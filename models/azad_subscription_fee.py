@@ -37,10 +37,10 @@ class AzadSubscriptionFee(db.Model):
     status = db.Column(db.String(20), nullable=False, default="accrued", index=True)
 
     gl_posted = db.Column(db.Boolean, nullable=False, default=False)
-    gl_posted_at = db.Column(db.DateTime, nullable=True)
+    gl_posted_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # When tenant actually pays
-    paid_at = db.Column(db.DateTime, nullable=True)
+    paid_at = db.Column(db.DateTime(timezone=True), nullable=True)
     paid_amount_aed = db.Column(db.Numeric(15, 3), nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)  # cash, bank_transfer, card
     payment_reference = db.Column(db.String(120), nullable=True)
@@ -48,13 +48,13 @@ class AzadSubscriptionFee(db.Model):
     notes = db.Column(db.Text)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

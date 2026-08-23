@@ -820,7 +820,7 @@ class TestMiscHelpers:
         assert AIService.smart_pricing_engine(999999, 1) is None
 
     def test_predict_churn(self, db_session, sample_customer, sample_tenant, sample_user):
-        old = datetime.now() - timedelta(days=200)
+        old = datetime.now(UTC) - timedelta(days=200)
         sale = Sale(
             tenant_id=sample_tenant.id,
             sale_number=f"OLD-{uuid.uuid4().hex[:6]}",

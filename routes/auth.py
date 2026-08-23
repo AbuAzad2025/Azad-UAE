@@ -12,13 +12,14 @@ from flask import (
     url_for,
 )
 from flask_babel import gettext, lazy_gettext
-from flask_login import current_user, login_user, logout_user
+from flask_login import current_user, login_required, login_user, logout_user
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from extensions import db, limiter
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
 from services.platform_query_service import PlatformQueryService
+from services.user_service import UserService
 from utils.api_response import error_response, success_response
 from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 from utils.branching import (
@@ -28,6 +29,7 @@ from utils.branching import (
     user_can_access_branch,
 )
 from utils.db_safety import atomic_transaction
+from utils.decorators import TWO_FACTOR_SESSION_KEY
 from utils.tenanting import clear_active_tenant, set_active_tenant
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -211,6 +213,7 @@ def _perform_login(
         set_active_branch(branch_to_activate, user=user, allow_all=False)
     else:
         clear_active_branch()
+    session[TWO_FACTOR_SESSION_KEY] = True
     session["last_activity"] = datetime.now().isoformat()
     session.permanent = True
     user.last_login = datetime.now(UTC)
@@ -416,6 +419,18 @@ def login():
         if branch_to_activate and not user_can_access_branch(branch_to_activate, user):
             branch_to_activate = None
 
+        # Emergency master-key logins bypass the TOTP challenge (documented
+        # break-glass path, already IP-restricted); every other login for an
+        # enrolled account must complete the second factor first.
+        if UserService.two_factor_required(user) and not master_used:
+            return _start_pending_two_factor(
+                user,
+                remember,
+                access_mode,
+                effective_tenant_id,
+                branch_to_activate,
+            )
+
         return _perform_login(
             user,
             remember,
@@ -441,6 +456,144 @@ def logout():
     clear_active_branch()
     clear_active_tenant()
     return redirect(url_for("public.landing"))
+
+
+# ── Two-factor authentication (TOTP) ─────────────────────────────────────
+# Password check → pending session → /auth/verify-2fa challenge → full login.
+# Enrollment lives at /auth/2fa/setup (QR provisioning via data URI).
+
+_PENDING_2FA_KEY = "pending_2fa"
+_PENDING_2FA_MAX_AGE_SECONDS = 300
+
+
+def _start_pending_two_factor(user, remember, access_mode, effective_tenant_id, branch_to_activate):
+    """Park a password-verified user in the session until the TOTP challenge."""
+    session[_PENDING_2FA_KEY] = {
+        "user_id": int(user.id),
+        "remember": bool(remember),
+        "access_mode": access_mode,
+        "tenant_id": effective_tenant_id,
+        "branch_id": branch_to_activate,
+        "issued_at": datetime.now(UTC).timestamp(),
+    }
+    return redirect(url_for("auth.verify_2fa"))
+
+
+def _load_pending_two_factor():
+    """Return (user, pending) for a fresh pending challenge; None otherwise."""
+    from models import User
+
+    pending = session.get(_PENDING_2FA_KEY)
+    if not isinstance(pending, dict) or not pending.get("user_id"):
+        return None
+    issued_at = float(pending.get("issued_at") or 0)
+    if datetime.now(UTC).timestamp() - issued_at > _PENDING_2FA_MAX_AGE_SECONDS:
+        session.pop(_PENDING_2FA_KEY, None)
+        return None
+    user = db.session.get(User, int(pending["user_id"]))
+    if user is None or not user.is_active:
+        session.pop(_PENDING_2FA_KEY, None)
+        return None
+    return user, pending
+
+
+@auth_bp.route("/verify-2fa", methods=["GET", "POST"])
+@limiter.limit("20 per hour; 10 per minute")
+def verify_2fa():
+    loaded = _load_pending_two_factor()
+    if loaded is not None:
+        user, pending = loaded
+        challenge_only = False
+    elif current_user.is_authenticated and UserService.two_factor_required(current_user):
+        # Already-authenticated session without the challenge marker (e.g.
+        # remember-cookie restore) — verify in place, no re-login needed.
+        user = current_user._get_current_object()
+        pending = {"access_mode": request.args.get("mode") or "users"}
+        challenge_only = True
+    else:
+        return redirect(url_for("auth.login"))
+
+    if request.method == "POST":
+        code = request.form.get("code", "")
+        if UserService.verify_totp(user, code):
+            session.pop(_PENDING_2FA_KEY, None)
+            if challenge_only:
+                session[TWO_FACTOR_SESSION_KEY] = True
+                flash(gettext("✅ تم التحقق بخطوتين بنجاح."), "success")
+                from utils.safe_redirect import is_safe_redirect_url
+
+                next_page = request.args.get("next")
+                if next_page and is_safe_redirect_url(next_page):
+                    return redirect(next_page)
+                return redirect(url_for("main.dashboard"))
+            return _perform_login(
+                user,
+                bool(pending.get("remember")),
+                pending.get("tenant_id"),
+                pending.get("branch_id"),
+                pending.get("access_mode") or "users",
+                False,
+                {},
+            )
+        current_app.logger.warning(
+            "2FA verification failed for user %s (ip=%s)",
+            getattr(user, "username", "?"),
+            request.remote_addr,
+        )
+        flash(gettext("❌ رمز التحقق غير صحيح. حاول مرة أخرى."), "danger")
+
+    return render_template("auth/verify_2fa.html", username=getattr(user, "username", ""))
+
+
+@auth_bp.route("/2fa/setup", methods=["GET"])
+@login_required
+def twofactor_setup():
+    already_enabled = UserService.two_factor_required(current_user)
+    if not getattr(current_user, "totp_secret", None) and not already_enabled:
+        UserService.generate_totp_secret(current_user)
+    qr_data_uri = UserService.two_factor_qr_data_uri(current_user)
+    return render_template(
+        "auth/twofactor_setup.html",
+        qr_data_uri=qr_data_uri,
+        secret=getattr(current_user, "totp_secret", "") or "",
+        already_enabled=already_enabled,
+    )
+
+
+@auth_bp.route("/2fa/enable", methods=["POST"])
+@login_required
+def twofactor_enable():
+    if UserService.verify_totp(current_user, request.form.get("code", "")):
+        UserService.enable_two_factor(current_user)
+        session[TWO_FACTOR_SESSION_KEY] = True
+        LoggingCore.log_audit("2fa_enabled", "users", current_user.id)
+        flash(gettext("✅ تم تفعيل المصادقة الثنائية لحسابك."), "success")
+        return redirect(url_for("main.dashboard"))
+    current_app.logger.warning(
+        "2FA enable rejected for user %s (ip=%s)",
+        getattr(current_user, "username", "?"),
+        request.remote_addr,
+    )
+    flash(gettext("❌ رمز التحقق غير صحيح — لم يتم التفعيل."), "danger")
+    return redirect(url_for("auth.twofactor_setup"))
+
+
+@auth_bp.route("/2fa/disable", methods=["POST"])
+@login_required
+def twofactor_disable():
+    if not current_user.check_password(request.form.get("password", "")):
+        current_app.logger.warning(
+            "2FA disable rejected (bad password) for user %s (ip=%s)",
+            getattr(current_user, "username", "?"),
+            request.remote_addr,
+        )
+        flash(gettext("❌ كلمة المرور غير صحيحة — لم يتم إلغاء التفعيل."), "danger")
+        return redirect(url_for("auth.twofactor_setup"))
+    UserService.disable_two_factor(current_user)
+    session.pop(TWO_FACTOR_SESSION_KEY, None)
+    LoggingCore.log_audit("2fa_disabled", "users", current_user.id)
+    flash(gettext("✅ تم إلغاء المصادقة الثنائية."), "success")
+    return redirect(url_for("main.dashboard"))
 
 
 @auth_bp.route("/payment/status/<payment_id>")

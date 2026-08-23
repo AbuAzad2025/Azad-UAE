@@ -52,17 +52,17 @@ class Budget(db.Model):
         db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # New Branch ID
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
-    approved_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime(timezone=True))
 
     tenant = db.relationship("Tenant", backref="budgets", foreign_keys=[tenant_id])
     lines = db.relationship("BudgetLine", back_populates="budget", cascade="all, delete-orphan")

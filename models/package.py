@@ -97,8 +97,8 @@ class Package(db.Model):
     enable_gl = db.Column(db.Boolean, default=True)
     enable_api = db.Column(db.Boolean, default=False)
 
-    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
+    updated_at = db.Column(db.DateTime(timezone=True), default=_utc_now, onupdate=_utc_now)
 
     def __repr__(self):
         return f"<Package {self.name_ar}>"
@@ -199,8 +199,8 @@ class PackagePurchase(db.Model):
 
     # الحالة
     activation_status = db.Column(db.String(50), default="pending")  # pending, activated, expired
-    activation_date = db.Column(db.DateTime)
-    expiry_date = db.Column(db.DateTime)
+    activation_date = db.Column(db.DateTime(timezone=True))
+    expiry_date = db.Column(db.DateTime(timezone=True))
 
     # ملاحظات
     notes = db.Column(db.Text)
@@ -208,8 +208,8 @@ class PackagePurchase(db.Model):
     # ربط العملية المالية بالمستأجر
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
 
-    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
+    updated_at = db.Column(db.DateTime(timezone=True), default=_utc_now, onupdate=_utc_now)
 
     # العلاقات
     package = db.relationship("Package", backref="purchases")

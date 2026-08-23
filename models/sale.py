@@ -34,7 +34,7 @@ class Sale(db.Model):
     )  # New Branch ID
 
     sale_date = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -125,13 +125,13 @@ class Sale(db.Model):
     notes = db.Column(db.Text)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -360,8 +360,8 @@ class SaleLine(db.Model):
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
 
     cost_price = db.Column(db.Numeric(15, 3), default=0)
-    warranty_start_date = db.Column(db.DateTime, nullable=True)
-    warranty_end_date = db.Column(db.DateTime, nullable=True)
+    warranty_start_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    warranty_end_date = db.Column(db.DateTime(timezone=True), nullable=True)
 
     notes = db.Column(db.String(255))
 

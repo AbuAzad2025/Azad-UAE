@@ -16,9 +16,9 @@ class EmailList(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -51,8 +51,8 @@ class EmailSubscriber(db.Model):
     name = db.Column(db.String(200))
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True)
     status = db.Column(db.String(20), default="subscribed", index=True)
-    unsubscribed_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    unsubscribed_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     list = db.relationship("EmailList", back_populates="subscribers", foreign_keys=[list_id])
@@ -79,9 +79,9 @@ class EmailTemplate(db.Model):
     body_html = db.Column(db.Text, nullable=False)
     from_email = db.Column(db.String(200))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -112,17 +112,17 @@ class EmailCampaign(db.Model):
     template_id = db.Column(
         db.Integer, db.ForeignKey("email_templates.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    scheduled_date = db.Column(db.DateTime, nullable=True)
-    sent_date = db.Column(db.DateTime, nullable=True)
+    scheduled_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    sent_date = db.Column(db.DateTime(timezone=True), nullable=True)
     status = db.Column(db.String(20), default="draft", index=True)
     sent_count = db.Column(db.Integer, default=0)
     open_count = db.Column(db.Integer, default=0)
     click_count = db.Column(db.Integer, default=0)
     bounce_count = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -156,11 +156,11 @@ class CampaignLog(db.Model):
         db.Integer, db.ForeignKey("email_subscribers.id", ondelete="CASCADE"), nullable=False, index=True
     )
     status = db.Column(db.String(20), nullable=False, index=True)
-    sent_at = db.Column(db.DateTime, nullable=True)
-    opened_at = db.Column(db.DateTime, nullable=True)
-    clicked_at = db.Column(db.DateTime, nullable=True)
+    sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    opened_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    clicked_at = db.Column(db.DateTime(timezone=True), nullable=True)
     error_message = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     campaign = db.relationship("EmailCampaign", back_populates="logs", foreign_keys=[campaign_id])

@@ -6,7 +6,7 @@ grouped-query blocks (partner/merchant financials, supplier summary,
 receivables aging inputs, stock movement maps) are preserved exactly.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -17,7 +17,7 @@ from extensions import db
 from models.payment import payment_affects_balance
 from utils.cache_decorators import cached_query
 from utils.decorators import report_branch_scope_id
-from utils.tenanting import tenant_get_or_404, tenant_query
+from utils.tenanting import tenant_query
 
 __all__ = ["ReportsQueryService"]
 
@@ -65,8 +65,7 @@ class ReportsQueryService:
     # ------------------------------------------------------------------
     @staticmethod
     def _scoped_customer_query():
-        from models import Customer
-        from models import Payment
+        from models import Customer, Payment, Sale
         from models.receipt import Receipt
 
         query = tenant_query(Customer)
@@ -85,9 +84,7 @@ class ReportsQueryService:
 
     @staticmethod
     def _scoped_supplier_query():
-        from models import Payment
-        from models import Purchase
-        from models import Supplier
+        from models import Payment, Purchase, Supplier
 
         scoped_branch_id = report_branch_scope_id()
         if scoped_branch_id is None:
@@ -103,7 +100,6 @@ class ReportsQueryService:
 
     @staticmethod
     def supplier_in_branch_scope(record_id):
-        from models import Supplier
 
         return bool(
             db.session.query(ReportsQueryService._scoped_supplier_query().filter_by(id=record_id).exists()).scalar()
@@ -111,7 +107,6 @@ class ReportsQueryService:
 
     @staticmethod
     def customer_in_branch_scope(record_id):
-        from models import Customer
 
         return bool(
             db.session.query(ReportsQueryService._scoped_customer_query().filter_by(id=record_id).exists()).scalar()
@@ -122,8 +117,7 @@ class ReportsQueryService:
     # ------------------------------------------------------------------
     @staticmethod
     def build_partners_report(date_from, date_to, tenant_id, scoped_branch_id):
-        from models import Customer, PartnerCommissionEntry, Product, Purchase, Sale, SaleLine
-        from models import Payment
+        from models import Customer, PartnerCommissionEntry, Payment, Product, Purchase, Sale, SaleLine
         from models.receipt import Receipt
 
         partners_data = []
@@ -153,7 +147,9 @@ class ReportsQueryService:
                     PartnerCommissionEntry.percentage.label("percentage"),
                     func.coalesce(func.sum(SaleLine.quantity), 0).label("total_qty"),
                     func.coalesce(func.sum(PartnerCommissionEntry.base_amount_aed), 0).label("total_revenue"),
-                    func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0).label("partner_share_amount"),
+                    func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), 0).label(
+                        "partner_share_amount"
+                    ),
                     Customer.id.label("partner_id"),
                 )
                 .join(Sale, PartnerCommissionEntry.sale_id == Sale.id)
@@ -195,7 +191,9 @@ class ReportsQueryService:
                         "partner_share_amount": partner_amount,
                     }
                 )
-                partner_share_totals[r.partner_id] = partner_share_totals.get(r.partner_id, Decimal("0")) + partner_amount
+                partner_share_totals[r.partner_id] = (
+                    partner_share_totals.get(r.partner_id, Decimal("0")) + partner_amount
+                )
         else:
             partner_products = tenant_query(Product).filter(
                 Product.is_active,
@@ -207,7 +205,9 @@ class ReportsQueryService:
 
             for product in partner_products:
                 sales_query = (
-                    tenant_query(SaleLine).join(Sale).filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
+                    tenant_query(SaleLine)
+                    .join(Sale)
+                    .filter(SaleLine.product_id == product.id, Sale.status == "confirmed")
                 )
                 if tenant_id is not None:
                     sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
@@ -541,7 +541,9 @@ class ReportsQueryService:
     # Sales report
     # ------------------------------------------------------------------
     @staticmethod
-    def fetch_sales_report(tenant_id, scoped_branch_id, date_from, date_to, customer_id, seller_id, seller_user_id=None):
+    def fetch_sales_report(
+        tenant_id, scoped_branch_id, date_from, date_to, customer_id, seller_id, seller_user_id=None
+    ):
         from models import Sale
 
         query = tenant_query(Sale).filter_by(status="confirmed")
@@ -574,7 +576,9 @@ class ReportsQueryService:
         if tenant_id is not None:
             customers_query = customers_query.filter(Customer.tenant_id == tenant_id)
         if scoped_branch_id is not None:
-            customer_ids = select(Sale.customer_id).where(Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None))
+            customer_ids = select(Sale.customer_id).where(
+                Sale.branch_id == scoped_branch_id, Sale.customer_id.isnot(None)
+            )
             customers_query = customers_query.filter(Customer.id.in_(customer_ids))
         return customers_query.order_by(Customer.name).limit(500).all()
 
@@ -618,7 +622,7 @@ class ReportsQueryService:
         """Supplier payments grouped FIFO-style per supplier, ordered by date asc."""
         from decimal import Decimal as Dec
 
-        from models import Payment, Supplier
+        from models import Payment
 
         supplier_payments = {}
         pmt_query = tenant_query(Payment).filter(
@@ -1160,6 +1164,130 @@ class ReportsQueryService:
 
         context["transactions"] = all_trans
         return context
+
+    # ------------------------------------------------------------------
+    # AP aging (payables aging buckets per supplier)
+    # ------------------------------------------------------------------
+    AP_AGING_BUCKETS = ("0-30", "31-60", "61-90", "90+")
+
+    @staticmethod
+    def build_ap_aging_report(tenant_id, scoped_branch_id, as_of_date=None, supplier_id=None):
+        """AP aging report: unpaid purchase balances bucketed 0-30/31-60/61-90/90+.
+
+        Balances follow the purchases-report convention: confirmed purchases up to
+        as_of_date, with the supplier's outgoing payments (balance-affecting) FIFO-
+        allocated across the oldest invoices first. All math is Decimal; floats are
+        produced only at serialization boundaries.
+        """
+        from datetime import date
+
+        from models import Supplier
+
+        if isinstance(as_of_date, str) and as_of_date.strip():
+            as_of = datetime.strptime(as_of_date.strip(), "%Y-%m-%d").date()
+        elif isinstance(as_of_date, datetime):
+            as_of = as_of_date.date()
+        elif isinstance(as_of_date, date):
+            as_of = as_of_date
+        else:
+            as_of = date.today()
+
+        as_of_str = as_of.strftime("%Y-%m-%d")
+        _, remaining_payments = ReportsQueryService.fetch_purchases_payments(
+            tenant_id, scoped_branch_id, "", as_of_str, supplier_id
+        )
+        purchases_list = ReportsQueryService.fetch_purchases_report(
+            tenant_id, scoped_branch_id, "", as_of_str, supplier_id
+        )
+
+        by_supplier: dict[Any, list] = {}
+        for purchase in purchases_list:
+            by_supplier.setdefault(purchase.supplier_id, []).append(purchase)
+
+        supplier_names = {}
+        if by_supplier:
+            suppliers = tenant_query(Supplier).filter(Supplier.id.in_(list(by_supplier.keys()))).all()
+            supplier_names = {s.id: s.name for s in suppliers}
+
+        rows = []
+        grand_totals = {bucket: Decimal("0") for bucket in ReportsQueryService.AP_AGING_BUCKETS}
+        grand_totals["total"] = Decimal("0")
+
+        for sid in sorted(by_supplier, key=lambda k: str(supplier_names.get(k, ""))):
+            supplier_purchases = sorted(
+                by_supplier[sid],
+                key=lambda p: (
+                    p.purchase_date if p.purchase_date is not None else datetime.min,
+                    p.id or 0,
+                ),
+            )
+            remaining_paid = Decimal(str(remaining_payments.get(sid) or 0))
+            buckets = {bucket: Decimal("0") for bucket in ReportsQueryService.AP_AGING_BUCKETS}
+            row_total = Decimal("0")
+            invoices = []
+
+            for purchase in supplier_purchases:
+                purchase_total = Decimal(str(purchase.total_amount or 0))
+                allocated = min(purchase_total, remaining_paid) if remaining_paid > 0 else Decimal("0")
+                remaining_paid -= allocated
+                balance = purchase_total - allocated
+                if balance <= 0:
+                    continue
+
+                purchase_day = (
+                    purchase.purchase_date.date()
+                    if isinstance(purchase.purchase_date, datetime)
+                    else purchase.purchase_date
+                )
+                days_old = (as_of - purchase_day).days if purchase_day else 0
+                if days_old <= 30:
+                    bucket = "0-30"
+                elif days_old <= 60:
+                    bucket = "31-60"
+                elif days_old <= 90:
+                    bucket = "61-90"
+                else:
+                    bucket = "90+"
+
+                buckets[bucket] += balance
+                row_total += balance
+                invoices.append(
+                    {
+                        "purchase_number": purchase.purchase_number or "",
+                        "purchase_date": purchase_day.isoformat() if purchase_day else "",
+                        "total": float(purchase_total),
+                        "paid": float(allocated),
+                        "balance": float(balance),
+                        "days_old": days_old,
+                        "bucket": bucket,
+                    }
+                )
+
+            if row_total <= 0:
+                continue
+
+            for bucket in ReportsQueryService.AP_AGING_BUCKETS:
+                grand_totals[bucket] += buckets[bucket]
+            grand_totals["total"] += row_total
+
+            rows.append(
+                {
+                    "supplier_id": sid,
+                    "supplier_name": supplier_names.get(sid, ""),
+                    "buckets": {bucket: float(buckets[bucket]) for bucket in ReportsQueryService.AP_AGING_BUCKETS},
+                    "total": float(row_total),
+                    "open_purchases": len(invoices),
+                    "invoices": invoices,
+                }
+            )
+
+        return {
+            "as_of": as_of.isoformat(),
+            "rows": rows,
+            "totals": {bucket: float(value) for bucket, value in grand_totals.items()},
+            "supplier_count": len(rows),
+            "generated_for_supplier": supplier_id,
+        }
 
     # ------------------------------------------------------------------
     # Top selling

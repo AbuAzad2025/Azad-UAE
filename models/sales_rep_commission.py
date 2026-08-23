@@ -22,8 +22,8 @@ class SalesRepCommission(db.Model):
     commission_amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(db.String(3), default=context_aware_default_currency)
     is_paid = db.Column(db.Boolean, default=False, index=True)
-    paid_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    paid_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     sale = db.relationship("Sale", foreign_keys=[sale_id])

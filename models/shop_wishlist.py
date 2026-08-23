@@ -20,7 +20,7 @@ class ShopWishlist(db.Model):
     )
     product_id = db.Column(db.Integer, db.ForeignKey("products.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

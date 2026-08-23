@@ -56,7 +56,7 @@ class Supplier(db.Model):
     # إحصائيات
     total_purchases_aed = db.Column(db.Numeric(15, 3), default=0)
     total_paid_aed = db.Column(db.Numeric(15, 3), default=0)
-    last_purchase_date = db.Column(db.DateTime)
+    last_purchase_date = db.Column(db.DateTime(timezone=True))
 
     # Aliases for unified currency handling
     @property
@@ -84,13 +84,13 @@ class Supplier(db.Model):
     is_verified = db.Column(db.Boolean, default=False)  # مورد موثوق
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

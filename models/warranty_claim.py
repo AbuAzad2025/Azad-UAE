@@ -31,15 +31,15 @@ class WarrantyClaim(db.Model):
         nullable=False,
         index=True,
     )
-    claim_date = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    claim_date = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     claim_type = db.Column(db.String(20), nullable=False)
     description = db.Column(db.Text)
     status = db.Column(db.String(20), default="open", index=True)
-    resolved_at = db.Column(db.DateTime)
+    resolved_at = db.Column(db.DateTime(timezone=True))
     resolution_notes = db.Column(db.Text)
     cost_to_company = db.Column(db.Numeric(15, 3), default=0)
-    warranty_start_date = db.Column(db.DateTime)
-    warranty_end_date = db.Column(db.DateTime)
+    warranty_start_date = db.Column(db.DateTime(timezone=True))
+    warranty_end_date = db.Column(db.DateTime(timezone=True))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     sale = db.relationship("Sale", foreign_keys=[sale_id])

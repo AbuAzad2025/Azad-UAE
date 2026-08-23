@@ -21,7 +21,7 @@ class ArchivedRecord(db.Model):
     data = db.Column(db.JSON, nullable=False)
 
     archived_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

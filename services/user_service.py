@@ -2,6 +2,7 @@ from sqlalchemy.orm import joinedload
 
 from extensions import db
 from models import Role, Tenant, User
+from utils.db_safety import atomic_transaction
 from utils.tenanting import scoped_user_query
 
 
@@ -218,3 +219,85 @@ class UserService:
             "recent_sales": recent_sales,
             "recent_audits": recent_audits,
         }
+
+    # ── Two-factor authentication (TOTP) ─────────────────────────────────
+
+    _TOTP_ISSUER = "AZAD ERP"
+
+    @staticmethod
+    def two_factor_required(user) -> bool:
+        """True when the account is enrolled in TOTP second-factor.
+
+        Strictly boolean: mock/legacy principals without a real flag are
+        treated as not enrolled.
+        """
+        if user is None:
+            return False
+        return getattr(user, "two_factor_enabled", False) is True
+
+    @staticmethod
+    def generate_totp_secret(user) -> str:
+        """Generate and persist a fresh TOTP secret for provisioning."""
+        import pyotp
+
+        secret = pyotp.random_base32()
+        user.totp_secret = secret
+        with atomic_transaction("generate_totp_secret"):
+            db.session.flush()
+        return secret
+
+    @staticmethod
+    def totp_provisioning_uri(user):
+        """otpauth:// URI for authenticator apps; None when not provisioned."""
+        import pyotp
+
+        if not getattr(user, "totp_secret", None):
+            return None
+        return pyotp.totp.TOTP(user.totp_secret).provisioning_uri(
+            name=getattr(user, "email", None) or user.username,
+            issuer_name=UserService._TOTP_ISSUER,
+        )
+
+    @staticmethod
+    def two_factor_qr_data_uri(user):
+        """Render the provisioning URI as a self-contained PNG data URI."""
+        import base64
+        import io
+
+        import qrcode
+
+        uri = UserService.totp_provisioning_uri(user)
+        if not uri:
+            return None
+        buffer = io.BytesIO()
+        qrcode.make(uri).save(buffer, format="PNG")
+        return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+
+    @staticmethod
+    def verify_totp(user, code) -> bool:
+        """Verify a 6-digit TOTP code (±1 time window for clock drift)."""
+        import pyotp
+
+        if user is None or not getattr(user, "totp_secret", None):
+            return False
+        normalized = str(code or "").strip().replace(" ", "")
+        if len(normalized) != 6 or not normalized.isdigit():
+            return False
+        totp = pyotp.TOTP(user.totp_secret)
+        try:
+            return bool(totp.verify(normalized, valid_window=1))
+        except Exception:
+            return False
+
+    @staticmethod
+    def enable_two_factor(user):
+        with atomic_transaction("enable_two_factor"):
+            user.two_factor_enabled = True
+            db.session.flush()
+
+    @staticmethod
+    def disable_two_factor(user):
+        with atomic_transaction("disable_two_factor"):
+            user.two_factor_enabled = False
+            user.totp_secret = None
+            db.session.flush()

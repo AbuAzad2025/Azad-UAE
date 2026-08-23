@@ -15,9 +15,9 @@ class Currency(db.Model):
     is_base = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -71,15 +71,15 @@ class ExchangeRate(db.Model):
     is_manual = db.Column(db.Boolean, default=False)
 
     valid_from = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
-    valid_until = db.Column(db.DateTime)
+    valid_until = db.Column(db.DateTime(timezone=True))
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

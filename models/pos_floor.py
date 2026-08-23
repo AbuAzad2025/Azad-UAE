@@ -63,7 +63,7 @@ class PosTableOrder(db.Model):
     is_split = db.Column(db.Boolean, default=False)
     split_group = db.Column(db.String(20), nullable=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: __import__("datetime").datetime.now(__import__("datetime").timezone.utc),
         nullable=False,
     )

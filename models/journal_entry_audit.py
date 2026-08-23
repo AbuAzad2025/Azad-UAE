@@ -23,7 +23,7 @@ class JournalEntryAudit(db.Model):
     new_values = db.Column(db.Text)
     reason = db.Column(db.Text)
     performed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    performed_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    performed_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     ip_address = db.Column(db.String(45))
     user_agent = db.Column(db.Text)
 

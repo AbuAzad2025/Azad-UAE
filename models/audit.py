@@ -31,7 +31,7 @@ class AuditLog(db.Model):
     user_agent = db.Column(db.String(255))
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ _('المصادقة الثنائية') }} — {{ _('شركة ازاد للأنظمة الذكية') }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 32px;
+      width: 100%;
+      max-width: 480px;
+    }
+    h1 { font-size: 1.3rem; margin-bottom: 8px; color: #f8fafc; }
+    p.hint { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; line-height: 1.6; }
+    .alert { border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.88rem; }
+    .alert-danger { background: #7f1d1d33; border: 1px solid #b91c1c66; color: #fecaca; }
+    .alert-success { background: #14532d33; border: 1px solid #16a34a66; color: #bbf7d0; }
+    .qr-wrap { text-align: center; margin: 18px 0; }
+    .qr-wrap img {
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+      max-width: 220px;
+      width: 100%;
+      image-rendering: pixelated;
+    }
+    .secret-box {
+      direction: ltr;
+      unicode-bidi: embed;
+      text-align: center;
+      font-family: monospace;
+      font-size: 0.95rem;
+      letter-spacing: 0.15em;
+      word-break: break-all;
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      padding: 10px;
+      color: #a5b4fc;
+      user-select: all;
+    }
+    label { display: block; font-size: 0.85rem; color: #cbd5e1; margin: 14px 0 6px; }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #f1f5f9;
+      font-size: 1rem;
+    }
+    input[type="text"] { letter-spacing: 0.5em; text-align: center; direction: ltr; }
+    button {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn-primary { background: #1b7a4e; }
+    .btn-primary:hover { background: #166534; }
+    .btn-danger { background: #b91c1c; }
+    .btn-danger:hover { background: #991b1b; }
+    hr { border: none; border-top: 1px solid #334155; margin: 24px 0; }
+    .links { margin-top: 18px; text-align: center; font-size: 0.85rem; }
+    .links a { color: #60a5fa; text-decoration: none; }
+    section + section { margin-top: 24px; }
+    h2 { font-size: 1.05rem; color: #f1f5f9; margin-bottom: 6px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>{{ _('المصادقة الثنائية (TOTP)') }}</h1>
+    <p class="hint">{{ _('حمي حسابك برمز مؤقت يتجدد كل ٣٠ ثانية من تطبيق مصادقة مثل Google Authenticator.') }}</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% set alert_class = 'danger' if category in ('error', 'danger') else ('success' if category == 'success' else 'warning') %}
+          <div class="alert alert-{{ alert_class }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if already_enabled %}
+      <section>
+        <h2>{{ _('الحالة: مفعّلة ✓') }}</h2>
+        <p class="hint">{{ ('حسابك محمي بالمصادقة الثنائية حالياً.') }}</p>
+        <form method="POST" action="{{ url_for('auth.twofactor_disable') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label for="password">{{ _('أدخل كلمة المرور لإلغاء التفعيل') }}</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required>
+          <button type="submit" class="btn-danger">{{ ('إلغاء المصادقة الثنائية') }}</button>
+        </form>
+      </section>
+    {% else %}
+      {% if qr_data_uri %}
+        <section>
+          <h2>{{ ('١) امسح رمز الاستجابة') }}</h2>
+          <div class="qr-wrap">
+            <img src="{{ qr_data_uri }}" alt="{{ ('رمز QR لتطبيق المصادقة') }}" width="200" height="200">
+          </div>
+          <p class="hint">{{ ('أو أدخل المفتاح يدوياً:') }}</p>
+          <div class="secret-box">{{ secret }}</div>
+        </section>
+        <section>
+          <h2>{{ ('٢) أكّد الرمز للتفعيل') }}</h2>
+          <form method="POST" action="{{ url_for('auth.twofactor_enable') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="code">{{ ('الرمز المكوّن من ٦ أرقام') }}</label>
+            <input type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+                   pattern="[0-9 ]{6,8}" maxlength="8" required placeholder="••••••"
+                   autocapitalize="none" spellcheck="false">
+            <button type="submit" class="btn-primary">{{ ('تفعيل المصادقة الثنائية') }}</button>
+          </form>
+        </section>
+      {% else %}
+        <p class="hint">{{ ('تعذر إنشاء مفتاح التحقق — أعد تحميل الصفحة.') }}</p>
+      {% endif %}
+    {% endif %}
+
+    <div class="links">
+      <a href="{{ url_for('main.dashboard') }}">{{ ('رجوع للوحة التحكم') }}</a>
+    </div>
+  </main>
+</body>
+</html>

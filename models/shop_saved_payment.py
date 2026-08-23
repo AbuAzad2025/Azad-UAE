@@ -24,7 +24,7 @@ class ShopSavedPayment(db.Model):
     details = db.Column(db.Text, nullable=True)
     is_default = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

@@ -38,7 +38,7 @@ class Warehouse(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
     is_main = db.Column(db.Boolean, default=False)
     allow_negative_inventory = db.Column(db.Boolean, default=False, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     extra_fields = db.Column(db.JSON, default=dict)
 
@@ -93,7 +93,7 @@ class ProductWarehouseStock(db.Model):
     warehouse_country_of_origin = db.Column(db.String(100), nullable=True)
 
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

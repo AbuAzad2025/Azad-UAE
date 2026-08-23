@@ -87,11 +87,11 @@ class Payment(db.Model):
     # confirmed: مؤكدة (الشيك صُرف)
     # pending: معلقة (الشيك لم يُصرف بعد)
     payment_confirmed = db.Column(db.Boolean, default=True, index=True)  # True للنقد/بطاقة، False للشيكات المعلقة
-    confirmation_date = db.Column(db.DateTime)  # تاريخ التأكيد
+    confirmation_date = db.Column(db.DateTime(timezone=True))  # تاريخ التأكيد
     rejection_reason = db.Column(db.String(500))  # سبب الرفض
 
     payment_date = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -100,7 +100,7 @@ class Payment(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

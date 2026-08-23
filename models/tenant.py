@@ -61,8 +61,8 @@ class Tenant(db.Model):
     # Subscription - الاشتراك
     subscription_plan = db.Column(db.String(50), default="basic")  # basic, pro, enterprise
     subscription_plan_duration = db.Column(db.String(20), default="monthly")  # monthly, annual, lifetime
-    subscription_start = db.Column(db.DateTime)
-    subscription_end = db.Column(db.DateTime)
+    subscription_start = db.Column(db.DateTime(timezone=True))
+    subscription_end = db.Column(db.DateTime(timezone=True))
     is_trial = db.Column(db.Boolean, default=False)
     trial_days_remaining = db.Column(db.Integer, default=0)
 
@@ -143,13 +143,13 @@ class Tenant(db.Model):
 
     # Meta
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

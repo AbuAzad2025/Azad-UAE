@@ -23,13 +23,13 @@ class PosKdsOrder(db.Model):
     priority = db.Column(db.Integer, default=0)
     notes = db.Column(db.Text, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
-    completed_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     sale = db.relationship("Sale", foreign_keys=[sale_id])
     session = db.relationship("PosSession", foreign_keys=[session_id])

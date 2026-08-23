@@ -36,7 +36,7 @@ class PaymentVault(db.Model):
     vault_password_hash = db.Column(db.String(255), nullable=False)  # كلمة مرور الخزينة
     vault_name = db.Column(db.String(100), default="Payment Vault")  # اسم الخزينة
     is_locked = db.Column(db.Boolean, default=True)  # هل مقفلة
-    last_access = db.Column(db.DateTime, default=_utc_now)  # آخر وصول
+    last_access = db.Column(db.DateTime(timezone=True), default=_utc_now)  # آخر وصول
 
     # Payment Gateway Settings - إعدادات بوابات الدفع
     nowpayments_api_key = db.Column(db.String(255))  # NOWPayments API Key
@@ -93,8 +93,8 @@ class PaymentVault(db.Model):
     max_failed_attempts = db.Column(db.Integer, default=3)  # محاولات فاشلة
     failed_attempts = db.Column(db.Integer, default=0)  # عدد المحاولات الفاشلة
 
-    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
+    updated_at = db.Column(db.DateTime(timezone=True), default=_utc_now, onupdate=_utc_now)
 
     @classmethod
     def get_platform_vault(cls):
@@ -200,9 +200,9 @@ class PaymentTransaction(db.Model):
     user_agent = db.Column(db.String(500))  # User Agent
     is_verified = db.Column(db.Boolean, default=False)  # هل تم التحقق
 
-    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
-    updated_at = db.Column(db.DateTime, default=_utc_now, onupdate=_utc_now)
-    completed_at = db.Column(db.DateTime)  # وقت الإكمال
+    created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
+    updated_at = db.Column(db.DateTime(timezone=True), default=_utc_now, onupdate=_utc_now)
+    completed_at = db.Column(db.DateTime(timezone=True))  # وقت الإكمال
 
     vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id", ondelete="RESTRICT"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="transactions")
@@ -255,7 +255,7 @@ class PaymentLog(db.Model):
     ip_address = db.Column(db.String(50))  # عنوان IP
     user_agent = db.Column(db.String(500))  # User Agent
 
-    created_at = db.Column(db.DateTime, default=_utc_now, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
 
     vault_id = db.Column(db.Integer, db.ForeignKey("payment_vault.id", ondelete="RESTRICT"), nullable=False, index=True)
     vault = db.relationship("PaymentVault", backref="logs")

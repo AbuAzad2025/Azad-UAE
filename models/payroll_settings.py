@@ -28,7 +28,7 @@ class PayrollSettings(db.Model):
     rounding_policy = db.Column(db.String(20), default="round_half_up")
 
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
         nullable=False,

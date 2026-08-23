@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ _('التحقق بخطوتين') }} — {{ _('شركة ازاد للأنظمة الذكية') }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+    }
+    h1 { font-size: 1.3rem; margin-bottom: 8px; color: #f8fafc; }
+    p.hint { font-size: 0.9rem; color: #94a3b8; margin-bottom: 20px; }
+    .alert { border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.88rem; }
+    .alert-danger { background: #7f1d1d33; border: 1px solid #b91c1c66; color: #fecaca; }
+    .alert-success { background: #14532d33; border: 1px solid #16a34a66; color: #bbf7d0; }
+    label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px; }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #f1f5f9;
+      font-size: 1.25rem;
+      letter-spacing: 0.5em;
+      text-align: center;
+      direction: ltr;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #1b7a4e;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #166534; }
+    .links { margin-top: 18px; text-align: center; font-size: 0.85rem; }
+    .links a { color: #60a5fa; text-decoration: none; }
+    .username { direction: ltr; unicode-bidi: embed; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>{{ _('التحقق بخطوتين') }}</h1>
+    <p class="hint">
+      {% if username %}<span class="username">{{ username }}</span> — {% endif %}{{ _('أدخل الرمز المكوّن من ٦ أرقام من تطبيق المصادقة.') }}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% set alert_class = 'danger' if category in ('error', 'danger') else ('success' if category == 'success' else 'warning') %}
+          <div class="alert alert-{{ alert_class }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('auth.verify_2fa', next=request.args.get('next')) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="code">{{ _('رمز التحقق') }}</label>
+      <input type="text" id="code" name="code" inputmode="numeric" autocomplete="one-time-code"
+             pattern="[0-9 ]{6,8}" maxlength="8" required autofocus
+             placeholder="••••••" autocapitalize="none" spellcheck="false">
+      <button type="submit">{{ _('تحقق ومتابعة') }}</button>
+    </form>
+
+    <div class="links">
+      <a href="{{ url_for('auth.logout') }}">{{ _('تسجيل الخروج') }}</a>
+    </div>
+  </main>
+</body>
+</html>

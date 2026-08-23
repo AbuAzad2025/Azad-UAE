@@ -21,15 +21,15 @@ class AiMemory(db.Model):
     confidence = db.Column(db.Numeric(3, 2), nullable=False, default=0.80)
     source = db.Column(db.String(100), nullable=True)
     access_count = db.Column(db.Integer, nullable=False, default=0)
-    last_accessed = db.Column(db.DateTime, nullable=True)
+    last_accessed = db.Column(db.DateTime(timezone=True), nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
         index=True,
     )
-    updated_at = db.Column(db.DateTime, nullable=True, onupdate=lambda: datetime.now(UTC))
+    updated_at = db.Column(db.DateTime(timezone=True), nullable=True, onupdate=lambda: datetime.now(UTC))
     tenant = db.relationship("Tenant", backref="ai_memories", foreign_keys=[tenant_id])
 
     def to_dict(self):
@@ -72,7 +72,7 @@ class AiInteraction(db.Model):
     response_time_ms = db.Column(db.Integer, nullable=True)
     is_training_sample = db.Column(db.Boolean, nullable=False, default=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
         index=True,
@@ -113,7 +113,7 @@ class AiExpertise(db.Model):
     usage_count = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
         index=True,

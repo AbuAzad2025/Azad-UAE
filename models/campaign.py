@@ -18,8 +18,8 @@ class Campaign(db.Model):
     campaign_type = db.Column(db.String(30), nullable=False)
     discount_value = db.Column(db.Numeric(15, 3), nullable=False)
     max_discount_amount = db.Column(db.Numeric(15, 3))
-    start_date = db.Column(db.DateTime, nullable=False)
-    end_date = db.Column(db.DateTime, nullable=False)
+    start_date = db.Column(db.DateTime(timezone=True), nullable=False)
+    end_date = db.Column(db.DateTime(timezone=True), nullable=False)
     min_order_amount = db.Column(db.Numeric(15, 3), default=0)
     min_quantity = db.Column(db.Numeric(15, 3), default=0)
     applicable_products = db.Column(db.JSON, default=list)
@@ -43,7 +43,7 @@ class Campaign(db.Model):
     )
     rule_config = db.Column(db.JSON, default=dict)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -75,7 +75,7 @@ class SaleCampaign(db.Model):
         index=True,
     )
     discount_amount = db.Column(db.Numeric(15, 3), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     campaign = db.relationship("Campaign", foreign_keys=[campaign_id])

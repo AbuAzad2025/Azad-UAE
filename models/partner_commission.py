@@ -60,7 +60,7 @@ class PartnerCommissionEntry(db.Model):
     def commission_amount_base(self, value):
         self.commission_amount_aed = value
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])

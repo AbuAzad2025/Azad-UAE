@@ -54,9 +54,9 @@ class PosSession(db.Model):
     # open (see utils/pos_security.py).
     terminal_id = db.Column(db.String(100), nullable=True)
 
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
-    paused_at = db.Column(db.DateTime, nullable=True)
-    closed_at = db.Column(db.DateTime, nullable=True)
+    opened_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    paused_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     opening_balance_cash = db.Column(db.Numeric(15, 3), default=0)
 
@@ -79,9 +79,9 @@ class PosSession(db.Model):
     status = db.Column(db.String(20), default="open", index=True)
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

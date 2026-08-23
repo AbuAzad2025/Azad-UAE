@@ -58,13 +58,13 @@ class PartnerProfitDistribution(db.Model):
     # Audit
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
-    approved_at = db.Column(db.DateTime, nullable=True)
+    approved_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     notes = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

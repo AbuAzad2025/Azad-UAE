@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -30,7 +30,7 @@ class TestPredictNextMaintenance:
         q.filter.return_value = q
         q.order_by.return_value = q
         q.limit.return_value = q
-        q.all.return_value = [_sale_line(1, datetime.now())]
+        q.all.return_value = [_sale_line(1, datetime.now(UTC))]
         session.query.return_value = q
 
         from services.predictive_maintenance import PredictiveMaintenanceService
@@ -38,7 +38,7 @@ class TestPredictNextMaintenance:
         assert PredictiveMaintenanceService.predict_next_maintenance(1) is None
 
     def test_calculates_avg_interval_and_days_until(self, mocker, frozen_time=None):
-        now = datetime(2025, 6, 15, 12, 0, 0)
+        now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=UTC)
         lines = [
             _sale_line(5, now),
             _sale_line(5, now - timedelta(days=10)),
@@ -143,7 +143,7 @@ class TestProductLifecycle:
         assert PredictiveMaintenanceService.analyze_product_lifecycle(1) == {"status": "no_data"}
 
     def test_lifecycle_metrics_computed(self, mocker):
-        start = datetime(2025, 1, 1)
+        start = datetime(2025, 1, 1, tzinfo=UTC)
         lines = [_sale_line(3, start + timedelta(days=i * 5), qty=1) for i in range(12)]
         session = mocker.patch("services.predictive_maintenance.db.session")
         q = MagicMock()

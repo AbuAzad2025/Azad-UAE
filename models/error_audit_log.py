@@ -21,13 +21,13 @@ class ErrorAuditLog(db.Model):
 
     occurrence_count = db.Column(db.Integer, nullable=False, default=1)
     first_seen_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     last_seen_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -68,12 +68,12 @@ class ErrorAuditLog(db.Model):
 
     # ── Resolution tracking ────────────────────────────────────
     is_resolved = db.Column(db.Boolean, default=False, index=True)
-    resolved_at = db.Column(db.DateTime)
+    resolved_at = db.Column(db.DateTime(timezone=True))
     resolved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     resolution_note = db.Column(db.Text)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

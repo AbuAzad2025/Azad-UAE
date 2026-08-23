@@ -48,13 +48,13 @@ class GLAccount(db.Model):
     bank_iban = db.Column(db.String(50), nullable=True)
     bank_swift_code = db.Column(db.String(20), nullable=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -195,7 +195,7 @@ class GLJournalEntry(db.Model):
     )
     entry_number = db.Column(db.String(50), nullable=False, index=True)
     entry_date = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -230,7 +230,7 @@ class GLJournalEntry(db.Model):
     # 'reversed': original entry that was reversed
     # 'cancelled': soft-deleted entry (audit trail preserved)
     validation_errors = db.Column(db.Text)  # JSON list of validation failures
-    validated_at = db.Column(db.DateTime)
+    validated_at = db.Column(db.DateTime(timezone=True))
     validated_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     reversed_entry_id = db.Column(
         db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), index=True
@@ -238,13 +238,13 @@ class GLJournalEntry(db.Model):
     notes = db.Column(db.Text)  # ملاحظات إضافية
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -344,11 +344,11 @@ class GLPeriod(db.Model):
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(db.Integer, nullable=False)
     is_closed = db.Column(db.Boolean, default=False, nullable=False)
-    closed_at = db.Column(db.DateTime)
+    closed_at = db.Column(db.DateTime(timezone=True))
     closed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     notes = db.Column(db.Text)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -493,13 +493,13 @@ class GLAccountMapping(db.Model):
     )
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

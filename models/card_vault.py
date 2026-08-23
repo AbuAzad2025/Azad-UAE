@@ -45,10 +45,10 @@ class CardVault(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
 
     usage_count = db.Column(db.Integer, default=0)
-    last_used = db.Column(db.DateTime)
+    last_used = db.Column(db.DateTime(timezone=True))
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

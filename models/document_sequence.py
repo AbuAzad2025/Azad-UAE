@@ -40,9 +40,9 @@ class DocumentSequence(db.Model):
     is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

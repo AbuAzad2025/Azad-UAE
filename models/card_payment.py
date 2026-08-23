@@ -76,14 +76,14 @@ class CardPayment(db.Model):
     country_code = db.Column(db.String(10))
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
-    completed_at = db.Column(db.DateTime)
+    completed_at = db.Column(db.DateTime(timezone=True))
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

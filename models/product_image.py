@@ -25,7 +25,7 @@ class ProductImage(db.Model):
     caption_en = db.Column(db.String(200))
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     __table_args__ = (db.Index("ix_product_image_type_order", "tenant_id", "product_id", "image_type", "sort_order"),)
 

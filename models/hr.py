@@ -20,7 +20,7 @@ class Department(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("departments.id", ondelete="SET NULL"), nullable=True, index=True)
     color = db.Column(db.String(7), default="#3b82f6")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     manager = db.relationship("User", foreign_keys=[manager_id])
@@ -47,7 +47,7 @@ class JobPosition(db.Model):
     )
     no_of_employees = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     department = db.relationship("Department", foreign_keys=[department_id])
@@ -87,9 +87,9 @@ class HRContract(db.Model):
     wage = db.Column(db.Numeric(15, 3), default=0)
     state = db.Column(db.String(20), default="draft")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -126,12 +126,12 @@ class Attendance(db.Model):
         nullable=False,
         index=True,
     )
-    check_in = db.Column(db.DateTime, nullable=False)
-    check_out = db.Column(db.DateTime, nullable=True)
+    check_in = db.Column(db.DateTime(timezone=True), nullable=False)
+    check_out = db.Column(db.DateTime(timezone=True), nullable=True)
     work_hours = db.Column(db.Numeric(8, 2), nullable=True)
     state = db.Column(db.String(20), default="draft")
     notes = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -161,7 +161,7 @@ class LeaveType(db.Model):
     carry_forward_days = db.Column(db.Integer, default=0)
     max_carry_forward = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
 
@@ -202,9 +202,9 @@ class LeaveRequest(db.Model):
     manager_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     rejected_reason = db.Column(db.String(500))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -257,7 +257,7 @@ class LeaveBalance(db.Model):
     pending_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
     remaining_days = db.Column(db.Numeric(5, 1), default=0, nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -301,10 +301,10 @@ class OvertimeEntry(db.Model):
     overtime_type = db.Column(db.String(20), default="standard", nullable=False)
     status = db.Column(db.String(20), default="pending", index=True)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    approved_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime(timezone=True))
     rejected_reason = db.Column(db.String(500))
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
 
     tenant = db.relationship("Tenant", backref="overtime_entries", foreign_keys=[tenant_id])
     user = db.relationship("User", foreign_keys=[user_id], backref="overtime_entries")

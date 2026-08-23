@@ -6,6 +6,7 @@ from flask_babel import gettext
 
 from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
+from utils.decorators import two_factor_required
 
 from .common import (
     company_admin_required,
@@ -56,6 +57,7 @@ def owner_root():
 
 @owner_bp.route("/dashboard")
 @owner_required
+@two_factor_required
 def dashboard():
     from utils.auth_helpers import is_global_owner_user
     from utils.owner_panel import (

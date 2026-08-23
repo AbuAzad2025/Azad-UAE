@@ -31,10 +31,10 @@ class PosOverrideToken(db.Model):
     session_id = db.Column(db.Integer, db.ForeignKey("pos_sessions.id", ondelete="SET NULL"), nullable=True, index=True)
 
     nonce = db.Column(db.String(64), nullable=False, unique=True)
-    expires_at = db.Column(db.DateTime, nullable=False)
-    used_at = db.Column(db.DateTime, nullable=True)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    used_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
     cashier = db.relationship("User", foreign_keys=[cashier_user_id])
     supervisor = db.relationship("User", foreign_keys=[supervisor_user_id])

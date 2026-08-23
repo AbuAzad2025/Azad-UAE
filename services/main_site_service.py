@@ -17,9 +17,10 @@ class MainSiteService:
     @staticmethod
     def today_sales_totals(tenant_id, today, branch_id=None):
         """(count, sum) of confirmed sales for the given day, tenant-scoped."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         query = db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed)).filter(
             func.date(Sale.sale_date) == today,
@@ -33,9 +34,10 @@ class MainSiteService:
     @staticmethod
     def month_sales_totals(tenant_id, month_start, branch_id=None):
         """(count, sum) of confirmed sales since month_start, tenant-scoped."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         query = db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed)).filter(
             func.date(Sale.sale_date) >= month_start,
@@ -49,9 +51,10 @@ class MainSiteService:
     @staticmethod
     def month_profit_total(tenant_id, month_start, branch_id=None) -> Decimal:
         """Margin-weighted profit over sale lines since month_start."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale, SaleLine
-        from sqlalchemy import func
 
         profit_expr = func.sum(
             (SaleLine.unit_price - func.coalesce(SaleLine.cost_price, 0))
@@ -76,9 +79,10 @@ class MainSiteService:
     @staticmethod
     def total_receivables(branch_id=None) -> Decimal:
         """Outstanding confirmed-sale balances."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         query = db.session.query(func.sum(Sale.amount_aed - Sale.paid_amount_aed)).filter(
             Sale.status == "confirmed",
@@ -91,9 +95,10 @@ class MainSiteService:
     @staticmethod
     def liquidity_balance(kind, tenant_id, branch_id=None) -> Decimal:
         """Net debit-credit across active non-header liquidity accounts of a kind."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import GLAccount, GLJournalLine
-        from sqlalchemy import func
 
         account_query = GLAccount.query.filter(
             GLAccount.tenant_id == int(tenant_id or 0),
@@ -118,14 +123,13 @@ class MainSiteService:
     @staticmethod
     def inventory_gl_value(inventory_account, branch_id=None) -> Decimal:
         """Net GL balance of the inventory control account (debit minus credit)."""
-        from extensions import db
-        from models import GLJournalLine
         from sqlalchemy import func
 
+        from extensions import db
+        from models import GLJournalLine
+
         inv_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=inventory_account.id)
-        inv_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(
-            account_id=inventory_account.id
-        )
+        inv_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=inventory_account.id)
         if branch_id is not None:
             inv_debit_query = inv_debit_query.join(GLJournalLine.entry).filter_by(branch_id=branch_id)
             inv_credit_query = inv_credit_query.join(GLJournalLine.entry).filter_by(branch_id=branch_id)
@@ -136,8 +140,9 @@ class MainSiteService:
     @staticmethod
     def recent_confirmed_sales(tenant_id, branch_id=None, limit=10):
         """Newest confirmed sales with customer/seller eager-loaded."""
-        from models import Sale
         from sqlalchemy.orm import joinedload
+
+        from models import Sale
 
         query = Sale.query.options(joinedload(Sale.customer), joinedload(Sale.seller)).filter_by(status="confirmed")
         if tenant_id is not None:
@@ -149,9 +154,10 @@ class MainSiteService:
     @staticmethod
     def seller_sales_totals(seller_id):
         """(count, sum) of all confirmed sales for a seller."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         return (
             db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
@@ -162,9 +168,10 @@ class MainSiteService:
     @staticmethod
     def seller_sales_totals_on(seller_id, day):
         """(count, sum) of a seller's confirmed sales on an exact day."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         return (
             db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
@@ -179,9 +186,10 @@ class MainSiteService:
     @staticmethod
     def seller_sales_totals_since(seller_id, start_day):
         """(count, sum) of a seller's confirmed sales since a start day."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Sale
-        from sqlalchemy import func
 
         return (
             db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
@@ -196,9 +204,10 @@ class MainSiteService:
     @staticmethod
     def payment_totals_for_user(user_id):
         """(count, sum) of payments recorded by a user."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import Payment
-        from sqlalchemy import func
 
         return (
             db.session.query(func.count(Payment.id), func.sum(Payment.amount_aed))
@@ -242,3 +251,86 @@ class MainSiteService:
         from models.branch import Branch
 
         return Branch.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(Branch.name).all()
+
+    # ─── Dashboard chart datasets ───
+
+    @staticmethod
+    def sales_trend_daily(tenant_id, start_day, days=14, branch_id=None):
+        """Daily confirmed-sales totals for the window [start_day, start_day+days).
+
+        Returns a dense series (zero-filled days) of {"date", "total_aed"} floats.
+        """
+        from datetime import timedelta
+
+        from sqlalchemy import func
+
+        from extensions import db
+        from models import Sale
+
+        end_day = start_day + timedelta(days=days - 1)
+        day_expr = func.date(Sale.sale_date)
+        query = db.session.query(day_expr, func.coalesce(func.sum(Sale.amount_aed), 0)).filter(
+            Sale.status == "confirmed",
+            Sale.tenant_id == tenant_id,
+            day_expr >= start_day,
+            day_expr <= end_day,
+        )
+        if branch_id is not None:
+            query = query.filter(Sale.branch_id == branch_id)
+
+        totals = {str(row_date): Decimal(str(value or 0)) for row_date, value in query.group_by(day_expr).all()}
+
+        series = []
+        for offset in range(days):
+            day = start_day + timedelta(days=offset)
+            series.append({"date": day.isoformat(), "total_aed": float(totals.get(day.isoformat(), Decimal("0")))})
+        return series
+
+    @staticmethod
+    def top_customers(tenant_id, start_day=None, limit=5, branch_id=None):
+        """Top customers by confirmed-sales revenue since start_day."""
+        from sqlalchemy import func
+
+        from extensions import db
+        from models import Customer, Sale
+
+        revenue = func.sum(Sale.amount_aed)
+        query = (
+            db.session.query(Customer.id, Customer.name, func.coalesce(revenue, 0))
+            .join(Sale, Sale.customer_id == Customer.id)
+            .filter(Sale.status == "confirmed", Sale.tenant_id == tenant_id)
+            .group_by(Customer.id, Customer.name)
+            .order_by(revenue.desc())
+        )
+        if start_day is not None:
+            query = query.filter(func.date(Sale.sale_date) >= start_day)
+        if branch_id is not None:
+            query = query.filter(Sale.branch_id == branch_id)
+
+        return [
+            {"customer_id": customer_id, "name": name, "total_aed": float(total or 0)}
+            for customer_id, name, total in query.limit(limit).all()
+        ]
+
+    @staticmethod
+    def stock_alert_summary(user, limit=10):
+        """Low/out-of-stock product lists and counts for dashboard widgets."""
+        from services.stock_service import StockService
+
+        low_stock = StockService.get_low_stock_products(limit=limit, user=user) or []
+        out_of_stock = StockService.get_out_of_stock_products(user=user) or []
+
+        def _row(product):
+            return {
+                "id": product.id,
+                "name": getattr(product, "name_ar", None) or product.name,
+                "qty": float(getattr(product, "current_stock", None) or 0),
+                "min_qty": float(getattr(product, "min_stock_alert", None) or 0),
+            }
+
+        return {
+            "low_stock": [_row(p) for p in low_stock],
+            "out_of_stock": [_row(p) for p in out_of_stock[:limit]],
+            "low_stock_count": len(low_stock),
+            "out_of_stock_count": len(out_of_stock),
+        }

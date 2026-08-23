@@ -50,7 +50,7 @@ class ProductCostHistory(db.Model):
     )  # TODO: use Config.DEFAULT_CURRENCY
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

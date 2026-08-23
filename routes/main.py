@@ -1,8 +1,7 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from flask import (
     Blueprint,
-    abort,
     current_app,
     flash,
     redirect,
@@ -17,6 +16,7 @@ from extensions import db
 from models import Customer, Sale
 from services.main_site_service import MainSiteService
 from services.stock_service import StockService
+from utils.api_response import success_response
 from utils.branching import get_visible_products_query
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id
@@ -146,6 +146,75 @@ def dashboard():
     except Exception:
         current_app.logger.exception("Dashboard failed")
         return render_template("errors/500.html"), 500
+
+
+# ───────────────────────────────────────────────────────────────
+# Dashboard chart datasets — small JSON endpoints (envelope responses)
+# ───────────────────────────────────────────────────────────────
+
+
+@main_bp.route("/dashboard/api/charts/sales-trend")
+@login_required
+def api_dashboard_sales_trend():
+    """Daily sales totals for the last N days (default 14)."""
+    days = request.args.get("days", 14, type=int)
+    days = min(max(days, 7), 60)
+    tid = get_active_tenant_id(current_user)
+    today = datetime.now(UTC).date()
+    start_day = today - timedelta(days=days - 1)
+
+    series = MainSiteService.sales_trend_daily(
+        tid,
+        start_day,
+        days=days,
+        branch_id=branch_scope_id(),
+    )
+    return success_response(data={"series": series, "days": days})
+
+
+@main_bp.route("/dashboard/api/charts/cash-position")
+@login_required
+def api_dashboard_cash_position():
+    """Cash vs bank GL liquidity balances (cost-visible users only)."""
+    data = {}
+    if current_user.can_see_costs():
+        tid = get_active_tenant_id(current_user)
+        scoped_branch_id = branch_scope_id()
+        cash = MainSiteService.liquidity_balance("cash", tid, scoped_branch_id)
+        bank = MainSiteService.liquidity_balance("bank", tid, scoped_branch_id)
+        data = {
+            "labels": [gettext("الصندوق"), gettext("البنك")],
+            "values": [float(cash or 0), float(bank or 0)],
+        }
+    return success_response(data=data)
+
+
+@main_bp.route("/dashboard/api/charts/top-customers")
+@login_required
+def api_dashboard_top_customers():
+    """Top customers by revenue over the last N days (default 30)."""
+    days = request.args.get("days", 30, type=int)
+    days = min(max(days, 7), 365)
+    limit = min(max(request.args.get("limit", 5, type=int), 1), 10)
+    tid = get_active_tenant_id(current_user)
+    start_day = datetime.now(UTC).date() - timedelta(days=days - 1)
+
+    customers = MainSiteService.top_customers(
+        tid,
+        start_day=start_day,
+        limit=limit,
+        branch_id=branch_scope_id(),
+    )
+    return success_response(data={"customers": customers, "days": days})
+
+
+@main_bp.route("/dashboard/api/charts/stock-alerts")
+@login_required
+def api_dashboard_stock_alerts():
+    """Low/out-of-stock product summary for the alerts widget."""
+    limit = min(max(request.args.get("limit", 10, type=int), 1), 25)
+    data = MainSiteService.stock_alert_summary(current_user, limit=limit)
+    return success_response(data=data)
 
 
 # ───────────────────────────────────────────────────────────────

@@ -24,13 +24,13 @@ class Project(db.Model):
     description = db.Column(db.Text)
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True, index=True)
     status = db.Column(db.String(20), default="planning", index=True)
-    date_start = db.Column(db.DateTime, nullable=True)
-    date_end = db.Column(db.DateTime, nullable=True)
+    date_start = db.Column(db.DateTime(timezone=True), nullable=True)
+    date_end = db.Column(db.DateTime(timezone=True), nullable=True)
     color = db.Column(db.String(7), default="#10b981")
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -76,7 +76,7 @@ class TaskStage(db.Model):
     sequence = db.Column(db.Integer, default=0)
     is_closed = db.Column(db.Boolean, default=False)
     color = db.Column(db.String(7), default="#6b7280")
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     project = db.relationship("Project", back_populates="stages", foreign_keys=[project_id])
@@ -123,14 +123,14 @@ class Task(db.Model):
         index=True,
     )
     priority = db.Column(db.String(20), default="medium")
-    date_deadline = db.Column(db.DateTime, nullable=True)
+    date_deadline = db.Column(db.DateTime(timezone=True), nullable=True)
     planned_hours = db.Column(db.Numeric(8, 2), default=0)
     effective_hours = db.Column(db.Numeric(8, 2), default=0)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -178,7 +178,7 @@ class Timesheet(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     hours = db.Column(db.Numeric(8, 2), nullable=False)
     description = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -212,7 +212,7 @@ class ProjectMember(db.Model):
         index=True,
     )
     role = db.Column(db.String(30), default="member")
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     project = db.relationship("Project", back_populates="members", foreign_keys=[project_id])

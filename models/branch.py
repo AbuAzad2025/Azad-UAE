@@ -31,9 +31,9 @@ class Branch(db.Model):
     # Pricing Method - هل الأسعار في هذا الفرع تشمل الضريبة؟
     prices_include_vat = db.Column(db.Boolean, default=None, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

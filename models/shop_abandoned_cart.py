@@ -21,11 +21,11 @@ class ShopAbandonedCart(db.Model):
     )
     email = db.Column(db.String(200), nullable=True)
     cart_data = db.Column(db.Text, nullable=True)
-    reminder_sent_at = db.Column(db.DateTime, nullable=True)
+    reminder_sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
     reminder_count = db.Column(db.Integer, default=0, nullable=False)
     recovered = db.Column(db.Boolean, default=False, nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

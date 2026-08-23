@@ -7,7 +7,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.reports_query_service import ReportsQueryService
-from utils.api_response import success_response
+from utils.api_response import error_response, success_response
 from utils.decorators import permission_required, report_branch_scope_id
 from utils.feature_guards import install_feature_gate
 from utils.tenanting import (
@@ -114,10 +114,7 @@ def sales():
 
     customers = ReportsQueryService.fetch_report_customers(tenant_id, scoped_branch_id)
 
-    if current_user.is_seller():
-        sellers = [current_user]
-    else:
-        sellers = ReportsQueryService.fetch_report_sellers(scoped_branch_id)
+    sellers = [current_user] if current_user.is_seller() else ReportsQueryService.fetch_report_sellers(scoped_branch_id)
 
     return render_template(
         "reports/sales.html",
@@ -705,6 +702,103 @@ def receivables_export():
     )
 
 
+@reports_bp.route("/ap-aging")
+@login_required
+@permission_required("view_reports")
+def ap_aging():
+    """تقرير أعمار الذمم الدائنة (AP Aging)."""
+    if current_user.is_seller():
+        return render_template("errors/403.html"), 403
+
+    as_of = request.args.get("as_of", "", type=str)
+    supplier_id = request.args.get("supplier", type=int)
+
+    scoped_branch_id = report_branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+
+    report = ReportsQueryService.build_ap_aging_report(
+        tenant_id, scoped_branch_id, as_of_date=as_of, supplier_id=supplier_id
+    )
+    suppliers = ReportsQueryService.list_active_suppliers_for_filter()
+
+    return render_template(
+        "reports/ap_aging.html",
+        report=report,
+        suppliers=suppliers,
+        as_of=as_of,
+        supplier_id=supplier_id,
+    )
+
+
+@reports_bp.route("/api/ap-aging")
+@login_required
+@permission_required("view_reports")
+def api_ap_aging():
+    """JSON envelope for the AP aging report."""
+    if current_user.is_seller():
+        return error_response(message=gettext("غير مصرح"), status_code=403)
+
+    as_of = request.args.get("as_of", "", type=str)
+    supplier_id = request.args.get("supplier", type=int)
+
+    scoped_branch_id = report_branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+
+    report = ReportsQueryService.build_ap_aging_report(
+        tenant_id, scoped_branch_id, as_of_date=as_of, supplier_id=supplier_id
+    )
+    return success_response(data=report)
+
+
+@reports_bp.route("/ap-aging/export")
+@login_required
+@permission_required("view_reports")
+def ap_aging_export():
+    """Download the AP aging report as a real PDF."""
+    from flask import Response
+
+    from services.print_service import PrintService
+
+    if current_user.is_seller():
+        return render_template("errors/403.html"), 403
+
+    fmt = (request.args.get("format") or "pdf").strip().lower()
+    if fmt != "pdf":
+        return error_response(
+            message=gettext("صيغة التصدير غير مدعومة لهذا التقرير"),
+            status_code=400,
+        )
+
+    as_of = request.args.get("as_of", "", type=str)
+    supplier_id = request.args.get("supplier", type=int)
+
+    scoped_branch_id = report_branch_scope_id()
+    tenant_id = get_active_tenant_id(current_user)
+
+    report = ReportsQueryService.build_ap_aging_report(
+        tenant_id, scoped_branch_id, as_of_date=as_of, supplier_id=supplier_id
+    )
+
+    context = {
+        "title": gettext("تقرير أعمار الذمم الدائنة"),
+        "report": report,
+        "as_of": report["as_of"],
+        "selected_branch": scoped_branch_id,
+    }
+    stamp = report["as_of"].replace("-", "")
+    pdf_bytes = PrintService.render_pdf(
+        "reports/ap_aging_pdf.html",
+        extra_context=context,
+        filename=f"ap_aging_{stamp}.pdf",
+    )
+
+    return Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=ap_aging_{stamp}.pdf"},
+    )
+
+
 @reports_bp.route("/inventory")
 @login_required
 @permission_required("view_reports")
@@ -895,7 +989,6 @@ def inventory_export():
 
     products = ReportsQueryService.fetch_inventory_products(category_id, include_zero, stock_map)
 
-
     headers = [
         gettext("المنتج"),
         "SKU",
@@ -1066,9 +1159,7 @@ def entity_report_fragment(entity_type, **kwargs):
                 return render_template("errors/403.html"), 403
             context["entity"] = entity
             context["type_label"] = gettext("مورد")
-            context.update(
-                ReportsQueryService.build_supplier_fragment_data(record_id, tenant_id, scoped_branch_id)
-            )
+            context.update(ReportsQueryService.build_supplier_fragment_data(record_id, tenant_id, scoped_branch_id))
 
         else:  # Customer/Partner/Merchant
             entity = tenant_get_or_404(Customer, record_id)

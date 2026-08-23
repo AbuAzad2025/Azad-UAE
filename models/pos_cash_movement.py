@@ -48,7 +48,7 @@ class PosCashMovement(db.Model):
         db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), nullable=True, index=True
     )
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
     session = db.relationship("PosSession", foreign_keys=[session_id])
     shift = db.relationship("PosShift", foreign_keys=[shift_id])

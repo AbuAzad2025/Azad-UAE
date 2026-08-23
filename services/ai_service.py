@@ -1761,14 +1761,14 @@ class AIService:
     def predict_customer_churn():
         """توقع فقدان العملاء"""
         try:
-            from datetime import datetime, timedelta
+            from datetime import UTC, datetime, timedelta
 
             from extensions import db
             from models import Customer, Sale
 
             tid = get_active_tenant_id()
 
-            three_months_ago = datetime.now() - timedelta(days=90)
+            three_months_ago = datetime.now(UTC) - timedelta(days=90)
             at_risk = []
             active_customers_q = db.session.query(Customer).filter_by(is_active=True)
             if tid is not None:
@@ -1785,8 +1785,10 @@ class AIService:
                             "customer_id": customer.id,
                             "customer_name": customer.name,
                             "last_purchase": last_sale.sale_date.strftime("%Y-%m-%d"),
-                            "days_since_last_purchase": (datetime.now() - last_sale.sale_date).days,
-                            "risk_level": ("high" if (datetime.now() - last_sale.sale_date).days > 180 else "medium"),
+                            "days_since_last_purchase": (datetime.now(UTC) - last_sale.sale_date).days,
+                            "risk_level": (
+                                "high" if (datetime.now(UTC) - last_sale.sale_date).days > 180 else "medium"
+                            ),
                         }
                     )
             return {

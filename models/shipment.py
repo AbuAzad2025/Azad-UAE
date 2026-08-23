@@ -22,14 +22,14 @@ class Shipment(db.Model):
     customs_duty = db.Column(db.Numeric(15, 3), default=0)
     insurance = db.Column(db.Numeric(15, 3), default=0)
     status = db.Column(db.String(20), default="pending", index=True)
-    estimated_delivery = db.Column(db.DateTime)
-    actual_delivery = db.Column(db.DateTime)
+    estimated_delivery = db.Column(db.DateTime(timezone=True))
+    actual_delivery = db.Column(db.DateTime(timezone=True))
     recipient_name = db.Column(db.String(200))
     recipient_phone = db.Column(db.String(50))
     recipient_address = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

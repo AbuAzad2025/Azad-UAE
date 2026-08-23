@@ -17,9 +17,9 @@ class SecurityAlert(db.Model):
     url = db.Column(db.String(500))
     method = db.Column(db.String(10))
     status_code = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     is_resolved = db.Column(db.Boolean, default=False)
-    resolved_at = db.Column(db.DateTime)
+    resolved_at = db.Column(db.DateTime(timezone=True))
     resolved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     user = db.relationship("User", foreign_keys=[user_id], backref="security_alerts")

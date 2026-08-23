@@ -31,7 +31,7 @@ class PrintHistory(db.Model):
 
     ip_address = db.Column(db.String(45), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     user = db.relationship("User", backref="print_history", foreign_keys=[user_id])
 

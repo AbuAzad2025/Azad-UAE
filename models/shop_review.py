@@ -24,7 +24,7 @@ class ShopReview(db.Model):
     comment = db.Column(db.Text, nullable=True)
     is_approved = db.Column(db.Boolean, default=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

@@ -33,8 +33,8 @@ class PosShift(db.Model):
 
     session = db.relationship("PosSession", backref="shifts")
 
-    opened_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
-    closed_at = db.Column(db.DateTime, nullable=True)
+    opened_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     starting_cash = db.Column(db.Numeric(15, 3), default=Decimal("0"), nullable=False)
     system_sales_expected = db.Column(db.Numeric(15, 3), default=Decimal("0"))
@@ -58,9 +58,9 @@ class PosShift(db.Model):
     SHIFT_RECONCILED = "reconciled"
     SHIFT_CLOSED = "closed"
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

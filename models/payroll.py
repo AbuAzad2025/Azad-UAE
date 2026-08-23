@@ -42,7 +42,7 @@ class Employee(db.Model):
     # Leave Accrual
     annual_leave_days = db.Column(db.Integer, default=30)  # Annual leave entitlement
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     branch = db.relationship("Branch", backref="employees")
     advances = db.relationship("SalaryAdvance", backref="employee", lazy="dynamic")
@@ -76,7 +76,7 @@ class EmployeeLeave(db.Model):
 
     status = db.Column(db.String(20), default="approved", index=True)  # pending, approved, rejected
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
 
 class SalaryAdvance(db.Model):
@@ -99,14 +99,14 @@ class SalaryAdvance(db.Model):
 
     status = db.Column(db.String(20), default="approved", index=True)  # pending, approved, paid, deducted
     is_deducted = db.Column(db.Boolean, default=False)  # True if fully deducted from salary
-    fully_deducted_at = db.Column(db.DateTime, nullable=True)  # تاريخ الاكتمال
+    fully_deducted_at = db.Column(db.DateTime(timezone=True), nullable=True)  # تاريخ الاكتمال
 
     # Link to GL
     gl_entry_id = db.Column(
         db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), nullable=True, index=True
     )
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
 

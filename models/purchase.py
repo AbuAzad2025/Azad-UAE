@@ -33,7 +33,7 @@ class Purchase(db.Model):
     supplier_email = db.Column(db.String(120))
 
     purchase_date = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -98,13 +98,13 @@ class Purchase(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -402,12 +402,12 @@ class PurchaseRequisition(db.Model):
     justification = db.Column(db.Text)
     notes = db.Column(db.Text)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    approved_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime(timezone=True))
     rejected_reason = db.Column(db.String(500))
     po_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="SET NULL"), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -512,10 +512,10 @@ class PurchaseOrder(db.Model):
     notes = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     confirmed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    confirmed_at = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    confirmed_at = db.Column(db.DateTime(timezone=True))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -633,7 +633,7 @@ class GoodsReceipt(db.Model):
     received_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     status = db.Column(db.String(20), default="draft", index=True)
     notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False, index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
 
     tenant = db.relationship("Tenant", backref="goods_receipts", foreign_keys=[tenant_id])
     purchase_order = db.relationship("PurchaseOrder", back_populates="goods_receipts")

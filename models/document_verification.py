@@ -22,7 +22,7 @@ class DocumentVerification(db.Model):
     document_id = db.Column(db.Integer, nullable=False)
     document_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)
     public_token = db.Column(db.String(36), unique=True, nullable=False, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     __table_args__ = (

@@ -33,9 +33,9 @@ class CustomsTax(db.Model):
     effective_from = db.Column(db.Date, nullable=False)
     effective_to = db.Column(db.Date)
     description = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -107,7 +107,7 @@ class AdvancedExpense(db.Model):
     requires_approval = db.Column(db.Boolean, default=False)
     approval_status = db.Column(db.String(50), default="pending")  # pending, approved, rejected
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
-    approved_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime(timezone=True))
     approval_notes = db.Column(db.Text)
 
     # معلومات المرفقات
@@ -122,18 +122,18 @@ class AdvancedExpense(db.Model):
     )  # New Branch ID
     gl_journal_entry_id = db.Column(db.Integer, db.ForeignKey("gl_journal_entries.id", ondelete="RESTRICT"), index=True)
     is_reversed = db.Column(db.Boolean, default=False)
-    reversed_at = db.Column(db.DateTime)
+    reversed_at = db.Column(db.DateTime(timezone=True))
     reversed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     reversal_reason = db.Column(db.Text)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -259,7 +259,7 @@ class TaxCalculationRule(db.Model):
     tax_id = db.Column(db.Integer, db.ForeignKey("customs_taxes.id", ondelete="RESTRICT"), nullable=False, index=True)
     priority = db.Column(db.Integer, default=0)  # أولوية التطبيق
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tax = db.relationship("CustomsTax")
     tenant = db.relationship("Tenant")

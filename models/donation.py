@@ -70,15 +70,15 @@ class Donation(db.Model):
     notification_sent = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
-    confirmed_at = db.Column(db.DateTime)  # وقت التأكيد
-    completed_at = db.Column(db.DateTime)  # وقت الاكتمال
+    confirmed_at = db.Column(db.DateTime(timezone=True))  # وقت التأكيد
+    completed_at = db.Column(db.DateTime(timezone=True))  # وقت الاكتمال
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

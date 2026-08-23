@@ -33,14 +33,14 @@ class IntegrationSettings(db.Model):
 
     config_data = db.Column(db.Text)  # JSON for flexibility
 
-    last_tested_at = db.Column(db.DateTime)  # آخر اختبار
+    last_tested_at = db.Column(db.DateTime(timezone=True))  # آخر اختبار
     last_test_status = db.Column(db.String(20))  # success, failed
     last_test_message = db.Column(db.Text)  # رسالة الاختبار
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

@@ -26,7 +26,7 @@ class Permission(db.Model):
     name_ar = db.Column(db.String(100))  # Arabic name
     description = db.Column(db.String(255))
     category = db.Column(db.String(50))  # Group permissions: 'sales', 'products', 'reports', etc.
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     def __repr__(self):
         return f"<Permission {self.code}>"
@@ -52,9 +52,9 @@ class Role(db.Model):
     slug = db.Column(db.String(50), unique=True, nullable=False, index=True)  # e.g., 'super_admin'
     description = db.Column(db.String(255))
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -116,15 +116,19 @@ class User(UserMixin, db.Model):
     # Phase 3 — hashed supervisor PIN for POS manager overrides.
     supervisor_pin_hash = db.Column(db.String(255), nullable=True)
 
-    # Login tracking
-    last_login = db.Column(db.DateTime)
-    last_seen = db.Column(db.DateTime)
-    login_attempts = db.Column(db.Integer, default=0)
-    locked_until = db.Column(db.DateTime)
+    # Two-factor authentication (TOTP)
+    totp_secret = db.Column(db.String(64))
+    two_factor_enabled = db.Column(db.Boolean, default=False, nullable=False, index=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    # Login tracking
+    last_login = db.Column(db.DateTime(timezone=True))
+    last_seen = db.Column(db.DateTime(timezone=True))
+    login_attempts = db.Column(db.Integer, default=0)
+    locked_until = db.Column(db.DateTime(timezone=True))
+
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

@@ -9,6 +9,7 @@ from cli_commands import (
     register_backup_commands,
     register_build_assets_command,
     register_cli_commands,
+    register_restore_drill_command,
     register_stock_commands,
 )
 
@@ -83,6 +84,75 @@ class TestBackupCommands:
         ):
             runner = cli_app.test_cli_runner()
             result = runner.invoke(args=["backup", "--scope", "tenant", "--tenant-id", "1"])
+        assert result.exit_code != 0
+
+
+class TestRestoreDrillCommand:
+    """flask restore-drill — service is mocked; scratch-db steps never run here."""
+
+    @pytest.fixture
+    def drill_app(self):
+        app = Flask(__name__)
+        register_restore_drill_command(app)
+        return app
+
+    def test_registered_alongside_backup(self):
+        app = Flask(__name__)
+        register_cli_commands(app)
+        assert "restore-drill" in app.cli.commands
+        assert "backup" in app.cli.commands
+
+    def test_success_prints_counts(self, drill_app):
+        drill_result = {
+            "ok": True,
+            "artifact_origin": "offsite",
+            "duration_seconds": 1.5,
+            "counts": {"purchases": 2, "sales": 7, "users": 3},
+            "errors": [],
+        }
+        with patch(
+            "services.restore_drill.RestoreDrillService.run_drill",
+            return_value=drill_result,
+        ) as run_drill:
+            runner = drill_app.test_cli_runner()
+            result = runner.invoke(args=["restore-drill"])
+        assert result.exit_code == 0
+        assert "PASSED" in result.output
+        assert "users: 3 rows" in result.output
+        assert "sales: 7 rows" in result.output
+        run_drill.assert_called_once_with(source="auto", filename=None)
+
+    def test_failure_exits_nonzero_and_lists_errors(self, drill_app):
+        drill_result = {
+            "ok": False,
+            "artifact_origin": "local",
+            "duration_seconds": 0.4,
+            "counts": {},
+            "errors": ["restore: pg_restore not found"],
+        }
+        with patch(
+            "services.restore_drill.RestoreDrillService.run_drill",
+            return_value=drill_result,
+        ):
+            runner = drill_app.test_cli_runner()
+            result = runner.invoke(args=["restore-drill"])
+        assert result.exit_code != 0
+        assert "FAILED" in result.output
+        assert "pg_restore not found" in result.output
+
+    def test_options_forwarded_to_service(self, drill_app):
+        with patch(
+            "services.restore_drill.RestoreDrillService.run_drill",
+            return_value={"ok": True, "counts": {}, "errors": [], "duration_seconds": 0},
+        ) as run_drill:
+            runner = drill_app.test_cli_runner()
+            result = runner.invoke(args=["restore-drill", "--source", "local", "--filename", "x.tar.gz"])
+        assert result.exit_code == 0
+        run_drill.assert_called_once_with(source="local", filename="x.tar.gz")
+
+    def test_invalid_source_rejected(self, drill_app):
+        runner = drill_app.test_cli_runner()
+        result = runner.invoke(args=["restore-drill", "--source", "ftp"])
         assert result.exit_code != 0
 
 

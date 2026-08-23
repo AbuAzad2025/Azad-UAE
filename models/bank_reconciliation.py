@@ -63,17 +63,17 @@ class BankReconciliation(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
-    approved_at = db.Column(db.DateTime)
+    approved_at = db.Column(db.DateTime(timezone=True))
 
     tenant = db.relationship("Tenant", backref="bank_reconciliations", foreign_keys=[tenant_id])
     bank_account = db.relationship("GLAccount", foreign_keys=[bank_account_id])
@@ -211,7 +211,7 @@ class BankStatementLine(db.Model):
     )
     statement_date = db.Column(db.Date, nullable=False, index=True)
     source_filename = db.Column(db.String(255))
-    imported_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    imported_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
 
     transaction_date = db.Column(db.Date, nullable=False, index=True)
@@ -224,7 +224,7 @@ class BankStatementLine(db.Model):
     status = db.Column(
         db.String(20), default="imported", index=True
     )  # imported, suggested_match, matched, ignored, reconciled
-    matched_at = db.Column(db.DateTime)
+    matched_at = db.Column(db.DateTime(timezone=True))
     matched_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
     match_type = db.Column(db.String(30))  # exact, amount_date, fuzzy
     matched_journal_entry_id = db.Column(
@@ -238,7 +238,7 @@ class BankStatementLine(db.Model):
     # Raw import data
     raw_data = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
 
     tenant = db.relationship("Tenant", backref="bank_statement_lines", foreign_keys=[tenant_id])
     bank_account = db.relationship("GLAccount", foreign_keys=[bank_account_id])

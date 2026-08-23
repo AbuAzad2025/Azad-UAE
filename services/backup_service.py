@@ -1028,6 +1028,7 @@ class BackupService:
             with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, indent=2, ensure_ascii=False)
 
+            offsite_status = cls._maybe_upload_offsite(archive_path)
             cls._apply_retention()
             cls._set_schedule_state(
                 last_run_at=datetime.now(UTC).isoformat(),
@@ -1036,6 +1037,7 @@ class BackupService:
                 last_filename=archive_name,
                 last_manual=bool(manual),
                 last_action=f"{scope}_backup",
+                **offsite_status,
             )
             return sidecar
         except Exception as e:
@@ -1316,6 +1318,7 @@ class BackupService:
             with open(archive_path + ".meta.json", "w", encoding="utf-8") as f:
                 json.dump(sidecar, f, indent=2, ensure_ascii=False)
 
+            offsite_status = cls._maybe_upload_offsite(archive_path)
             cls._apply_retention()
             cls._set_schedule_state(
                 last_run_at=datetime.now(UTC).isoformat(),
@@ -1324,6 +1327,7 @@ class BackupService:
                 last_filename=archive_name,
                 last_manual=bool(manual),
                 last_action="create_backup",
+                **offsite_status,
             )
             logger.info("Backup created: %s", archive_name)
             return sidecar
@@ -1342,6 +1346,31 @@ class BackupService:
             return None
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
+
+    @classmethod
+    def _maybe_upload_offsite(cls, archive_path: str) -> dict[str, Any]:
+        """Best-effort offsite upload after a successful local backup.
+
+        Never raises and never fails the local backup path; the returned
+        status dict is merged into the schedule state (offsite_* keys).
+        """
+        status: dict[str, Any] = {"offsite_status": "disabled"}
+        try:
+            from utils.offsite_backup import is_configured, upload_backup_archive
+
+            if not is_configured():
+                return status
+            result = upload_backup_archive(archive_path)
+            status["offsite_status"] = "uploaded" if result.get("ok") else "failed"
+            status["offsite_key"] = result.get("key")
+            status["offsite_attempts"] = int(result.get("attempts") or 0)
+            if result.get("error"):
+                status["offsite_error"] = str(result["error"])[:200]
+        except Exception as exc:
+            logger.error("Offsite upload failed for %s (non-fatal): %s", archive_path, exc)
+            status["offsite_status"] = "failed"
+            status["offsite_error"] = f"{type(exc).__name__}: {exc}"[:200]
+        return status
 
     @classmethod
     def _write_readme_restore(cls, path: str) -> None:

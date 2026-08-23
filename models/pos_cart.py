@@ -50,12 +50,12 @@ class PosCart(db.Model):
     total_estimate = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     currency = db.Column(db.String(3), nullable=True)
 
-    parked_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
-    resumed_at = db.Column(db.DateTime, nullable=True)
+    parked_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    resumed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), nullable=False)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

@@ -27,7 +27,7 @@ class ShopProductVariant(db.Model):
     sort_order = db.Column(db.Integer, default=0, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

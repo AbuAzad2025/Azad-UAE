@@ -18,6 +18,11 @@ sentry-sdk>=2.66.0,<3
 # Metrics endpoint — enable when the Prometheus exporter is wired into the app
 prometheus-flask-exporter==0.23.2
 
+# Offsite backup upload/download — enable when OFFSITE_BACKUP_ENABLED is set.
+# utils/offsite_backup.py imports boto3 lazily; without this package the app
+# runs normally with offsite backup disabled.
+boto3>=1.35.0
+
 # -----------------------------------------------------------------------------
 # AI provider SDKs — intentionally NOT dependencies.
 # services/ai_service.py calls OpenAI/Gemini via plain HTTP (requests), so the

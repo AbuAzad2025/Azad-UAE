@@ -51,13 +51,13 @@ class Quotation(db.Model):
     sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="SET NULL"), nullable=True, index=True)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -123,7 +123,7 @@ class QuotationLine(db.Model):
     line_total = db.Column(db.Numeric(15, 3), nullable=False, default=0)
     sort_order = db.Column(db.Integer, default=0)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     quotation = db.relationship("Quotation", back_populates="lines")
     product = db.relationship("Product", foreign_keys=[product_id])

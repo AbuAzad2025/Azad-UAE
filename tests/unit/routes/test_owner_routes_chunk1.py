@@ -121,20 +121,23 @@ class TestOwnerDashboard:
         mocker.patch("routes.owner.core.get_active_tenant_id", return_value=None)
         mocker.patch("routes.owner.core._owner_branch_scope", return_value=None)
 
-        mock_query = _make_dashboard_query(
-            first_results=[
-                (10, 5000.0, 500.0),
-                (120, 60000.0),
-                (80000.0, 40000.0),
-                (15000.0, 25),
-            ],
-            scalar_results=[
-                250000.0,
-                30000.0,
-                15000.0,
-            ],
+        mocker.patch(
+            "utils.owner_panel.build_platform_telemetry",
+            return_value={
+                "mrr_aed": 5000.0,
+                "active_tenant_count": 10,
+                "suspended_tenant_count": 1,
+                "trial_tenant_count": 2,
+                "expired_subscription_count": 0,
+                "expiring_soon_count": 3,
+                "new_tenants_month": 4,
+                "new_tenants_week": 1,
+                "new_tenants_today": 0,
+                "plan_distribution": {"pro": 10},
+                "total_branches": 25,
+                "total_users": 15000,
+            },
         )
-        mocker.patch("routes.owner.core.db.session.query", mock_query)
 
         mocker.patch("utils.owner_panel.build_platform_overview", return_value={})
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])

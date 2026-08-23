@@ -3,7 +3,7 @@ from datetime import UTC
 from functools import wraps
 from typing import Any
 
-from flask import abort, flash, redirect, request, url_for
+from flask import abort, flash, redirect, request, session, url_for
 from flask_login import current_user
 
 from extensions import db
@@ -11,6 +11,28 @@ from models.enums import PermissionEnum, RoleEnum
 from utils.auth_helpers import is_admin_surface_user, is_global_owner_user
 from utils.branching import branch_scope_id_for, report_branch_scope_id_for
 from utils.pos_features import POS_SUBFEATURES, plan_meets, pos_feature_enabled
+
+TWO_FACTOR_SESSION_KEY = "twofa_verified"
+
+
+def two_factor_required(f):
+    """Sensitive surfaces: accounts enrolled in TOTP must have passed the
+    6-digit challenge in this session (login or setup confirmation).
+
+    Sessions restored via remember-cookie without a challenge are sent to
+    /auth/verify-2fa. Mock/anonymous principals without a real boolean flag
+    pass untouched so non-2FA surfaces are unaffected.
+    """
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.is_authenticated:
+            flag = getattr(current_user, "two_factor_enabled", False)
+            if flag is True and not session.get(TWO_FACTOR_SESSION_KEY):
+                return redirect(url_for("auth.verify_2fa"))
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 def branch_scope_id():

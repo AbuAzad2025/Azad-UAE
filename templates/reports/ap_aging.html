@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ _('تقرير أعمار الذمم الدائنة') }}{% endblock %}
+
+{% block page_title %}{{ _('تقرير أعمار الذمم الدائنة') }}{% endblock %}
+
+{% block extra_css %}
+<style nonce="{{ csp_nonce() }}">
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+  .main-sidebar, .main-header, .main-footer, .content-header, .btn, .card-header, .card-footer, .no-print, .filters, .pagination { display: none !important; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <i class="fas fa-file-invoice-dollar"></i> {{ _('أعمار الذمم الدائنة') }}
+          </h3>
+          <div class="card-tools no-print">
+            <a class="btn btn-outline-danger" href="{{ url_for('reports.ap_aging_export', as_of=as_of, supplier=supplier_id, format='pdf') }}">
+              <i class="fas fa-file-pdf mr-1"></i>PDF
+            </a>
+            <button data-action="window-print" class="btn btn-primary">
+              <i class="fas fa-print"></i> {{ _('طباعة') }}
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+
+          <form class="needs-validation no-print mb-4" method="get" action="">
+            <div class="row">
+              <div class="col-md-3">
+                <label for="input_as_of">{{ _('كما في تاريخ') }}</label>
+                <input type="date" name="as_of" class="form-control" value="{{ as_of }}" id="input_as_of" aria-label="as of date">
+              </div>
+              <div class="col-md-3">
+                <label for="supplier_id">{{ _('المورد') }}</label>
+                <select name="supplier" class="form-control" id="supplier_id">
+                  <option value="">{{ _('الكل') }}</option>
+                  {% for supplier in suppliers %}
+                  <option value="{{ supplier.id }}" {% if supplier_id == supplier.id %}selected{% endif %}>
+                    {{ supplier.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label aria-hidden="true">&nbsp;</label>
+                <button type="submit" class="btn btn-info btn-block no-print">
+                  <i class="fas fa-search"></i> {{ _('بحث') }}
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div class="row mb-4">
+            {% set bucket_labels = [
+              ('0-30', 'bg-info', '0-30'),
+              ('31-60', 'bg-warning', '31-60'),
+              ('61-90', 'bg-danger', '61-90'),
+              ('90+', 'bg-secondary', '+90')
+            ] %}
+            {% for key, color, label in bucket_labels %}
+            <div class="col-md-3">
+              <div class="small-box {{ color }}">
+                <div class="inner">
+                  <h3>{{ format_currency(report.totals[key]) }}</h3>
+                  <p>{{ label }} {{ _('يوم') }}</p>
+                </div>
+                <div class="icon">
+                  <i class="fas fa-money-bill-wave"></i>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-hover erp-table-compact">
+              <thead>
+                <tr>
+                  <th>{{ _('المورد') }}</th>
+                  <th class="text-center">0-30</th>
+                  <th class="text-center">31-60</th>
+                  <th class="text-center">61-90</th>
+                  <th class="text-center">+90</th>
+                  <th class="text-center">{{ _('الإجمالي') }}</th>
+                  <th class="text-center">{{ _('عدد الفواتير') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if report.rows %}
+                  {% for row in report.rows %}
+                  <tr>
+                    <td><strong>{{ row.supplier_name }}</strong></td>
+                    <td class="text-center">{{ format_currency(row.buckets['0-30']) }}</td>
+                    <td class="text-center">{{ format_currency(row.buckets['31-60']) }}</td>
+                    <td class="text-center">{{ format_currency(row.buckets['61-90']) }}</td>
+                    <td class="text-center">{{ format_currency(row.buckets['90+']) }}</td>
+                    <td class="text-center"><strong>{{ format_currency(row.total) }}</strong></td>
+                    <td class="text-center">{{ row.open_purchases }}</td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="7" class="text-center py-5">
+                      <div class="az-empty-state">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3 az-empty-icon"></i>
+                        <p class="text-muted">{{ _('لا توجد أرصدة مستحقة على الموردين لهذا التاريخ.') }}</p>
+                      </div>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+              {% if report.rows %}
+              <tfoot>
+                <tr>
+                  <th>{{ _('الإجمالي') }}</th>
+                  <th class="text-center">{{ format_currency(report.totals['0-30']) }}</th>
+                  <th class="text-center">{{ format_currency(report.totals['31-60']) }}</th>
+                  <th class="text-center">{{ format_currency(report.totals['61-90']) }}</th>
+                  <th class="text-center">{{ format_currency(report.totals['90+']) }}</th>
+                  <th class="text-center">{{ format_currency(report.totals['total']) }}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+              {% endif %}
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

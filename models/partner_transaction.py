@@ -59,7 +59,7 @@ class PartnerTransaction(db.Model):
     notes = db.Column(db.Text)
 
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     distribution = db.relationship("PartnerProfitDistribution", foreign_keys=[distribution_id])

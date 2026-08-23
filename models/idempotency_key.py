@@ -39,12 +39,12 @@ class IdempotencyKey(db.Model):
     response_body = db.Column(db.Text, nullable=True)
     response_status = db.Column(db.Integer, nullable=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
-    completed_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     tenant = db.relationship("Tenant", backref="idempotency_keys", foreign_keys=[tenant_id])
 

@@ -55,6 +55,38 @@ def register_backup_commands(app):
             raise click.ClickException("Backup failed")
 
 
+def register_restore_drill_command(app):
+    @app.cli.command("restore-drill")
+    @click.option(
+        "--source",
+        type=click.Choice(["auto", "local", "offsite"]),
+        default="auto",
+        help="Artifact source: auto tries offsite then falls back to local.",
+    )
+    @click.option("--filename", default=None, help="Drill a specific local backup filename instead of the newest.")
+    def restore_drill_cmd(source, filename):
+        """Restore latest backup into a scratch DB and sanity-check row counts.
+
+        Scratch database name comes from RESTORE_DRILL_DB (never the live DB).
+        Cron example (daily 03:15):
+            15 3 * * * cd /path/to/Azad-UAE && flask restore-drill >> logs/restore_drill.log 2>&1
+        """
+        from services.restore_drill import RestoreDrillService
+
+        result = RestoreDrillService.run_drill(source=source, filename=filename)
+        status = "PASSED" if result.get("ok") else "FAILED"
+        click.echo(
+            f"Restore drill {status} (origin={result.get('artifact_origin')}, "
+            f"duration={result.get('duration_seconds')}s)"
+        )
+        for table, count in sorted((result.get("counts") or {}).items()):
+            click.echo(f"  {table}: {count} rows")
+        if not result.get("ok"):
+            for err in result.get("errors") or []:
+                click.echo(f"ERROR: {err}")
+            raise click.ClickException("Restore drill failed")
+
+
 def register_reset_platform_db_command(app):
     @app.cli.command("reset-platform-db")
     @click.option("--yes", is_flag=True, help="Confirm destructive wipe of all data")
@@ -926,6 +958,7 @@ def register_cli_commands(app):
     register_build_assets_command(app)
     register_stock_commands(app)
     register_backup_commands(app)
+    register_restore_drill_command(app)
     register_reset_platform_db_command(app)
     register_seed_demo_command(app)
     register_seed_packages_command(app)

@@ -225,6 +225,45 @@ def register_validation_listeners():
     register_validation_event_listeners()
 
 
+def _log_audit_failure(message: str) -> None:
+    """Report an audit-row failure without ever breaking the request."""
+    delivered = False
+    try:
+        from flask import current_app, has_app_context
+
+        if has_app_context():
+            current_app.logger.error(message)
+            delivered = True
+    except Exception:
+        logger.debug("current_app audit failure log unavailable", exc_info=True)
+    if not delivered:
+        logger.error(message)
+
+
+def _write_audit_delete_row(connection, target, table_name: str, label=None) -> None:
+    """Insert an ``audit_logs`` row for a hard delete on the SAME transaction.
+
+    Uses the mapper-event connection (session operations are unsafe mid-flush)
+    wrapped in a savepoint so any failure cannot poison the caller's
+    transaction — listener errors never break the request.
+    """
+    try:
+        from models.audit import AuditLog
+
+        stmt = AuditLog.__table__.insert().values(
+            tenant_id=getattr(target, "tenant_id", None),
+            action="delete",
+            table_name=table_name,
+            record_id=getattr(target, "id", None),
+            changes={"label": label} if label is not None else None,
+        )
+        with connection.begin_nested():
+            connection.execute(stmt)
+        logger.debug("audit_logs delete row written for %s#%s", table_name, getattr(target, "id", None))
+    except Exception as exc:
+        _log_audit_failure(f"audit row insert failed for {table_name}: {exc}")
+
+
 def register_audit_listeners():
     if not _mark("audit"):
         return
@@ -234,18 +273,22 @@ def register_audit_listeners():
     @event.listens_for(Sale, "after_delete")
     def _h1(mapper, connection, target):
         logger.warning(f"DELETED: Sale {target.sale_number} - Amount: {target.amount_aed} AED")
+        _write_audit_delete_row(connection, target, "sales", getattr(target, "sale_number", None))
 
     @event.listens_for(Purchase, "after_delete")
     def _h2(mapper, connection, target):
         logger.warning(f"DELETED: Purchase {target.purchase_number} - Amount: {target.amount_aed} AED")
+        _write_audit_delete_row(connection, target, "purchases", getattr(target, "purchase_number", None))
 
     @event.listens_for(Receipt, "after_delete")
     def _h3(mapper, connection, target):
         logger.warning(f"DELETED: Receipt {target.receipt_number} - Amount: {target.amount_aed} AED")
+        _write_audit_delete_row(connection, target, "receipts", getattr(target, "receipt_number", None))
 
     @event.listens_for(Payment, "after_delete")
     def _h4(mapper, connection, target):
         logger.warning(f"DELETED: Payment - Amount: {target.amount_aed} AED")
+        _write_audit_delete_row(connection, target, "payments", None)
 
 
 def register_ai_listeners():

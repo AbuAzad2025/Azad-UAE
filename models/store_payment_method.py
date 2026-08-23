@@ -30,13 +30,13 @@ class StorePaymentMethod(db.Model):
     sort_order = db.Column(db.Integer, default=100, nullable=False)
     config_json = db.Column(db.Text)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

@@ -24,10 +24,10 @@ class StoreCoupon(db.Model):
     max_uses = db.Column(db.Integer)
     used_count = db.Column(db.Integer, default=0, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
-    valid_from = db.Column(db.DateTime)
-    valid_until = db.Column(db.DateTime)
+    valid_from = db.Column(db.DateTime(timezone=True))
+    valid_until = db.Column(db.DateTime(timezone=True))
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

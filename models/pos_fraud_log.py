@@ -40,7 +40,7 @@ class PosFraudSignal(db.Model):
     prev_hash = db.Column(db.String(64), nullable=False, default="")
     entry_hash = db.Column(db.String(64), nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

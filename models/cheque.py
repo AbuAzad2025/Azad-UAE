@@ -39,13 +39,13 @@ class Cheque(db.Model):
     account_number = db.Column(db.String(100))
 
     # المبلغ والعملة
-    amount = db.Column(db.Numeric(15, 2), nullable=False)
+    amount = db.Column(db.Numeric(15, 3), nullable=False)
     currency = db.Column(db.String(10), default=context_aware_default_currency)  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=Decimal("1.0"))  # سعر الصرف عند الإنشاء
     clearance_exchange_rate = db.Column(db.Numeric(15, 6))  # سعر الصرف عند الصرف الفعلي
-    amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ بالعملة الأساسية عند الإنشاء
-    actual_amount_aed = db.Column(db.Numeric(15, 2))  # المبلغ الفعلي بالعملة الأساسية عند الصرف
-    currency_gain_loss = db.Column(db.Numeric(15, 2), default=Decimal("0"))  # ربح/خسارة فرق العملة
+    amount_aed = db.Column(db.Numeric(15, 3))  # المبلغ بالعملة الأساسية عند الإنشاء
+    actual_amount_aed = db.Column(db.Numeric(15, 3))  # المبلغ الفعلي بالعملة الأساسية عند الصرف
+    currency_gain_loss = db.Column(db.Numeric(15, 3), default=Decimal("0"))  # ربح/خسارة فرق العملة
 
     # Aliases for unified currency handling
     @property
@@ -104,13 +104,13 @@ class Cheque(db.Model):
 
     # الأرشفة
     is_active = db.Column(db.Boolean, default=True, index=True)
-    archived_at = db.Column(db.DateTime)
+    archived_at = db.Column(db.DateTime(timezone=True))
     archive_reason = db.Column(db.String(500))
 
     # Meta
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

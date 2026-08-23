@@ -40,13 +40,13 @@ class WarehouseTransfer(db.Model):
     notes = db.Column(db.Text)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -105,7 +105,7 @@ class WarehouseTransferLine(db.Model):
     notes = db.Column(db.Text)
     sort_order = db.Column(db.Integer, default=0)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     transfer = db.relationship("WarehouseTransfer", back_populates="lines")
     product = db.relationship("Product", foreign_keys=[product_id])

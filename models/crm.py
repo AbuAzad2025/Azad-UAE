@@ -21,9 +21,9 @@ class CRMStage(db.Model):
     is_won = db.Column(db.Boolean, default=False)
     is_lost = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -65,9 +65,9 @@ class CRMTeam(db.Model):
     name_ar = db.Column(db.String(100))
     leader_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
@@ -102,7 +102,7 @@ class CRMTeamMember(db.Model):
         nullable=False,
         index=True,
     )
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     team = db.relationship("CRMTeam", back_populates="members")
     user = db.relationship("User", foreign_keys=[user_id])
@@ -151,13 +151,13 @@ class CRMLead(db.Model):
     status = db.Column(db.String(20), default="open")
     description = db.Column(db.Text)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
-    closed_at = db.Column(db.DateTime, nullable=True)
+    closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     branch = db.relationship("Branch", foreign_keys=[branch_id])
@@ -213,10 +213,10 @@ class CRMActivity(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     activity_type = db.Column(db.String(30), nullable=False)
     summary = db.Column(db.String(500))
-    date_deadline = db.Column(db.DateTime, nullable=True)
-    done_date = db.Column(db.DateTime, nullable=True)
+    date_deadline = db.Column(db.DateTime(timezone=True), nullable=True)
+    done_date = db.Column(db.DateTime(timezone=True), nullable=True)
     is_done = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     lead = db.relationship("CRMLead", back_populates="activities", foreign_keys=[lead_id])

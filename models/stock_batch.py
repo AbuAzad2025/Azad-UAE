@@ -41,7 +41,7 @@ class StockBatch(db.Model):
     unit_cost = db.Column(db.Numeric(15, 4), nullable=False, default=0)
     expiry_date = db.Column(db.Date, nullable=True, index=True)
     received_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -49,7 +49,7 @@ class StockBatch(db.Model):
     reference_type = db.Column(db.String(40), nullable=True)
     reference_id = db.Column(db.Integer, nullable=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
     )

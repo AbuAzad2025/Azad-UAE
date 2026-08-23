@@ -22,7 +22,7 @@ class ProductCategory(db.Model):
     parent_id = db.Column(db.Integer, db.ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     sort_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True, index=True)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     parent = db.relationship("ProductCategory", remote_side=[id], backref="subcategories")
     products = db.relationship("Product", back_populates="category", lazy="dynamic")
@@ -59,7 +59,7 @@ class ProductPartner(db.Model):
     )
     percentage = db.Column(db.Numeric(5, 2), nullable=False, default=0)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -171,13 +171,13 @@ class Product(db.Model):
     extra_fields = db.Column(db.JSON, default=dict)
 
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
     )
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )

@@ -23,7 +23,7 @@ class ShopLoyalty(db.Model):
     points_earned = db.Column(db.Integer, default=0, nullable=False)
     points_redeemed = db.Column(db.Integer, default=0, nullable=False)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
@@ -52,7 +52,7 @@ class ShopLoyaltyTransaction(db.Model):
     points = db.Column(db.Integer, nullable=False)
     reason = db.Column(db.String(100), nullable=False)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

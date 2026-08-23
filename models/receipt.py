@@ -65,12 +65,12 @@ class Receipt(db.Model):
 
     # حالة السند - للشيكات فقط
     payment_confirmed = db.Column(db.Boolean, default=True, index=True)
-    confirmation_date = db.Column(db.DateTime)
+    confirmation_date = db.Column(db.DateTime(timezone=True))
     rejection_reason = db.Column(db.String(500))
     branch_id = db.Column(db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), index=True)
 
     receipt_date = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,
@@ -79,7 +79,7 @@ class Receipt(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

@@ -32,7 +32,7 @@ class DocumentSnapshot(db.Model):
     branding_snapshot = db.Column(db.JSON, nullable=True)
     snapshot_reason = db.Column(db.String(20), nullable=False, default="print")
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

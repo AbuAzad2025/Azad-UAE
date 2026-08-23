@@ -22,7 +22,7 @@ class ShopStockAlert(db.Model):
     email = db.Column(db.String(200), nullable=False)
     is_notified = db.Column(db.Boolean, default=False, nullable=False, index=True)
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         nullable=False,
         index=True,
         default=lambda: datetime.now(UTC),

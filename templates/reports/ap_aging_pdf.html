@@ -1,0 +1,50 @@
+{% extends 'layouts/base_print.html' %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="print-root">
+  <div class="erp-report-header">
+    <h2>{{ title }}</h2>
+    <div class="erp-report-meta">
+      {{ t('As of') }}: {{ as_of }}
+      {% if company_name_ar %} | {{ company_name_ar }}{% endif %}
+      {% if selected_branch %} | {{ t('Branch') }}: {{ selected_branch }}{% endif %}
+    </div>
+  </div>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th>{{ t('Supplier_Header') }}</th>
+        <th class="text-center">0-30 {{ t('يوم') }}</th>
+        <th class="text-center">31-60 {{ t('يوم') }}</th>
+        <th class="text-center">61-90 {{ t('يوم') }}</th>
+        <th class="text-center">+90 {{ t('يوم') }}</th>
+        <th class="text-center">{{ t('Total_3') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in report.rows %}
+      <tr>
+        <td>{{ item.supplier_name }}</td>
+        <td class="amount-cell">{{ format_currency(item.buckets['0-30']) }}</td>
+        <td class="amount-cell">{{ format_currency(item.buckets['31-60']) }}</td>
+        <td class="amount-cell">{{ format_currency(item.buckets['61-90']) }}</td>
+        <td class="amount-cell">{{ format_currency(item.buckets['90+']) }}</td>
+        <td class="amount-cell"><strong>{{ format_currency(item.total) }}</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>{{ t('Total_3') }}</th>
+        <th class="amount-cell">{{ format_currency(report.totals['0-30']) }}</th>
+        <th class="amount-cell">{{ format_currency(report.totals['31-60']) }}</th>
+        <th class="amount-cell">{{ format_currency(report.totals['61-90']) }}</th>
+        <th class="amount-cell">{{ format_currency(report.totals['90+']) }}</th>
+        <th class="amount-cell"><strong>{{ format_currency(report.totals['total']) }}</strong></th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

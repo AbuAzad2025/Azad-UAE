@@ -19,8 +19,8 @@ class PosOrderType(db.Model):
     sort_order = db.Column(db.Integer, default=0, nullable=False)
     is_default = db.Column(db.Boolean, default=False, nullable=False)
     kds_enabled = db.Column(db.Boolean, default=False, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.now())
-    updated_at = db.Column(db.DateTime, default=db.func.now(), onupdate=db.func.now())
+    created_at = db.Column(db.DateTime(timezone=True), default=db.func.now())
+    updated_at = db.Column(db.DateTime(timezone=True), default=db.func.now(), onupdate=db.func.now())
 
     __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_pos_order_type_tenant_code"),)
 

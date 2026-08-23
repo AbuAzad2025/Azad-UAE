@@ -25,11 +25,11 @@ class ShopCustomerAccount(db.Model):
     address = db.Column(db.Text)
     password_hash = db.Column(db.String(255), nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
-    last_login_at = db.Column(db.DateTime)
+    last_login_at = db.Column(db.DateTime(timezone=True))
     password_reset_token = db.Column(db.String(128), index=True)
-    password_reset_expires_at = db.Column(db.DateTime)
+    password_reset_expires_at = db.Column(db.DateTime(timezone=True))
     created_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         nullable=False,
         index=True,

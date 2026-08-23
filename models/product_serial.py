@@ -55,12 +55,12 @@ class ProductSerial(db.Model):
     )  # Who did we sell it to?
 
     # Warranty Info (Calculated from Sale Date)
-    warranty_start_date = db.Column(db.DateTime, nullable=True)
-    warranty_end_date = db.Column(db.DateTime, nullable=True)
+    warranty_start_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    warranty_end_date = db.Column(db.DateTime(timezone=True), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC), index=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(
-        db.DateTime,
+        db.DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
     )
