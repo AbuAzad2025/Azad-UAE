@@ -81,8 +81,8 @@ def _login_patches(user=None, tenant=None, branch=None):
 
     return [
         patch("extensions.limiter.limit", return_value=lambda f: f),
-        patch("routes.auth.User.query", _chain_query(first=user)),
-        patch("routes.auth.db.session.get", side_effect=_session_get),
+        patch("models.User.query", _chain_query(first=user)),
+        patch("extensions.db.session.get", side_effect=_session_get),
         patch("routes.auth.user_may_have_null_tenant", return_value=False),
         patch("routes.auth.user_can_access_branch", return_value=True),
         patch("routes.auth.is_global_user", return_value=False),
@@ -171,30 +171,30 @@ class TestPaymentStatusToken:
 class TestPaymentIdKnownLocally:
     def test_donation_gateway_match(self, auth_app):
         donation = MagicMock()
-        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=donation)):
+        with auth_app.app_context(), patch("models.Donation.query", _chain_query(first=donation)):
             from routes.auth import _payment_id_known_locally
 
             assert _payment_id_known_locally("gw-1") is True
 
     def test_package_purchase_match(self, auth_app):
-        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
-            with patch("routes.auth.PackagePurchase.query", _chain_query(first=MagicMock())):
+        with auth_app.app_context(), patch("models.Donation.query", _chain_query(first=None)):
+            with patch("models.PackagePurchase.query", _chain_query(first=MagicMock())):
                 from routes.auth import _payment_id_known_locally
 
                 assert _payment_id_known_locally("pkg-1") is True
 
     def test_sale_checkout_ref_match(self, auth_app):
-        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
-            with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
-                with patch("routes.auth.Sale.query", _chain_query(first=MagicMock())):
+        with auth_app.app_context(), patch("models.Donation.query", _chain_query(first=None)):
+            with patch("models.PackagePurchase.query", _chain_query(first=None)):
+                with patch("models.Sale.query", _chain_query(first=MagicMock())):
                     from routes.auth import _payment_id_known_locally
 
                     assert _payment_id_known_locally("sale-ref") is True
 
     def test_unknown_payment_id(self, auth_app):
-        with auth_app.app_context(), patch("routes.auth.Donation.query", _chain_query(first=None)):
-            with patch("routes.auth.PackagePurchase.query", _chain_query(first=None)):
-                with patch("routes.auth.Sale.query", _chain_query(first=None)):
+        with auth_app.app_context(), patch("models.Donation.query", _chain_query(first=None)):
+            with patch("models.PackagePurchase.query", _chain_query(first=None)):
+                with patch("models.Sale.query", _chain_query(first=None)):
                     from routes.auth import _payment_id_known_locally
 
                     assert _payment_id_known_locally("  ") is False
@@ -253,7 +253,7 @@ class TestAuthHelpers:
 
     def test_login_branches(self, auth_app):
         branches = [_mock_branch()]
-        with auth_app.app_context(), patch("routes.auth.Branch.query", _chain_query(all=branches)):
+        with auth_app.app_context(), patch("models.Branch.query", _chain_query(all=branches)):
             from routes.auth import _login_branches
 
             assert _login_branches() == branches
@@ -300,7 +300,7 @@ class TestAuthHelpers:
 
     def test_validate_credentials_success(self, auth_app):
         user = _mock_user(password_ok=True)
-        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)):
+        with auth_app.test_request_context(), patch("models.User.query", _chain_query(first=user)):
             from routes.auth import _validate_credentials
 
             u, master, meta = _validate_credentials("admin", "secret")
@@ -310,7 +310,7 @@ class TestAuthHelpers:
     def test_validate_credentials_master_login_disabled(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
         auth_app.config["MASTER_LOGIN_ENABLED"] = False
-        with auth_app.test_request_context(), patch("routes.auth.User.query", _chain_query(first=user)):
+        with auth_app.test_request_context(), patch("models.User.query", _chain_query(first=user)):
             from routes.auth import _validate_credentials
 
             u, master, meta = _validate_credentials("owner", "wrong")
@@ -321,7 +321,7 @@ class TestAuthHelpers:
     def test_validate_credentials_master_login_success(self, auth_app):
         user = _mock_user(is_owner=True, password_ok=False)
         with auth_app.test_request_context("/auth/login", environ_base={"REMOTE_ADDR": "127.0.0.1"}):
-            with patch("routes.auth.User.query", _chain_query(first=user)):
+            with patch("models.User.query", _chain_query(first=user)):
                 with patch(
                     "utils.master_login.try_master_login",
                     return_value=(True, {"method": "seed"}),
@@ -335,7 +335,7 @@ class TestAuthHelpers:
         user = _mock_user(is_owner=True, password_ok=False)
         with (
             auth_app.test_request_context(),
-            patch("routes.auth.User.query", _chain_query(first=user)),
+            patch("models.User.query", _chain_query(first=user)),
             patch(
                 "utils.master_login.try_master_login",
                 side_effect=RuntimeError("boom"),
@@ -561,7 +561,7 @@ class TestLoginRoute:
         with unauthenticated_client(auth_client):
             patches = [
                 patch("extensions.limiter.limit", return_value=lambda f: f),
-                patch("routes.auth.User.query", _chain_query(first=None)),
+                patch("models.User.query", _chain_query(first=None)),
                 patch("routes.auth._log_failed_login"),
                 patch("routes.auth.render_template", return_value="login"),
             ]
@@ -572,7 +572,7 @@ class TestLoginRoute:
     def test_post_master_ip_denied(self, auth_client):
         owner = _mock_user(is_owner=True, password_ok=False)
         with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
-            with patch("routes.auth.User.query", _chain_query(first=owner)):
+            with patch("models.User.query", _chain_query(first=owner)):
                 with patch(
                     "routes.auth._validate_credentials",
                     return_value=(owner, False, {"reason": "ip_denied"}),
@@ -588,7 +588,7 @@ class TestLoginRoute:
     def test_post_master_disabled(self, auth_client):
         owner = _mock_user(is_owner=True, password_ok=False)
         with unauthenticated_client(auth_client), patch("extensions.limiter.limit", return_value=lambda f: f):
-            with patch("routes.auth.User.query", _chain_query(first=owner)):
+            with patch("models.User.query", _chain_query(first=owner)):
                 with patch(
                     "routes.auth._validate_credentials",
                     return_value=(owner, False, {"reason": "disabled"}),
@@ -714,7 +714,7 @@ class TestLoginRoute:
                 p.start()
             try:
                 with (
-                    patch("routes.auth.db.session.get", side_effect=_session_get),
+                    patch("extensions.db.session.get", side_effect=_session_get),
                     patch(
                         "routes.auth._validate_credentials",
                         return_value=(user, False, {}),

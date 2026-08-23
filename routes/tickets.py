@@ -2,33 +2,11 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import Customer, TicketCategory, TicketPriority, User
 from services.ticket_service import TicketService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
 
 tickets_bp = Blueprint("tickets", __name__, url_prefix="/tickets")
-
-
-def _tenant_categories(tid):
-    q = TicketCategory.query.filter(TicketCategory.is_active)
-    if tid is not None:
-        q = q.filter(TicketCategory.tenant_id == tid)
-    return q.all()
-
-
-def _tenant_priorities(tid):
-    q = TicketPriority.query.filter(TicketPriority.is_active)
-    if tid is not None:
-        q = q.filter(TicketPriority.tenant_id == tid)
-    return q.all()
-
-
-def _tenant_customers(tid):
-    q = Customer.query.filter(Customer.is_active)
-    if tid is not None:
-        q = q.filter(Customer.tenant_id == tid)
-    return q.order_by(Customer.name).all()
 
 
 @tickets_bp.route("/")
@@ -38,9 +16,9 @@ def list_tickets():
     filters = {k: v for k, v in request.args.items() if v}
     tickets = TicketService.search_tickets(filters, current_user)
     tid = get_active_tenant_id(current_user)
-    categories = _tenant_categories(tid)
-    priorities = _tenant_priorities(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    categories = TicketService.tenant_categories(tid)
+    priorities = TicketService.tenant_priorities(tid)
+    users = TicketService.tenant_users(tid)
     statuses = ["open", "waiting", "resolved", "closed"]
     return render_template(
         "tickets/list.html",
@@ -64,10 +42,10 @@ def create_ticket():
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
     tid = get_active_tenant_id(current_user)
-    categories = _tenant_categories(tid)
-    priorities = _tenant_priorities(tid)
-    customers = _tenant_customers(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    categories = TicketService.tenant_categories(tid)
+    priorities = TicketService.tenant_priorities(tid)
+    customers = TicketService.tenant_customers(tid)
+    users = TicketService.tenant_users(tid)
     return render_template(
         "tickets/detail.html",
         categories=categories,
@@ -87,9 +65,9 @@ def ticket_detail(ticket_id):
         flash(str(e), "danger")
         return redirect(url_for("tickets.list_tickets"))
     tid = get_active_tenant_id(current_user)
-    categories = _tenant_categories(tid)
-    priorities = _tenant_priorities(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    categories = TicketService.tenant_categories(tid)
+    priorities = TicketService.tenant_priorities(tid)
+    users = TicketService.tenant_users(tid)
     return render_template(
         "tickets/detail.html",
         ticket=ticket,

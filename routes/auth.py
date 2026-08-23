@@ -11,16 +11,15 @@ from flask import (
     session,
     url_for,
 )
-
-from utils.api_response import error_response, success_response
 from flask_babel import gettext, lazy_gettext
 from flask_login import current_user, login_user, logout_user
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from extensions import db, limiter
-from models import Branch, Donation, PackagePurchase, Sale, User
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
+from services.platform_query_service import PlatformQueryService
+from utils.api_response import error_response, success_response
 from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
 from utils.branching import (
     clear_active_branch,
@@ -62,14 +61,7 @@ def verify_payment_status_token(payment_id: str, token: str | None) -> bool:
 
 
 def _payment_id_known_locally(payment_id: str) -> bool:
-    pid = str(payment_id).strip()
-    if not pid:
-        return False
-    if Donation.query.filter((Donation.gateway_transaction_id == pid) | (Donation.transaction_hash == pid)).first():
-        return True
-    if PackagePurchase.query.filter_by(transaction_id=pid).first():
-        return True
-    return bool(Sale.query.filter_by(checkout_gateway_ref=pid).first())
+    return PlatformQueryService.payment_id_known_locally(payment_id)
 
 
 _DEFAULT_TENANT_NAME_AR = lazy_gettext("نظام المحاسبة")
@@ -80,9 +72,7 @@ def _login_company_display():
     name_ar = ""
     address = ""
     try:
-        from models.tenant import Tenant
-
-        tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+        tenant = PlatformQueryService.first_active_tenant()
         if tenant and (tenant.name_ar or "").strip():
             name_ar = (tenant.name_ar or "").strip()
             address = ((tenant.address_ar or "") or (tenant.address_en or "")).strip()
@@ -102,7 +92,7 @@ def _login_company_display():
 
 
 def _login_branches():
-    return Branch.query.filter_by(is_active=True).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
+    return PlatformQueryService.active_login_branches()
 
 
 def _render_login(**extra):
@@ -132,7 +122,7 @@ def _post_login_redirect(user, access_mode):
 
 def _validate_credentials(username, password):
     """Verify username/password. Return (user, master_used, master_meta) or (None, False, {})."""
-    user = User.query.filter(User.username.ilike(username)).first()
+    user = PlatformQueryService.find_user_by_username(username)
     if not user or not user.check_password(password):
         master_used = False
         master_meta = {}
@@ -162,7 +152,7 @@ def _resolve_effective_tenant(user, branch_obj):
     return None
 
 
-def _validate_branch_tenant_consistency(user, branch_obj: "Branch | None"):
+def _validate_branch_tenant_consistency(user, branch_obj=None):
     """Ensure branch belongs to user's tenant. Returns True if consistent or no validation needed."""
     if getattr(user, "tenant_id", None) is None or not branch_obj:
         return True
@@ -284,9 +274,7 @@ def _perform_login(
 @auth_bp.route("/support")
 def support():
     """صفحة الدعم والشراء - متاحة قبل تسجيل الدخول"""
-    from models import Package
-
-    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc()).all()
+    packages = PlatformQueryService.active_support_packages()
     return render_template("support.html", packages=packages)
 
 
@@ -366,18 +354,11 @@ def login():
             )
 
         effective_branch_id = getattr(user, "branch_id", None)
-        branch_obj = None
-        if effective_branch_id:
-            try:
-                branch_obj = db.session.get(Branch, int(effective_branch_id or 0))
-            except Exception:
-                branch_obj = None
+        branch_obj = PlatformQueryService.get_branch_safe(effective_branch_id) if effective_branch_id else None
 
         effective_tenant_id = _resolve_effective_tenant(user, branch_obj)
         if effective_tenant_id is None and is_global_owner_user(user):
-            from models.tenant import Tenant
-
-            default_tenant = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).first()
+            default_tenant = PlatformQueryService.first_active_tenant()
             if default_tenant:
                 effective_tenant_id = default_tenant.id
         may_have_null_tenant = user_may_have_null_tenant(
@@ -385,9 +366,7 @@ def login():
         )
 
         if effective_tenant_id is not None:
-            from models.tenant import Tenant
-
-            tenant = db.session.get(Tenant, effective_tenant_id)
+            tenant = PlatformQueryService.get_tenant(effective_tenant_id)
             if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
                 LoggingCore.log_security(
                     event_type="login_inactive_tenant",

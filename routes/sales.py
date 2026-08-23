@@ -2,6 +2,7 @@ from datetime import UTC
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     redirect,
@@ -18,12 +19,12 @@ from services.logging_core import LoggingCore
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from services.store_service import StoreService
+from utils.api_response import error_response, success_response
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
     should_show_all_branch_columns,
 )
-from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import enforce_resource_limit, permission_required
@@ -283,9 +284,7 @@ def create():
                 "customer_type": customer.customer_type,
             }
 
-    from models import User
-
-    users = User.query.filter_by(tenant_id=tid, is_active=True).all() if tid else []
+    users = SaleService.list_active_users(tid)
     return render_template(
         "sales/create.html",
         warehouses=warehouses,
@@ -547,18 +546,11 @@ def archived():
     """عرض المبيعات المؤرشفة"""
     from datetime import datetime
 
-    from models import ArchivedRecord
-    from utils.tenanting import get_active_tenant_id
-
     tenant_id = get_active_tenant_id(current_user)
-
-    archived_sales_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "sales")
-    if tenant_id is not None:
-        archived_sales_query = archived_sales_query.filter(ArchivedRecord.tenant_id == tenant_id)
 
     archived_items = []
 
-    for archived in archived_sales_query.order_by(ArchivedRecord.archived_at.desc()).limit(500).all():
+    for archived in SaleService.list_archived_sale_records(tenant_id):
         data = archived.data
         sale = tenant_get(Sale, archived.record_id) if archived.record_id else None
         if sale is None:
@@ -597,9 +589,7 @@ def delete(**kwargs):
         flash(ErrorMessages.permission_denied(gettext("حذف الفواتير")), "danger")
         return redirect(url_for("sales.index"))
 
-    from models import Cheque, Payment
     from services.archive_service import ArchiveService
-    from services.sale_service import SaleService
 
     sale = tenant_get_or_404(Sale, record_id)
     from utils.decorators import branch_scope_id
@@ -615,15 +605,10 @@ def delete(**kwargs):
         )
         return redirect(url_for("sales.view", id=record_id))
 
-    has_links = False
-
-    linked_payments = Payment.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
-    if linked_payments > 0:
-        has_links = True
-
-    linked_cheques = Cheque.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id).count()
-    if linked_cheques > 0:
-        has_links = True
+    has_links = (
+        SaleService.count_sale_payments(sale.id, sale.tenant_id) > 0
+        or SaleService.count_sale_cheques(sale.id, sale.tenant_id) > 0
+    )
 
     try:
         with atomic_transaction("sale_delete"):
@@ -690,13 +675,11 @@ def archive(**kwargs):
 def restore(**kwargs):
     """استعادة فاتورة من الأرشيف"""
     record_id = kwargs.pop("id")
-    from models import ArchivedRecord
 
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
-    if tid is not None:
-        archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
-    archived_record = archived_query.first_or_404()
+    archived_record = SaleService.get_archived_sale_record(record_id, tid)
+    if archived_record is None:
+        abort(404)
 
     try:
         with atomic_transaction("sale_restore"):

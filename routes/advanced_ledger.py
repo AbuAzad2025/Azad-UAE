@@ -15,14 +15,15 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models import Cheque, GLAccount, GLJournalEntry
-from utils.api_response import error_response, success_response
 from models.advanced_accounting import AdvancedExpense, CustomsTax
 from models.expense import ExpenseCategory
 from services.advanced_analytics import AdvancedFinancialAnalytics
+from services.advanced_expense_service import AdvancedExpenseService
 from services.advanced_journal_manager import AdvancedJournalEntryManager
 from services.cheque_accounting_integration import ChequeAccountingIntegration
 from services.logging_core import LoggingCore
 from services.real_time_listeners import accounting_event_stream
+from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, permission_required
@@ -98,7 +99,7 @@ def professional_printing():
 def customs_taxes():
     """إدارة الجمارك والضرائب"""
     tid = active_tenant_id(current_user)
-    taxes = CustomsTax.query.filter_by(is_active=True, tenant_id=tid).order_by(CustomsTax.name_ar).all()
+    taxes = AdvancedExpenseService.list_customs_taxes(tid)
     return render_template("ledger/advanced/customs_taxes.html", taxes=taxes)
 
 
@@ -165,7 +166,7 @@ def add_customs_tax():
 def expense_categories():
     """إدارة فئات المصروفات المتقدمة"""
     tid = active_tenant_id(current_user)
-    categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).order_by(ExpenseCategory.name).all()
+    categories = AdvancedExpenseService.list_expense_categories(tid, ordered=True)
     return render_template("ledger/advanced/expense_categories.html", categories=categories)
 
 
@@ -175,7 +176,7 @@ def expense_categories():
 def add_expense_category():
     """إضافة فئة مصروفات جديدة"""
     tid = active_tenant_id(current_user)
-    parent_categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
+    parent_categories = AdvancedExpenseService.list_expense_categories(tid)
     accounts = _accounts().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
 
     if request.method == "POST":
@@ -238,11 +239,7 @@ def advanced_expenses():
     per_page = 20
 
     tid = active_tenant_id(current_user)
-    expenses = (
-        AdvancedExpense.query.filter_by(tenant_id=tid)
-        .order_by(AdvancedExpense.created_at.desc())
-        .paginate(page=page, per_page=per_page, error_out=False)
-    )
+    expenses = AdvancedExpenseService.paginate_advanced_expenses(tid, page, per_page)
 
     return render_template("ledger/advanced/advanced_expenses.html", expenses=expenses)
 
@@ -310,10 +307,9 @@ def add_advanced_expense():
             flash(ErrorMessages.unexpected_error(), "danger")
 
     tid = active_tenant_id(current_user)
-    categories = ExpenseCategory.query.filter_by(is_active=True, tenant_id=tid).all()
-    from models import Supplier
+    categories = AdvancedExpenseService.list_expense_categories(tid)
 
-    suppliers = Supplier.query.filter_by(tenant_id=tid).with_entities(Supplier.id, Supplier.name).all()
+    suppliers = AdvancedExpenseService.list_supplier_options(tid)
 
     return render_template(
         "ledger/advanced/add_advanced_expense.html",
@@ -424,15 +420,7 @@ def approve_journal_entry(entry_id):
 def cheque_integration():
     """تكامل الشيكات مع النظام المحاسبي"""
     tid = active_tenant_id(current_user)
-    recent_cheques = Cheque.query.filter_by(tenant_id=tid).order_by(Cheque.updated_at.desc()).limit(20).all()
-
-    stats = {
-        "total_cheques": Cheque.query.filter_by(tenant_id=tid).count(),
-        "pending_cheques": Cheque.query.filter_by(tenant_id=tid, status="pending").count(),
-        "cleared_cheques": Cheque.query.filter_by(tenant_id=tid, status="cleared").count(),
-        "bounced_cheques": Cheque.query.filter_by(tenant_id=tid, status="bounced").count(),
-        "total_amount": db.session.query(db.func.sum(Cheque.amount_aed)).filter_by(tenant_id=tid).scalar() or 0,
-    }
+    recent_cheques, stats = AdvancedExpenseService.cheque_integration_data(tid)
 
     return render_template(
         "ledger/advanced/cheque_integration.html",

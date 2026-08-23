@@ -249,6 +249,15 @@ class HRService:
         )
 
     @staticmethod
+    def list_active_users(tid):
+        """Active users of the tenant ordered by full name (route dropdown data)."""
+        if tid is None:
+            return []
+        from models import User
+
+        return User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all()
+
+    @staticmethod
     def create_contract(data, user):
         tid = HRService._tid(user)
         if not tid:

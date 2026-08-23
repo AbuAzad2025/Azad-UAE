@@ -1158,7 +1158,7 @@ class TestConfig:
         with patch("routes.ai_routes.assistant.__file__", str(fake_assistant)):
             resp = ai_client.post("/ai/config", data={"api_key": "g-key", "provider": "gemini"})
         assert "GEMINI_API_KEY=g-key" in (tmp_path / ".env").read_text(encoding="utf-8")
-        assert resp.get_json()["provider"] == "gemini"
+        assert resp.get_json()["data"]["provider"] == "gemini"
 
     def test_post_openai_provider(self, ai_client, tmp_path):
         env_dir = tmp_path / "ai_routes"
@@ -1182,7 +1182,7 @@ class TestUploadExcel:
     def test_no_file_400(self, ai_client):
         resp = ai_client.post("/ai/upload-excel", data={"warehouse_id": "1"})
         assert resp.status_code == 400
-        assert "لم يتم رفع ملف" in resp.get_json()["error"]
+        assert "لم يتم رفع ملف" in resp.get_json()["message"]
 
     def test_wrong_extension_400(self, ai_client):
         data = {"file": (io.BytesIO(b"data"), "products.csv"), "warehouse_id": "1"}

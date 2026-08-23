@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Response
 
-from tests.unit.routes.conftest import _chain_query, unauthenticated_client
+from tests.unit.routes.conftest import unauthenticated_client
 
 
 def _doc_mock(branch_id=1, tenant_id=1, **extra):
@@ -50,7 +50,6 @@ def printing_client(app_factory, bypass_permission_auth):
         patch("routes.printing.render_template", return_value="403-page") as render_tpl,
         patch("extensions.db.session", MagicMock()) as session,
         patch("routes.printing.InvoiceSettings.get_active") as get_settings,
-        patch("routes.printing.PrintHistory") as history_model,
         patch(
             "routes.printing.send_file",
             return_value=Response(b"pdf", mimetype="application/pdf"),
@@ -58,7 +57,8 @@ def printing_client(app_factory, bypass_permission_auth):
     ):
         settings = MagicMock()
         get_settings.return_value = settings
-        history_model.query = _chain_query()
+        history_pagination = MagicMock()
+        history_pagination.items = []
         from routes.printing import printing_bp
 
         app = app_factory(printing_bp)
@@ -74,7 +74,7 @@ def printing_client(app_factory, bypass_permission_auth):
             "render_tpl": render_tpl,
             "session": session,
             "get_settings": get_settings,
-            "history_model": history_model,
+            "history_pagination": history_pagination,
             "send_file": send_file,
             "settings": settings,
         }
@@ -235,6 +235,7 @@ class TestPackingSlip:
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q
         sale_q.first_or_404.return_value = sale
+        sale_q.first.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = None
         with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
@@ -257,6 +258,7 @@ class TestPackingSlip:
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q
         sale_q.first_or_404.return_value = sale
+        sale_q.first.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = shipment
         with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
@@ -297,16 +299,26 @@ class TestPrintHistory:
     def test_print_history_returns_200(self, printing_client):
         record = MagicMock()
         record.id = 1
-        printing_client._printing_mocks["history_model"].query = _chain_query(all=[record])
-        with patch("routes.printing.render_template", return_value="history-page") as render:
+        printing_client._printing_mocks["history_pagination"].items = [record]
+        with (
+            patch(
+                "routes.printing.PrintService.history_query",
+                return_value=MagicMock(
+                    paginate=MagicMock(return_value=printing_client._printing_mocks["history_pagination"])
+                ),
+            ),
+            patch("routes.printing.render_template", return_value="history-page") as render,
+        ):
             resp = printing_client.get("/printing/history")
         assert resp.status_code == 200
         render.assert_called_once()
         assert "printing/history.html" in render.call_args[0][0]
 
     def test_print_history_pagination(self, printing_client):
-        printing_client._printing_mocks["history_model"].query = _chain_query(all=[])
-        with patch("routes.printing.render_template", return_value="history-page"):
+        with (
+            patch("routes.printing.PrintService.history_query", return_value=MagicMock(paginate=MagicMock())),
+            patch("routes.printing.render_template", return_value="history-page"),
+        ):
             resp = printing_client.get("/printing/history?page=2")
         assert resp.status_code == 200
 
@@ -394,11 +406,8 @@ class TestPrintApiHistory:
         record.action = "print"
         record.created_at = datetime(2025, 6, 1, 12, 0, 0, tzinfo=UTC)
         record.user = MagicMock(full_name="Tester")
-        hist_q = MagicMock()
-        hist_q.filter_by.return_value = hist_q
-        hist_q.order_by.return_value.limit.return_value.all.return_value = [record]
-        printing_client._printing_mocks["history_model"].query = hist_q
-        resp = printing_client.get("/printing/api/print-history")
+        with patch("routes.printing.PrintService.list_recent_history", return_value=[record]):
+            resp = printing_client.get("/printing/api/print-history")
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
@@ -408,15 +417,15 @@ class TestPrintApiHistory:
         assert data[0]["user_name"] == "Tester"
 
     def test_api_print_history_with_limit(self, printing_client):
-        hist_q = MagicMock()
-        hist_q.filter_by.return_value = hist_q
-        hist_q.order_by.return_value.limit.return_value.all.return_value = []
-        printing_client._printing_mocks["history_model"].query = hist_q
-        resp = printing_client.get("/printing/api/print-history?limit=5")
+        with patch(
+            "routes.printing.PrintService.list_recent_history",
+            return_value=[],
+        ) as list_recent:
+            resp = printing_client.get("/printing/api/print-history?limit=5")
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        hist_q.order_by.return_value.limit.assert_called_with(5)
+        list_recent.assert_called_once_with(1, limit=5)
 
 
 class TestPrintSettings:
@@ -479,6 +488,7 @@ class TestPrintingBranchScope:
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q
         sale_q.first_or_404.return_value = sale
+        sale_q.first.return_value = sale
         ship_q = MagicMock()
         ship_q.filter_by.return_value.first.return_value = None
         with patch("models.Sale") as sale_cls, patch("models.Shipment") as ship_model:
@@ -525,6 +535,7 @@ class TestPrintingCoverageGaps:
         sale_q.filter_by.return_value = sale_q
         sale_q.filter.return_value = sale_q
         sale_q.first_or_404.return_value = sale
+        sale_q.first.return_value = sale
         with patch("models.Sale") as sale_cls:
             sale_cls.query = sale_q
             import builtins

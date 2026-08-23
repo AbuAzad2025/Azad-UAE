@@ -12,6 +12,7 @@ from flask_login import current_user, login_required
 from werkzeug.utils import secure_filename
 
 from extensions import db
+from services.platform_query_service import PlatformQueryService
 from services.stock_service import StockService
 from utils.ai_access import get_ai_access_state
 from utils.api_response import error_response, success_response
@@ -153,12 +154,8 @@ def upload_excel():
         file = request.files["file"]
         warehouse_id = request.form.get("warehouse_id", type=int)
         if not warehouse_id:
-            from models import Warehouse
-
             tid = get_active_tenant_id(current_user)
-            warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tid).first()
-            if not warehouse:
-                warehouse = Warehouse.query.filter_by(is_active=True, tenant_id=tid).first()
+            warehouse = PlatformQueryService.main_import_warehouse(tid)
             if warehouse:
                 warehouse_id = warehouse.id
 
@@ -198,7 +195,7 @@ def upload_excel():
 def _process_excel_intelligently(file, warehouse_id, user):
     """معالج Excel ذكي خارق - أفضل من البشر"""
     try:
-        from models import Product, Warehouse
+        from models import Product
 
         tid = get_active_tenant_id(user)
         df = pd.read_excel(file, engine="openpyxl")
@@ -211,7 +208,7 @@ def _process_excel_intelligently(file, warehouse_id, user):
                 "error": gettext("لم أستطع فهم هيكل الملف. تأكد من وجود أعمدة: الاسم، رقم القطعة، السعر"),
             }
 
-        warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tid).first()
+        warehouse = PlatformQueryService.warehouse_in_tenant(warehouse_id, tid)
         if not warehouse:
             return {
                 "success": False,
@@ -238,13 +235,13 @@ def _process_excel_intelligently(file, warehouse_id, user):
                     if not name or name == "nan" or part_number == "nan":
                         continue
 
-                    existing_product = Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
+                    existing_product = PlatformQueryService.product_by_part_number(part_number, tid)
 
                     if existing_product:
                         existing_product.regular_price = price
                         products_updated += 1
                         if quantity > 0:
-                            wh_import = Warehouse.query.filter_by(tenant_id=tid, is_active=True).first()
+                            wh_import = PlatformQueryService.first_active_warehouse(tid)
                             StockService.add_stock(
                                 product_id=existing_product.id,
                                 quantity=quantity,

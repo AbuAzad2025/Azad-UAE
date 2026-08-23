@@ -165,3 +165,56 @@ class PosWriteService:
     def delete_printer(printer):
         """Delete a POS printer."""
         db.session.delete(printer)
+
+    # ─── Route-facing scoped fetches ───
+
+    @staticmethod
+    def latest_system_settings():
+        """Most recent global SystemSettings row (or None)."""
+        from models.system_settings import SystemSettings
+
+        return SystemSettings.query.order_by(SystemSettings.id.desc()).first()
+
+    @staticmethod
+    def products_by_ids(product_ids, tenant_id):
+        """Tenant-scoped products keyed by id for the given ids (empty dict when absent)."""
+        from models import Product
+
+        rows = db.session.query(Product).filter(Product.id.in_(product_ids), Product.tenant_id == tenant_id).all()
+        return {p.id: p for p in rows}
+
+    @staticmethod
+    def session_sales(tenant_id, session_id):
+        """All sales recorded against a POS session (tenant-scoped)."""
+        from models import Sale
+
+        return Sale.query.filter(Sale.tenant_id == tenant_id, Sale.pos_session_id == session_id).all()
+
+    @staticmethod
+    def recent_session_sales(tenant_id, session_id, limit=5):
+        """Newest sales of a POS session (tenant-scoped, id-descending)."""
+        from models import Sale
+
+        return (
+            Sale.query.filter(Sale.tenant_id == tenant_id, Sale.pos_session_id == session_id)
+            .order_by(Sale.id.desc())
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
+    def shift_cash_movements(tenant_id, shift_id):
+        """Pay-in/out cash movements recorded for a shift (tenant-scoped)."""
+        from models.pos_cash_movement import PosCashMovement
+
+        return PosCashMovement.query.filter(
+            PosCashMovement.tenant_id == tenant_id,
+            PosCashMovement.shift_id == shift_id,
+        ).all()
+
+    @staticmethod
+    def kds_order_for_sale(sale_id, tenant_id):
+        """KDS order linked to a sale (tenant-scoped) or None."""
+        from models import PosKdsOrder
+
+        return PosKdsOrder.query.filter_by(sale_id=sale_id, tenant_id=tenant_id).first()

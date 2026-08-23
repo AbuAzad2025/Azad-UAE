@@ -29,23 +29,23 @@ def _ticket_patches(**kwargs):
         stack.enter_context(patch("routes.tickets.TicketService.search_tickets", return_value=tickets))
         stack.enter_context(
             patch(
-                "routes.tickets.TicketCategory.query",
+                "models.TicketCategory.query",
                 _chain_query(all=kwargs.get("categories", [])),
             )
         )
         stack.enter_context(
             patch(
-                "routes.tickets.TicketPriority.query",
+                "models.TicketPriority.query",
                 _chain_query(all=kwargs.get("priorities", [])),
             )
         )
         stack.enter_context(
             patch(
-                "routes.tickets.Customer.query",
+                "models.Customer.query",
                 _chain_query(all=kwargs.get("customers", [])),
             )
         )
-        stack.enter_context(patch("routes.tickets.User.query", _chain_query(all=kwargs.get("users", []))))
+        stack.enter_context(patch("models.User.query", _chain_query(all=kwargs.get("users", []))))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield
 

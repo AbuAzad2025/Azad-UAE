@@ -11,7 +11,7 @@ class TestPaymentCallbackIPWhitelist:
                 headers={"x-nowpayments-sig": "fake"},
             )
             assert resp.status_code == 403
-            assert resp.get_json()["error"] == "غير مصرح"
+            assert resp.get_json()["message"] == "غير مصرح"
 
 
 class TestPaymentCallbackDuplicate:
@@ -30,6 +30,6 @@ class TestPaymentCallbackDuplicate:
                     headers={"x-nowpayments-sig": "valid"},
                 )
                 assert resp.status_code == 200
-                assert resp.get_json()["status"] == "already_processed"
+                assert resp.get_json()["data"]["status"] == "already_processed"
         finally:
             _payment_callback_cache.pop("123:finished", None)

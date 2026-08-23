@@ -4,7 +4,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import LeaveRequest, LeaveType, User
+from models import LeaveRequest, LeaveType
 from services.hr_service import HRService, LeaveBalanceService, OvertimeService
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
@@ -26,7 +26,7 @@ def attendance():
     records = HRService.report_attendance(filters, current_user)
     tid = get_active_tenant_id(current_user)
     departments = HRService.list_departments(current_user)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    users = HRService.list_active_users(tid)
     return render_template(
         "hr/attendance.html",
         records=records,
@@ -71,7 +71,7 @@ def leaves_list():
     leaves = HRService.list_leaves(filters, current_user)
     tid = get_active_tenant_id(current_user)
     leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    users = HRService.list_active_users(tid)
     return render_template(
         "hr/leave_list.html",
         leaves=leaves,
@@ -165,7 +165,7 @@ def leave_ledger():
     year = request.args.get("year", date.today().year, type=int)
     user_id = request.args.get("user_id", type=int)
     balances = LeaveBalanceService.list_balances(user_id, year, tid) if user_id else []
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    users = HRService.list_active_users(tid)
     leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if tid else []
     return render_template(
         "hr/leave_ledger.html",
@@ -220,7 +220,7 @@ def overtime_list():
     filters = {k: v for k, v in request.args.items() if v}
     entries = OvertimeService.list_entries(current_user, filters)
     tid = get_active_tenant_id(current_user)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    users = HRService.list_active_users(tid)
     return render_template("hr/overtime.html", entries=entries, users=users)
 
 

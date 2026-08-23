@@ -12,6 +12,57 @@ from utils.tenanting import get_active_tenant_id
 
 class CRMLeadService:
     @staticmethod
+    def tenant_stages(tid):
+        """Active CRM stages ordered by sequence, optionally scoped to the tenant."""
+        from models import CRMStage
+
+        q = CRMStage.query.filter(CRMStage.is_active)
+        if tid is not None:
+            q = q.filter(CRMStage.tenant_id == tid)
+        return q.order_by(CRMStage.sequence).all()
+
+    @staticmethod
+    def tenant_teams(tid):
+        """Active CRM teams, optionally scoped to the tenant."""
+        from models import CRMTeam
+
+        q = CRMTeam.query.filter(CRMTeam.is_active)
+        if tid is not None:
+            q = q.filter(CRMTeam.tenant_id == tid)
+        return q.all()
+
+    @staticmethod
+    def teams_for_tenant(tid):
+        """All CRM teams of the tenant regardless of active flag; empty when no tenant."""
+        from models import CRMTeam
+
+        return CRMTeam.query.filter_by(tenant_id=tid).all() if tid else []
+
+    @staticmethod
+    def tenant_users_ordered(tid):
+        """Active users of the tenant ordered by full name (unconditional query)."""
+        from models import User
+
+        return User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all()
+
+    @staticmethod
+    def tenant_users(tid):
+        """Active users of the tenant in default order; empty when no tenant."""
+        from models import User
+
+        return User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
+
+    @staticmethod
+    def tenant_customers(tid):
+        """Active customers ordered by name, optionally scoped to the tenant."""
+        from models import Customer
+
+        q = Customer.query.filter(Customer.is_active)
+        if tid is not None:
+            q = q.filter(Customer.tenant_id == tid)
+        return q.order_by(Customer.name).all()
+
+    @staticmethod
     def _validate_tenant(lead, user):
         tid = get_active_tenant_id(user)
         if tid is not None and int(lead.tenant_id) != int(tid):

@@ -139,55 +139,56 @@ class TestApiHelpers:
             assert code == 403
 
     def test_scoped_customer_query_branch_scoped(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=3)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=3)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         customer_q = MagicMock()
         customer_q.filter.return_value = customer_q
-        mocker.patch("routes.api.Customer.query", customer_q)
-        from routes.api import _scoped_customer_query
+        mocker.patch("models.Customer.query", customer_q)
+        from services.platform_query_service import PlatformQueryService
 
-        _scoped_customer_query()
+        PlatformQueryService.scoped_customers_query(MagicMock())
         customer_q.filter.assert_called()
 
     def test_scoped_supplier_query_branch_scoped(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=3)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=3)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         supplier_q = MagicMock()
         supplier_q.filter.return_value = supplier_q
-        mocker.patch("routes.api.Supplier.query", supplier_q)
-        from routes.api import _scoped_supplier_query
+        mocker.patch("models.Supplier.query", supplier_q)
+        from services.platform_query_service import PlatformQueryService
 
-        _scoped_supplier_query()
+        PlatformQueryService.scoped_suppliers_query(MagicMock())
         supplier_q.filter.assert_called()
 
     def test_scoped_customer_query_unscoped_branch(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=None)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         customer_q = MagicMock()
         customer_q.filter.return_value = customer_q
-        mocker.patch("routes.api.Customer.query", customer_q)
-        from routes.api import _scoped_customer_query
+        mocker.patch("models.Customer.query", customer_q)
+        from services.platform_query_service import PlatformQueryService
 
-        result = _scoped_customer_query()
+        result = PlatformQueryService.scoped_customers_query(MagicMock())
         assert result is customer_q
 
     def test_scoped_supplier_query_unscoped_branch(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=None)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         supplier_q = MagicMock()
         supplier_q.filter.return_value = supplier_q
-        mocker.patch("routes.api.Supplier.query", supplier_q)
-        from routes.api import _scoped_supplier_query
+        mocker.patch("models.Supplier.query", supplier_q)
+        from services.platform_query_service import PlatformQueryService
 
-        result = _scoped_supplier_query()
+        result = PlatformQueryService.scoped_suppliers_query(MagicMock())
         assert result is supplier_q
 
     def test_customer_balance_no_customer(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch("routes.api._scoped_customer_query").return_value.filter.return_value.first.return_value = None
-        from routes.api import _customer_balance
+        mocker.patch(
+            "services.platform_query_service.PlatformQueryService.scoped_customers_query"
+        ).return_value.filter.return_value.first.return_value = None
+        from services.platform_query_service import PlatformQueryService
 
-        assert _customer_balance(1) == 0.0
+        assert PlatformQueryService.customer_balance_unscoped(1, MagicMock()) == 0.0
 
     def test_supplier_balance_scoped(self, mocker):
         mocker.patch("routes.api.branch_scope_id", return_value=2)
@@ -202,11 +203,12 @@ class TestApiHelpers:
     def test_scoped_supplier_balance_unscoped(self, mocker):
         supplier = MagicMock()
         supplier.get_balance_aed.return_value = Decimal("10")
-        mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch("routes.api._scoped_supplier_query").return_value.filter.return_value.first.return_value = supplier
-        from routes.api import _supplier_balance
+        mocker.patch(
+            "services.platform_query_service.PlatformQueryService.scoped_suppliers_query"
+        ).return_value.filter.return_value.first.return_value = supplier
+        from services.platform_query_service import PlatformQueryService
 
-        assert _supplier_balance(3) == 10.0
+        assert PlatformQueryService.supplier_balance_unscoped(3, MagicMock()) == 10.0
 
 
 class TestApiEndpoints:
@@ -316,13 +318,17 @@ class TestApiEndpoints:
 
     def test_check_username_taken(self, api_client, mocker):
         mocker.patch(
-            "routes.api.User.query"
-        ).filter_by.return_value.filter.return_value.first.return_value = MagicMock()
+            "services.platform_query_service.PlatformQueryService.find_existing_username",
+            return_value=MagicMock(),
+        )
         resp = api_client.get("/api/check-username?username=existing_user")
         assert resp.get_json()["data"]["available"] is False
 
     def test_check_username_available(self, api_client, mocker):
-        mocker.patch("routes.api.User.query").filter_by.return_value.filter.return_value.first.return_value = None
+        mocker.patch(
+            "services.platform_query_service.PlatformQueryService.find_existing_username",
+            return_value=None,
+        )
         resp = api_client.get("/api/check-username?username=valid_user")
         assert resp.get_json()["data"]["available"] is True
 
@@ -392,7 +398,7 @@ class TestApiEndpoints:
         products_q.order_by.return_value = products_q
         products_q.limit.return_value.all.return_value = [product]
         mocker.patch(
-            "routes.api.StockService.get_visible_products_query",
+            "services.stock_service.StockService.get_visible_products_query",
             return_value=products_q,
         )
         mocker.patch("routes.api.get_accessible_warehouse_ids", return_value=[1])
@@ -453,7 +459,7 @@ class TestApiEndpoints:
             unit="pc",
             min_stock_alert=Decimal("1"),
         )
-        mocker.patch("routes.api.db.session.get", return_value=product)
+        mocker.patch("services.platform_query_service.db.session.get", return_value=product)
         mocker.patch("routes.api.get_branch_stock_map", return_value={9: Decimal("4")})
         mocker.patch("utils.branching.ensure_warehouse_access", return_value=MagicMock(id=1))
         resp = api_client.get("/api/products/9/info?warehouse_id=1")
@@ -462,18 +468,18 @@ class TestApiEndpoints:
 
     def test_product_info_cross_tenant(self, api_client, mocker):
         product = MagicMock(id=9, tenant_id=99)
-        mocker.patch("routes.api.db.session.get", return_value=product)
+        mocker.patch("services.platform_query_service.db.session.get", return_value=product)
         resp = api_client.get("/api/products/9/info")
         assert resp.status_code == 404
 
     def test_product_by_barcode(self, api_client, mocker):
         product = SimpleNamespace(id=4, name="Bar", sku="SKU")
-        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = product
+        mocker.patch("models.Product.query").filter.return_value.filter.return_value.first.return_value = product
         resp = api_client.get("/api/products/barcode/ABC123")
         assert resp.status_code == 200
 
     def test_barcode_validate(self, api_client, mocker):
-        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = None
+        mocker.patch("models.Product.query").filter.return_value.filter.return_value.first.return_value = None
         resp = api_client.get("/api/barcode/validate?code=NEW123")
         assert resp.get_json()["data"]["valid"] is True
 
@@ -537,13 +543,13 @@ class TestApiEndpoints:
         products_q.filter.return_value = products_q
         products_q.order_by.return_value = products_q
         products_q.limit.return_value.all.return_value = [product]
-        mocker.patch("routes.api.Product.query").filter.return_value = products_q
+        mocker.patch("models.Product.query").filter.return_value = products_q
         mocker.patch("routes.api.get_accessible_warehouse_ids", return_value=[])
         resp = api_client.get("/api/search?q=Buy&type=products&purpose=purchase")
         assert resp.status_code == 200
 
     def test_product_info_missing(self, api_client, mocker):
-        mocker.patch("routes.api.db.session.get", return_value=None)
+        mocker.patch("services.platform_query_service.db.session.get", return_value=None)
         resp = api_client.get("/api/products/404/info")
         assert resp.status_code == 404
 
@@ -559,13 +565,13 @@ class TestApiEndpoints:
             unit="pc",
             min_stock_alert=Decimal("1"),
         )
-        mocker.patch("routes.api.db.session.get", return_value=product)
+        mocker.patch("services.platform_query_service.db.session.get", return_value=product)
         mocker.patch("utils.branching.ensure_warehouse_access", side_effect=ValueError("denied"))
         resp = api_client.get("/api/products/9/info?warehouse_id=1")
         assert resp.status_code == 403
 
     def test_product_by_barcode_not_found(self, api_client, mocker):
-        mocker.patch("routes.api.Product.query").filter.return_value.filter.return_value.first.return_value = None
+        mocker.patch("models.Product.query").filter.return_value.filter.return_value.first.return_value = None
         resp = api_client.get("/api/products/barcode/MISSING")
         assert resp.status_code == 404
 

@@ -152,10 +152,14 @@ def exchange_rate(currency):
 @permission_required("view_products")
 def search_market_price(product_id):
     """API: البحث عن سعر القطعة في الأسواق العالمية"""
-    from models import Product
+    from flask import abort
+
+    from services.product_service import ProductService
 
     tid = get_active_tenant_id(current_user)
-    product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
+    product = ProductService.get_tenant_product(product_id, tid)
+    if product is None:
+        abort(404)
 
     return success_response(
         data={
@@ -171,10 +175,14 @@ def search_market_price(product_id):
 @permission_required("view_products")
 def find_compatible(product_id):
     """API: البحث عن السيارات المتوافقة"""
-    from models import Product
+    from flask import abort
+
+    from services.product_service import ProductService
 
     tid = get_active_tenant_id(current_user)
-    product = Product.query.filter_by(id=product_id, tenant_id=tid).first_or_404()
+    product = ProductService.get_tenant_product(product_id, tid)
+    if product is None:
+        abort(404)
 
     return success_response(
         data={

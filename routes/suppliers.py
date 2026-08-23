@@ -14,11 +14,12 @@ from flask import (
 )
 from flask_babel import gettext
 from flask_login import current_user, login_required
-from sqlalchemy import desc, func, select
+from sqlalchemy import desc, func
 
 from extensions import db, limiter
 from models import Payment, Purchase, PurchaseReturn, Supplier
 from services.logging_core import LoggingCore
+from services.supplier_service import SupplierService
 from utils.api_response import success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
@@ -26,48 +27,25 @@ from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
 from utils.error_messages import ErrorMessages
 from utils.structured_logging import log_mutation
-from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404
 
 suppliers_bp = Blueprint("suppliers", __name__, url_prefix="/suppliers")
 
 
 def _scoped_supplier_query():
-    query = tenant_query(Supplier)
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is None:
-        return query
-
-    purchase_ids = select(Purchase.supplier_id).where(
-        Purchase.supplier_id.isnot(None),
-        Purchase.branch_id == scoped_branch_id,
-    )
-    payment_ids = select(Payment.supplier_id).where(
-        Payment.supplier_id.isnot(None),
-        Payment.branch_id == scoped_branch_id,
-    )
-    supplier_ids = purchase_ids.union(payment_ids)
-    return query.filter(Supplier.id.in_(supplier_ids))
+    return SupplierService.scoped_suppliers_query(branch_id=branch_scope_id())
 
 
 def _supplier_in_scope(supplier_id):
-    if branch_scope_id() is None:
-        return True
-    return db.session.query(_scoped_supplier_query().filter(Supplier.id == supplier_id).exists()).scalar()
+    return SupplierService.supplier_in_branch_scope(supplier_id, branch_id=branch_scope_id())
 
 
 def _supplier_scoped_totals(supplier_id):
-    tid = get_active_tenant_id(current_user)
-    scoped_branch_id = branch_scope_id()
-    purchases_query = Purchase.query.filter_by(supplier_id=supplier_id, status="confirmed", tenant_id=tid)
-    payments_query = Payment.query.filter_by(supplier_id=supplier_id, tenant_id=tid)
-    if scoped_branch_id is not None:
-        purchases_query = purchases_query.filter(Purchase.branch_id == scoped_branch_id)
-        payments_query = payments_query.filter(Payment.branch_id == scoped_branch_id)
-
-    purchases = purchases_query.all()
-    total_purchases = sum((p.amount_aed or 0) for p in purchases)
-    total_paid = sum((p.amount_aed or 0) for p in payments_query.filter(Payment.direction == "outgoing").all())
-    return purchases, total_purchases, total_paid
+    return SupplierService.supplier_scoped_totals(
+        supplier_id,
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_scope_id(),
+    )
 
 
 def _attach_supplier_branch_labels(suppliers):
@@ -75,40 +53,10 @@ def _attach_supplier_branch_labels(suppliers):
     if not suppliers:
         return
 
-    from models import Branch
-
-    supplier_ids = [s.id for s in suppliers]
-    branch_map = {sid: set() for sid in supplier_ids}
-
-    purchase_rows = (
-        db.session.query(Purchase.supplier_id, Purchase.branch_id)
-        .filter(
-            Purchase.supplier_id.in_(supplier_ids),
-            Purchase.branch_id.isnot(None),
-        )
-        .all()
-    )
-    payment_rows = (
-        db.session.query(Payment.supplier_id, Payment.branch_id)
-        .filter(
-            Payment.supplier_id.in_(supplier_ids),
-            Payment.branch_id.isnot(None),
-        )
-        .all()
-    )
-
-    branch_ids = set()
-    for sid, bid in purchase_rows + payment_rows:
-        if sid in branch_map and bid:
-            branch_map[sid].add(bid)
-            branch_ids.add(bid)
-
-    branches = Branch.query.filter(Branch.id.in_(branch_ids)).all() if branch_ids else []
-    branch_labels = {b.id: (f"{b.name} ({b.code})" if getattr(b, "code", None) else b.name) for b in branches}
+    label_map = SupplierService.supplier_branch_labels([s.id for s in suppliers])
 
     for supplier in suppliers:
-        labels = [branch_labels.get(bid, str(bid)) for bid in sorted(branch_map.get(supplier.id, set()))]
-        supplier.branch_labels = labels
+        supplier.branch_labels = label_map.get(supplier.id, [])
 
 
 @suppliers_bp.route("/")
@@ -386,13 +334,13 @@ def delete(**kwargs):
     try:
         # Check for related records preventing deletion
         tid = get_active_tenant_id(current_user)
-        purchases_query = Purchase.query.filter_by(supplier_id=record_id, tenant_id=tid)
-        payments_query = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
-        if branch_scope_id() is not None:
-            purchases_query = purchases_query.filter(Purchase.branch_id == branch_scope_id())
-            payments_query = payments_query.filter(Payment.branch_id == branch_scope_id())
-        purchases_count = purchases_query.count()
-        payments_count = payments_query.count()
+        linked_counts = SupplierService.supplier_linked_counts(
+            record_id,
+            tenant_id=tid,
+            branch_id=branch_scope_id(),
+        )
+        purchases_count = linked_counts["purchases"]
+        payments_count = linked_counts["payments"]
 
         if purchases_count > 0 or payments_count > 0:
             supplier.is_active = False
@@ -449,44 +397,15 @@ def print_statement(**kwargs):
     date_to = request.args.get("date_to", type=str)
     tid = get_active_tenant_id(current_user)
 
-    purchases_q = Purchase.query.filter_by(supplier_id=record_id, status="confirmed", tenant_id=tid)
-    payments_q = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
-    returns_q = PurchaseReturn.query.filter_by(supplier_id=record_id, tenant_id=tid)
-    if branch_scope_id() is not None:
-        purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
-        payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
-        returns_q = returns_q.filter(PurchaseReturn.branch_id == branch_scope_id())
+    purchases_q, payments_q, returns_q = SupplierService.print_statement_queries(
+        record_id,
+        tenant_id=tid,
+        branch_id=branch_scope_id(),
+    )
 
-    opening_balance = 0.0
+    # الرصيد الافتتاحي من استعلامات مستقلة لما قبل الفترة (بدون تقييد فرعي)
+    opening_balance = SupplierService.preperiod_opening_balance(record_id, date_from, tenant_id=tid)
     if date_from:
-        opening_balance = float(
-            Purchase.query.filter(
-                Purchase.supplier_id == record_id,
-                Purchase.status == "confirmed",
-                Purchase.tenant_id == tid,
-                func.date(Purchase.purchase_date) < date_from,
-            )
-            .with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0))
-            .scalar()
-            or 0
-        )
-        for pm in Payment.query.filter(
-            Payment.supplier_id == record_id, Payment.tenant_id == tid, func.date(Payment.payment_date) < date_from
-        ).all():
-            if pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason):
-                opening_balance += (
-                    float(pm.amount_aed or 0) if pm.direction == "incoming" else -float(pm.amount_aed or 0)
-                )
-        opening_balance -= float(
-            PurchaseReturn.query.filter(
-                PurchaseReturn.supplier_id == record_id,
-                PurchaseReturn.tenant_id == tid,
-                func.date(PurchaseReturn.return_date) < date_from,
-            )
-            .with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0))
-            .scalar()
-            or 0
-        )
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
         returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) >= date_from)
@@ -612,53 +531,23 @@ def statement(**kwargs):
     purchases_q = supplier.purchases.filter_by(status="confirmed", tenant_id=tid)
     # Include both outgoing payments (credit) and incoming refunds (debit) so
     # the statement balance matches the supplier's ledger balance.
-    payments_q = Payment.query.filter_by(supplier_id=record_id, tenant_id=tid)
-    # مرتجعات المشتريات دائن — تقلل المستحق للمورد
-    returns_q = PurchaseReturn.query.filter_by(supplier_id=record_id, tenant_id=tid)
-    if branch_scope_id() is not None:
-        purchases_q = purchases_q.filter(Purchase.branch_id == branch_scope_id())
-        payments_q = payments_q.filter(Payment.branch_id == branch_scope_id())
-        returns_q = returns_q.filter(PurchaseReturn.branch_id == branch_scope_id())
+    payments_q, returns_q = SupplierService.statement_ledger_queries(
+        record_id,
+        tenant_id=tid,
+        branch_id=branch_scope_id(),
+    )
 
     # الرصيد الافتتاحي من استعلامات مستقلة لما قبل الفترة — الاستعلامات
     # الرئيسية ستُصفّى على >= date_from فلا يمكن استخلاصه منها.
     def _payment_affects_balance(pm):
         return bool(pm.payment_confirmed) or (pm.payment_method == "cheque" and not pm.rejection_reason)
 
-    opening_balance = 0.0
-    if date_from:
-        pre_purchases_q = Purchase.query.filter(
-            Purchase.supplier_id == record_id,
-            Purchase.status == "confirmed",
-            Purchase.tenant_id == tid,
-            func.date(Purchase.purchase_date) < date_from,
-        )
-        pre_payments_q = Payment.query.filter(
-            Payment.supplier_id == record_id,
-            Payment.tenant_id == tid,
-            func.date(Payment.payment_date) < date_from,
-        )
-        pre_returns_q = PurchaseReturn.query.filter(
-            PurchaseReturn.supplier_id == record_id,
-            PurchaseReturn.tenant_id == tid,
-            func.date(PurchaseReturn.return_date) < date_from,
-        )
-        if branch_scope_id() is not None:
-            pre_purchases_q = pre_purchases_q.filter(Purchase.branch_id == branch_scope_id())
-            pre_payments_q = pre_payments_q.filter(Payment.branch_id == branch_scope_id())
-            pre_returns_q = pre_returns_q.filter(PurchaseReturn.branch_id == branch_scope_id())
-        opening_balance = float(
-            pre_purchases_q.with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0)).scalar() or 0
-        )
-        for pm in pre_payments_q.all():
-            if not _payment_affects_balance(pm):
-                continue
-            amt = float(pm.amount_aed or 0)
-            opening_balance += amt if pm.direction == "incoming" else -amt
-        # المرتجعات قبل الفترة تقلل المستحق للمورد
-        opening_balance -= float(
-            pre_returns_q.with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0)).scalar() or 0
-        )
+    opening_balance = SupplierService.preperiod_opening_balance(
+        record_id,
+        date_from,
+        tenant_id=tid,
+        branch_id=branch_scope_id(),
+    )
 
     if date_from:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)

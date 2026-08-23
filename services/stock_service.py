@@ -1489,3 +1489,122 @@ class StockService:
             qty = Decimal(str(row.quantity or 0))
             balances[row.id] = (after_qty - qty, after_qty)
         return balances
+
+    # ─── Route-facing scoped fetches / listings ───
+
+    @staticmethod
+    def get_branch_warehouse_ids(branch_id, tenant_id=None):
+        """Active warehouse IDs within a branch scope; [-1] sentinel when empty."""
+        wh_query = Warehouse.query.filter_by(is_active=True, branch_id=branch_id)
+        if tenant_id is not None:
+            wh_query = wh_query.filter(Warehouse.tenant_id == tenant_id)
+        warehouse_ids = [w.id for w in wh_query.all()]
+        return warehouse_ids or [-1]
+
+    @staticmethod
+    def get_tenant_warehouse(warehouse_id, tenant_id=None):
+        """Fetch a single warehouse by id, optionally tenant-scoped (or None)."""
+        query = Warehouse.query.filter_by(id=warehouse_id)
+        if tenant_id is not None:
+            query = query.filter_by(tenant_id=tenant_id)
+        return query.first()
+
+    @staticmethod
+    def movements_query(
+        tenant_id=None,
+        warehouse_ids=None,
+        product_id=None,
+        movement_type=None,
+        warehouse_id=None,
+    ):
+        """Tenant/branch/product-filtered stock-movement query, newest first."""
+        query = StockMovement.query
+        if tenant_id is not None:
+            query = query.filter(StockMovement.tenant_id == tenant_id)
+        if warehouse_ids is not None:
+            query = query.filter(StockMovement.warehouse_id.in_(warehouse_ids))
+        if product_id:
+            query = query.filter_by(product_id=product_id)
+        if movement_type:
+            query = query.filter_by(movement_type=movement_type)
+        if warehouse_id:
+            query = query.filter_by(warehouse_id=warehouse_id)
+        return query.order_by(StockMovement.created_at.desc())
+
+    @staticmethod
+    def list_active_warehouses():
+        """Tenant-scoped active warehouses ordered by name."""
+        from utils.tenanting import tenant_query
+
+        return tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
+
+    @staticmethod
+    def get_warehouse_stock_totals(warehouse_id):
+        """Aggregate per-product quantities recorded for one warehouse."""
+        return (
+            db.session.query(
+                StockMovement.product_id,
+                db.func.sum(StockMovement.quantity).label("total_quantity"),
+            )
+            .filter_by(warehouse_id=warehouse_id)
+            .group_by(StockMovement.product_id)
+            .all()
+        )
+
+    @staticmethod
+    def get_tenant_product(product_id, tenant_id=None):
+        """Fetch a product by id scoped to the owning tenant (or None)."""
+        return Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def list_parent_warehouses(tenant_id=None):
+        """Active root warehouses available as parents, tenant-scoped."""
+        parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
+        if tenant_id is not None:
+            parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tenant_id)
+        return parent_warehouses.all()
+
+    @staticmethod
+    def find_warehouse_by_code(code, tenant_id):
+        """Duplicate-code lookup for warehouse creation (or None)."""
+        return Warehouse.query.filter_by(code=code, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def list_visible_warehouses(branch_id=None):
+        """Tenant-scoped active warehouses for listing pages, optionally branch-filtered."""
+        from utils.tenanting import tenant_query
+
+        query = tenant_query(Warehouse).filter_by(is_active=True)
+        if branch_id is not None:
+            query = query.filter_by(branch_id=branch_id)
+        return query.order_by(Warehouse.name).all()
+
+    @staticmethod
+    def pick_default_warehouse(branch_id=None):
+        """Default destination warehouse: main first, else alphabetical fallback.
+
+        Scoped to active warehouses and, when provided, the user's branch scope.
+        """
+        from utils.tenanting import tenant_query
+
+        accessible_query = tenant_query(Warehouse).filter_by(is_active=True)
+        if branch_id is not None:
+            accessible_query = accessible_query.filter_by(branch_id=branch_id)
+        warehouse = accessible_query.filter_by(is_main=True).first()
+        if not warehouse:
+            warehouse = accessible_query.order_by(Warehouse.name).first()
+        return warehouse
+
+    @staticmethod
+    def warehouse_has_stock(warehouse_id):
+        """True when any stock movement references the warehouse."""
+        return StockMovement.query.filter_by(warehouse_id=warehouse_id).first() is not None
+
+    @staticmethod
+    def get_pws_row(tenant_id, product_id, warehouse_id):
+        """Per-warehouse on-hand row for a tenant/product/warehouse triple (or None)."""
+        return ProductWarehouseStock.query.filter_by(
+            tenant_id=tenant_id,
+            product_id=product_id,
+            warehouse_id=warehouse_id,
+        ).first()

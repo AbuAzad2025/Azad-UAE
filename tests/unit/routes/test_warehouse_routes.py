@@ -87,13 +87,18 @@ def warehouse_mocks():
             },
         ),
         patch(
-            "routes.warehouse.tenant_query",
-            side_effect=lambda model: _chain_query(all=[_warehouse()]),
+            "routes.warehouse.StockService.list_visible_warehouses",
+            return_value=[_warehouse(1)],
         ),
         patch(
-            "routes.warehouse.tenant_get_or_404",
-            side_effect=lambda model, pk: _warehouse(pk),
+            "routes.warehouse.StockService.pick_default_warehouse",
+            return_value=_warehouse(1, is_main=True),
         ),
+        patch(
+            "routes.warehouse.StockService.warehouse_has_stock",
+            return_value=False,
+        ),
+        patch("routes.warehouse.tenant_get_or_404", side_effect=lambda model, pk: _warehouse(pk)),
         patch("routes.warehouse.ensure_warehouse_access"),
         patch(
             "routes.warehouse.get_accessible_branches_query",
@@ -104,7 +109,6 @@ def warehouse_mocks():
         patch("routes.warehouse.db.session.query", return_value=stock_session_query),
         patch("routes.warehouse.db.session"),
         patch("routes.warehouse.Product.query"),
-        patch("routes.warehouse.StockMovement.query", movement_query),
         patch("routes.warehouse.Warehouse.query", warehouse_query),
         patch("routes.warehouse.render_template", return_value="ok"),
         patch("routes.warehouse.should_show_all_branch_columns", return_value=True),
@@ -390,13 +394,8 @@ class TestWarehouseList:
         wh_a.name = "WH-A"
         wh_b = _warehouse(2, branch_id=2)
         wh_b.name = "WH-B"
-        query = MagicMock()
-        query.filter_by.return_value.filter_by.return_value.order_by.return_value.all.return_value = [
-            wh_a,
-            wh_b,
-        ]
         with (
-            patch("routes.warehouse.tenant_query", return_value=query),
+            patch("routes.warehouse.StockService.list_visible_warehouses", return_value=[wh_a, wh_b]),
             patch("routes.warehouse.branch_scope_id", return_value=99),
             patch("routes.warehouse.render_template", return_value="list") as render,
         ):
@@ -422,12 +421,9 @@ class TestWarehouseDelete:
 
     def test_delete_soft_delete_when_has_stock(self, warehouse_admin_client):
         wh = _warehouse(5, is_main=False)
-        movement = MagicMock()
-        movement_query = MagicMock()
-        movement_query.filter_by.return_value.first.return_value = movement
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=wh),
-            patch("routes.warehouse.StockMovement.query", movement_query),
+            patch("routes.warehouse.StockService.warehouse_has_stock", return_value=True),
             patch("routes.warehouse.db.session"),
         ):
             resp = warehouse_admin_client.post("/warehouse/5/delete")
@@ -436,12 +432,10 @@ class TestWarehouseDelete:
 
     def test_delete_hard_delete_when_no_stock(self, warehouse_admin_client):
         wh = _warehouse(6, is_main=False)
-        movement_query = MagicMock()
-        movement_query.filter_by.return_value.first.return_value = None
         mock_session = MagicMock()
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=wh),
-            patch("routes.warehouse.StockMovement.query", movement_query),
+            patch("routes.warehouse.StockService.warehouse_has_stock", return_value=False),
             patch("routes.warehouse.db.session", mock_session),
         ):
             resp = warehouse_admin_client.post("/warehouse/6/delete")
@@ -572,10 +566,11 @@ class TestWarehouseExtended:
             )
         assert resp.status_code in (302, 303)
 
-    def test_create_post_invalid_parent(self, warehouse_admin_client, warehouse_mocks):
-        wh_query = warehouse_mocks["warehouse_query"]
-        wh_query.filter_by.return_value.first.side_effect = [None, None]
-        with patch("routes.warehouse.render_template", return_value="create") as render:
+    def test_create_post_invalid_parent(self, warehouse_admin_client):
+        with (
+            patch("routes.warehouse.StockService.get_tenant_warehouse", return_value=None),
+            patch("routes.warehouse.render_template", return_value="create") as render,
+        ):
             resp = warehouse_admin_client.post(
                 "/warehouse/create",
                 data={
@@ -648,13 +643,11 @@ class TestWarehouseExtended:
 
     def test_delete_exception(self, warehouse_admin_client):
         wh = _warehouse(7, is_main=False)
-        movement_query = MagicMock()
-        movement_query.filter_by.return_value.first.return_value = None
         mock_session = MagicMock()
         mock_session.delete.side_effect = RuntimeError("fail")
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=wh),
-            patch("routes.warehouse.StockMovement.query", movement_query),
+            patch("routes.warehouse.StockService.warehouse_has_stock", return_value=False),
             patch("routes.warehouse.db.session", mock_session),
             patch("routes.warehouse.render_template", return_value="err"),
         ):
@@ -665,10 +658,9 @@ class TestWarehouseExtended:
         movement = MagicMock()
         movement.product = _product(1)
         wh = _warehouse(1, is_main=True)
-        wh_query = _chain_query(first=wh)
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=_product(1)),
-            patch("routes.warehouse.tenant_query", return_value=wh_query),
+            patch("routes.warehouse.StockService.pick_default_warehouse", return_value=wh),
             patch("routes.warehouse.branch_scope_id", return_value=None),
             patch("routes.warehouse.StockService.adjust_stock", return_value=movement),
             patch("routes.warehouse.db.session"),
@@ -677,10 +669,9 @@ class TestWarehouseExtended:
         assert resp.status_code == 200
 
     def test_add_stock_no_warehouse_400(self, warehouse_client):
-        empty_query = _chain_query(first=None)
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=_product(1)),
-            patch("routes.warehouse.tenant_query", return_value=empty_query),
+            patch("routes.warehouse.StockService.pick_default_warehouse", return_value=None),
             patch("routes.warehouse.branch_scope_id", return_value=None),
         ):
             resp = warehouse_client.post("/warehouse/add-stock/1", data={"quantity": "2"})
@@ -786,12 +777,13 @@ class TestWarehouseExtended:
             )
         assert resp.status_code in (302, 303)
 
-    def test_create_post_inactive_parent(self, warehouse_admin_client, warehouse_mocks):
+    def test_create_post_inactive_parent(self, warehouse_admin_client):
         parent = _warehouse(50)
         parent.is_active = False
-        wh_query = warehouse_mocks["warehouse_query"]
-        wh_query.filter_by.return_value.first.return_value = parent
-        with patch("routes.warehouse.render_template", return_value="create") as render:
+        with (
+            patch("routes.warehouse.StockService.get_tenant_warehouse", return_value=parent),
+            patch("routes.warehouse.render_template", return_value="create") as render,
+        ):
             resp = warehouse_admin_client.post(
                 "/warehouse/create",
                 data={
@@ -819,13 +811,10 @@ class TestWarehouseExtended:
         movement = MagicMock()
         movement.product = _product(1)
         main_wh = _warehouse(3, branch_id=2, is_main=True)
-        wh_query = MagicMock()
-        wh_query.filter_by.return_value.order_by.return_value.first.return_value = main_wh
-        wh_query.filter_by.return_value.first.return_value = main_wh
         with (
             patch("routes.warehouse.tenant_get_or_404", return_value=_product(1)),
             patch("routes.warehouse.branch_scope_id", return_value=2),
-            patch("routes.warehouse.tenant_query", return_value=wh_query),
+            patch("routes.warehouse.StockService.pick_default_warehouse", return_value=main_wh),
             patch("routes.warehouse.StockService.adjust_stock", return_value=movement),
             patch("routes.warehouse.db.session"),
         ):

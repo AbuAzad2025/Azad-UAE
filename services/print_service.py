@@ -341,3 +341,44 @@ class PrintService:
             combined += page
         combined += "</body></html>"
         return combined
+
+    # ─── Route-facing scoped fetches ───
+
+    @staticmethod
+    def get_document(model_cls, record_id, tenant_id=None):
+        """Fetch a printable document by id; tenant filter applied only when provided."""
+        query = model_cls.query.filter_by(id=record_id)
+        if tenant_id is not None:
+            query = query.filter(model_cls.tenant_id == tenant_id)
+        return query.first()
+
+    @staticmethod
+    def get_tenant_document(model_cls, doc_id, tenant_id):
+        """Strictly tenant-scoped document fetch (bulk print / preview)."""
+        return model_cls.query.filter_by(id=doc_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def get_shipment_for_sale(sale_id, tenant_id):
+        """Shipment linked to a sale (tenant-scoped) or None."""
+        from models import Shipment
+
+        return Shipment.query.filter_by(sale_id=sale_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def history_query(tenant_id):
+        """Print-history query for a tenant, newest first."""
+        from models.print_history import PrintHistory
+
+        return PrintHistory.query.filter_by(tenant_id=tenant_id).order_by(PrintHistory.created_at.desc())
+
+    @staticmethod
+    def list_recent_history(tenant_id, limit=20):
+        """Most recent print-history records for a tenant."""
+        from models.print_history import PrintHistory
+
+        return (
+            PrintHistory.query.filter_by(tenant_id=tenant_id)
+            .order_by(PrintHistory.created_at.desc())
+            .limit(limit)
+            .all()
+        )

@@ -41,6 +41,8 @@ def company_admin_client(app_factory, bypass_company_admin_auth):
 def mock_settings_db(mocker):
     mock = MagicMock()
     mocker.patch("routes.owner.settings.db", mock)
+    # Query lookups moved into OwnerOpsService — patch its db seam too.
+    mocker.patch("extensions.db", mock)
     return mock
 
 
@@ -48,6 +50,8 @@ def mock_settings_db(mocker):
 def mock_tenants_db(mocker):
     mock = MagicMock()
     mocker.patch("routes.owner.tenants.db", mock)
+    # Query lookups moved into OwnerOpsService — patch its db seam too.
+    mocker.patch("extensions.db", mock)
     return mock
 
 

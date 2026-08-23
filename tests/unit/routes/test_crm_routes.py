@@ -26,15 +26,15 @@ def _crm_patches(**kwargs):
         stack.enter_context(patch("routes.crm.render_template", return_value="ok"))
         stack.enter_context(patch("routes.crm.get_active_tenant_id", return_value=kwargs.get("tid", 1)))
         stack.enter_context(patch("routes.crm.CRMLeadService.search_leads", return_value=leads))
-        stack.enter_context(patch("routes.crm.CRMStage.query", _chain_query(all=kwargs.get("stages", []))))
-        stack.enter_context(patch("routes.crm.CRMTeam.query", _chain_query(all=kwargs.get("teams", []))))
+        stack.enter_context(patch("models.CRMStage.query", _chain_query(all=kwargs.get("stages", []))))
+        stack.enter_context(patch("models.CRMTeam.query", _chain_query(all=kwargs.get("teams", []))))
         stack.enter_context(
             patch(
-                "routes.crm.Customer.query",
+                "models.Customer.query",
                 _chain_query(all=kwargs.get("customers", [])),
             )
         )
-        stack.enter_context(patch("routes.crm.User.query", _chain_query(all=kwargs.get("users", []))))
+        stack.enter_context(patch("models.User.query", _chain_query(all=kwargs.get("users", []))))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield
 

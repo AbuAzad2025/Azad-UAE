@@ -88,10 +88,10 @@ def _payroll_patches(**kwargs):
         )
         stack.enter_context(patch("routes.payroll.should_show_all_branch_columns", return_value=False))
         stack.enter_context(patch("routes.payroll.db.session.get", side_effect=_session_get))
-        stack.enter_context(patch("routes.payroll.Employee.query", emp_q))
-        stack.enter_context(patch("routes.payroll.Branch.query", branch_q))
-        stack.enter_context(patch("routes.payroll.PayrollTransaction.query", txn_q))
-        stack.enter_context(patch("routes.payroll.SalaryAdvance.query", adv_q))
+        stack.enter_context(patch("models.Employee.query", emp_q))
+        stack.enter_context(patch("models.Branch.query", branch_q))
+        stack.enter_context(patch("models.PayrollTransaction.query", txn_q))
+        stack.enter_context(patch("models.SalaryAdvance.query", adv_q))
         stack.enter_context(patch("routes.payroll.PayrollService.create_employee"))
         stack.enter_context(patch("routes.payroll.PayrollService.create_advance"))
         stack.enter_context(patch("routes.payroll.PayrollService.process_payroll", return_value=txn))
@@ -353,7 +353,7 @@ class TestPayrollSlipAndStatement:
         txn_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = NotFound()
         with (
             _payroll_patches(),
-            patch("routes.payroll.PayrollTransaction.query", txn_q),
+            patch("models.PayrollTransaction.query", txn_q),
         ):
             resp = payroll_client.get("/payroll/slip/999")
         assert resp.status_code == 404
@@ -372,6 +372,6 @@ class TestPayrollSlipAndStatement:
     def test_statement_not_found(self, payroll_client):
         emp_q = _chain_query(first=None)
         emp_q.filter_by.return_value.filter.return_value.first_or_404.side_effect = NotFound()
-        with _payroll_patches(), patch("routes.payroll.Employee.query", emp_q):
+        with _payroll_patches(), patch("models.Employee.query", emp_q):
             resp = payroll_client.get("/payroll/statement/404")
         assert resp.status_code == 404

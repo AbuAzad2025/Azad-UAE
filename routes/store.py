@@ -13,7 +13,6 @@ from flask import (
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import Product, Sale, ShopCustomerAccount, TenantStore
 from services.azad_platform_fee_service import AzadPlatformFeeService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService
@@ -151,10 +150,7 @@ def admin_settings():
 
                 custom_domain = (request.form.get("custom_domain") or "").strip().lower()
                 if custom_domain:
-                    clash = TenantStore.query.filter(
-                        TenantStore.custom_domain == custom_domain,
-                        TenantStore.tenant_id != tenant_id,
-                    ).first()
+                    clash = StoreService.find_custom_domain_clash(custom_domain, exclude_tenant_id=tenant_id)
                     if clash:
                         raise ValueError(gettext("النطاق المخصص مستخدم من متجر آخر."))
                 store.custom_domain = custom_domain or None
@@ -219,7 +215,7 @@ def admin_transfer():
     online_wh = StoreService.ensure_online_warehouse(tenant_id)
     physical_warehouses = StoreService.get_physical_warehouses(tenant_id, user=current_user)
 
-    products = Product.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(Product.name.asc()).all()
+    products = StoreService.list_active_products(tenant_id)
 
     if request.method == "POST":
         try:
@@ -233,9 +229,7 @@ def admin_transfer():
                 if not product_id or not quantity or quantity <= 0:
                     raise ValueError(gettext("اختر منتجاً وكمية صحيحة."))
 
-                product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
-                if not product:
-                    raise ValueError(gettext("المنتج غير موجود."))
+                StoreService.get_transfer_product(tenant_id, product_id)
 
                 if direction == "to_online":
                     if not source_id:
@@ -299,10 +293,11 @@ def admin_orders():
     page = request.args.get("page", 1, type=int)
     status_filter = (request.args.get("status") or "").strip().lower()
     per_page = 20
-    query = Sale.query.filter_by(tenant_id=tenant_id, source="online_store").order_by(Sale.sale_date.desc())
-    if status_filter in StoreOrderService.STORE_ORDER_STATUSES:
-        query = query.filter_by(status=status_filter)
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = StoreService.online_orders_query(tenant_id, status_filter).paginate(
+        page=page,
+        per_page=per_page,
+        error_out=False,
+    )
     payment_methods = {m.code: m for m in StorePaymentMethodService.list_all(tenant_id=tenant_id)}
     return render_template(
         "store/admin_orders.html",
@@ -397,12 +392,7 @@ def admin_order_cancel(order_id):
 def admin_customers():
     tenant_id = _tenant_id()
     store = StoreService.get_tenant_store(tenant_id, create=True)
-    accounts = (
-        ShopCustomerAccount.query.filter_by(tenant_id=tenant_id)
-        .order_by(ShopCustomerAccount.created_at.desc())
-        .limit(200)
-        .all()
-    )
+    accounts = StoreService.list_customer_accounts(tenant_id)
     return render_template("store/admin_customers.html", store=store, accounts=accounts)
 
 

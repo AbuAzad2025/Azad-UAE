@@ -14,7 +14,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import Branch, Product, StockMovement, Warehouse
+from models import Branch, Product, Warehouse
 from services.stock_service import StockService
 from utils.api_response import error_response, success_response
 from utils.branching import (
@@ -28,7 +28,7 @@ from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
 from utils.error_messages import ErrorMessages
 from utils.structured_logging import log_mutation
-from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_get_or_404, tenant_query
+from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_get_or_404
 
 warehouse_bp = Blueprint("warehouse", __name__, url_prefix="/warehouse")
 
@@ -146,41 +146,22 @@ def movements():
 
     branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
-    if branch_id is not None:
-        wh_query = Warehouse.query.filter_by(is_active=True, branch_id=branch_id)
-        if tid is not None:
-            wh_query = wh_query.filter(Warehouse.tenant_id == tid)
-        warehouse_ids = [w.id for w in wh_query.all()]
-        if not warehouse_ids:
-            warehouse_ids = [-1]
-    else:
-        warehouse_ids = None
-
-    query = StockMovement.query
-    if tid is not None:
-        query = query.filter(StockMovement.tenant_id == tid)
-    if warehouse_ids is not None:
-        query = query.filter(StockMovement.warehouse_id.in_(warehouse_ids))
-
-    if product_id:
-        query = query.filter_by(product_id=product_id)
-
-    if movement_type:
-        query = query.filter_by(movement_type=movement_type)
+    warehouse_ids = StockService.get_branch_warehouse_ids(branch_id, tid) if branch_id is not None else None
 
     if warehouse_id:
-        query = query.filter_by(warehouse_id=warehouse_id)
-        current_warehouse = Warehouse.query.filter_by(
-            id=warehouse_id, tenant_id=get_active_tenant_id(current_user)
-        ).first()
+        current_warehouse = StockService.get_tenant_warehouse(warehouse_id, get_active_tenant_id(current_user))
         if branch_id is not None and (not current_warehouse or current_warehouse.branch_id != branch_id):
             abort(403)
     else:
         current_warehouse = None
 
-    pagination = query.order_by(StockMovement.created_at.desc()).paginate(
-        page=current_page, per_page=items_per_page, error_out=False
-    )
+    pagination = StockService.movements_query(
+        tenant_id=tid,
+        warehouse_ids=warehouse_ids,
+        product_id=product_id,
+        movement_type=movement_type,
+        warehouse_id=warehouse_id,
+    ).paginate(page=current_page, per_page=items_per_page, error_out=False)
 
     running_balances = StockService.get_movement_running_balances(pagination.items, tid)
     for movement in pagination.items:
@@ -191,7 +172,7 @@ def movements():
         else:
             movement.before_qty, movement.after_qty = before_after
 
-    warehouses = tenant_query(Warehouse).filter_by(is_active=True).order_by(Warehouse.name).all()
+    warehouses = StockService.list_active_warehouses()
     if branch_id is not None:
         warehouses = [w for w in warehouses if w.branch_id == branch_id]
 
@@ -231,22 +212,14 @@ def view_warehouse(**kwargs):
         abort(403)
 
     # Calculate stock for this warehouse from movements
-    stock_query = (
-        db.session.query(
-            StockMovement.product_id,
-            db.func.sum(StockMovement.quantity).label("total_quantity"),
-        )
-        .filter_by(warehouse_id=record_id)
-        .group_by(StockMovement.product_id)
-        .all()
-    )
+    stock_query = StockService.get_warehouse_stock_totals(record_id)
 
     warehouse_stock = []
     for product_id, quantity in stock_query:
         # Convert quantity to float for comparison and display, handling None
         qty = float(quantity) if quantity is not None else 0.0
         if qty != 0:
-            product = Product.query.filter_by(id=product_id, tenant_id=warehouse.tenant_id).first()
+            product = StockService.get_tenant_product(product_id, warehouse.tenant_id)
             if product:
                 warehouse_stock.append({"product": product, "quantity": qty})
 
@@ -260,10 +233,7 @@ def edit_warehouse(**kwargs):
     record_id = kwargs.pop("id")
     warehouse = tenant_get_or_404(Warehouse, record_id)
     tid = get_active_tenant_id(current_user)
-    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
-    if tid is not None:
-        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
-    parent_warehouses = parent_warehouses.all()
+    parent_warehouses = StockService.list_parent_warehouses(tid)
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = (
         get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
@@ -332,10 +302,7 @@ def create_warehouse():
     pass
 
     tid = get_active_tenant_id(current_user)
-    parent_warehouses = Warehouse.query.filter_by(is_active=True, parent_id=None)
-    if tid is not None:
-        parent_warehouses = parent_warehouses.filter(Warehouse.tenant_id == tid)
-    parent_warehouses = parent_warehouses.all()
+    parent_warehouses = StockService.list_parent_warehouses(tid)
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
     branches = (
         get_accessible_branches_query(current_user).order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
@@ -387,7 +354,7 @@ def create_warehouse():
                 )
 
             if code:
-                existing = Warehouse.query.filter_by(code=code, tenant_id=tenant_id).first()
+                existing = StockService.find_warehouse_by_code(code, tenant_id)
                 if existing:
                     flash(gettext("رمز المستودع موجود مسبقاً"), "warning")
                     return render_template(
@@ -399,7 +366,7 @@ def create_warehouse():
                     )
 
             if parent_id:
-                parent_warehouse = Warehouse.query.filter_by(id=parent_id, tenant_id=tenant_id).first()
+                parent_warehouse = StockService.get_tenant_warehouse(parent_id, tenant_id)
                 if not parent_warehouse:
                     flash(gettext("المستودع الأب غير موجود"), "warning")
                     return render_template(
@@ -494,11 +461,8 @@ def create_warehouse():
 @login_required
 @permission_required("manage_warehouse")
 def list_warehouses():
-    query = tenant_query(Warehouse).filter_by(is_active=True)
     branch_id = branch_scope_id()
-    if branch_id is not None:
-        query = query.filter_by(branch_id=branch_id)
-    warehouses = query.order_by(Warehouse.name).all()
+    warehouses = StockService.list_visible_warehouses(branch_id=branch_id)
     return render_template(
         "warehouse/list_warehouses.html",
         warehouses=warehouses,
@@ -521,7 +485,7 @@ def delete_warehouse(**kwargs):
 
     try:
         with atomic_transaction("warehouse_delete"):
-            has_stock = StockMovement.query.filter_by(warehouse_id=record_id).first()
+            has_stock = StockService.warehouse_has_stock(record_id)
             if has_stock:
                 warehouse.is_active = False
             else:
@@ -559,14 +523,7 @@ def add_stock(product_id):
             )
 
         if not warehouse_id:
-            accessible_query = tenant_query(Warehouse).filter_by(is_active=True)
-            scoped_branch_id = branch_scope_id()
-            if scoped_branch_id is not None:
-                accessible_query = accessible_query.filter_by(branch_id=scoped_branch_id)
-
-            warehouse = accessible_query.filter_by(is_main=True).first()
-            if not warehouse:
-                warehouse = accessible_query.order_by(Warehouse.name).first()
+            warehouse = StockService.pick_default_warehouse(branch_id=branch_scope_id())
             if not warehouse:
                 return error_response(message=gettext("لا يوجد مستودع نشط"), status_code=400)
             warehouse_id = warehouse.id
@@ -628,18 +585,16 @@ def api_transfer():
                 notes=notes or gettext("تحويل يدوي"),
                 user=current_user,
             )
-            from models.warehouse import ProductWarehouseStock
-
-            src_pws = ProductWarehouseStock.query.filter_by(
+            src_pws = StockService.get_pws_row(
                 tenant_id=out_movement.tenant_id,
                 product_id=product_id,
                 warehouse_id=source_id,
-            ).first()
-            dst_pws = ProductWarehouseStock.query.filter_by(
+            )
+            dst_pws = StockService.get_pws_row(
                 tenant_id=in_movement.tenant_id,
                 product_id=product_id,
                 warehouse_id=destination_id,
-            ).first()
+            )
 
         return success_response(
             data={
@@ -695,13 +650,11 @@ def api_exchange():
                 notes=notes or gettext(f"تسوية مخزون ({direction})"),
                 warehouse_id=warehouse_id,
             )
-            from models.warehouse import ProductWarehouseStock
-
-            pws = ProductWarehouseStock.query.filter_by(
+            pws = StockService.get_pws_row(
                 tenant_id=movement.tenant_id,
                 product_id=product_id,
                 warehouse_id=warehouse_id,
-            ).first()
+            )
 
         return success_response(data={"new_quantity": float(pws.quantity) if pws else 0})
     except ValueError as e:

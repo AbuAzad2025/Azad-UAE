@@ -66,7 +66,7 @@ def _hr_patches(**kwargs):
         stack.enter_context(patch("routes.hr.HRService.refuse_leave", return_value=_mock_leave()))
         stack.enter_context(patch("routes.hr.HRService.create_department"))
         stack.enter_context(patch("routes.hr.HRService.create_contract"))
-        stack.enter_context(patch("routes.hr.User.query", user_q))
+        stack.enter_context(patch("models.User.query", user_q))
         stack.enter_context(patch("routes.hr.tenant_get_or_404", return_value=_mock_leave()))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield

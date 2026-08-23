@@ -2,7 +2,6 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import CRMStage, CRMTeam, Customer, User
 from services.crm_lead_service import CRMLeadService
 from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
@@ -12,36 +11,15 @@ from utils.tenanting import get_active_tenant_id
 crm_bp = Blueprint("crm", __name__, url_prefix="/crm")
 
 
-def _tenant_stages(tid):
-    q = CRMStage.query.filter(CRMStage.is_active)
-    if tid is not None:
-        q = q.filter(CRMStage.tenant_id == tid)
-    return q.order_by(CRMStage.sequence).all()
-
-
-def _tenant_teams(tid):
-    q = CRMTeam.query.filter(CRMTeam.is_active)
-    if tid is not None:
-        q = q.filter(CRMTeam.tenant_id == tid)
-    return q.all()
-
-
-def _tenant_customers(tid):
-    q = Customer.query.filter(Customer.is_active)
-    if tid is not None:
-        q = q.filter(Customer.tenant_id == tid)
-    return q.order_by(Customer.name).all()
-
-
 @crm_bp.route("/pipeline")
 @login_required
 @permission_required("crm.view")
 def pipeline():
     tid = get_active_tenant_id(current_user)
-    stages = _tenant_stages(tid)
+    stages = CRMLeadService.tenant_stages(tid)
     leads = CRMLeadService.search_leads({}, current_user)
-    teams = CRMTeam.query.filter_by(tenant_id=tid).all() if tid else []
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all()
+    teams = CRMLeadService.teams_for_tenant(tid)
+    users = CRMLeadService.tenant_users_ordered(tid)
     return render_template(
         "crm/pipeline.html",
         stages=stages,
@@ -57,7 +35,7 @@ def pipeline():
 def leads_list():
     leads = CRMLeadService.search_leads(dict(request.args), current_user)
     tid = get_active_tenant_id(current_user)
-    stages = _tenant_stages(tid)
+    stages = CRMLeadService.tenant_stages(tid)
     return render_template(
         "crm/leads_list.html",
         leads=leads,
@@ -78,10 +56,10 @@ def create_lead():
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
     tid = get_active_tenant_id(current_user)
-    stages = _tenant_stages(tid)
-    customers = _tenant_customers(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
-    teams = _tenant_teams(tid)
+    stages = CRMLeadService.tenant_stages(tid)
+    customers = CRMLeadService.tenant_customers(tid)
+    users = CRMLeadService.tenant_users_ordered(tid) if tid else []
+    teams = CRMLeadService.tenant_teams(tid)
     return render_template(
         "crm/lead_form.html",
         stages=stages,
@@ -101,8 +79,8 @@ def lead_detail(lead_id):
         flash(str(e), "danger")
         return redirect(url_for("crm.leads_list"))
     tid = get_active_tenant_id(current_user)
-    stages = _tenant_stages(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
+    stages = CRMLeadService.tenant_stages(tid)
+    users = CRMLeadService.tenant_users(tid)
     return render_template("crm/lead_form.html", lead=lead, stages=stages, users=users, view=True)
 
 
@@ -124,10 +102,10 @@ def edit_lead(lead_id):
         except Exception as e:
             flash(gettext(f"حدث خطأ: {e}"), "danger")
     tid = get_active_tenant_id(current_user)
-    stages = _tenant_stages(tid)
-    customers = _tenant_customers(tid)
-    users = User.query.filter(User.tenant_id == tid, User.is_active).all() if tid else []
-    teams = _tenant_teams(tid)
+    stages = CRMLeadService.tenant_stages(tid)
+    customers = CRMLeadService.tenant_customers(tid)
+    users = CRMLeadService.tenant_users(tid)
+    teams = CRMLeadService.tenant_teams(tid)
     return render_template(
         "crm/lead_form.html",
         lead=lead,

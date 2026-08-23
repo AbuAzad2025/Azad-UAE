@@ -93,7 +93,7 @@ def _pos_enabled_patches(**kwargs):
 
     session_mock.query.side_effect = _query_side
     with ExitStack() as stack:
-        ss = stack.enter_context(patch("routes.pos.SystemSettings.query"))
+        ss = stack.enter_context(patch("models.system_settings.SystemSettings.query"))
         ss.order_by.return_value.first.return_value = global_setting
         stack.enter_context(patch("routes.pos.get_active_tenant_id", return_value=1))
         stack.enter_context(patch("routes.pos.db.session", session_mock))

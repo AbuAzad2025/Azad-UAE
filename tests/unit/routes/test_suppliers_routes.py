@@ -41,7 +41,12 @@ def _supplier_patches(**kwargs):
     scoped = _scoped_query(suppliers)
     with ExitStack() as stack:
         stack.enter_context(patch("routes.suppliers.render_template", return_value="ok"))
-        stack.enter_context(patch("routes.suppliers.tenant_query", return_value=scoped))
+        stack.enter_context(
+            patch(
+                "services.supplier_service.SupplierService.scoped_suppliers_query",
+                return_value=scoped,
+            )
+        )
         stack.enter_context(
             patch(
                 "routes.suppliers.tenant_get_or_404",

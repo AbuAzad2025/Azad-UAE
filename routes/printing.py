@@ -7,6 +7,7 @@ from io import BytesIO
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     redirect,
@@ -19,7 +20,6 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from models.invoice_settings import InvoiceSettings
-from models.print_history import PrintHistory
 from services.print_service import PrintService
 from utils.api_response import error_response, success_response
 from utils.branching import branch_scope_id
@@ -72,10 +72,9 @@ def print_document(doc_type, **kwargs):
     if doc_type == "packing_slip":
         return _handle_packing_slip(record_id, tid)
 
-    result = model_cls.query.filter_by(id=record_id)
-    if tid is not None:
-        result = result.filter(model_cls.tenant_id == tid)
-    doc = result.first_or_404()
+    doc = PrintService.get_document(model_cls, record_id, tid)
+    if doc is None:
+        abort(404)
 
     if _check_branch_scope(doc):
         return render_template("errors/403.html"), 403
@@ -128,10 +127,9 @@ def print_document_pdf(doc_type, **kwargs):
     if doc_type == "packing_slip":
         return _handle_packing_slip_pdf(record_id, tid)
 
-    result = model_cls.query.filter_by(id=record_id)
-    if tid is not None:
-        result = result.filter(model_cls.tenant_id == tid)
-    doc = result.first_or_404()
+    doc = PrintService.get_document(model_cls, record_id, tid)
+    if doc is None:
+        abort(404)
 
     if _check_branch_scope(doc):
         return render_template("errors/403.html"), 403
@@ -164,10 +162,9 @@ def _handle_packing_slip(sale_id, tid):
     """Build packing slip context (sale + delivery info) and render."""
     from models import Sale
 
-    sale = Sale.query.filter_by(id=sale_id)
-    if tid is not None:
-        sale = sale.filter(Sale.tenant_id == tid)
-    sale = sale.first_or_404()
+    sale = PrintService.get_document(Sale, sale_id, tid)
+    if sale is None:
+        abort(404)
 
     if _check_branch_scope(sale):
         return render_template("errors/403.html"), 403
@@ -190,10 +187,9 @@ def _handle_packing_slip_pdf(sale_id, tid):
     """Render packing slip as PDF."""
     from models import Sale
 
-    sale = Sale.query.filter_by(id=sale_id)
-    if tid is not None:
-        sale = sale.filter(Sale.tenant_id == tid)
-    sale = sale.first_or_404()
+    sale = PrintService.get_document(Sale, sale_id, tid)
+    if sale is None:
+        abort(404)
 
     if _check_branch_scope(sale):
         return render_template("errors/403.html"), 403
@@ -224,9 +220,7 @@ def _resolve_delivery(sale, tid):
     """Resolve delivery info from shipment or fall back to sale/customer data."""
     shipment = None
     try:
-        from models import Shipment
-
-        shipment = Shipment.query.filter_by(sale_id=sale.id, tenant_id=tid).first()
+        shipment = PrintService.get_shipment_for_sale(sale.id, tid)
     except Exception:
         shipment = None
     if shipment:
@@ -268,7 +262,7 @@ def bulk_print():
 
     documents = []
     for doc_id in doc_ids:
-        doc = model_cls.query.filter_by(id=doc_id, tenant_id=tid).first()
+        doc = PrintService.get_tenant_document(model_cls, doc_id, tid)
         if doc:
             eff_tid = tid or getattr(doc, "tenant_id", None)
             documents.append({"type": doc_type, "context": {entry["context_key"]: doc}})
@@ -293,8 +287,7 @@ def bulk_print():
 def print_history():
     tid = get_active_tenant_id(current_user)
     page = request.args.get("page", 1, type=int)
-    query = PrintHistory.query.filter_by(tenant_id=tid).order_by(PrintHistory.created_at.desc())
-    pagination = query.paginate(page=page, per_page=50, error_out=False)
+    pagination = PrintService.history_query(tid).paginate(page=page, per_page=50, error_out=False)
     return render_template("printing/history.html", history=pagination.items, pagination=pagination)
 
 
@@ -315,7 +308,7 @@ def print_preview_api():
     tid = get_active_tenant_id(current_user)
     model_cls = PrintService._get_model(entry["model"])
 
-    obj = model_cls.query.filter_by(id=doc_id, tenant_id=tid).first()
+    obj = PrintService.get_tenant_document(model_cls, doc_id, tid)
     if not obj:
         return error_response(message="Document not found", status_code=404)
 
@@ -329,7 +322,7 @@ def print_preview_api():
 def api_print_history():
     tid = get_active_tenant_id(current_user)
     limit = request.args.get("limit", 20, type=int)
-    records = PrintHistory.query.filter_by(tenant_id=tid).order_by(PrintHistory.created_at.desc()).limit(limit).all()
+    records = PrintService.list_recent_history(tid, limit=limit)
     return success_response(
         data=[
             {

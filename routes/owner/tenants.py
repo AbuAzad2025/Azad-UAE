@@ -9,9 +9,10 @@ from services.logging_core import LoggingCore
 from services.saas_provisioning_service import SaaSProvisioningService
 from utils.db_safety import atomic_transaction
 
+from services.owner_ops_service import OwnerOpsService
+
 from .common import (
     Tenant,
-    User,
     db,
     error_response,
     flash,
@@ -35,16 +36,9 @@ logger = logging.getLogger(__name__)
 @owner_required
 def tenant_stores():
     """التحكم الهرمي بمتاجر التينانتس — قفل/فك قفل من مالك المنصة."""
-    from models.tenant import Tenant
-    from models.tenant_store import TenantStore
     from services.store_service import StoreService
 
-    stores = (
-        db.session.query(TenantStore, Tenant)
-        .join(Tenant, Tenant.id == TenantStore.tenant_id)
-        .order_by(Tenant.name.asc())
-        .all()
-    )
+    stores = OwnerOpsService.tenant_stores_with_tenants()
     rows = []
     for store, tenant in stores:
         rows.append(
@@ -67,7 +61,7 @@ def tenant_stores():
 @owner_required
 def tenant_ai():
     """Platform-level per-tenant AI visibility toggle."""
-    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name.asc()).all()
+    tenants = OwnerOpsService.active_ai_tenants()
     tenant_ai_levels = {int(t.id): get_tenant_ai_level(int(t.id), default="execute") for t in tenants}
     return render_template("owner/tenant_ai.html", tenants=tenants, tenant_ai_levels=tenant_ai_levels)
 
@@ -75,7 +69,7 @@ def tenant_ai():
 @owner_bp.route("/tenant-ai/<int:tenant_id>/toggle", methods=["POST"])
 @owner_required
 def tenant_ai_toggle(tenant_id):
-    tenant = db.session.get(Tenant, int(tenant_id))
+    tenant = OwnerOpsService.get_tenant(int(tenant_id))
     if not tenant:
         flash(gettext("التينانت غير موجود."), "warning")
         return redirect(url_for("owner.tenant_ai"))
@@ -123,10 +117,9 @@ def tenant_ai_toggle(tenant_id):
 @owner_required
 def tenant_store_platform_toggle(store_id):
     """قفل (force-OFF) أو فك قفل متجر تينانت من مالك المنصة."""
-    from models.tenant_store import TenantStore
     from services.store_service import StoreService
 
-    store = db.session.get(TenantStore, int(store_id))
+    store = OwnerOpsService.get_tenant_store(store_id)
     if not store:
         flash(gettext("المتجر غير موجود."), "warning")
         return redirect(url_for("owner.tenant_stores"))
@@ -173,9 +166,7 @@ def tenants_list():
 @owner_required
 def tenant_create():
     """Create a new tenant from the owner panel."""
-    from models.package import Package
-
-    packages = Package.query.filter_by(is_active=True).order_by(Package.sort_order.asc(), Package.id.asc()).all()
+    packages = OwnerOpsService.active_packages_sorted()
 
     if request.method == "POST":
         try:
@@ -189,7 +180,7 @@ def tenant_create():
             if not default_currency:
                 flash(gettext("يجب اختيار العملة الافتراضية للتينانت."), "danger")
                 return redirect(url_for("owner.tenant_create"))
-            if Tenant.query.filter_by(slug=slug).first():
+            if OwnerOpsService.find_tenant_by_slug(slug):
                 flash(gettext("الـ Slug مستخدم مسبقاً."), "danger")
                 return redirect(url_for("owner.tenant_create"))
 
@@ -298,7 +289,7 @@ def tenant_create():
 @owner_required
 def tenant_suspend(tenant_id):
     """Suspend a tenant (soft-disable all operations)."""
-    tenant = Tenant.query.get_or_404(tenant_id)
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
     reason = request.form.get("reason", "").strip()
 
     # Protect default tenant (id==1) from suspension
@@ -328,7 +319,7 @@ def tenant_suspend(tenant_id):
 @owner_required
 def tenant_activate(tenant_id):
     """Re-activate a suspended tenant."""
-    tenant = Tenant.query.get_or_404(tenant_id)
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
 
     try:
         with atomic_transaction("tenant_activate"):
@@ -352,7 +343,7 @@ def tenant_activate(tenant_id):
 @owner_required
 def tenant_edit(tenant_id):
     """Edit tenant core settings."""
-    tenant = Tenant.query.get_or_404(tenant_id)
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
 
     if request.method == "POST":
         try:
@@ -435,7 +426,7 @@ def tenant_edit(tenant_id):
 @owner_required
 def tenant_delete(tenant_id):
     """Soft-delete a tenant (mark as inactive, do not purge)."""
-    tenant = Tenant.query.get_or_404(tenant_id)
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
 
     # Protect default tenant (id==1) from deletion
     if tenant.id == 1:
@@ -443,7 +434,7 @@ def tenant_delete(tenant_id):
         return redirect(url_for("owner.tenants_list"))
 
     # Check for active users
-    active_users = User.query.filter_by(tenant_id=tenant_id, is_active=True).count()
+    active_users = OwnerOpsService.count_tenant_active_users(tenant_id)
     if active_users > 0:
         flash(
             gettext(f"⚠️ التينانت يحتوي على {active_users} مستخدمين نشطين. قم بتعطيلهم أولاً أو قم بالتعليق."),
@@ -473,7 +464,7 @@ def api_tenant_toggle_status(tenant_id):
     if not request.is_json:
         return error_response(message="JSON required", status_code=400)
     try:
-        tenant = db.session.get(Tenant, tenant_id)
+        tenant = OwnerOpsService.get_tenant(tenant_id)
         if not tenant:
             return error_response(message="Tenant not found", status_code=404)
         if tenant.id == 1:
@@ -511,7 +502,7 @@ def api_tenant_update_package(tenant_id):
         return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
-        tenant = db.session.get(Tenant, tenant_id)
+        tenant = OwnerOpsService.get_tenant(tenant_id)
         if not tenant:
             return error_response(message="Tenant not found", status_code=404)
         field = data.get("field")
@@ -549,7 +540,7 @@ def api_tenant_update_package(tenant_id):
 @owner_required
 def tenant_extend_subscription(tenant_id):
     """Manually extend (or shorten) a tenant's subscription duration."""
-    tenant = Tenant.query.get_or_404(tenant_id)
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
 
     days_raw = str(request.form.get("days", "0") or "0").strip()
     try:
@@ -600,7 +591,7 @@ def api_tenant_extend_subscription(tenant_id):
     if not request.is_json:
         return error_response(message="JSON required", status_code=400)
     data = request.get_json(silent=True) or {}
-    tenant = db.session.get(Tenant, tenant_id)
+    tenant = OwnerOpsService.get_tenant(tenant_id)
     if not tenant:
         return error_response(message="Tenant not found", status_code=404)
 

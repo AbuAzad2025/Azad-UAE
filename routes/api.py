@@ -3,17 +3,16 @@ from datetime import UTC, datetime
 from urllib.parse import urlparse
 
 from flask import Blueprint, abort, current_app, make_response, request
-
-from utils.api_response import error_response, paginated_response, success_response
 from flask_babel import gettext
 from flask_login import current_user, login_required
-from sqlalchemy import select
 
 from extensions import csrf, db, limiter
-from models import Customer, Product, Supplier, User
+from models import Customer, Product, Supplier
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
+from services.platform_query_service import PlatformQueryService
 from services.stock_service import StockService
+from utils.api_response import error_response, success_response
 from utils.branching import (
     get_accessible_warehouse_ids,
     get_accessible_warehouses,
@@ -119,60 +118,24 @@ def _validate_public_telemetry_origin():
 
 
 def _scoped_customer_query():
-    from models import Payment, Sale
-    from models.receipt import Receipt
-
-    query = Customer.query
-    tid = get_active_tenant_id(current_user)
-    if tid is not None:
-        query = query.filter(Customer.tenant_id == tid)
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is None:
-        return query
-
-    sale_ids = select(Sale.customer_id).where(Sale.customer_id.isnot(None), Sale.branch_id == scoped_branch_id)
-    payment_ids = select(Payment.customer_id).where(
-        Payment.customer_id.isnot(None), Payment.branch_id == scoped_branch_id
-    )
-    receipt_ids = select(Receipt.customer_id).where(
-        Receipt.customer_id.isnot(None), Receipt.branch_id == scoped_branch_id
-    )
-    return query.filter(Customer.id.in_(sale_ids.union(payment_ids, receipt_ids)))
+    return PlatformQueryService.scoped_customers_query(current_user)
 
 
 def _scoped_supplier_query():
-    from models import Payment, Purchase
-
-    query = Supplier.query
-    tid = get_active_tenant_id(current_user)
-    if tid is not None:
-        query = query.filter(Supplier.tenant_id == tid)
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is None:
-        return query
-
-    purchase_ids = select(Purchase.supplier_id).where(
-        Purchase.supplier_id.isnot(None), Purchase.branch_id == scoped_branch_id
-    )
-    payment_ids = select(Payment.supplier_id).where(
-        Payment.supplier_id.isnot(None), Payment.branch_id == scoped_branch_id
-    )
-    return query.filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
+    return PlatformQueryService.scoped_suppliers_query(current_user)
 
 
 def _customer_balance(customer_id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
-        customer = _scoped_customer_query().filter(Customer.id == customer_id).first()
-        return float(customer.get_balance_aed()) if customer else 0.0
+        return PlatformQueryService.customer_balance_unscoped(customer_id, current_user)
     return float(PaymentService.get_customer_balance_scoped(customer_id, branch_id=scoped_branch_id))
 
 
 def _supplier_balance(supplier_id):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is None:
-        supplier = _scoped_supplier_query().filter(Supplier.id == supplier_id).first()
-        return float(supplier.get_balance_aed()) if supplier else 0.0
+        return PlatformQueryService.supplier_balance_unscoped(supplier_id, current_user)
     return float(PaymentService.get_supplier_balance_scoped(supplier_id, branch_id=scoped_branch_id))
 
 
@@ -183,9 +146,7 @@ def health():
 
 @api_bp.route("/version")
 def version():
-    return success_response(
-        data={"version": "1.0.0", "name": "Warehouse & Sales Management System"}
-    )
+    return success_response(data={"version": "1.0.0", "name": "Warehouse & Sales Management System"})
 
 
 @api_bp.route("/payment-fields/<payment_method>")
@@ -377,11 +338,7 @@ def api_search():
         warehouse_id = request.args.get("warehouse_id", type=int)
         purpose = request.args.get("purpose", "").strip()
         warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
-        tid = get_active_tenant_id(current_user)
-        if purpose == "purchase":
-            products_query = Product.query.filter(Product.is_active, Product.tenant_id == tid)
-        else:
-            products_query = StockService.get_visible_products_query(current_user)
+        products_query = PlatformQueryService.products_base_query(current_user, purpose)
         if query:
             products_query = products_query.filter(
                 db.or_(
@@ -506,15 +463,9 @@ def check_username():
     import re
 
     if not re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
-        return success_response(
-            data={"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")}
-        )
+        return success_response(data={"available": False, "error": gettext("استخدم حروف إنجليزية وأرقام و_ فقط")})
 
-    tid = get_active_tenant_id(current_user)
-    existing = User.query.filter_by(username=username)
-    if tid is not None:
-        existing = existing.filter(User.tenant_id == tid)
-    existing = existing.first()
+    existing = PlatformQueryService.find_existing_username(username, current_user)
 
     if existing:
         year = datetime.now().year
@@ -574,17 +525,12 @@ def exchange_rates_display():
     """
     from flask_login import current_user
 
-    from models import Tenant
     from services.exchange_rate_service import ExchangeRateService
     from utils.tenanting import get_active_tenant_id
 
     # Use tenant's base currency as the base for display
     tenant_id = get_active_tenant_id(current_user)
-    base = (
-        Tenant.query.get(tenant_id).get_base_currency
-        if tenant_id and Tenant.query.get(tenant_id)
-        else request.args.get("base", "USD").upper()
-    )
+    base = PlatformQueryService.tenant_base_currency(tenant_id, request.args.get("base", "USD").upper())
 
     symbols_str = request.args.get("symbols", "")
     if symbols_str:
@@ -914,11 +860,8 @@ def api_warehouse_products(wid):
 @login_required
 def api_product_info(pid):
     """معلومات منتج (سعر، مخزون)"""
-    product = db.session.get(Product, pid)
+    product = PlatformQueryService.product_for_info(pid, current_user)
     if not product:
-        return error_response(gettext("المنتج غير موجود"), status_code=404)
-    tid = get_active_tenant_id(current_user)
-    if tid is not None and product.tenant_id != tid:
         return error_response(gettext("المنتج غير موجود"), status_code=404)
     warehouse_id = request.args.get("warehouse_id", type=int)
     if warehouse_id:
@@ -956,11 +899,7 @@ def api_product_info(pid):
 @login_required
 def api_product_by_barcode(code):
     """البحث عن منتج بواسطة الباركود"""
-    tid = get_active_tenant_id(current_user)
-    query = Product.query.filter(Product.barcode == code)
-    if tid is not None:
-        query = query.filter(Product.tenant_id == tid)
-    product = query.first()
+    product = PlatformQueryService.find_product_by_barcode(code, current_user)
     if not product:
         return error_response(
             gettext("لم يتم العثور على منتج بهذا الباركود"),
@@ -984,11 +923,7 @@ def api_barcode_validate():
     if not code:
         return success_response(data={"valid": False, "exists": False, "normalized": ""})
     normalized = code
-    tid = get_active_tenant_id(current_user)
-    query = Product.query.filter(Product.barcode == code)
-    if tid is not None:
-        query = query.filter(Product.tenant_id == tid)
-    exists = query.first() is not None
+    exists = PlatformQueryService.find_product_by_barcode(code, current_user) is not None
     return success_response(
         data={
             "valid": not exists,

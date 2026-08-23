@@ -11,6 +11,43 @@ from utils.tenanting import get_active_tenant_id
 
 class TicketService:
     @staticmethod
+    def tenant_categories(tid):
+        """Active ticket categories, optionally scoped to the tenant."""
+        from models import TicketCategory
+
+        q = TicketCategory.query.filter(TicketCategory.is_active)
+        if tid is not None:
+            q = q.filter(TicketCategory.tenant_id == tid)
+        return q.all()
+
+    @staticmethod
+    def tenant_priorities(tid):
+        """Active ticket priorities, optionally scoped to the tenant."""
+        from models import TicketPriority
+
+        q = TicketPriority.query.filter(TicketPriority.is_active)
+        if tid is not None:
+            q = q.filter(TicketPriority.tenant_id == tid)
+        return q.all()
+
+    @staticmethod
+    def tenant_customers(tid):
+        """Active customers, optionally scoped to the tenant."""
+        from models import Customer
+
+        q = Customer.query.filter(Customer.is_active)
+        if tid is not None:
+            q = q.filter(Customer.tenant_id == tid)
+        return q.order_by(Customer.name).all()
+
+    @staticmethod
+    def tenant_users(tid):
+        """Active users of the tenant ordered by full name; empty when no tenant."""
+        from models import User
+
+        return User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+
+    @staticmethod
     def _validate_tenant(ticket, user):
         tid = get_active_tenant_id(user)
         if tid is not None and int(ticket.tenant_id) != int(tid):

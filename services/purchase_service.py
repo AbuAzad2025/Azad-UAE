@@ -783,3 +783,81 @@ class PurchaseService:
                 supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
         PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
         db.session.delete(purchase)
+
+    @staticmethod
+    def count_linked_cheques(purchase_id, tenant_id=None):
+        """Number of cheques linked to a purchase within the tenant."""
+        from models import Cheque
+
+        return Cheque.query.filter_by(purchase_id=purchase_id, tenant_id=tenant_id).count()
+
+    @staticmethod
+    def has_stock_movements(purchase_id):
+        """True when the purchase produced stock movements."""
+        from models.stock_movement import StockMovement
+
+        return (
+            StockMovement.query.filter_by(
+                reference_type=GLRef.PURCHASE,
+                reference_id=purchase_id,
+            ).count()
+            > 0
+        )
+
+    @staticmethod
+    def get_tenant_supplier(supplier_id, tenant_id=None):
+        """Fetch a supplier scoped to the given tenant (None when absent)."""
+        return Supplier.query.filter_by(id=supplier_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def get_returns_with_lines(purchase_id, tenant_id=None):
+        """(returns, return_lines) for a purchase, newest returns first."""
+        returns_query = PurchaseReturn.query.filter(
+            PurchaseReturn.purchase_id == purchase_id,
+        )
+        if tenant_id is not None:
+            returns_query = returns_query.filter(PurchaseReturn.tenant_id == tenant_id)
+        returns = returns_query.order_by(PurchaseReturn.created_at.desc()).all()
+        return_lines = (
+            PurchaseReturnLine.query.filter(PurchaseReturnLine.return_id.in_([r.id for r in returns])).all()
+            if returns
+            else []
+        )
+        return returns, return_lines
+
+    @staticmethod
+    def list_requisitions(tenant_id=None):
+        """All purchase requisitions for the tenant, newest first."""
+        from models import PurchaseRequisition
+
+        return (
+            PurchaseRequisition.query.filter_by(tenant_id=tenant_id).order_by(PurchaseRequisition.created_at.desc()).all()
+        )
+
+    @staticmethod
+    def list_active_products(tenant_id=None):
+        """Active products for the tenant ([] when tenant is unknown)."""
+        if not tenant_id:
+            return []
+        return Product.query.filter_by(tenant_id=tenant_id, is_active=True).all()
+
+    @staticmethod
+    def list_goods_receipts(tenant_id=None):
+        """All goods receipts for the tenant, newest first."""
+        from models import GoodsReceipt
+
+        return GoodsReceipt.query.filter_by(tenant_id=tenant_id).order_by(GoodsReceipt.created_at.desc()).all()
+
+    @staticmethod
+    def list_receivable_purchase_orders(tenant_id=None):
+        """Purchase orders open for receiving ([] when tenant is unknown)."""
+        from models import PurchaseOrder
+
+        if not tenant_id:
+            return []
+        return (
+            PurchaseOrder.query.filter(
+                PurchaseOrder.tenant_id == tenant_id,
+                PurchaseOrder.status.in_(["confirmed", "partially_received"]),
+            ).all()
+        )

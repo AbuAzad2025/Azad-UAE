@@ -18,6 +18,7 @@ from models import Expense, ExpenseCategory
 from services.cheque_service import ChequeService, process_cheque_issue
 from services.currency_service import CurrencyService
 from services.exchange_rate_service import ExchangeRateService
+from services.expense_service import ExpenseService
 from services.gl_posting import post_or_fail
 from services.gl_service import GLService
 from services.logging_core import LoggingCore
@@ -61,13 +62,9 @@ def _build_expense_gl_lines(expense, tenant_id):
     category = expense.category
     expense_account = category.gl_account_code if category and category.gl_account_code else "6990"
     expense_concept = None if category and category.gl_account_code else "MISC_EXPENSE"
-    from models import GLAccount
 
     tid = tenant_id
-    acc_check = GLAccount.query.filter_by(
-        code=str(expense_account),
-        tenant_id=int(tid) if tid else None,
-    ).first()
+    acc_check = ExpenseService.find_gl_account(expense_account, tid)
     if acc_check and acc_check.is_header:
         expense_account = "6990"
         expense_concept = "MISC_EXPENSE"
@@ -239,7 +236,7 @@ def create():
                 from services.budget_enforcement import check_budget_for_account
                 from services.gl_service import GL_ACCOUNTS as _GL_ACCTS
 
-                cat = ExpenseCategory.query.get(expense.category_id) if expense.category_id else None
+                cat = ExpenseService.get_category(expense.category_id)
                 expense_acct = getattr(cat, "gl_account_code", None) or _GL_ACCTS.get("misc_expense", "6500")
                 budget_check = check_budget_for_account(
                     tenant_id=tid,
@@ -333,9 +330,7 @@ def edit(**kwargs):
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
 
-    from models import ArchivedRecord
-
-    is_archived = ArchivedRecord.query.filter_by(table_name="expenses", record_id=expense.id).first() is not None
+    is_archived = ExpenseService.is_expense_archived("expenses", expense.id)
     if is_archived:
         flash(gettext("⚠️ لا يمكن تعديل مصروف مؤرشف."), "warning")
         return redirect(url_for("expenses.view", id=record_id))
@@ -431,7 +426,6 @@ def edit(**kwargs):
 @permission_required("manage_expenses")
 def delete(**kwargs):
     """حذف (أرشفة) المصروف"""
-    from models import Cheque
     from services.archive_service import ArchiveService
 
     record_id = kwargs.pop("id")
@@ -441,7 +435,7 @@ def delete(**kwargs):
 
     has_links = False
 
-    cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
+    cheque = ExpenseService.get_expense_cheque(expense.id, expense.tenant_id)
     if cheque and cheque.status in ["cleared", "deposited", "bounced", "cancelled"]:
         has_links = True
 
@@ -500,7 +494,6 @@ def delete(**kwargs):
 @permission_required("manage_expenses")
 def cancel(**kwargs):
     """إلغاء مصروف — عكس القيد المحاسبي وتحديث حالة الشيك"""
-    from models import Cheque
     from utils.gl_tenant import reverse_document_gl
 
     record_id = kwargs.pop("id")
@@ -513,7 +506,7 @@ def cancel(**kwargs):
 
         assert_period_open(expense.expense_date, expense.tenant_id)
 
-        cheque = Cheque.query.filter_by(expense_id=expense.id, tenant_id=expense.tenant_id).first()
+        cheque = ExpenseService.get_expense_cheque(expense.id, expense.tenant_id)
 
         with atomic_transaction("expense_cancel"):
             if cheque and cheque.status not in ("cancelled",):
@@ -555,12 +548,8 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
     """التحقق من صحة حساب الأستاذ لفئة المصروف"""
     if not gl_account_code:
         return True
-    from models import GLAccount
 
-    account = GLAccount.query.filter_by(
-        code=str(gl_account_code),
-        tenant_id=int(tenant_id) if tenant_id else None,
-    ).first()
+    account = ExpenseService.find_gl_account(gl_account_code, tenant_id)
     if not account:
         raise ValueError(gettext(f'⚠️ حساب الأستاذ "{gl_account_code}" غير موجود.'))
     if account.is_header:
@@ -654,14 +643,10 @@ def _archived_expense_row(archived):
 @permission_required("manage_expenses")
 def archived():
     """عرض المصروفات المؤرشفة"""
-    from models import ArchivedRecord
-
     tid = get_active_tenant_id(current_user)
-    archived_expenses_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "expenses")
-    if tid is not None:
-        archived_expenses_query = archived_expenses_query.filter(ArchivedRecord.tenant_id == tid)
+    archived_records = ExpenseService.list_archived_expenses(tid)
 
-    archived_items = [_archived_expense_row(archived) for archived in archived_expenses_query.all()]
+    archived_items = [_archived_expense_row(archived) for archived in archived_records]
     archived_items.sort(key=lambda x: x["archived_at"], reverse=True)
 
     return render_template("expenses/archived.html", expenses=archived_items)
@@ -698,14 +683,9 @@ def archive(**kwargs):
 @permission_required("manage_expenses")
 def restore(**kwargs):
     """استعادة مصروف من الأرشيف"""
-    from models import ArchivedRecord
-
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="expenses", record_id=record_id)
-    if tid is not None:
-        archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
-    archived_record = archived_query.first_or_404()
+    archived_record = ExpenseService.get_archived_expense_record(record_id, tid)
 
     try:
         with atomic_transaction("expense_restore"):

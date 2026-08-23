@@ -13,17 +13,17 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Purchase, PurchaseReturn, PurchaseReturnLine
+from models import Purchase
 from services.currency_service import CurrencyService
 from services.logging_core import LoggingCore
 from services.purchase_service import PurchaseService
+from utils.api_response import error_response, success_response
 from utils.branching import (
     ensure_warehouse_access,
     get_accessible_warehouses,
     get_active_branch_id,
     should_show_all_branch_columns,
 )
-from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
@@ -270,7 +270,6 @@ def edit(**kwargs):
 @permission_required("manage_purchases")
 def delete(**kwargs):
     """حذف (أرشفة) فاتورة شراء"""
-    from models import Cheque
     from services.archive_service import ArchiveService
 
     record_id = kwargs.pop("id")
@@ -286,19 +285,11 @@ def delete(**kwargs):
     if purchase.get_paid_amount() > 0:
         has_links = True
 
-    linked_cheques = Cheque.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).count()
+    linked_cheques = PurchaseService.count_linked_cheques(purchase.id, tenant_id=purchase.tenant_id)
     if linked_cheques > 0:
         has_links = True
 
-    from models.stock_movement import StockMovement
-
-    has_stock = (
-        StockMovement.query.filter_by(
-            reference_type=GLRef.PURCHASE,
-            reference_id=purchase.id,
-        ).count()
-        > 0
-    )
+    has_stock = PurchaseService.has_stock_movements(purchase.id)
 
     try:
         if has_links:
@@ -344,9 +335,10 @@ def delete(**kwargs):
                 )
 
                 if purchase.supplier_id:
-                    from models import Supplier
-
-                    supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
+                    supplier = PurchaseService.get_tenant_supplier(
+                        purchase.supplier_id,
+                        tenant_id=purchase.tenant_id,
+                    )
                     if supplier:
                         from decimal import Decimal
 
@@ -442,17 +434,7 @@ def purchase_return(**kwargs):
             current_app.logger.exception("Purchase return error")
 
     tid = get_active_tenant_id(current_user)
-    returns_query = PurchaseReturn.query.filter(
-        PurchaseReturn.purchase_id == purchase.id,
-    )
-    if tid is not None:
-        returns_query = returns_query.filter(PurchaseReturn.tenant_id == tid)
-    returns = returns_query.order_by(PurchaseReturn.created_at.desc()).all()
-    return_lines = (
-        PurchaseReturnLine.query.filter(PurchaseReturnLine.return_id.in_([r.id for r in returns])).all()
-        if returns
-        else []
-    )
+    returns, return_lines = PurchaseService.get_returns_with_lines(purchase.id, tenant_id=tid)
     return render_template(
         "purchases/return.html",
         purchase=purchase,
@@ -547,12 +529,8 @@ def api_calculate_purchase_totals():
 @login_required
 @permission_required("purchase_req:create")
 def requisitions_list():
-    from models import PurchaseRequisition
-
     tid = get_active_tenant_id(current_user)
-    requisitions = (
-        PurchaseRequisition.query.filter_by(tenant_id=tid).order_by(PurchaseRequisition.created_at.desc()).all()
-    )
+    requisitions = PurchaseService.list_requisitions(tid)
     return render_template("purchasing/requisitions.html", requisitions=requisitions)
 
 
@@ -570,10 +548,8 @@ def create_requisition():
             return redirect(url_for("purchases.requisitions_list"))
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
-    from models import Product
-
     tid = get_active_tenant_id(current_user)
-    products = Product.query.filter_by(tenant_id=tid, is_active=True).all() if tid else []
+    products = PurchaseService.list_active_products(tid)
     return render_template("purchasing/requisitions.html", products=products, creating=True)
 
 
@@ -633,10 +609,8 @@ def reject_requisition(pr_id):
 @login_required
 @permission_required("grn:manage")
 def grn_list():
-    from models import GoodsReceipt
-
     tid = get_active_tenant_id(current_user)
-    receipts = GoodsReceipt.query.filter_by(tenant_id=tid).order_by(GoodsReceipt.created_at.desc()).all()
+    receipts = PurchaseService.list_goods_receipts(tid)
     return render_template("purchasing/grn.html", receipts=receipts)
 
 
@@ -655,17 +629,8 @@ def create_grn():
             return redirect(url_for("purchases.grn_list"))
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
-    from models import PurchaseOrder
-
     tid = get_active_tenant_id(current_user)
-    pos = (
-        PurchaseOrder.query.filter(
-            PurchaseOrder.tenant_id == tid,
-            PurchaseOrder.status.in_(["confirmed", "partially_received"]),
-        ).all()
-        if tid
-        else []
-    )
+    pos = PurchaseService.list_receivable_purchase_orders(tid)
     return render_template("purchasing/grn.html", pos=pos, creating=True)
 
 

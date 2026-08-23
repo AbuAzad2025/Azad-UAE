@@ -510,7 +510,7 @@ class StoreService:
         if not lp or (lp.points or 0) < points:
             raise ValueError("Insufficient loyalty points")
         lp.points = (lp.points or 0) - points
-        lp.points_redeemed = (lp.points_redeemed or 0) + points
+        lp.points_redeemed = (lp.points or 0) + points
         txn = ShopLoyaltyTransaction(
             tenant_id=int(tenant_id),
             account_id=int(account_id),
@@ -519,3 +519,57 @@ class StoreService:
         )
         db.session.add(txn)
         return Decimal(points) / Decimal("100")
+
+    # ─── Route-facing scoped fetches ───
+
+    @staticmethod
+    def find_custom_domain_clash(custom_domain: str, exclude_tenant_id: int):
+        """Another tenant's store already claiming this custom domain (or None)."""
+        from models import TenantStore
+
+        return TenantStore.query.filter(
+            TenantStore.custom_domain == custom_domain,
+            TenantStore.tenant_id != exclude_tenant_id,
+        ).first()
+
+    @staticmethod
+    def list_active_products(tenant_id: int):
+        """Tenant-scoped active products ordered by name (transfer picker)."""
+        from models import Product
+
+        return Product.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(Product.name.asc()).all()
+
+    @staticmethod
+    def get_transfer_product(tenant_id: int, product_id: int):
+        """Fetch a product for a stock transfer; raises ValueError when missing."""
+        from flask_babel import gettext
+
+        from models import Product
+
+        product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
+        if not product:
+            raise ValueError(gettext("المنتج غير موجود."))
+        return product
+
+    @staticmethod
+    def online_orders_query(tenant_id: int, status_filter=None):
+        """Online-store orders query, newest first, optionally status-filtered."""
+        from models import Sale
+        from services.store_order_service import StoreOrderService
+
+        query = Sale.query.filter_by(tenant_id=tenant_id, source="online_store").order_by(Sale.sale_date.desc())
+        if status_filter in StoreOrderService.STORE_ORDER_STATUSES:
+            query = query.filter_by(status=status_filter)
+        return query
+
+    @staticmethod
+    def list_customer_accounts(tenant_id: int, limit: int = 200):
+        """Most recent shop customer accounts for the store admin."""
+        from models import ShopCustomerAccount
+
+        return (
+            ShopCustomerAccount.query.filter_by(tenant_id=tenant_id)
+            .order_by(ShopCustomerAccount.created_at.desc())
+            .limit(limit)
+            .all()
+        )

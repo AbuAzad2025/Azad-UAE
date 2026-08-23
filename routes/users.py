@@ -16,9 +16,9 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Branch, Role, User
-from models.tenant import Tenant
+from models import User
 from services.logging_core import LoggingCore
+from services.user_service import UserService
 from utils.auth_helpers import (
     enforce_company_user_tenant,
     role_level_for,
@@ -47,14 +47,7 @@ users_bp = Blueprint("users", __name__, url_prefix="/users")
 
 
 def _available_branches():
-    tid = get_active_tenant_id(current_user)
-    query = Branch.query.filter_by(is_active=True)
-    if tid is not None:
-        query = query.filter(Branch.tenant_id == tid)
-    scoped_branch_id = branch_scope_id_for(current_user)
-    if scoped_branch_id is not None:
-        query = query.filter(Branch.id == scoped_branch_id)
-    return query.order_by(Branch.code, Branch.name).all()
+    return UserService.available_branches(current_user)
 
 
 def _clean_branch_id(raw_value):
@@ -65,13 +58,13 @@ def _clean_branch_id(raw_value):
 
 def _username_example():
     tid = get_active_tenant_id(current_user)
-    tenant = db.session.get(Tenant, int(tid)) if tid else None
+    tenant = UserService.get_tenant(tid)
     prefix = tenant_username_prefix(tenant) if tenant else "CODE"
     return f"{prefix}_ahmad"
 
 
 def _validate_user_branch(role_id, branch_id):
-    role = db.session.get(Role, role_id) if role_id else None
+    role = UserService.get_role(role_id)
     if not role:
         raise ValueError(gettext("يرجى اختيار الدور الوظيفي."))
 
@@ -144,8 +137,7 @@ def index():
 @limiter.limit("10 per minute", methods=["POST"])
 def create():
     current_level = role_level_for_user(current_user)
-    roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
+    roles = UserService.roles_visible_to_level(current_level)
     branches = _available_branches()
     default_form = {"is_active": "1"}
 
@@ -172,7 +164,7 @@ def create():
                 return _create_form_context(roles, branches, form_values)
 
             tid = get_active_tenant_id(current_user)
-            tenant = db.session.get(Tenant, int(tid)) if tid else None
+            tenant = UserService.get_tenant(tid)
             uname_err = validate_username_for_user(username, is_owner=False, tenant=tenant)
             if uname_err:
                 prefix = tenant_username_prefix(tenant) if tenant else "CODE"
@@ -185,7 +177,7 @@ def create():
                 flash(str(e), "warning")
                 return _create_form_context(roles, branches, form_values)
 
-            conflict = User.query.filter(User.username.ilike(username)).first()
+            conflict = UserService.find_username_conflict(username)
             if conflict:
                 flash(gettext("اسم المستخدم مستخدم مسبقاً على مستوى النظام."), "danger")
                 return _create_form_context(roles, branches, form_values)
@@ -245,11 +237,7 @@ def create():
 @permission_required("manage_users")
 def view(**kwargs):
     record_id = kwargs.pop("id")
-    tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=record_id, is_owner=False)
-    if tid is not None:
-        user_query = user_query.filter(User.tenant_id == tid)
-    user = user_query.first_or_404()
+    user = UserService.get_scoped_non_owner_or_404(record_id, current_user)
     _ensure_user_in_scope(user)
     return render_template("users/view.html", user=user)
 
@@ -260,16 +248,11 @@ def view(**kwargs):
 @limiter.limit("10 per minute", methods=["POST"])
 def edit(**kwargs):
     record_id = kwargs.pop("id")
-    tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=record_id, is_owner=False)
-    if tid is not None:
-        user_query = user_query.filter(User.tenant_id == tid)
-    user = user_query.first_or_404()
+    user = UserService.get_scoped_non_owner_or_404(record_id, current_user)
     _ensure_user_in_scope(user)
 
     current_level = role_level_for_user(current_user)
-    roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
+    roles = UserService.roles_visible_to_level(current_level)
     branches = _available_branches()
 
     if request.method == "POST":
@@ -323,11 +306,7 @@ def edit(**kwargs):
 @permission_required("manage_users")
 def toggle_active(**kwargs):
     record_id = kwargs.pop("id")
-    tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=record_id, is_owner=False)
-    if tid is not None:
-        user_query = user_query.filter(User.tenant_id == tid)
-    user = user_query.first_or_404()
+    user = UserService.get_scoped_non_owner_or_404(record_id, current_user)
     _ensure_user_in_scope(user)
 
     with atomic_transaction("user_toggle_active"):
@@ -346,10 +325,7 @@ def toggle_active(**kwargs):
 def delete(**kwargs):
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    user_query = User.query.filter_by(id=record_id, is_owner=False)
-    if tid is not None:
-        user_query = user_query.filter(User.tenant_id == tid)
-    user = user_query.first_or_404()
+    user = UserService.get_scoped_non_owner_or_404(record_id, current_user)
     _ensure_user_in_scope(user)
 
     current_level = role_level_for_user(current_user)
@@ -368,12 +344,7 @@ def delete(**kwargs):
 
     try:
         with atomic_transaction("user_delete"):
-            from models import Sale
-
-            sales_query = Sale.query.filter_by(seller_id=record_id)
-            if tid is not None:
-                sales_query = sales_query.filter(Sale.tenant_id == tid)
-            sales_count = sales_query.count()
+            sales_count = UserService.count_sales_for_seller(record_id, tid)
 
             has_sales = sales_count > 0
             if has_sales:

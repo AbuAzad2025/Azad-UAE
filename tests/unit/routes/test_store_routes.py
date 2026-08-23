@@ -54,13 +54,6 @@ def store_service_mocks():
     physical_wh = _mock_warehouse(20)
     physical_wh.id = 20
     sale_query = _chain_query(all=[_mock_sale()])
-    product_query = MagicMock()
-    product_query.filter_by.return_value.order_by.return_value.all.return_value = [_mock_product()]
-    product_query.filter_by.return_value.first.return_value = _mock_product()
-    customer_query = MagicMock()
-    customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = []
-    tenant_store_query = MagicMock()
-    tenant_store_query.filter.return_value.first.return_value = None
     patches = [
         patch("routes.store.StoreService.get_tenant_store", return_value=store),
         patch("routes.store.StoreService.ensure_tenant_store", return_value=store),
@@ -79,6 +72,26 @@ def store_service_mocks():
         patch(
             "routes.store.StoreService.get_physical_warehouses",
             return_value=[physical_wh],
+        ),
+        patch(
+            "routes.store.StoreService.list_active_products",
+            return_value=[_mock_product()],
+        ),
+        patch(
+            "routes.store.StoreService.get_transfer_product",
+            return_value=_mock_product(),
+        ),
+        patch(
+            "routes.store.StoreService.online_orders_query",
+            return_value=sale_query,
+        ),
+        patch(
+            "routes.store.StoreService.list_customer_accounts",
+            return_value=[],
+        ),
+        patch(
+            "routes.store.StoreService.find_custom_domain_clash",
+            return_value=None,
         ),
         patch("routes.store.StoreService.validate_slug", side_effect=lambda s: s),
         patch(
@@ -120,10 +133,6 @@ def store_service_mocks():
             return_value=MagicMock(),
         ),
         patch("routes.store.StockService.transfer_stock"),
-        patch("routes.store.Product.query", product_query),
-        patch("routes.store.Sale.query", sale_query),
-        patch("routes.store.ShopCustomerAccount.query", customer_query),
-        patch("routes.store.TenantStore.query", tenant_store_query),
         patch("routes.store.render_template", return_value="ok"),
         patch("extensions.db.session"),
         patch(
@@ -239,10 +248,8 @@ class TestStoreAdminSettings:
 
     def test_settings_post_custom_domain_clash(self, store_client):
         clash = MagicMock()
-        tenant_store_query = MagicMock()
-        tenant_store_query.filter.return_value.first.return_value = clash
         with (
-            patch("routes.store.TenantStore.query", tenant_store_query),
+            patch("routes.store.StoreService.find_custom_domain_clash", return_value=clash),
             patch("routes.store.render_template", return_value="settings"),
         ):
             resp = store_client.post(
@@ -379,10 +386,8 @@ class TestStoreAdminCustomers:
     def test_customers_renders(self, store_client):
         account = MagicMock()
         account.id = 1
-        customer_query = MagicMock()
-        customer_query.filter_by.return_value.order_by.return_value.limit.return_value.all.return_value = [account]
         with (
-            patch("routes.store.ShopCustomerAccount.query", customer_query),
+            patch("routes.store.StoreService.list_customer_accounts", return_value=[account]),
             patch("routes.store.render_template", return_value="customers") as render,
         ):
             resp = store_client.get("/store/admin/customers")

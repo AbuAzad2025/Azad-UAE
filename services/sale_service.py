@@ -33,10 +33,7 @@ class SaleService:
             return
         if discount_decimal > subtotal:
             raise ValueError(
-                gettext(
-                    "⚠️ قيمة الخصم تتجاوز إجمالي الفاتورة.\n"
-                    f"💡 الحد الأقصى المسموح للخصم هو {subtotal}"
-                )
+                gettext(f"⚠️ قيمة الخصم تتجاوز إجمالي الفاتورة.\n💡 الحد الأقصى المسموح للخصم هو {subtotal}")
             )
 
     @staticmethod
@@ -1359,3 +1356,46 @@ class SaleService:
         except Exception:
             current_app.logger.exception("Payment status update flush failed for %s", sale.sale_number)
             raise
+
+    # ─── Route-facing scoped fetches ───
+
+    @staticmethod
+    def list_active_users(tenant_id=None):
+        """Active users of a tenant (sales-rep picker); empty list without a tenant."""
+        from models import User
+
+        return User.query.filter_by(tenant_id=tenant_id, is_active=True).all() if tenant_id else []
+
+    @staticmethod
+    def list_archived_sale_records(tenant_id=None, limit=500):
+        """Archived sales records, newest first, optionally tenant-scoped."""
+        from models import ArchivedRecord
+
+        query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "sales")
+        if tenant_id is not None:
+            query = query.filter(ArchivedRecord.tenant_id == tenant_id)
+        return query.order_by(ArchivedRecord.archived_at.desc()).limit(limit).all()
+
+    @staticmethod
+    def get_archived_sale_record(record_id, tenant_id=None):
+        """Fetch a single archived sales record (or None)."""
+        from models import ArchivedRecord
+
+        query = ArchivedRecord.query.filter_by(table_name="sales", record_id=record_id)
+        if tenant_id is not None:
+            query = query.filter(ArchivedRecord.tenant_id == tenant_id)
+        return query.first()
+
+    @staticmethod
+    def count_sale_payments(sale_id, tenant_id=None):
+        """Number of payment rows linked to a sale (tenant-scoped)."""
+        from models import Payment
+
+        return Payment.query.filter_by(sale_id=sale_id, tenant_id=tenant_id).count()
+
+    @staticmethod
+    def count_sale_cheques(sale_id, tenant_id=None):
+        """Number of cheque rows linked to a sale (tenant-scoped)."""
+        from models import Cheque
+
+        return Cheque.query.filter_by(sale_id=sale_id, tenant_id=tenant_id).count()

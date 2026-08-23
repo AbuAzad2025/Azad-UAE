@@ -685,6 +685,114 @@ class PayrollService:
         return generated_count, skipped_count
 
     @staticmethod
+    def list_employees(tenant_id=None, branch_id=None):
+        from models import Employee
+
+        query = Employee.query
+        if tenant_id is not None:
+            query = query.filter(Employee.tenant_id == tenant_id)
+        if branch_id is not None:
+            query = query.filter(Employee.branch_id == branch_id)
+        return query.order_by(Employee.name).all()
+
+    @staticmethod
+    def list_branches_at_scope(tenant_id, scoped_branch_id):
+        """Active branches restricted to the exact scoped branch id."""
+        from models import Branch
+
+        query = Branch.query.filter_by(id=scoped_branch_id, is_active=True)
+        if tenant_id is not None:
+            query = query.filter(Branch.tenant_id == tenant_id)
+        return query.all()
+
+    @staticmethod
+    def list_branch_options(tenant_id=None, scoped_branch_id=None):
+        from models import Branch
+
+        query = Branch.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            query = query.filter(Branch.tenant_id == tenant_id)
+        if scoped_branch_id is not None:
+            query = query.filter(Branch.id == scoped_branch_id)
+        return query.order_by(Branch.code, Branch.name).all()
+
+    @staticmethod
+    def list_active_employees(tenant_id=None, branch_id=None):
+        from models import Employee
+
+        query = Employee.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            query = query.filter(Employee.tenant_id == tenant_id)
+        if branch_id is not None:
+            query = query.filter(Employee.branch_id == branch_id)
+        return query.order_by(Employee.name).all()
+
+    @staticmethod
+    def advance_page_data(tenant_id=None, scoped_branch_id=None):
+        from models import Employee, SalaryAdvance
+
+        employees_query = Employee.query.filter_by(is_active=True)
+        advances_query = SalaryAdvance.query.join(Employee, SalaryAdvance.employee_id == Employee.id)
+        if tenant_id is not None:
+            employees_query = employees_query.filter(Employee.tenant_id == tenant_id)
+            advances_query = advances_query.filter(Employee.tenant_id == tenant_id)
+        if scoped_branch_id is not None:
+            employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
+            advances_query = advances_query.filter(Employee.branch_id == scoped_branch_id)
+        employees = employees_query.order_by(Employee.name).all()
+        advance_list = advances_query.order_by(SalaryAdvance.date.desc()).limit(50).all()
+        return employees, advance_list
+
+    @staticmethod
+    def process_page_data(tenant_id=None, scoped_branch_id=None):
+        from models import Branch, Employee, PayrollTransaction
+
+        employees_query = Employee.query.filter_by(is_active=True)
+        branches_query = Branch.query.filter_by(is_active=True)
+        transactions_query = PayrollTransaction.query
+        if tenant_id is not None:
+            employees_query = employees_query.filter(Employee.tenant_id == tenant_id)
+            branches_query = branches_query.filter(Branch.tenant_id == tenant_id)
+            transactions_query = transactions_query.filter(PayrollTransaction.tenant_id == tenant_id)
+        if scoped_branch_id is not None:
+            employees_query = employees_query.filter(Employee.branch_id == scoped_branch_id)
+            branches_query = branches_query.filter(Branch.id == scoped_branch_id)
+            transactions_query = transactions_query.filter(PayrollTransaction.branch_id == scoped_branch_id)
+        employees = employees_query.order_by(Employee.name).all()
+        branches = branches_query.order_by(Branch.code, Branch.name).all()
+        transactions = transactions_query.order_by(PayrollTransaction.payment_date.desc()).limit(50).all()
+        return employees, branches, transactions
+
+    @staticmethod
+    def get_transaction_or_404(record_id, tenant_id=None):
+        from models import PayrollTransaction
+
+        query = PayrollTransaction.query.filter_by(id=record_id)
+        if tenant_id is not None:
+            query = query.filter(PayrollTransaction.tenant_id == tenant_id)
+        return query.first_or_404()
+
+    @staticmethod
+    def get_employee_or_404(record_id, tenant_id=None):
+        from models import Employee
+
+        query = Employee.query.filter_by(id=record_id)
+        if tenant_id is not None:
+            query = query.filter(Employee.tenant_id == tenant_id)
+        return query.first_or_404()
+
+    @staticmethod
+    def employee_statement_records(employee_id, tenant_id=None):
+        from models import PayrollTransaction, SalaryAdvance
+
+        advance_list_query = SalaryAdvance.query.filter_by(employee_id=employee_id)
+        payments_query = PayrollTransaction.query.filter_by(employee_id=employee_id)
+        if tenant_id is not None:
+            advance_list_query = advance_list_query.filter(SalaryAdvance.tenant_id == tenant_id)
+            payments_query = payments_query.filter(PayrollTransaction.tenant_id == tenant_id)
+        return advance_list_query.all(), payments_query.all()
+
+    @staticmethod
     def get_wps_rows(tenant_id, month, year):
         """Employees with bank details joined to their payroll transaction
         for the given period — single bulk query (fixes per-employee N+1)."""

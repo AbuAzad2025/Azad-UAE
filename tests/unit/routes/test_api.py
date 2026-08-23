@@ -139,25 +139,25 @@ class TestApiHelpers:
             assert code == 403
 
     def test_scoped_customer_query_branch_scoped(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=3)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=3)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         customer_q = MagicMock()
         customer_q.filter.return_value = customer_q
-        mocker.patch("routes.api.Customer.query", customer_q)
-        from routes.api import _scoped_customer_query
+        mocker.patch("models.Customer.query", customer_q)
+        from services.platform_query_service import PlatformQueryService
 
-        _scoped_customer_query()
+        PlatformQueryService.scoped_customers_query(MagicMock())
         customer_q.filter.assert_called()
 
     def test_scoped_supplier_query_branch_scoped(self, mocker):
-        mocker.patch("routes.api.branch_scope_id", return_value=3)
-        mocker.patch("routes.api.get_active_tenant_id", return_value=1)
+        mocker.patch("utils.branching.branch_scope_id", return_value=3)
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         supplier_q = MagicMock()
         supplier_q.filter.return_value = supplier_q
-        mocker.patch("routes.api.Supplier.query", supplier_q)
-        from routes.api import _scoped_supplier_query
+        mocker.patch("models.Supplier.query", supplier_q)
+        from services.platform_query_service import PlatformQueryService
 
-        _scoped_supplier_query()
+        PlatformQueryService.scoped_suppliers_query(MagicMock())
         supplier_q.filter.assert_called()
 
     def test_scoped_customer_query_unscoped_branch(self, mocker):
@@ -202,11 +202,12 @@ class TestApiHelpers:
     def test_scoped_supplier_balance_unscoped(self, mocker):
         supplier = MagicMock()
         supplier.get_balance_aed.return_value = Decimal("10")
-        mocker.patch("routes.api.branch_scope_id", return_value=None)
-        mocker.patch("routes.api._scoped_supplier_query").return_value.filter.return_value.first.return_value = supplier
-        from routes.api import _supplier_balance
+        mocker.patch(
+            "services.platform_query_service.PlatformQueryService.scoped_suppliers_query"
+        ).return_value.filter.return_value.first.return_value = supplier
+        from services.platform_query_service import PlatformQueryService
 
-        assert _supplier_balance(3) == 10.0
+        assert PlatformQueryService.supplier_balance_unscoped(3, MagicMock()) == 10.0
 
 
 class TestApiEndpoints:
@@ -316,13 +317,17 @@ class TestApiEndpoints:
 
     def test_check_username_taken(self, api_client, mocker):
         mocker.patch(
-            "routes.api.User.query"
-        ).filter_by.return_value.filter.return_value.first.return_value = MagicMock()
+            "services.platform_query_service.PlatformQueryService.find_existing_username",
+            return_value=MagicMock(),
+        )
         resp = api_client.get("/api/check-username?username=existing_user")
         assert resp.get_json()["data"]["available"] is False
 
     def test_check_username_available(self, api_client, mocker):
-        mocker.patch("routes.api.User.query").filter_by.return_value.filter.return_value.first.return_value = None
+        mocker.patch(
+            "services.platform_query_service.PlatformQueryService.find_existing_username",
+            return_value=None,
+        )
         resp = api_client.get("/api/check-username?username=valid_user")
         assert resp.get_json()["data"]["available"] is True
 

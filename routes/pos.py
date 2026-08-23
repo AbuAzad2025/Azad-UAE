@@ -23,10 +23,9 @@ from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
 from extensions import db
-from models import Customer, PosOrderType, PosPrinter, PosSession, Product
+from models import Customer, PosOrderType, PosPrinter, PosSession
 from models.enums import PermissionEnum
 from models.pos_shift import PosShift
-from models.system_settings import SystemSettings
 from models.tenant import Tenant
 from services.idempotency_service import (
     IdempotencyHashMismatchError,
@@ -42,7 +41,7 @@ from services.pos_override_service import PosOverrideError, PosOverrideService
 from services.pos_rma_service import PosRmaService
 from services.promotion_service import PromotionService
 from utils import sse_backplane
-from utils.api_response import error_response, paginated_response, success_response
+from utils.api_response import error_response, success_response
 from utils.branching import (
     get_accessible_warehouses,
     get_active_branch_id,
@@ -311,7 +310,9 @@ def _pos_register_context():
 
 @pos_bp.before_request
 def _require_pos_enabled():
-    global_setting = SystemSettings.query.order_by(SystemSettings.id.desc()).first()
+    from services.pos_write_service import PosWriteService
+
+    global_setting = PosWriteService.latest_system_settings()
     if global_setting and not global_setting.enable_pos:
         if request.is_json or request.path.startswith("/pos/api/"):
             return error_response(message=gettext("POS غير مفعل على مستوى النظام."), status_code=403)
@@ -360,9 +361,12 @@ def api_order_types():
         return error_response(message=gettext("لا يوجد فرع/شركة نشطة"), status_code=400)
     types = PosOrderType.for_tenant(tid, active_only=True)
     default = PosOrderType.default_for_tenant(tid)
-    return success_response(data={"order_types": [t.to_dict() for t in types],
+    return success_response(
+        data={
+            "order_types": [t.to_dict() for t in types],
             "default_code": default.code if default else None,
-        })
+        }
+    )
 
 
 @pos_bp.route("/settings/order-types", methods=["GET", "POST"])
@@ -664,12 +668,15 @@ def api_walkin_customer():
     except Exception as exc:
         return error_response(message=str(exc), status_code=400)
 
-    return success_response(data={"id": customer.id,
+    return success_response(
+        data={
+            "id": customer.id,
             "name": customer.name,
             "text": customer.name,
             "customer_type": customer.customer_type,
             "is_walkin": True,
-        })
+        }
+    )
 
 
 @pos_bp.route("/api/checkout", methods=["POST"])
@@ -804,10 +811,9 @@ def api_promotions_evaluate():
             customer_type = customer.customer_type or "regular"
 
     tid = get_active_tenant_id(current_user)
-    product_ids = [int(r["product_id"]) for r in merged]
-    products = {
-        p.id: p for p in db.session.query(Product).filter(Product.id.in_(product_ids), Product.tenant_id == tid).all()
-    }
+    from services.pos_write_service import PosWriteService
+
+    products = PosWriteService.products_by_ids([int(r["product_id"]) for r in merged], tid)
 
     cart = []
     for row in merged:
@@ -1051,7 +1057,9 @@ def api_session_open():
 
     existing = get_active_session(current_user)
     if existing:
-        return error_response(message=gettext(f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."), status_code=409)
+        return error_response(
+            message=gettext(f"توجد جلسة مفتوحة بالفعل: {existing.session_number}. يرجى إغلاقها أولاً."), status_code=409
+        )
 
     branch_id = get_active_branch_id(current_user)
     if not branch_id:
@@ -1144,9 +1152,12 @@ def api_session_resume():
     session_token = None
     if session.terminal_id:
         session_token = issue_pos_session_token(session.id, session.user_id, session.terminal_id)
-    return success_response(data={"session": {"id": session.id, "status": session.status},
+    return success_response(
+        data={
+            "session": {"id": session.id, "status": session.status},
             "session_token": session_token,
-        })
+        }
+    )
 
 
 @pos_bp.route("/api/session/close", methods=["POST"])
@@ -1393,9 +1404,10 @@ def _accumulate_shift_totals(shift: PosShift):
     NOTE: shift close posts NO GL — Cash Over/Short journals are posted at
     session close only (single posting level, no double-posting).
     """
-    from models import PosCashMovement, Sale
+    from models.pos_cash_movement import PosCashMovement
+    from services.pos_write_service import PosWriteService
 
-    sales = Sale.query.filter(Sale.tenant_id == shift.tenant_id, Sale.pos_session_id == shift.session_id).all()
+    sales = PosWriteService.session_sales(shift.tenant_id, shift.session_id)
     total = Decimal("0")
     cash = Decimal("0")
     card = Decimal("0")
@@ -1412,10 +1424,7 @@ def _accumulate_shift_totals(shift: PosShift):
     change_given = Decimal(str(shift.total_change_given or 0))
     pay_ins = Decimal("0")
     pay_outs = Decimal("0")
-    movements = PosCashMovement.query.filter(
-        PosCashMovement.tenant_id == shift.tenant_id,
-        PosCashMovement.shift_id == shift.id,
-    ).all()
+    movements = PosWriteService.shift_cash_movements(shift.tenant_id, shift.id)
     for movement in movements:
         amount = Decimal(str(movement.amount or 0))
         if movement.movement_type == PosCashMovement.TYPE_PAY_IN:
@@ -1461,10 +1470,13 @@ def api_authorize_override():
     except ValueError as exc:
         return error_response(message=str(exc), status_code=400)
 
-    return success_response(data={"override_token": override_token,
+    return success_response(
+        data={
+            "override_token": override_token,
             "action": token_row.action,
             "expires_in": OVERRIDE_TOKEN_TTL_SECONDS,
-        })
+        }
+    )
 
 
 @pos_bp.route("/api/supervisor-pin", methods=["POST"])
@@ -2030,24 +2042,13 @@ def customer_display_stream(session_id):
         session = db.session.get(PosSession, session_id)
         if not session or session.tenant_id != display_tenant_id:
             return {"type": "closed"}
-        from models import PosKdsOrder, Sale
+        from services.pos_write_service import PosWriteService
 
-        sales = (
-            Sale.query.filter(
-                Sale.tenant_id == session.tenant_id,
-                Sale.pos_session_id == session_id,
-            )
-            .order_by(Sale.id.desc())
-            .limit(5)
-            .all()
-        )
+        sales = PosWriteService.recent_session_sales(session.tenant_id, session_id)
         if not sales:
             return {"type": "waiting"}
         latest = sales[0]
-        kds_order = PosKdsOrder.query.filter_by(
-            sale_id=latest.id,
-            tenant_id=session.tenant_id,
-        ).first()
+        kds_order = PosWriteService.kds_order_for_sale(latest.id, session.tenant_id)
         return build_cfd_order_payload(latest, kds_order.status if kds_order else "confirmed")
 
     def stream():
@@ -2167,7 +2168,9 @@ def hardware_print_receipt():
             event="hardware_agent_unreachable",
             agent_operation="print-receipt",
         )
-        return error_response(message=gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"), status_code=503)
+        return error_response(
+            message=gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"), status_code=503
+        )
     except Exception as e:
         return error_response(message=str(e), status_code=500)
 
