@@ -90,15 +90,12 @@ class TestParseProductPartners:
     def test_percentage_zero_or_over_100(self):
         from routes.products import _parse_product_partners
 
-        partner = MagicMock()
-        partner.id = 3
         form = MagicMock()
         form.getlist.side_effect = lambda key: {
             "partner_customer_id[]": ["3"],
             "partner_percentage[]": ["0"],
         }.get(key, [])
-        with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+        with _products_patches():
             partners, err = _parse_product_partners(form)
         assert partners is None
         assert "بين 0 و 100" in err
@@ -107,8 +104,7 @@ class TestParseProductPartners:
             "partner_customer_id[]": ["3"],
             "partner_percentage[]": ["101"],
         }.get(key, [])
-        with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+        with _products_patches():
             partners, err = _parse_product_partners(form)
         assert partners is None
 
@@ -123,7 +119,7 @@ class TestParseProductPartners:
             "partner_percentage[]": ["25"],
         }.get(key, [])
         with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+            ctx["find_scoped_customer"].return_value = partner
             partners, err = _parse_product_partners(form)
         assert err is None
         assert partners == [{"partner_customer_id": 4, "percentage": 25.0}]
@@ -232,17 +228,17 @@ class TestGetAlternativeWarehouses:
 
 class TestScopedCustomersQuery:
     def test_without_branch_scope(self, app_factory, bypass_product_auth):
-        from routes.products import _scoped_customers_query, products_bp
+        from routes.products import products_bp
+        from services.product_service import ProductService
 
         app = app_factory(products_bp)
         query = MagicMock()
         query.filter.return_value = query
         with (
             app.app_context(),
-            patch("routes.products.tenant_query", return_value=query),
-            patch("routes.products.branch_scope_id", return_value=None),
+            patch("utils.tenanting.tenant_query", return_value=query),
         ):
-            _scoped_customers_query("merchant")
+            ProductService.scoped_customers_query("merchant")
         assert query.filter.call_count >= 1
 
 
@@ -574,16 +570,10 @@ class TestEditAssurance:
         product.cost_price = Decimal("0")
         partner = MagicMock(id=1, tenant_id=1)
 
-        def _scoped_query(_customer_type=None):
-            query = MagicMock()
-            query.order_by.return_value.all.return_value = []
-            query.filter.return_value.first.return_value = partner
-            return query
-
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products._scoped_customers_query", side_effect=_scoped_query),
+            patch("routes.products.ProductService.find_scoped_customer", return_value=partner),
             patch("models.ProductPriceTier") as tier_model,
         ):
             tier_model.query.filter_by.return_value.first.return_value = None
@@ -608,18 +598,17 @@ class TestEditAssurance:
         product.cost_price = Decimal("0")
         partner = MagicMock(id=99, tenant_id=1)
 
-        def _scoped_query(_customer_type=None):
-            query = MagicMock()
-            query.order_by.return_value.all.return_value = []
-            query.filter.return_value.first.return_value = partner
-            return query
-
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products._scoped_customers_query", side_effect=_scoped_query),
-            patch("routes.products.Customer") as cust_cls,
+            patch("routes.products.ProductService.find_scoped_customer", return_value=partner),
+            patch("models.Customer") as cust_cls,
+            patch(
+                "routes.products.ProductService.find_customer_in_tenant",
+                return_value=None,
+            ),
             patch("models.ProductPriceTier") as tier_model,
+            patch("routes.products.render_template", return_value="edit"),
         ):
             cust_cls.query.filter_by.return_value.first.return_value = None
             tier_model.query.filter_by.return_value.first.return_value = None
@@ -645,20 +634,17 @@ class TestEditAssurance:
         partner = MagicMock(id=8, tenant_id=1)
         wrong_partner = MagicMock(id=8, tenant_id=2)
 
-        def _scoped_query(_customer_type=None):
-            query = MagicMock()
-            query.order_by.return_value.all.return_value = []
-            query.filter.return_value.first.return_value = partner
-            return query
-
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products._scoped_customers_query", side_effect=_scoped_query),
-            patch("routes.products.Customer") as cust_cls,
+            patch("routes.products.ProductService.find_scoped_customer", return_value=partner),
+            patch(
+                "routes.products.ProductService.find_customer_in_tenant",
+                return_value=wrong_partner,
+            ),
             patch("models.ProductPriceTier") as tier_model,
+            patch("routes.products.render_template", return_value="edit"),
         ):
-            cust_cls.query.filter_by.return_value.first.return_value = wrong_partner
             tier_model.query.filter_by.return_value.first.return_value = None
             resp = product_client.post(
                 "/products/1/edit",
@@ -730,16 +716,9 @@ class TestEditAssurance:
         form = _mock_product_form(validate=True)
         product = _product()
 
-        def _scoped_query(_customer_type=None):
-            query = MagicMock()
-            query.order_by.return_value.all.return_value = []
-            query.filter.return_value.first.return_value = None
-            return query
-
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products._scoped_customers_query", side_effect=_scoped_query),
             patch("routes.products.render_template", return_value="edit"),
             patch("models.ProductPriceTier") as tier_model,
         ):
@@ -875,7 +854,7 @@ class TestApiSearchAssurance:
         ):
             resp = product_client.get("/products/api/search?q=a")
         assert resp.status_code == 200
-        assert resp.get_json()[0]["stock"] == 33.0
+        assert resp.get_json()["data"][0]["stock"] == 33.0
 
     def test_api_search_short_query_returns_all(self, product_client):
         items = [_product(1), _product(2, name="B")]
@@ -884,7 +863,7 @@ class TestApiSearchAssurance:
         with _products_patches(visible_query=query):
             resp = product_client.get("/products/api/search?q=")
         assert resp.status_code == 200
-        assert len(resp.get_json()) == 2
+        assert len(resp.get_json()["data"]) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -913,10 +892,10 @@ class TestCategoriesAssurance:
 
     def test_create_category_form_success(self, product_client):
         new_cat = _category(20, name="FormCat")
-        pc_class = MagicMock()
-        pc_class.query.filter.return_value.first.return_value = None
-        pc_class.return_value = new_cat
-        with _products_patches(), patch("routes.products.ProductCategory", pc_class):
+        with (
+            _products_patches(),
+            patch("routes.products.ProductService.create_category", return_value=new_cat),
+        ):
             resp = product_client.post(
                 "/products/categories/create",
                 data={"name": "FormCat", "description": "desc"},
@@ -981,10 +960,16 @@ class TestImportProductsDirect:
         inner.first.side_effect = [None, None, existing]
         with (
             _products_patches() as ctx,
-            patch("routes.products.ProductCategory") as pc_cls,
+            patch(
+                "routes.products.ProductService.find_category_by_name",
+                return_value=None,
+            ),
+            patch(
+                "routes.products.ProductService.create_category",
+                return_value=_category(31, name="NewCat"),
+            ),
         ):
             ctx["product_query"].filter.return_value = inner
-            pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
             with patch("routes.products._read_import_dataframe", return_value=df):
                 file_mock = MagicMock()
                 file_mock.filename = "products.xlsx"
@@ -1061,7 +1046,7 @@ class TestParsePartnersBlankRow:
         }.get(key, [])
         partner = MagicMock(id=4)
         with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+            ctx["find_scoped_customer"].return_value = partner
             partners, err = _parse_product_partners(form)
         assert err is None
         assert partners == [{"partner_customer_id": 4, "percentage": 25.0}]
@@ -1138,11 +1123,15 @@ class TestProductsCoverageFinal:
             }
         )
         new_cat = _category(12, name="BrandNewCat")
-        pc_cls = MagicMock()
-        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
-        pc_cls.return_value = new_cat
         with (
-            patch("routes.products.ProductCategory", pc_cls),
+            patch(
+                "routes.products.ProductService.find_category_by_name",
+                return_value=None,
+            ),
+            patch(
+                "routes.products.ProductService.create_category",
+                return_value=new_cat,
+            ),
             patch("routes.products._read_import_dataframe", return_value=df),
         ):
             resp = _run_import_post(products_import_app, df)
@@ -1187,12 +1176,9 @@ class TestProductsIndexAndEditGaps:
     def test_edit_invalid_merchant_and_partner_error(self, product_client):
         form = _mock_product_form(validate=True)
         product = _product()
-        merchant_q = MagicMock()
-        merchant_q.filter.return_value.first.return_value = None
         with (
             _products_patches(product=product),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products._scoped_customers_query", return_value=merchant_q),
             patch(
                 "routes.products._parse_product_partners",
                 return_value=(None, "bad partners"),
@@ -1316,9 +1302,6 @@ class TestProductsRemainingCoverage:
         product.partner_shares.clear = MagicMock()
         product.partner_shares.append = MagicMock()
         partner = MagicMock(id=8, tenant_id=1)
-        _tier_existing = MagicMock()
-        tier_q = MagicMock()
-        tier_q.filter_by.return_value.first.return_value = None
         session = MagicMock()
         with (
             _products_patches(product=product),
@@ -1327,7 +1310,6 @@ class TestProductsRemainingCoverage:
                 "routes.products._parse_product_partners",
                 return_value=([{"partner_customer_id": 8, "percentage": 25.0}], None),
             ),
-            patch("routes.products._scoped_customers_query") as cust_q,
             patch("models.Customer") as customer_cls,
             patch("models.ProductPriceTier") as tier_cls,
             patch("routes.products.ProductPartner") as pp_cls,
@@ -1337,9 +1319,9 @@ class TestProductsRemainingCoverage:
             patch("routes.products.render_template", return_value="edit"),
         ):
             user.can_see_costs.return_value = True
-            cust_q.return_value.filter.return_value.first.return_value = None
             customer_cls.query.filter_by.return_value.first.return_value = partner
-            tier_cls.query = tier_q
+            tier_cls.query = MagicMock()
+            tier_cls.query.filter_by.return_value.first.return_value = None
             pp_cls.return_value = MagicMock()
             session.commit = MagicMock()
             resp = product_client.post(
@@ -1381,7 +1363,7 @@ class TestProductsRemainingCoverage:
         pc_cls = MagicMock()
         pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
         pc_cls.return_value = new_cat
-        with patch("routes.products.ProductCategory", pc_cls):
+        with patch("services.product_service.ProductCategory", pc_cls):
             resp = _run_import_post(products_import_app, df)
         _assert_import_index_redirect(resp)
         pc_cls.assert_called_once()

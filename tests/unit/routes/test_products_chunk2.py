@@ -209,12 +209,12 @@ class TestAdjustStockInsufficientCrossWarehouse:
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["success"] is False
-        assert body["insufficient"] is True
-        assert body["requested_quantity"] == 50
-        assert body["available_stock"] == 10.0
-        assert body["current_warehouse_id"] == 1
-        assert len(body["alternative_locations"]) == 1
-        assert body["alternative_locations"][0]["warehouse_id"] == 2
+        assert body["meta"]["insufficient"] is True
+        assert body["meta"]["requested_quantity"] == 50
+        assert body["meta"]["available_stock"] == 10.0
+        assert body["meta"]["current_warehouse_id"] == 1
+        assert len(body["meta"]["alternative_locations"]) == 1
+        assert body["meta"]["alternative_locations"][0]["warehouse_id"] == 2
 
     def test_insufficient_returns_empty_alternatives_on_error(self, product_client, mocker):
         mocker.patch(
@@ -228,8 +228,8 @@ class TestAdjustStockInsufficientCrossWarehouse:
         )
         assert resp.status_code == 400
         body = resp.get_json()
-        assert body["insufficient"] is True
-        assert body["alternative_locations"] == []
+        assert body["meta"]["insufficient"] is True
+        assert body["meta"]["alternative_locations"] == []
 
 
 # =============================================================================
@@ -334,14 +334,8 @@ class TestSafeFloatRouteIntegration:
     ENDPOINT = "/products"
 
     def test_create_uses_module_level_safe_float(self, product_client, mocker, mock_db):
-        pc = mocker.patch("routes.products.ProductCategory")
-        pc.query.filter.return_value.first.return_value = None
-        pc.return_value.id = 1
-        pc.return_value.name = "Test Cat"
-        pc.return_value.name_ar = "قطة"
-        pc.return_value.description = None
-        product = mocker.patch("routes.products.Product")
-        product.query.filter_by.return_value.count.return_value = 0
+        mocker.patch("routes.products.ProductService.category_name_taken", return_value=False)
+        mocker.patch("routes.products.ProductService.count_products_in_category", return_value=0)
 
         resp = product_client.post(
             "/products/categories/create",
@@ -392,7 +386,7 @@ class TestAjaxHeaderJsonResponses:
         assert resp.status_code == 400
         body = resp.get_json()
         assert body["success"] is False
-        assert "مخزون" in body["error"]
+        assert "مخزون" in body["message"]
 
     def test_delete_with_ajax_header_returns_json_on_soft_delete(self, product_client, mocker):
         """X-Requested-With → JSON 200 soft-delete when stock=0 + sales exist."""

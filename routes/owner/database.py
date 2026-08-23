@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
+from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
 from utils.safe_sql import (
     count_query,
@@ -18,8 +19,6 @@ from utils.safe_sql import (
 )
 
 from .common import (
-    ArchivedRecord,
-    AuditLog,
     current_app,
     current_user,
     db,
@@ -577,12 +576,7 @@ def data_cleanup():
 
         if not cleanup_type:
             flash(gettext("⚠️ يرجى اختيار نوع البيانات للحذف."), "warning")
-            stats = {
-                "old_logs": AuditLog.query.filter(AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)).count(),
-                "old_archived": ArchivedRecord.query.filter(
-                    ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
-                ).count(),
-            }
+            stats = OwnerOpsService.data_cleanup_stats()
             return render_template("owner/data_cleanup.html", stats=stats)
 
         cutoff_date = datetime.now(UTC) - timedelta(days=days)
@@ -591,9 +585,9 @@ def data_cleanup():
         try:
             with atomic_transaction("data_cleanup"):
                 if cleanup_type == "logs":
-                    deleted_count = AuditLog.query.filter(AuditLog.created_at < cutoff_date).delete()
+                    deleted_count = OwnerOpsService.delete_old_audit_logs(cutoff_date)
                 elif cleanup_type == "archived":
-                    deleted_count = ArchivedRecord.query.filter(ArchivedRecord.archived_at < cutoff_date).delete()
+                    deleted_count = OwnerOpsService.delete_old_archived_records(cutoff_date)
         except Exception as e:
             flash(gettext(f"❌ خطأ في التنظيف: {str(e)}"), "danger")
             return redirect(url_for("owner.data_cleanup"))
@@ -601,12 +595,7 @@ def data_cleanup():
         flash(gettext(f"✅ تم حذف {deleted_count} سجل قديم"), "success")
         return redirect(url_for("owner.data_cleanup"))
 
-    stats = {
-        "old_logs": AuditLog.query.filter(AuditLog.created_at < datetime.now(UTC) - timedelta(days=90)).count(),
-        "old_archived": ArchivedRecord.query.filter(
-            ArchivedRecord.archived_at < datetime.now(UTC) - timedelta(days=180)
-        ).count(),
-    }
+    stats = OwnerOpsService.data_cleanup_stats()
 
     return render_template("owner/data_cleanup.html", stats=stats)
 
@@ -638,16 +627,7 @@ def export_excel(table_name):
 @owner_required
 def api_recent_audit_logs():
     """API endpoint for maintenance audit log display."""
-    from sqlalchemy import desc
-
-    from models import AuditLog
-
-    logs = (
-        AuditLog.query.filter(AuditLog.action.in_(["fix_cost_centers", "rebuild_gl_tree"]))
-        .order_by(desc(AuditLog.created_at))
-        .limit(20)
-        .all()
-    )
+    logs = OwnerOpsService.recent_maintenance_audit_logs()
 
     return success_response(
         data={

@@ -5,15 +5,13 @@ import logging
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
+from services.owner_ops_service import OwnerOpsService
 
 from .common import (
-    CardVault,
     company_admin_required,
     current_app,
     current_user,
-    db,
     flash,
-    func,
     get_active_tenant_id,
     login_required,
     owner_bp,
@@ -237,43 +235,12 @@ def cards_vault():
     page = request.args.get("page", 1, type=int)
     customer_id = request.args.get("customer", type=int)
 
-    query = CardVault.query.filter_by(is_active=True)
-
-    if customer_id:
-        query = query.filter_by(customer_id=customer_id)
-
     tid = get_active_tenant_id(current_user)
-    if tid is not None:
-        query = query.filter(CardVault.tenant_id == tid)
+    vault = OwnerOpsService.card_vault_context(page, customer_id, tid)
+    pagination = vault["pagination"]
+    stats = vault["stats"]
 
-    pagination = query.order_by(CardVault.created_at.desc()).paginate(page=page, per_page=50, error_out=False)
-
-    total_cards = CardVault.query.filter_by(is_active=True)
-    if tid is not None:
-        total_cards = total_cards.filter(CardVault.tenant_id == tid)
-    total_cards = total_cards.count()
-
-    total_usage = db.session.query(func.sum(CardVault.usage_count))
-    if tid is not None:
-        total_usage = total_usage.filter(CardVault.tenant_id == tid)
-    total_usage = total_usage.scalar() or 0
-
-    stats = {
-        "total_cards": total_cards,
-        "total_usage": total_usage,
-        "visa_count": (
-            CardVault.query.filter_by(card_type="visa", is_active=True).filter(CardVault.tenant_id == tid).count()
-            if tid is not None
-            else CardVault.query.filter_by(card_type="visa", is_active=True).count()
-        ),
-        "mastercard_count": (
-            CardVault.query.filter_by(card_type="mastercard", is_active=True).filter(CardVault.tenant_id == tid).count()
-            if tid is not None
-            else CardVault.query.filter_by(card_type="mastercard", is_active=True).count()
-        ),
-    }
-
-    _audit_owner_db_action("view_card_vault_list", {"total_cards": total_cards})
+    _audit_owner_db_action("view_card_vault_list", {"total_cards": stats["total_cards"]})
 
     return render_template(
         "owner/cards_vault.html",
@@ -287,7 +254,7 @@ def cards_vault():
 @owner_required
 def view_card(**kwargs):
     record_id = kwargs.pop("id")
-    card = CardVault.query.get_or_404(record_id)
+    card = OwnerOpsService.get_card_or_404(record_id)
 
     from flask import current_app
 

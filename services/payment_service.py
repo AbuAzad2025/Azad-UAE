@@ -1165,3 +1165,70 @@ class PaymentService:
         if payment.cheque:
             db.session.delete(payment.cheque)
         db.session.delete(payment)
+
+    # ── read-side lookups extracted from routes/payments.py ──
+
+    @staticmethod
+    def get_print_branch(branch_id, tenant_id):
+        """Branch for a printable voucher, scoped to the tenant; None when no branch."""
+        from models import Branch
+
+        if not branch_id:
+            return None
+        return Branch.query.filter_by(id=branch_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def find_archived_record(table_name, record_id, tenant_id=None):
+        """ArchivedRecord by table + record id, optionally tenant filtered."""
+        from models import ArchivedRecord
+
+        archived_query = ArchivedRecord.query.filter_by(table_name=table_name, record_id=record_id)
+        if tenant_id is not None:
+            archived_query = archived_query.filter(ArchivedRecord.tenant_id == tenant_id)
+        return archived_query.first()
+
+    @staticmethod
+    def list_archived_records(table_name, tenant_id=None):
+        """All archived records of one table, optionally tenant filtered."""
+        from models import ArchivedRecord
+
+        query = ArchivedRecord.query.filter(ArchivedRecord.table_name == table_name)
+        if tenant_id is not None:
+            query = query.filter(ArchivedRecord.tenant_id == tenant_id)
+        return query.all()
+
+    @staticmethod
+    def get_sale_for_receipt(receipt):
+        """Tenant-scoped sale backing a receipt, or None."""
+        from models import Sale
+
+        if not receipt.source_id:
+            return None
+        return Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
+
+    @staticmethod
+    def get_supplier_by_id(supplier_id, tenant_id):
+        """Tenant-scoped supplier lookup, or None."""
+        from models import Supplier
+
+        if not supplier_id:
+            return None
+        return Supplier.query.filter_by(id=supplier_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def get_confirmed_purchase_paid_total(purchase_id, tenant_id):
+        """Sum of confirmed AED payments booked against a purchase (0 when none)."""
+        from sqlalchemy import func
+
+        from models import Payment
+
+        return (
+            db.session.query(func.sum(Payment.amount_aed))
+            .filter(
+                Payment.purchase_id == purchase_id,
+                Payment.tenant_id == tenant_id,
+                Payment.payment_confirmed,
+            )
+            .scalar()
+            or 0
+        )

@@ -52,21 +52,16 @@ def create_user():
     """إضافة مستخدم جديد"""
     from werkzeug.security import generate_password_hash
 
-    from models import Role
+    from services.user_service import UserService
     from utils.auth_helpers import is_global_owner_user, user_may_have_null_tenant
     from utils.password_validator import PasswordValidator
     from utils.tenanting import get_active_tenant_id
 
     current_level = role_level_for_user(current_user)
-    roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
-    roles = [r for r in roles if getattr(r, "slug", None) not in ("owner", "developer")]
+    roles = UserService.creatable_roles(current_level)
     tid = get_active_tenant_id(current_user)
-    branches = Branch.query.filter_by(is_active=True)
-    if tid:
-        branches = branches.filter_by(tenant_id=tid)
-    branches = branches.order_by(Branch.code, Branch.name).all()
-    tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
+    branches = UserService.tenant_branches(tid)
+    tenants = UserService.active_tenants()
     default_form = {"is_active": "on"}
     preselect_tenant_id = request.args.get("tenant_id", type=int)
 
@@ -145,7 +140,7 @@ def create_user():
                 )
 
             target_tenant_id = request.form.get("tenant_id", type=int) or tid
-            existing = User.query.filter_by(username=username, tenant_id=target_tenant_id).first()
+            existing = UserService.find_username_conflict_in_tenant(username, target_tenant_id)
             if existing:
                 from utils.error_messages import ErrorMessages
 
@@ -159,7 +154,7 @@ def create_user():
                     form_data=_form_values(),
                 )
 
-            role = db.session.get(Role, role_id)
+            role = UserService.get_role(role_id)
             from utils.branching import role_requires_branch
 
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
@@ -244,17 +239,13 @@ def edit_user(user_id):
     """تعديل مستخدم"""
     from werkzeug.security import generate_password_hash
 
-    from models import Role
+    from services.user_service import UserService
 
-    user = User.query.get_or_404(user_id)
+    user = UserService.get_user_or_404(user_id)
     current_level = role_level_for_user(current_user)
-    roles = Role.query.filter_by(is_active=True).all()
-    roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= current_level]
+    roles = UserService.roles_visible_to_level(current_level)
     tid = get_active_tenant_id(current_user)
-    branches = Branch.query.filter_by(is_active=True)
-    if tid:
-        branches = branches.filter_by(tenant_id=tid)
-    branches = branches.order_by(Branch.code, Branch.name).all()
+    branches = UserService.tenant_branches(tid)
 
     if request.method == "POST":
         try:
@@ -262,7 +253,7 @@ def edit_user(user_id):
             requested_is_owner = request.form.get("is_owner") == "on"
             is_owner = requested_is_owner if current_user.is_owner else user.is_owner
             branch_id = request.form.get("branch_id", type=int) or None
-            role = db.session.get(Role, role_id)
+            role = UserService.get_role(role_id)
             from utils.branching import role_requires_branch
 
             if role_requires_branch(role, is_owner=is_owner) and not branch_id:
@@ -315,57 +306,20 @@ def edit_user(user_id):
 @owner_required
 def user_profile(user_id):
     """الملف الشخصي للمستخدم — مع نشاطات AuditLog حقيقية."""
-    user = User.query.get_or_404(user_id)
+    from services.user_service import UserService
+
+    user = UserService.get_user_or_404(user_id)
     tid = get_active_tenant_id(current_user)
 
-    from models import Payment, Sale
-
     # Sale/Payment stats scoped by tenant for security
-    sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
-    payment_q = (
-        Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
-    )
-
-    stats = {
-        "sales_count": sale_q.count(),
-        "sales_total": (
-            db.session.query(func.sum(Sale.amount_aed))
-            .filter(
-                Sale.status == "confirmed",
-                Sale.seller_id == user_id,
-                Sale.tenant_id == tid,
-            )
-            .scalar()
-            or 0
-            if tid
-            else db.session.query(func.sum(Sale.amount_aed)).filter_by(status="confirmed", seller_id=user_id).scalar()
-            or 0
-        ),
-        "payments_count": payment_q.count(),
-        "payments_total": (
-            db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id, tenant_id=tid).scalar() or 0
-            if tid
-            else db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0
-        ),
-        "audits_count": (
-            AuditLog.query.filter_by(user_id=user_id, tenant_id=tid).count()
-            if tid
-            else AuditLog.query.filter_by(user_id=user_id).count()
-        ),
-    }
-
-    recent_sales = sale_q.order_by(Sale.sale_date.desc()).limit(5).all()
-    recent_audits = AuditLog.query.filter_by(user_id=user_id)
-    if tid:
-        recent_audits = recent_audits.filter_by(tenant_id=tid)
-    recent_audits = recent_audits.order_by(AuditLog.created_at.desc()).limit(10).all()
+    context = UserService.user_profile_context(user_id, tid)
 
     return render_template(
         "owner/user_profile.html",
         user=user,
-        stats=stats,
-        recent_sales=recent_sales,
-        recent_audits=recent_audits,
+        stats=context["stats"],
+        recent_sales=context["recent_sales"],
+        recent_audits=context["recent_audits"],
     )
 
 
@@ -373,7 +327,9 @@ def user_profile(user_id):
 @owner_required
 def delete_user(user_id):
     """حذف مستخدم"""
-    user = User.query.get_or_404(user_id)
+    from services.user_service import UserService
+
+    user = UserService.get_user_or_404(user_id)
 
     from utils.error_messages import ErrorMessages
 

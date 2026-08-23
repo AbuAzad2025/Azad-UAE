@@ -703,3 +703,77 @@ class TestChequeEdgePaths:
         target = MagicMock(status="cleared", cheque_number="EV4")
         handlers[-1](None, None, target)
         err.assert_called()
+
+
+class TestChequeServiceScopedLookups:
+    """Scoped read-side lookups relocated from routes/cheques.py."""
+
+    def test_scoped_cheques_query_filters(self, mocker):
+        from services.cheque_service import ChequeService
+
+        cheque_cls = mocker.patch("models.Cheque")
+        chain = cheque_cls.query.filter_by.return_value
+        chain.filter.return_value = chain
+        result = ChequeService.scoped_cheques_query(tenant_id=1, branch_id=2)
+        cheque_cls.query.filter_by.assert_called_once_with(is_active=True)
+        assert chain.filter.call_count == 2
+        assert result is chain
+
+    def test_scoped_cheques_query_unscoped(self, mocker):
+        from services.cheque_service import ChequeService
+
+        cheque_cls = mocker.patch("models.Cheque")
+        result = ChequeService.scoped_cheques_query()
+        cheque_cls.query.filter_by.assert_called_once_with(is_active=True)
+        cheque_cls.query.filter_by.return_value.filter.assert_not_called()
+        assert result is cheque_cls.query.filter_by.return_value
+
+    def test_scoped_customers_query_branch_union(self, mocker):
+        from services.cheque_service import ChequeService
+
+        customer_cls = mocker.patch("models.Customer")
+        base = customer_cls.query.filter.return_value
+        base.filter.return_value = base
+        result = ChequeService.scoped_customers_query(tenant_id=1, branch_id=3)
+        customer_cls.query.filter.assert_called_once_with(customer_cls.is_active)
+        assert base.filter.call_count == 2
+        assert result is base
+
+    def test_scoped_customers_query_unscoped_returns_active_only(self, mocker):
+        from services.cheque_service import ChequeService
+
+        customer_cls = mocker.patch("models.Customer")
+        base = customer_cls.query.filter.return_value
+        base.filter.return_value = base
+        result = ChequeService.scoped_customers_query(tenant_id=1, branch_id=None)
+        base.filter.assert_called_once()
+        assert result is base
+
+    def test_scoped_suppliers_query_branch_union(self, mocker):
+        from services.cheque_service import ChequeService
+
+        supplier_cls = mocker.patch("models.Supplier")
+        base = supplier_cls.query.filter.return_value
+        base.filter.return_value = base
+        result = ChequeService.scoped_suppliers_query(tenant_id=1, branch_id=3)
+        supplier_cls.query.filter.assert_called_once_with(supplier_cls.is_active)
+        assert base.filter.call_count == 2
+        assert result is base
+
+    def test_has_gl_references_true(self, mocker):
+        from services.cheque_service import ChequeService
+
+        cheque = MagicMock(id=12, tenant_id=1)
+        glje = mocker.patch("models.GLJournalEntry")
+        glje.query.filter.return_value.first.return_value = MagicMock()
+        assert ChequeService.has_gl_references(cheque, ["cheque_clear"]) is True
+        assert glje.query.filter.call_count == 1
+        assert glje.query.filter.return_value.first.called
+
+    def test_has_gl_references_false(self, mocker):
+        from services.cheque_service import ChequeService
+
+        cheque = MagicMock(id=12, tenant_id=1)
+        glje = mocker.patch("models.GLJournalEntry")
+        glje.query.filter.return_value.first.return_value = None
+        assert ChequeService.has_gl_references(cheque, ["Cheque"]) is False

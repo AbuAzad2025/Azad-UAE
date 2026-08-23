@@ -220,6 +220,13 @@ class ProductService:
         ).first()
 
     @staticmethod
+    def find_customer_in_tenant(customer_id, tenant_id):
+        """Fetch a customer by id within a tenant; returns None when absent."""
+        from models import Customer
+
+        return Customer.query.filter_by(id=customer_id, tenant_id=tenant_id).first()
+
+    @staticmethod
     def annotate_branch_and_warehouse_info(products, warehouse_ids):
         """
         For all-branches views, annotate each product with visible warehouse names
@@ -268,3 +275,66 @@ class ProductService:
             product.visible_branch_names = sorted(info["branches"])
 
         return products
+
+    @staticmethod
+    def tenant_business_type(tenant_id):
+        """Normalized business type for a tenant; None when unset."""
+        from models import Tenant
+
+        tenant = db.session.get(Tenant, int(tenant_id))
+        if tenant and tenant.business_type:
+            return (tenant.business_type or "general").strip().lower()
+        return None
+
+    @staticmethod
+    def scoped_customers_query(customer_type=None, branch_scope_id=None):
+        """Tenant-scoped active-customer query, optionally narrowed to customers
+        with sales/payments/receipts inside the branch scope."""
+        from sqlalchemy import select
+
+        from models import Customer, Payment, Sale
+        from models.receipt import Receipt
+        from utils.tenanting import tenant_query
+
+        query = tenant_query(Customer).filter(Customer.is_active)
+        if customer_type:
+            query = query.filter(Customer.customer_type == customer_type)
+
+        if branch_scope_id is None:
+            return query
+
+        sale_ids = select(Sale.customer_id).where(
+            Sale.customer_id.isnot(None),
+            Sale.branch_id == branch_scope_id,
+        )
+        payment_ids = select(Payment.customer_id).where(
+            Payment.customer_id.isnot(None),
+            Payment.branch_id == branch_scope_id,
+        )
+        receipt_ids = select(Receipt.customer_id).where(
+            Receipt.customer_id.isnot(None),
+            Receipt.branch_id == branch_scope_id,
+        )
+        return query.filter(Customer.id.in_(sale_ids.union(payment_ids, receipt_ids)))
+
+    @staticmethod
+    def scoped_customers(customer_type, branch_scope_id=None):
+        """Scoped active customers of *customer_type*, ordered by name."""
+        from models import Customer
+
+        return (
+            ProductService.scoped_customers_query(customer_type, branch_scope_id=branch_scope_id)
+            .order_by(Customer.name)
+            .all()
+        )
+
+    @staticmethod
+    def find_scoped_customer(customer_id, customer_type, branch_scope_id=None):
+        """Scoped active-customer lookup by id; None when absent or out of scope."""
+        from models import Customer
+
+        return (
+            ProductService.scoped_customers_query(customer_type, branch_scope_id=branch_scope_id)
+            .filter(Customer.id == customer_id)
+            .first()
+        )

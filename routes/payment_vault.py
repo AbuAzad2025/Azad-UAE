@@ -1777,8 +1777,8 @@ def export_report_pdf():
     from services.export_service import ExportService
 
     tid = None
-    purchases = PackagePurchase.query.all()
-    donations = Donation.query.filter_by(tenant_id=tid, transaction_type="donation").all()
+    purchases = VaultQueryService.list_all_purchases()
+    donations = VaultQueryService.list_platform_records(tid=tid, transaction_type="donation")
 
     stats = {
         gettext("إجمالي المشتريات"): len(purchases),
@@ -1952,28 +1952,15 @@ def api_v2_purchases():
     sort_by = request.args.get("sort_by", "created_at")
     order = request.args.get("order", "desc")
 
-    query = PackagePurchase.query
-
-    # Filters
-    if status:
-        query = query.filter_by(payment_status=status)
-    if package_id:
-        query = query.filter_by(package_id=package_id)
-    if search:
-        query = query.filter(
-            db.or_(
-                PackagePurchase.customer_name.ilike(f"%{search}%"),
-                PackagePurchase.customer_email.ilike(f"%{search}%"),
-            )
-        )
-
-    # Sorting
-    if hasattr(PackagePurchase, sort_by):
-        column = getattr(PackagePurchase, sort_by)
-        query = query.order_by(column.asc()) if order == "asc" else query.order_by(column.desc())
-
-    # Pagination
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = VaultQueryService.purchases_paginated_v2(
+        page=page,
+        per_page=per_page,
+        status=status,
+        package_id=package_id,
+        search=search,
+        sort_by=sort_by,
+        order=order,
+    )
 
     return paginated_response(
         items=[p.to_dict() for p in pagination.items],
@@ -2002,21 +1989,7 @@ def api_v2_donations():
     search = request.args.get("search", "")
 
     tid = None
-    query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-
-    # Filters
-    if status:
-        query = query.filter_by(status=status)
-    if search:
-        query = query.filter(
-            db.or_(
-                Donation.donor_name.ilike(f"%{search}%"),
-                Donation.donor_email.ilike(f"%{search}%"),
-            )
-        )
-
-    # Pagination
-    pagination = query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination = VaultQueryService.donations_paginated_v2(tid, page, per_page, status=status, search=search)
 
     # Convert to dict
     donations_data = []

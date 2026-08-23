@@ -11,9 +11,8 @@ from flask import (
     url_for,
 )
 from flask_login import current_user
-from sqlalchemy import func
 
-from extensions import db
+from services.owner_ops_service import OwnerOpsService
 from utils.decorators import owner_required
 from utils.security_helpers import enforce_owner_ip_if_needed
 
@@ -36,43 +35,12 @@ def index():
 @owner_admin_bp.route("/dashboard")
 @owner_required
 def dashboard():
-    from models.branch import Branch
-    from models.package import Package
-    from models.tenant import Tenant
-    from models.user import Role, User
-
-    tenants = db.session.query(Tenant).order_by(Tenant.id.asc()).all()
-
-    user_counts = dict(
-        db.session.query(User.tenant_id, func.count(User.id))
-        .filter(User.tenant_id.isnot(None))
-        .group_by(User.tenant_id)
-        .all()
-    )
-    branch_counts = dict(
-        db.session.query(Branch.tenant_id, func.count(Branch.id))
-        .filter(Branch.tenant_id.isnot(None))
-        .group_by(Branch.tenant_id)
-        .all()
-    )
-
-    admin_emails: dict[int, str] = {}
-    admin_users = (
-        db.session.query(User)
-        .join(Role, User.role_id == Role.id)
-        .filter(
-            User.tenant_id.isnot(None),
-            Role.slug.in_(["super_admin", "owner", "developer"]),
-        )
-        .order_by(User.id.asc())
-        .all()
-    )
-    for u in admin_users:
-        admin_emails.setdefault(u.tenant_id, u.email)
-
-    packages = (
-        db.session.query(Package).filter_by(is_active=True).order_by(Package.sort_order.asc(), Package.id.asc()).all()
-    )
+    ctx = OwnerOpsService.landlord_dashboard_context()
+    tenants = ctx["tenants"]
+    user_counts = ctx["user_counts"]
+    branch_counts = ctx["branch_counts"]
+    admin_emails = ctx["admin_emails"]
+    packages = ctx["packages"]
 
     tenant_rows = []
     for t in tenants:
@@ -112,8 +80,6 @@ _DURATION_LABELS = {
 @owner_admin_bp.route("/activate-subscription", methods=["POST"])
 @owner_required
 def activate_subscription():
-    from models.package import Package
-    from models.tenant import Tenant
     from services.saas_provisioning_service import (
         SaaSProvisioningError,
         SaaSProvisioningService,
@@ -134,8 +100,8 @@ def activate_subscription():
     if duration_type == "yearly":
         duration_type = "annual"
 
-    tenant = db.session.get(Tenant, tenant_id)
-    package = db.session.get(Package, package_id)
+    tenant = OwnerOpsService.get_tenant(tenant_id)
+    package = OwnerOpsService.get_package(package_id)
     if not tenant:
         flash(f"Tenant {tenant_id} not found.", "danger")
         return redirect(url_for("owner_admin.dashboard"))

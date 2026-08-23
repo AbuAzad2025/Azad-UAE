@@ -12,6 +12,7 @@ from routes.owner.shared import (
     _invalidate_owner_changes,
 )
 from services.logging_core import LoggingCore
+from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
 
 from .common import (
@@ -20,7 +21,6 @@ from .common import (
     SystemSettings,
     Tenant,
     User,
-    Warehouse,
     abort,
     company_admin_required,
     current_app,
@@ -931,7 +931,6 @@ def exchange_rates():
     """إدارة أسعار الصرف — Manual rate entry and history."""
     from datetime import date
 
-    from models import ExchangeRateRecord
     from services.exchange_rate_service import ExchangeRateService
 
     today = date.today().isoformat()
@@ -963,7 +962,7 @@ def exchange_rates():
         elif action == "delete":
             record_id = request.form.get("record_id", type=int)
             if record_id:
-                rec = ExchangeRateRecord.query.filter_by(id=record_id, tenant_id=tenant_id).first()
+                rec = OwnerOpsService.find_exchange_rate_record(record_id, tenant_id)
                 if rec:
                     with atomic_transaction("exchange_rate_delete"):
                         db.session.delete(rec)
@@ -974,15 +973,7 @@ def exchange_rates():
         return redirect(url_for("owner.exchange_rates"))
 
     # GET: show records
-    records = (
-        ExchangeRateRecord.query.filter_by(tenant_id=tenant_id)
-        .order_by(
-            ExchangeRateRecord.effective_date.desc(),
-            ExchangeRateRecord.created_at.desc(),
-        )
-        .limit(100)
-        .all()
-    )
+    records = OwnerOpsService.recent_exchange_rate_records(tenant_id)
 
     return render_template(
         "owner/exchange_rates.html",
@@ -1176,15 +1167,13 @@ def api_toggle_warehouse_negative():
         if not warehouse_id:
             return error_response(message="warehouse_id required", status_code=400)
         tenant_id = get_active_tenant_id()
-        warehouse = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
+        warehouse = OwnerOpsService.warehouse_in_tenant(warehouse_id, tenant_id)
         if not warehouse:
             return error_response(message="Warehouse not found", status_code=404)
         with atomic_transaction("api_toggle_warehouse_negative"):
             warehouse.allow_negative_inventory = not warehouse.allow_negative_inventory
         _invalidate_owner_changes()
-        return success_response(
-            data={"allow_negative_inventory": warehouse.allow_negative_inventory}
-        )
+        return success_response(data={"allow_negative_inventory": warehouse.allow_negative_inventory})
     except Exception as e:
         return error_response(message=str(e), status_code=500)
 

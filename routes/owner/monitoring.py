@@ -6,14 +6,12 @@ from datetime import UTC, datetime
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
+from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
 
 from .common import (
     APIKey,
-    LoginHistory,
-    SecurityAlert,
     SystemSettings,
-    User,
     current_user,
     db,
     flash,
@@ -73,36 +71,14 @@ def login_history():
     success_filter = request.args.get("success")
     tid = get_active_tenant_id(current_user)
 
-    # LoginHistory has no tenant_id, so we join with User to scope where possible
-    query = LoginHistory.query
-    if tid:
-        query = query.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
-
-    if user_filter:
-        query = query.filter(LoginHistory.user_id == user_filter)
-
-    if success_filter is not None:
-        query = query.filter(LoginHistory.__table__.c.success == (success_filter == "true"))
-
-    pagination = query.order_by(LoginHistory.login_time.desc()).paginate(page=page, per_page=50, error_out=False)
+    # LoginHistory has no tenant_id, so scoping joins with User happen in the service
+    pagination = OwnerOpsService.login_history_pagination(page, tid, user_filter, success_filter)
 
     # Users list for filter dropdown, scoped by tenant
-    users = User.query.filter_by(is_active=True)
-    if tid:
-        users = users.filter_by(tenant_id=tid)
-    users = users.order_by(User.username).all()
+    users = OwnerOpsService.login_history_users(tid)
 
     # Stats: base queries scoped by tenant via User join
-    base_stats = LoginHistory.query
-    if tid:
-        base_stats = base_stats.join(User, LoginHistory.user_id == User.id).filter(User.tenant_id == tid)
-    stats = {
-        "total_logins": base_stats.filter(LoginHistory.success).count(),
-        "failed_logins": base_stats.filter(LoginHistory.success.is_(False)).count(),
-        "today_logins": base_stats.filter(
-            LoginHistory.login_time >= datetime.now(UTC).replace(hour=0, minute=0)
-        ).count(),
-    }
+    stats = OwnerOpsService.login_history_stats(tid)
 
     return render_template(
         "owner/login_history.html",
@@ -130,22 +106,8 @@ def security_alerts():
     page = request.args.get("page", 1, type=int)
     severity_filter = request.args.get("severity")
 
-    query = SecurityAlert.query
-
-    if severity_filter:
-        query = query.filter_by(severity=severity_filter)
-
-    pagination = (
-        query.filter_by(is_resolved=False)
-        .order_by(SecurityAlert.created_at.desc())
-        .paginate(page=page, per_page=30, error_out=False)
-    )
-
-    stats = {
-        "unresolved": SecurityAlert.query.filter_by(is_resolved=False).count(),
-        "critical": SecurityAlert.query.filter_by(severity="critical", is_resolved=False).count(),
-        "high": SecurityAlert.query.filter_by(severity="high", is_resolved=False).count(),
-    }
+    pagination = OwnerOpsService.security_alerts_pagination(page, severity_filter)
+    stats = OwnerOpsService.security_alert_stats()
 
     return render_template(
         "owner/security_alerts.html",
@@ -159,7 +121,7 @@ def security_alerts():
 @owner_required
 def resolve_alert(**kwargs):
     record_id = kwargs.pop("id")
-    alert = SecurityAlert.query.get_or_404(record_id)
+    alert = OwnerOpsService.get_security_alert_or_404(record_id)
     try:
         with atomic_transaction("resolve_alert"):
             alert.is_resolved = True
@@ -244,7 +206,7 @@ def api_keys():
         flash(gettext(f"✅ تم إنشاء API Key ({_mask_api_key(key.key)})"), "success")
         return redirect(url_for("owner.api_keys"))
 
-    keys = APIKey.query.order_by(APIKey.created_at.desc()).all()
+    keys = OwnerOpsService.list_api_keys()
 
     return render_template("owner/api_keys.html", keys=keys, mask_api_key=_mask_api_key)
 
@@ -253,7 +215,7 @@ def api_keys():
 @owner_required
 def toggle_api_key(**kwargs):
     record_id = kwargs.pop("id")
-    key = APIKey.query.get_or_404(record_id)
+    key = OwnerOpsService.get_api_key_or_404(record_id)
     try:
         with atomic_transaction("toggle_api_key"):
             key.is_active = not key.is_active
@@ -348,13 +310,10 @@ def error_audit_logs():
         category, level, is_resolved, source, from_date, to_date, search, page, per_page
     )
 
-    from models.user import User
-
     user_ids = {log.user_id for log in items if log.user_id}
     user_map = {}
-    if user_ids:
-        for u in User.query.filter(User.id.in_(user_ids)).all():
-            user_map[u.id] = u.get_display_name() or u.username or f"User #{u.id}"
+    for u in OwnerOpsService.get_users_by_ids(list(user_ids)):
+        user_map[u.id] = u.get_display_name() or u.username or f"User #{u.id}"
 
     error_log_data = {}
     for log in items:

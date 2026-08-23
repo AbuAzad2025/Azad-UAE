@@ -82,6 +82,85 @@ class ChequeService:
         db.session.add(cheque)
         return cheque
 
+    # ── read-side scoped lookups extracted from routes/cheques.py ──
+
+    @staticmethod
+    def scoped_cheques_query(tenant_id=None, branch_id=None):
+        """Active-cheque query filtered by tenant and branch scope."""
+        from models import Cheque
+
+        query = Cheque.query.filter_by(is_active=True)
+        if tenant_id is not None:
+            query = query.filter(Cheque.tenant_id == tenant_id)
+        if branch_id is not None:
+            query = query.filter(Cheque.branch_id == branch_id)
+        return query
+
+    @staticmethod
+    def scoped_customers_query(tenant_id=None, branch_id=None):
+        """Active-customer query visible from the branch (sales/payments/receipts union)."""
+        from sqlalchemy import select
+
+        from models import Customer, Payment, Sale
+        from models.receipt import Receipt
+
+        query = Customer.query.filter(Customer.is_active)
+        if tenant_id is not None:
+            query = query.filter(Customer.tenant_id == tenant_id)
+        if branch_id is None:
+            return query
+
+        sale_ids = select(Sale.customer_id).where(
+            Sale.customer_id.isnot(None),
+            Sale.branch_id == branch_id,
+        )
+        payment_ids = select(Payment.customer_id).where(
+            Payment.customer_id.isnot(None),
+            Payment.branch_id == branch_id,
+        )
+        receipt_ids = select(Receipt.customer_id).where(
+            Receipt.customer_id.isnot(None),
+            Receipt.branch_id == branch_id,
+        )
+        return query.filter(Customer.id.in_(sale_ids.union(payment_ids, receipt_ids)))
+
+    @staticmethod
+    def scoped_suppliers_query(tenant_id=None, branch_id=None):
+        """Active-supplier query visible from the branch (purchases/payments union)."""
+        from sqlalchemy import select
+
+        from models import Payment, Purchase, Supplier
+
+        query = Supplier.query.filter(Supplier.is_active)
+        if tenant_id is not None:
+            query = query.filter(Supplier.tenant_id == tenant_id)
+        if branch_id is None:
+            return query
+
+        purchase_ids = select(Purchase.supplier_id).where(
+            Purchase.supplier_id.isnot(None),
+            Purchase.branch_id == branch_id,
+        )
+        payment_ids = select(Payment.supplier_id).where(
+            Payment.supplier_id.isnot(None),
+            Payment.branch_id == branch_id,
+        )
+        return query.filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
+
+    @staticmethod
+    def has_gl_references(cheque, ref_types):
+        """True when any GL journal entry references this cheque."""
+        from models import GLJournalEntry
+
+        return (
+            GLJournalEntry.query.filter(
+                GLJournalEntry.reference_type.in_(ref_types),
+                GLJournalEntry.reference_id == cheque.id,
+                GLJournalEntry.tenant_id == cheque.tenant_id,
+            ).first()
+            is not None
+        )
+
 
 def validate_cheque(cheque):
     if not cheque.cheque_number:

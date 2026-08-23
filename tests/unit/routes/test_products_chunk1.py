@@ -69,7 +69,7 @@ class TestApiSearch:
 
         resp = product_client.get(f"{self.ENDPOINT}?q=test")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert len(data) == 2
         assert data[0]["name"] == "Test Product A"
         assert data[0]["price"] == 50.0
@@ -81,7 +81,7 @@ class TestApiSearch:
 
         resp = product_client.get(self.ENDPOINT)
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert len(data) == 1
 
     def test_empty_results(self, product_client):
@@ -89,7 +89,7 @@ class TestApiSearch:
 
         resp = product_client.get(f"{self.ENDPOINT}?q=zzzzz")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data == []
 
     def test_with_warehouse_id(self, product_client, mocker):
@@ -102,7 +102,7 @@ class TestApiSearch:
 
         resp = product_client.get(f"{self.ENDPOINT}?q=prod&warehouse_id=1")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data[0]["stock"] == 99.0
 
     def test_run_out_product_low_stock_flag(self, product_client):
@@ -113,7 +113,7 @@ class TestApiSearch:
         self.mock_query.all.return_value = products
 
         resp = product_client.get(f"{self.ENDPOINT}?q=test")
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data[0]["is_low_stock"] is True
         assert data[1]["is_low_stock"] is False
 
@@ -128,15 +128,8 @@ class TestCreateCategory:
 
     @pytest.fixture(autouse=True)
     def _patch_category(self, mocker):
-        pc = mocker.patch("routes.products.ProductCategory")
-        pc.query.filter.return_value.first.return_value = None
-        pc.return_value.id = 1
-        pc.return_value.name = "Test Category"
-        pc.return_value.name_ar = "تصنيف اختبار"
-        pc.return_value.description = "A test"
-        product = mocker.patch("routes.products.Product")
-        product.query.filter_by.return_value.count.return_value = 0
-        return pc
+        mocker.patch("routes.products.ProductService.category_name_taken", return_value=False)
+        mocker.patch("routes.products.ProductService.count_products_in_category", return_value=0)
 
     def test_json_happy_path(self, product_client, mock_db):
         resp = product_client.post(
@@ -146,7 +139,7 @@ class TestCreateCategory:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["category"]["name"] == "New Category"
+        assert body["data"]["category"]["name"] == "New Category"
 
     def test_json_missing_name_returns_400(self, product_client):
         resp = product_client.post(self.ENDPOINT, json={"name_ar": "only ar"})
@@ -155,8 +148,7 @@ class TestCreateCategory:
         assert body["success"] is False
 
     def test_json_duplicate_name_returns_400(self, product_client, mocker):
-        pc = mocker.patch("routes.products.ProductCategory")
-        pc.query.filter.return_value.first.return_value = MagicMock(name="existing")
+        mocker.patch("routes.products.ProductService.category_name_taken", return_value=True)
 
         resp = product_client.post(self.ENDPOINT, json={"name": "Existing"})
         assert resp.status_code == 400
@@ -172,16 +164,16 @@ class TestCreateCategory:
         assert resp.status_code == 400
 
     def test_exception_during_create_returns_400(self, product_client, mocker, mock_db):
-        pc = mocker.patch("routes.products.ProductCategory")
-        pc.query.filter.return_value.first.return_value = None
-        pc.side_effect = Exception("DB fail")
+        mocker.patch(
+            "routes.products.ProductService.create_category",
+            side_effect=Exception("DB fail"),
+        )
 
         resp = product_client.post(self.ENDPOINT, json={"name": "Cat"})
-        # Route catches the exception and returns 200 with success=True
-        assert resp.status_code == 200
+        # Route catches the exception and returns a JSON 400 envelope
+        assert resp.status_code == 400
         body = resp.get_json()
-        # The route returns success=True even when an exception occurs
-        assert body["success"] is True
+        assert body["success"] is False
 
 
 # =============================================================================
@@ -218,7 +210,7 @@ class TestAdjustStock:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["new_stock"] == 110.0
+        assert body["data"]["new_stock"] == 110.0
 
     def test_subtract_quantity(self, product_client):
         resp = product_client.post(
@@ -227,7 +219,7 @@ class TestAdjustStock:
         )
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["new_stock"] == 80.0
+        assert body["data"]["new_stock"] == 80.0
 
     def test_set_quantity(self, product_client):
         resp = product_client.post(
@@ -236,7 +228,7 @@ class TestAdjustStock:
         )
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["new_stock"] == 150.0
+        assert body["data"]["new_stock"] == 150.0
 
     def test_invalid_quantity_returns_422(self, product_client):
         resp = product_client.post(

@@ -5,23 +5,12 @@ from flask import Blueprint, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
+from services.platform_query_service import PlatformQueryService
 from utils.api_response import success_response
-from utils.branching import branch_scope_id_for
 from utils.cache_decorators import cached_query
 from utils.decorators import permission_required
-from utils.tenanting import get_active_tenant_id
 
 api_analytics_bp = Blueprint("api_analytics", __name__, url_prefix="/api/analytics")
-
-
-def _apply_branch_scope(query, model):
-    """Apply branch-level scoping to an analytics query if the user is branch-scoped."""
-    scoped_branch_id = branch_scope_id_for(current_user)
-    if scoped_branch_id is not None:
-        branch_col = getattr(model, "branch_id", None)
-        if branch_col is not None:
-            query = query.filter(branch_col == scoped_branch_id)
-    return query
 
 
 @api_analytics_bp.route("/overdue-payments")
@@ -30,14 +19,7 @@ def _apply_branch_scope(query, model):
 @limiter.limit("50 per minute")
 @cached_query(timeout=300, key_prefix="overdue_payments")
 def overdue_payments():
-    from models import Customer
-
-    tid = get_active_tenant_id(current_user)
-    customers = Customer.query.filter_by(is_active=True)
-    if tid:
-        customers = customers.filter(Customer.tenant_id == tid)
-    customers = _apply_branch_scope(customers, Customer)
-    customers = customers.all()
+    customers = PlatformQueryService.analytics_overdue_customer_candidates(current_user)
     overdue = [c for c in customers if c.get_balance_aed() > Decimal("1000")]
 
     return success_response(
@@ -54,23 +36,10 @@ def overdue_payments():
 @permission_required("view_reports")
 @cached_query(timeout=60, key_prefix="daily_stats")
 def daily_stats():
-    from extensions import db
-    from models import Payment, Sale
-
     today = datetime.now().date()
 
-    tid = get_active_tenant_id(current_user)
-    today_sales = Sale.query.filter(db.func.date(Sale.sale_date) == today, Sale.status == "confirmed")
-    if tid:
-        today_sales = today_sales.filter(Sale.tenant_id == tid)
-    today_sales = _apply_branch_scope(today_sales, Sale)
-    today_sales = today_sales.all()
-
-    today_payments = Payment.query.filter(db.func.date(Payment.payment_date) == today)
-    if tid:
-        today_payments = today_payments.filter(Payment.tenant_id == tid)
-    today_payments = _apply_branch_scope(today_payments, Payment)
-    today_payments = today_payments.all()
+    today_sales = PlatformQueryService.analytics_today_sales(current_user, today)
+    today_payments = PlatformQueryService.analytics_today_payments(current_user, today)
 
     return success_response(
         data={
@@ -91,16 +60,9 @@ def daily_stats():
 @permission_required("view_reports")
 @cached_query(timeout=600, key_prefix="top_customers")
 def top_customers():
-    from models import Customer
-
     limit = request.args.get("limit", 10, type=int)
 
-    tid = get_active_tenant_id(current_user)
-    customers = Customer.query.filter_by(is_active=True)
-    if tid:
-        customers = customers.filter(Customer.tenant_id == tid)
-    customers = _apply_branch_scope(customers, Customer)
-    customers = customers.order_by(Customer.total_purchases.desc()).limit(limit).all()
+    customers = PlatformQueryService.analytics_top_customers(current_user, limit)
 
     return success_response(
         data={
@@ -123,14 +85,7 @@ def top_customers():
 @permission_required("view_reports")
 @cached_query(timeout=120, key_prefix="low_stock_products")
 def low_stock_products():
-    from models import Product
-
-    tid = get_active_tenant_id(current_user)
-    products = Product.query.filter(Product.is_active, Product.current_stock <= Product.min_stock_alert)
-    if tid:
-        products = products.filter(Product.tenant_id == tid)
-    products = _apply_branch_scope(products, Product)
-    products = products.all()
+    products = PlatformQueryService.analytics_low_stock_products(current_user)
 
     return success_response(
         data={
@@ -154,23 +109,10 @@ def low_stock_products():
 @permission_required("view_reports")
 @cached_query(timeout=300, key_prefix="revenue_trend")
 def revenue_trend():
-    from sqlalchemy import func
-
-    from extensions import db
-    from models import Sale
-
     days = request.args.get("days", 30, type=int)
     since = datetime.now() - timedelta(days=days)
 
-    tid = get_active_tenant_id(current_user)
-    daily_revenue = db.session.query(
-        func.date(Sale.sale_date).label("date"),
-        func.sum(Sale.amount_aed).label("total"),
-    ).filter(Sale.sale_date >= since, Sale.status == "confirmed")
-    if tid:
-        daily_revenue = daily_revenue.filter(Sale.tenant_id == tid)
-    daily_revenue = _apply_branch_scope(daily_revenue, Sale)
-    daily_revenue = daily_revenue.group_by(func.date(Sale.sale_date)).all()
+    daily_revenue = PlatformQueryService.analytics_revenue_trend_rows(current_user, since)
 
     return success_response(
         data={"data": [{"date": str(row.date), "revenue": float(row.total or 0)} for row in daily_revenue]}

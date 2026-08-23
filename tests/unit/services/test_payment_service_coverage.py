@@ -1211,3 +1211,104 @@ class TestPaymentServiceChequeAndFxLoss:
         ):
             PaymentService.allocate_receipt_to_oldest_sales(receipt, customer)
             customer.apply_receipt.assert_called_once()
+
+
+class TestPaymentServiceReadHelpers:
+    """Read-side lookups relocated from routes/payments.py."""
+
+    def test_get_print_branch_scoped(self):
+        from services.payment_service import PaymentService
+
+        branch = MagicMock(id=3)
+        with patch("models.Branch") as branch_cls:
+            branch_cls.query.filter_by.return_value.first.return_value = branch
+            assert PaymentService.get_print_branch(3, 1) is branch
+            branch_cls.query.filter_by.assert_called_once_with(id=3, tenant_id=1)
+
+    def test_get_print_branch_none_without_branch(self):
+        from services.payment_service import PaymentService
+
+        assert PaymentService.get_print_branch(None, 1) is None
+
+    def test_find_archived_record_filters_tenant(self):
+        from services.payment_service import PaymentService
+
+        archived = MagicMock()
+        with patch("models.ArchivedRecord") as ar:
+            chain = ar.query.filter_by.return_value
+            chain.filter.return_value.first.return_value = archived
+            result = PaymentService.find_archived_record("payments", 9, tenant_id=4)
+        assert result is archived
+        ar.query.filter_by.assert_called_once_with(table_name="payments", record_id=9)
+
+    def test_find_archived_record_unscoped_when_no_tenant(self):
+        from services.payment_service import PaymentService
+
+        with patch("models.ArchivedRecord") as ar:
+            ar.query.filter_by.return_value.first.return_value = None
+            assert PaymentService.find_archived_record("receipts", 9, None) is None
+            ar.query.filter_by.return_value.filter.assert_not_called()
+
+    def test_list_archived_records_scoped(self):
+        from services.payment_service import PaymentService
+
+        rows = [MagicMock(), MagicMock()]
+        with patch("models.ArchivedRecord") as ar:
+            chain = ar.query.filter.return_value
+            chain.filter.return_value.all.return_value = rows
+            assert PaymentService.list_archived_records("receipts", 2) == rows
+
+    def test_list_archived_records_unscoped(self):
+        from services.payment_service import PaymentService
+
+        rows = [MagicMock()]
+        with patch("models.ArchivedRecord") as ar:
+            ar.query.filter.return_value.all.return_value = rows
+            assert PaymentService.list_archived_records("payments", None) == rows
+            ar.query.filter.return_value.filter.assert_not_called()
+
+    def test_get_sale_for_receipt(self):
+        from services.payment_service import PaymentService
+
+        receipt = MagicMock(source_id=7, tenant_id=2)
+        sale = MagicMock(id=7)
+        with patch("models.Sale") as sale_cls:
+            sale_cls.query.filter_by.return_value.first.return_value = sale
+            assert PaymentService.get_sale_for_receipt(receipt) is sale
+            sale_cls.query.filter_by.assert_called_once_with(id=7, tenant_id=2)
+
+    def test_get_sale_for_receipt_without_source(self):
+        from services.payment_service import PaymentService
+
+        receipt = MagicMock(source_id=None)
+        assert PaymentService.get_sale_for_receipt(receipt) is None
+
+    def test_get_supplier_by_id(self):
+        from services.payment_service import PaymentService
+
+        supplier = MagicMock(id=5)
+        with patch("models.Supplier") as sup_cls:
+            sup_cls.query.filter_by.return_value.first.return_value = supplier
+            assert PaymentService.get_supplier_by_id(5, 1) is supplier
+            sup_cls.query.filter_by.assert_called_once_with(id=5, tenant_id=1)
+
+    def test_get_supplier_by_id_none_guard(self):
+        from services.payment_service import PaymentService
+
+        assert PaymentService.get_supplier_by_id(None, 1) is None
+
+    def test_get_confirmed_purchase_paid_total(self):
+        from services.payment_service import PaymentService
+
+        with patch("services.payment_service.db") as mock_db:
+            chain = mock_db.session.query.return_value
+            chain.filter.return_value.scalar.return_value = Decimal("120")
+            assert PaymentService.get_confirmed_purchase_paid_total(8, 1) == Decimal("120")
+
+    def test_get_confirmed_purchase_paid_total_defaults_zero(self):
+        from services.payment_service import PaymentService
+
+        with patch("services.payment_service.db") as mock_db:
+            chain = mock_db.session.query.return_value
+            chain.filter.return_value.scalar.return_value = None
+            assert PaymentService.get_confirmed_purchase_paid_total(8, 1) == 0

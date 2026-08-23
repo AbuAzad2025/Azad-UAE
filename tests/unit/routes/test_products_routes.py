@@ -151,10 +151,13 @@ def _products_patches(
     warehouse_query = MagicMock()
     warehouse_query.filter_by.return_value.first.return_value = _warehouse()
 
-    customer_query = _chain_query(all=[])
+    find_scoped_customer = MagicMock(return_value=None)
+    scoped_customers = MagicMock(return_value=[])
+
     session_query = _chain_query(all=[])
 
     with ExitStack() as stack:
+        product_cls, product_query_mock = _product_class_mock()
         stack.enter_context(
             patch(
                 "routes.products.StockService.get_visible_products_query",
@@ -164,12 +167,52 @@ def _products_patches(
         stack.enter_context(patch("routes.products.StockService.get_product_stock", return_value=10.0))
         stack.enter_context(patch("routes.products.StockService.adjust_stock"))
         stack.enter_context(patch("routes.products.StockService.add_opening_stock"))
-        stack.enter_context(patch("routes.products.tenant_query", return_value=customer_query))
+        stack.enter_context(patch("routes.products.ProductService.find_scoped_customer", find_scoped_customer))
+        stack.enter_context(patch("routes.products.ProductService.scoped_customers", scoped_customers))
+        stack.enter_context(patch("routes.products.ProductService.tenant_business_type", return_value="general"))
         stack.enter_context(patch("routes.products.tenant_get_or_404", return_value=product))
         stack.enter_context(patch("routes.products.render_template", return_value="ok"))
         session = stack.enter_context(patch("routes.products.db.session"))
         stack.enter_context(patch("routes.products.db.session.query", return_value=session_query))
-        stack.enter_context(patch.object(products_mod, "ProductCategory", MagicMock(query=category_query)))
+        stack.enter_context(
+            patch(
+                "routes.products.ProductService.list_active_categories",
+                side_effect=lambda tid, ordered=False: (
+                    category_query.filter_by.return_value.order_by.return_value.all.return_value
+                    if ordered
+                    else category_query.filter_by.return_value.all.return_value
+                ),
+            )
+        )
+        stack.enter_context(
+            patch(
+                "routes.products.ProductService.category_name_taken",
+                side_effect=lambda tid, name, exclude_id=None: (
+                    category_query.filter.return_value.first.return_value is not None
+                ),
+            )
+        )
+        stack.enter_context(
+            patch(
+                "routes.products.ProductService.count_products_in_category",
+                side_effect=lambda tid, cid: product_query_mock.filter_by.return_value.count.return_value,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "routes.products.ProductService.find_duplicate_product",
+                side_effect=lambda sku, barcode, tid=None: product_query_mock.filter.return_value.first.return_value,
+            )
+        )
+        stack.enter_context(
+            patch(
+                "routes.products.ProductService.find_category_by_name",
+                side_effect=lambda tid, name: (
+                    category_query.filter_by.return_value.filter.return_value.first.return_value
+                ),
+            )
+        )
+        stack.enter_context(patch.object(products_mod, "Product", product_cls))
         stack.enter_context(patch("routes.products.branch_scope_id", return_value=branch_scope))
         stack.enter_context(patch("routes.products.get_accessible_warehouses", return_value=[_warehouse()]))
         stack.enter_context(patch("routes.products.get_accessible_warehouse_ids", return_value=[1]))
@@ -183,8 +226,6 @@ def _products_patches(
         stack.enter_context(patch("routes.products.generate_sku", return_value="AUTO-SKU"))
         stack.enter_context(patch("routes.products.generate_barcode", return_value="AUTO-BC"))
         stack.enter_context(patch("routes.products.save_uploaded_file", return_value="products/img.png"))
-        product_cls, product_query_mock = _product_class_mock()
-        stack.enter_context(patch.object(products_mod, "Product", product_cls))
         stack.enter_context(patch("routes.products.db.or_", return_value=MagicMock(name="sql_or")))
         stack.enter_context(patch("utils.tenant_limits.check_products_limit"))
         yield {
@@ -193,7 +234,8 @@ def _products_patches(
             "products": products,
             "category_query": category_query,
             "session": session,
-            "customer_query": customer_query,
+            "find_scoped_customer": find_scoped_customer,
+            "scoped_customers": scoped_customers,
             "product_query": product_query_mock,
             "warehouse_query": warehouse_query,
         }
@@ -345,7 +387,7 @@ class TestHelperFunctions:
         partner = MagicMock()
         partner.id = 5
         with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+            ctx["find_scoped_customer"].return_value = partner
             form = MagicMock()
             form.getlist.side_effect = lambda key: {
                 "partner_customer_id[]": ["5", "5"],
@@ -361,7 +403,7 @@ class TestHelperFunctions:
         partner = MagicMock()
         partner.id = 5
         with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = partner
+            ctx["find_scoped_customer"].return_value = partner
             form = MagicMock()
             form.getlist.side_effect = lambda key: {
                 "partner_customer_id[]": ["5", "6"],
@@ -852,11 +894,8 @@ class TestApiSearch:
 class TestCategories:
     def test_categories_list(self, products_client):
         cats = [_category(1), _category(2, name="B")]
-        category_query = MagicMock()
-        category_query.filter_by.return_value.order_by.return_value.all.return_value = cats
         with (
             _products_patches(categories=cats),
-            patch("routes.products.ProductCategory.query", category_query),
             patch("routes.products.render_template", return_value="cats") as render,
         ):
             resp = products_client.get("/products/categories")
@@ -868,7 +907,7 @@ class TestCategories:
         with _products_patches() as ctx:
             ctx["category_query"].filter.return_value.first.return_value = None
             ctx["session"].add = MagicMock()
-            with patch("routes.products.ProductCategory", return_value=new_cat):
+            with patch("routes.products.ProductService.create_category", return_value=new_cat):
                 resp = products_client.post(
                     "/products/categories/create",
                     data={"name": "Fresh", "name_ar": "جديد"},
@@ -895,12 +934,9 @@ class TestCategories:
 
     def test_create_category_json_success(self, products_client):
         new_cat = _category(11, name="JSON Cat")
-        pc_class = MagicMock()
-        pc_class.query.filter.return_value.first.return_value = None
-        pc_class.return_value = new_cat
         with (
             _products_patches(),
-            patch("routes.products.ProductCategory", pc_class),
+            patch("routes.products.ProductService.create_category", return_value=new_cat),
         ):
             resp = products_client.post(
                 "/products/categories/create",
@@ -1111,10 +1147,6 @@ class TestProductsExtendedCoverage:
                 "category": ["Tools"],
             }
         )
-        new_cat = _category(5, name="Tools")
-        pc_class = MagicMock()
-        pc_class.query.filter_by.return_value.filter.return_value.first.return_value = None
-        pc_class.return_value = new_cat
         new_product = MagicMock()
         new_product.id = 88
         with _products_patches() as ctx:
@@ -1122,8 +1154,6 @@ class TestProductsExtendedCoverage:
             with (
                 patch("models.Warehouse.query", _warehouse_query_mock()),
                 patch("routes.products._read_import_dataframe", return_value=df),
-                patch("routes.products.ProductCategory", pc_class),
-                patch("routes.products.Product", return_value=new_product),
             ):
                 resp = products_client.post(
                     "/products/import",
@@ -1151,7 +1181,7 @@ class TestProductsExtendedCoverage:
         with (
             _products_patches(),
             patch("models.Warehouse.query", _warehouse_query_mock()),
-            patch("routes.products.Product", side_effect=RuntimeError("boom")),
+            patch("routes.products.ProductService.create_product", side_effect=RuntimeError("boom")),
         ):
             resp = products_client.post(
                 "/products/import-grid",
@@ -1169,15 +1199,16 @@ class TestProductsExtendedCoverage:
         merchant.id = 7
         partner = MagicMock()
         partner.id = 8
-        customer_query = _chain_query(all=[])
-        customer_query.filter.return_value.first.side_effect = [merchant, partner]
 
         with (
             _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
             patch("routes.products.Product", return_value=added),
             patch("routes.products.db.session", session),
-            patch("routes.products.tenant_query", return_value=customer_query),
+            patch(
+                "routes.products.ProductService.find_scoped_customer",
+                side_effect=[merchant, partner],
+            ),
             patch("routes.products.ProductPartner") as pp_cls,
             patch("models.ProductPriceTier") as tier_cls,
         ):
@@ -1207,12 +1238,9 @@ class TestProductsExtendedCoverage:
 
     def test_create_post_invalid_merchant(self, products_client):
         form = _mock_product_form(validate=True)
-        customer_query = _chain_query(all=[])
-        customer_query.filter.return_value.first.return_value = None
         with (
             _products_patches(),
             patch("forms.product.ProductForm", return_value=form),
-            patch("routes.products.tenant_query", return_value=customer_query),
             patch("routes.products.render_template", return_value="create"),
         ):
             resp = products_client.post(
@@ -1418,12 +1446,9 @@ class TestProductsExtendedCoverage:
     def test_create_category_form_exception(self, products_client):
         session = MagicMock()
         session.commit.side_effect = RuntimeError("db")
-        pc_class = MagicMock()
-        pc_class.query.filter.return_value.first.return_value = None
         with (
             _products_patches(),
             patch("routes.products.db.session", session),
-            patch("routes.products.ProductCategory", pc_class),
         ):
             resp = products_client.post(
                 "/products/categories/create",
@@ -1513,8 +1538,7 @@ class TestProductsExtendedCoverage:
     def test_parse_product_partners_missing_customer(self, products_client):
         from routes.products import _parse_product_partners
 
-        with _products_patches() as ctx:
-            ctx["customer_query"].filter.return_value.first.return_value = None
+        with _products_patches():
             form = MagicMock()
             form.getlist.side_effect = lambda key: {
                 "partner_customer_id[]": ["9"],
@@ -1553,14 +1577,14 @@ class TestProductsExtendedCoverage:
         labels.assert_called_once()
 
     def test_scoped_customers_query_with_branch(self, app_factory, bypass_permission_auth):
-        from routes.products import _scoped_customers_query, products_bp
+        from routes.products import products_bp
+        from services.product_service import ProductService
 
         app = app_factory(products_bp)
         query = _chain_query(all=[])
         with (
             app.app_context(),
-            patch("routes.products.branch_scope_id", return_value=5),
-            patch("routes.products.tenant_query", return_value=query),
+            patch("utils.tenanting.tenant_query", return_value=query),
         ):
-            result = _scoped_customers_query("merchant")
+            result = ProductService.scoped_customers_query("merchant", branch_scope_id=5)
         assert result is query

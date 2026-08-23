@@ -72,13 +72,14 @@ def _users_patches(**overrides):
         patch("routes.owner.users.url_for", return_value="/"),
         patch("routes.owner.users.db", mock_db),
         patch("routes.owner.users.User", user_cls),
-        patch("routes.owner.users.Branch", branch_cls),
-        patch("routes.owner.users.Tenant", tenant_cls),
-        patch("routes.owner.users.AuditLog", _model_class(all=[])),
+        patch("models.User", user_cls),
+        patch("models.Branch", branch_cls),
+        patch("models.Tenant", tenant_cls),
+        patch("models.AuditLog", _model_class(all=[])),
         patch("routes.owner.users.get_active_tenant_id", return_value=1),
         patch("routes.owner.users.role_level_for_user", return_value=100),
         patch("routes.owner.users.role_level_for", return_value=10),
-        patch("routes.owner.users.func", MagicMock()),
+        patch("services.user_service.UserService.get_role", return_value=role),
         patch("models.Role", role_cls),
         patch("utils.branching.role_requires_branch", return_value=False),
         patch("routes.owner.shared._invalidate_owner_changes"),
@@ -145,7 +146,7 @@ class TestCreateUserValidation:
         app = app_factory(owner_bp)
         existing = _mock_user_entity(username="exists")
         user_cls = _model_class(first=existing, entity=existing)
-        with _users_patches(user_entity=existing), patch("routes.owner.users.User", user_cls):
+        with _users_patches(user_entity=existing), patch("models.User", user_cls):
             resp = app.test_client().post(
                 "/owner/users/create",
                 data={
@@ -406,16 +407,17 @@ class TestUserProfile:
         app = app_factory(owner_bp)
         target = _mock_user_entity(id=3)
         target_cls = _model_class(entity=target)
-        mock_db = MagicMock()
-        mock_db.session.query.return_value = _chain_query(scalar=0, count=0, all=[])
         with (
-            _users_patches(mock_db=mock_db, user_entity=target),
+            _users_patches(user_entity=target),
             patch("routes.owner.users.User", target_cls),
-            patch("models.Sale", _model_class()),
-            patch("models.Payment", _model_class()),
+            patch(
+                "services.user_service.UserService.user_profile_context",
+                return_value={"stats": {}, "recent_sales": [], "recent_audits": []},
+            ) as profile_ctx,
         ):
             resp = app.test_client().get("/owner/users/3/profile")
         assert resp.status_code == 200
+        assert profile_ctx.call_args[0] == (3, 1)
 
 
 class TestUsersListAndRoles:

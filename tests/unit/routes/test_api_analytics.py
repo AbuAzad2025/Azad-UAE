@@ -104,12 +104,12 @@ class TestAnalyticsEndpoints:
         assert resp.get_json()["success"] is True
 
     def test_apply_branch_scope_filters(self, app):
-        from routes.api_analytics import _apply_branch_scope
+        from services.platform_query_service import PlatformQueryService
 
         mock_query = MagicMock()
         mock_model = MagicMock()
         mock_model.branch_id = MagicMock()
-        with app.app_context(), patch("routes.api_analytics.branch_scope_id_for", return_value=5):
-            result = _apply_branch_scope(mock_query, mock_model)
+        with app.app_context(), patch("utils.branching.branch_scope_id_for", return_value=5):
+            result = PlatformQueryService._analytics_branch_scope(mock_query, mock_model, user=MagicMock())
         mock_query.filter.assert_called_once()
         assert result is mock_query.filter.return_value

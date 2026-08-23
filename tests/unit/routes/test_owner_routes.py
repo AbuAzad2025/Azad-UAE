@@ -835,6 +835,141 @@ def _owner_route_patches(mock_db=None, **overrides):
             ),
         ),
         ("extensions.cache.clear", patch("extensions.cache.clear")),
+        # ── OwnerOpsService boundary (queries moved out of routes/owner/*) ──
+        (
+            "services.owner_ops_service.OwnerOpsService.login_history_pagination",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.login_history_pagination",
+                return_value=MagicMock(items=[]),
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.login_history_users",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.login_history_users",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.login_history_stats",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.login_history_stats",
+                return_value={"total_logins": 0, "failed_logins": 0, "today_logins": 0},
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.security_alerts_pagination",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.security_alerts_pagination",
+                return_value=MagicMock(items=[]),
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.security_alert_stats",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.security_alert_stats",
+                return_value={"unresolved": 0, "critical": 0, "high": 0},
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.get_security_alert_or_404",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.get_security_alert_or_404",
+                return_value=MagicMock(is_resolved=False),
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.list_api_keys",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.list_api_keys",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.get_api_key_or_404",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.get_api_key_or_404",
+                return_value=MagicMock(is_active=True),
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.get_users_by_ids",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.get_users_by_ids",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.card_vault_context",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.card_vault_context",
+                return_value={
+                    "pagination": MagicMock(items=[]),
+                    "stats": {
+                        "total_cards": 0,
+                        "total_usage": 0,
+                        "visa_count": 0,
+                        "mastercard_count": 0,
+                    },
+                },
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.get_card_or_404",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.get_card_or_404",
+                return_value=MagicMock(),
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
+                return_value={"old_logs": 0, "old_archived": 0},
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.delete_old_audit_logs",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.delete_old_audit_logs",
+                return_value=0,
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.delete_old_archived_records",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.delete_old_archived_records",
+                return_value=0,
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.recent_maintenance_audit_logs",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.recent_maintenance_audit_logs",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.find_exchange_rate_record",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.find_exchange_rate_record",
+                return_value=None,
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.recent_exchange_rate_records",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.recent_exchange_rate_records",
+                return_value=[],
+            ),
+        ),
+        (
+            "services.owner_ops_service.OwnerOpsService.warehouse_in_tenant",
+            patch(
+                "services.owner_ops_service.OwnerOpsService.warehouse_in_tenant",
+                return_value=MagicMock(allow_negative_inventory=False),
+            ),
+        ),
     ]
     with ExitStack() as stack:
         for _name, p in patches:

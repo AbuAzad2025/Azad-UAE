@@ -90,8 +90,22 @@ def _db_route_patches(**overrides):
         patch("routes.owner.database._validate_postgresql_uri", return_value=True),
         patch("routes.owner.database._mask_db_uri", return_value="postgresql://user:***@host/db"),
         patch("routes.owner.shared._invalidate_owner_changes"),
-        patch("routes.owner.database.AuditLog", _mock_query_cls(all=[])),
-        patch("routes.owner.database.ArchivedRecord", _mock_query_cls(all=[])),
+        patch(
+            "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
+            return_value={"old_logs": 0, "old_archived": 0},
+        ),
+        patch(
+            "services.owner_ops_service.OwnerOpsService.delete_old_audit_logs",
+            return_value=0,
+        ),
+        patch(
+            "services.owner_ops_service.OwnerOpsService.delete_old_archived_records",
+            return_value=0,
+        ),
+        patch(
+            "services.owner_ops_service.OwnerOpsService.recent_maintenance_audit_logs",
+            return_value=[],
+        ),
         patch("services.logging_core.LoggingCore.log_audit"),
         patch("services.logging_core.LoggingCore.log_error"),
         patch("utils.db_safety.atomic_transaction", atomic_mock),
@@ -639,24 +653,24 @@ class TestDataCleanup:
 
     def test_get_renders(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        audit_cls = _mock_query_cls(count=3)
-        arch_cls = _mock_query_cls(count=1)
         with (
             _db_route_patches(),
-            patch("routes.owner.database.AuditLog", audit_cls),
-            patch("routes.owner.database.ArchivedRecord", arch_cls),
+            patch(
+                "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
+                return_value={"old_logs": 3, "old_archived": 1},
+            ),
         ):
             resp = app.test_client().get("/owner/data-cleanup")
         assert resp.status_code == 200
 
     def test_post_no_cleanup_type(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        audit_cls = _mock_query_cls(count=3)
-        arch_cls = _mock_query_cls(count=1)
         with (
             _db_route_patches(),
-            patch("routes.owner.database.AuditLog", audit_cls),
-            patch("routes.owner.database.ArchivedRecord", arch_cls),
+            patch(
+                "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
+                return_value={"old_logs": 3, "old_archived": 1},
+            ),
         ):
             resp = app.test_client().post(
                 "/owner/data-cleanup",
@@ -666,8 +680,10 @@ class TestDataCleanup:
 
     def test_post_cleanup_logs(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        with _db_route_patches(), patch("routes.owner.database.AuditLog") as audit_cls:
-            audit_cls.query.filter.return_value.delete.return_value = 5
+        with (
+            _db_route_patches(),
+            patch("services.owner_ops_service.OwnerOpsService.delete_old_audit_logs", return_value=5),
+        ):
             resp = app.test_client().post(
                 "/owner/data-cleanup",
                 data={"days": "30", "cleanup_type": "logs"},
@@ -676,8 +692,10 @@ class TestDataCleanup:
 
     def test_post_cleanup_archived(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        with _db_route_patches(), patch("routes.owner.database.ArchivedRecord") as arch_cls:
-            arch_cls.query.filter.return_value.delete.return_value = 2
+        with (
+            _db_route_patches(),
+            patch("services.owner_ops_service.OwnerOpsService.delete_old_archived_records", return_value=2),
+        ):
             resp = app.test_client().post(
                 "/owner/data-cleanup",
                 data={"days": "180", "cleanup_type": "archived"},
@@ -686,8 +704,13 @@ class TestDataCleanup:
 
     def test_post_cleanup_error_redirects(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        with _db_route_patches(), patch("routes.owner.database.AuditLog") as audit_cls:
-            audit_cls.query.filter.return_value.delete.side_effect = RuntimeError("delete fail")
+        with (
+            _db_route_patches(),
+            patch(
+                "services.owner_ops_service.OwnerOpsService.delete_old_audit_logs",
+                side_effect=RuntimeError("delete fail"),
+            ),
+        ):
             resp = app.test_client().post(
                 "/owner/data-cleanup",
                 data={"days": "30", "cleanup_type": "logs"},
@@ -727,13 +750,12 @@ class TestApiRecentAuditLogs:
         log1.action = "rebuild_gl_tree"
         log1.metadata = {"success": True}
         log1.details = "Rebuilt GL tree"
-        audit_cls = MagicMock()
-        chain = audit_cls.query.filter.return_value.order_by.return_value.limit.return_value
-        chain.all.return_value = [log1]
         with (
             _db_route_patches(),
-            patch("models.AuditLog", audit_cls),
-            patch("sqlalchemy.desc", return_value=MagicMock()),
+            patch(
+                "services.owner_ops_service.OwnerOpsService.recent_maintenance_audit_logs",
+                return_value=[log1],
+            ),
         ):
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200
@@ -743,14 +765,7 @@ class TestApiRecentAuditLogs:
 
     def test_api_empty_logs(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
-        audit_cls = MagicMock()
-        chain = audit_cls.query.filter.return_value.order_by.return_value.limit.return_value
-        chain.all.return_value = []
-        with (
-            _db_route_patches(),
-            patch("models.AuditLog", audit_cls),
-            patch("sqlalchemy.desc", return_value=MagicMock()),
-        ):
+        with _db_route_patches():
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200
         assert resp.get_json()["data"]["logs"] == []
@@ -762,13 +777,12 @@ class TestApiRecentAuditLogs:
         log.action = "fix_cost_centers"
         log.metadata = None
         log.details = None
-        audit_cls = MagicMock()
-        chain = audit_cls.query.filter.return_value.order_by.return_value.limit.return_value
-        chain.all.return_value = [log]
         with (
             _db_route_patches(),
-            patch("models.AuditLog", audit_cls),
-            patch("sqlalchemy.desc", return_value=MagicMock()),
+            patch(
+                "services.owner_ops_service.OwnerOpsService.recent_maintenance_audit_logs",
+                return_value=[log],
+            ),
         ):
             resp = app.test_client().get("/owner/api/recent-audit-logs")
         assert resp.status_code == 200

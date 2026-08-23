@@ -23,6 +23,7 @@ from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
 from services.logging_core import LoggingCore
 from services.payment_service import PaymentService
+from utils.api_response import success_response
 from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency, resolve_tenant_base_currency
 from utils.db_safety import atomic_transaction
@@ -30,7 +31,6 @@ from utils.decorators import permission_required
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
-from utils.api_response import error_response, success_response
 from utils.tenanting import (
     assert_tenant_record,
     get_active_tenant_id,
@@ -470,13 +470,12 @@ def print_payment(**kwargs):
     payment_branch_id = payment.branch_id
     if not _in_scope_branch(payment_branch_id):
         return render_template("errors/403.html"), 403
-    from models import Branch
+    tid = getattr(payment, "tenant_id", None)
     from utils.tenant_branding import get_print_header_context
 
-    tid = getattr(payment, "tenant_id", None)
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branding = get_print_header_context(tid)
-    print_branch = Branch.query.filter_by(id=payment_branch_id, tenant_id=tid).first() if payment_branch_id else None
+    print_branch = PaymentService.get_print_branch(payment_branch_id, tid)
     try:
         default_currency = resolve_default_currency(tenant)
     except Exception:
@@ -592,14 +591,11 @@ def archive_payment(**kwargs):
 @permission_required("manage_payments")
 def restore_payment(**kwargs):
     """استعادة سند صرف من الأرشيف"""
-    from models import ArchivedRecord
-
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(table_name="payments", record_id=record_id)
-    if tid is not None:
-        archived_query = archived_query.filter(ArchivedRecord.tenant_id == tid)
-    archived = archived_query.first_or_404()
+    archived = PaymentService.find_archived_record("payments", record_id, tid)
+    if archived is None:
+        abort(404)
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template("errors/403.html"), 403
 
@@ -1092,10 +1088,8 @@ def print_receipt(**kwargs):
     requested_template = (request.args.get("template") or "").strip().lower()
     template_path = PrintService.resolve_template("receipt", tenant_id=tid, requested_template=requested_template)
 
-    from models import Branch
-
     tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    print_branch = Branch.query.filter_by(id=receipt_branch_id, tenant_id=tid).first() if receipt_branch_id else None
+    print_branch = PaymentService.get_print_branch(receipt_branch_id, tid)
     try:
         default_currency = resolve_default_currency(tenant)
     except Exception:
@@ -1174,20 +1168,14 @@ def print_receipt(**kwargs):
 @permission_required("manage_payments")
 def archived_receipts():
     """عرض السندات المؤرشفة"""
-    from models import ArchivedRecord
-
     tid = get_active_tenant_id(current_user)
 
-    archived_receipts_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "receipts")
-    if tid is not None:
-        archived_receipts_query = archived_receipts_query.filter(ArchivedRecord.tenant_id == tid)
-    archived_payments_query = db.session.query(ArchivedRecord).filter(ArchivedRecord.table_name == "payments")
-    if tid is not None:
-        archived_payments_query = archived_payments_query.filter(ArchivedRecord.tenant_id == tid)
+    archived_receipts = PaymentService.list_archived_records("receipts", tid)
+    archived_payments = PaymentService.list_archived_records("payments", tid)
 
     archived_items = []
 
-    for archived in archived_receipts_query.all():
+    for archived in archived_receipts:
         if not _in_scope_branch(_archived_item_branch_id(archived)):
             continue
         data = archived.data
@@ -1211,7 +1199,7 @@ def archived_receipts():
             }
         )
 
-    for archived in archived_payments_query.all():
+    for archived in archived_payments:
         if not _in_scope_branch(_archived_item_branch_id(archived)):
             continue
         data = archived.data
@@ -1268,17 +1256,11 @@ def archive_receipt(**kwargs):
 @permission_required("manage_payments")
 def restore_receipt(**kwargs):
     """استعادة سند قبض من الأرشيف"""
-    from models import ArchivedRecord
-
     record_id = kwargs.pop("id")
     tid = get_active_tenant_id(current_user)
-    archived_query = ArchivedRecord.query.filter_by(
-        table_name="receipts",
-        record_id=record_id,
-    )
-    if tid is not None:
-        archived_query = archived_query.filter_by(tenant_id=tid)
-    archived = archived_query.first_or_404()
+    archived = PaymentService.find_archived_record("receipts", record_id, tid)
+    if archived is None:
+        abort(404)
     if not _in_scope_branch(_archived_item_branch_id(archived)):
         return render_template("errors/403.html"), 403
 
@@ -1314,9 +1296,7 @@ def delete_receipt(**kwargs):
     try:
         with atomic_transaction("receipt_delete"):
             if receipt.source_type == "sale" and receipt.source_id:
-                from models import Sale
-
-                sale = Sale.query.filter_by(id=receipt.source_id, tenant_id=receipt.tenant_id).first()
+                sale = PaymentService.get_sale_for_receipt(receipt)
                 if sale:
                     sale.paid_amount -= receipt.amount
                     sale.paid_amount_aed -= receipt.amount_aed
@@ -1424,9 +1404,7 @@ def delete_payment(**kwargs):
                 )
 
                 if payment.supplier_id:
-                    from models import Supplier
-
-                    supplier = Supplier.query.filter_by(id=payment.supplier_id, tenant_id=payment.tenant_id).first()
+                    supplier = PaymentService.get_supplier_by_id(payment.supplier_id, payment.tenant_id)
                     if supplier:
                         supplier.apply_payment(-Decimal(str(payment.amount_aed or 0)))
 
@@ -1449,8 +1427,6 @@ def delete_payment(**kwargs):
 @permission_required("manage_payments")
 def create_payment(purchase_id):
     """إنشاء سند صرف لفاتورة مشتريات"""
-    from sqlalchemy import func
-
     from models import Payment, Purchase, Supplier
     from utils.helpers import generate_number
 
@@ -1459,16 +1435,7 @@ def create_payment(purchase_id):
         return render_template("errors/403.html"), 403
     supplier = tenant_get(Supplier, purchase.supplier_id, or_404=False) if purchase.supplier_id else None
 
-    paid_amount = (
-        db.session.query(func.sum(Payment.amount_aed))
-        .filter(
-            Payment.purchase_id == purchase.id,
-            Payment.tenant_id == purchase.tenant_id,
-            Payment.payment_confirmed,
-        )
-        .scalar()
-        or 0
-    )
+    paid_amount = PaymentService.get_confirmed_purchase_paid_total(purchase.id, purchase.tenant_id)
 
     balance_aed = float(purchase.amount_aed or 0) - float(paid_amount)
     purchase_rate = float(purchase.exchange_rate or 1)
@@ -1667,8 +1634,6 @@ def create_payment(purchase_id):
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
                     )
-
-                    from services.payment_service import PaymentService
 
                     PaymentService._post_supplier_fx_gain_loss(payment, purchase, tenant_id)
 

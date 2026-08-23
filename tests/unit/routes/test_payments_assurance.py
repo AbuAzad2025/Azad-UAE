@@ -497,9 +497,6 @@ class TestArchiveRestoreDeleteAssurance:
             data={"branch_id": 99, "receipt_number": "R2", "amount": "10"},
             archived_at=datetime.now(UTC),
         )
-        q = MagicMock()
-        q.filter.return_value = q
-        q.all.side_effect = [[in_scope, out_scope], []]
 
         def render_side_effect(template, **ctx):
             assert len(ctx["archived_items"]) == 1
@@ -507,7 +504,7 @@ class TestArchiveRestoreDeleteAssurance:
             return "ok"
 
         with (
-            patch("routes.payments.db.session.query", return_value=q),
+            patch("routes.payments.PaymentService.list_archived_records", side_effect=[[in_scope, out_scope], []]),
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", side_effect=render_side_effect),
         ):
@@ -888,11 +885,8 @@ class TestPaymentsGapCoverage:
             },
             archived_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
-        q = MagicMock()
-        q.filter.return_value = q
-        q.all.side_effect = [[], [archived]]
         with (
-            patch("routes.payments.db.session.query", return_value=q),
+            patch("routes.payments.PaymentService.list_archived_records", side_effect=[[], [archived]]),
             patch("routes.payments._archived_item_branch_id", return_value=99),
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="ok") as render,
@@ -1022,11 +1016,8 @@ class TestArchivedPaymentsInScope:
             },
             archived_at=datetime(2026, 1, 2, tzinfo=UTC),
         )
-        q = MagicMock()
-        q.filter.return_value = q
-        q.all.side_effect = [[], [archived]]
         with (
-            patch("routes.payments.db.session.query", return_value=q),
+            patch("routes.payments.PaymentService.list_archived_records", side_effect=[[], [archived]]),
             patch("routes.payments._archived_item_branch_id", return_value=1),
             patch("utils.decorators.branch_scope_id", return_value=1),
             patch("routes.payments.render_template", return_value="ok") as render,

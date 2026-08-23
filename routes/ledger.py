@@ -15,13 +15,13 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import GLAccount, Cheque, GLJournalEntry, PaymentVault
-from utils.api_response import error_response, success_response
+from models import Cheque, GLAccount, GLJournalEntry, PaymentVault
 from services.aging_analysis_service import AgingAnalysisService
 from services.cash_flow_service import CashFlowService
 from services.gl_service import GLService
 from services.logging_core import LoggingCore
 from services.print_service import PrintService
+from utils.api_response import error_response, success_response
 from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
@@ -472,26 +472,10 @@ def reverse_entry(entry_id):
 @permission_required("view_ledger")
 def api_search_accounts():
     """API للبحث عن الحسابات"""
-    from utils.gl_tenant import scope_gl_accounts
+    from services.gl_service import GLService
 
     query = request.args.get("q", "").strip()
-
-    accounts = (
-        scope_gl_accounts(
-            GLAccount.query.filter(
-                GLAccount.is_active,
-                GLAccount.is_header.is_(False),
-                db.or_(
-                    GLAccount.code.ilike(f"%{query}%"),
-                    GLAccount.name.ilike(f"%{query}%"),
-                    GLAccount.name_ar.ilike(f"%{query}%"),
-                ),
-            )
-        )
-        .order_by(GLAccount.code)
-        .limit(20)
-        .all()
-    )
+    accounts = GLService.search_accounts(query)
 
     return success_response(
         data=[
@@ -944,17 +928,14 @@ def admin_balance_sheet():
 @permission_required("view_ledger")
 def budget_vs_actual():
     """Budget vs Actual Report - compares budgeted amounts with GL actuals"""
-    from models import Budget
+    from services.gl_service import GLService
     from utils.tenanting import require_active_tenant_id
 
     tenant_id = require_active_tenant_id()
     branch_id = _effective_branch_id()
 
     # Get active budgets
-    budget_query = Budget.query.filter_by(tenant_id=tenant_id, status="active")
-    if branch_id:
-        budget_query = budget_query.filter_by(branch_id=branch_id)
-    budgets = budget_query.all()
+    budgets = GLService.list_active_budgets(tenant_id, branch_id=branch_id)
 
     budget_data = []
     for budget in budgets:

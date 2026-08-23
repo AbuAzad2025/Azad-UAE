@@ -19,8 +19,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Cheque, Customer, Sale, Supplier
-from models.receipt import Receipt
+from models import Cheque, Customer, Supplier
 from services.cheque_service import (
     calculate_amount_aed,
     process_cheque_bounce,
@@ -47,14 +46,12 @@ install_feature_gate(cheques_bp, "cheques")
 
 
 def _scoped_cheques_query():
-    tid = get_active_tenant_id(current_user)
-    query = Cheque.query.filter_by(is_active=True)
-    if tid is not None:
-        query = query.filter(Cheque.tenant_id == tid)
-    scoped_branch_id = branch_scope_id()
-    if scoped_branch_id is not None:
-        query = query.filter(Cheque.branch_id == scoped_branch_id)
-    return query
+    from services.cheque_service import ChequeService
+
+    return ChequeService.scoped_cheques_query(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_scope_id(),
+    )
 
 
 def _ensure_cheque_scope(cheque):
@@ -81,55 +78,21 @@ def _resolve_transaction_rate(currency, user_rate=None):
 
 
 def _scoped_customers_query():
-    from sqlalchemy import select
+    from services.cheque_service import ChequeService
 
-    from models import Payment
-
-    tid = get_active_tenant_id(current_user)
-    scoped_branch_id = branch_scope_id()
-    query = Customer.query.filter(Customer.is_active)
-    if tid is not None:
-        query = query.filter(Customer.tenant_id == tid)
-    if scoped_branch_id is None:
-        return query
-
-    sale_ids = select(Sale.customer_id).where(
-        Sale.customer_id.isnot(None),
-        Sale.branch_id == scoped_branch_id,
+    return ChequeService.scoped_customers_query(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_scope_id(),
     )
-    payment_ids = select(Payment.customer_id).where(
-        Payment.customer_id.isnot(None),
-        Payment.branch_id == scoped_branch_id,
-    )
-    receipt_ids = select(Receipt.customer_id).where(
-        Receipt.customer_id.isnot(None),
-        Receipt.branch_id == scoped_branch_id,
-    )
-    return query.filter(Customer.id.in_(sale_ids.union(payment_ids, receipt_ids)))
 
 
 def _scoped_suppliers_query():
-    from sqlalchemy import select
+    from services.cheque_service import ChequeService
 
-    from models import Payment, Purchase
-
-    tid = get_active_tenant_id(current_user)
-    scoped_branch_id = branch_scope_id()
-    query = Supplier.query.filter(Supplier.is_active)
-    if tid is not None:
-        query = query.filter(Supplier.tenant_id == tid)
-    if scoped_branch_id is None:
-        return query
-
-    purchase_ids = select(Purchase.supplier_id).where(
-        Purchase.supplier_id.isnot(None),
-        Purchase.branch_id == scoped_branch_id,
+    return ChequeService.scoped_suppliers_query(
+        tenant_id=get_active_tenant_id(current_user),
+        branch_id=branch_scope_id(),
     )
-    payment_ids = select(Payment.supplier_id).where(
-        Payment.supplier_id.isnot(None),
-        Payment.branch_id == scoped_branch_id,
-    )
-    return query.filter(Supplier.id.in_(purchase_ids.union(payment_ids)))
 
 
 @cheques_bp.route("/")
@@ -712,7 +675,7 @@ def delete(**kwargs):
         has_links = True
 
     if not has_links:
-        from models import GLJournalEntry
+        from services.cheque_service import ChequeService
 
         ref_types = [
             "cheque_receive",
@@ -722,14 +685,7 @@ def delete(**kwargs):
             "cheque_bounce",
             "Cheque",
         ]
-        has_links = (
-            GLJournalEntry.query.filter(
-                GLJournalEntry.reference_type.in_(ref_types),
-                GLJournalEntry.reference_id == cheque.id,
-                GLJournalEntry.tenant_id == cheque.tenant_id,
-            ).first()
-            is not None
-        )
+        has_links = ChequeService.has_gl_references(cheque, ref_types)
 
     try:
         if has_links:

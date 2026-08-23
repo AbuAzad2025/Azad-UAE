@@ -28,11 +28,14 @@ class UserService:
 
     @staticmethod
     def get_role(role_id):
+        from models import Role
+
         return db.session.get(Role, role_id) if role_id else None
 
     @staticmethod
     def roles_visible_to_level(max_level):
         """Active roles whose level does not exceed the given level."""
+        from models import Role
         from utils.auth_helpers import role_level_for
 
         roles = Role.query.filter_by(is_active=True).all()
@@ -127,6 +130,7 @@ class UserService:
     @staticmethod
     def creatable_roles(max_level):
         """Active roles at/below the caller's level, minus owner/developer."""
+        from models import Role
         from utils.auth_helpers import role_level_for
 
         roles = Role.query.filter_by(is_active=True).all()
@@ -166,7 +170,9 @@ class UserService:
 
         from models import AuditLog, Payment, Sale
 
-        sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
+        sale_q = (
+            Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
+        )
         payment_q = (
             Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
         )
@@ -183,7 +189,9 @@ class UserService:
                 .scalar()
                 or 0
                 if tid
-                else db.session.query(func.sum(Sale.amount_aed)).filter_by(status="confirmed", seller_id=user_id).scalar()
+                else db.session.query(func.sum(Sale.amount_aed))
+                .filter_by(status="confirmed", seller_id=user_id)
+                .scalar()
                 or 0
             ),
             "payments_count": payment_q.count(),
