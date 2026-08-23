@@ -7,7 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-from werkzeug.exceptions import NotFound
 
 
 def _obj(**attrs):
@@ -81,7 +80,7 @@ class TestRecommendPrice:
         mock_ai_service.recommend_price.return_value = self.RECOMMENDED
         resp = ai_client.post("/ai/recommend-price", json={"product_id": 1, "customer_id": 2})
         assert resp.status_code == 200
-        assert resp.get_json()["recommended_price"] == 125.0
+        assert resp.get_json()["data"]["recommended_price"] == 125.0
 
     def test_missing_json_400(self, ai_client, mock_ai_service):
         resp = ai_client.post("/ai/recommend-price", data=b"x", content_type="application/json")
@@ -125,7 +124,7 @@ class TestCheckStock:
         mock_ai_service.check_stock_alert.return_value = None
         resp = ai_client.post("/ai/check-stock", json={"product_id": 1, "quantity": 5})
         assert resp.status_code == 200
-        assert resp.get_json()["type"] == "success"
+        assert resp.get_json()["data"]["type"] == "success"
 
     def test_warning(self, ai_client, mock_ai_service):
         mock_ai_service.check_stock_alert.return_value = {
@@ -133,7 +132,7 @@ class TestCheckStock:
             "message": "low",
         }
         resp = ai_client.post("/ai/check-stock", json={"product_id": 1, "quantity": 10})
-        assert resp.get_json()["type"] == "warning"
+        assert resp.get_json()["data"]["type"] == "warning"
 
     def test_error_type(self, ai_client, mock_ai_service):
         mock_ai_service.check_stock_alert.return_value = {
@@ -141,7 +140,7 @@ class TestCheckStock:
             "message": "no stock",
         }
         resp = ai_client.post("/ai/check-stock", json={"product_id": 1, "quantity": 10})
-        assert resp.get_json()["type"] == "error"
+        assert resp.get_json()["data"]["type"] == "error"
 
     def test_missing_json_400(self, ai_client, mock_ai_service):
         resp = ai_client.post("/ai/check-stock", data=b"x", content_type="application/json")
@@ -182,11 +181,11 @@ class TestAnalyzeCustomer:
         mock_ai_service.analyze_customer_behavior.return_value = self.ANALYSIS
         resp = ai_client.get("/ai/analyze-customer/42")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["customer_name"] == "c1"
         assert data["risk_level"] == "low"
         mock_ai_service.analyze_customer_behavior.assert_called_once_with(42)
-        assert resp.get_json()["customer_name"] == "c1"
+        assert resp.get_json()["data"]["customer_name"] == "c1"
 
     def test_not_found_404(self, ai_client, mock_ai_service):
         mock_ai_service.analyze_customer_behavior.return_value = None
@@ -216,7 +215,7 @@ class TestExchangeRate:
         ) as m:
             resp = ai_client.get("/ai/exchange-rate/USD")
             assert resp.status_code == 200
-            assert resp.get_json()["rate"] == 3.67
+            assert resp.get_json()["data"]["rate"] == 3.67
             m.assert_called_once_with("USD")
 
     def test_eur_currency(self, ai_client):
@@ -244,11 +243,10 @@ class TestExchangeRate:
 class TestSearchMarketPrice:
     @staticmethod
     def _product_chain(product=None):
+        # Route resolves via ProductService.get_tenant_product → query.first()
+        # (None ⇒ abort(404) for tenant-mismatch / missing product).
         chain = MagicMock()
-        if product is None:
-            chain.first_or_404.side_effect = NotFound()
-        else:
-            chain.first_or_404.return_value = product
+        chain.first.return_value = product
         return chain
 
     def test_happy_path(self, ai_client):
@@ -259,7 +257,7 @@ class TestSearchMarketPrice:
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
-        assert body["product"] == "Brake Pad"
+        assert body["data"]["product"] == "Brake Pad"
 
     def test_tenant_mismatch_404(self, ai_client):
         with patch("models.Product") as Product:
@@ -279,7 +277,7 @@ class TestSearchMarketPrice:
         with patch("models.Product") as Product:
             Product.query.filter_by.return_value = self._product_chain(product)
             resp = ai_client.get("/ai/search-market-price/2")
-        assert resp.get_json()["suggestions"] == []
+        assert resp.get_json()["data"]["suggestions"] == []
 
     def test_response_message(self, ai_client):
         product = _obj(name="Z")
@@ -293,17 +291,16 @@ class TestSearchMarketPrice:
         with patch("models.Product") as Product:
             Product.query.filter_by.return_value = self._product_chain(product)
             resp = ai_client.get("/ai/search-market-price/7")
-        assert resp.get_json()["product"] == "Filter"
+        assert resp.get_json()["data"]["product"] == "Filter"
 
 
 class TestFindCompatible:
     @staticmethod
     def _product_chain(product=None):
+        # Route resolves via ProductService.get_tenant_product → query.first()
+        # (None ⇒ abort(404) for tenant-mismatch / missing product).
         chain = MagicMock()
-        if product is None:
-            chain.first_or_404.side_effect = NotFound()
-        else:
-            chain.first_or_404.return_value = product
+        chain.first.return_value = product
         return chain
 
     def test_happy_path(self, ai_client):
@@ -312,7 +309,7 @@ class TestFindCompatible:
             Product.query.filter_by.return_value = self._product_chain(product)
             resp = ai_client.get("/ai/find-compatible/10")
         assert resp.status_code == 200
-        assert resp.get_json()["compatible_vehicles"] == []
+        assert resp.get_json()["data"]["compatible_vehicles"] == []
 
     def test_tenant_mismatch_404(self, ai_client):
         with patch("models.Product") as Product:
@@ -349,7 +346,7 @@ class TestChatAccessPolicy:
         ):
             resp = ai_client.post("/ai/chat", json={"message": "hi"})
         assert resp.status_code == 403
-        assert resp.get_json()["reason"] == "global_disabled"
+        assert resp.get_json()["meta"]["reason"] == "global_disabled"
 
     def test_tenant_disabled_reason(self, ai_client):
         with patch(
@@ -418,7 +415,7 @@ class TestChatCapabilityLevel:
                                                     headers={"Accept": "application/json"},
                                                 )
         assert resp.status_code == 403
-        assert resp.get_json()["required"] == "advanced"
+        assert resp.get_json()["meta"]["required"] == "advanced"
 
     def test_basic_allows_chat(self, ai_client, mock_ai_service):
         state = _basic_tenant_access()
@@ -450,7 +447,7 @@ class TestChatEndpoint:
         with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
             resp = ai_client.post("/ai/chat", json={"message": "ما هو المخزون؟"})
         assert resp.status_code == 200
-        assert resp.get_json()["response"] == "mocked chat"
+        assert resp.get_json()["data"]["response"] == "mocked chat"
         mock_ai_service.chat_response.assert_called_once()
 
     def test_action_dispatcher_success(self, ai_client, mock_ai_service):
@@ -460,7 +457,7 @@ class TestChatEndpoint:
             ad.dispatch.return_value = dispatch_result
             resp = ai_client.post("/ai/chat", json={"message": "فاتورة جديدة"})
         assert resp.status_code == 200
-        body = resp.get_json()
+        body = resp.get_json()["data"]
         assert body["action_executed"] is True
         assert body["response"] == "تم التنفيذ"
         mock_ai_service.chat_response.assert_not_called()
@@ -475,7 +472,7 @@ class TestChatEndpoint:
                 return_value="wizard reply",
             ) as proc:
                 resp = ai_client.post("/ai/chat", json={"message": "فاتورة"})
-        assert resp.get_json()["response"] == "wizard reply"
+        assert resp.get_json()["data"]["response"] == "wizard reply"
         proc.assert_called_once()
 
     def test_greeting_via_intelligent_response(self, ai_client, mock_ai_service):
@@ -483,7 +480,7 @@ class TestChatEndpoint:
             with patch("ai_knowledge.agents_core.intelligent_response", return_value="أهلا") as ir:
                 ad.parse_chat_action.return_value = ("greeting", {})
                 resp = ai_client.post("/ai/chat", json={"message": "مرحبا"})
-        assert resp.get_json()["response"] == "أهلا"
+        assert resp.get_json()["data"]["response"] == "أهلا"
         ir.assert_called_once()
 
     def test_help_via_intelligent_response(self, ai_client, mock_ai_service):
@@ -491,32 +488,32 @@ class TestChatEndpoint:
             with patch("ai_knowledge.agents_core.intelligent_response", return_value="مساعدة"):
                 ad.parse_chat_action.return_value = ("help", {})
                 resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
-        assert resp.get_json()["response"] == "مساعدة"
+        assert resp.get_json()["data"]["response"] == "مساعدة"
 
     def test_process_user_action_rasid(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "رصيد"})
         assert resp.status_code == 200
-        assert "رصيد العميل" in resp.get_json()["response"]
+        assert "رصيد العميل" in resp.get_json()["data"]["response"]
 
     def test_process_user_action_customer(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "عميل"})
-        assert "إضافة عميل" in resp.get_json()["response"]
+        assert "إضافة عميل" in resp.get_json()["data"]["response"]
 
     def test_process_user_action_product(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "منتج"})
-        assert "إضافة منتج" in resp.get_json()["response"]
+        assert "إضافة منتج" in resp.get_json()["data"]["response"]
 
     def test_process_user_action_invoice(self, ai_client, mock_ai_service):
         with patch("ai_knowledge.action_dispatcher.action_dispatcher") as ad:
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "فاتورة"})
-        assert "فاتورة مبيعات" in resp.get_json()["response"]
+        assert "فاتورة مبيعات" in resp.get_json()["data"]["response"]
 
     def test_trainer_called_on_chat(self, ai_client, mock_ai_service):
         with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
@@ -534,7 +531,7 @@ class TestChatEndpoint:
     def test_response_includes_ai_enabled(self, ai_client, mock_ai_service):
         with patch("routes.ai_routes.chat._user_can_ai_execute_actions", return_value=False):
             resp = ai_client.post("/ai/chat", json={"message": "x"})
-        assert "ai_enabled" in resp.get_json()
+        assert "ai_enabled" in resp.get_json()["data"]
 
     def test_no_execute_without_permission(self, ai_client, mock_ai_service, mock_user):
         mock_user.is_owner = False
@@ -565,7 +562,7 @@ class TestChatEndpoint:
         ):
             ad.parse_chat_action.return_value = None
             resp = ai_client.post("/ai/chat", json={"message": "مساعدة"})
-        assert "مساعدة" in resp.get_json()["response"]
+        assert "مساعدة" in resp.get_json()["data"]["response"]
 
 
 class TestSmartListener:
@@ -1333,7 +1330,7 @@ class TestAnalyticsGetRoutes:
             resp = ai_client.get("/ai/business-insights")
         body = resp.get_json()
         assert body["success"] is True
-        assert body["insights"][0]["icon"] == "⚠️"
+        assert body["data"]["insights"][0]["icon"] == "⚠️"
 
 
 class TestSmartPrice:
@@ -1458,7 +1455,7 @@ class TestImprovementRoutes:
         with patch("routes.ai_routes.knowledge.self_improvement") as si:
             si.track_progress.return_value = {"pct": 50}
             resp = ai_client.get("/ai/improvement/progress")
-        assert resp.get_json()["progress"]["pct"] == 50
+        assert resp.get_json()["data"]["progress"]["pct"] == 50
 
     def test_progress_error(self, ai_client):
         with patch("routes.ai_routes.knowledge.self_improvement") as si:
@@ -1524,7 +1521,7 @@ class TestPerformanceAnalysis:
                     gc.get_global_insights.return_value = {"g": 4}
                     resp = ai_client.get("/ai/performance/analysis")
         assert resp.status_code == 200
-        body = resp.get_json()["performance_analysis"]
+        body = resp.get_json()["data"]["performance_analysis"]
         assert "performance" in body
 
     def test_error(self, ai_client):
@@ -1578,7 +1575,7 @@ class TestSystemRoutes:
             resp = ai_client.get("/ai/system/summary")
         body = resp.get_json()
         assert body["success"] is True
-        assert body["summary"]["users"] == 1
+        assert body["data"]["summary"]["users"] == 1
 
     def test_summary_error(self, ai_client):
         with patch("routes.ai_routes.system.system_integrator") as si:
@@ -1734,7 +1731,7 @@ class TestNeuralStatus:
     def test_status_payload(self, ai_client):
         with patch("routes.ai_routes.AIService.get_neural_status", return_value={"models": 2}):
             resp = ai_client.get("/ai/neural-status")
-        assert resp.get_json()["status"]["models"] == 2
+        assert resp.get_json()["data"]["status"]["models"] == 2
 
 
 class TestAutomotiveRoutes:
@@ -1746,7 +1743,7 @@ class TestAutomotiveRoutes:
             return_value=expert,
         ):
             resp = ai_client.get("/ai/automotive-ecu/p0300")
-        assert resp.get_json()["diagnosis"]["code"] == "P0300"
+        assert resp.get_json()["data"]["diagnosis"]["code"] == "P0300"
         expert.diagnose_code.assert_called_once_with("P0300")
 
     def test_ecu_code_error(self, ai_client):
@@ -1775,7 +1772,7 @@ class TestAutomotiveRoutes:
             return_value=expert,
         ):
             resp = ai_client.get("/ai/automotive-sensor/map")
-        assert resp.get_json()["sensor_info"]["name"] == "MAP"
+        assert resp.get_json()["data"]["sensor_info"]["name"] == "MAP"
 
     def test_sensor_error(self, ai_client):
         with patch(
@@ -1805,7 +1802,7 @@ class TestExternalSources:
             resp = ai_client.get("/ai/external-sources")
         body = resp.get_json()
         assert body["success"] is True
-        assert "catalog" in body
+        assert "catalog" in body["data"]
 
     def test_error(self, ai_client):
         with patch(
@@ -1821,7 +1818,7 @@ class TestExternalSources:
         learning.get_statistics.return_value = {"count": 5}
         with patch("routes.ai_routes.specialized.get_external_learning", return_value=learning):
             resp = ai_client.get("/ai/external-sources")
-        assert resp.get_json()["statistics"]["count"] == 5
+        assert resp.get_json()["data"]["statistics"]["count"] == 5
 
 
 class TestAskGenius:
@@ -1898,7 +1895,7 @@ class TestProductTenantIsolation:
     def test_search_filters_by_active_tenant(self, ai_client):
         product = _obj(name="TenantProduct")
         chain = MagicMock()
-        chain.first_or_404.return_value = product
+        chain.first.return_value = product
         with patch("models.Product") as Product:
             with patch("routes.ai_routes.chat.get_active_tenant_id", return_value=99):
                 Product.query.filter_by.return_value = chain
@@ -1906,8 +1903,10 @@ class TestProductTenantIsolation:
                 Product.query.filter_by.assert_called_with(id=1, tenant_id=99)
 
     def test_find_compatible_wrong_tenant_404(self, ai_client):
+        # Route resolves via ProductService.get_tenant_product → query.first();
+        # None ⇒ abort(404), never a cross-tenant leak.
         chain = MagicMock()
-        chain.first_or_404.side_effect = NotFound()
+        chain.first.return_value = None
         with patch("models.Product") as Product:
             with patch("routes.ai_routes.chat.get_active_tenant_id", return_value=2):
                 Product.query.filter_by.return_value = chain
@@ -1916,7 +1915,7 @@ class TestProductTenantIsolation:
 
     def test_search_market_no_cross_tenant_leak(self, ai_client):
         chain = MagicMock()
-        chain.first_or_404.side_effect = NotFound()
+        chain.first.return_value = None
         with patch("models.Product") as Product:
             Product.query.filter_by.return_value = chain
             resp = ai_client.get("/ai/search-market-price/100")

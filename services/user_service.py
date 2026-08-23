@@ -114,3 +114,99 @@ class UserService:
             "tenants": tenants,
             "active_tenant_id": tenant_id,
         }
+
+    # ── owner panel: user CRUD lookups (routes/owner/users.py) ───────────────
+
+    @staticmethod
+    def get_user_or_404(user_id):
+        """Platform-wide fetch-by-id for the owner panel (404 when absent)."""
+        from models import User
+
+        return User.query.get_or_404(user_id)
+
+    @staticmethod
+    def creatable_roles(max_level):
+        """Active roles at/below the caller's level, minus owner/developer."""
+        from utils.auth_helpers import role_level_for
+
+        roles = Role.query.filter_by(is_active=True).all()
+        roles = [r for r in roles if role_level_for(getattr(r, "slug", None)) <= max_level]
+        return [r for r in roles if getattr(r, "slug", None) not in ("owner", "developer")]
+
+    @staticmethod
+    def tenant_branches(tid):
+        """Active branches ordered for forms; tenant-filtered when tid set."""
+        from models import Branch
+
+        query = Branch.query.filter_by(is_active=True)
+        if tid:
+            query = query.filter_by(tenant_id=tid)
+        return query.order_by(Branch.code, Branch.name).all()
+
+    @staticmethod
+    def active_tenants():
+        from models import Tenant
+
+        return Tenant.query.filter_by(is_active=True).order_by(Tenant.name_ar).all()
+
+    @staticmethod
+    def find_username_conflict_in_tenant(username, tenant_id):
+        """Username already taken inside the target tenant."""
+        from models import User
+
+        return User.query.filter_by(username=username, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def user_profile_context(user_id, tid):
+        """Sale/payment/audit stats plus recent rows for the profile page.
+
+        Sale/Payment stats are scoped by tenant when one is active.
+        """
+        from sqlalchemy import func
+
+        from models import AuditLog, Payment, Sale
+
+        sale_q = Sale.query.filter_by(seller_id=user_id, tenant_id=tid) if tid else Sale.query.filter_by(seller_id=user_id)
+        payment_q = (
+            Payment.query.filter_by(user_id=user_id, tenant_id=tid) if tid else Payment.query.filter_by(user_id=user_id)
+        )
+
+        stats = {
+            "sales_count": sale_q.count(),
+            "sales_total": (
+                db.session.query(func.sum(Sale.amount_aed))
+                .filter(
+                    Sale.status == "confirmed",
+                    Sale.seller_id == user_id,
+                    Sale.tenant_id == tid,
+                )
+                .scalar()
+                or 0
+                if tid
+                else db.session.query(func.sum(Sale.amount_aed)).filter_by(status="confirmed", seller_id=user_id).scalar()
+                or 0
+            ),
+            "payments_count": payment_q.count(),
+            "payments_total": (
+                db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id, tenant_id=tid).scalar() or 0
+                if tid
+                else db.session.query(func.sum(Payment.amount_aed)).filter_by(user_id=user_id).scalar() or 0
+            ),
+            "audits_count": (
+                AuditLog.query.filter_by(user_id=user_id, tenant_id=tid).count()
+                if tid
+                else AuditLog.query.filter_by(user_id=user_id).count()
+            ),
+        }
+
+        recent_sales = sale_q.order_by(Sale.sale_date.desc()).limit(5).all()
+        recent_audits = AuditLog.query.filter_by(user_id=user_id)
+        if tid:
+            recent_audits = recent_audits.filter_by(tenant_id=tid)
+        recent_audits = recent_audits.order_by(AuditLog.created_at.desc()).limit(10).all()
+
+        return {
+            "stats": stats,
+            "recent_sales": recent_sales,
+            "recent_audits": recent_audits,
+        }

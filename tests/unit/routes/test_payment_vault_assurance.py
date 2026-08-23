@@ -14,7 +14,7 @@ def _patch_package_query(mocker, **query_attrs):
     pkg_q = MagicMock()
     for attr, value in query_attrs.items():
         getattr(pkg_q, attr).return_value = value
-    mocker.patch.object(pv_mod, "Package", MagicMock(query=pkg_q))
+    mocker.patch.object(pv_mod.Package, "query", pkg_q)
     return pkg_q
 
 
@@ -22,7 +22,7 @@ def _patch_purchase_query(mocker, **query_attrs):
     purchase_q = MagicMock()
     for attr, value in query_attrs.items():
         getattr(purchase_q, attr).return_value = value
-    mocker.patch.object(pv_mod, "PackagePurchase", MagicMock(query=purchase_q))
+    mocker.patch.object(pv_mod.PackagePurchase, "query", purchase_q)
     return purchase_q
 
 
@@ -251,7 +251,7 @@ class TestMutationErrorPaths:
         fb = MagicMock()
         fb.first.return_value = None
         pkg_q.filter_by.return_value = fb
-        mocker.patch.object(pv_mod, "Package", MagicMock(query=pkg_q))
+        mocker.patch.object(pv_mod.Package, "query", pkg_q)
         mock_db.commit.side_effect = RuntimeError("insert fail")
         resp = vault_owner_client.post(
             "/payment-vault/package/create",

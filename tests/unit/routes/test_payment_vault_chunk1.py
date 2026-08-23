@@ -46,11 +46,9 @@ def mock_package(mocker):
     pkg.is_active = True
     pkg.name_ar = "الباقة الأساسية"
     pkg.id = 1
-    mocker.patch("routes.payment_vault.Package")
-    from routes.payment_vault import Package as PkgMod
-
-    PkgMod.query.get_or_404.return_value = pkg
-    PkgMod.query.get.return_value = pkg
+    q = mocker.patch("models.Package.query")
+    q.get_or_404.return_value = pkg
+    q.get.return_value = pkg
     return pkg
 
 
@@ -64,12 +62,10 @@ def mock_purchase(mocker):
     pur.customer_email = "a@b.com"
     pur.transaction_id = "tx_1"
     pur.to_dict.return_value = {"id": 1, "amount": 99.0}
-    mocker.patch("routes.payment_vault.PackagePurchase")
-    from routes.payment_vault import PackagePurchase as pp
-
-    pp.query.get_or_404.return_value = pur
-    pp.query.filter_by.return_value.all.return_value = [pur]
-    pp.query.paginate.return_value = _make_pagination([pur], 1, 20, 1)
+    q = mocker.patch("models.PackagePurchase.query")
+    q.get_or_404.return_value = pur
+    q.filter_by.return_value.all.return_value = [pur]
+    q.paginate.return_value = _make_pagination([pur], 1, 20, 1)
     return pur
 
 
@@ -83,14 +79,12 @@ def mock_donation(mocker):
     don.donor_email = "ali@test.com"
     don.created_at = datetime(2024, 6, 1, tzinfo=UTC)
     don.transaction_type = "donation"
-    mocker.patch("routes.payment_vault.Donation")
-    from routes.payment_vault import Donation as DMod
-
-    DMod.query.filter_by.return_value.first_or_404.return_value = don
-    DMod.query.filter_by.return_value.first.return_value = don
-    DMod.query.filter_by.return_value.count.return_value = 3
-    DMod.query.with_entities.return_value.scalar.return_value = 150.0
-    DMod.query.order_by.return_value.paginate.return_value = _make_pagination([don], 1, 20, 1)
+    q = mocker.patch("models.Donation.query")
+    q.filter_by.return_value.first_or_404.return_value = don
+    q.filter_by.return_value.first.return_value = don
+    q.filter_by.return_value.count.return_value = 3
+    q.with_entities.return_value.scalar.return_value = 150.0
+    q.order_by.return_value.paginate.return_value = _make_pagination([don], 1, 20, 1)
     return don
 
 

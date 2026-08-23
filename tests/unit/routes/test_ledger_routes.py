@@ -12,6 +12,14 @@ from tests.unit.routes.conftest import (
 )
 
 
+def _restore_migrated_route_models(stack):
+    from models import Cheque, GLJournalEntry, PaymentVault
+
+    stack.enter_context(patch("routes.ledger.GLJournalEntry", GLJournalEntry, create=True))
+    stack.enter_context(patch("routes.ledger.PaymentVault", PaymentVault, create=True))
+    stack.enter_context(patch("routes.ledger.Cheque", Cheque, create=True))
+
+
 def _mock_account(code="1101", balance=Decimal("1000"), **kwargs):
     acct = MagicMock()
     acct.id = kwargs.get("id", 1)
@@ -117,6 +125,7 @@ def _ledger_patches(**kwargs):
     vat = kwargs.get("vat", {"output": 0, "input": 0})
     branches = kwargs.get("branches", [MagicMock(id=1, name="Main")])
     with ExitStack() as stack:
+        _restore_migrated_route_models(stack)
         stack.enter_context(patch("routes.ledger.render_template", return_value="ok"))
         stack.enter_context(patch("routes.ledger.get_accessible_branches", return_value=branches))
         stack.enter_context(patch("routes.ledger.branch_scope_id", return_value=kwargs.get("branch_scope")))
@@ -433,9 +442,12 @@ class TestLedgerPages:
         assert resp.status_code == 302
 
     def test_aging_payables_pdf_export(self, ledger_client):
-        with _ledger_patches(), patch(
-            "routes.ledger.PrintService.render_pdf",
-            return_value=b"%PDF-1.4 fake pdf bytes",
+        with (
+            _ledger_patches(),
+            patch(
+                "routes.ledger.PrintService.render_pdf",
+                return_value=b"%PDF-1.4 fake pdf bytes",
+            ),
         ):
             resp = ledger_client.get("/ledger/aging-analysis/export?type=payables&as_of_date=2026-08-22")
         assert resp.status_code == 200
@@ -444,9 +456,12 @@ class TestLedgerPages:
         assert b"%PDF" in resp.data
 
     def test_aging_receivables_pdf_export(self, ledger_client):
-        with _ledger_patches(), patch(
-            "routes.ledger.PrintService.render_pdf",
-            return_value=b"%PDF-1.4 fake pdf bytes",
+        with (
+            _ledger_patches(),
+            patch(
+                "routes.ledger.PrintService.render_pdf",
+                return_value=b"%PDF-1.4 fake pdf bytes",
+            ),
         ):
             resp = ledger_client.get("/ledger/aging-analysis/export?type=receivables")
         assert resp.status_code == 200

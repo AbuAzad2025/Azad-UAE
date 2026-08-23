@@ -696,7 +696,7 @@ class TestPackageFormParsing:
                 captured.update(kwargs)
 
         mocker.patch("routes.payment_vault.Package", _Pkg)
-        mocker.patch("routes.payment_vault.Package.query", create=True).filter_by.return_value.first.return_value = None
+        mocker.patch("models.Package.query").filter_by.return_value.first.return_value = None
         mocker.patch("routes.payment_vault.LoggingCore.log_audit")
         resp = vault_owner_client.post(
             "/payment-vault/package/create",

@@ -73,10 +73,16 @@ def _projects_patches(**kwargs):
             )
         )
         stack.enter_context(patch("routes.projects.Customer.query", _chain_query(all=customers)))
-        stack.enter_context(patch("routes.projects.TaskStage.query", _chain_query(all=stages)))
-        stack.enter_context(patch("routes.projects.Task.query", _chain_query(all=tasks)))
-        stack.enter_context(patch("routes.projects.ProjectMember.query", _chain_query(all=members)))
-        stack.enter_context(patch("routes.projects.User.query", _chain_query(all=users)))
+        stack.enter_context(
+            patch("routes.projects.ProjectService.stages_for_project", return_value=stages)
+        )
+        stack.enter_context(patch("routes.projects.ProjectService.tasks_for_project", return_value=tasks))
+        stack.enter_context(
+            patch("routes.projects.ProjectService.members_for_project", return_value=members)
+        )
+        stack.enter_context(
+            patch("routes.projects.ProjectService.active_users_for_tenant", return_value=users)
+        )
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         yield project
 

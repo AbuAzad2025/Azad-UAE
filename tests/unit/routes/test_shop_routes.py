@@ -387,7 +387,7 @@ class TestShopCatalogAndSearch:
                 "routes.shop.StoreService.get_public_catalog",
                 return_value=_catalog_items(),
             ),
-            patch("routes.shop.ProductCategory.query", cat_query),
+            patch("models.product.ProductCategory.query", cat_query),
         ):
             resp = shop_client.get(f"{BASE}/")
         assert resp.status_code == 200
@@ -400,7 +400,7 @@ class TestShopCatalogAndSearch:
                 "routes.shop.StoreService.get_public_catalog",
                 return_value=_catalog_items(),
             ),
-            patch("routes.shop.ProductCategory.query", cat_query),
+            patch("models.product.ProductCategory.query", cat_query),
         ):
             resp = shop_client.get(f"{BASE}/?utm_source=google&utm_campaign=sale")
         assert resp.status_code == 200
@@ -432,7 +432,7 @@ class TestShopProduct:
         rq = MagicMock()
         rq.filter_by.return_value.order_by.return_value.all.return_value = []
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("5")},
@@ -452,7 +452,7 @@ class TestShopProduct:
     def test_product_detail_wrong_tenant_404(self, shop_client):
         pq = MagicMock()
         pq.filter_by.return_value.first_or_404.side_effect = NotFound()
-        with patch("routes.shop.Product.query", pq):
+        with patch("models.product.Product.query", pq):
             resp = shop_client.get(f"{BASE}/p/10")
         assert resp.status_code == 404
 
@@ -461,7 +461,7 @@ class TestShopProduct:
         pq = MagicMock()
         pq.filter_by.return_value.first_or_404.return_value = product
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("0")},
@@ -560,7 +560,7 @@ class TestShopCart:
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("10")},
@@ -577,7 +577,7 @@ class TestShopCart:
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("10")},
@@ -600,7 +600,7 @@ class TestShopCart:
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = None
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch("routes.shop.safe_redirect_target", return_value=f"{BASE}/"),
         ):
             resp = shop_client.post(f"{BASE}/cart/add", data={"product_id": "99", "quantity": "1"})
@@ -841,7 +841,7 @@ class TestShopStaticPages:
         pq = MagicMock()
         pq.filter_by.return_value.first_or_404.return_value = product
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("3")},
@@ -1010,8 +1010,8 @@ class TestShopReorderInvoiceTrack:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch("routes.shop.Sale.query", sq),
-            patch("routes.shop.SaleLine.query", sl_q),
+            patch("models.sale.Sale.query", sq),
+            patch("models.sale.SaleLine.query", sl_q),
             patch("routes.shop.StoreService.get_cart", return_value={}),
             patch(
                 "routes.shop.StoreService.online_stock_map",
@@ -1045,7 +1045,7 @@ class TestShopReorderInvoiceTrack:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch("routes.shop.Sale.query", sq),
+            patch("models.sale.Sale.query", sq),
             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
             patch("routes.shop.StoreOrderService.status_label", return_value="Confirmed"),
         ):
@@ -1063,7 +1063,7 @@ class TestShopReorderInvoiceTrack:
         sq = MagicMock()
         sq.filter_by.return_value.first.return_value = sale
         with (
-            patch("routes.shop.Sale.query", sq),
+            patch("models.sale.Sale.query", sq),
             patch("routes.shop.StoreOrderService.status_label", return_value="Shipped"),
         ):
             resp = shop_client.get(f"{BASE}/track?order=ORD-001")
@@ -1072,7 +1072,7 @@ class TestShopReorderInvoiceTrack:
     def test_order_track_not_found(self, shop_client):
         sq = MagicMock()
         sq.filter_by.return_value.first.return_value = None
-        with patch("routes.shop.Sale.query", sq):
+        with patch("models.sale.Sale.query", sq):
             resp = shop_client.get(f"{BASE}/track?order=MISSING")
         assert resp.status_code == 200
 
@@ -1093,7 +1093,7 @@ class TestShopOrderConfirmation:
                     "tenant_id": 1,
                 },
             ),
-            patch("routes.shop.Sale.query", sq),
+            patch("models.sale.Sale.query", sq),
             patch("routes.shop.StorePaymentMethodService.get_by_code", return_value=pm),
         ):
             resp = shop_client.get(f"{BASE}/order/valid-token")
@@ -1188,7 +1188,7 @@ class TestShopRoutesExtended:
         product.has_serial_number = True
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
-        with patch("routes.shop.Product.query", pq):
+        with patch("models.product.Product.query", pq):
             resp = shop_client.post(
                 f"{BASE}/cart/add",
                 data={"product_id": "10", "quantity": "1"},
@@ -1201,7 +1201,7 @@ class TestShopRoutesExtended:
         pq = MagicMock()
         pq.filter_by.return_value.first.return_value = product
         with (
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("0")},
@@ -1223,7 +1223,7 @@ class TestShopRoutesExtended:
         ac_q.filter_by.return_value.first.return_value = None
         with (
             patch("routes.shop._require_open_store", return_value=None),
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("5")},
@@ -1350,7 +1350,7 @@ class TestShopRoutesExtended:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch("routes.shop.Sale.query", sq),
+            patch("models.sale.Sale.query", sq),
         ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code == 404
@@ -1369,8 +1369,8 @@ class TestShopRoutesExtended:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch("routes.shop.Sale.query", sq),
-            patch("routes.shop.SaleLine.query", sl_q),
+            patch("models.sale.Sale.query", sq),
+            patch("models.sale.SaleLine.query", sl_q),
         ):
             resp = shop_client.post(f"{BASE}/order/reorder/50")
         assert resp.status_code in (302, 303)
@@ -1395,7 +1395,7 @@ class TestShopRoutesExtended:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
-            patch("routes.shop.Sale.query", sq),
+            patch("models.sale.Sale.query", sq),
         ):
             resp = shop_client.get(f"{BASE}/order/50/invoice")
         assert resp.status_code == 404
@@ -1479,7 +1479,7 @@ class TestShopRoutesMoreCoverage:
         pq.filter_by.return_value.first.return_value = product
         with (
             patch("routes.shop._require_open_store", return_value=None),
-            patch("routes.shop.Product.query", pq),
+            patch("models.product.Product.query", pq),
             patch(
                 "routes.shop.StoreService.online_stock_map",
                 return_value={10: Decimal("0")},

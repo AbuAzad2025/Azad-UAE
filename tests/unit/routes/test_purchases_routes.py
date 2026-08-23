@@ -228,14 +228,14 @@ class TestPurchasesDelete:
     def test_delete_success_no_links(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)
         with (
-            _purchase_patches(purchase=purchase),
-            patch("models.Cheque.query") as cheque_model,
+            _purchase_patches(purchase=purchase) as _ctx,
             patch("models.stock_movement.StockMovement.query") as stock_model,
             patch("services.gl_service.GLService.reverse_entry"),
             patch("models.PurchaseLine") as _line_model,
             patch("routes.purchases.PurchaseService.delete_purchase") as mock_delete,
         ):
-            cheque_model.filter_by.return_value.count.return_value = 0
+            _ctx["purchase_service"].count_linked_cheques.return_value = 0
+            _ctx["purchase_service"].has_stock_movements.return_value = 0
             stock_model.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
@@ -245,12 +245,12 @@ class TestPurchasesDelete:
         purchase = _mock_purchase(paid_amount=Decimal("50"))
         archive = MagicMock()
         with (
-            _purchase_patches(purchase=purchase),
+            _purchase_patches(purchase=purchase) as _ctx,
             patch("services.archive_service.ArchiveService", return_value=archive),
-            patch("models.Cheque.query") as cheque_model,
             patch("models.stock_movement.StockMovement.query") as stock_model,
         ):
-            cheque_model.filter_by.return_value.count.return_value = 0
+            _ctx["purchase_service"].count_linked_cheques.return_value = 0
+            _ctx["purchase_service"].has_stock_movements.return_value = 0
             stock_model.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
@@ -277,12 +277,11 @@ class TestPurchasesCancel:
 class TestPurchasesReturn:
     def test_return_get(self, purchases_client):
         purchase = _mock_purchase()
-        with (
-            _purchase_patches(purchase=purchase) as ctx,
-            patch("services.purchase_service.PurchaseReturn") as ret_model,
-            patch("services.purchase_service.PurchaseReturnLine") as _line_model,
-        ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        with _purchase_patches(purchase=purchase) as ctx:
+            ctx["purchase_service"].get_returns_with_lines.return_value = (
+                [],
+                [],
+            )
             resp = purchases_client.get("/purchases/1/return")
         assert resp.status_code == 200
         assert ctx["render"].call_args[0][0] == "purchases/return.html"
@@ -391,12 +390,12 @@ class TestPurchasesExtended:
         purchase = _mock_purchase()
         archive = MagicMock()
         with (
-            _purchase_patches(purchase=purchase),
+            _purchase_patches(purchase=purchase) as _ctx,
             patch("services.archive_service.ArchiveService", return_value=archive),
-            patch("models.Cheque.query") as cheque_model,
             patch("models.stock_movement.StockMovement.query") as stock_model,
         ):
-            cheque_model.filter_by.return_value.count.return_value = 2
+            _ctx["purchase_service"].count_linked_cheques.return_value = 2
+            _ctx["purchase_service"].has_stock_movements.return_value = 0
             stock_model.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
@@ -406,12 +405,12 @@ class TestPurchasesExtended:
         purchase = _mock_purchase()
         archive = MagicMock()
         with (
-            _purchase_patches(purchase=purchase),
+            _purchase_patches(purchase=purchase) as _ctx,
             patch("services.archive_service.ArchiveService", return_value=archive),
-            patch("models.Cheque.query") as cheque_model,
             patch("models.stock_movement.StockMovement.query") as stock_model,
         ):
-            cheque_model.filter_by.return_value.count.return_value = 0
+            _ctx["purchase_service"].count_linked_cheques.return_value = 0
+            _ctx["purchase_service"].has_stock_movements.return_value = 3
             stock_model.filter_by.return_value.count.return_value = 3
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
@@ -422,15 +421,14 @@ class TestPurchasesExtended:
         supplier = MagicMock()
         with (
             _purchase_patches(purchase=purchase) as _ctx,
-            patch("models.Cheque.query") as cheque_model,
             patch("models.stock_movement.StockMovement.query") as stock_model,
             patch("services.gl_service.GLService.reverse_entry"),
             patch("models.PurchaseLine") as _line_model,
-            patch("services.purchase_service.Supplier") as supplier_model,
         ):
-            cheque_model.filter_by.return_value.count.return_value = 0
+            _ctx["purchase_service"].count_linked_cheques.return_value = 0
+            _ctx["purchase_service"].has_stock_movements.return_value = 0
+            _ctx["purchase_service"].get_tenant_supplier.return_value = supplier
             stock_model.filter_by.return_value.count.return_value = 0
-            supplier_model.query.filter_by.return_value.first.return_value = supplier
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
         supplier.apply_payment.assert_called_once()
@@ -439,14 +437,14 @@ class TestPurchasesExtended:
         purchase = _mock_purchase(supplier_id=None)
         with (
             _purchase_patches(purchase=purchase) as _ctx,
-            patch("models.Cheque.query") as cheque_model,
             patch("models.stock_movement.StockMovement.query") as stock_model,
             patch(
                 "services.gl_service.GLService.reverse_entry",
                 side_effect=RuntimeError("gl fail"),
             ),
         ):
-            cheque_model.filter_by.return_value.count.return_value = 0
+            _ctx["purchase_service"].count_linked_cheques.return_value = 0
+            _ctx["purchase_service"].has_stock_movements.return_value = 0
             stock_model.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
@@ -473,23 +471,21 @@ class TestPurchasesExtended:
 
     def test_return_post_empty_lines(self, purchases_client):
         purchase = _mock_purchase()
-        with (
-            _purchase_patches(purchase=purchase),
-            patch("services.purchase_service.PurchaseReturn") as ret_model,
-            patch("services.purchase_service.PurchaseReturnLine"),
-        ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        with _purchase_patches(purchase=purchase) as ctx:
+            ctx["purchase_service"].get_returns_with_lines.return_value = (
+                [],
+                [],
+            )
             resp = purchases_client.post("/purchases/1/return", data={})
         assert resp.status_code == 302
 
     def test_return_post_exception(self, purchases_client):
         purchase = _mock_purchase()
-        with (
-            _purchase_patches(purchase=purchase) as ctx,
-            patch("services.purchase_service.PurchaseReturn") as ret_model,
-            patch("services.purchase_service.PurchaseReturnLine"),
-        ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        with _purchase_patches(purchase=purchase) as ctx:
+            ctx["purchase_service"].get_returns_with_lines.return_value = (
+                [],
+                [],
+            )
             ctx["purchase_service"].create_purchase_return.side_effect = RuntimeError("fail")
             resp = purchases_client.post(
                 "/purchases/1/return",
@@ -548,12 +544,11 @@ class TestPurchasesExtended:
 
     def test_return_post_value_error(self, purchases_client):
         purchase = _mock_purchase()
-        with (
-            _purchase_patches(purchase=purchase) as ctx,
-            patch("services.purchase_service.PurchaseReturn") as ret_model,
-            patch("services.purchase_service.PurchaseReturnLine"),
-        ):
-            ret_model.query.filter.return_value.filter.return_value.order_by.return_value.all.return_value = []
+        with _purchase_patches(purchase=purchase) as ctx:
+            ctx["purchase_service"].get_returns_with_lines.return_value = (
+                [],
+                [],
+            )
             ctx["purchase_service"].create_purchase_return.side_effect = ValueError("invalid qty")
             resp = purchases_client.post(
                 "/purchases/1/return",

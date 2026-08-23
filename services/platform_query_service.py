@@ -229,3 +229,109 @@ class PlatformQueryService:
         from models import Product
 
         return Product.query.filter_by(part_number=part_number, tenant_id=tid).first()
+
+    # ── analytics endpoints (api_analytics) ──────────────────────────────────
+
+    @staticmethod
+    def _analytics_branch_scope(query, model, user):
+        """Branch-level scoping when the user is branch-restricted."""
+        from utils.branching import branch_scope_id_for
+
+        scoped_branch_id = branch_scope_id_for(user)
+        if scoped_branch_id is not None:
+            branch_col = getattr(model, "branch_id", None)
+            if branch_col is not None:
+                query = query.filter(branch_col == scoped_branch_id)
+        return query
+
+    @staticmethod
+    def analytics_overdue_customer_candidates(user):
+        """Active customers (tenant + branch scoped) for overdue scanning."""
+        from models import Customer
+
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        customers = Customer.query.filter_by(is_active=True)
+        if tid:
+            customers = customers.filter(Customer.tenant_id == tid)
+        customers = PlatformQueryService._analytics_branch_scope(customers, Customer, user)
+        return customers.all()
+
+    @staticmethod
+    def analytics_today_sales(user, day):
+        """Confirmed sales dated ``day`` (tenant + branch scoped)."""
+        from models import Sale
+
+        from extensions import db
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        today_sales = Sale.query.filter(db.func.date(Sale.sale_date) == day, Sale.status == "confirmed")
+        if tid:
+            today_sales = today_sales.filter(Sale.tenant_id == tid)
+        today_sales = PlatformQueryService._analytics_branch_scope(today_sales, Sale, user)
+        return today_sales.all()
+
+    @staticmethod
+    def analytics_today_payments(user, day):
+        """Payments dated ``day`` (tenant + branch scoped)."""
+        from models import Payment
+
+        from extensions import db
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        today_payments = Payment.query.filter(db.func.date(Payment.payment_date) == day)
+        if tid:
+            today_payments = today_payments.filter(Payment.tenant_id == tid)
+        today_payments = PlatformQueryService._analytics_branch_scope(today_payments, Payment, user)
+        return today_payments.all()
+
+    @staticmethod
+    def analytics_top_customers(user, limit):
+        """Active customers ordered by lifetime purchases."""
+        from models import Customer
+
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        customers = Customer.query.filter_by(is_active=True)
+        if tid:
+            customers = customers.filter(Customer.tenant_id == tid)
+        customers = PlatformQueryService._analytics_branch_scope(customers, Customer, user)
+        return customers.order_by(Customer.total_purchases.desc()).limit(limit).all()
+
+    @staticmethod
+    def analytics_low_stock_products(user):
+        """Active products at or below their alert threshold."""
+        from models import Product
+
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        products = Product.query.filter(Product.is_active, Product.current_stock <= Product.min_stock_alert)
+        if tid:
+            products = products.filter(Product.tenant_id == tid)
+        products = PlatformQueryService._analytics_branch_scope(products, Product, user)
+        return products.all()
+
+    @staticmethod
+    def analytics_revenue_trend_rows(user, since):
+        """Daily confirmed revenue since ``since`` (tenant + branch scoped)."""
+        from sqlalchemy import func
+
+        from models import Sale
+
+        from extensions import db
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(user)
+        daily_revenue = db.session.query(
+            func.date(Sale.sale_date).label("date"),
+            func.sum(Sale.amount_aed).label("total"),
+        ).filter(Sale.sale_date >= since, Sale.status == "confirmed")
+        if tid:
+            daily_revenue = daily_revenue.filter(Sale.tenant_id == tid)
+        daily_revenue = PlatformQueryService._analytics_branch_scope(daily_revenue, Sale, user)
+        return daily_revenue.group_by(func.date(Sale.sale_date)).all()

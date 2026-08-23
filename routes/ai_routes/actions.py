@@ -26,6 +26,7 @@ from routes.ai_routes.shared import (
     smart_listener,
     train_local_ai,
 )
+from services.ai_actions_query_service import AiActionsQueryService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from utils.db_safety import atomic_transaction
@@ -64,17 +65,7 @@ def _process_user_action(message, user):
         from datetime import datetime
 
         from extensions import db
-        from models import (
-            Cheque,
-            Customer,
-            Expense,
-            Payment,
-            Product,
-            Purchase,
-            Sale,
-            Supplier,
-            Warehouse,
-        )
+        from models import Payment
 
         msg_lower = message.lower()
         user_id = user.id
@@ -141,9 +132,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "4" and ctx.get("last_action") == gettext("رصيد"):
-            from models.customer import Customer
-
-            customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
+            customers = AiActionsQueryService.active_customers(tid)
             if customers:
                 customers_list = "\n".join([gettext(f"• {c.name}: {c.balance} درهم") for c in customers[:10]])
                 del ctx
@@ -179,9 +168,7 @@ def _process_user_action(message, user):
             data = ctx.get("data", {})
 
             if step == 1:
-                from models.customer import Customer
-
-                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                customer = AiActionsQueryService.find_customer_by_name(tid, message.strip())
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -845,9 +832,7 @@ def _process_user_action(message, user):
                         gettext("العملاء"),
                     ]
                 ):
-                    from models.customer import Customer
-
-                    customers = Customer.query.filter_by(tenant_id=tid, is_active=True).limit(10).all()
+                    customers = AiActionsQueryService.active_customers(tid, limit=10)
                     if customers:
                         customers_list = "\n".join(
                             [gettext(f"• {c.name} ({c.phone or 'لا يوجد هاتف'})") for c in customers]
@@ -868,9 +853,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
-                from models.customer import Customer
-
-                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                customer = AiActionsQueryService.find_customer_by_name(tid, message.strip())
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -906,9 +889,7 @@ def _process_user_action(message, user):
                         gettext("المنتجات"),
                     ]
                 ):
-                    from models.product import Product
-
-                    products = Product.query.filter_by(tenant_id=tid, is_active=True).limit(10).all()
+                    products = AiActionsQueryService.active_products(tid, limit=10)
                     if products:
                         products_list = "\n".join(
                             [
@@ -932,9 +913,7 @@ def _process_user_action(message, user):
 
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
-                from models.product import Product
-
-                product = Product.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                product = AiActionsQueryService.find_product_by_name(tid, message.strip())
                 if not product:
                     return """❌ **المنتج غير موجود!**
 
@@ -1033,9 +1012,7 @@ def _process_user_action(message, user):
                 return listener_msg
 
             if step == 1:
-                from models.customer import Customer
-
-                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                customer = AiActionsQueryService.find_customer_by_name(tid, message.strip())
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -1084,7 +1061,6 @@ def _process_user_action(message, user):
                 data["payment_method"] = message.strip()
 
                 try:
-                    from models.customer import Customer
                     from services.payment_service import PaymentService
 
                     with atomic_transaction("ai_receive_payment"):
@@ -1097,7 +1073,7 @@ def _process_user_action(message, user):
                             branch_id=getattr(user, "branch_id", None),
                         )
 
-                    customer = Customer.query.filter_by(id=data["customer_id"], tenant_id=tid).first()
+                    customer = AiActionsQueryService.customer_by_id(data["customer_id"], tid)
                     train_local_ai(
                         "receive_payment",
                         data,
@@ -1159,9 +1135,7 @@ def _process_user_action(message, user):
                 return listener_msg
 
             if step == 1:
-                from models.customer import Customer
-
-                customer = Customer.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                customer = AiActionsQueryService.find_customer_by_name(tid, message.strip())
                 if not customer:
                     return """❌ **العميل غير موجود!**
 
@@ -1210,7 +1184,6 @@ def _process_user_action(message, user):
                 data["reason"] = message.strip()
 
                 try:
-                    from models.customer import Customer
                     from models.payment import Payment
                     from utils.helpers import generate_number
 
@@ -1563,9 +1536,7 @@ def _process_user_action(message, user):
                 return listener_msg
 
             if step == 1:
-                from models.supplier import Supplier
-
-                supplier = Supplier.query.filter_by(name=message.strip(), is_active=True, tenant_id=tid).first()
+                supplier = AiActionsQueryService.find_supplier_by_name(tid, message.strip())
                 if not supplier:
                     return """❌ **المورد غير موجود!**
 
@@ -1587,9 +1558,7 @@ def _process_user_action(message, user):
 🤖 اكتب اسم المنتج الآن..."""
 
             elif step == 2:
-                from models.product import Product
-
-                product = Product.query.filter_by(tenant_id=tid, name=message.strip(), is_active=True).first()
+                product = AiActionsQueryService.find_product_by_name(tid, message.strip())
                 if not product:
                     return """❌ **المنتج غير موجود!**
 
@@ -1814,14 +1783,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "1" and ctx.get("last_action") == gettext("دفتر"):
-            from models.gl import GLJournalEntry
-
-            gl_entries = (
-                GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid)
-                .order_by(GLJournalEntry.entry_date.desc())
-                .limit(20)
-                .all()
-            )
+            gl_entries = AiActionsQueryService.recent_gl_entries(tid)
 
             del ctx
 
@@ -1853,7 +1815,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "1" and ctx.get("last_action") == gettext("مستودع"):
-            warehouses = Warehouse.query.filter_by(is_active=True, tenant_id=tid).all()
+            warehouses = AiActionsQueryService.active_warehouses(tid)
 
             del ctx
 
@@ -2002,9 +1964,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("عميل"):
-            from models.customer import Customer
-
-            customers = Customer.query.filter_by(tenant_id=tid, is_active=True).all()
+            customers = AiActionsQueryService.active_customers(tid)
             if customers:
                 customers_list = "\n".join(
                     [gettext(f"• {c.name} - {c.phone or 'لا يوجد هاتف'}") for c in customers[:10]]
@@ -2025,9 +1985,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("منتج"):
-            from models.product import Product
-
-            products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
+            products = AiActionsQueryService.active_products(tid)
             if products:
                 products_list = "\n".join(
                     [f"• {p.name} - {p.part_number} - {p.current_stock} {p.unit}" for p in products[:10]]
@@ -2048,9 +2006,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("فاتورة"):
-            from models.sale import Sale
-
-            sales = Sale.query.filter_by(is_active=True).all()
+            sales = AiActionsQueryService.all_active_sales()
             if sales:
                 sales_list = "\n".join(
                     [
@@ -2074,9 +2030,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مصروف"):
-            from models.expense import Expense
-
-            expenses = Expense.query.filter_by(is_active=True).all()
+            expenses = AiActionsQueryService.all_active_expenses()
             if expenses:
                 expenses_list = "\n".join(
                     [gettext(f"• {e.description} - {e.amount} درهم - {e.category}") for e in expenses[:10]]
@@ -2097,9 +2051,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مورد"):
-            from models.supplier import Supplier
-
-            suppliers = Supplier.query.filter_by(is_active=True, tenant_id=tid).all()
+            suppliers = AiActionsQueryService.active_suppliers(tid)
             del ctx
             if suppliers:
                 suppliers_list = "\n".join(
@@ -2117,9 +2069,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مشتريات"):
-            from models.purchase import Purchase
-
-            purchases = Purchase.query.filter_by(is_active=True).all()
+            purchases = AiActionsQueryService.all_active_purchases()
             del ctx
             if purchases:
                 purchases_list = "\n".join(
@@ -2140,9 +2090,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("شيك"):
-            from models.cheque import Cheque
-
-            cheques = Cheque.query.filter_by(is_active=True).all()
+            cheques = AiActionsQueryService.all_active_cheques()
             del ctx
             if cheques:
                 cheques_list = "\n".join(
@@ -2160,9 +2108,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مستخدم"):
-            from utils.tenanting import scoped_user_query
-
-            users = scoped_user_query(active_only=True).all()
+            users = AiActionsQueryService.active_users()
             del ctx
             if users:
                 users_list = "\n".join([f"• {u.username} - {u.role}" for u in users[:10]])
@@ -2178,14 +2124,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("دفتر"):
-            from models.gl import GLJournalEntry
-
-            gl_entries = (
-                GLJournalEntry.query.filter_by(is_active=True, tenant_id=tid)
-                .order_by(GLJournalEntry.entry_date.desc())
-                .limit(20)
-                .all()
-            )
+            gl_entries = AiActionsQueryService.recent_gl_entries(tid)
             del ctx
             if gl_entries:
                 gl_list = "\n".join(
@@ -2207,9 +2146,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مستودع"):
-            from models.product import Product
-
-            products = Product.query.filter_by(tenant_id=tid, is_active=True).all()
+            products = AiActionsQueryService.active_products(tid)
             del ctx
             if products:
                 stock_list = "\n".join([f"• {p.name} - {p.current_stock} {p.unit}" for p in products[:15]])
@@ -2529,11 +2466,11 @@ http://localhost:5000/ai/assistant
                     quantity = int(parts[2]) if parts[2].isdigit() else 1
                     payment_method = parts[3] if len(parts) > 3 else "cash"
 
-                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                    customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود. أنشئه أولاً!")
 
-                    product = Product.query.filter_by(tenant_id=tid, name=product_name, is_active=True).first()
+                    product = AiActionsQueryService.resolve_product_by_name(tid, product_name)
                     if not product:
                         return gettext(f"❌ المنتج '{product_name}' غير موجود. أنشئه أولاً!")
 
@@ -2607,7 +2544,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip())
                     payment_method = parts[2]
 
-                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                    customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
@@ -2654,7 +2591,7 @@ http://localhost:5000/ai/assistant
                     customer_name = parts[0]
                     new_balance = float(parts[1].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip())
 
-                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                    customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
@@ -2689,7 +2626,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip())
                     payment_method = parts[2]
 
-                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                    customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
@@ -2733,16 +2670,11 @@ http://localhost:5000/ai/assistant
             if match:
                 customer_name = match.group(1).strip()
 
-                customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                 if not customer:
                     return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 
-                recent_payments = (
-                    Payment.query.filter_by(customer_id=customer.id)
-                    .order_by(Payment.payment_date.desc())
-                    .limit(5)
-                    .all()
-                )
+                recent_payments = AiActionsQueryService.recent_customer_payments(customer.id)
 
                 payments_info = ""
                 if recent_payments:
@@ -2786,7 +2718,7 @@ http://localhost:5000/ai/assistant
                     amount = float(parts[1].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip())
                     reason = parts[2]
 
-                    customer = Customer.query.filter_by(tenant_id=tid, name=customer_name, is_active=True).first()
+                    customer = AiActionsQueryService.resolve_customer_by_name(tid, customer_name)
                     if not customer:
                         return gettext(f"❌ العميل '{customer_name}' غير موجود!")
 

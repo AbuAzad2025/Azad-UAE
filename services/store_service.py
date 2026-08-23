@@ -573,3 +573,152 @@ class StoreService:
             .limit(limit)
             .all()
         )
+
+    # ─── Storefront route queries (relocated from routes/shop.py) ───
+
+    @staticmethod
+    def save_abandoned_cart_snapshot(tenant_id, account_id, email, cart_json):
+        """Upsert the abandoned-cart snapshot for a storefront session."""
+        from models.shop_abandoned_cart import ShopAbandonedCart
+
+        existing = ShopAbandonedCart.query.filter_by(
+            tenant_id=tenant_id,
+            account_id=account_id,
+            recovered=False,
+        ).first()
+        if existing:
+            existing.cart_data = cart_json
+        else:
+            ac = ShopAbandonedCart(
+                tenant_id=tenant_id,
+                account_id=account_id,
+                email=email,
+                cart_data=cart_json,
+            )
+            db.session.add(ac)
+        db.session.flush()
+
+    @staticmethod
+    def wishlist_entry(tenant_id, account_id, product_id):
+        from models.shop_wishlist import ShopWishlist
+
+        return ShopWishlist.query.filter_by(
+            account_id=account_id, product_id=product_id, tenant_id=tenant_id
+        ).first()
+
+    @staticmethod
+    def wishlist_count(tenant_id, account_id) -> int:
+        from models.shop_wishlist import ShopWishlist
+
+        return ShopWishlist.query.filter_by(account_id=account_id, tenant_id=tenant_id).count()
+
+    @staticmethod
+    def remove_wishlist_entry(tenant_id, account_id, product_id):
+        from models.shop_wishlist import ShopWishlist
+
+        ShopWishlist.query.filter_by(account_id=account_id, product_id=product_id, tenant_id=tenant_id).delete()
+
+    @staticmethod
+    def wishlist_items(tenant_id, account_id):
+        from models.shop_wishlist import ShopWishlist
+
+        return (
+            ShopWishlist.query.filter_by(account_id=account_id, tenant_id=tenant_id)
+            .order_by(ShopWishlist.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
+    def active_categories(tenant_id: int):
+        """Active product categories ordered by name for the catalog sidebar."""
+        from models import ProductCategory
+
+        return (
+            ProductCategory.query.filter_by(tenant_id=tenant_id, is_active=True)
+            .order_by(ProductCategory.name.asc())
+            .all()
+        )
+
+    @staticmethod
+    def active_product_or_404(tenant_id: int, product_id: int):
+        """Tenant-scoped active product or 404."""
+        from models import Product
+
+        return Product.query.filter_by(id=product_id, tenant_id=tenant_id, is_active=True).first_or_404()
+
+    @staticmethod
+    def active_product(tenant_id: int, product_id: int):
+        """Tenant-scoped active product or None."""
+        from models import Product
+
+        return Product.query.filter_by(
+            id=product_id,
+            tenant_id=tenant_id,
+            is_active=True,
+        ).first()
+
+    @staticmethod
+    def approved_reviews(tenant_id: int, product_id: int):
+        """Approved reviews for a product, newest first."""
+        from models.shop_review import ShopReview
+
+        return (
+            ShopReview.query.filter_by(product_id=product_id, tenant_id=tenant_id, is_approved=True)
+            .order_by(ShopReview.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
+    def stock_alert_subscriber(tenant_id: int, product_id: int, email: str):
+        """Existing stock-alert subscription for an email/product pair."""
+        from models.shop_stock_alert import ShopStockAlert
+
+        return ShopStockAlert.query.filter_by(email=email, product_id=product_id, tenant_id=tenant_id).first()
+
+    @staticmethod
+    def newsletter_subscriber(tenant_id: int, email: str):
+        """Existing newsletter subscription for an email."""
+        from models.shop_newsletter import ShopNewsletter
+
+        return ShopNewsletter.query.filter_by(tenant_id=tenant_id, email=email).first()
+
+    @staticmethod
+    def saved_payment_methods(tenant_id: int, account_id: int):
+        """Saved payment methods of a shop customer account."""
+        from models.shop_saved_payment import ShopSavedPayment
+
+        return ShopSavedPayment.query.filter_by(account_id=account_id, tenant_id=tenant_id).all()
+
+    @staticmethod
+    def saved_payment_or_404(tenant_id: int, account_id: int, payment_id: int):
+        """Account-owned saved payment method or 404."""
+        from models.shop_saved_payment import ShopSavedPayment
+
+        return ShopSavedPayment.query.filter_by(
+            id=payment_id, account_id=account_id, tenant_id=tenant_id
+        ).first_or_404()
+
+    @staticmethod
+    def online_order_or_404(tenant_id: int, sale_id: int):
+        """Online-store order scoped to the tenant or 404."""
+        from models import Sale
+
+        return Sale.query.filter_by(id=sale_id, tenant_id=tenant_id, source="online_store").first_or_404()
+
+    @staticmethod
+    def online_order_lines(tenant_id: int, sale_id: int):
+        """Sale lines of an online-store order."""
+        from models.sale import SaleLine
+
+        return SaleLine.query.filter_by(sale_id=sale_id, tenant_id=tenant_id).all()
+
+    @staticmethod
+    def online_order_by_number(tenant_id: int, order_number: str):
+        """Online-store order by sale number or None."""
+        from models import Sale
+
+        return Sale.query.filter_by(
+            tenant_id=tenant_id,
+            sale_number=order_number,
+            source="online_store",
+        ).first()

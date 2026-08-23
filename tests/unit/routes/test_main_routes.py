@@ -27,6 +27,12 @@ def _main_patches(**kwargs):
         )
         stack.enter_context(
             patch(
+                "services.main_site_service.MainSiteService.count_active_products",
+                return_value=kwargs.get("products_count", 0),
+            )
+        )
+        stack.enter_context(
+            patch(
                 "routes.main.StockService.get_low_stock_products",
                 return_value=kwargs.get("low_stock", []),
             )
@@ -92,15 +98,12 @@ def _dashboard_query_side_effect(can_profit=False):
 class TestMainDashboard:
     def test_dashboard_renders_without_branch(self, main_client, bypass_permission_auth):
         bypass_permission_auth.can_see_costs.return_value = False
-        product_q = MagicMock()
-        product_q.filter_by.return_value.count.return_value = 8
         with (
-            _main_patches(branch_scope=None),
+            _main_patches(branch_scope=None, products_count=8),
             patch(
                 "routes.main.db.session.query",
                 side_effect=_dashboard_query_side_effect(),
             ),
-            patch("routes.main.Product.query", product_q),
             patch("routes.main.Sale.query", _scalar_query_result([])),
         ):
             resp = main_client.get("/dashboard")
@@ -162,7 +165,7 @@ class TestMainDashboard:
                 side_effect=_dashboard_query_side_effect(can_profit=True),
             ),
             patch("routes.main.Sale.query", _scalar_query_result([])),
-            patch("routes.main.GLAccount.query") as gaq,
+            patch("models.gl.GLAccount.query") as gaq,
             patch("routes.main.get_gl_account_by_code", return_value=inv_account),
             patch("utils.gl_tenant.active_tenant_id", return_value=1),
         ):
@@ -222,7 +225,7 @@ class TestMainDashboard:
             patch("utils.tenanting.tenant_query", return_value=customer_count_q),
             patch("routes.main.get_visible_products_query", return_value=product_count_q),
             patch("routes.main.Sale.query", sale_q),
-            patch("routes.main.GLAccount.query") as gaq,
+            patch("models.gl.GLAccount.query") as gaq,
             patch("routes.main.get_gl_account_by_code", return_value=inv_account),
             patch("utils.gl_tenant.active_tenant_id", return_value=1),
         ):
@@ -294,10 +297,12 @@ class TestMainProfile:
                 "utils.sanitizer.InputSanitizer.sanitize_email",
                 return_value="new@test.com",
             ),
-            patch("routes.main.User.query") as uq,
+            patch(
+                "services.main_site_service.MainSiteService.email_exists",
+                return_value=None,
+            ),
             patch("routes.main.db.session") as _sess,
         ):
-            uq.filter.return_value.first.return_value = None
             resp = main_client.post(
                 "/my-profile/update",
                 data={"email": "new@test.com"},
@@ -341,9 +346,11 @@ class TestMainProfile:
                 "utils.sanitizer.InputSanitizer.sanitize_email",
                 return_value="dup@test.com",
             ),
-            patch("routes.main.User.query") as uq,
+            patch(
+                "services.main_site_service.MainSiteService.email_exists",
+                return_value=existing,
+            ),
         ):
-            uq.filter.return_value.first.return_value = existing
             resp = main_client.post(
                 "/my-profile/update",
                 data={"email": "dup@test.com"},

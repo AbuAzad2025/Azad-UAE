@@ -1525,6 +1525,401 @@ class GLService:
             "ap_difference": float(gl_ap - total_supplier_balance),
         }
 
+    # ------------------------------------------------------------------
+    # Read-model queries relocated from routes/ledger.py
+    # ------------------------------------------------------------------
+    @staticmethod
+    def list_active_accounts():
+        """Active GL accounts ordered by code (ledger index)."""
+        from utils.gl_tenant import scope_gl_accounts
+
+        return scope_gl_accounts(GLAccount.query.filter_by(is_active=True)).order_by(GLAccount.code).all()
+
+    @staticmethod
+    def get_scoped_account_or_404(account_id):
+        from utils.gl_tenant import scope_gl_accounts
+
+        return scope_gl_accounts(GLAccount.query.filter_by(id=account_id)).first_or_404()
+
+    @staticmethod
+    def paginate_journal_entries(branch_id=None, page=1, per_page=50):
+        from sqlalchemy import desc
+
+        from utils.gl_tenant import scope_journal_entries
+
+        query = scope_journal_entries(GLJournalEntry.query)
+        if branch_id:
+            query = query.filter(GLJournalEntry.branch_id == branch_id)
+        return query.order_by(desc(GLJournalEntry.entry_date)).paginate(page=page, per_page=per_page, error_out=False)
+
+    @staticmethod
+    def get_gl_period(tenant_id, year, month):
+        from models.gl import GLPeriod
+
+        return GLPeriod.query.filter_by(tenant_id=tenant_id, year=year, month=month).first()
+
+    @staticmethod
+    def list_gl_periods(tenant_id, limit=24):
+        from models.gl import GLPeriod
+
+        return (
+            GLPeriod.query.filter_by(tenant_id=tenant_id)
+            .order_by(GLPeriod.year.desc(), GLPeriod.month.desc())
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
+    def build_income_statement(tid, date_from, date_to, branch_id):
+        """Per-account revenue/expense balances for the income statement."""
+        from sqlalchemy import func
+
+        from utils.gl_tenant import scope_gl_accounts
+
+        def _filter_tenant(q):
+            if tid is not None:
+                return q.filter(GLJournalEntry.tenant_id == tid)
+            return q
+
+        revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "revenue")).all()
+        expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "expense")).all()
+
+        revenues = {}
+        total_revenue = Decimal("0")
+
+        for acc in revenue_accounts:
+            query_credit = _filter_tenant(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            query_debit = _filter_tenant(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+
+            if date_from:
+                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+
+            if date_to:
+                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+            if branch_id:
+                query_credit = query_credit.filter(GLJournalEntry.branch_id == branch_id)
+                query_debit = query_debit.filter(GLJournalEntry.branch_id == branch_id)
+
+            credit = query_credit.scalar() or Decimal("0")
+            debit = query_debit.scalar() or Decimal("0")
+            balance = credit - debit
+
+            if balance != 0:
+                revenues[acc.name] = float(balance)
+                total_revenue += balance
+
+        expenses = {}
+        total_expense = Decimal("0")
+
+        for acc in expense_accounts:
+            query_debit = _filter_tenant(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            query_credit = _filter_tenant(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+
+            if date_from:
+                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
+
+            if date_to:
+                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+            if branch_id:
+                query_debit = query_debit.filter(GLJournalEntry.branch_id == branch_id)
+                query_credit = query_credit.filter(GLJournalEntry.branch_id == branch_id)
+
+            debit = query_debit.scalar() or Decimal("0")
+            credit = query_credit.scalar() or Decimal("0")
+            balance = debit - credit
+
+            if balance != 0:
+                expenses[acc.name] = float(balance)
+                total_expense += balance
+
+        net_profit = total_revenue - total_expense
+
+        return {
+            "revenues": revenues,
+            "expenses": expenses,
+            "total_revenue": total_revenue,
+            "total_expense": total_expense,
+            "net_profit": net_profit,
+        }
+
+    @staticmethod
+    def build_balance_sheet(tid, branch_id, date_to):
+        """Asset/liability/equity balances plus period net profit."""
+        from sqlalchemy import func
+
+        from utils.gl_tenant import scope_gl_accounts
+
+        assets = {}
+        liabilities = {}
+        equity = {}
+
+        asset_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "asset")).all()
+        liability_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "liability")).all()
+        equity_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "equity")).all()
+
+        def _apply_entry_filters(q):
+            if tid is not None:
+                q = q.filter(GLJournalEntry.tenant_id == tid)
+            if date_to:
+                q = q.filter(func.date(GLJournalEntry.entry_date) <= date_to)
+            if branch_id:
+                q = q.filter(GLJournalEntry.branch_id == branch_id)
+            return q
+
+        total_assets = Decimal("0")
+        for acc in asset_accounts:
+            debit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            credit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            debit = debit_query.scalar() or Decimal("0")
+            credit = credit_query.scalar() or Decimal("0")
+            balance = debit - credit
+
+            if balance != 0:
+                assets[acc.name] = float(balance)
+                total_assets += balance
+
+        total_liabilities = Decimal("0")
+        for acc in liability_accounts:
+            credit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            debit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            credit = credit_query.scalar() or Decimal("0")
+            debit = debit_query.scalar() or Decimal("0")
+            balance = credit - debit
+
+            if balance != 0:
+                liabilities[acc.name] = float(balance)
+                total_liabilities += balance
+
+        total_equity = Decimal("0")
+        for acc in equity_accounts:
+            credit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            debit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            credit = credit_query.scalar() or Decimal("0")
+            debit = debit_query.scalar() or Decimal("0")
+            balance = credit - debit
+
+            if balance != 0:
+                equity[acc.name] = float(balance)
+                total_equity += balance
+
+        # Calculate Net Profit (Revenue - Expenses) for Equity Section
+        revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("4%"))).all()
+        expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("5%"))).all()
+        expense_accounts += scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("6%"))).all()
+
+        total_revenue_period = Decimal("0")
+        for acc in revenue_accounts:
+            credit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            debit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            credit = credit_query.scalar() or Decimal("0")
+            debit = debit_query.scalar() or Decimal("0")
+            total_revenue_period += credit - debit
+
+        total_expense_period = Decimal("0")
+        for acc in expense_accounts:
+            debit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            credit_query = _apply_entry_filters(
+                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
+            )
+            debit = debit_query.scalar() or Decimal("0")
+            credit = credit_query.scalar() or Decimal("0")
+            total_expense_period += debit - credit
+
+        net_profit_period = total_revenue_period - total_expense_period
+
+        if net_profit_period != 0:
+            equity[gettext("الأرباح المبقاة (صافي الربح التراكمي)")] = float(net_profit_period)
+            total_equity += net_profit_period
+
+        return {
+            "assets": assets,
+            "liabilities": liabilities,
+            "equity": equity,
+            "total_assets": total_assets,
+            "total_liabilities": total_liabilities,
+            "total_equity": total_equity,
+        }
+
+    @staticmethod
+    def count_active_tenants():
+        from models.tenant import Tenant
+
+        return Tenant.query.filter_by(is_active=True).count()
+
+    @staticmethod
+    def list_postable_accounts():
+        from utils.gl_tenant import scope_gl_accounts
+
+        return (
+            scope_gl_accounts(GLAccount.query.filter_by(is_active=True, is_header=False))
+            .order_by(GLAccount.code)
+            .all()
+        )
+
+    @staticmethod
+    def get_entry_or_404(entry_id):
+        from utils.gl_tenant import gl_entry_query
+
+        return gl_entry_query().filter_by(id=entry_id).first_or_404()
+
+    @staticmethod
+    def search_accounts(query_text):
+        from utils.gl_tenant import scope_gl_accounts
+
+        return (
+            scope_gl_accounts(
+                GLAccount.query.filter(
+                    GLAccount.is_active,
+                    GLAccount.is_header.is_(False),
+                    db.or_(
+                        GLAccount.code.ilike(f"%{query_text}%"),
+                        GLAccount.name.ilike(f"%{query_text}%"),
+                        GLAccount.name_ar.ilike(f"%{query_text}%"),
+                    ),
+                )
+            )
+            .order_by(GLAccount.code)
+            .limit(20)
+            .all()
+        )
+
+    @staticmethod
+    def get_admin_dashboard_stats():
+        """Counts and lists powering the ledger admin dashboard."""
+        from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query
+        from utils.tenanting import tenant_query
+
+        stats: dict[str, Any] = {}
+
+        def _accounts():
+            return gl_account_query()
+
+        def _entries():
+            return gl_entry_query()
+
+        stats["total_accounts"] = _accounts().count()
+        stats["active_accounts"] = _accounts().filter_by(is_active=True).count()
+        stats["total_entries"] = _entries().count()
+        stats["posted_entries"] = _entries().filter_by(status="posted").count()
+
+        _all_balances = GLService.get_all_account_balances()
+
+        cash_accounts = _accounts().filter(GLAccount.code.like("11%")).all()
+        stats["total_cash"] = sum(_all_balances.get(a.id, 0) for a in cash_accounts)
+
+        stats["recent_entries"] = _entries().order_by(GLJournalEntry.created_at.desc()).limit(10).all()
+
+        high_balance_accounts = []
+        for account in _accounts().filter_by(is_active=True, is_header=False).all():
+            balance = _all_balances.get(account.id, 0)
+            if abs(balance) > 1000:
+                high_balance_accounts.append({"account": account, "balance": balance})
+
+        high_balance_accounts.sort(key=lambda x: abs(x["balance"]), reverse=True)
+        stats["high_balance_accounts"] = high_balance_accounts
+
+        stats["total_cheques"] = tenant_query(Cheque).count()
+        stats["pending_cheques"] = tenant_query(Cheque).filter_by(status="pending").count()
+        stats["cleared_cheques"] = tenant_query(Cheque).filter_by(status="cleared").count()
+
+        stats["total_vaults"] = scoped_model_query(PaymentVault).count()
+        stats["active_vaults"] = scoped_model_query(PaymentVault).filter_by(is_locked=False).count()
+
+        return stats
+
+    @staticmethod
+    def list_all_accounts():
+        from utils.gl_tenant import gl_account_query
+
+        return gl_account_query().order_by(GLAccount.code).all()
+
+    @staticmethod
+    def find_account_by_code(code):
+        from utils.gl_tenant import gl_account_query
+
+        return gl_account_query().filter_by(code=code).first()
+
+    @staticmethod
+    def find_account_by_id(account_id):
+        from utils.gl_tenant import gl_account_query
+
+        return gl_account_query().filter_by(id=account_id).first()
+
+    @staticmethod
+    def list_header_accounts():
+        from utils.gl_tenant import gl_account_query
+
+        return gl_account_query().filter_by(is_header=True).order_by(GLAccount.code).all()
+
+    @staticmethod
+    def list_payment_vaults():
+        from utils.gl_tenant import scoped_model_query
+
+        return scoped_model_query(PaymentVault).all()
+
+    @staticmethod
+    def paginate_all_entries(page, per_page=20):
+        from utils.gl_tenant import gl_entry_query
+
+        return (
+            gl_entry_query()
+            .order_by(GLJournalEntry.created_at.desc())
+            .paginate(page=page, per_page=per_page, error_out=False)
+        )
+
+    @staticmethod
+    def list_leaf_accounts_ordered(account_type=None):
+        """Active non-header accounts ordered by code; optionally by type."""
+        from utils.gl_tenant import gl_account_query
+
+        if account_type is not None:
+            return (
+                gl_account_query()
+                .filter_by(type=account_type, is_active=True, is_header=False)
+                .order_by(GLAccount.code)
+                .all()
+            )
+        return gl_account_query().filter_by(is_active=True, is_header=False).order_by(GLAccount.code).all()
+
+    @staticmethod
+    def list_active_budgets(tenant_id, branch_id=None):
+        from models import Budget
+
+        budget_query = Budget.query.filter_by(tenant_id=tenant_id, status="active")
+        if branch_id:
+            budget_query = budget_query.filter_by(branch_id=branch_id)
+        return budget_query.all()
+
 
 class FiscalYearService:
     """Fiscal year closing — validates all periods are closed, computes P&L,

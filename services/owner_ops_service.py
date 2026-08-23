@@ -255,6 +255,13 @@ class OwnerOpsService:
 
         return db.session.get(User, user_id)
 
+    @staticmethod
+    def get_store_payment_method(method_id):
+        from extensions import db
+        from models.store_payment_method import StorePaymentMethod
+
+        return db.session.get(StorePaymentMethod, int(method_id))
+
     # ── super-admin dashboard ────────────────────────────────────────────────
 
     @staticmethod
@@ -318,78 +325,91 @@ class OwnerOpsService:
     # ── database tools (raw, identifier-validated SQL) ───────────────────────
 
     @staticmethod
-    def table_row_count(table_name):
-        from extensions import db
-        from utils.safe_sql import count_query
+    def _db(db=None):
+        """Session/engine holder; callers may pass their own db seam."""
+        from extensions import db as default_db
 
-        return db.session.execute(count_query(db.engine, table_name)).scalar()
+        return db or default_db
 
     @staticmethod
-    def run_select_rows(query_text):
+    def table_row_count(table_name, *, db=None):
+        from utils.safe_sql import count_query
+
+        d = OwnerOpsService._db(db)
+        return d.session.execute(count_query(d.engine, table_name)).scalar()
+
+    @staticmethod
+    def run_select_rows(query_text, *, db=None):
         """Execute a validated SELECT; returns list-of-dicts plus count."""
         from sqlalchemy import text as sa_text
 
-        from extensions import db
-
-        result = db.session.execute(sa_text(query_text))
+        d = OwnerOpsService._db(db)
+        result = d.session.execute(sa_text(query_text))
         rows = result.fetchall()
         columns = result.keys()
         data = [dict(zip(columns, row, strict=False)) for row in rows]
         return data, len(data)
 
     @staticmethod
-    def truncate_table_rows(table_name):
-        from extensions import db
+    def truncate_table_rows(table_name, *, db=None):
         from utils.safe_sql import delete_all_query
 
-        db.session.execute(delete_all_query(db.engine, table_name))
+        d = OwnerOpsService._db(db)
+        d.session.execute(delete_all_query(d.engine, table_name))
 
     @staticmethod
-    def select_table_page(table_name, page, per_page):
+    def select_table_page(table_name, page, per_page, *, db=None):
         """Rows + column keys for one page of a browsable table."""
-        from extensions import db
         from utils.safe_sql import select_all_query
 
+        d = OwnerOpsService._db(db)
         offset = (page - 1) * per_page
-        result = db.session.execute(select_all_query(db.engine, table_name, limit=per_page, offset=offset))
+        result = d.session.execute(select_all_query(d.engine, table_name, limit=per_page, offset=offset))
         return result.fetchall(), result.keys()
 
     @staticmethod
-    def select_table_rows(table_name, limit=100):
+    def select_table_rows(table_name, limit=100, *, db=None):
         """Rows + column keys for inline table editing."""
-        from extensions import db
         from utils.safe_sql import select_all_query
 
-        result = db.session.execute(select_all_query(db.engine, table_name, limit=limit))
+        d = OwnerOpsService._db(db)
+        result = d.session.execute(select_all_query(d.engine, table_name, limit=limit))
         return result.fetchall(), result.keys()
 
     @staticmethod
-    def table_columns_and_pk(table_name):
+    def select_table_result(table_name, *, db=None):
+        """Raw execute() result of a full-table SELECT (convert pipeline)."""
+        from utils.safe_sql import select_all_query
+
+        d = OwnerOpsService._db(db)
+        return d.session.execute(select_all_query(d.engine, table_name))
+
+    @staticmethod
+    def table_columns_and_pk(table_name, *, db=None):
         """Column-name set + PK constraint columns for a browsable table."""
         from sqlalchemy import inspect as sa_inspect
 
-        from extensions import db
+        d = OwnerOpsService._db(db)
 
-        inspector = sa_inspect(db.engine)
+        inspector = sa_inspect(d.engine)
         columns = {col["name"] for col in inspector.get_columns(table_name)}
         pk_cols = inspector.get_pk_constraint(table_name).get("constrained_columns") or []
         return columns, pk_cols
 
     @staticmethod
-    def execute_table_row_update(table_name, pk_name, row_id, safe_updates):
-        from extensions import db
+    def execute_table_row_update(table_name, pk_name, row_id, safe_updates, *, db=None):
         from utils.safe_sql import update_row_query
 
-        db.session.execute(update_row_query(db.engine, table_name, pk_name, row_id, safe_updates))
+        d = OwnerOpsService._db(db)
+        d.session.execute(update_row_query(d.engine, table_name, pk_name, row_id, safe_updates))
 
     @staticmethod
-    def run_select_matrix(sql_query):
+    def run_select_matrix(sql_query, *, db=None):
         """Execute a validated SELECT; returns columns/rows/count matrix."""
         from sqlalchemy import text as sa_text
 
-        from extensions import db
-
-        result = db.session.execute(sa_text(sql_query))
+        d = OwnerOpsService._db(db)
+        result = d.session.execute(sa_text(sql_query))
         rows = result.fetchall()
         columns = result.keys()
         return {
@@ -399,14 +419,14 @@ class OwnerOpsService:
         }
 
     @staticmethod
-    def export_tables_data(table_names):
+    def export_tables_data(table_names, *, db=None):
         """Full-row dumps keyed by table name for JSON export."""
-        from extensions import db
         from utils.safe_sql import select_all_query
 
+        d = OwnerOpsService._db(db)
         export_data = {}
         for table_name in table_names:
-            result = db.session.execute(select_all_query(db.engine, table_name))
+            result = d.session.execute(select_all_query(d.engine, table_name))
             rows = result.fetchall()
             columns = result.keys()
             export_data[table_name] = [dict(zip(columns, row, strict=False)) for row in rows]

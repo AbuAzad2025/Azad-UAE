@@ -2,7 +2,7 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from models import Customer, ProjectMember, Task, TaskStage, User
+from models import Customer
 from services.project_service import ProjectService
 from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
@@ -43,11 +43,11 @@ def project_detail(project_id):
     except ValueError as e:
         flash(str(e), "danger")
         return redirect(url_for("projects.list_projects"))
-    stages = TaskStage.query.filter_by(project_id=project.id).order_by(TaskStage.sequence).all()
-    tasks = Task.query.filter_by(project_id=project.id, is_active=True).order_by(Task.sort_order).all()
+    stages = ProjectService.stages_for_project(project.id)
+    tasks = ProjectService.tasks_for_project(project.id)
     tid = get_active_tenant_id(current_user)
-    members = ProjectMember.query.filter_by(project_id=project.id).all()
-    users = User.query.filter(User.tenant_id == tid, User.is_active).order_by(User.full_name).all() if tid else []
+    members = ProjectService.members_for_project(project.id)
+    users = ProjectService.active_users_for_tenant(tid)
     return render_template(
         "projects/detail.html",
         project=project,

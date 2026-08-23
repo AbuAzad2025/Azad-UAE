@@ -33,10 +33,11 @@ from services.idempotency_service import (
 )
 from services.logging_core import LoggingCore
 from services.nowpayments_service import NOWPaymentsService
+from services.vault_query_service import VaultQueryService
 from utils.api_response import error_response, paginated_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
-from utils.tenanting import tenant_get_or_404, tenant_query
+from utils.tenanting import tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
 logger = logging.getLogger(__name__)
@@ -260,9 +261,7 @@ def _validate_api_key(*, required_scope: str = "write") -> tuple | None:
     if not raw_key:
         return error_response(message="API key is required", status_code=401)
 
-    from models import APIKey
-
-    api_key = APIKey.query.filter_by(key=raw_key, is_active=True).first()
+    api_key = VaultQueryService.find_active_api_key(raw_key)
     if not api_key:
         return error_response(message="Invalid or inactive API key", status_code=403)
 
@@ -402,8 +401,8 @@ def dashboard():
 
     tid = None
 
-    purchases = Donation.query.filter_by(tenant_id=tid, transaction_type="purchase").all()
-    donation_list = Donation.query.filter_by(tenant_id=tid, transaction_type="donation").all()
+    purchases = VaultQueryService.list_platform_records(tid=tid, transaction_type="purchase")
+    donation_list = VaultQueryService.list_platform_records(tid=tid, transaction_type="donation")
 
     stats = {
         "total_purchases": len(purchases),
@@ -417,18 +416,8 @@ def dashboard():
 
     security_status = SecurityService.get_security_status()
 
-    recent_purchases = (
-        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase")
-        .order_by(Donation.created_at.desc())
-        .limit(5)
-        .all()
-    )
-    recent_donations = (
-        Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-        .order_by(Donation.created_at.desc())
-        .limit(5)
-        .all()
-    )
+    recent_purchases = VaultQueryService.recent_platform_records(tid=tid, transaction_type="purchase", limit=5)
+    recent_donations = VaultQueryService.recent_platform_records(tid=tid, transaction_type="donation", limit=5)
 
     revenue_data = AnalyticsService.get_revenue_by_period(months=6)
     monthly_labels = revenue_data["labels"]
@@ -586,27 +575,16 @@ def donations():
     search_query = request.args.get("search", "")
 
     tid = None
-    query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-
-    if status_filter:
-        query = query.filter_by(status=status_filter)
-    if crypto_filter:
-        query = query.filter_by(crypto_type=crypto_filter)
-    if search_query:
-        query = query.filter(
-            db.or_(
-                Donation.donor_name.ilike(f"%{search_query}%"),
-                Donation.donor_email.ilike(f"%{search_query}%"),
-            )
-        )
-
-    pagination = query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    pagination, completed_count, pending_count, total_amount = VaultQueryService.donations_overview(
+        tid,
+        status_filter,
+        crypto_filter,
+        search_query,
+        page,
+        per_page,
+    )
     donation_list = pagination.items
-
     total_donations = pagination.total
-    completed_count = query.filter(Donation.status == "completed").count()
-    pending_count = query.filter(Donation.status == "pending").count()
-    total_amount = float(query.with_entities(db.func.coalesce(db.func.sum(Donation.amount_usd), 0)).scalar() or 0)
 
     return render_template(
         "payment_vault/donations.html",
@@ -628,13 +606,9 @@ def packages_management():
         flash(gettext("❌ يجب فتح الخزينة أولاً"), "warning")
         return redirect(url_for("payment_vault.unlock_vault"))
 
-    packages = Package.query.order_by(Package.sort_order.asc()).all()
+    packages = VaultQueryService.list_packages_ordered()
 
-    basic_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "basic").count()
-    pro_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "professional").count()
-    ent_purchases = PackagePurchase.query.join(Package).filter(Package.slug == "enterprise").count()
-
-    package_stats = [basic_purchases, pro_purchases, ent_purchases]
+    package_stats = VaultQueryService.package_purchase_counts_by_slug(("basic", "professional", "enterprise"))
 
     return render_template("payment_vault/packages.html", packages=packages, package_stats=package_stats)
 
@@ -701,7 +675,7 @@ def create_package():
             flash(gettext("❌ اسم الباقة بالعربية والإنجليزية مطلوبان"), "danger")
             return redirect(url_for("payment_vault.packages_management"))
 
-        existing = Package.query.filter_by(slug=slug).first()
+        existing = VaultQueryService.find_package_by_slug(slug)
         if existing:
             flash(gettext("❌ هذا الرابط المختصر مستخدم بالفعل لباقـة أخرى"), "danger")
             return redirect(url_for("payment_vault.packages_management"))
@@ -757,7 +731,7 @@ def edit_package(package_id):
         flash(gettext("❌ يجب فتح الخزينة أولاً"), "warning")
         return redirect(url_for("payment_vault.unlock_vault"))
 
-    package = Package.query.get_or_404(package_id)
+    package = VaultQueryService.get_package_or_404(package_id)
 
     if request.method == "POST":
         try:
@@ -827,7 +801,7 @@ def delete_package(package_id):
     if not vault or vault.is_locked:
         return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
-    package = Package.query.get_or_404(package_id)
+    package = VaultQueryService.get_package_or_404(package_id)
 
     try:
         with atomic_transaction("package_deletion"):
@@ -855,7 +829,7 @@ def reports():
         return redirect(url_for("payment_vault.unlock_vault"))
 
     tid = None
-    all_transactions = Donation.query.filter_by(tenant_id=tid).order_by(Donation.created_at.desc()).all()
+    all_transactions = VaultQueryService.list_platform_records_desc(tid)
     purchases = [t for t in all_transactions if t.transaction_type == "purchase"]
     donations = [t for t in all_transactions if t.transaction_type == "donation"]
 
@@ -876,22 +850,8 @@ def reports():
             y -= 1
         month_keys.append((y, m))
 
-    from sqlalchemy import extract, func
-
     start_of_window = datetime(month_keys[0][0], month_keys[0][1], 1)
-    year_col = extract("year", Donation.created_at)
-    month_col = extract("month", Donation.created_at)
-    monthly_rows = (
-        db.session.query(
-            year_col.label("y"),
-            month_col.label("m"),
-            Donation.transaction_type,
-            func.sum(Donation.amount_usd).label("total"),
-        )
-        .filter(Donation.tenant_id == tid, Donation.created_at >= start_of_window)
-        .group_by(year_col, month_col, Donation.transaction_type)
-        .all()
-    )
+    monthly_rows = VaultQueryService.donation_monthly_aggregates(tid, start_of_window)
 
     monthly_totals = {}
     for row in monthly_rows:
@@ -905,11 +865,7 @@ def reports():
         monthly_purchases_data.append(round(monthly_totals.get((y, m, "purchase"), 0.0), 2))
         monthly_donations_data.append(round(monthly_totals.get((y, m, "donation"), 0.0), 2))
 
-    package_stats = [
-        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="basic").count(),
-        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="professional").count(),
-        Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package="enterprise").count(),
-    ]
+    package_stats = VaultQueryService.platform_package_purchase_counts(tid, ("basic", "professional", "enterprise"))
 
     return render_template(
         "payment_vault/reports.html",
@@ -953,7 +909,7 @@ def cards():
         flash(gettext("❌ يجب فتح الخزينة أولاً"), "warning")
         return redirect(url_for("payment_vault.unlock_vault"))
 
-    card_list = tenant_query(CardPayment).order_by(CardPayment.created_at.desc()).all()
+    card_list = VaultQueryService.list_cards()
 
     total_cards = len(card_list)
     total_amount = sum(float(c.amount or 0) for c in card_list if c.status == "completed")
@@ -978,7 +934,7 @@ def decrypt_card(card_id):
     if not vault or vault.is_locked:
         return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
-    card = tenant_get_or_404(CardPayment, card_id)
+    card = VaultQueryService.get_card_or_404(card_id)
     PaymentLog.log_action(
         vault_id=vault.id,
         action="card_viewed",
@@ -1194,7 +1150,7 @@ def api_create_purchase():
         customer_phone = sanitize(data.get("customer_phone", ""), 50)
         company_name = sanitize(data.get("company_name", ""), 100)
 
-        package = db.session.get(Package, data["package_id"])
+        package = VaultQueryService.get_package_by_id(data["package_id"])
         if not package or not package.is_active:
             return error_response(message=gettext("الباقة غير متاحة"), status_code=404)
 
@@ -1266,7 +1222,7 @@ def api_create_purchase():
                     "note": gettext("يتطلب تواصل مباشر للحصول على تفاصيل الحساب البنكي"),
                 }
 
-            donation = Donation.query.filter_by(transaction_hash=payment_result.get("payment_id")).first()
+            donation = VaultQueryService.find_donation_by_transaction_hash(payment_result.get("payment_id"))
 
             if not donation:
                 donation = Donation(
@@ -1464,18 +1420,12 @@ def view_purchases():
     per_page = request.args.get("per_page", 20, type=int)
     status_filter = request.args.get("status", "")
 
-    query = PackagePurchase.query
-    if status_filter:
-        query = query.filter_by(payment_status=status_filter)
-
     # Pagination
-    pagination = query.order_by(PackagePurchase.created_at.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    pagination = VaultQueryService.purchases_page(page, per_page, status_filter)
 
     purchases = pagination.items
 
-    all_purchases = PackagePurchase.query.all()
+    all_purchases = VaultQueryService.list_all_purchases()
     stats = {
         "total": len(all_purchases),
         "pending": len([p for p in all_purchases if p.payment_status == "pending"]),
@@ -1500,7 +1450,7 @@ def purchase_detail(**kwargs):
     if not vault or vault.is_locked:
         return redirect(url_for("payment_vault.unlock_vault"))
 
-    purchase = PackagePurchase.query.get_or_404(record_id)
+    purchase = VaultQueryService.get_purchase_or_404(record_id)
     return render_template("payment_vault/purchase_detail.html", purchase=purchase)
 
 
@@ -1512,7 +1462,7 @@ def send_email(id):
     if not vault or vault.is_locked:
         return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
-    purchase = PackagePurchase.query.get_or_404(id)
+    purchase = VaultQueryService.get_purchase_or_404(id)
     if not purchase.customer_email:
         return error_response(message=gettext("لا يوجد بريد إلكتروني للعميل"), status_code=400)
 
@@ -1545,7 +1495,7 @@ def send_email(id):
 def activate_purchase(**kwargs):
     """تفعيل عملية شراء"""
     record_id = kwargs.pop("id")
-    purchase = PackagePurchase.query.get_or_404(record_id)
+    purchase = VaultQueryService.get_purchase_or_404(record_id)
 
     try:
         purchase.activation_status = "activated"
@@ -1553,11 +1503,7 @@ def activate_purchase(**kwargs):
         purchase.payment_status = "completed"
 
         tid = None
-        donation = Donation.query.filter_by(
-            tenant_id=tid,
-            customer_email=purchase.customer_email,
-            transaction_type="purchase",
-        ).first()
+        donation = VaultQueryService.find_purchase_donation_by_email(purchase.customer_email, tid)
         if donation:
             donation.status = "completed"
             donation.completed_at = datetime.now(UTC)
@@ -1576,8 +1522,8 @@ def activate_purchase(**kwargs):
 @owner_only
 def api_package_stats(package_id):
     """API لإحصائيات باقة محددة"""
-    Package.query.get_or_404(package_id)
-    purchases = PackagePurchase.query.filter_by(package_id=package_id).all()
+    VaultQueryService.get_package_or_404(package_id)
+    purchases = VaultQueryService.purchases_for_package(package_id)
 
     stats = {
         "total_sales": len(purchases),
@@ -1594,7 +1540,7 @@ def api_package_stats(package_id):
 @owner_only
 def toggle_package_status(package_id):
     """تبديل حالة الباقة (نشط/معطل)"""
-    package = Package.query.get_or_404(package_id)
+    package = VaultQueryService.get_package_or_404(package_id)
     package.is_active = not package.is_active
 
     try:
@@ -1619,7 +1565,7 @@ def donation_detail(donation_id):
         return redirect(url_for("payment_vault.unlock_vault"))
 
     tid = None
-    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
+    donation = VaultQueryService.get_platform_donation_or_404(donation_id, tid)
     return render_template("payment_vault/donation_detail.html", donation=donation)
 
 
@@ -1628,7 +1574,7 @@ def donation_detail(donation_id):
 def approve_donation(donation_id):
     """قبول تبرع"""
     tid = None
-    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
+    donation = VaultQueryService.get_platform_donation_or_404(donation_id, tid)
 
     try:
         donation.status = "completed"
@@ -1656,7 +1602,7 @@ def approve_donation(donation_id):
 def reject_donation(donation_id):
     """رفض تبرع"""
     tid = None
-    donation = Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
+    donation = VaultQueryService.get_platform_donation_or_404(donation_id, tid)
 
     try:
         donation.status = "failed"
@@ -1683,7 +1629,7 @@ def send_donation_thank_you(donation_id):
     if not vault or vault.is_locked:
         return error_response(message=gettext("الخزينة مقفلة"), status_code=403)
 
-    donation = Donation.query.filter_by(id=donation_id).first_or_404()
+    donation = VaultQueryService.get_any_donation_or_404(donation_id)
     if not donation.donor_email:
         return error_response(message=gettext("لا يوجد بريد إلكتروني للمتبرع"), status_code=400)
 
@@ -1753,7 +1699,7 @@ def api_live_stats():
     security_status = SecurityService.get_security_status()
 
     tid = None
-    pending_count = Donation.query.filter_by(tenant_id=tid, status="pending").count()
+    pending_count = VaultQueryService.pending_platform_donations_count(tid)
 
     return success_response(
         data={
@@ -1774,7 +1720,7 @@ def export_purchases():
 
     from services.export_service import ExportService
 
-    purchases = PackagePurchase.query.order_by(PackagePurchase.created_at.desc()).all()
+    purchases = VaultQueryService.list_purchases_desc()
     csv_file = ExportService.export_purchases_to_csv(purchases)
 
     return send_file(
@@ -1794,9 +1740,7 @@ def export_donations():
     from services.export_service import ExportService
 
     tid = None
-    donation_list = (
-        Donation.query.filter_by(tenant_id=tid, transaction_type="donation").order_by(Donation.created_at.desc()).all()
-    )
+    donation_list = VaultQueryService.list_platform_records(tid=tid, transaction_type="donation")
     csv_file = ExportService.export_donations_to_csv(donation_list)
 
     return send_file(

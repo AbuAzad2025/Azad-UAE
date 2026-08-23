@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
-from decimal import Decimal
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     redirect,
@@ -12,11 +12,10 @@ from flask import (
 )
 from flask_babel import gettext
 from flask_login import current_user, login_required
-from sqlalchemy import func
-from sqlalchemy.orm import joinedload
 
 from extensions import db
-from models import Customer, GLAccount, GLJournalLine, Product, Sale, SaleLine, User
+from models import Customer, Sale
+from services.main_site_service import MainSiteService
 from services.stock_service import StockService
 from utils.branching import get_visible_products_query
 from utils.db_safety import atomic_transaction
@@ -60,11 +59,11 @@ def dashboard():
         total_customers = total_customers_query.count()
         stats["customers_count"] = total_customers
 
+        tid = get_active_tenant_id(current_user)
         if scoped_branch_id is not None:
             total_products = get_visible_products_query(current_user).count()
         else:
-            tid = get_active_tenant_id(current_user)
-            total_products = Product.query.filter_by(is_active=True, tenant_id=tid).count()
+            total_products = MainSiteService.count_active_products(tid)
         stats["products_count"] = total_products
 
         low_stock = []
@@ -84,139 +83,45 @@ def dashboard():
 
         stats["out_of_stock_count"] = len(out_of_stock)
 
-        tid = get_active_tenant_id(current_user)
-        today_sales_query = db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed)).filter(
-            func.date(Sale.sale_date) == today,
-            Sale.status == "confirmed",
-            Sale.tenant_id == tid,
-        )
-        if scoped_branch_id is not None:
-            today_sales_query = today_sales_query.filter(Sale.branch_id == scoped_branch_id)
-        today_sales = today_sales_query.first()
+        today_sales = MainSiteService.today_sales_totals(tid, today, scoped_branch_id)
 
         stats["today_sales_count"] = today_sales[0] or 0
         stats["today_sales_amount"] = float(today_sales[1] or 0)
 
-        month_sales_query = db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed)).filter(
-            func.date(Sale.sale_date) >= month_start,
-            Sale.status == "confirmed",
-            Sale.tenant_id == tid,
-        )
-        if scoped_branch_id is not None:
-            month_sales_query = month_sales_query.filter(Sale.branch_id == scoped_branch_id)
-        month_sales = month_sales_query.first()
+        month_sales = MainSiteService.month_sales_totals(tid, month_start, scoped_branch_id)
 
         stats["month_sales_count"] = month_sales[0] or 0
         stats["month_sales_amount"] = float(month_sales[1] or 0)
 
         if current_user.can_see_costs():
-            profit_expr = func.sum(
-                (SaleLine.unit_price - func.coalesce(SaleLine.cost_price, 0))
-                * SaleLine.quantity
-                * (100 - func.coalesce(SaleLine.discount_percent, 0))
-                / 100
-            )
-            month_profit_query = (
-                db.session.query(profit_expr)
-                .select_from(SaleLine)
-                .join(Sale, SaleLine.sale_id == Sale.id)
-                .filter(
-                    func.date(Sale.sale_date) >= month_start,
-                    Sale.status == "confirmed",
-                    Sale.tenant_id == tid,
-                )
-            )
-            if scoped_branch_id is not None:
-                month_profit_query = month_profit_query.filter(Sale.branch_id == scoped_branch_id)
-            month_profit = month_profit_query.scalar() or Decimal("0")
+            stats["month_profit"] = float(MainSiteService.month_profit_total(tid, month_start, scoped_branch_id))
 
-            stats["month_profit"] = float(month_profit)
-
-        total_receivables_query = db.session.query(func.sum(Sale.amount_aed - Sale.paid_amount_aed)).filter(
-            Sale.status == "confirmed", Sale.balance_due > 0
-        )
-        if scoped_branch_id is not None:
-            total_receivables_query = total_receivables_query.filter(Sale.branch_id == scoped_branch_id)
-        total_receivables = total_receivables_query.scalar() or Decimal("0")
-
-        stats["total_receivables"] = float(total_receivables)
+        stats["total_receivables"] = float(MainSiteService.total_receivables(scoped_branch_id))
 
         if current_user.can_see_costs():
             try:
                 from utils.gl_tenant import active_tenant_id
 
-                tid = active_tenant_id()
+                gl_tid = active_tenant_id()
 
-                def liquidity_balance(kind):
-                    account_query = GLAccount.query.filter(
-                        GLAccount.tenant_id == int(tid or 0),
-                        GLAccount.is_active,
-                        GLAccount.is_header.is_(False),
-                        GLAccount.liquidity_kind == kind,
-                    )
-                    if scoped_branch_id is not None:
-                        account_query = account_query.filter(GLAccount.branch_id == scoped_branch_id)
-                    account_ids = [acc.id for acc in account_query.all()]
-                    if not account_ids:
-                        return Decimal("0")
-                    debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter(
-                        GLJournalLine.account_id.in_(account_ids)
-                    )
-                    credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter(
-                        GLJournalLine.account_id.in_(account_ids)
-                    )
-                    if scoped_branch_id is not None:
-                        debit_query = debit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                        credit_query = credit_query.join(GLJournalLine.entry).filter_by(branch_id=scoped_branch_id)
-                    return (debit_query.scalar() or Decimal("0")) - (credit_query.scalar() or Decimal("0"))
+                stats["cash_balance"] = float(MainSiteService.liquidity_balance("cash", gl_tid, scoped_branch_id))
+                stats["bank_balance"] = float(MainSiteService.liquidity_balance("bank", gl_tid, scoped_branch_id))
 
-                stats["cash_balance"] = float(liquidity_balance("cash"))
-                stats["bank_balance"] = float(liquidity_balance("bank"))
-
-                inventory_acc = get_gl_account_by_code("1140", tenant_id=tid)
+                inventory_acc = get_gl_account_by_code("1140", tenant_id=gl_tid)
                 if inventory_acc:
-                    inv_debit_query = db.session.query(func.sum(GLJournalLine.debit)).filter_by(
-                        account_id=inventory_acc.id
+                    stats["inventory_value_gl"] = float(
+                        MainSiteService.inventory_gl_value(inventory_acc, scoped_branch_id)
                     )
-                    inv_credit_query = db.session.query(func.sum(GLJournalLine.credit)).filter_by(
-                        account_id=inventory_acc.id
-                    )
-                    if scoped_branch_id is not None:
-                        inv_debit_query = inv_debit_query.join(GLJournalLine.entry).filter_by(
-                            branch_id=scoped_branch_id
-                        )
-                        inv_credit_query = inv_credit_query.join(GLJournalLine.entry).filter_by(
-                            branch_id=scoped_branch_id
-                        )
-                    inv_debit = inv_debit_query.scalar() or Decimal("0")
-                    inv_credit = inv_credit_query.scalar() or Decimal("0")
-                    stats["inventory_value_gl"] = float(inv_debit - inv_credit)
             except Exception:
                 current_app.logger.exception("Failed to compute inventory GL balance for dashboard")
 
         # Optimized query with eager loading (N+1 problem fix)
-        tid = get_active_tenant_id(current_user)
-        recent_sales = Sale.query.options(joinedload(Sale.customer), joinedload(Sale.seller)).filter_by(
-            status="confirmed"
-        )
-        if tid is not None:
-            recent_sales = recent_sales.filter(Sale.tenant_id == tid)
-        if scoped_branch_id is not None:
-            recent_sales = recent_sales.filter(Sale.branch_id == scoped_branch_id)
-        recent_sales = recent_sales.order_by(Sale.sale_date.desc()).limit(10).all()
+        recent_sales = MainSiteService.recent_confirmed_sales(tid, scoped_branch_id)
 
         stats["recent_sales"] = recent_sales
 
         if current_user.is_seller():
-            my_today_sales = (
-                db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
-                .filter(
-                    func.date(Sale.sale_date) == today,
-                    Sale.seller_id == current_user.id,
-                    Sale.status == "confirmed",
-                )
-                .first()
-            )
+            my_today_sales = MainSiteService.seller_sales_totals_on(current_user.id, today)
 
             stats["my_today_sales_count"] = my_today_sales[0] or 0
             stats["my_today_sales_amount"] = float(my_today_sales[1] or 0)
@@ -264,55 +169,25 @@ def my_profile():
     stats = {}
 
     # Sales stats
-    from models import Sale
-
-    today_sales = (
-        db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
-        .filter(
-            Sale.seller_id == user.id,
-            func.date(Sale.sale_date) == today,
-            Sale.status == "confirmed",
-        )
-        .first()
-    )
+    today_sales = MainSiteService.seller_sales_totals_on(user.id, today)
     stats["today_sales_count"] = today_sales[0] or 0
     stats["today_sales_amount"] = float(today_sales[1] or 0)
 
-    month_sales = (
-        db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
-        .filter(
-            Sale.seller_id == user.id,
-            func.date(Sale.sale_date) >= month_start,
-            Sale.status == "confirmed",
-        )
-        .first()
-    )
+    month_sales = MainSiteService.seller_sales_totals_since(user.id, month_start)
     stats["month_sales_count"] = month_sales[0] or 0
     stats["month_sales_amount"] = float(month_sales[1] or 0)
 
-    total_sales = (
-        db.session.query(func.count(Sale.id), func.sum(Sale.amount_aed))
-        .filter(Sale.seller_id == user.id, Sale.status == "confirmed")
-        .first()
-    )
+    total_sales = MainSiteService.seller_sales_totals(user.id)
     stats["total_sales_count"] = total_sales[0] or 0
     stats["total_sales_amount"] = float(total_sales[1] or 0)
 
     # Payment stats
-    from models import Payment
-
-    payment_stats = (
-        db.session.query(func.count(Payment.id), func.sum(Payment.amount_aed))
-        .filter(Payment.user_id == user.id)
-        .first()
-    )
+    payment_stats = MainSiteService.payment_totals_for_user(user.id)
     stats["payments_count"] = payment_stats[0] or 0
     stats["payments_amount"] = float(payment_stats[1] or 0)
 
     # Recent sales
-    recent_sales = (
-        Sale.query.filter_by(seller_id=user.id, status="confirmed").order_by(Sale.sale_date.desc()).limit(10).all()
-    )
+    recent_sales = MainSiteService.recent_sales_for_seller(user.id)
 
     return render_template(
         "my_profile.html",
@@ -353,11 +228,7 @@ def my_profile_update():
                 email = InputSanitizer.sanitize_email(request.form.get("email", ""))
                 if email:
                     # Check email uniqueness (excluding self)
-                    existing = User.query.filter(
-                        User.email == email,
-                        User.id != user.id,
-                        User.tenant_id == user.tenant_id,
-                    ).first()
+                    existing = MainSiteService.email_exists(email, user.id, user.tenant_id)
                     if existing:
                         flash(gettext("⚠️ هذا البريد الإلكتروني مستخدم من قبل."), "warning")
                         return redirect(url_for("main.my_profile"))
@@ -418,10 +289,7 @@ def my_profile_update():
 @main_bp.route("/tenant/<slug>")
 def tenant_public_profile(slug):
     """Public company profile page — no login required."""
-    from models.branch import Branch
-    from models.tenant import Tenant
-
-    tenant = Tenant.query.filter_by(slug=slug).first_or_404()
+    tenant = MainSiteService.tenant_by_slug(slug)
 
     # Only show active tenants
     if not tenant.is_active or getattr(tenant, "is_suspended", False):
@@ -434,7 +302,7 @@ def tenant_public_profile(slug):
             503,
         )
 
-    branches = Branch.query.filter_by(tenant_id=tenant.id, is_active=True).order_by(Branch.name).all()
+    branches = MainSiteService.active_branches_for_tenant(tenant.id)
 
     # Determine if viewer is owner (for edit/delete buttons)
     from flask_login import current_user as _current_user

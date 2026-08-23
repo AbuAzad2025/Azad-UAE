@@ -236,3 +236,35 @@ class ProjectService:
             logger.exception("Failed to flush project member addition")
             raise
         return member
+
+    # ─── Project detail queries (relocated from routes/projects.py) ───
+
+    @staticmethod
+    def stages_for_project(project_id):
+        """Task stages of a project ordered by sequence."""
+        from models import TaskStage
+
+        return TaskStage.query.filter_by(project_id=project_id).order_by(TaskStage.sequence).all()
+
+    @staticmethod
+    def tasks_for_project(project_id):
+        """Active tasks of a project ordered by sort order."""
+        from models import Task
+
+        return Task.query.filter_by(project_id=project_id, is_active=True).order_by(Task.sort_order).all()
+
+    @staticmethod
+    def members_for_project(project_id):
+        """Members of a project."""
+        from models import ProjectMember
+
+        return ProjectMember.query.filter_by(project_id=project_id).all()
+
+    @staticmethod
+    def active_users_for_tenant(tenant_id):
+        """Active users of the active tenant ordered by full name (empty without tenant)."""
+        if not tenant_id:
+            return []
+        from models import User
+
+        return User.query.filter(User.tenant_id == tenant_id, User.is_active).order_by(User.full_name).all()

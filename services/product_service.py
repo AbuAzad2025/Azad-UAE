@@ -112,3 +112,159 @@ class ProductService:
         if tid:
             q = q.filter(Product.tenant_id == tid)
         return q.limit(limit).all()
+
+    @staticmethod
+    def get_active_category(category_id, tenant_id):
+        """Fetch an active category by id within a tenant; returns None when absent."""
+        from models import ProductCategory
+
+        return ProductCategory.query.filter_by(
+            id=int(category_id),
+            tenant_id=int(tenant_id),
+            is_active=True,
+        ).first()
+
+    @staticmethod
+    def category_name_taken(tenant_id, name, exclude_id=None):
+        """True when another category in the tenant already uses *name* (case-insensitive)."""
+        from models import ProductCategory
+
+        q = ProductCategory.query.filter(
+            ProductCategory.tenant_id == tenant_id,
+            db.func.lower(ProductCategory.name) == name.lower(),
+        )
+        if exclude_id:
+            q = q.filter(ProductCategory.id != int(exclude_id))
+        return q.first() is not None
+
+    @staticmethod
+    def find_category_name_conflict(tenant_id, name, exclude_id=None):
+        """Return the conflicting category for *name* (case-insensitive), if any."""
+        from models import ProductCategory
+
+        q = ProductCategory.query.filter(
+            ProductCategory.tenant_id == tenant_id,
+            db.func.lower(ProductCategory.name) == name.lower(),
+        )
+        if exclude_id:
+            q = q.filter(ProductCategory.id != int(exclude_id))
+        return q.first()
+
+    @staticmethod
+    def count_products_in_category(tenant_id, category_id):
+        """Number of products assigned to a category within a tenant."""
+        from models import Product
+
+        return Product.query.filter_by(
+            tenant_id=tenant_id,
+            category_id=category_id,
+        ).count()
+
+    @staticmethod
+    def list_active_categories(tenant_id, ordered=False):
+        """Active categories for a tenant, optionally ordered by name."""
+        from models import ProductCategory
+
+        query = ProductCategory.query.filter_by(is_active=True, tenant_id=tenant_id)
+        if ordered:
+            return query.order_by(ProductCategory.name).all()
+        return query.all()
+
+    @staticmethod
+    def find_category_by_name(tenant_id, name):
+        """Case-insensitive exact-name category lookup within a tenant."""
+        from models import ProductCategory
+
+        return ProductCategory.query.filter_by(tenant_id=tenant_id).filter(ProductCategory.name.ilike(name)).first()
+
+    @staticmethod
+    def get_default_warehouse(tenant_id):
+        """Main active warehouse for a tenant; falls back to any tenant warehouse."""
+        from models import Warehouse
+
+        warehouse = Warehouse.query.filter_by(is_active=True, is_main=True, tenant_id=tenant_id).first()
+        if not warehouse:
+            warehouse = Warehouse.query.filter_by(tenant_id=tenant_id).first()
+        return warehouse
+
+    @staticmethod
+    def find_duplicate_product(sku, barcode, tenant_id):
+        """Find an existing product sharing the SKU or barcode, optionally tenant-scoped."""
+        from models import Product
+
+        dup_q = Product.query.filter((Product.sku == sku) | (Product.barcode == barcode))
+        if tenant_id is not None:
+            dup_q = dup_q.filter(Product.tenant_id == tenant_id)
+        return dup_q.first()
+
+    @staticmethod
+    def transaction_counts(product_id, tenant_id):
+        """Count sale/purchase lines tied to a product (for delete guards)."""
+        from models import PurchaseLine, SaleLine
+
+        sales_query = SaleLine.query.filter_by(product_id=product_id)
+        purchases_query = PurchaseLine.query.filter_by(product_id=product_id)
+        if tenant_id is not None:
+            sales_query = sales_query.filter(SaleLine.tenant_id == tenant_id)
+            purchases_query = purchases_query.filter(PurchaseLine.tenant_id == tenant_id)
+        return sales_query.count(), purchases_query.count()
+
+    @staticmethod
+    def get_price_tier(product_id, tier_code):
+        """Fetch a product's price tier by tier code; returns None when absent."""
+        from models import ProductPriceTier
+
+        return ProductPriceTier.query.filter_by(
+            product_id=product_id,
+            tier_code=tier_code,
+        ).first()
+
+    @staticmethod
+    def annotate_branch_and_warehouse_info(products, warehouse_ids):
+        """
+        For all-branches views, annotate each product with visible warehouse names
+        and branch names based on accessible stock movements.
+        """
+        if not products:
+            return products
+
+        from models import Branch, StockMovement, Warehouse
+
+        for product in products:
+            product.visible_warehouse_names = []
+            product.visible_branch_names = []
+
+        if not warehouse_ids:
+            return products
+
+        product_ids = [p.id for p in products]
+        rows = (
+            db.session.query(
+                StockMovement.product_id,
+                Warehouse.name,
+                Warehouse.name_ar,
+                Branch.name,
+                Branch.code,
+            )
+            .join(Warehouse, Warehouse.id == StockMovement.warehouse_id)
+            .outerjoin(Branch, Branch.id == Warehouse.branch_id)
+            .filter(StockMovement.product_id.in_(product_ids))
+            .filter(StockMovement.warehouse_id.in_(warehouse_ids))
+            .all()
+        )
+
+        by_product = {}
+        for product_id, wh_name, wh_name_ar, branch_name, branch_code in rows:
+            bucket = by_product.setdefault(product_id, {"warehouses": set(), "branches": set()})
+            if wh_name_ar or wh_name:
+                bucket["warehouses"].add((wh_name_ar or wh_name).strip())
+            if branch_name:
+                branch_label = f"{branch_name} ({branch_code})" if branch_code else branch_name
+                bucket["branches"].add(branch_label.strip())
+
+        for product in products:
+            info = by_product.get(product.id, {"warehouses": set(), "branches": set()})
+            product.visible_warehouse_names = sorted(info["warehouses"])
+            product.visible_branch_names = sorted(info["branches"])
+
+        return products

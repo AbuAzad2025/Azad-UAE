@@ -16,8 +16,7 @@ from utils.api_response import error_response, success_response
 from flask_babel import gettext
 
 from extensions import db, limiter
-from models import Product, ProductCategory, Sale, Tenant
-from models.sale import SaleLine
+from models import Tenant
 from models.shop_review import ShopReview
 from models.shop_wishlist import ShopWishlist
 from services.shop_customer_auth_service import ShopCustomerAuthService
@@ -154,8 +153,6 @@ def _is_ajax():
 
 
 def _track_cart_activity(store, account, session):
-    from models.shop_abandoned_cart import ShopAbandonedCart
-
     cart = StoreService.get_cart(session, store.tenant_id)
     if not cart:
         return
@@ -163,22 +160,12 @@ def _track_cart_activity(store, account, session):
 
     cart_json = json.dumps(cart)
     email = account.email if account else None
-    existing = ShopAbandonedCart.query.filter_by(
-        tenant_id=store.tenant_id,
-        account_id=account.id if account else None,
-        recovered=False,
-    ).first()
-    if existing:
-        existing.cart_data = cart_json
-    else:
-        ac = ShopAbandonedCart(
-            tenant_id=store.tenant_id,
-            account_id=account.id if account else None,
-            email=email,
-            cart_data=cart_json,
-        )
-        db.session.add(ac)
-    db.session.flush()
+    StoreService.save_abandoned_cart_snapshot(
+        store.tenant_id,
+        account.id if account else None,
+        email,
+        cart_json,
+    )
 
 
 @shop_bp.route("/<slug>/lang/<lang_code>")
@@ -206,9 +193,7 @@ def wishlist_add(slug, product_id):
     if not account:
         return error_response(message="Login required", status_code=401)
     if request.content_type and "application/json" in request.content_type:
-        existing = ShopWishlist.query.filter_by(
-            account_id=account.id, product_id=product_id, tenant_id=store.tenant_id
-        ).first()
+        existing = StoreService.wishlist_entry(store.tenant_id, account.id, product_id)
         if not existing:
             with atomic_transaction("wishlist_add"):
                 wl = ShopWishlist(
@@ -217,7 +202,7 @@ def wishlist_add(slug, product_id):
                     product_id=product_id,
                 )
                 db.session.add(wl)
-        count = ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).count()
+        count = StoreService.wishlist_count(store.tenant_id, account.id)
         return success_response(data={"wishlisted": True, "count": count})
     return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
@@ -229,7 +214,7 @@ def wishlist_remove(slug, product_id):
     if not account:
         return error_response(message="Login required", status_code=401)
     with atomic_transaction("wishlist_remove"):
-        ShopWishlist.query.filter_by(account_id=account.id, product_id=product_id, tenant_id=store.tenant_id).delete()
+        StoreService.remove_wishlist_entry(store.tenant_id, account.id, product_id)
     if request.content_type and "application/json" in request.content_type:
         return success_response(data={"wishlisted": False})
     return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
@@ -246,11 +231,7 @@ def wishlist_view(slug):
     if not account:
         flash(t("login_required", ctx["lang"]), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    items = (
-        ShopWishlist.query.filter_by(account_id=account.id, tenant_id=store.tenant_id)
-        .order_by(ShopWishlist.created_at.desc())
-        .all()
-    )
+    items = StoreService.wishlist_items(store.tenant_id, account.id)
     return render_template("shop/wishlist.html", wishlist_items=items, noindex=True, **ctx)
 
 
@@ -461,11 +442,7 @@ def catalog(slug):
 
     items = catalog_result["items"]
 
-    categories = (
-        ProductCategory.query.filter_by(tenant_id=store.tenant_id, is_active=True)
-        .order_by(ProductCategory.name.asc())
-        .all()
-    )
+    categories = StoreService.active_categories(store.tenant_id)
 
     wa_digits = _whatsapp_digits(store)
 
@@ -527,7 +504,7 @@ def product_detail(slug, product_id):
 
     ctx = _store_context(store)
 
-    product = Product.query.filter_by(id=product_id, tenant_id=store.tenant_id, is_active=True).first_or_404()
+    product = StoreService.active_product_or_404(store.tenant_id, product_id)
 
     stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
 
@@ -555,11 +532,7 @@ def product_detail(slug, product_id):
 
     variants = StoreService.get_product_variants(store.tenant_id, product.id)
     loyalty_points = StoreService.get_loyalty_points(ctx["shop_account"].id) if ctx["shop_account"] else 0
-    reviews = (
-        ShopReview.query.filter_by(product_id=product.id, tenant_id=store.tenant_id, is_approved=True)
-        .order_by(ShopReview.created_at.desc())
-        .all()
-    )
+    reviews = StoreService.approved_reviews(store.tenant_id, product.id)
     review_count = len(reviews)
     avg_rating = round(sum(r.rating for r in reviews) / review_count, 1) if review_count else None
     return render_template(
@@ -582,11 +555,7 @@ def product_detail(slug, product_id):
 @shop_bp.route("/<slug>/p/<int:product_id>/reviews", methods=["GET"])
 def product_reviews(slug, product_id):
     store = _resolve_store(slug)
-    reviews = (
-        ShopReview.query.filter_by(product_id=product_id, tenant_id=store.tenant_id, is_approved=True)
-        .order_by(ShopReview.created_at.desc())
-        .all()
-    )
+    reviews = StoreService.approved_reviews(store.tenant_id, product_id)
     return success_response(
         data={
             "reviews": [
@@ -645,7 +614,7 @@ def stock_alert(slug, product_id):
         )
     from models.shop_stock_alert import ShopStockAlert
 
-    existing = ShopStockAlert.query.filter_by(email=email, product_id=product_id, tenant_id=store.tenant_id).first()
+    existing = StoreService.stock_alert_subscriber(store.tenant_id, product_id, email)
     if existing:
         flash(t("alert_exists", shop_lang()), "info")
     else:
@@ -666,7 +635,7 @@ def newsletter_subscribe(slug):
         return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
     from models.shop_newsletter import ShopNewsletter
 
-    existing = ShopNewsletter.query.filter_by(tenant_id=store.tenant_id, email=email).first()
+    existing = StoreService.newsletter_subscriber(store.tenant_id, email)
     if not existing:
         with atomic_transaction("newsletter_subscribe"):
             sub = ShopNewsletter(tenant_id=store.tenant_id, email=email)
@@ -718,11 +687,7 @@ def cart_add(slug):
 
         return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
 
-    product = Product.query.filter_by(
-        id=product_id,
-        tenant_id=store.tenant_id,
-        is_active=True,
-    ).first()
+    product = StoreService.active_product(store.tenant_id, product_id)
     if not product or product.has_serial_number:
         if _is_ajax():
             return error_response(
@@ -1029,7 +994,7 @@ def return_policy(slug):
 def quick_view(slug, product_id):
     store = _resolve_store(slug)
     ctx = _store_context(store)
-    product = Product.query.filter_by(id=product_id, tenant_id=store.tenant_id, is_active=True).first_or_404()
+    product = StoreService.active_product_or_404(store.tenant_id, product_id)
     stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
     qty = stock_map.get(product.id, Decimal("0"))
     wa_url = (
@@ -1174,9 +1139,7 @@ def saved_payments(slug):
     account = ctx["shop_account"]
     if not account:
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    from models.shop_saved_payment import ShopSavedPayment
-
-    payments = ShopSavedPayment.query.filter_by(account_id=account.id, tenant_id=store.tenant_id).all()
+    payments = StoreService.saved_payment_methods(store.tenant_id, account.id)
     return render_template("shop/saved_payments.html", payments=payments, noindex=True, **ctx)
 
 
@@ -1210,11 +1173,7 @@ def delete_saved_payment(slug, payment_id):
     account = _shop_account(store)
     if not account:
         return error_response(message="Login required", status_code=401)
-    from models.shop_saved_payment import ShopSavedPayment
-
-    pm = ShopSavedPayment.query.filter_by(
-        id=payment_id, account_id=account.id, tenant_id=store.tenant_id
-    ).first_or_404()
+    pm = StoreService.saved_payment_or_404(store.tenant_id, account.id, payment_id)
     with atomic_transaction("delete_payment"):
         db.session.delete(pm)
     flash(t("payment_deleted", shop_lang()), "success")
@@ -1229,10 +1188,10 @@ def reorder(slug, sale_id):
     if not account:
         flash(t("login_required", shop_lang()), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source="online_store").first_or_404()
+    sale = StoreService.online_order_or_404(store.tenant_id, sale_id)
     if sale.customer_id != account.customer_id:
         abort(404)
-    lines = SaleLine.query.filter_by(sale_id=sale.id, tenant_id=store.tenant_id).all()
+    lines = StoreService.online_order_lines(store.tenant_id, sale.id)
     if not lines:
         flash("No items to reorder", "warning")
         return redirect(url_for("shop.account_orders", slug=store.store_slug))
@@ -1257,7 +1216,7 @@ def order_invoice(slug, sale_id):
     if not account:
         flash(t("login_required", ctx["lang"]), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
-    sale = Sale.query.filter_by(id=sale_id, tenant_id=store.tenant_id, source="online_store").first_or_404()
+    sale = StoreService.online_order_or_404(store.tenant_id, sale_id)
     if sale.customer_id != account.customer_id:
         abort(404)
     pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod", tenant_id=store.tenant_id)
@@ -1278,11 +1237,7 @@ def order_track(slug):
     order_number = (request.args.get("order") or "").strip()
     sale = None
     if order_number:
-        sale = Sale.query.filter_by(
-            tenant_id=store.tenant_id,
-            sale_number=order_number,
-            source="online_store",
-        ).first()
+        sale = StoreService.online_order_by_number(store.tenant_id, order_number)
         if not sale:
             flash(t("order_not_found", ctx["lang"]), "warning")
     return render_template(
@@ -1306,9 +1261,7 @@ def order_confirmation(slug, token):
     if not payload or int(payload.get("tenant_id", 0)) != int(store.tenant_id):
         abort(404)
 
-    sale = Sale.query.filter_by(
-        id=int(payload["sale_id"]), tenant_id=store.tenant_id, source="online_store"
-    ).first_or_404()
+    sale = StoreService.online_order_or_404(store.tenant_id, int(payload["sale_id"]))
 
     pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
 
