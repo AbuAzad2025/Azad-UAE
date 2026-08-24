@@ -144,20 +144,24 @@ def _export_state(app, users, tenant):
                 flask_session["tenant_id"] = tenant.id
                 flask_session["role"] = u["slug"]
                 flask_session["language"] = "ar"
+                # Valid Playwright storageState (cookies must be an array, origins required)
+                # Keep custom app data under `_app` so Python tours can still inspect it if needed,
+                # but the top-level shape must be Playwright-valid for both Python and JS runners.
                 state = {
-                    "cookies": {
-                        "session": "",
-                    },
-                    "session": dict(flask_session),
-                    "user": {
-                        "id": user.id,
-                        "email": user.email,
-                        "tenant_id": tenant.id,
-                        "role_slug": u["slug"],
-                    },
-                    "meta": {
-                        "base_url": BASE_URL,
-                        "tenant_slug": tenant.slug,
+                    "cookies": [],
+                    "origins": [],
+                    "_app": {
+                        "session": dict(flask_session),
+                        "user": {
+                            "id": user.id,
+                            "email": user.email,
+                            "tenant_id": tenant.id,
+                            "role_slug": u["slug"],
+                        },
+                        "meta": {
+                            "base_url": BASE_URL,
+                            "tenant_slug": tenant.slug,
+                        },
                     },
                 }
                 path = os.path.join(state_dir, f"{u['slug']}_state.json")

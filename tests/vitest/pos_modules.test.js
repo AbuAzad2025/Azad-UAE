@@ -89,11 +89,11 @@ describe('pos/index.js', () => {
     const jqMock = createJQueryMock();
     global.$ = global.jQuery = jqMock;
 
-    // Mock BarcodeScanner
-    global.BarcodeScanner = vi.fn(() => ({
-      start: vi.fn(),
-      stop: vi.fn(),
-    }));
+    // Mock BarcodeScanner (must be constructable for `new window.BarcodeScanner`)
+    const MockScanner = vi.fn(function () {
+      return { start: vi.fn(), stop: vi.fn() };
+    });
+    global.BarcodeScanner = window.BarcodeScanner = MockScanner;
 
     // Mock fetch
     global.fetch = vi.fn(() =>
@@ -113,6 +113,7 @@ describe('pos/index.js', () => {
     delete global.$;
     delete global.jQuery;
     delete global.BarcodeScanner;
+    delete window.BarcodeScanner;
     delete global.fetch;
     delete window.PosApp;
     vi.resetModules();
