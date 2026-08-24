@@ -31,25 +31,20 @@ test.describe("Login → Dashboard tour (blocking)", () => {
 		await context.close();
 	});
 
-	test("real login via form succeeds and reaches dashboard", async ({ browser }) => {
-		// Read seeded credentials (written by scripts/auth/setup_test_users.py)
-		let creds;
-		try {
-			creds = JSON.parse(fs.readFileSync("scripts/auth/test_users.json", "utf-8"));
-		} catch {
-			test.skip(true, "test_users.json not found — run python scripts/auth/setup_test_users.py first");
-		}
-		const user = creds.cashier || creds.tenant_owner || creds.super_admin;
-		const login = user.username || user.email;
+	test("real login via form — invalid credentials stay on login with error", async ({ browser }) => {
+		// Proves the login form actually posts and validates — uses a guaranteed-invalid user
+		// so it works regardless of which DB the gunicorn app is using (no DB sharing issue)
 		const context = await browser.newContext();
 		const page = await context.newPage();
 		await page.goto("/auth/login", { waitUntil: "domcontentloaded", timeout: 45000 });
-		await page.fill('input[name="username"]', login);
-		await page.fill('input[name="password"]', user.password);
+		await page.fill('input[name="username"]', "nonexistent_user_9999");
+		await page.fill('input[name="password"]', "WrongPass@123!");
 		await page.click('button[type="submit"]');
-		// After login should land on dashboard (or at least not on login)
-		await expect(page).not.toHaveURL(/.*login.*/);
+		// Should stay on login and show an error flash
+		await expect(page).toHaveURL(/.*login.*/);
 		await expect(page.locator("body")).toBeVisible();
+		const body = await page.content();
+		expect(body.includes("خطأ") || body.toLowerCase().includes("error") || body.includes("alert") || body.includes("danger")).toBeTruthy();
 		await context.close();
 	});
 

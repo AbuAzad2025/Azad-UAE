@@ -120,7 +120,9 @@ def _seed(db):
         user.set_password(password)
         db.session.add(user)
         db.session.flush()
-        users.append({"slug": slug, "email": email, "username": f"{email_slug}-{uid}", "password": password, "user_id": user.id})
+        users.append(
+            {"slug": slug, "email": email, "username": f"{email_slug}-{uid}", "password": password, "user_id": user.id}
+        )
 
     db.session.commit()
     return tenant, branch, warehouse, users
@@ -137,7 +139,12 @@ def _export_state(app, users, tenant):
     # Write credentials file for JS tours to perform real form login (deterministic per run)
     creds_path = os.path.join(state_dir, "test_users.json")
     with open(creds_path, "w", encoding="utf-8") as cf:
-        json.dump({u["slug"]: {"email": u["email"], "username": u["username"], "password": u["password"]} for u in users}, cf, ensure_ascii=False, indent=2)
+        json.dump(
+            {u["slug"]: {"email": u["email"], "username": u["username"], "password": u["password"]} for u in users},
+            cf,
+            ensure_ascii=False,
+            indent=2,
+        )
     print(f"  [OK] Exported {creds_path}")
 
     with app.app_context():
