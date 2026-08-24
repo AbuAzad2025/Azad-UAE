@@ -8209,6 +8209,9 @@ msgstr "Sales Report"
 msgid "Sales_Returns"
 msgstr "Sales Returns"
 
+msgid "Master_Data"
+msgstr "Master Data"
+
 msgid "Sales_Section"
 msgstr "Sales & Customers"
 

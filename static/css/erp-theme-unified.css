@@ -3562,3 +3562,38 @@ label,
 		animation: none !important;
 	}
 }
+
+@media (min-width: 768px) {
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview {
+    position: relative;
+  }
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview > .nav-treeview {
+    display: none !important;
+    position: absolute;
+    top: 0;
+    inset-inline-start: 100%;
+    width: 220px;
+    background: var(--az-sidebar-bg);
+    border-radius: 0 8px 8px 0;
+    box-shadow: 4px 0 12px rgba(0,0,0,0.25);
+    z-index: 1036;
+    padding: 0.5rem 0;
+    margin: 0;
+  }
+  html[dir="rtl"] body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview > .nav-treeview {
+    inset-inline-start: auto;
+    inset-inline-end: 100%;
+    border-radius: 8px 0 0 8px;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.25);
+  }
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview:hover > .nav-treeview,
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview:focus-within > .nav-treeview {
+    display: block !important;
+  }
+  body.sidebar-mini.sidebar-collapse .main-sidebar .nav-item.has-treeview:hover > .nav-link {
+    background: var(--az-sidebar-hover) !important;
+  }
+  body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-sidebar-search {
+    display: none !important;
+  }
+}

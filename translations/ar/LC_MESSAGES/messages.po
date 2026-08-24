@@ -8209,6 +8209,9 @@ msgstr "تقرير المبيعات"
 msgid "Sales_Returns"
 msgstr "مرتجعات المبيعات"
 
+msgid "Master_Data"
+msgstr "البيانات الأساسية"
+
 msgid "Sales_Section"
 msgstr "المبيعات والعملاء"
 

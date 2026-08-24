@@ -83,13 +83,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
 
-  <!-- FontAwesome (async) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}"></noscript>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
 
-  <!-- SweetAlert2 (async) -->
-  <link rel="stylesheet" href="{{ dist_url('css/sweetalert2.min.css') }}" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="{{ dist_url('css/sweetalert2.min.css') }}"></noscript>
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="{{ dist_url('css/sweetalert2.min.css') }}">
 
   {% block extra_css %}{% endblock %}
 

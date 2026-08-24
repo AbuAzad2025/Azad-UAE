@@ -28,11 +28,21 @@
         </div>
       </div>
 
+      <!-- Sidebar Search (as in reference: top, with icon) -->
+      <div class="erp-sidebar-search px-3 py-2">
+        <div class="input-group input-group-sm">
+          <input type="search" id="erpSidebarSearch" class="form-control form-control-sm bg-dark text-white border-0" placeholder="{{ t('Search') }}..." aria-label="{{ t('Search') }}" autocomplete="off">
+          <div class="input-group-append">
+            <span class="input-group-text bg-dark border-0 text-white-50"><i class="fas fa-search"></i></span>
+          </div>
+        </div>
+      </div>
+
       <!-- Navigation Macros -->
       {% macro _sec(label, perms) %}
         {% if perms %}
         <li class="nav-item erp-sidebar-section-label" role="separator" aria-label="{{ label }}">
-          <span class="nav-link py-1 text-muted text-uppercase small font-weight-bold">{{ label }}</span>
+          <span class="nav-link py-1 text-white-50 small" style="font-size: 0.68rem; letter-spacing: 0.08em; opacity: 0.7;">{{ label }}</span>
         </li>
         {% endif %}
       {% endmacro %}
@@ -75,43 +85,13 @@
           <!-- Dashboard -->
           {{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}
 
+          {# Master Data (as in reference: Customer/Supplier/Article before Operations) #}
+          {% set _master_perm = current_user.is_authenticated and (current_user.has_permission('manage_customers') or current_user.has_permission('manage_suppliers') or current_user.has_permission('manage_products')) %}
+          {{ _sec(t('Master_Data'), _master_perm) }}
+
           {# ═══════════════════════════════════════════════════════ #}
           {#  1. المبيعات والعملاء (Sales & CRM)                      #}
-          {# ═══════════════════════════════════════════════════════ #}
-          {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
-          {{ _sec(t('Sales_Section'), _sale_perm) }}
-
-          {% set _sale = current_user.is_authenticated and current_user.has_permission('manage_sales') %}
-          {{ _tree('fas fa-file-invoice', t('Sales'), 'sales', _sale) }}
-            {% if _sale and tenant_enable_pos %}
-            <li class="nav-item">
-              <a href="{{ url_for('pos.index') }}" class="nav-link">
-                <i class="fas fa-cash-register nav-icon text-info"></i>
-                <p>{{ t('POS_Cashier') }}</p>
-              </a>
-            </li>
-            {% endif %}
-            {% if _sale %}
-            <li class="nav-item">
-              <a href="{{ url_for('sales.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
-                <p>{{ t('New_Invoice') }}</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('sales.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
-                <p>{{ t('Invoices_List') }}</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('returns.index') }}" class="nav-link">
-                <i class="fas fa-undo-alt nav-icon text-warning"></i>
-                <p>{{ t('Sales_Returns') }}</p>
-              </a>
-            </li>
-            {% endif %}
-          {{ _end(_sale) }}
+          
 
           {% set _cust = current_user.is_authenticated and current_user.has_permission('manage_customers') %}
           {{ _tree('fas fa-users', t('Customers'), 'customers', _cust) }}
@@ -199,6 +179,42 @@
             </li>
             {% endif %}
           {{ _end(_prod) }}
+
+{# ═══════════════════════════════════════════════════════ #}
+          {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
+          {{ _sec(t('Sales_Section'), _sale_perm) }}
+
+          {% set _sale = current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+          {{ _tree('fas fa-file-invoice', t('Sales'), 'sales', _sale) }}
+            {% if _sale and tenant_enable_pos %}
+            <li class="nav-item">
+              <a href="{{ url_for('pos.index') }}" class="nav-link">
+                <i class="fas fa-cash-register nav-icon text-info"></i>
+                <p>{{ t('POS_Cashier') }}</p>
+              </a>
+            </li>
+            {% endif %}
+            {% if _sale %}
+            <li class="nav-item">
+              <a href="{{ url_for('sales.create') }}" class="nav-link">
+                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <p>{{ t('New_Invoice') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('sales.index') }}" class="nav-link">
+                <i class="fas fa-list nav-icon"></i>
+                <p>{{ t('Invoices_List') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('returns.index') }}" class="nav-link">
+                <i class="fas fa-undo-alt nav-icon text-warning"></i>
+                <p>{{ t('Sales_Returns') }}</p>
+              </a>
+            </li>
+            {% endif %}
+          {{ _end(_sale) }}
 
           {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
           {{ _tree('fas fa-warehouse', t('Warehouses'), 'warehouse', _wh) }}
@@ -527,3 +543,30 @@
       </nav>
     </div>
   </aside>
+  <script nonce="{{ csp_nonce() }}">
+  (function() {
+    var input = document.getElementById('erpSidebarSearch');
+    if (!input) return;
+    var nav = document.querySelector('.erp-sidebar-nav');
+    if (!nav) return;
+    input.addEventListener('input', function() {
+      var q = input.value.trim().toLowerCase();
+      nav.querySelectorAll('.nav-item').forEach(function(li) {
+        if (li.classList.contains('erp-sidebar-section-label')) {
+          li.style.display = q ? 'none' : '';
+          return;
+        }
+        var text = (li.textContent || '').toLowerCase();
+        var show = !q || text.includes(q);
+        // Keep parent tree visible if any child matches
+        if (!show && li.classList.contains('has-treeview')) {
+          var hasVisibleChild = Array.from(li.querySelectorAll('.nav-treeview .nav-item')).some(function(c) {
+            return (c.textContent || '').toLowerCase().includes(q);
+          });
+          if (hasVisibleChild) show = true;
+        }
+        li.style.display = show ? '' : 'none';
+      });
+    });
+  })();
+  </script>

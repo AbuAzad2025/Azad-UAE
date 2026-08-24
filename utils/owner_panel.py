@@ -100,8 +100,12 @@ def build_platform_overview(backups: list | None = None) -> dict:
 
     recent_active = Tenant.query.filter(Tenant.is_active).order_by(Tenant.id.desc()).limit(200).all()
     for t in recent_active:
+        slug_lower = (t.slug or "").lower()
+        # Skip ephemeral test tenants (sync/e2e/auth seeding) — they intentionally have no users/backups
+        if slug_lower.startswith(("sync-test", "authtest", "test-")):
+            continue
         uc = int(user_counts.get(t.id) or 0)
-        if uc == 0 and (t.slug or "").lower() != "nasrallah":
+        if uc == 0 and slug_lower != "nasrallah":
             warnings.append(f"Tenant {t.slug or t.id}: no users")
         if t.id not in backup_by_tenant:
             warnings.append(f"Tenant {t.slug or t.id}: no tenant backup")
@@ -402,6 +406,8 @@ def evaluate_tenant_user_warnings(rows: list[dict]) -> tuple[list[str], list[str
         if not getattr(row.get("tenant"), "is_active", True):
             continue
         slug = (row.get("warn_slug") or "").lower()
+        if slug.startswith(("sync-test", "authtest", "test-")):
+            continue
         if not row.get("warn_no_users"):
             continue
         msg = f"tenant {slug or row['tenant'].id}: no users"
