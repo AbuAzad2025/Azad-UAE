@@ -235,6 +235,7 @@ class RestoreDrillService:
             result["errors"].append(err)
             result["report_path"] = cls.write_drill_report(result)
             return result
+        assert scratch_url is not None
 
         artifact, err = cls.acquire_artifact(source=source, filename=filename)
         if not artifact:
@@ -245,8 +246,10 @@ class RestoreDrillService:
         result["artifact_origin"] = artifact.get("origin")
         result["artifact_filename"] = artifact.get("filename") or os.path.basename(artifact.get("path") or "")
         workdir = artifact.get("workdir")
+        artifact_path = artifact.get("path")
+        assert isinstance(artifact_path, str)
         try:
-            restore_outcome = cls.restore_into_scratch(artifact["path"], scratch_url)
+            restore_outcome = cls.restore_into_scratch(artifact_path, scratch_url)
             result["restore_ok"] = bool(restore_outcome.get("ok"))
             for e in restore_outcome.get("errors") or []:
                 result["errors"].append(f"restore: {str(e)[:200]}")
