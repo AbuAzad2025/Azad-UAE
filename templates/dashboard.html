@@ -216,7 +216,7 @@
         <h5 class="mb-0"><i class="fas fa-chart-line ml-2 text-primary"></i>{{ _('اتجاه المبيعات — آخر 14 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3 d-flex align-items-center">
-        <canvas id="salesTrendChart" height="170" role="img" aria-label="{{ _('اتجاه المبيعات') }}"></canvas>
+        <div style="height:280px; position:relative;"><canvas id="salesTrendChart" height="170" role="img" aria-label="{{ _('اتجاه المبيعات') }}"></canvas>
       </div>
     </div>
   </div>
@@ -228,7 +228,7 @@
         <h5 class="mb-0"><i class="fas fa-wallet ml-2 text-success"></i>{{ _('الوضع النقدي') }}</h5>
       </div>
       <div class="card-body pt-3 d-flex align-items-center justify-content-center">
-        <canvas id="cashPositionChart" height="190" role="img" aria-label="{{ _('الوضع النقدي') }}"></canvas>
+        <div style="height:260px; position:relative;"><canvas id="cashPositionChart" height="190" role="img" aria-label="{{ _('الوضع النقدي') }}"></canvas>
       </div>
     </div>
   </div>
@@ -240,7 +240,7 @@
         <h5 class="mb-0"><i class="fas fa-users ml-2 text-info"></i>{{ _('أفضل العملاء — آخر 30 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3 d-flex align-items-center">
-        <canvas id="topCustomersChart" height="190" role="img" aria-label="{{ _('أفضل العملاء') }}"></canvas>
+        <div style="height:260px; position:relative;"><canvas id="topCustomersChart" height="190" role="img" aria-label="{{ _('أفضل العملاء') }}"></canvas>
       </div>
     </div>
   </div>
@@ -252,7 +252,7 @@
         <span class="badge badge-danger">{{ stats.low_stock_count|default(0) }} {{ _('منخفض') }} · {{ stats.out_of_stock_count|default(0) }} {{ _('منتهي') }}</span>
       </div>
       <div class="card-body pt-3 d-flex align-items-center">
-        <canvas id="stockAlertsChart" height="170" role="img" aria-label="{{_('تنبيهات المخزون')}}"></canvas>
+        <div style="height:280px; position:relative;"><canvas id="stockAlertsChart" height="170" role="img" aria-label="{{_('تنبيهات المخزون')}}"></canvas>
       </div>
     </div>
   </div>
@@ -542,7 +542,7 @@
             pointRadius: 2
           }]
         },
-        options: { maintainAspectRatio: false }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }).catch(function() {});
   }
@@ -561,7 +561,7 @@
             backgroundColor: ['rgb(16, 185, 129)', 'rgb(59, 130, 246)']
           }]
         },
-        options: { maintainAspectRatio: false }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }).catch(function() {});
   }
@@ -612,7 +612,7 @@
             }
           ]
         },
-        options: { maintainAspectRatio: false }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }).catch(function() {});
   }
