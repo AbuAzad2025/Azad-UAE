@@ -84,7 +84,7 @@ const recalc = async () => {
 				}),
 			});
 			const response = await r.json();
-			const data = response && response.data ? response.data : response;
+			const data = response?.data ? response.data : response;
 			if (response.success) {
 				qs("#kpiSubtotal").textContent = fmt(data.subtotal);
 				qs("#kpiDiscount").textContent = fmt(data.discount);

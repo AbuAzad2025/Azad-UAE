@@ -38,9 +38,7 @@
 							page: params.page || 1,
 						}),
 						processResults: (data) => {
-							const items = Array.isArray(data)
-								? data
-								: (data && data.data) || data.results || [];
+							const items = Array.isArray(data) ? data : data?.data || data.results || [];
 							return {
 								results: items.map((item) => ({
 									id: item.id,
@@ -90,9 +88,7 @@
 							page: params.page || 1,
 						}),
 						processResults: (data) => {
-							const items = Array.isArray(data)
-								? data
-								: (data && data.data) || data.results || [];
+							const items = Array.isArray(data) ? data : data?.data || data.results || [];
 							return {
 								results: items.map((item) => ({
 									id: item.id,

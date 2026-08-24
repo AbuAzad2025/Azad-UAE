@@ -504,7 +504,7 @@ async function calculateTotalsClientSide() {
 			}),
 		});
 		const response = await r.json();
-		const data = response && response.data ? response.data : response;
+		const data = response?.data ? response.data : response;
 		if (response.success) {
 			const $summarySubtotal = $("#summary_subtotal");
 			const $summaryTax = $("#summary_tax");

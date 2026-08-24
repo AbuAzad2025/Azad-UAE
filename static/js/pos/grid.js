@@ -229,7 +229,7 @@
 					}),
 				});
 				const response = await r.json();
-				const data = response && response.data ? response.data : response;
+				const data = response?.data ? response.data : response;
 				if (response.success) {
 					qs("#kpiSubtotal").textContent = fmt(data.subtotal);
 					qs("#kpiTax").textContent = fmt(data.tax_amount);
@@ -439,7 +439,9 @@
 		} catch (_) {
 			showAlert("تعذر تحميل التصنيفات. تحقق من الاتصال وأعد المحاولة.", "danger");
 			const list = qs("#categoryList");
-			if (list) list.innerHTML = '<div class="text-muted text-center py-2 w-100">تعذر تحميل التصنيفات</div>';
+			if (list)
+				list.innerHTML =
+					'<div class="text-muted text-center py-2 w-100">تعذر تحميل التصنيفات</div>';
 		}
 	};
 

@@ -160,7 +160,7 @@ function addLine() {
 					customer_id: customerId,
 				},
 				success: (response) => {
-					const data = response && response.data ? response.data : response;
+					const data = response?.data ? response.data : response;
 					if (data.price) {
 						_applyBasePrice(currentIndex, data.price);
 					}
@@ -265,7 +265,7 @@ function _loadProductPrice(index) {
 			customer_id: customerId,
 		},
 		success: (response) => {
-			const data = response && response.data ? response.data : response;
+			const data = response?.data ? response.data : response;
 			// Store base price in base currency
 			$(`#price_${index}`).data("base-price", data.price);
 
@@ -554,7 +554,7 @@ async function calculateTotals() {
 		});
 
 		const responseJson = await response.json();
-		const result = responseJson && responseJson.data ? responseJson.data : responseJson;
+		const result = responseJson?.data ? responseJson.data : responseJson;
 
 		if (responseJson.success) {
 			_totalsServerDown = false;
