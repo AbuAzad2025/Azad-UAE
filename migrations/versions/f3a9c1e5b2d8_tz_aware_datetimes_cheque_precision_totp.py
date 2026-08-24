@@ -1967,22 +1967,6 @@ def upgrade():
         postgresql_using="updated_at AT TIME ZONE 'UTC'",
     )
     op.alter_column(
-        "sales_rep_commissions",
-        "paid_at",
-        existing_type=sa.DateTime(),
-        type_=sa.DateTime(timezone=True),
-        existing_nullable=True,
-        postgresql_using="paid_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "sales_rep_commissions",
-        "created_at",
-        existing_type=sa.DateTime(),
-        type_=sa.DateTime(timezone=True),
-        existing_nullable=True,
-        postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
         "security_alerts",
         "created_at",
         existing_type=sa.DateTime(),
@@ -2405,22 +2389,6 @@ def upgrade():
         type_=sa.DateTime(timezone=True),
         existing_nullable=True,
         postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "user_dashboard_layouts",
-        "created_at",
-        existing_type=sa.DateTime(),
-        type_=sa.DateTime(timezone=True),
-        existing_nullable=False,
-        postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "user_dashboard_layouts",
-        "updated_at",
-        existing_type=sa.DateTime(),
-        type_=sa.DateTime(timezone=True),
-        existing_nullable=False,
-        postgresql_using="updated_at AT TIME ZONE 'UTC'",
     )
     op.alter_column(
         "users",
@@ -4443,22 +4411,6 @@ def downgrade():
         postgresql_using="updated_at AT TIME ZONE 'UTC'",
     )
     op.alter_column(
-        "sales_rep_commissions",
-        "paid_at",
-        existing_type=sa.DateTime(timezone=True),
-        type_=sa.DateTime(),
-        existing_nullable=True,
-        postgresql_using="paid_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "sales_rep_commissions",
-        "created_at",
-        existing_type=sa.DateTime(timezone=True),
-        type_=sa.DateTime(),
-        existing_nullable=True,
-        postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
         "security_alerts",
         "created_at",
         existing_type=sa.DateTime(timezone=True),
@@ -4881,22 +4833,6 @@ def downgrade():
         type_=sa.DateTime(),
         existing_nullable=True,
         postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "user_dashboard_layouts",
-        "created_at",
-        existing_type=sa.DateTime(timezone=True),
-        type_=sa.DateTime(),
-        existing_nullable=False,
-        postgresql_using="created_at AT TIME ZONE 'UTC'",
-    )
-    op.alter_column(
-        "user_dashboard_layouts",
-        "updated_at",
-        existing_type=sa.DateTime(timezone=True),
-        type_=sa.DateTime(),
-        existing_nullable=False,
-        postgresql_using="updated_at AT TIME ZONE 'UTC'",
     )
     op.alter_column(
         "users",

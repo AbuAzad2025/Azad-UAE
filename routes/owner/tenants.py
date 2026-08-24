@@ -6,10 +6,9 @@ from datetime import UTC, date, datetime
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
+from services.owner_ops_service import OwnerOpsService
 from services.saas_provisioning_service import SaaSProvisioningService
 from utils.db_safety import atomic_transaction
-
-from services.owner_ops_service import OwnerOpsService
 
 from .common import (
     Tenant,

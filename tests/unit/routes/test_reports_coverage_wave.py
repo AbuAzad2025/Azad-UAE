@@ -8,6 +8,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
 from flask import make_response
 
 from tests.unit.routes.test_reports_routes import (
@@ -17,6 +18,20 @@ from tests.unit.routes.test_reports_routes import (
     _export_io,
     _send_file_response,
 )
+
+
+@pytest.fixture
+def reports_client(app_factory, bypass_reports_auth):
+    """reports.py delegates queries to ReportsQueryService — stub that boundary."""
+    from routes.reports import reports_bp
+
+    app = app_factory(reports_bp)
+    with (
+        patch("routes.reports.render_template", return_value="ok"),
+        patch("services.reports_query_service.db.session.query", return_value=_chain_query_stub()),
+        patch("services.reports_query_service.tenant_query", return_value=_chain_query_stub()),
+    ):
+        yield app.test_client()
 
 
 def _partner_commission_row(**overrides):
@@ -53,10 +68,10 @@ class TestPartnersBranchScopeWave:
         partner_cust = MagicMock(id=3, name="Partner A", customer_type="partner")
         supplier = MagicMock(id=1, name="Sup", tenant_id=1)
         with (
-            patch("routes.reports.db.session.query", side_effect=session_query),
-            patch("routes.reports.tenant_query", return_value=_chain_query_stub(all=[])),
-            patch("routes.reports._scoped_customer_query") as scq,
-            patch("routes.reports._scoped_supplier_query") as ssq,
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.tenant_query", return_value=_chain_query_stub(all=[])),
+            patch("services.reports_query_service.ReportsQueryService._scoped_customer_query") as scq,
+            patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query") as ssq,
             patch("routes.reports.report_branch_scope_id", return_value=7),
         ):
             scq.return_value.filter_by.return_value.all.return_value = [partner_cust]
@@ -90,16 +105,16 @@ class TestPartnersBranchScopeWave:
 
         with (
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(scalar=False),
             ),
-            patch("routes.reports.tenant_query", side_effect=tenant_query_side),
+            patch("services.reports_query_service.tenant_query", side_effect=tenant_query_side),
             patch(
-                "routes.reports._scoped_customer_query",
+                "services.reports_query_service.ReportsQueryService._scoped_customer_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch(
-                "routes.reports._scoped_supplier_query",
+                "services.reports_query_service.ReportsQueryService._scoped_supplier_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch("routes.reports.report_branch_scope_id", return_value=3),
@@ -133,16 +148,16 @@ class TestPartnersBranchScopeWave:
 
         with (
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(scalar=False),
             ),
-            patch("routes.reports.tenant_query", side_effect=tenant_query_side),
+            patch("services.reports_query_service.tenant_query", side_effect=tenant_query_side),
             patch(
-                "routes.reports._scoped_customer_query",
+                "services.reports_query_service.ReportsQueryService._scoped_customer_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch(
-                "routes.reports._scoped_supplier_query",
+                "services.reports_query_service.ReportsQueryService._scoped_supplier_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch("routes.reports.report_branch_scope_id", return_value=5),
@@ -162,12 +177,12 @@ class TestSalesBranchScopeWave:
         seller = MagicMock(id=2, username="seller1")
         sellers_q = _chain_query_stub(all=[seller])
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
+            patch("services.reports_query_service.tenant_query", return_value=sq),
             patch(
-                "routes.reports.get_confirmed_sale_paid_aed",
+                "services.reports_query_service.ReportsQueryService.get_confirmed_sale_paid_aed",
                 return_value=Decimal("200"),
             ),
-            patch("routes.reports.Customer") as Customer,
+            patch("models.Customer") as Customer,
             patch("utils.tenanting.scoped_user_query", return_value=sellers_q),
             patch("routes.reports.report_branch_scope_id", return_value=4),
         ):
@@ -192,8 +207,11 @@ class TestSalesBranchScopeWave:
         sale.payment_status = "partial"
         sq = _chain_query_stub(all=[sale])
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
-            patch("routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("50")),
+            patch("services.reports_query_service.tenant_query", return_value=sq),
+            patch(
+                "services.reports_query_service.ReportsQueryService.get_confirmed_sale_paid_aed",
+                return_value=Decimal("50"),
+            ),
             patch("routes.reports.report_branch_scope_id", return_value=2),
             patch(
                 "services.export_service.ExportService.export_to_xlsx",
@@ -227,8 +245,8 @@ class TestPurchasesBranchScopeWave:
             return pq
 
         with (
-            patch("routes.reports.tenant_query", side_effect=tq),
-            patch("routes.reports._scoped_supplier_query", return_value=sup_scoped),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query", return_value=sup_scoped),
             patch("routes.reports.report_branch_scope_id", return_value=6),
         ):
             resp = reports_client.get("/reports/purchases?start_date=2025-01-01&end_date=2025-06-30&supplier_id=3")
@@ -249,7 +267,7 @@ class TestPurchasesBranchScopeWave:
         purchase.status = "confirmed"
         pq = _chain_query_stub(all=[purchase])
         with (
-            patch("routes.reports.tenant_query", return_value=pq),
+            patch("services.reports_query_service.tenant_query", return_value=pq),
             patch("routes.reports.report_branch_scope_id", return_value=3),
             patch(
                 "services.export_service.ExportService.export_to_xlsx",
@@ -366,8 +384,8 @@ class TestReceivablesWave:
         sale.sale_date = datetime(2024, 1, 1)  # naive — triggers tz fix
         sq = _chain_query_stub(all=[sale])
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
-            patch("routes.reports.Customer") as Customer,
+            patch("services.reports_query_service.tenant_query", return_value=sq),
+            patch("models.Customer") as Customer,
             patch("routes.reports.report_branch_scope_id", return_value=2),
         ):
             Customer.query.filter.return_value.filter.return_value.order_by.return_value.limit.return_value.all.return_value = []
@@ -391,7 +409,7 @@ class TestReceivablesWave:
             sales.append(s)
         sq = _chain_query_stub(all=sales)
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
+            patch("services.reports_query_service.tenant_query", return_value=sq),
             patch("routes.reports.report_branch_scope_id", return_value=1),
             patch(
                 "services.export_service.ExportService.export_to_xlsx",
@@ -433,7 +451,7 @@ class TestInventoryWave:
         _configure_user(mock_user)
         wh_chain = _chain_query_stub(all=[])
         with (
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("models.Warehouse") as Warehouse,
@@ -456,12 +474,12 @@ class TestInventoryWave:
             return product_chain
 
         with (
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("models.Warehouse") as Warehouse,
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(20, Decimal("8"))]),
             ),
         ):
@@ -488,9 +506,9 @@ class TestInventoryWave:
         with (
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[10]),
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(20, Decimal("5"))]),
             ),
         ):
@@ -512,11 +530,11 @@ class TestInventoryWave:
         mock_user.is_admin.return_value = False
         wh_chain = _chain_query_stub(all=[])
         with (
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
@@ -537,9 +555,9 @@ class TestInventoryWave:
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[10]),
             patch("utils.branching.user_can_access_branch", return_value=True),
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(20, Decimal("12"))]),
             ),
             patch(
@@ -581,10 +599,10 @@ class TestInventoryWave:
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("utils.branching.user_can_access_branch", return_value=True),
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch("models.Warehouse.query", wh_query),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(20, Decimal("3"))]),
             ),
             patch(
@@ -602,7 +620,7 @@ class TestEntitySearchWave:
         _configure_user(mock_user)
         supplier = SimpleNamespace(id=1, name="Acme Sup", phone="+971")
         scoped = _chain_query_stub(all=[supplier])
-        with patch("routes.reports._scoped_supplier_query", return_value=scoped):
+        with patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query", return_value=scoped):
             resp = reports_client.get("/reports/api/entity-search?type=supplier&q=acme")
             assert resp.status_code == 200
             body = resp.get_json()
@@ -614,7 +632,7 @@ class TestEntitySearchWave:
         _configure_user(mock_user)
         customer = SimpleNamespace(id=2, name="John", phone="050", customer_type="regular")
         scoped = _chain_query_stub(all=[customer])
-        with patch("routes.reports._scoped_customer_query", return_value=scoped):
+        with patch("services.reports_query_service.ReportsQueryService._scoped_customer_query", return_value=scoped):
             resp = reports_client.get("/reports/api/entity-search?type=customer&q=john")
             assert resp.status_code == 200
             body = resp.get_json()
@@ -679,7 +697,7 @@ class TestEntityFragmentWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=None),
-            patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+            patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
             patch("models.Purchase") as Purchase,
             patch("models.Payment") as Payment,
         ):
@@ -701,8 +719,8 @@ class TestEntityFragmentWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=ctx["branch_id"]),
-            patch("routes.reports._scoped_supplier_query", return_value=scoped),
-            patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+            patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query", return_value=scoped),
+            patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
             patch("models.Purchase") as Purchase,
             patch("models.Payment") as Payment,
         ):
@@ -765,7 +783,7 @@ class TestEntityFragmentWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=4),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
@@ -801,7 +819,7 @@ class TestEntityFragmentWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=2),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
@@ -837,7 +855,11 @@ class TestEntityFragmentWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=2),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch(
+                "services.reports_query_service.ReportsQueryService.customer_in_branch_scope",
+                return_value=True,
+            ),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
@@ -865,7 +887,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+                patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -904,7 +926,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+                patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -974,7 +996,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=session_query),
+                patch("services.reports_query_service.db.session.query", side_effect=session_query),
                 patch("models.Sale.query", sale_q),
                 patch("models.Receipt.query", receipt_q),
                 patch("models.Payment.query", payment_q),
@@ -1022,7 +1044,7 @@ class TestEntityFragmentDirectCall:
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=None),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=session_query),
+                patch("services.reports_query_service.db.session.query", side_effect=session_query),
                 patch("models.Sale.query", sale_q),
                 patch("models.Receipt.query") as rq,
                 patch("models.Payment.query") as pq,
@@ -1050,9 +1072,9 @@ class TestEntityFragmentDirectCall:
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=3),
-                patch("routes.reports._scoped_supplier_query", return_value=scoped),
+                patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query", return_value=scoped),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+                patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
                 patch("models.Purchase.query", ctx["purchase_q"]),
                 patch("models.Payment.query") as pay_query,
             ):
@@ -1122,9 +1144,9 @@ class TestEntityFragmentDirectCall:
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=2),
-                patch("routes.reports._scoped_customer_query", return_value=scoped),
+                patch("services.reports_query_service.ReportsQueryService._scoped_customer_query", return_value=scoped),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=session_query),
+                patch("services.reports_query_service.db.session.query", side_effect=session_query),
                 patch("models.Sale.query", sale_q),
                 patch("models.Receipt.query", receipt_q),
                 patch("models.Payment.query", payment_q),
@@ -1170,9 +1192,9 @@ class TestEntityFragmentDirectCall:
                 patch("utils.tenanting.get_active_tenant_id", return_value=1),
                 patch("routes.reports.tenant_get_or_404", return_value=entity),
                 patch("routes.reports.report_branch_scope_id", return_value=2),
-                patch("routes.reports._scoped_customer_query", return_value=scoped),
+                patch("services.reports_query_service.ReportsQueryService._scoped_customer_query", return_value=scoped),
                 patch("routes.reports.render_template", return_value="ok") as render,
-                patch("routes.reports.db.session.query", side_effect=session_query),
+                patch("services.reports_query_service.db.session.query", side_effect=session_query),
                 patch("models.Sale.query", sale_q),
                 patch("models.Receipt.query") as rq,
                 patch("models.Payment.query") as pq,
@@ -1191,7 +1213,7 @@ class TestTopSellingBranchWave:
         row = MagicMock(id=1, name="Hot", total_quantity=50, total_sales=Decimal("5000"))
         with (
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 return_value=_chain_query_stub(all=[row]),
             ),
             patch("routes.reports.report_branch_scope_id", return_value=8),
@@ -1207,8 +1229,11 @@ class TestSalesExportSellerWave:
         mock_user.id = 42
         sq = _chain_query_stub(all=[])
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
-            patch("routes.reports.get_confirmed_sale_paid_aed", return_value=Decimal("0")),
+            patch("services.reports_query_service.tenant_query", return_value=sq),
+            patch(
+                "services.reports_query_service.ReportsQueryService.get_confirmed_sale_paid_aed",
+                return_value=Decimal("0"),
+            ),
             patch(
                 "services.export_service.ExportService.export_to_csv",
                 return_value=_export_io(),
@@ -1292,7 +1317,7 @@ class TestReceivablesExportNaiveDate:
         sale.exchange_rate = Decimal("1")
         sq = _chain_query_stub(all=[sale])
         with (
-            patch("routes.reports.tenant_query", return_value=sq),
+            patch("services.reports_query_service.tenant_query", return_value=sq),
             patch(
                 "services.export_service.ExportService.export_to_csv",
                 return_value=_export_io(),
@@ -1323,9 +1348,9 @@ class TestInventoryStatsWave:
         with (
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(5, Decimal("3"))]),
             ),
         ):
@@ -1341,7 +1366,7 @@ class TestInventoryStatsWave:
         product_chain = _chain_query_stub(all=[])
         with (
             patch(
-                "routes.reports.tenant_query",
+                "services.reports_query_service.tenant_query",
                 side_effect=lambda m: wh_chain if getattr(m, "__name__", "") == "Warehouse" else product_chain,
             ),
             patch("utils.branching.get_accessible_branches", return_value=[]),
@@ -1349,7 +1374,7 @@ class TestInventoryStatsWave:
             patch("utils.branching.user_can_access_branch", return_value=True),
             patch("models.Warehouse.query", wh_query),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
@@ -1370,13 +1395,13 @@ class TestInventoryStatsWave:
             return product_chain
 
         with (
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch("utils.branching.get_accessible_branches", return_value=[]),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("utils.branching.user_can_access_branch", return_value=True),
             patch("models.Warehouse.query", wh_query),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
@@ -1392,10 +1417,10 @@ class TestInventoryStatsWave:
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("utils.branching.user_can_access_branch", return_value=True),
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("models.Warehouse.query", wh_query),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
@@ -1411,10 +1436,10 @@ class TestInventoryStatsWave:
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("utils.branching.user_can_access_branch", return_value=True),
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("models.Warehouse.query", wh_query),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[]),
             ),
         ):
@@ -1429,7 +1454,7 @@ class TestInventoryStatsWave:
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
             patch("utils.branching.user_can_access_branch", return_value=True),
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("models.Warehouse.query", wh_query),
         ):
             resp = reports_client.get("/reports/inventory/export?warehouse_id=10&branch_id=2")
@@ -1454,7 +1479,7 @@ class TestInventoryExportBranchForbidden:
         mock_user.is_admin.return_value = False
         wh_chain = _chain_query_stub(all=[])
         with (
-            patch("routes.reports.tenant_query", return_value=wh_chain),
+            patch("services.reports_query_service.tenant_query", return_value=wh_chain),
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[]),
         ):
             resp = reports_client.get("/reports/inventory/export?warehouse_id=77")
@@ -1474,8 +1499,8 @@ class TestSupplierFragmentFifoWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=2),
-            patch("routes.reports._scoped_supplier_query", return_value=scoped),
-            patch("routes.reports.db.session.query", side_effect=ctx["session_query"]),
+            patch("services.reports_query_service.ReportsQueryService._scoped_supplier_query", return_value=scoped),
+            patch("services.reports_query_service.db.session.query", side_effect=ctx["session_query"]),
             patch("models.Purchase") as Purchase,
             patch("models.Payment") as Payment,
         ):
@@ -1538,14 +1563,14 @@ class TestPartnersCommissionRowLoop:
             return financial_q
 
         with (
-            patch("routes.reports.db.session.query", side_effect=session_query),
-            patch("routes.reports.tenant_query", return_value=_chain_query_stub(all=[])),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.tenant_query", return_value=_chain_query_stub(all=[])),
             patch(
-                "routes.reports._scoped_customer_query",
+                "services.reports_query_service.ReportsQueryService._scoped_customer_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch(
-                "routes.reports._scoped_supplier_query",
+                "services.reports_query_service.ReportsQueryService._scoped_supplier_query",
                 return_value=_chain_query_stub(all=[]),
             ),
             patch("routes.reports.report_branch_scope_id", return_value=9),
@@ -1576,9 +1601,9 @@ class TestInventoryExportExcludeZero:
 
         with (
             patch("utils.branching.get_accessible_warehouse_ids", return_value=[1]),
-            patch("routes.reports.tenant_query", side_effect=tq),
+            patch("services.reports_query_service.tenant_query", side_effect=tq),
             patch(
-                "routes.reports.db.session.query",
+                "services.reports_query_service.db.session.query",
                 side_effect=lambda *a, **k: _chain_query_stub(all=[(6, Decimal("5"))]),
             ),
             patch(
@@ -1659,7 +1684,7 @@ class TestCustomerFragmentFullWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=None),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
@@ -1715,7 +1740,7 @@ class TestCustomerFragmentFullWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=None),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,
@@ -1769,8 +1794,8 @@ class TestCustomerFragmentFullWave:
         with (
             patch("routes.reports.tenant_get_or_404", return_value=entity),
             patch("routes.reports.report_branch_scope_id", return_value=4),
-            patch("routes.reports._scoped_customer_query", return_value=scoped),
-            patch("routes.reports.db.session.query", side_effect=session_query),
+            patch("services.reports_query_service.ReportsQueryService._scoped_customer_query", return_value=scoped),
+            patch("services.reports_query_service.db.session.query", side_effect=session_query),
             patch("models.Sale") as Sale,
             patch("models.Receipt") as Receipt,
             patch("models.Payment") as Payment,

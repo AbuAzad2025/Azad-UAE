@@ -159,9 +159,11 @@ class RestoreDrillService:
 
     @classmethod
     def _count_table(cls, conn, table: str) -> int:
-        from sqlalchemy import text
+        from sqlalchemy import MetaData, Table, func, select
 
-        return int(conn.execute(text(f"SELECT COUNT(*) FROM {table}")).scalar() or 0)
+        metadata = MetaData()
+        reflected = Table(table, metadata, autoload_with=conn)
+        return int(conn.execute(select(func.count()).select_from(reflected)).scalar() or 0)
 
     @classmethod
     def row_count_sanity(cls, scratch_url: str) -> dict[str, Any]:

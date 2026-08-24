@@ -124,8 +124,6 @@ def index():
 @login_required
 @permission_required("manage_customers")
 def export():
-    from models import Payment
-    from models.receipt import Receipt
     from services.export_service import ExportService
 
     fmt = (request.args.get("format") or "csv").strip().lower()

@@ -66,7 +66,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/predict-sales")
         assert resp.status_code == 200
-        assert resp.get_json() == {"forecast": [1, 2]}
+        assert resp.get_json()["data"] == {"forecast": [1, 2]}
         predict.assert_called_once_with(7)
 
     def test_predict_sales_custom_days(self, auth_client, mocker):
@@ -85,7 +85,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/analyze-margins")
         assert resp.status_code == 200
-        assert resp.get_json() == {"margins": []}
+        assert resp.get_json()["data"] == {"margins": []}
         analyze.assert_called_once_with()
 
     def test_detect_patterns(self, auth_client, mocker):
@@ -95,7 +95,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/detect-patterns")
         assert resp.status_code == 200
-        assert resp.get_json() == {"patterns": ["weekly"]}
+        assert resp.get_json()["data"] == {"patterns": ["weekly"]}
         detect.assert_called_once_with()
 
     def test_inventory_health(self, auth_client, mocker):
@@ -105,7 +105,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/inventory-health")
         assert resp.status_code == 200
-        assert resp.get_json() == {"health": "ok"}
+        assert resp.get_json()["data"] == {"health": "ok"}
         health.assert_called_once_with()
 
     def test_deep_analysis(self, auth_client, mocker):
@@ -115,7 +115,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/deep-analysis")
         assert resp.status_code == 200
-        assert resp.get_json() == {"score": 90}
+        assert resp.get_json()["data"] == {"score": 90}
         deep.assert_called_once_with()
 
     def test_cash_flow_prediction_days_param(self, auth_client, mocker):
@@ -134,7 +134,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/churn-prediction")
         assert resp.status_code == 200
-        assert resp.get_json() == {"at_risk": []}
+        assert resp.get_json()["data"] == {"at_risk": []}
         churn.assert_called_once_with()
 
     def test_optimize_inventory(self, auth_client, mocker):
@@ -144,7 +144,7 @@ class TestReadEndpoints:
         )
         resp = auth_client.get("/ai/optimize-inventory")
         assert resp.status_code == 200
-        assert resp.get_json() == {"tips": []}
+        assert resp.get_json()["data"] == {"tips": []}
         optimize.assert_called_once_with()
 
 
@@ -190,13 +190,13 @@ class TestSmartPrice:
     def test_missing_fields_400(self, view_products_client):
         resp = view_products_client.post("/ai/smart-price", json={})
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Product and Customer required"
+        assert resp.get_json()["message"] == "Product and Customer required"
 
     def test_non_json_body_400_not_500(self, view_products_client):
         """Regression: unguarded get_json(silent=True) used to 500 on non-JSON."""
         resp = view_products_client.post("/ai/smart-price", data="not json", content_type="text/plain")
         assert resp.status_code == 400
-        assert resp.get_json()["error"] == "Product and Customer required"
+        assert resp.get_json()["message"] == "Product and Customer required"
 
     def test_not_found_404(self, view_products_client, mocker):
         mocker.patch("services.ai_service.AIService.smart_pricing_engine", return_value=None)
@@ -213,7 +213,7 @@ class TestSmartPrice:
             json={"product_id": 1, "customer_id": 2, "quantity": 5},
         )
         assert resp.status_code == 200
-        assert resp.get_json() == {"price": 42}
+        assert resp.get_json()["data"] == {"price": 42}
         engine.assert_called_once_with(1, 2, 5)
 
 
@@ -238,9 +238,9 @@ class TestBusinessInsights:
         )
         resp = auth_client.get("/ai/business-insights")
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
-        assert data["insights"] == [
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["insights"] == [
             {
                 "icon": "⚠️",
                 "title": "Low stock",

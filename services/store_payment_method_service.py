@@ -82,6 +82,10 @@ class StorePaymentMethodService:
     @staticmethod
     def ensure_defaults(tenant_id: int | None = None) -> None:
         tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
+        from models import Tenant
+
+        if db.session.get(Tenant, tenant_id) is None:
+            return
         with atomic_transaction("ensure_payment_defaults"):
             for item in DEFAULT_METHODS:
                 existing = StorePaymentMethod.query.filter_by(tenant_id=tenant_id, code=item["code"]).first()

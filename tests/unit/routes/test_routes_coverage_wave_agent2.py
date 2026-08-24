@@ -207,7 +207,8 @@ class TestChatOwnerExecuteElif:
             resp = client.post("/ai/chat", json={"message": "افعل شيئا"})
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["action_executed"] is True
+        assert body["success"] is True
+        assert body["data"]["action_executed"] is True
         proc.assert_called_once()
 
 

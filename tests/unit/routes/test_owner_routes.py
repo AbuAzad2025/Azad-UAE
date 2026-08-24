@@ -575,6 +575,13 @@ def _owner_route_patches(mock_db=None, **overrides):
             ),
         ),
         (
+            "services.user_service.UserService.user_profile_context",
+            patch(
+                "services.user_service.UserService.user_profile_context",
+                return_value={"stats": {}, "recent_sales": [], "recent_audits": []},
+            ),
+        ),
+        (
             "services.role_service.RoleService.get_roles_permissions_context",
             patch(
                 "services.role_service.RoleService.get_roles_permissions_context",
@@ -992,13 +999,20 @@ def _owner_route_patches(mock_db=None, **overrides):
             "Branch",
             "Tenant",
         ):
-            stack.enter_context(
-                patch(
-                    f"models.{model_name}",
-                    _model_class() if model_name != "Tenant" else tenant_cls,
-                )
-            )
+            if model_name == "Tenant":
+                patched_cls = tenant_cls
+            elif model_name == "User":
+                # UserService.get_user_or_404 imports the sub-module class and
+                # calls User.query.get_or_404 — resolve to a mock user entity.
+                patched_cls = _model_class(entity=user_entity)
+                patched_cls.query.get_or_404.side_effect = lambda pk: _mock_user_entity(id=pk)
+            else:
+                patched_cls = _model_class()
+            stack.enter_context(patch(f"models.{model_name}", patched_cls))
         stack.enter_context(patch("models.ProductWarehouseCost", _model_class()))
+        # OwnerOpsService resolves tenants via the sub-module class, so patch
+        # it alongside the re-exported `models.Tenant`.
+        stack.enter_context(patch("models.tenant.Tenant", tenant_cls))
         # ── Propagate ALL patched routes.owner attributes to submodules ──
         # Submodules do `from routes.owner import X` at module load time,
         # creating local references. Patching routes.owner.X doesn't affect
@@ -1922,13 +1936,13 @@ class TestOwnerExtendedCoverage:
 
     def test_tenant_delete_with_users(self, owner_client):
         user_q = _model_query(count=3)
-        with patch("routes.owner.User.query", new=user_q):
+        with patch("models.User.query", new=user_q):
             resp = owner_client.post("/owner/tenants/2/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_tenant_delete_success(self, owner_client):
         user_q = _model_query(count=0)
-        with patch("routes.owner.User.query", new=user_q):
+        with patch("models.User.query", new=user_q):
             resp = owner_client.post("/owner/tenants/2/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
@@ -2014,21 +2028,21 @@ class TestOwnerExtendedCoverage:
 
     def test_user_delete_self_blocked(self, owner_client, bypass_owner_auth):
         target = _mock_user_entity(id=bypass_owner_auth.id)
-        with patch("routes.owner.User.query") as user_query:
+        with patch("models.User.query") as user_query:
             user_query.get_or_404.return_value = target
             resp = owner_client.post("/owner/users/42/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_user_delete_owner_blocked(self, owner_client):
         target = _mock_user_entity(id=9, is_owner=True)
-        with patch("routes.owner.User.query") as user_query:
+        with patch("models.User.query") as user_query:
             user_query.get_or_404.return_value = target
             resp = owner_client.post("/owner/users/9/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
 
     def test_user_delete_success(self, owner_client):
         target = _mock_user_entity(id=9, is_owner=False)
-        with patch("routes.owner.User.query") as user_query:
+        with patch("models.User.query") as user_query:
             user_query.get_or_404.return_value = target
             resp = owner_client.post("/owner/users/9/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
@@ -3244,7 +3258,7 @@ class TestOwnerGapClosure:
         assert resp.status_code in (302, 303, 200)
         tenant_cls = _tenant_class(_mock_tenant())
         tenant_cls.query.filter_by.return_value.first.return_value = _mock_tenant()
-        with patch("routes.owner.tenants.Tenant", tenant_cls):
+        with patch("models.tenant.Tenant", tenant_cls):
             resp2 = owner_client.post(
                 "/owner/tenants/create",
                 data={"name_ar": "شركة", "slug": "dup", "default_currency": "AED"},
@@ -3253,7 +3267,7 @@ class TestOwnerGapClosure:
         assert resp2.status_code in (302, 303)
         tenant_cls.query.filter_by.return_value.first.return_value = None
         with (
-            patch("routes.owner.tenants.Tenant", tenant_cls),
+            patch("models.tenant.Tenant", tenant_cls),
             patch("routes.owner.tenants.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
@@ -3269,14 +3283,14 @@ class TestOwnerGapClosure:
         tenant = _mock_tenant(id=1)
         tenant_cls = _tenant_class(tenant)
         tenant_cls.query.get_or_404.return_value = tenant
-        with patch("routes.owner.Tenant", tenant_cls):
+        with patch("models.tenant.Tenant", tenant_cls):
             resp = owner_client.post("/owner/tenants/1/delete", follow_redirects=False)
         assert resp.status_code in (302, 303, 200)
         tenant2 = _mock_tenant(id=2)
         tenant_cls2 = _tenant_class(tenant2)
         tenant_cls2.query.get_or_404.return_value = tenant2
         with (
-            patch("routes.owner.Tenant", tenant_cls2),
+            patch("models.tenant.Tenant", tenant_cls2),
             patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
@@ -3295,16 +3309,10 @@ class TestOwnerGapClosure:
         with _owner_route_patches():
             resp = app.test_client().post("/owner/api/toggle-warehouse-negative", data={})
         assert resp.status_code in (400, 404)
-        wh = MagicMock()
-        wh.allow_negative_inventory = False
-        wh_cls = _model_class()
-        wh_cls.query.filter_by.return_value.first.return_value = wh
         with (
             _owner_route_patches(),
             patch("utils.decorators.is_global_owner_user", return_value=False),
             patch("utils.tenanting.get_active_tenant_id", return_value=1),
-            patch("routes.owner.settings.Warehouse", wh_cls),
-            patch("routes.owner.settings.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
             mock_safety_session.commit.side_effect = RuntimeError("wh fail")
@@ -3342,18 +3350,20 @@ class TestOwnerGapClosure:
         assert resp4.status_code == 500
 
     def test_api_tenant_toggle_and_package_edges(self, owner_client):
-        with patch("routes.owner.tenants.db") as mock_db:
-            mock_db.session.get.return_value = None
+        with patch("services.owner_ops_service.OwnerOpsService.get_tenant", return_value=None):
             resp = owner_client.post("/owner/api/tenant/99/toggle-status", json={})
         assert resp.status_code == 404
         default_tenant = _mock_tenant(id=1)
-        with patch("routes.owner.tenants.db") as mock_db:
-            mock_db.session.get.return_value = default_tenant
+        with patch(
+            "services.owner_ops_service.OwnerOpsService.get_tenant",
+            return_value=default_tenant,
+        ):
             resp2 = owner_client.post("/owner/api/tenant/1/toggle-status", json={})
         assert resp2.status_code == 400
-        with patch("routes.owner.tenants.db") as mock_db:
-            mock_db.session.get.side_effect = RuntimeError("toggle fail")
-            mock_db.session.rollback = MagicMock()
+        with patch(
+            "services.owner_ops_service.OwnerOpsService.get_tenant",
+            side_effect=RuntimeError("toggle fail"),
+        ):
             resp3 = owner_client.post("/owner/api/tenant/2/toggle-status", json={})
         assert resp3.status_code == 500
         resp4 = owner_client.post("/owner/api/tenant/2/update-package", data={})

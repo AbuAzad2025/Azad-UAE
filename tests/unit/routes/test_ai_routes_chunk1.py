@@ -32,8 +32,9 @@ class TestRecommendPrice:
         )
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["recommended_price"] == 125.0
-        assert body["base_price"] == 100.0
+        assert body["success"] is True
+        assert body["data"]["recommended_price"] == 125.0
+        assert body["data"]["base_price"] == 100.0
         mock_ai_service.recommend_price.assert_called_once_with(1, 2)
 
     def test_missing_json_body_returns_400(self, ai_client, mock_ai_service):
@@ -43,7 +44,7 @@ class TestRecommendPrice:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "JSON" in resp.get_json()["error"]
+        assert "JSON" in resp.get_json()["message"]
         mock_ai_service.recommend_price.assert_not_called()
 
     def test_empty_json_body_returns_400(self, ai_client, mock_ai_service):
@@ -52,7 +53,7 @@ class TestRecommendPrice:
             json={},
         )
         assert resp.status_code == 400
-        assert "JSON" in resp.get_json()["error"]
+        assert "JSON" in resp.get_json()["message"]
         mock_ai_service.recommend_price.assert_not_called()
 
     def test_missing_product_id_returns_400(self, ai_client, mock_ai_service):
@@ -78,7 +79,7 @@ class TestRecommendPrice:
             json={"product_id": 999, "customer_id": 999},
         )
         assert resp.status_code == 404
-        assert "Not found" in resp.get_json()["error"]
+        assert "Not found" in resp.get_json()["message"]
 
     def test_timeout_error_returns_503(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.side_effect = TimeoutError("API timeout")
@@ -87,7 +88,7 @@ class TestRecommendPrice:
             json={"product_id": 1, "customer_id": 2},
         )
         assert resp.status_code == 503
-        assert "timed out" in resp.get_json()["error"]
+        assert "timed out" in resp.get_json()["message"]
 
     def test_generic_exception_returns_503(self, ai_client, mock_ai_service):
         mock_ai_service.recommend_price.side_effect = RuntimeError("connection reset")
@@ -96,7 +97,7 @@ class TestRecommendPrice:
             json={"product_id": 1, "customer_id": 2},
         )
         assert resp.status_code == 503
-        assert "error" in resp.get_json()["error"]
+        assert "error" in resp.get_json()["message"]
 
     def test_content_type_not_json_returns_400(self, ai_client, mock_ai_service):
         resp = ai_client.post(
@@ -105,7 +106,7 @@ class TestRecommendPrice:
             content_type="text/plain",
         )
         assert resp.status_code == 400
-        assert "JSON" in resp.get_json()["error"]
+        assert "JSON" in resp.get_json()["message"]
         mock_ai_service.recommend_price.assert_not_called()
 
 
@@ -125,7 +126,8 @@ class TestCheckStock:
         )
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["type"] == "success"
+        assert body["success"] is True
+        assert body["data"]["type"] == "success"
         mock_ai_service.check_stock_alert.assert_called_once_with(1, 5)
 
     def test_low_stock_warning(self, ai_client, mock_ai_service):
@@ -138,7 +140,7 @@ class TestCheckStock:
             json={"product_id": 1, "quantity": 10},
         )
         assert resp.status_code == 200
-        assert resp.get_json()["type"] == "warning"
+        assert resp.get_json()["data"]["type"] == "warning"
 
     def test_insufficient_stock_error(self, ai_client, mock_ai_service):
         mock_ai_service.check_stock_alert.return_value = {
@@ -150,7 +152,7 @@ class TestCheckStock:
             json={"product_id": 1, "quantity": 10},
         )
         assert resp.status_code == 200
-        assert resp.get_json()["type"] == "error"
+        assert resp.get_json()["data"]["type"] == "error"
 
     def test_missing_json_body_returns_400(self, ai_client, mock_ai_service):
         resp = ai_client.post(
@@ -159,7 +161,7 @@ class TestCheckStock:
             content_type="application/json",
         )
         assert resp.status_code == 400
-        assert "JSON" in resp.get_json()["error"]
+        assert "JSON" in resp.get_json()["message"]
         mock_ai_service.check_stock_alert.assert_not_called()
 
     def test_empty_json_body_returns_400(self, ai_client, mock_ai_service):
@@ -181,7 +183,7 @@ class TestCheckStock:
             json={"product_id": 1, "quantity": "abc"},
         )
         assert resp.status_code == 422
-        assert "number" in resp.get_json()["error"].lower()
+        assert "number" in resp.get_json()["message"].lower()
         mock_ai_service.check_stock_alert.assert_not_called()
 
     def test_quantity_negative_allowed(self, ai_client, mock_ai_service):
@@ -201,7 +203,7 @@ class TestCheckStock:
             json={"product_id": 1, "quantity": 5},
         )
         assert resp.status_code == 503
-        assert "timed out" in resp.get_json()["error"]
+        assert "timed out" in resp.get_json()["message"]
 
     def test_generic_exception_returns_503(self, ai_client, mock_ai_service):
         mock_ai_service.check_stock_alert.side_effect = RuntimeError("service down")
@@ -210,7 +212,7 @@ class TestCheckStock:
             json={"product_id": 1, "quantity": 5},
         )
         assert resp.status_code == 503
-        assert "error" in resp.get_json()["error"]
+        assert "error" in resp.get_json()["message"]
 
 
 # ===========================================================================
@@ -235,27 +237,28 @@ class TestAnalyzeCustomer:
         resp = ai_client.get("/ai/analyze-customer/42")
         assert resp.status_code == 200
         body = resp.get_json()
-        assert body["customer_name"] == "test-customer"
-        assert body["risk_level"] == "low"
+        assert body["success"] is True
+        assert body["data"]["customer_name"] == "test-customer"
+        assert body["data"]["risk_level"] == "low"
         mock_ai_service.analyze_customer_behavior.assert_called_once_with(42)
 
     def test_customer_not_found_returns_404(self, ai_client, mock_ai_service):
         mock_ai_service.analyze_customer_behavior.return_value = None
         resp = ai_client.get("/ai/analyze-customer/999")
         assert resp.status_code == 404
-        assert "not found" in resp.get_json()["error"].lower()
+        assert "not found" in resp.get_json()["message"].lower()
 
     def test_timeout_error_returns_503(self, ai_client, mock_ai_service):
         mock_ai_service.analyze_customer_behavior.side_effect = TimeoutError("API timeout")
         resp = ai_client.get("/ai/analyze-customer/1")
         assert resp.status_code == 503
-        assert "timed out" in resp.get_json()["error"]
+        assert "timed out" in resp.get_json()["message"]
 
     def test_generic_exception_returns_503(self, ai_client, mock_ai_service):
         mock_ai_service.analyze_customer_behavior.side_effect = RuntimeError("LLM unavailable")
         resp = ai_client.get("/ai/analyze-customer/1")
         assert resp.status_code == 503
-        assert "error" in resp.get_json()["error"]
+        assert "error" in resp.get_json()["message"]
 
     def test_non_existent_route_returns_404(self, ai_client):
         resp = ai_client.get("/ai/analyze-customer/abc")

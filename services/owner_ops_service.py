@@ -173,9 +173,10 @@ class OwnerOpsService:
     @staticmethod
     def card_vault_context(page, customer_id, tid):
         """Paginated vault listing plus aggregate stats, scoped when tid set."""
+        from sqlalchemy import func
+
         from extensions import db
         from models import CardVault
-        from sqlalchemy import func
 
         query = CardVault.query.filter_by(is_active=True)
         if customer_id:

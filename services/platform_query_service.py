@@ -248,7 +248,6 @@ class PlatformQueryService:
     def analytics_overdue_customer_candidates(user):
         """Active customers (tenant + branch scoped) for overdue scanning."""
         from models import Customer
-
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)
@@ -261,9 +260,8 @@ class PlatformQueryService:
     @staticmethod
     def analytics_today_sales(user, day):
         """Confirmed sales dated ``day`` (tenant + branch scoped)."""
-        from models import Sale
-
         from extensions import db
+        from models import Sale
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)
@@ -276,9 +274,8 @@ class PlatformQueryService:
     @staticmethod
     def analytics_today_payments(user, day):
         """Payments dated ``day`` (tenant + branch scoped)."""
-        from models import Payment
-
         from extensions import db
+        from models import Payment
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)
@@ -292,7 +289,6 @@ class PlatformQueryService:
     def analytics_top_customers(user, limit):
         """Active customers ordered by lifetime purchases."""
         from models import Customer
-
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)
@@ -306,7 +302,6 @@ class PlatformQueryService:
     def analytics_low_stock_products(user):
         """Active products at or below their alert threshold."""
         from models import Product
-
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)
@@ -321,9 +316,8 @@ class PlatformQueryService:
         """Daily confirmed revenue since ``since`` (tenant + branch scoped)."""
         from sqlalchemy import func
 
-        from models import Sale
-
         from extensions import db
+        from models import Sale
         from utils.tenanting import get_active_tenant_id
 
         tid = get_active_tenant_id(user)

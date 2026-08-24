@@ -1816,6 +1816,7 @@ class GLService:
     @staticmethod
     def get_admin_dashboard_stats():
         """Counts and lists powering the ledger admin dashboard."""
+        from models import Cheque, PaymentVault
         from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query
         from utils.tenanting import tenant_query
 
@@ -1883,6 +1884,7 @@ class GLService:
 
     @staticmethod
     def list_payment_vaults():
+        from models import PaymentVault
         from utils.gl_tenant import scoped_model_query
 
         return scoped_model_query(PaymentVault).all()

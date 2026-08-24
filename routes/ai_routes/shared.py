@@ -7,8 +7,6 @@ from datetime import UTC, datetime
 from flask_babel import gettext
 from flask_login import current_user
 
-from utils.api_response import error_response
-
 from ai_knowledge.core.conversation_store import (
     clear_context as _clear_conversation_context,
 )
@@ -21,6 +19,7 @@ from ai_knowledge.core.conversation_store import (
 from extensions import db
 from services.ai_service import AIService
 from utils.ai_access import get_ai_access_state
+from utils.api_response import error_response
 from utils.context_managers import AutoSaveCtx as _AutoSaveCtx
 from utils.db_safety import atomic_transaction
 from utils.sanitizer import InputSanitizer
