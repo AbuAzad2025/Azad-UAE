@@ -44,7 +44,7 @@ stripe>=8.0.0,<17
 # Optional integrations (enable when configured)
 elasticsearch>=9.5.0,<10
 forex-python==1.9.2
-cachelib==0.15.4
+cachelib==0.16.0
 bleach==6.4.0
 markupsafe==3.0.3
 jsmin>=3.0.1
