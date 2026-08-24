@@ -581,11 +581,13 @@
             backgroundColor: 'rgba(234, 179, 8, 0.7)'
           }]
         },
-        options: {
-          indexAxis: 'y',
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } }
-        }
+          options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { x: { beginAtZero: true } },
+            plugins: { legend: { display: false } }
+          }
       });
     }).catch(function() {});
   }
