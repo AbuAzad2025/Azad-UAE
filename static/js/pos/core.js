@@ -62,24 +62,53 @@ const tenantPosSymbol = document
 if (baseCurrency && tenantPosSymbol) CURRENCY_SYMBOLS[baseCurrency] = tenantPosSymbol;
 const currencySymbolFor = (code) => CURRENCY_SYMBOLS[code] || code;
 const warehouseParam = (sep = "&") => {
-	const w = qs("#warehouseId").value;
+	const el = qs("#warehouseId");
+	const w = el ? String(el.value || "").trim() : "";
 	return w ? `${sep}warehouse_id=${encodeURIComponent(w)}` : "";
+};
+const _unwrapEnvelope = (payload) => {
+	if (
+		payload &&
+		typeof payload === "object" &&
+		!Array.isArray(payload) &&
+		"success" in payload &&
+		"data" in payload
+	) {
+		return payload.data;
+	}
+	return payload;
 };
 const fetchJson = async (url) => {
 	const r = await fetch(url, {
 		credentials: "same-origin",
 		headers: { Accept: "application/json" },
 	});
+	const raw = await r.json().catch(() => null);
+	// 404 is a valid business case for product lookup — surface the translated message
 	if (r.status === 404) {
-		const j = await r.json().catch(() => ({}));
-		return { ok: false, error: j.error || "غير موجود" };
+		const msg =
+			(raw && (raw.message || raw.error)) ||
+			(raw?.data && (raw.data.message || raw.data.error)) ||
+			"غير موجود";
+		return { ok: false, error: String(msg) };
 	}
 	if (!r.ok) {
-		const j = await r.json().catch(() => ({}));
-		return { ok: false, error: j.error || `HTTP ${r.status}` };
+		const msg =
+			(raw && (raw.message || raw.error)) ||
+			(raw?.data && (raw.data.message || raw.data.error)) ||
+			`HTTP ${r.status}`;
+		return { ok: false, error: String(msg) };
 	}
-	const data = await r.json();
-	return { ok: true, data };
+	// Success envelope: {success:true, data:...} — unwrap to inner data for callers.
+	// Raw arrays (legacy test mocks) and plain objects pass through unchanged.
+	if (raw && typeof raw === "object" && "success" in raw) {
+		if (!raw.success) {
+			const msg = raw.message || raw.error || `HTTP ${r.status}`;
+			return { ok: false, error: String(msg) };
+		}
+		return { ok: true, data: _unwrapEnvelope(raw) };
+	}
+	return { ok: true, data: raw };
 };
 
 export {

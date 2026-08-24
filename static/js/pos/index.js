@@ -162,6 +162,16 @@ qs("#productSearch").addEventListener("keydown", function (e) {
 qs("#warehouseId").addEventListener("change", () => {
 	const q = qs("#productSearch").value.trim();
 	if (q) void runProductSearch(q);
+	else {
+		// No active search query → reload the grid for the selected warehouse/category
+		const activeCat = document.querySelector("#posCategories .pos-cat.active");
+		const catId = activeCat ? activeCat.getAttribute("data-cat") : "";
+		void loadProducts(catId || "");
+		// Re-hydrate offline catalog for the new warehouse filter
+		if (window.posOfflineCatalog) {
+			void window.posOfflineCatalog.hydrateCatalog({ warehouseParam: warehouseParam("?") });
+		}
+	}
 });
 qs("#clearProductSearch").addEventListener("click", () => {
 	qs("#productSearch").value = "";
@@ -441,21 +451,70 @@ const orderTypeSel = qs("#orderType");
 if (orderTypeSel) orderTypeSel.addEventListener("change", toggleTableField);
 
 if (tablesBtn) {
-	tablesBtn.addEventListener("click", loadFloors);
+	tablesBtn.addEventListener("click", async () => {
+		try {
+			await loadFloors();
+		} catch (_) {}
+		// Always show the tables modal after attempting to load floors
+		if (window.$?.("#posTablesModal").modal) {
+			window.$("#posTablesModal").modal("show");
+		} else {
+			const modal = qs("#posTablesModal");
+			if (modal) modal.classList.remove("d-none");
+		}
+	});
 	const clearT = qs("#posTableClear");
 	if (clearT)
 		clearT.addEventListener("click", () => {
 			state.selectedTable = null;
 			const sel = qs("#posTableSelected");
 			if (sel) sel.textContent = "";
-			if (tablesBtn) tablesBtn.title = "إدارة الطاولات";
+			if (tablesBtn) {
+				tablesBtn.title = "إدارة الطاولات";
+				tablesBtn.classList.remove("has-selection");
+			}
 		});
 }
 
 if (holdBtn) {
 	holdBtn.addEventListener("click", async () => {
-		const list = JSON.parse(localStorage.getItem(HOLD_KEY) || "[]");
+		// Resume path: empty cart → try server parked carts first, then local hold
 		if (!state.cart.length) {
+			// Try server-side parked carts when online
+			try {
+				const r = await fetch("/pos/api/carts?limit=5", {
+					credentials: "same-origin",
+					headers: { Accept: "application/json" },
+				});
+				const j = await r.json().catch(() => ({}));
+				const serverCarts = j.data?.carts || j.carts || [];
+				if (Array.isArray(serverCarts) && serverCarts.length) {
+					const last = serverCarts[serverCarts.length - 1];
+					try {
+						const rr = await fetch(`/pos/api/carts/${last.id}`, {
+							credentials: "same-origin",
+							headers: { Accept: "application/json" },
+						});
+						const jj = await rr.json().catch(() => ({}));
+						const detail = jj.data?.cart || jj.cart || jj.data;
+						if (detail?.payload) {
+							const p =
+								typeof detail.payload === "string" ? JSON.parse(detail.payload) : detail.payload;
+							state.cart = p.cart || p.lines || [];
+							state.customer = p.customer || null;
+							state.selectedTable = p.table || null;
+							state.idemKey = newCartKey();
+							if (qs("#orderNote") && p.note) qs("#orderNote").value = p.note;
+							await renderCart();
+							customerHint();
+							showAlert("تم استئناف الفاتورة المعلّقة (خادم)", "success");
+							return;
+						}
+					} catch (_) {}
+				}
+			} catch (_) {}
+			// Fallback to local hold
+			const list = JSON.parse(localStorage.getItem(HOLD_KEY) || "[]");
 			if (!list.length) {
 				showAlert("لا توجد فواتير معلّقة", "warning");
 				return;
@@ -472,19 +531,41 @@ if (holdBtn) {
 			showAlert("تم استئناف الفاتورة المعلّقة", "success");
 			return;
 		}
-		list.push({
+		// Park path: try server first when online, always mirror to local for offline resilience
+		const payload = {
 			cart: state.cart,
 			customer: state.customer,
 			table: state.selectedTable,
 			note: qs("#orderNote") ? qs("#orderNote").value || "" : "",
 			ts: Date.now(),
-		});
+		};
+		let serverParked = false;
+		try {
+			const r = await fetch("/pos/api/carts/park", {
+				method: "POST",
+				credentials: "same-origin",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+					"X-CSRFToken": csrf,
+				},
+				body: JSON.stringify({ payload, label: `Hold ${new Date().toLocaleString("ar-EG")}` }),
+			});
+			if (r.ok) serverParked = true;
+		} catch (_) {}
+		// Mirror to localStorage for offline fallback
+		const list = JSON.parse(localStorage.getItem(HOLD_KEY) || "[]");
+		list.push(payload);
 		localStorage.setItem(HOLD_KEY, JSON.stringify(list));
 		state.cart = [];
 		state.idemKey = newCartKey();
 		await renderCart();
 		if (qs("#orderNote")) qs("#orderNote").value = "";
-		showAlert(`${window.t("تم تعليق الفاتورة")} (${heldCount()} ${window.t("معلّقة")})`, "success");
+		const suffix = serverParked ? "" : " (محلياً)";
+		showAlert(
+			`${window.t("تم تعليق الفاتورة")} (${heldCount()} ${window.t("معلّقة")})${suffix}`,
+			"success",
+		);
 	});
 }
 

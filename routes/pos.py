@@ -277,7 +277,7 @@ def _paused_session_error_response():
 
 def _pos_register_context():
     from services.industry_service import get_pos_profile
-    from utils.currency_utils import resolve_default_currency
+    from utils.currency_utils import get_currency_symbol, resolve_default_currency
     from utils.tax_settings import get_prices_include_vat
 
     warehouses = [
@@ -285,11 +285,16 @@ def _pos_register_context():
     ]
     tenant = Tenant.get_current(user=current_user)
     tenant_default_currency = resolve_default_currency(tenant) if tenant else "AED"
+    # Symbol for display (e.g. AED -> د.إ), code is kept in tenant_default_currency
+    try:
+        symbol = get_currency_symbol(tenant_default_currency) or tenant_default_currency or "AED"
+    except Exception:
+        symbol = tenant_default_currency or "AED"
     branch_id = get_active_branch_id()
     return {
         "warehouses": warehouses,
         "tenant_default_currency": tenant_default_currency,
-        "currency_symbol": tenant_default_currency or "AED",
+        "currency_symbol": symbol,
         "prices_include_vat": get_prices_include_vat(
             tenant_id=get_active_tenant_id(current_user),
             branch_id=branch_id,
@@ -566,13 +571,51 @@ def api_products():
     warehouse_id = request.args.get("warehouse_id", type=int)
     category_id = request.args.get("category_id", type=int)
 
-    products, stock_map, _ = search_pos_products(
-        q,
-        user=current_user,
-        warehouse_id=warehouse_id,
-        per_page=per_page,
-        category_id=category_id,
-    )
+    try:
+        products, stock_map, _ = search_pos_products(
+            q,
+            user=current_user,
+            warehouse_id=warehouse_id,
+            per_page=per_page,
+            category_id=category_id,
+        )
+    except Exception as exc:
+        current_app.logger.error("POS api_products failed: %s", exc, exc_info=True)
+        return error_response(message=gettext("تعذر تحميل المنتجات. حاول مرة أخرى."), status_code=500)
+    # Visible-products scoping can hide products when a cashier's branch has no
+    # stock movements yet (new warehouse). For the initial grid (no query, no
+    # category) we fall back to tenant-scoped active products so the grid is
+    # never permanently empty for a valid catalog.
+    if not products and not q and not category_id:
+        try:
+            from models import Product
+
+            fallback = (
+                tenant_query(Product)
+                .filter_by(is_active=True)
+                .order_by(Product.name)
+                .limit(max(1, min(int(per_page or 20), 50)))
+                .all()
+            )
+            if fallback:
+                products = fallback
+                # Rebuild a minimal stock map for fallback products
+                try:
+                    from utils.branching import get_accessible_warehouse_ids, get_branch_stock_map
+
+                    wh_ids = get_accessible_warehouse_ids(current_user)
+                    if warehouse_id:
+                        wh_ids = [warehouse_id]
+                    stock_map = (
+                        get_branch_stock_map(product_ids=[p.id for p in products], warehouse_ids=wh_ids)
+                        if wh_ids
+                        else {}
+                    )
+                except Exception as inner_exc:  # noqa: S110
+                    current_app.logger.debug("POS fallback stock map failed: %s", inner_exc)
+                    stock_map = {}
+        except Exception as exc:  # noqa: S110
+            current_app.logger.debug("POS fallback products failed: %s", exc)
     results = [serialize_pos_product(p, stock_map, warehouse_id=warehouse_id) for p in products]
     return success_response(data=results)
 

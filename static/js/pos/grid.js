@@ -78,16 +78,20 @@
 				credentials: "same-origin",
 				headers: { Accept: "application/json" },
 			});
-			const data = await r.json();
-			if (!data.success) return;
+			const envelope = await r.json();
+			if (!envelope.success) return;
+			const payload = envelope.data || envelope;
 			sel.innerHTML = "";
-			(data.order_types || []).forEach((ot) => {
+			const types = payload.order_types || envelope.order_types || [];
+			types.forEach((ot) => {
 				const o = document.createElement("option");
 				o.value = ot.code;
-				o.textContent = ot.display_name;
+				o.textContent = ot.display_name || ot.name_ar || ot.code;
 				sel.appendChild(o);
 			});
-			if (data.default_code) sel.value = data.default_code;
+			const def = payload.default_code || envelope.default_code;
+			if (def) sel.value = def;
+			else if (types.length) sel.value = types[0].code;
 			toggleTableField();
 		} catch (_) {}
 	};
@@ -109,7 +113,8 @@
 				credentials: "same-origin",
 				headers: { Accept: "application/json" },
 			});
-			const tables = await r.json();
+			const envelope = await r.json();
+			const tables = Array.isArray(envelope) ? envelope : envelope.data || envelope.tables || [];
 			(tables || []).forEach((t) => {
 				const o = document.createElement("option");
 				o.value = t.id;
@@ -420,10 +425,13 @@
 	const loadCategories = async () => {
 		try {
 			const r = await fetch("/pos/api/categories");
-			const data = await r.json();
+			const envelope = await r.json();
+			if (!r.ok) throw new Error(envelope.message || envelope.error || `HTTP ${r.status}`);
+			const cats = Array.isArray(envelope) ? envelope : envelope.data || [];
 			const list = qs("#categoryList");
+			if (!list) return;
 			list.innerHTML = "";
-			data.forEach((cat) => {
+			(cats || []).forEach((cat) => {
 				const div = document.createElement("div");
 				div.className = "cat-item";
 				div.dataset.catId = cat.id;
@@ -455,19 +463,21 @@
 			if (wid) params.append("warehouse_id", wid);
 			params.append("per_page", "40");
 			const r = await fetch(`/pos/api/products?${params.toString()}`);
-			const data = await r.json();
+			const envelope = await r.json();
+			if (!r.ok) throw new Error(envelope.message || envelope.error || `HTTP ${r.status}`);
+			const data = Array.isArray(envelope) ? envelope : envelope.data || [];
 			state.lastProductResults = data;
-			if (data.length > 0) {
+			if (Array.isArray(data) && data.length > 0) {
 				renderProductGrid(data);
 				qs("#productResults")?.classList.add("d-none");
 			} else {
 				qs("#productGrid").innerHTML =
-					'<div class="text-center text-muted py-5 w-100">لا توجد منتجات</div>';
+					'<div class="text-center text-muted py-5 w-100">لا توجد منتجات في هذه الفئة<br><span class="small">جرّب تغيير التصنيف أو البحث بالباركود</span></div>';
 			}
 		} catch (_) {
 			showAlert("تعذر تحميل المنتجات. تحقق من الاتصال وأعد المحاولة.", "danger");
 			qs("#productGrid").innerHTML =
-				'<div class="text-center text-danger py-5 w-100">تعذر تحميل المنتجات — أعد المحاولة</div>';
+				'<div class="text-center text-danger py-5 w-100">تعذر تحميل المنتجات — أعد المحاولة<br><button class="btn btn-sm btn-outline-secondary mt-2" onclick="location.reload()">تحديث</button></div>';
 		}
 		qs("#productLoading")?.classList.add("d-none");
 	};

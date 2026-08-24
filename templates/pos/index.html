@@ -80,10 +80,10 @@
       <div id="customerSelectedHint" class="text-muted small"></div>
       <div id="productLoading" class="small text-info d-none"><i class="fas fa-spinner fa-spin"></i> {{ t('Searching') }}</div>
 
-      <div id="posCategories" class="pos-categories"></div>
+      <div id="posCategories" class="pos-categories" aria-label="{{ _('التصنيفات') }}"></div>
 
-      <div id="posProductGrid" class="pos-products">
-        <div class="pos-cart-empty">{{ _('اختر فئة لعرض المنتجات') }}</div>
+      <div id="posProductGrid" class="pos-products" role="grid" aria-label="{{ _('شبكة المنتجات') }}">
+        <div class="pos-cart-empty"><i class="fas fa-spinner fa-spin"></i> {{ _('جاري تحميل المنتجات...') }}</div>
       </div>
 
     </div>
@@ -97,9 +97,9 @@
       </div>
 
       <div class="pos-cart-scroll">
-        <table class="pos-cart-table">
+        <table class="pos-cart-table" aria-label="{{ _('السلة') }}">
           <tbody id="cartBody">
-            <tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">{{ t('Cart Empty') }}</td></tr>
+            <tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
           </tbody>
         </table>
       </div>

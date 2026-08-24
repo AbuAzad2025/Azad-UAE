@@ -236,10 +236,20 @@ body.pos-layout .erp-mobile-nav {
 /* ---------- main grid ---------- */
 .pos-grid {
 	display: grid;
-	grid-template-columns: 1fr 400px;
+	grid-template-columns: minmax(0, 1fr) 380px;
 	gap: 16px;
 	align-items: start;
 	flex: 1;
+	min-width: 0;
+}
+
+/* RTL balance: keep visual hierarchy natural for Arabic layout */
+[dir="rtl"] .pos-grid {
+	direction: rtl;
+}
+[dir="rtl"] .pos-main,
+[dir="rtl"] .pos-side {
+	direction: rtl;
 }
 
 @media (max-width: 1100px) {
@@ -480,11 +490,18 @@ body.pos-layout .erp-mobile-nav {
 /* ---------- product grid ---------- */
 .pos-products {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	gap: 12px;
-	max-height: calc(100vh - 320px);
+	max-height: calc(100vh - 280px);
 	overflow: auto;
-	padding: 4px 2px;
+	padding: 8px 4px;
+	align-content: start;
+}
+.pos-products:has(.pos-cart-empty) {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 240px;
 }
 
 .pos-card {
@@ -715,9 +732,23 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-cart-empty {
-	padding: 30px 10px;
+	padding: 28px 16px;
 	text-align: center;
 	color: var(--pos-muted);
+	line-height: 1.6;
+	font-size: 14px;
+	border: 1px dashed var(--pos-border);
+	border-radius: 12px;
+	background: rgba(255, 255, 255, 0.02);
+}
+.pos-products .pos-cart-empty {
+	border: none;
+	background: transparent;
+	padding: 40px 20px;
+}
+.pos-products .pos-cart-empty .small {
+	color: var(--pos-muted);
+	font-size: 12px;
 }
 
 /* ---------- calculator ---------- */
@@ -1178,6 +1209,27 @@ body:has(.pos-app) {
 
 .pos-app {
 	overflow: visible !important;
+}
+
+/* Offline banner — less aggressive than alert-danger, fits dark POS theme */
+#posOfflineBar {
+	background: rgba(220, 38, 38, 0.12);
+	border: 1px solid rgba(220, 38, 38, 0.35);
+	color: #fecaca;
+	border-radius: 10px;
+	font-size: 13px;
+	backdrop-filter: blur(4px);
+}
+#posOfflineBar .btn {
+	border-radius: 8px;
+	font-weight: 700;
+}
+#posOfflineBar.d-none {
+	display: none !important;
+}
+.has-selection {
+	border-color: var(--pos-accent) !important;
+	color: var(--pos-accent);
 }
 
 /* don't clip the side panel — let the page scroll instead */
