@@ -8,6 +8,7 @@
  * JS specs cover the true UI flow: login → dashboard navigation.
  */
 
+import fs from "fs";
 import { test, expect } from "@playwright/test";
 
 test.describe("Login → Dashboard tour (blocking)", () => {
@@ -20,13 +21,36 @@ test.describe("Login → Dashboard tour (blocking)", () => {
 		await expect(btn).toBeVisible();
 	});
 
-	test("unauthenticated dashboard redirects to login", async ({ page }) => {
-		await page.goto("/dashboard");
-		// In test env dashboard may render directly (200) or redirect to login (302→/auth/login)
-		// Accept either — verify we land on a sensible page with HTML content
+	test("unauthenticated dashboard redirects to login", async ({ browser }) => {
+		// Truly unauthenticated: fresh context without storageState
+		const context = await browser.newContext();
+		const page = await context.newPage();
+		await page.goto("/dashboard", { waitUntil: "domcontentloaded", timeout: 45000 });
+		// Should redirect to login when not authenticated
+		await expect(page).toHaveURL(/.*login.*/);
+		await context.close();
+	});
+
+	test("real login via form succeeds and reaches dashboard", async ({ browser }) => {
+		// Read seeded credentials (written by scripts/auth/setup_test_users.py)
+		let creds;
+		try {
+			creds = JSON.parse(fs.readFileSync("scripts/auth/test_users.json", "utf-8"));
+		} catch {
+			test.skip(true, "test_users.json not found — run python scripts/auth/setup_test_users.py first");
+		}
+		const user = creds.cashier || creds.tenant_owner || creds.super_admin;
+		const login = user.username || user.email;
+		const context = await browser.newContext();
+		const page = await context.newPage();
+		await page.goto("/auth/login", { waitUntil: "domcontentloaded", timeout: 45000 });
+		await page.fill('input[name="username"]', login);
+		await page.fill('input[name="password"]', user.password);
+		await page.click('button[type="submit"]');
+		// After login should land on dashboard (or at least not on login)
+		await expect(page).not.toHaveURL(/.*login.*/);
 		await expect(page.locator("body")).toBeVisible();
-		const url = page.url();
-		expect(url.includes("login") || url.includes("dashboard") || url.endsWith("/")).toBeTruthy();
+		await context.close();
 	});
 
 	test("dashboard route responds with HTML (200 or redirect)", async ({ page }) => {
