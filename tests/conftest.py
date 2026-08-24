@@ -687,19 +687,36 @@ def _session_is_polluted(session_obj):
 
 
 def _resync_service_db_bindings():
-    """Rebind services.*.db to the real extensions.db after mock patches."""
+    """Rebind services.*.db (and extensions.db) to the pristine instance.
+
+    Never ``importlib.reload(extensions)``: reloading fabricates a second
+    SQLAlchemy instance that is registered with no Flask app, and rebinding
+    every service to it permanently breaks any later request that touches
+    the DB ("current Flask app is not registered with this 'SQLAlchemy'
+    instance" — seen as suite-wide auth 500s under full-directory runs).
+
+    Two recovery cases handled here:
+    * ``extensions.db`` reads as a mock — either a patch started in fixture
+      setup is still active during autouse teardown (its own patcher will
+      also restore, harmlessly), or a nested-patch interleave wrote back a
+      stale mock after the outer context-manager restored (pytest-mock's
+      ``stopall`` runs after fixture-context exits). Re-pointing the
+      attribute at the pristine import-time instance keeps the invariant
+      ``extensions.db is db`` at every test boundary.
+    * a ``services.*`` module's ``db`` drifted from the pristine instance
+      (e.g. bound under a mock or a stale reload) — rebind it.
+    """
     import sys
     from unittest.mock import MagicMock, NonCallableMock
 
-    import extensions
-
     polluted_types = (MagicMock, NonCallableMock)
-    real_db = extensions.db
+    real_db = db
     if isinstance(real_db, polluted_types):
-        import importlib
+        return
 
-        extensions = importlib.reload(extensions)
-        real_db = extensions.db
+    ext_mod = sys.modules.get("extensions")
+    if ext_mod is not None and getattr(ext_mod, "db", None) is not real_db:
+        ext_mod.db = real_db
 
     for mod_name, mod in list(sys.modules.items()):
         if not mod_name.startswith("services."):

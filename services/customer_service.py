@@ -334,14 +334,18 @@ class CustomerService:
         pre_pay = sum(
             (float(p.amount_aed or 0) if p.direction == "incoming" else -float(p.amount_aed or 0))
             for p in Payment.query.filter(
-                Payment.customer_id == customer_id, Payment.tenant_id == tenant_id, func.date(Payment.payment_date) < date_from
+                Payment.customer_id == customer_id,
+                Payment.tenant_id == tenant_id,
+                func.date(Payment.payment_date) < date_from,
             ).all()
             if p.payment_confirmed or (p.payment_method == "cheque" and not p.rejection_reason)
         )
         pre_receipt = sum(
             float(r.amount_aed or 0)
             for r in Receipt.query.filter(
-                Receipt.customer_id == customer_id, Receipt.tenant_id == tenant_id, func.date(Receipt.receipt_date) < date_from
+                Receipt.customer_id == customer_id,
+                Receipt.tenant_id == tenant_id,
+                func.date(Receipt.receipt_date) < date_from,
             ).all()
             if r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason)
         )

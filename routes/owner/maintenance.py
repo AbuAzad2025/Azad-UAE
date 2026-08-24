@@ -44,9 +44,7 @@ def maintenance_fix_cost_centers():
             0,
             {"status": "completed", "result": str(result)},
         )
-        return success_response(
-            message=gettext("✅ تم إصلاح فهارس مراكز التكلفة بنجاح")
-        )
+        return success_response(message=gettext("✅ تم إصلاح فهارس مراكز التكلفة بنجاح"))
     except Exception as e:
         current_app.logger.error("maintenance_fix_cost_centers failed: %s", e)
         LoggingCore.log_error(
@@ -85,9 +83,7 @@ def maintenance_rebuild_gl_tree():
         total_created = sum(t.get("created", 0) for t in result.get("tenants", []))
         total_updated = sum(t.get("updated", 0) for t in result.get("tenants", []))
         return success_response(
-            message=gettext(
-                f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب"
-            ),
+            message=gettext(f"✅ تم إعادة بناء شجرة الحسابات - تمت إضافة {total_created} وتحديث {total_updated} حساب"),
             data={"result": result},
         )
     except Exception as e:

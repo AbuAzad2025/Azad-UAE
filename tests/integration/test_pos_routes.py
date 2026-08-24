@@ -77,7 +77,7 @@ class TestPOSSession:
                 content_type="application/json",
             )
         assert resp.status_code == 201, f"Session open failed: {resp.get_json()}"
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["success"] is True
         assert data["session"]["opening_balance"] == 500.0
         assert data["session"]["status"] == "open"
@@ -217,7 +217,7 @@ class TestPOSSession:
                 content_type="application/json",
             )
         assert resp.status_code == 200, f"Checkout failed: {resp.get_json()}"
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["success"] is True
         sale_id = data["sale_id"]
         assert data["sale_number"] is not None
@@ -384,7 +384,7 @@ class TestPOSSession:
                 content_type="application/json",
             )
         assert resp.status_code == 200, f"Close failed: {resp.get_json()}"
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["success"] is True
         assert data["session"]["status"] == "closed"
         assert data["session"]["closing_balance"] == 575.0
@@ -538,7 +538,7 @@ class TestPOSSession:
                 content_type="application/json",
             )
         assert resp.status_code == 200, f"Close failed: {resp.get_json()}"
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["session"]["difference"] == 5.0
 
         from models import PosSession
@@ -825,7 +825,7 @@ class TestPOSSession:
                 content_type="application/json",
             )
         assert resp.status_code == 200, f"Credit checkout failed: {resp.get_json()}"
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert data["success"] is True
 
         from models import Sale
@@ -983,8 +983,7 @@ class TestPOSSession:
 
             resp = client.get("/pos/api/walkin-customer")
         assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
         assert data["id"] is not None
         assert data["is_walkin"] is True
 

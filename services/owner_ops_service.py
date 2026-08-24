@@ -306,7 +306,10 @@ class OwnerOpsService:
             admin_emails.setdefault(u.tenant_id, u.email)
 
         packages = (
-            db.session.query(Package).filter_by(is_active=True).order_by(Package.sort_order.asc(), Package.id.asc()).all()
+            db.session.query(Package)
+            .filter_by(is_active=True)
+            .order_by(Package.sort_order.asc(), Package.id.asc())
+            .all()
         )
         return {
             "tenants": tenants,

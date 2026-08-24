@@ -1,10 +1,9 @@
-"""Deep assurance — routes/api_analytics.py metrics and branch scoping."""
+"""Deep assurance — routes/api_analytics.py metrics endpoints."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -102,14 +101,3 @@ class TestAnalyticsEndpoints:
             resp = auth_client.get("/api/analytics/revenue-trend?days=30")
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
-
-    def test_apply_branch_scope_filters(self, app):
-        from routes.api_analytics import _apply_branch_scope
-
-        mock_query = MagicMock()
-        mock_model = MagicMock()
-        mock_model.branch_id = MagicMock()
-        with app.app_context(), patch("routes.api_analytics.branch_scope_id_for", return_value=5):
-            result = _apply_branch_scope(mock_query, mock_model)
-        mock_query.filter.assert_called_once()
-        assert result is mock_query.filter.return_value

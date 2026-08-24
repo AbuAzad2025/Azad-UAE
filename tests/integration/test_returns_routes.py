@@ -221,8 +221,7 @@ class TestReturnsApiCreate:
             )
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
         assert "return_id" in data
         assert "return_number" in data
         assert float(data["refund_amount"]) == 200.0
@@ -291,8 +290,7 @@ class TestReturnsApiCreate:
             )
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
 
         product_return = db_session.get(ProductReturn, data["return_id"])
         assert product_return is not None
@@ -367,8 +365,7 @@ class TestReturnsApiCreate:
             )
 
         assert resp.status_code == 200, f"Expected 200, got {resp.status_code}: {resp.data}"
-        data = resp.get_json()
-        assert data["success"] is True
+        data = resp.get_json()["data"]
         assert float(data["refund_amount"]) == 200.0
 
         stock_after_return = ProductWarehouseStock.query.filter_by(

@@ -43,8 +43,7 @@ def init_socketio(app: Flask):
         logger.info("[WebSocket] Socket.IO message queue enabled via REDIS_URL for multi-worker fan-out")
     else:
         logger.warning(
-            "[WebSocket] REDIS_URL unset — Socket.IO emits stay per-worker; "
-            "set REDIS_URL in multi-worker deployments"
+            "[WebSocket] REDIS_URL unset — Socket.IO emits stay per-worker; set REDIS_URL in multi-worker deployments"
         )
     socketio = SocketIO(
         app,

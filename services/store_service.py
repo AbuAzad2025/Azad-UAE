@@ -602,9 +602,7 @@ class StoreService:
     def wishlist_entry(tenant_id, account_id, product_id):
         from models.shop_wishlist import ShopWishlist
 
-        return ShopWishlist.query.filter_by(
-            account_id=account_id, product_id=product_id, tenant_id=tenant_id
-        ).first()
+        return ShopWishlist.query.filter_by(account_id=account_id, product_id=product_id, tenant_id=tenant_id).first()
 
     @staticmethod
     def wishlist_count(tenant_id, account_id) -> int:

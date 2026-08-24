@@ -222,7 +222,7 @@ $(document).ready(() => {
 
     $.ajax({
 
-      url: '{{ url_for("sales.restore", id="__ID__") }}'.replace('__ID__', id),
+      url: '{{ url_for("sales.restore", id=0) }}'.replace('/0', '/' + id),
 
       type: 'POST',
 

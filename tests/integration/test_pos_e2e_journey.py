@@ -206,7 +206,7 @@ class TestPosE2EJourney:
                 content_type="application/json",
             )
             assert resp.status_code == 200, f"checkout failed: {resp.get_json()}"
-            data = resp.get_json()
+            data = resp.get_json()["data"]
             assert data["success"] is True
             assert Decimal(str(data["promotion_discount"])) == Decimal("10.0")
             assert "upsell_prompts" in data
@@ -228,7 +228,7 @@ class TestPosE2EJourney:
                 content_type="application/json",
             )
             assert resp.status_code == 200, f"close failed: {resp.get_json()}"
-            closed = resp.get_json()
+            closed = resp.get_json()["data"]
             assert closed["success"] is True
             assert closed["session"]["status"] == "closed"
 
@@ -282,8 +282,8 @@ class TestPosE2EJourney:
             )
         assert first.status_code == 200, f"first failed: {first.get_json()}"
         assert second.status_code == 200, f"replay failed: {second.get_json()}"
-        first_id = first.get_json()["sale_id"]
-        assert second.get_json()["sale_id"] == first_id
+        first_id = first.get_json()["data"]["sale_id"]
+        assert second.get_json()["data"]["sale_id"] == first_id
 
         sales = Sale.query.filter_by(tenant_id=tenant.id).all()
         assert len(sales) == 1
@@ -346,8 +346,8 @@ class TestPosE2EJourney:
                 content_type="application/json",
             )
         assert checkout.status_code == 200, f"checkout failed: {checkout.get_json()}"
-        preview_discount = Decimal(str(preview.get_json()["total_discount"]))
-        checkout_discount = Decimal(str(checkout.get_json()["promotion_discount"]))
+        preview_discount = Decimal(str(preview.get_json()["data"]["total_discount"]))
+        checkout_discount = Decimal(str(checkout.get_json()["data"]["promotion_discount"]))
         assert preview_discount == checkout_discount == Decimal("5.0")
 
 

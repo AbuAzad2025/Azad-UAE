@@ -94,8 +94,7 @@ class VaultQueryService:
         from models import Donation
 
         return [
-            Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package=slug).count()
-            for slug in slugs
+            Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package=slug).count() for slug in slugs
         ]
 
     @staticmethod
@@ -202,7 +201,9 @@ class VaultQueryService:
         return PackagePurchase.query.filter_by(package_id=package_id).all()
 
     @staticmethod
-    def purchases_paginated_v2(page, per_page, status="", package_id=None, search="", sort_by="created_at", order="desc"):
+    def purchases_paginated_v2(
+        page, per_page, status="", package_id=None, search="", sort_by="created_at", order="desc"
+    ):
         from extensions import db
         from models import PackagePurchase
 

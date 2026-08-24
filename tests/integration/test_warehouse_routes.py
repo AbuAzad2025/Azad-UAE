@@ -258,7 +258,7 @@ class TestWarehouseAddStock:
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
-        assert float(data["new_stock"]) == 10.0
+        assert float(resp.get_json()["data"]["new_stock"]) == 10.0
 
         stock_after = ProductWarehouseStock.query.filter_by(product_id=product.id, warehouse_id=warehouse.id).first()
         assert stock_after.quantity == Decimal("10")

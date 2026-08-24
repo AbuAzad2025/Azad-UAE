@@ -222,7 +222,7 @@ class TestPosRefundAccountingReversal:
                 content_type="application/json",
             )
             assert checkout.status_code == 200, checkout.get_json()
-            sale_id = checkout.get_json()["sale_id"]
+            sale_id = checkout.get_json()["data"]["sale_id"]
             sale = db.session.get(Sale, sale_id)
             line = SaleLine.query.filter_by(sale_id=sale.id).first()
 
@@ -246,7 +246,7 @@ class TestPosRefundAccountingReversal:
                 content_type="application/json",
             )
             assert r1.status_code == 201, r1.get_json()
-            partial_body = r1.get_json()
+            partial_body = r1.get_json()["data"]
             assert partial_body["success"] is True
             assert partial_body["refund_payment_number"] is None  # credit -> no cash payment
 
@@ -288,8 +288,8 @@ class TestPosRefundAccountingReversal:
                 content_type="application/json",
             )
             assert r2.status_code == 201, r2.get_json()
-            assert r2.get_json()["success"] is True
-            assert r2.get_json()["refund_payment_number"] is not None
+            assert r2.get_json()["data"]["success"] is True
+            assert r2.get_json()["data"]["refund_payment_number"] is not None
 
             assert StockService.get_product_stock(env["product"].id, warehouse_id=env["warehouse"].id) == Decimal("100")
 
@@ -356,7 +356,7 @@ class TestSplitTenderForeignCurrency:
                 content_type="application/json",
             )
             assert checkout.status_code == 200, checkout.get_json()
-            data = checkout.get_json()
+            data = checkout.get_json()["data"]
             assert data["success"] is True
             sale = db.session.get(Sale, data["sale_id"])
             assert Decimal(str(sale.total_amount)) == Decimal("50.000")
@@ -417,7 +417,7 @@ class TestPosShiftCashMovements:
                 content_type="application/json",
             )
             assert pay_in.status_code == 201, pay_in.get_json()
-            pay_in_id = pay_in.get_json()["movement"]["id"]
+            pay_in_id = pay_in.get_json()["data"]["movement"]["id"]
 
             pay_out = client.post(
                 "/pos/api/cash-movements",
@@ -425,7 +425,7 @@ class TestPosShiftCashMovements:
                 content_type="application/json",
             )
             assert pay_out.status_code == 201, pay_out.get_json()
-            pay_out_id = pay_out.get_json()["movement"]["id"]
+            pay_out_id = pay_out.get_json()["data"]["movement"]["id"]
 
         m_in = db.session.get(PosCashMovement, pay_in_id)
         m_out = db.session.get(PosCashMovement, pay_out_id)

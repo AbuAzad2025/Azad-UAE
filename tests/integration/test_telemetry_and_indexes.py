@@ -236,7 +236,7 @@ class TestClientLogIngest:
         }
         resp = auth_client.post("/api/v1/telemetry/logs", json=payload, headers=_ORIGIN_HEADER)
         assert resp.status_code == 202
-        assert resp.get_json()["accepted"] == 2
+        assert resp.get_json()["data"]["accepted"] == 2
 
         entries = [e for e in telemetry_capture.entries if e.get("source") == "frontend"]
         assert len(entries) == 2
@@ -259,7 +259,7 @@ class TestClientLogIngest:
             headers=_ORIGIN_HEADER,
         )
         assert resp.status_code == 202
-        assert resp.get_json()["accepted"] == 1
+        assert resp.get_json()["data"]["accepted"] == 1
         entries = [e for e in telemetry_capture.entries if e.get("source") == "frontend"]
         assert len(entries) == 1
         assert entries[0]["tenant_id"] is None
@@ -294,7 +294,7 @@ class TestClientLogIngest:
         }
         resp = client.post("/api/v1/telemetry/logs", json=payload, headers=_ORIGIN_HEADER)
         assert resp.status_code == 202
-        assert resp.get_json()["accepted"] == 3
+        assert resp.get_json()["data"]["accepted"] == 3
         entries = [e for e in telemetry_capture.entries if e.get("source") == "frontend"]
         assert [e["category"] for e in entries] == ["SOFTWARE_EXCEPTION"] * 3
 

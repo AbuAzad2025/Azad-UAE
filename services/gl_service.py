@@ -1781,9 +1781,7 @@ class GLService:
         from utils.gl_tenant import scope_gl_accounts
 
         return (
-            scope_gl_accounts(GLAccount.query.filter_by(is_active=True, is_header=False))
-            .order_by(GLAccount.code)
-            .all()
+            scope_gl_accounts(GLAccount.query.filter_by(is_active=True, is_header=False)).order_by(GLAccount.code).all()
         )
 
     @staticmethod

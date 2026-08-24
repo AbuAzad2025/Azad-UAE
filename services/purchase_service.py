@@ -831,7 +831,9 @@ class PurchaseService:
         from models import PurchaseRequisition
 
         return (
-            PurchaseRequisition.query.filter_by(tenant_id=tenant_id).order_by(PurchaseRequisition.created_at.desc()).all()
+            PurchaseRequisition.query.filter_by(tenant_id=tenant_id)
+            .order_by(PurchaseRequisition.created_at.desc())
+            .all()
         )
 
     @staticmethod
@@ -855,9 +857,7 @@ class PurchaseService:
 
         if not tenant_id:
             return []
-        return (
-            PurchaseOrder.query.filter(
-                PurchaseOrder.tenant_id == tenant_id,
-                PurchaseOrder.status.in_(["confirmed", "partially_received"]),
-            ).all()
-        )
+        return PurchaseOrder.query.filter(
+            PurchaseOrder.tenant_id == tenant_id,
+            PurchaseOrder.status.in_(["confirmed", "partially_received"]),
+        ).all()

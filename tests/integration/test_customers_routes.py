@@ -1041,7 +1041,7 @@ class TestCustomerApi:
 
             resp = client.get("/customers/api/search", query_string={"q": "APICust"})
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert isinstance(data, list)
         assert any(c["name"] == f"APICust {tid}" for c in data), "API search did not return the expected customer"
 
@@ -1116,6 +1116,6 @@ class TestCustomerApi:
 
             resp = client.get(f"/customers/{customer.id}/balance")
         assert resp.status_code == 200
-        data = resp.get_json()
+        data = resp.get_json()["data"]
         assert "balance_aed" in data
         assert "unpaid_sales" in data

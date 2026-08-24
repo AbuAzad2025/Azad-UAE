@@ -110,7 +110,6 @@ class TestStripeWebhook:
         assert resp.status_code == 200
         assert resp.get_json()["data"]["status"] == "acknowledged"
 
-
     def test_duplicate_event_short_circuits(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event())
         mocker.patch("routes.billing_webhooks._is_duplicate", return_value=True)

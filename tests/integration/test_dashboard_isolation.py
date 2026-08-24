@@ -535,7 +535,7 @@ class TestWarehouseNegativeToggle:
             assert resp.status_code == 200
             data = resp.get_json()
             assert data["success"] is True
-            assert data["allow_negative_inventory"] is True
+            assert data["data"]["allow_negative_inventory"] is True
 
     def test_toggle_warehouse_not_found(self, db_session, app):
         t = _make_tenant(db_session, "WhNF", "wh-nf")

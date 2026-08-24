@@ -229,7 +229,9 @@ class SupplierService:
             pre_payments_q = pre_payments_q.filter(Payment.branch_id == branch_id)
             pre_returns_q = pre_returns_q.filter(PurchaseReturn.branch_id == branch_id)
 
-        opening_balance = float(pre_purchases_q.with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0)).scalar() or 0)
+        opening_balance = float(
+            pre_purchases_q.with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0)).scalar() or 0
+        )
         for pm in pre_payments_q.all():
             # A payment affects the balance when confirmed, or when it is a
             # still-pending cheque without a rejection reason.
@@ -237,5 +239,7 @@ class SupplierService:
                 continue
             amt = float(pm.amount_aed or 0)
             opening_balance += amt if pm.direction == "incoming" else -amt
-        opening_balance -= float(pre_returns_q.with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0)).scalar() or 0)
+        opening_balance -= float(
+            pre_returns_q.with_entities(func.coalesce(func.sum(PurchaseReturn.amount_aed), 0)).scalar() or 0
+        )
         return opening_balance
