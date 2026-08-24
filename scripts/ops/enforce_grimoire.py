@@ -658,6 +658,7 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
         ".python-version",
         ".browserslistrc",
         ".bandit.yml",
+        ".pre-commit-config.yaml",
         ".stylelintrc.json",
         ".yamllint.yml",
         "ruff.toml",
