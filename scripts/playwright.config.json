@@ -1,8 +1,8 @@
 {
 	"$schema": "https://playwright.dev/schemas/config.json",
-	"name": "Azad-UAE E2E Tours",
+	"name": "Azad-UAE E2E Tours (BLOCKING)",
 	"testDir": "../tests/e2e/tours",
-	"testMatch": ["**/test_*.py"],
+	"testMatch": ["**/test_*.py", "**/*.spec.js", "**/*.spec.ts"],
 	"timeout": 60000,
 	"expect": { "timeout": 10000 },
 	"fullyParallel": false,

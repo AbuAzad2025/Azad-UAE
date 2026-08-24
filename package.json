@@ -2,6 +2,11 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
+		"test:e2e": "pytest tests/e2e --ignore=tests/e2e/tours -q",
+		"test:e2e:all": "pytest tests/e2e -q",
+		"test:e2e:tours:python": "pytest tests/e2e/tours -v --tb=short",
+		"test:tours": "npx playwright test --config=scripts/playwright.config.json --reporter=list",
+		"test:tours:ci": "npx playwright test --config=scripts/playwright.config.json --reporter=list",
 		"css:purge": "node scripts/lint/purgecss-report.js",
 		"css:build": "postcss \"static/css/*.css\" --dir static/css/dist --config postcss.config.js",
 		"css:minify": "postcss \"static/css/dist/*.css\" --dir static/css/dist --config postcss.config.min.js",
@@ -10,6 +15,7 @@
 		"build:prod": "npm run build:assets && npm run css:purge"
 	},
 	"devDependencies": {
+		"@playwright/test": "^1.55.0",
 		"@vitest/coverage-v8": "^4.1.11",
 		"cssnano": "^8.0.6",
 		"jsdom": "^30.0.1",
