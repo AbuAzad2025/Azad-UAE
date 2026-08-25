@@ -197,7 +197,7 @@ qs("#drawerOpenBtn")?.addEventListener("click", async () => {
 		if (r.ok && j.success) {
 			showAlert("تم فتح الدرج", "success");
 		} else {
-			showAlert(j.error || "تعذر فتح الدرج", "warning");
+			showAlert(j.message || j.error || "تعذر فتح الدرج", "warning");
 		}
 	} catch (_) {
 		showAlert("فشل الاتصال بالخادم", "warning");
@@ -309,17 +309,18 @@ const checkout = async (autoPrint) => {
 			return;
 		}
 		if (!r.ok || !j.success) {
-			showAlert(j.error || `HTTP ${r.status}`);
+			showAlert(j.message || j.error || `HTTP ${r.status}`);
 			return;
 		}
-		qs("#doneSaleNumber").textContent = j.sale_number;
-		renderUpsellMessages(qs("#doneUpsellList"), j.upsell_prompts);
-		qs("#doneViewBtn").href = j.view_url;
-		qs("#donePrintBtn").href = j.print_url;
+		const d = j.data || j;
+		qs("#doneSaleNumber").textContent = d.sale_number;
+		renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
+		qs("#doneViewBtn").href = d.view_url;
+		qs("#donePrintBtn").href = d.print_url;
 		window.$("#posDoneModal").modal("show");
-		autoPrintSale(j.sale_id);
+		autoPrintSale(d.sale_id);
 		if (autoPrint) {
-			window.open(j.print_url, "_blank", "noopener");
+			window.open(d.print_url, "_blank", "noopener");
 		}
 		await resetAfterSale();
 		if (state.selectedTable && j.sale_id) {
@@ -577,8 +578,8 @@ async function loadSession() {
 		const j = await r.json();
 		const bar = qs("#posSessionBar");
 		const required = qs("#posSessionRequired");
-		if (j.success && j.session) {
-			const s = j.session;
+		const s = j.data?.session || j.session;
+		if (j.success && s) {
 			if (window.cfdBroadcast) cfdBroadcast.setSession(s.id);
 			bar.classList.remove("d-none");
 			required.classList.add("d-none");
@@ -619,12 +620,13 @@ qs("#openSessionConfirm").addEventListener("click", async () => {
 		});
 		const j = await r.json();
 		if (!r.ok || !j.success) {
-			showModalAlert("openSession", j.error || "فشل فتح الجلسة", "danger");
+			showModalAlert("openSession", j.message || j.error || "فشل فتح الجلسة", "danger");
 			return;
 		}
 		window.$("#openSessionModal").modal("hide");
 		await loadSession();
-		showAlert(`${window.t("تم فتح الجلسة")} ${j.session.number}`, "success");
+		const opened = j.data?.session || j.session;
+		showAlert(`${window.t("تم فتح الجلسة")} ${opened.number}`, "success");
 	} catch (err) {
 		showModalAlert("openSession", err.message, "danger");
 	} finally {
@@ -639,14 +641,15 @@ qs("#closeSessionBtn").addEventListener("click", async () => {
 			credentials: "same-origin",
 		});
 		const j = await r.json();
-		if (j.success && j.session) {
-			qs("#closeOpening").textContent = fmt(j.session.opening_balance);
+		const rep = j.data?.session || j.session;
+		if (j.success && rep) {
+			qs("#closeOpening").textContent = fmt(rep.opening_balance);
 			const canViewSensitive =
-				j.session.total_cash_sales !== undefined && j.session.expected_balance !== undefined;
+				rep.total_cash_sales !== undefined && rep.expected_balance !== undefined;
 			qs("#closeExpectedBlock").classList.toggle("d-none", !canViewSensitive);
 			if (canViewSensitive) {
-				qs("#closeCashSales").textContent = fmt(j.session.total_cash_sales);
-				qs("#closeExpected").textContent = fmt(j.session.expected_balance);
+				qs("#closeCashSales").textContent = fmt(rep.total_cash_sales);
+				qs("#closeExpected").textContent = fmt(rep.expected_balance);
 			}
 		}
 	} catch (err) {
@@ -682,12 +685,13 @@ qs("#closeSessionConfirm").addEventListener("click", async () => {
 		});
 		const j = await r.json();
 		if (!r.ok || !j.success) {
-			showModalAlert("closeSession", j.error || "فشل إغلاق الجلسة", "danger");
+			showModalAlert("closeSession", j.message || j.error || "فشل إغلاق الجلسة", "danger");
 			return;
 		}
 		window.$("#closeSessionModal").modal("hide");
 		await loadSession();
-		const diff = j.session.difference;
+		const closed = j.data?.session || j.session;
+		const diff = closed.difference;
 		if (Math.abs(diff) > 0.01) {
 			showAlert(
 				`${window.t("تم إغلاق الجلسة. فرق الرصيد")}: ${fmt(diff)}`,

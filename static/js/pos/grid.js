@@ -526,13 +526,14 @@
 		fetch("/pos/api/session/current")
 			.then((r) => r.json())
 			.then((d) => {
-				if (d.success && d.session) {
-					if (window.cfdBroadcast) cfdBroadcast.setSession(d.session.id);
+				const s = d.data?.session || d.session;
+				if (d.success && s) {
+					if (window.cfdBroadcast) cfdBroadcast.setSession(s.id);
 					qs("#posSessionBar").classList.remove("d-none");
 					qs("#posSessionRequired").classList.add("d-none");
-					qs("#sessionNumber").textContent = d.session.number;
-					qs("#sessionBalance").textContent = fmt(d.session.opening_balance);
-					qs("#sessionTotal").textContent = fmt(d.session.total_sales);
+					qs("#sessionNumber").textContent = s.number;
+					qs("#sessionBalance").textContent = fmt(s.opening_balance);
+					qs("#sessionTotal").textContent = fmt(s.total_sales);
 				} else {
 					qs("#posSessionBar").classList.add("d-none");
 					qs("#posSessionRequired").classList.remove("d-none");
@@ -618,12 +619,12 @@
 				body: JSON.stringify({ pin, action }),
 			});
 			const j = await r.json().catch(() => ({}));
-			if (r.ok && j.success && j.override_token) {
+			if (r.ok && j.success && (j.data?.override_token || j.override_token)) {
 				$("#posPinModal").modal("hide");
-				settlePin(j.override_token);
+				settlePin(j.data?.override_token || j.override_token);
 				return;
 			}
-			err.textContent = j.error || "تعذر التفويض";
+			err.textContent = j.message || j.error || "تعذر التفويض";
 			err.classList.remove("d-none");
 		} catch (_) {
 			err.textContent = "فشل الاتصال بالخادم";
@@ -653,7 +654,9 @@
 		return send(token);
 	};
 	const needsOverride = (r, j) =>
-		r.status === 403 && typeof j.error === "string" && j.error.includes("تفويض");
+		r.status === 403 &&
+		typeof (j.message || j.error) === "string" &&
+		(j.message || j.error).includes("تفويض");
 
 	// Split tender: multiple payment chunks in one checkout (server `payments`).
 	const SPLIT_METHODS = [
@@ -822,10 +825,11 @@
 					return;
 				}
 				if (d.success) {
-					qs("#doneSaleNumber").textContent = d.sale_number;
-					renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
-					qs("#doneViewBtn").href = d.view_url;
-					qs("#donePrintBtn").href = d.print_url;
+					const dd = d.data || d;
+					qs("#doneSaleNumber").textContent = dd.sale_number;
+					renderUpsellMessages(qs("#doneUpsellList"), dd.upsell_prompts);
+					qs("#doneViewBtn").href = dd.view_url;
+					qs("#donePrintBtn").href = dd.print_url;
 					$("#posDoneModal").modal("show");
 					state.cart = [];
 					state.idemKey = newCartKey();
@@ -836,10 +840,10 @@
 					const splitRows = qs("#splitTenderRows");
 					if (splitRows) splitRows.innerHTML = "";
 					if (print) {
-						window.open(d.print_url, "_blank");
+						window.open(dd.print_url, "_blank");
 					}
 				} else {
-					showAlert(d.error || "فشل حفظ الفاتورة");
+					showAlert(d.message || d.error || "فشل حفظ الفاتورة");
 				}
 			} catch (_) {
 				showAlert("فشل الاتصال بالخادم");
@@ -883,7 +887,7 @@
 				if (r.ok && j.success) {
 					showAlert("تم فتح الدرج", "success");
 				} else {
-					showAlert(j.error || "تعذر فتح الدرج", "warning");
+					showAlert(j.message || j.error || "تعذر فتح الدرج", "warning");
 				}
 			} catch (_) {
 				showAlert("فشل الاتصال بالخادم", "warning");
@@ -917,7 +921,7 @@
 				.then((r) => r.json())
 				.then((d) => {
 					if (d.success) {
-						state.customer = d;
+						state.customer = d.data || d;
 						customerHint();
 					}
 				})
@@ -987,7 +991,7 @@
 						$("#openSessionModal").modal("hide");
 						initSession();
 					} else {
-						showAlert(d.error || "فشل فتح الجلسة");
+						showAlert(d.message || d.error || "فشل فتح الجلسة");
 					}
 				})
 				.catch(() => {})
@@ -1000,14 +1004,15 @@
 			fetch("/pos/api/session/report")
 				.then((r) => r.json())
 				.then((d) => {
-					if (d.success && d.session) {
-						qs("#closeOpening").textContent = fmt(d.session.opening_balance);
+					const rep = d.data?.session || d.session;
+					if (d.success && rep) {
+						qs("#closeOpening").textContent = fmt(rep.opening_balance);
 						const canViewSensitive =
-							d.session.total_cash_sales !== undefined && d.session.expected_balance !== undefined;
+							rep.total_cash_sales !== undefined && rep.expected_balance !== undefined;
 						qs("#closeExpectedBlock").classList.toggle("d-none", !canViewSensitive);
 						if (canViewSensitive) {
-							qs("#closeCashSales").textContent = fmt(d.session.total_cash_sales);
-							qs("#closeExpected").textContent = fmt(d.session.expected_balance);
+							qs("#closeCashSales").textContent = fmt(rep.total_cash_sales);
+							qs("#closeExpected").textContent = fmt(rep.expected_balance);
 						}
 						$("#closeSessionModal").modal("show");
 					}
@@ -1040,7 +1045,7 @@
 						$("#closeSessionModal").modal("hide");
 						initSession();
 					} else {
-						showAlert(d.error || "فشل إغلاق الجلسة");
+						showAlert(d.message || d.error || "فشل إغلاق الجلسة");
 					}
 				})
 				.catch(() => {})
@@ -1066,10 +1071,10 @@
 				if (d && d.success !== false) {
 					const liveKg = Number(state.scaleWeightKg) || 0;
 					const qty = d.is_weight_product && liveKg > 0 ? liveKg : d.scale_weight_kg || 1;
-					void addToCart(d, qty);
+					void addToCart(d.data || d, qty);
 					qs("#productSearch").value = "";
 				} else {
-					showAlert(d?.error || "المنتج غير موجود");
+					showAlert(d?.message || d?.error || "المنتج غير موجود");
 				}
 			};
 			state.barcodeScanner = new BarcodeScanner({

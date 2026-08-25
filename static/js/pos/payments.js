@@ -38,13 +38,13 @@ const confirmPin = async () => {
 			body: JSON.stringify({ pin, action }),
 		});
 		const j = await r.json().catch(() => ({}));
-		if (r.ok && j.success && j.override_token) {
+		if (r.ok && j.success && (j.data?.override_token || j.override_token)) {
 			window.$("#posPinModal").modal("hide");
-			settlePin(j.override_token);
+			settlePin(j.data?.override_token || j.override_token);
 			return;
 		}
 		err.textContent =
-			j.error || "\u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u0641\u0648\u064a\u0636";
+			j.message || j.error || "\u062a\u0639\u0630\u0631 \u0627\u0644\u062a\u0641\u0648\u064a\u0636";
 		err.classList.remove("d-none");
 	} catch (_) {
 		err.textContent =
@@ -76,8 +76,8 @@ const postWithOverride = async (url, body, action) => {
 };
 const needsOverride = (r, j) =>
 	r.status === 403 &&
-	typeof j.error === "string" &&
-	j.error.includes("\u062a\u0641\u0648\u064a\u0636");
+	typeof (j.message || j.error) === "string" &&
+	(j.message || j.error).includes("\u062a\u0641\u0648\u064a\u0636");
 
 const SPLIT_METHODS = [
 	["cash", "\u0646\u0642\u062f\u064a"],
