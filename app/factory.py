@@ -283,10 +283,14 @@ def create_app(config_class=Config) -> Flask:
         # Phase 2: no eval/new Function usage found in application code or bundled
         # vendor libs under static/, so unsafe-eval is dropped in strict mode.
         unsafe_eval = "'unsafe-eval' " if not csp_strict else ""
+        # style= attributes are used pervasively across templates (hundreds of
+        # sites) and cannot execute script — allow them in style-src even in
+        # strict mode. script-src stays strict (no inline event handlers).
+        style_unsafe_inline = "'unsafe-inline' "
         csp = (
             "default-src 'self'; "
             f"script-src 'self' {nonce_directive}{unsafe_inline}{unsafe_eval}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            f"style-src 'self' {nonce_directive}{unsafe_inline}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+            f"style-src 'self' {nonce_directive}{style_unsafe_inline}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
             "img-src 'self' data: blob:; "
             "media-src 'self' data: blob:; "

@@ -22,7 +22,7 @@
               alt="{{ _developer_title }}"
               loading="lazy"
               class="erp-footer-logo"
-              onerror="if(this.dataset.fallback){this.src=this.dataset.fallback;this.removeAttribute('onerror');}"
+              data-fallback-img
             >
             <div class="erp-footer-brand-text">
               <div class="erp-footer-title">{{ _developer_title }}</div>
@@ -68,3 +68,12 @@
       </div>
     </div>
   </footer>
+  <script nonce="{{ csp_nonce() }}">
+  document.addEventListener("error", (e) => {
+    const img = e.target;
+    if (img && img.matches && img.matches("img[data-fallback-img]") && img.dataset.fallback) {
+      img.src = img.dataset.fallback;
+      img.removeAttribute("data-fallback-img");
+    }
+  }, true);
+  </script>
