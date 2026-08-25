@@ -26,7 +26,6 @@
 <!-- POS Module (lazy-loaded only on POS pages) -->
 {% if request.endpoint and 'pos' in request.endpoint %}
 <script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
-<script defer src="{{ dist_url('js/pos/grid.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/cashier-logic.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/cfd-broadcast.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/escpos-printer.js') }}"></script>

@@ -1,8 +1,8 @@
-{% extends 'layouts/base_pos.html' %}
+﻿{% extends 'layouts/base_pos.html' %}
 
 {% block title %}{{ _('نقطة البيع') }} — {{ _('السلال المعلّقة') }}{% endblock %}
 
-{# pos-theme styles are bundled in css/pos-unified.css, loaded by base_pos.html #}
+{# pos-theme styles are bundled in css/pos.css, loaded by base_pos.html #}
 
 {% block content %}
 <div class="pos-app">
@@ -16,7 +16,6 @@
     </div>
     <div class="pos-topbar-actions">
       <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ _('رجوع') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i></a>
-      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
       <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home"></i></a>
     </div>
   </div>

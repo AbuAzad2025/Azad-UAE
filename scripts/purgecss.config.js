@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PurgeCSS configuration — ANALYSIS / OPT-IN USE ONLY.
  *
  * Purpose: measure how much of the large custom stylesheets is actually
@@ -60,7 +60,7 @@ module.exports = {
   ],
   css: [
     "static/css/erp-theme-unified.css",
-    "static/css/pos-unified.css",
+    "static/css/pos.css",
     "static/css/landing.css",
     "static/css/landing-page-en.css",
     "static/css/accessibility.css",

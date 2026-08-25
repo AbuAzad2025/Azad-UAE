@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 import pytest
 
@@ -34,4 +34,4 @@ def test_pos_js_exists():
 
 
 def test_pos_css_exists():
-    assert os.path.isfile(_static_path("css", "pos-unified.css")), "static/css/pos-unified.css not found"
+    assert os.path.isfile(_static_path("css", "pos.css")), "static/css/pos.css not found"

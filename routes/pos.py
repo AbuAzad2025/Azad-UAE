@@ -343,7 +343,8 @@ def index():
 @login_required
 @permission_required("manage_sales")
 def grid():
-    return render_template("pos/grid.html", **_pos_register_context())
+    # grid terminal removed - unified single POS screen
+    return redirect(url_for("pos.index"))
 
 
 @pos_bp.route("/held-carts")
