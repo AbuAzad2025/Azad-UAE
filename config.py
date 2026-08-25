@@ -165,11 +165,12 @@ class Config:
     RATELIMIT_ENABLED = _bool(os.environ.get("RATELIMIT_ENABLED"), True)
     RATELIMIT_DEFAULT = "100000 per hour"
     # Prefer explicit RATELIMIT_STORAGE_URI; otherwise fall back to REDIS_URL when
-    # the deployment provides one, and only use in-memory storage as a last resort.
+    # the deployment provides one AND Redis is actually reachable — a dead Redis
+    # here turns every rate-limited request into a 500 (ConnectionError).
     _ratelimit_storage = os.environ.get("RATELIMIT_STORAGE_URI")
     if _ratelimit_storage:
         RATELIMIT_STORAGE_URI = _ratelimit_storage
-    elif os.environ.get("REDIS_URL"):
+    elif os.environ.get("REDIS_URL") and _redis_available():
         RATELIMIT_STORAGE_URI = os.environ["REDIS_URL"]
     else:
         RATELIMIT_STORAGE_URI = "memory://"
