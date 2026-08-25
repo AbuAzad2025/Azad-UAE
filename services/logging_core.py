@@ -153,6 +153,15 @@ _CATEGORIES = frozenset(
         "WARNING",
         "HARDWARE_WARN",
         "SOFTWARE_EXCEPTION",
+        "SALES",
+        "PURCHASES",
+        "INVENTORY",
+        "WAREHOUSE",
+        "PAYMENTS",
+        "HR",
+        "CRM",
+        "POS",
+        "ECOMMERCE",
     }
 )
 
