@@ -476,8 +476,10 @@
 			}
 		} catch (_) {
 			showAlert("تعذر تحميل المنتجات. تحقق من الاتصال وأعد المحاولة.", "danger");
-			qs("#productGrid").innerHTML =
-				'<div class="text-center text-danger py-5 w-100">تعذر تحميل المنتجات — أعد المحاولة<br><button class="btn btn-sm btn-outline-secondary mt-2" onclick="location.reload()">تحديث</button></div>';
+			const grid = qs("#productGrid");
+			grid.innerHTML =
+				'<div class="text-center text-danger py-5 w-100">تعذر تحميل المنتجات — أعد المحاولة<br><button class="btn btn-sm btn-outline-secondary mt-2" id="reloadProductsBtn">تحديث</button></div>';
+			grid.querySelector("#reloadProductsBtn")?.addEventListener("click", () => location.reload());
 		}
 		qs("#productLoading")?.classList.add("d-none");
 	};
