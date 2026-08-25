@@ -1106,6 +1106,14 @@ def api_session_open():
 
     branch_id = get_active_branch_id(current_user)
     if not branch_id:
+        # Fallback: use tenant's main branch for global users or users without branch
+        from models import Branch
+        tenant_id = getattr(current_user, "tenant_id", None)
+        if tenant_id:
+            main_branch = Branch.query.filter_by(tenant_id=tenant_id, is_main=True, is_active=True).first()
+            if main_branch:
+                branch_id = main_branch.id
+    if not branch_id:
         return error_response(message=gettext("لا يوجد فرع نشط. يرجى تحديد فرع."), status_code=400)
 
     idempotency_key = _extract_idempotency_key(payload)
