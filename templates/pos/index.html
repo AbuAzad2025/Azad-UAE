@@ -29,7 +29,7 @@
           <span><span class="k">{{ _('الجلسة') }}:</span> <span class="v" id="sessionNumber"></span></span>
           <span class="k" id="sessionTime"></span>
           <span><span class="k">{{ _('الرصيد') }}:</span> <span class="v" id="sessionBalance">0.00</span></span>
-          <span><span class="k">{{ _('المبيعات') }}:</span> <span class="v" id="sessionTotal">0.00</span></span>
+          <span><span class="k">سجل الفواتير:</span> <span class="v" id="sessionTotal">0.00</span></span>
         </div>
         <button id="drawerOpenBtn" class="pos-chip" type="button"><span class="dot"></span><i class="fas fa-box-open"></i> {{ _('فتح الدرج') }}</button>
         <button id="closeSessionBtn" class="pos-chip closed" type="button"><span class="dot"></span><i class="fas fa-sign-out-alt"></i> {{ _('إغلاق الجلسة') }}</button>
@@ -44,9 +44,9 @@
       <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair"></i></button>
       <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause"></i></button>
       <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list"></i></a>
-      <a href="{{ url_for('pos.grid') }}" class="pos-icon-btn" title="{{ _('عرض الشبكة') }}"><i class="fas fa-th"></i></a>
-      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ _('المبيعات') }}"><i class="fas fa-file-invoice"></i></a>
-      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home"></i></a>
+      <!-- grid POS removed: unified single screen -->
+      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="سجل الفواتير"><i class="fas fa-file-invoice"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="الرئيسية"><i class="fas fa-home"></i></a>
     </div>
   </div>
 
@@ -240,11 +240,11 @@
 
         <div class="pos-actions">
           <button id="checkoutBtn" class="pos-btn pos-btn-primary full">
-            <span class="btn-text"><i class="fas fa-check mr-2"></i>{{ _('حفظ الفاتورة') }}</span>
+            <span class="btn-text"><i class="fas fa-check-circle mr-2"></i>إتمام البيع</span>
             <span class="btn-spinner d-none"><i class="fas fa-spinner fa-spin"></i></span>
           </button>
           <button id="checkoutPrintBtn" class="pos-btn pos-btn-ghost full">
-            <span class="btn-text"><i class="fas fa-print mr-2"></i>{{ _('حفظ') }} + {{ _('طباعة') }}</span>
+            <span class="btn-text"><i class="fas fa-print mr-2"></i>إتمام البيع + طباعة</span>
             <span class="btn-spinner d-none"><i class="fas fa-spinner fa-spin"></i></span>
           </button>
         </div>
@@ -401,12 +401,6 @@
 {% block extra_js %}
 <script src="{{ dist_url('js/barcode-scanner.js') }}"></script>
 <script src="{{ dist_url('js/pos/pos-config.js') }}"></script>
-<script src="{{ dist_url('js/pos/cfd-broadcast.js') }}"></script>
-<script src="{{ dist_url('js/pos/scale-serial.js') }}"></script>
-<script src="{{ dist_url('js/pos/offline-catalog.js') }}"></script>
-<script src="{{ dist_url('js/pos/terminal.js') }}"></script>
-<script src="{{ dist_url('js/pos/escpos-printer.js') }}"></script>
-<script src="{{ dist_url('js/pos/print-tickets.js') }}"></script>
 <script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
 <script src="{{ dist_url('js/pos/offline.js') }}"></script>
 {% endblock %}

@@ -533,7 +533,7 @@ body.pos-layout .erp-mobile-nav {
 	font-size: 24px;
 }
 
-.pos-card .name {
+.pos-card .name { overflow-wrap: break-word; } {
 	font-weight: 700;
 	font-size: 14px;
 	line-height: 1.2;
@@ -660,7 +660,7 @@ body.pos-layout .erp-mobile-nav {
 	gap: 8px;
 }
 
-.pos-cart-item .ci-name {
+.pos-cart-item .ci-name { overflow-wrap: break-word; } {
 	font-weight: 700;
 	font-size: 14px;
 }
@@ -786,6 +786,18 @@ body.pos-layout .erp-mobile-nav {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	gap: 8px;
+}
+
+@media (max-width: 768px) {
+	.pos-calc-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 480px) {
+	.pos-calc-grid {
+		grid-template-columns: 1fr;
+	}
 }
 
 .pos-calc-grid button {
