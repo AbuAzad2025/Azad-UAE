@@ -1,4 +1,4 @@
-const POS_CACHE = "pos-cache-v3";
+const POS_CACHE = "pos-cache-v4";
 const POS_QUEUE_DB = "pos-offline-queue";
 const POS_QUEUE_STORE = "checkout-queue";
 
