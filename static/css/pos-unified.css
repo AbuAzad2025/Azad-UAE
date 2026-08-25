@@ -1232,22 +1232,7 @@ body:has(.pos-app) {
 	color: var(--pos-accent);
 }
 
-/* don't clip the side panel — let the page scroll instead */
-.pos-side {
-	position: static;
-	top: auto;
-	max-height: none;
-	overflow: visible;
-}
 
-.pos-cart-scroll {
-	flex: 0 0 auto;
-	max-height: 42vh;
-}
-
-.pos-products {
-	max-height: calc(100vh - 240px);
-}
 
 /* purgecss start ignore */
 .pos-upsell-bar {
