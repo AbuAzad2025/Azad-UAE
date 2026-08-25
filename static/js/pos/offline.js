@@ -40,14 +40,16 @@
 		document.documentElement.dataset.posOnline = visible ? "false" : "true";
 	}
 
-	async function probeConnectivity(timeoutMs = 3500) {
-		// navigator.onLine is unreliable (captive portals, DNS hijack). Probe the
-		// POS health endpoint with a short timeout; any HTTP response (even 401/403)
-		// proves the server is reachable → online. Only network failures → offline.
+	async function probeConnectivity(timeoutMs = 4000) {
+		// navigator.onLine is unreliable (captive portals, DNS hijack). Probe a
+		// lightweight unauthenticated endpoint with a short timeout; any HTTP
+		// response (even 401/403) proves the server is reachable → online.
+		// Heavy authenticated endpoints (/pos/api/session/current) can exceed
+		// the timeout on slow requests and falsely report offline.
 		const ctrl = new AbortController();
 		const t = setTimeout(() => ctrl.abort(), timeoutMs);
 		try {
-			const res = await fetch("/pos/api/session/current", {
+			const res = await fetch("/api/health", {
 				method: "GET",
 				credentials: "same-origin",
 				headers: { Accept: "application/json" },
@@ -60,8 +62,8 @@
 			// Network error / abort → probe fallback endpoint quickly
 			try {
 				const ctrl2 = new AbortController();
-				const t2 = setTimeout(() => ctrl2.abort(), 1500);
-				const res2 = await fetch("/pos/api/products?per_page=1", {
+				const t2 = setTimeout(() => ctrl2.abort(), 2500);
+				const res2 = await fetch("/pos/api/session/current", {
 					method: "GET",
 					credentials: "same-origin",
 					headers: { Accept: "application/json" },
