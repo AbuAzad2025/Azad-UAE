@@ -32,7 +32,13 @@ def cached_query(timeout=300, key_prefix=None):
             prefix = key_prefix or f.__name__
             cache_key = f"{prefix}:{digest}"
 
-            result = cache.get(cache_key)
+            try:
+                result = cache.get(cache_key)
+            except Exception as e:
+                # Cache backend down (e.g. Redis refused) must never 500 a page —
+                # treat as a miss and serve from source (mirrors the set() guard below).
+                current_app.logger.warning(f"Cache get failed for key {cache_key}: {str(e)}")
+                result = None
             if result is not None:
                 return result
 
