@@ -1510,10 +1510,18 @@ body:has(.pos-app) {
 
 /* Numpad */
 .pos-page--grid .pos-numpad {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
 	gap: 0.4rem;
 	padding: 0.5rem 1rem;
+	background: #fff;
+	border-top: 1px solid #e2e8f0;
+	box-shadow: 0 -2px 8px rgba(0,0,0,.08);
+	z-index: 100;
 }
 
 .pos-page--grid .pos-numpad button {
