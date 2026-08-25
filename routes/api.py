@@ -658,6 +658,7 @@ def log_client_error():
     }
     if getattr(current_user, "is_authenticated", False):
         extra["user_id"] = getattr(current_user, "id", None)
+        extra["username"] = getattr(current_user, "username", None)
         extra["tenant_id"] = getattr(current_user, "tenant_id", None)
 
     LoggingCore.log_frontend_error(

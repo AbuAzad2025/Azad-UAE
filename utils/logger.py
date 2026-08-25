@@ -227,11 +227,13 @@ def _bridge_to_error_log(category, message, *, event_level, bridge_level, except
             ip_address=_resolve_id("ip"),
             tenant_id=_resolve_id("tenant_id"),
             user_id=_resolve_id("user_id"),
+            username=_resolve_id("username"),
             request_id=_resolve_id("request_id"),
             extra={
                 "telemetry_category": category,
                 "tenant_id": _resolve_id("tenant_id"),
                 "user_id": _resolve_id("user_id"),
+                "username": _resolve_id("username"),
                 "request_id": _resolve_id("request_id"),
                 "endpoint": _resolve_id("endpoint"),
                 **payload,
