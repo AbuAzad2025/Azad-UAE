@@ -722,6 +722,7 @@ def ingest_telemetry_logs():
 
     tenant_id = get_active_tenant_id(current_user)
     user_id = getattr(current_user, "id", None) if getattr(current_user, "is_authenticated", False) else None
+    username = getattr(current_user, "username", None) if getattr(current_user, "is_authenticated", False) else None
 
     accepted = 0
     for raw_event in events:
@@ -744,6 +745,7 @@ def ingest_telemetry_logs():
                 level=level,
                 tenant_id=tenant_id,
                 user_id=user_id,
+                username=username,
                 source="frontend",
                 url=str(raw_event.get("url") or "")[:500],
                 stack=(str(raw_event.get("stack"))[:4000] if raw_event.get("stack") else None),

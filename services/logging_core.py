@@ -146,6 +146,13 @@ _CATEGORIES = frozenset(
         "API",
         "SECURITY",
         "RATE_LIMIT",
+        "ACCOUNTING",
+        "PRINTING",
+        "REPORTS",
+        "STATIC",
+        "WARNING",
+        "HARDWARE_WARN",
+        "SOFTWARE_EXCEPTION",
     }
 )
 
@@ -233,6 +240,7 @@ def _get_request_context() -> dict[str, Any]:
         "ip": None,
         "ua": None,
         "user_id": None,
+        "username": None,
         "tenant_id": None,
     }
     if has_request_context() and request:
@@ -245,6 +253,7 @@ def _get_request_context() -> dict[str, Any]:
 
             if getattr(current_user, "is_authenticated", False):
                 ctx["user_id"] = int(current_user.get_id())
+                ctx["username"] = getattr(current_user, "username", None) or getattr(current_user, "email", None)
                 ctx["tenant_id"] = getattr(current_user, "tenant_id", None)
         except Exception:
             logger.debug("Failed to resolve current user for request context", exc_info=True)
@@ -745,6 +754,7 @@ class LoggingCore:
         ip_address: str | None = None,
         tenant_id: int | None = None,
         user_id: int | None = None,
+        username: str | None = None,
         request_id: str | None = None,
     ) -> int | None:
         """Persist error to database + file log.
@@ -775,6 +785,7 @@ class LoggingCore:
             ip_address=ip_address,
             tenant_id=tenant_id,
             user_id=user_id,
+            username=username,
             request_id=request_id,
             extra=extra,
         )
@@ -832,6 +843,7 @@ class LoggingCore:
         ip_address: str | None = None,
         tenant_id: int | None = None,
         user_id: int | None = None,
+        username: str | None = None,
         request_id: str | None = None,
         stack_trace: str | None = None,
         extra: dict[str, Any] | None = None,
@@ -849,6 +861,7 @@ class LoggingCore:
         _ua = user_agent or ctx["ua"]
         _ip = ip_address or ctx["ip"]
         _user_id = user_id if user_id is not None else ctx["user_id"]
+        _username = username if username is not None else ctx.get("username")
         _tenant_id = tenant_id if tenant_id is not None else ctx["tenant_id"]
 
         environment = "production"
@@ -910,13 +923,13 @@ class LoggingCore:
                 fingerprint, occurrence_count, first_seen_at, last_seen_at,
                 level, category, source, message, exception_type,
                 stack_trace, request_id, url, method, ip_address, user_agent,
-                environment, app_version, user_id, tenant_id, request_data,
+                environment, app_version, user_id, username, tenant_id, request_data,
                 is_resolved, created_at
             ) VALUES (
                 :fingerprint, 1, :now, :now,
                 :level, :category, :source, :message, :exception_type,
                 :stack_trace, :request_id, :url, :method, :ip_address, :user_agent,
-                :environment, :app_version, :user_id, :tenant_id, :request_data,
+                :environment, :app_version, :user_id, :username, :tenant_id, :request_data,
                 false, :now
             ) RETURNING id
         """)
@@ -937,6 +950,7 @@ class LoggingCore:
             "environment": environment[:20],
             "app_version": (app_version or "")[:30],
             "user_id": _user_id,
+            "username": (_username or "")[:100] if _username else None,
             "tenant_id": _tenant_id,
             "request_data": (json.dumps(request_data, ensure_ascii=False, default=str) if request_data else None),
             "now": datetime.now(UTC),

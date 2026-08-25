@@ -61,6 +61,8 @@
         };
 
         window.CURRENT_USER_PERMISSIONS = JSON.parse(document.getElementById('user-permissions-data').textContent || '[]');
+        window.CURRENT_USERNAME = {{ current_user.username | tojson | safe if current_user.is_authenticated else 'null' }};
+        window.CURRENT_USER_ID = {{ current_user.id | tojson | safe if current_user.is_authenticated else 'null' }};
     </script>
     <script src="{{ dist_url('js/pos-permissions.js') }}"></script>
     <script src="{{ dist_url('js/i18n.js') }}"></script>

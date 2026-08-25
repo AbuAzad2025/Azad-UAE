@@ -140,6 +140,8 @@
   <script nonce="{{ csp_nonce() }}">
     window.APP_ENUMS = {{ app_enums | tojson | safe }};
     window.CURRENT_USER_PERMISSIONS = {{ current_user_permissions | tojson | safe }};
+    window.CURRENT_USERNAME = {{ current_user.username | tojson | safe if current_user.is_authenticated else 'null' }};
+    window.CURRENT_USER_ID = {{ current_user.id | tojson | safe if current_user.is_authenticated else 'null' }};
     window.hasPermission = (code) => (window.CURRENT_USER_PERMISSIONS || []).includes(code);
     window._LOG_ENDPOINT = '{{ url_for("api.log_client_error") }}';
     window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}';

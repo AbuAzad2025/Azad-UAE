@@ -61,6 +61,7 @@ class ErrorAuditLog(db.Model):
 
     # ── User / tenant context ──────────────────────────────────
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), index=True)
+    username = db.Column(db.String(100), index=True)
     tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="CASCADE"), index=True)
 
     # Sanitized request data (no passwords, tokens, secrets)
@@ -102,6 +103,7 @@ class ErrorAuditLog(db.Model):
             "environment": self.environment,
             "app_version": self.app_version,
             "user_id": self.user_id,
+            "username": self.username,
             "tenant_id": self.tenant_id,
             "is_resolved": self.is_resolved,
             "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,

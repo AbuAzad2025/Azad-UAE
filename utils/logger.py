@@ -46,6 +46,7 @@ _INSTANCE_DIR = os.path.join(_BASEDIR, "instance")
 _CONTEXT_FIELDS = (
     "tenant_id",
     "user_id",
+    "username",
     "request_id",
     "ip",
     "endpoint",
@@ -285,6 +286,7 @@ def log_event(
     level: str | int = "INFO",
     tenant_id=None,
     user_id=None,
+    username=None,
     _bridge: bool = True,
     _bridge_level: str | None = None,
     **extras,
@@ -300,7 +302,7 @@ def log_event(
     handlers) so exactly one error_audit_logs row exists per real event.
     """
     level_no = _levels.get(level.upper(), logging.INFO) if isinstance(level, str) else int(level)
-    explicit = {"tenant_id": tenant_id, "user_id": user_id}
+    explicit = {"tenant_id": tenant_id, "user_id": user_id, "username": username}
     for field in _CONTEXT_FIELDS:
         if field in extras:
             explicit[field] = extras.pop(field)

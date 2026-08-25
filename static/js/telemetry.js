@@ -240,6 +240,7 @@
 		url: pageUrl(),
 		stack: stack ? truncate(stack, 4000) : undefined,
 		client_ts: nowIso(),
+		username: (typeof window.CURRENT_USERNAME === "string" ? window.CURRENT_USERNAME : null) || (window.CURRENT_USER && window.CURRENT_USER.username) || undefined,
 		breadcrumbs: breadcrumbs.slice(),
 		extra: extra || {},
 	});
