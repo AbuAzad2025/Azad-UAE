@@ -1509,7 +1509,8 @@ body:has(.pos-app) {
 }
 
 /* Numpad */
-.pos-page--grid .pos-numpad {
+.pos-page--grid .pos-numpad,
+.pos-page--grid .pos-numpad--fixed {
 	position: fixed;
 	bottom: 0;
 	left: 0;
@@ -1522,6 +1523,20 @@ body:has(.pos-app) {
 	border-top: 1px solid #e2e8f0;
 	box-shadow: 0 -2px 8px rgba(0,0,0,.08);
 	z-index: 100;
+}
+
+.pos-page--grid .pos-payment-btns,
+.pos-page--grid .pos-payment-btns--fixed {
+	position: fixed;
+	bottom: 220px; /* above numpad (approx 170px height + gap) */
+	left: 0;
+	right: 0;
+	display: flex;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	justify-content: center;
+	background: transparent;
+	z-index: 101;
 }
 
 .pos-page--grid .pos-numpad button {
