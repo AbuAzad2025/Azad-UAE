@@ -351,7 +351,7 @@
 
               <input type="checkbox" class="custom-control-input" id="splitTenderToggle">
 
-              <label class="custom-control-label" for="splitTenderToggle">{{ _('دفع متعدد (تقسيم المبلغ)') }}</label>
+              <label class="custom-control-label" for="splitTenderToggle">{{ _('دفع متعدد (تقسيم المبلغ) }}</label>
 
             </div>
 
@@ -371,33 +371,33 @@
 
       </div>
 
+      <div class="pos-numpad">
+
+        <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
+
+        <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
+
+        <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
+
+        <button data-key=".">.</button><button data-key="0">0</button><button class="action" data-key="qty">{{ _('كمية') }}</button>
+
+        <button class="danger" data-key="del" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-backspace"></i></button><button class="action" data-key="disc">{{ _('خصم') }}</button><button class="action" data-key="price">{{ _('سعر') }}</button>
+
+      </div>
+
+      <div class="pos-payment-btns">
+
+        <button id="checkoutBtn" class="btn-pay"><i class="fas fa-check mr-1"></i>{{ _('حفظ الفاتورة') }}</button>
+
+        <button id="checkoutPrintBtn" class="btn-print"><i class="fas fa-print mr-1"></i>{{ _('حفظ + طباعة') }}</button>
+
+        <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash mr-1"></i>{{ _('مسح') }}</button>
+
+      </div>
+
     </div>
 
   </div>
-
-</div>
-
-<div class="pos-numpad pos-numpad--fixed">
-
-  <button data-key="1">1</button><button data-key="2">2</button><button data-key="3">3</button>
-
-  <button data-key="4">4</button><button data-key="5">5</button><button data-key="6">6</button>
-
-  <button data-key="7">7</button><button data-key="8">8</button><button data-key="9">9</button>
-
-  <button data-key=".">.</button><button data-key="0">0</button><button class="action" data-key="qty">{{ _('كمية') }}</button>
-
-  <button class="danger" data-key="del" title="{{ _('حذف') }}" aria-label="{{ _('حذف') }}"><i class="fas fa-backspace"></i></button><button class="action" data-key="disc">{{ _('خصم') }}</button><button class="action" data-key="price">{{ _('سعر') }}</button>
-
-</div>
-
-<div class="pos-payment-btns pos-payment-btns--fixed">
-
-  <button id="checkoutBtn" class="btn-pay"><i class="fas fa-check mr-1"></i>{{ _('حفظ الفاتورة') }}</button>
-
-  <button id="checkoutPrintBtn" class="btn-print"><i class="fas fa-print mr-1"></i>{{ _('حفظ + طباعة') }}</button>
-
-  <button id="clearCartBtn" class="btn-clear"><i class="fas fa-trash mr-1"></i>{{ _('مسح') }}</button>
 
 </div>
 
