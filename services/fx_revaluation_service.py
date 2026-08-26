@@ -31,13 +31,17 @@ _REVALUATION_TAG = "FX_REVALUATION"
 _THRESHOLD = Decimal("0.01")
 
 
-def _current_rate(from_currency: str, to_currency: str, tenant_id: int | None) -> Decimal:
+def _current_rate(from_currency: str, to_currency: str, tenant_id: int | None) -> Decimal | None:
+    """Current rate for the pair, or None when no rate can be resolved (needs_input)."""
     rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
         from_currency,
         to_currency,
         tenant_id=tenant_id,
     )
-    return Decimal(str(rate_info["rate"]))
+    rate = rate_info.get("rate")
+    if rate is None:
+        return None
+    return Decimal(str(rate))
 
 
 def _open_sales(tenant_id: int | None, base_currency: str):
@@ -182,6 +186,11 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
 
     for sale in open_sales:
         current = _current_rate(sale.currency, base_currency, tenant_id)
+        if current is None:
+            summary["errors"].append(
+                f"No exchange rate for {sale.currency} -> {base_currency}; skipped Sale #{sale.sale_number}"
+            )
+            continue
         original = Decimal(str(sale.exchange_rate or 1))
         if original <= 0:
             original = Decimal("1")
@@ -217,11 +226,11 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
                 ]
             )
         else:
-            gain = abs(fx_diff)
+            loss_amount = abs(fx_diff)
             all_lines.extend(
                 [
-                    {"account": fx_loss, "concept_code": "FX_LOSS", "debit": gain, "description": desc},
-                    {"account": ar_concept, "concept_code": "AR", "credit": gain, "description": desc},
+                    {"account": fx_loss, "concept_code": "FX_LOSS", "debit": loss_amount, "description": desc},
+                    {"account": ar_concept, "concept_code": "AR", "credit": loss_amount, "description": desc},
                 ]
             )
 
@@ -249,6 +258,12 @@ def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_conce
 
     for purchase, balance_aed in open_purchases:
         current = _current_rate(purchase.currency, base_currency, tenant_id)
+        if current is None:
+            summary["errors"].append(
+                f"No exchange rate for {purchase.currency} -> {base_currency}; "
+                f"skipped Purchase #{purchase.purchase_number}"
+            )
+            continue
         original = Decimal(str(purchase.exchange_rate or 1))
         if original <= 0:
             original = Decimal("1")
@@ -284,11 +299,11 @@ def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_conce
                 ]
             )
         else:
-            gain = abs(fx_diff)
+            gain_amount = abs(fx_diff)
             all_lines.extend(
                 [
-                    {"account": ap_concept, "concept_code": "AP", "debit": gain, "description": desc},
-                    {"account": fx_gain, "concept_code": "FX_GAIN", "credit": gain, "description": desc},
+                    {"account": ap_concept, "concept_code": "AP", "debit": gain_amount, "description": desc},
+                    {"account": fx_gain, "concept_code": "FX_GAIN", "credit": gain_amount, "description": desc},
                 ]
             )
 

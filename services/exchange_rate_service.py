@@ -25,7 +25,7 @@ from __future__ import annotations
 import logging
 import time
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from flask import current_app
@@ -395,7 +395,7 @@ class ExchangeRateService:
                         "ok": True,
                         "from": from_currency,
                         "to": to_currency,
-                        "rate": str(rate.quantize(Decimal("0.000001"))),
+                        "rate": str(rate.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)),
                         "source": "document_fixed",
                         "rate_mode": "frozen",
                         "note": "Rate is already frozen inside the saved document. Never auto-update.",
@@ -417,7 +417,7 @@ class ExchangeRateService:
                         "ok": True,
                         "from": from_currency,
                         "to": to_currency,
-                        "rate": str(rate.quantize(Decimal("0.000001"))),
+                        "rate": str(rate.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)),
                         "source": "user_manual",
                         "rate_mode": "editable",
                         "note": "User-provided rate. Caller MUST store in document on save and then treat as frozen.",
@@ -514,7 +514,7 @@ class ExchangeRateService:
                 .first()
             )
             if record and record.rate:
-                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001")))
+                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP))
         except Exception:
             logger.debug(
                 "Failed to fetch manual exchange rate from DB for %s -> %s",
@@ -553,7 +553,7 @@ class ExchangeRateService:
                 )
                 return None
             if rate_decimal and rate_decimal > Decimal("0"):
-                rate_str = str(rate_decimal.quantize(Decimal("0.000001")))
+                rate_str = str(rate_decimal.quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP))
                 # Auto-save genuinely-online rates (not static fallbacks) to
                 # tenant-scoped exchange_rate_records as 'api_primary' for today.
                 # exchange_rate_records.tenant_id is NOT NULL, so skip when unset.
@@ -599,7 +599,7 @@ class ExchangeRateService:
                 .first()
             )
             if record and record.rate:
-                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001")))
+                return str(Decimal(str(record.rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP))
         except Exception:
             logger.debug(
                 "Failed to get last known exchange rate for %s -> %s",
