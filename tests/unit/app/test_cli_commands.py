@@ -332,6 +332,7 @@ class TestSanitizeLegacyIndustries:
         assert result.exit_code == 0
         assert "ERROR" in result.output
 
+
 class TestSeedPackagesCommand:
     """flask seed-packages — real idempotent upsert against the test database."""
 
@@ -447,18 +448,14 @@ class TestSeedDemoIntegration:
         from models.tenant import Tenant
 
         with app.app_context():
-            before = Product.query.filter_by(
-                tenant_id=Tenant.query.filter_by(slug="demo").first().id
-            ).count()
+            before = Product.query.filter_by(tenant_id=Tenant.query.filter_by(slug="demo").first().id).count()
         runner = app.test_cli_runner()
         result = runner.invoke(args=["seed-demo"])
         assert result.exit_code == 0, result.output
         assert "already exists" in result.output
         assert "re-seeding with --force" not in result.output
         with app.app_context():
-            after = Product.query.filter_by(
-                tenant_id=Tenant.query.filter_by(slug="demo").first().id
-            ).count()
+            after = Product.query.filter_by(tenant_id=Tenant.query.filter_by(slug="demo").first().id).count()
         assert after == before
 
     def test_05_direct_reseed_wipes_existing_demo_data(self, app, capsys):

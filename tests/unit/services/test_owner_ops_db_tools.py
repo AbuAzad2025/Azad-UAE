@@ -51,9 +51,7 @@ class TestDatabaseToolsAgainstScratchTable:
     def test_run_select_rows_returns_dicts(self, seam, scratch_table):
         from services.owner_ops_service import OwnerOpsService
 
-        data, count = OwnerOpsService.run_select_rows(
-            f"SELECT id, label FROM {scratch_table} ORDER BY id", db=seam
-        )
+        data, count = OwnerOpsService.run_select_rows(f"SELECT id, label FROM {scratch_table} ORDER BY id", db=seam)
         assert count == 3
         assert [d["label"] for d in data] == ["row1", "row2", "row3"]
 
@@ -91,9 +89,7 @@ class TestDatabaseToolsAgainstScratchTable:
     def test_execute_table_row_update_mutates_target_row(self, seam, scratch_table):
         from services.owner_ops_service import OwnerOpsService
 
-        target_id = (
-            seam.session.execute(sa_text(f'SELECT id FROM "{scratch_table}" ORDER BY id LIMIT 1')).scalar()
-        )
+        target_id = seam.session.execute(sa_text(f'SELECT id FROM "{scratch_table}" ORDER BY id LIMIT 1')).scalar()
         OwnerOpsService.execute_table_row_update(scratch_table, "id", target_id, {"label": "patched"}, db=seam)
         seam.session.commit()
 

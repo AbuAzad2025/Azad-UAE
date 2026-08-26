@@ -27,8 +27,17 @@ def _hash(payload=None):
     return hash_request_payload(payload if payload is not None else PAYLOAD)
 
 
-def _make_record(db_session, sample_tenant, *, key="k", endpoint="pos.checkout", body=None,
-                 status=IdempotencyKey.STATUS_COMPLETED, response_status=200, created_at=None):
+def _make_record(
+    db_session,
+    sample_tenant,
+    *,
+    key="k",
+    endpoint="pos.checkout",
+    body=None,
+    status=IdempotencyKey.STATUS_COMPLETED,
+    response_status=200,
+    created_at=None,
+):
     record = IdempotencyKey(
         tenant_id=sample_tenant.id,
         endpoint=endpoint,
@@ -50,9 +59,12 @@ def _make_record(db_session, sample_tenant, *, key="k", endpoint="pos.checkout",
 
 class TestReplayIfCompleted:
     def test_fresh_key_returns_none(self, db_session, sample_tenant):
-        assert IdempotencyService.replay_if_completed(
-            tenant_id=sample_tenant.id, endpoint="pos.checkout", key="fresh", request_hash=_hash()
-        ) is None
+        assert (
+            IdempotencyService.replay_if_completed(
+                tenant_id=sample_tenant.id, endpoint="pos.checkout", key="fresh", request_hash=_hash()
+            )
+            is None
+        )
 
     def test_completed_row_replays_exact_payload_and_status(self, db_session, sample_tenant):
         _make_record(db_session, sample_tenant, key="done", body='{"ok": true, "id": 7}', response_status=201)
@@ -97,12 +109,9 @@ class TestIsExpiredBranches:
         record = IdempotencyKey.query.filter_by(tenant_id=sample_tenant.id, key="nul").first()
         record.created_at = None
         # No flush: the identity-map instance carries the None into the service read.
-        assert (
-            IdempotencyService.replay_if_completed(
-                tenant_id=sample_tenant.id, endpoint="pos.checkout", key="nul", request_hash=_hash()
-            )
-            == ({"ok": 1}, 200)
-        )
+        assert IdempotencyService.replay_if_completed(
+            tenant_id=sample_tenant.id, endpoint="pos.checkout", key="nul", request_hash=_hash()
+        ) == ({"ok": 1}, 200)
 
     def test_naive_timestamp_compared_as_utc(self, db_session, sample_tenant):
         naive_stale = (datetime.now(UTC) - IDEMPOTENCY_TTL - timedelta(hours=2)).replace(tzinfo=None)

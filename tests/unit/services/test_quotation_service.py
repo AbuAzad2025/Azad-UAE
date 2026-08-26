@@ -200,7 +200,9 @@ class TestQuotationUpdate:
         assert updated.warehouse_id is None
         assert updated.customer_id == customer.id
 
-    def test_update_replaces_lines_and_recalculates_totals(self, db_session, sample_tenant, sample_user, sample_product):
+    def test_update_replaces_lines_and_recalculates_totals(
+        self, db_session, sample_tenant, sample_user, sample_product
+    ):
         """Regression guard: replaced lines must drive recalculated totals (no stale ORM collection)."""
         customer = _customer(db_session, sample_tenant, "UPD-C2")
         q = QuotationService.create_quotation(

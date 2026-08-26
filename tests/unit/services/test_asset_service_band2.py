@@ -65,9 +65,7 @@ class TestListAssetsFilters:
         by_branch = AssetService.list_assets(sample_user, {"branch_id": str(sample_branch.id)})
         assert {a.id for a in by_branch} == {vehicle.id}
 
-    def test_other_tenant_assets_excluded(
-        self, db_session, sample_tenant, sample_gl_accounts, sample_user
-    ):
+    def test_other_tenant_assets_excluded(self, db_session, sample_tenant, sample_gl_accounts, sample_user):
         """Tenant isolation: rows belonging to another tenant must never leak."""
         import uuid as _uuid
 
@@ -106,7 +104,9 @@ class TestListAssetsFilters:
 
 
 class TestPostManualDepreciation:
-    def test_success_posts_schedule_and_updates_totals(self, db_session, sample_tenant, sample_gl_accounts, sample_user):
+    def test_success_posts_schedule_and_updates_totals(
+        self, db_session, sample_tenant, sample_gl_accounts, sample_user
+    ):
         from models import DepreciationSchedule
 
         asset = AssetService.create_asset(_asset_data(sample_tenant.id, price="12000"), sample_user)
@@ -123,9 +123,7 @@ class TestPostManualDepreciation:
     def test_land_asset_zero_depreciation_raises_no_schedule_value_error(
         self, db_session, sample_tenant, sample_gl_accounts, sample_user
     ):
-        asset = AssetService.create_asset(
-            _asset_data(sample_tenant.id, category="land", price="50000"), sample_user
-        )
+        asset = AssetService.create_asset(_asset_data(sample_tenant.id, category="land", price="50000"), sample_user)
         with pytest.raises(ValueError, match="استهلاك"):
             AssetService.post_manual_depreciation(asset)
 
@@ -145,7 +143,9 @@ class TestGetDepreciationSchedule:
 
 
 class TestUpdateStatusGuard:
-    def test_fully_depreciated_asset_remains_updatable(self, db_session, sample_tenant, sample_gl_accounts, sample_user):
+    def test_fully_depreciated_asset_remains_updatable(
+        self, db_session, sample_tenant, sample_gl_accounts, sample_user
+    ):
         asset = AssetService.create_asset(_asset_data(sample_tenant.id), sample_user)
         asset.status = "fully_depreciated"
         db_session.flush()

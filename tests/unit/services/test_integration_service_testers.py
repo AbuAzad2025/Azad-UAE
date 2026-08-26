@@ -51,7 +51,11 @@ class TestBuildCurrencyTestUrl:
         from services.integration_service import IntegrationService
 
         url = IntegrationService._build_currency_test_url(
-            {"api_url": "https://api.example.test/rate?key={api_key}&base={base}", "api_key": "K-123", "base_currency": "aed"}
+            {
+                "api_url": "https://api.example.test/rate?key={api_key}&base={base}",
+                "api_key": "K-123",
+                "base_currency": "aed",
+            }
         )
         assert url == "https://api.example.test/rate?key=K-123&base=AED"
 
@@ -152,9 +156,7 @@ class TestEmailTester:
 
     def test_smtp_username_used_as_sender_when_from_email_absent(self, app, settings_spy, mocker):
         send = mocker.patch("services.integration_service.mail.send")
-        settings_spy["email"] = _integration_row(
-            {"smtp_user": "erp@test.local", "sender_name": "Azadexa"}
-        )
+        settings_spy["email"] = _integration_row({"smtp_user": "erp@test.local", "sender_name": "Azadexa"})
         ok, message = self._service().test_email()
         assert ok is True
         sent = send.call_args.args[0]

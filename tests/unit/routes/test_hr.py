@@ -50,20 +50,12 @@ def _hr_patches(**kwargs):
                 side_effect=lambda model: _chain_query(all=kwargs.get("leave_types", [])),
             )
         )
-        stack.enter_context(
-            patch("routes.hr.HRService.report_attendance", return_value=kwargs.get("records", []))
-        )
+        stack.enter_context(patch("routes.hr.HRService.report_attendance", return_value=kwargs.get("records", [])))
         stack.enter_context(patch("routes.hr.HRService.list_leaves", return_value=kwargs.get("leaves", [])))
-        stack.enter_context(
-            patch("routes.hr.HRService.list_departments", return_value=kwargs.get("departments", []))
-        )
-        stack.enter_context(
-            patch("routes.hr.HRService.list_active_users", return_value=kwargs.get("users", []))
-        )
+        stack.enter_context(patch("routes.hr.HRService.list_departments", return_value=kwargs.get("departments", [])))
+        stack.enter_context(patch("routes.hr.HRService.list_active_users", return_value=kwargs.get("users", [])))
         stack.enter_context(patch("routes.hr.HRService.clock_in", return_value=_mock_attendance()))
-        stack.enter_context(
-            patch("routes.hr.HRService.clock_out", return_value=_mock_attendance(work_hours=7.5))
-        )
+        stack.enter_context(patch("routes.hr.HRService.clock_out", return_value=_mock_attendance(work_hours=7.5)))
         stack.enter_context(patch("routes.hr.HRService.request_leave"))
         stack.enter_context(patch("routes.hr.HRService.approve_leave", return_value=_mock_leave()))
         stack.enter_context(patch("routes.hr.HRService.refuse_leave", return_value=_mock_leave()))
@@ -72,15 +64,9 @@ def _hr_patches(**kwargs):
         stack.enter_context(
             patch("routes.hr.LeaveBalanceService.list_balances", return_value=kwargs.get("balances", []))
         )
-        stack.enter_context(
-            patch("routes.hr.LeaveBalanceService.accrue_leave", return_value=_mock_balance())
-        )
-        stack.enter_context(
-            patch("routes.hr.LeaveBalanceService.carry_forward_leave", return_value=_mock_balance())
-        )
-        stack.enter_context(
-            patch("routes.hr.OvertimeService.list_entries", return_value=kwargs.get("overtime", []))
-        )
+        stack.enter_context(patch("routes.hr.LeaveBalanceService.accrue_leave", return_value=_mock_balance()))
+        stack.enter_context(patch("routes.hr.LeaveBalanceService.carry_forward_leave", return_value=_mock_balance()))
+        stack.enter_context(patch("routes.hr.OvertimeService.list_entries", return_value=kwargs.get("overtime", [])))
         stack.enter_context(patch("routes.hr.OvertimeService.create_entry", return_value=_mock_overtime()))
         stack.enter_context(patch("routes.hr.OvertimeService.approve_entry", return_value=_mock_overtime()))
         stack.enter_context(patch("routes.hr.OvertimeService.reject_entry", return_value=_mock_overtime()))
@@ -155,9 +141,7 @@ class TestHrAccrueLeave:
             mocked.assert_called_once()
 
     def test_accrue_value_error(self, hr_client):
-        with _hr_patches(), patch(
-            "routes.hr.LeaveBalanceService.accrue_leave", side_effect=ValueError("bad days")
-        ):
+        with _hr_patches(), patch("routes.hr.LeaveBalanceService.accrue_leave", side_effect=ValueError("bad days")):
             resp = hr_client.post(
                 "/hr/leave-ledger/accrue",
                 data={"user_id": "7", "leave_type_id": "1", "days": "abc"},
@@ -175,9 +159,7 @@ class TestHrAccrueLeave:
         assert resp.status_code == 302
 
     def test_accrue_invalid_leave_type(self, hr_client):
-        with _hr_patches(), patch(
-            "routes.hr.LeaveBalanceService.accrue_leave", side_effect=KeyError("leave_type_id")
-        ):
+        with _hr_patches(), patch("routes.hr.LeaveBalanceService.accrue_leave", side_effect=KeyError("leave_type_id")):
             resp = hr_client.post(
                 "/hr/leave-ledger/accrue",
                 data={"user_id": "1", "leave_type_id": ""},
@@ -199,8 +181,9 @@ class TestHrCarryForward:
             mocked.assert_called_once_with(5, 2, 2024, 1)
 
     def test_carry_forward_value_error(self, hr_client):
-        with _hr_patches(), patch(
-            "routes.hr.LeaveBalanceService.carry_forward_leave", side_effect=ValueError("no balance")
+        with (
+            _hr_patches(),
+            patch("routes.hr.LeaveBalanceService.carry_forward_leave", side_effect=ValueError("no balance")),
         ):
             resp = hr_client.post(
                 "/hr/leave-ledger/carry-forward",
@@ -219,9 +202,10 @@ class TestHrCarryForward:
         assert resp.status_code == 302
 
     def test_carry_forward_no_tenant(self, hr_client):
-        with _hr_patches(tid=None), patch(
-            "routes.hr.LeaveBalanceService.carry_forward_leave", return_value=None
-        ) as mocked:
+        with (
+            _hr_patches(tid=None),
+            patch("routes.hr.LeaveBalanceService.carry_forward_leave", return_value=None) as mocked,
+        ):
             resp = hr_client.post(
                 "/hr/leave-ledger/carry-forward",
                 data={"user_id": "5", "leave_type_id": "1", "from_year": "2024"},
@@ -271,9 +255,7 @@ class TestHrOvertime:
         assert resp.status_code == 302
 
     def test_create_overtime_value_error(self, hr_client):
-        with _hr_patches(), patch(
-            "routes.hr.OvertimeService.create_entry", side_effect=ValueError("hours required")
-        ):
+        with _hr_patches(), patch("routes.hr.OvertimeService.create_entry", side_effect=ValueError("hours required")):
             resp = hr_client.post(
                 "/hr/overtime/create",
                 data={"user_id": "10", "overtime_date": "2026-06-26", "hours": ""},
@@ -282,18 +264,17 @@ class TestHrOvertime:
         assert resp.status_code == 302
 
     def test_create_overtime_key_error(self, hr_client):
-        with _hr_patches(), patch(
-            "routes.hr.OvertimeService.create_entry", side_effect=KeyError("user_id")
-        ):
+        with _hr_patches(), patch("routes.hr.OvertimeService.create_entry", side_effect=KeyError("user_id")):
             resp = hr_client.post("/hr/overtime/create", data={}, follow_redirects=False)
         assert resp.status_code == 302
 
     def test_approve_overtime_success(self, hr_client):
         entry = _mock_overtime(status="pending")
         with _hr_patches():
-            with patch("routes.hr.tenant_get_or_404", return_value=entry), patch(
-                "routes.hr.OvertimeService.approve_entry", return_value=entry
-            ) as mocked:
+            with (
+                patch("routes.hr.tenant_get_or_404", return_value=entry),
+                patch("routes.hr.OvertimeService.approve_entry", return_value=entry) as mocked,
+            ):
                 resp = hr_client.post("/hr/overtime/10/approve", follow_redirects=False)
             assert resp.status_code == 302
             mocked.assert_called_once()
@@ -301,8 +282,9 @@ class TestHrOvertime:
     def test_approve_overtime_value_error(self, hr_client):
         entry = _mock_overtime(status="pending")
         with _hr_patches():
-            with patch("routes.hr.tenant_get_or_404", return_value=entry), patch(
-                "routes.hr.OvertimeService.approve_entry", side_effect=ValueError("already approved")
+            with (
+                patch("routes.hr.tenant_get_or_404", return_value=entry),
+                patch("routes.hr.OvertimeService.approve_entry", side_effect=ValueError("already approved")),
             ):
                 resp = hr_client.post("/hr/overtime/10/approve", follow_redirects=False)
             assert resp.status_code == 302
@@ -316,20 +298,20 @@ class TestHrOvertime:
     def test_reject_overtime_success(self, hr_client):
         entry = _mock_overtime(status="pending")
         with _hr_patches():
-            with patch("routes.hr.tenant_get_or_404", return_value=entry), patch(
-                "routes.hr.OvertimeService.reject_entry", return_value=entry
-            ) as mocked:
-                resp = hr_client.post(
-                    "/hr/overtime/10/reject", data={"reason": "not needed"}, follow_redirects=False
-                )
+            with (
+                patch("routes.hr.tenant_get_or_404", return_value=entry),
+                patch("routes.hr.OvertimeService.reject_entry", return_value=entry) as mocked,
+            ):
+                resp = hr_client.post("/hr/overtime/10/reject", data={"reason": "not needed"}, follow_redirects=False)
             assert resp.status_code == 302
             mocked.assert_called_once()
 
     def test_reject_overtime_value_error(self, hr_client):
         entry = _mock_overtime(status="pending")
         with _hr_patches():
-            with patch("routes.hr.tenant_get_or_404", return_value=entry), patch(
-                "routes.hr.OvertimeService.reject_entry", side_effect=ValueError("already")
+            with (
+                patch("routes.hr.tenant_get_or_404", return_value=entry),
+                patch("routes.hr.OvertimeService.reject_entry", side_effect=ValueError("already")),
             ):
                 resp = hr_client.post("/hr/overtime/10/reject", data={}, follow_redirects=False)
             assert resp.status_code == 302

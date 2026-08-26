@@ -157,7 +157,11 @@ class TestLiquidityBalance:
         debit_q.scalar.return_value = Decimal("1000")
         credit_q.scalar.return_value = Decimal("400")
 
-        with patch("models.GLAccount", mock_account), patch("extensions.db", mock_db), patch("models.GLJournalLine", MagicMock()):
+        with (
+            patch("models.GLAccount", mock_account),
+            patch("extensions.db", mock_db),
+            patch("models.GLJournalLine", MagicMock()),
+        ):
             out = MainSiteService.liquidity_balance("cash", tenant_id=1, branch_id=7)
             assert out == Decimal("600")
 
@@ -177,7 +181,11 @@ class TestLiquidityBalance:
         credit_q.filter.return_value = credit_q
         debit_q.scalar.return_value = Decimal("10")
         credit_q.scalar.return_value = None  # should coalesce to 0
-        with patch("models.GLAccount", mock_account), patch("extensions.db", mock_db), patch("models.GLJournalLine", MagicMock()):
+        with (
+            patch("models.GLAccount", mock_account),
+            patch("extensions.db", mock_db),
+            patch("models.GLJournalLine", MagicMock()),
+        ):
             out = MainSiteService.liquidity_balance("bank", tenant_id=2)
             assert out == Decimal("10")
 

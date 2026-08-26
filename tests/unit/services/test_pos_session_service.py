@@ -40,9 +40,7 @@ def sale(db_session, sample_sale):
 
 
 class TestUpdateSessionTotals:
-    def test_cash_payment_updates_sales_and_cash_bucket(
-        self, db_session, sample_tenant, pos_session, sale
-    ):
+    def test_cash_payment_updates_sales_and_cash_bucket(self, db_session, sample_tenant, pos_session, sale):
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -57,9 +55,7 @@ class TestUpdateSessionTotals:
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("150.555")
         assert Decimal(str(pos_session.total_card_sales)) == Decimal("0")
 
-    def test_non_cash_payment_data_leaves_cash_bucket_untouched(
-        self, db_session, sample_tenant, pos_session, sale
-    ):
+    def test_non_cash_payment_data_leaves_cash_bucket_untouched(self, db_session, sample_tenant, pos_session, sale):
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -82,9 +78,7 @@ class TestUpdateSessionTotals:
         assert Decimal(str(pos_session.total_sales)) == Decimal("210.000")
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("0")
 
-    def test_split_tenders_land_in_buckets_and_total_sales(
-        self, db_session, sample_tenant, pos_session, sale
-    ):
+    def test_split_tenders_land_in_buckets_and_total_sales(self, db_session, sample_tenant, pos_session, sale):
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -103,9 +97,7 @@ class TestUpdateSessionTotals:
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("50.000")
         assert Decimal(str(pos_session.total_card_sales)) == Decimal("20.000")
 
-    def test_foreign_currency_tender_is_converted_to_aed(
-        self, db_session, sample_tenant, pos_session, sale
-    ):
+    def test_foreign_currency_tender_is_converted_to_aed(self, db_session, sample_tenant, pos_session, sale):
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -143,9 +135,7 @@ class TestUpdateSessionTotals:
         assert Decimal(str(pos_session.total_sales)) == Decimal("420.000")
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("15.500")
 
-    def test_unknown_tender_method_only_counts_into_total_sales(
-        self, db_session, sample_tenant, pos_session, sale
-    ):
+    def test_unknown_tender_method_only_counts_into_total_sales(self, db_session, sample_tenant, pos_session, sale):
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -190,9 +180,7 @@ class TestCreateShift:
         # Branch is derived through the parent session.
         assert stored.branch_id == pos_session.branch_id
 
-    def test_create_shift_defaults_starting_cash_to_zero(
-        self, db_session, sample_tenant, sample_user, pos_session
-    ):
+    def test_create_shift_defaults_starting_cash_to_zero(self, db_session, sample_tenant, sample_user, pos_session):
         from services.pos_session_service import PosSessionService
 
         shift = PosSessionService.create_shift(tenant_id=sample_tenant.id, user_id=sample_user.id)

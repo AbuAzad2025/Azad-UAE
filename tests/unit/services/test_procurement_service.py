@@ -446,7 +446,9 @@ class TestCreateGRN:
     ):
         po, _ = self._confirmed_po(db_session, sample_tenant, sample_user, sample_supplier, sample_product)
         with pytest.raises(ValueError):
-            ProcurementService.create_grn(po.id, {"lines": [{"po_line_id": 99999999, "received_quantity": "1"}]}, sample_user)
+            ProcurementService.create_grn(
+                po.id, {"lines": [{"po_line_id": 99999999, "received_quantity": "1"}]}, sample_user
+            )
 
 
 class TestConfirmGRNFullReceipt:
@@ -542,8 +544,17 @@ class TestConfirmGRNFullReceipt:
 
 class TestThreeWayMatch:
     def _po_with_confirmed_grn(
-        self, db_session, sample_tenant, sample_user, sample_supplier, sample_product, sample_warehouse,
-        po_qty="10", cost="5", received="10", total="50"
+        self,
+        db_session,
+        sample_tenant,
+        sample_user,
+        sample_supplier,
+        sample_product,
+        sample_warehouse,
+        po_qty="10",
+        cost="5",
+        received="10",
+        total="50",
     ):
         po = PurchaseOrder(
             tenant_id=sample_tenant.id,
@@ -602,8 +613,16 @@ class TestThreeWayMatch:
         import flask_login
 
         po = self._po_with_confirmed_grn(
-            db_session, sample_tenant, sample_user, sample_supplier, sample_product, sample_warehouse,
-            po_qty="10", cost="5", received="6", total="50"
+            db_session,
+            sample_tenant,
+            sample_user,
+            sample_supplier,
+            sample_product,
+            sample_warehouse,
+            po_qty="10",
+            cost="5",
+            received="6",
+            total="50",
         )
         with app.test_request_context():
             flask_login.login_user(sample_user)

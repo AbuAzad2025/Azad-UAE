@@ -124,9 +124,7 @@ class TestProcessSyncPayload:
         mv = db_session.get(StockMovement, result["movements"][0]["movement_id"])
         assert mv.product_id == product.id
 
-    def test_completed_batch_is_returned_cached_without_reprocessing(
-        self, db_session, sample_tenant, product
-    ):
+    def test_completed_batch_is_returned_cached_without_reprocessing(self, db_session, sample_tenant, product):
         payload = _payload(product, sample_tenant.id)
         first = StockSyncService.process_sync_payload(payload)
         assert first["cached"] is False
@@ -138,9 +136,7 @@ class TestProcessSyncPayload:
         # No duplicate movements were created.
         assert second["movements"] == []
 
-    def test_in_transaction_race_guard_returns_existing_pending_batch(
-        self, db_session, sample_tenant, product
-    ):
+    def test_in_transaction_race_guard_returns_existing_pending_batch(self, db_session, sample_tenant, product):
         """A pending batch with the same key short-circuits inside the
         transaction — no second batch row may be created."""
         key = f"race-{uuid.uuid4().hex[:12]}"
@@ -153,11 +149,7 @@ class TestProcessSyncPayload:
 
         assert result["cached"] is True
         assert result["status"] == "pending"
-        batches = (
-            db_session.query(SyncBatch)
-            .filter(SyncBatch.idempotency_key == key)
-            .all()
-        )
+        batches = db_session.query(SyncBatch).filter(SyncBatch.idempotency_key == key).all()
         assert len(batches) == 1
 
     def test_failed_movement_rolls_back_entire_batch(self, db_session, sample_tenant, product):
@@ -177,9 +169,7 @@ class TestProcessSyncPayload:
             StockSyncService.process_sync_payload(payload)
 
         db_session.rollback()
-        assert (
-            db_session.query(SyncBatch).filter(SyncBatch.idempotency_key == key).first() is None
-        )
+        assert db_session.query(SyncBatch).filter(SyncBatch.idempotency_key == key).first() is None
 
     def test_missing_quantity_raises_and_leaves_no_batch(self, db_session, sample_tenant, product):
         payload = _payload(
@@ -197,9 +187,7 @@ class TestProcessSyncPayload:
         payload = _payload(
             product,
             sample_tenant.id,
-            movements=[
-                {"sku": product.sku, "warehouse_code": "NOPE-404", "quantity": 1, "movement_type": "purchase"}
-            ],
+            movements=[{"sku": product.sku, "warehouse_code": "NOPE-404", "quantity": 1, "movement_type": "purchase"}],
         )
         with pytest.raises(ValueError, match="Warehouse not found"):
             StockSyncService.process_sync_payload(payload)

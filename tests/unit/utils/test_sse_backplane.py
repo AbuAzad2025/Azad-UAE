@@ -261,9 +261,7 @@ class TestSubscribeFanout:
 
     def test_queue_full_stops_reader_and_closes_pubsub(self, redis_env):
         client, _ = redis_env()
-        pubsub = FakePubSub(
-            [{"type": "message", "data": json.dumps({"type": "refresh", "n": 1}).encode("utf-8")}]
-        )
+        pubsub = FakePubSub([{"type": "message", "data": json.dumps({"type": "refresh", "n": 1}).encode("utf-8")}])
         client.pubsub_to_return = pubsub
 
         target = queue.Queue(maxsize=1)
@@ -291,9 +289,7 @@ class TestSubscribeFanout:
 
     def test_pubsub_close_failure_is_swallowed_at_debug_level(self, redis_env):
         client, _ = redis_env()
-        pubsub = FakePubSub(
-            [{"type": "message", "data": json.dumps({"ok": True}).encode("utf-8")}]
-        )
+        pubsub = FakePubSub([{"type": "message", "data": json.dumps({"ok": True}).encode("utf-8")}])
         pubsub.close_should_fail = True
         client.pubsub_to_return = pubsub
         target = queue.Queue(maxsize=4)

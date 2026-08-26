@@ -173,7 +173,9 @@ class TestTableAndKdsOrders:
         assert stored.sale_id == sample_sale.id
         assert stored.guest_count == 4
 
-    def test_create_kds_order_starts_pending_with_payload(self, db_session, sample_tenant, sample_sale, pos_open_session):
+    def test_create_kds_order_starts_pending_with_payload(
+        self, db_session, sample_tenant, sample_sale, pos_open_session
+    ):
         from services.pos_write_service import PosWriteService
 
         kds = PosWriteService.create_kds_order(
@@ -195,14 +197,10 @@ class TestTableAndKdsOrders:
         assert stored.notes == "no onions"
         assert stored.completed_at is None
 
-    def test_kds_order_for_sale_is_tenant_scoped(
-        self, db_session, sample_tenant, other_tenant, sample_sale
-    ):
+    def test_kds_order_for_sale_is_tenant_scoped(self, db_session, sample_tenant, other_tenant, sample_sale):
         from services.pos_write_service import PosWriteService
 
-        kds = PosWriteService.create_kds_order(
-            tenant_id=sample_tenant.id, sale_id=sample_sale.id, order_number="KDS-2"
-        )
+        kds = PosWriteService.create_kds_order(tenant_id=sample_tenant.id, sale_id=sample_sale.id, order_number="KDS-2")
         db_session.flush()
 
         found = PosWriteService.kds_order_for_sale(sample_sale.id, sample_tenant.id)

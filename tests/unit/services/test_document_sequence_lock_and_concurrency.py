@@ -154,10 +154,12 @@ class TestConcurrentNumbering:
                         poolclass=sa_pool.NullPool,
                     )
                     with peek.connect() as lc:
-                        rows = lc.execute(sqlalchemy.text(
-                            "SELECT locktype, mode, granted FROM pg_locks "
-                            "WHERE relation = 'document_sequences'::regclass"
-                        )).all()
+                        rows = lc.execute(
+                            sqlalchemy.text(
+                                "SELECT locktype, mode, granted FROM pg_locks "
+                                "WHERE relation = 'document_sequences'::regclass"
+                            )
+                        ).all()
                         assert rows and all(row[2] for row in rows), rows
                     db.session.commit()
                     with lock:

@@ -320,8 +320,14 @@ class TestTransferLookup:
 
     def test_get_transfer_cross_tenant_raises(self, db_session, sample_tenant, sample_user, two_warehouses):
         wh1, wh2 = two_warehouses
-        other_tenant = Tenant(name="Other Co", name_ar="آخر", slug=f"other-{db_session.query(Tenant).count()}",
-                              email="other@test.local", country="AE", subscription_plan="basic")
+        other_tenant = Tenant(
+            name="Other Co",
+            name_ar="آخر",
+            slug=f"other-{db_session.query(Tenant).count()}",
+            email="other@test.local",
+            country="AE",
+            subscription_plan="basic",
+        )
         db_session.add(other_tenant)
         db_session.flush()
 
@@ -347,7 +353,9 @@ class TestListFilters:
             {"from_warehouse_id": wh1.id, "to_warehouse_id": wh2.id, "lines": []}, sample_user
         )
         TransferService.approve_transfer(t1, sample_user)
-        TransferService.create_transfer({"from_warehouse_id": wh2.id, "to_warehouse_id": wh1.id, "lines": []}, sample_user)
+        TransferService.create_transfer(
+            {"from_warehouse_id": wh2.id, "to_warehouse_id": wh1.id, "lines": []}, sample_user
+        )
 
         by_status = TransferService.list_transfers(sample_tenant.id, filters={"status": "approved"})
         assert [t.id for t in by_status] == [t1.id]

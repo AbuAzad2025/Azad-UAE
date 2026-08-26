@@ -107,8 +107,10 @@ class TestReturnsApiCreate:
 
     def test_create_success(self, returns_client):
         result = _mock_return(id=5, return_number="RET-005")
-        with _returns_patches(), patch("utils.tenanting.tenant_get_or_404"), patch(
-            "routes.returns.ReturnService.create_return", return_value=result
+        with (
+            _returns_patches(),
+            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.ReturnService.create_return", return_value=result),
         ):
             resp = returns_client.post(
                 "/returns/api/create",
@@ -120,8 +122,10 @@ class TestReturnsApiCreate:
         assert data["data"]["return_number"] == "RET-005"
 
     def test_create_value_error(self, returns_client):
-        with _returns_patches(), patch("utils.tenanting.tenant_get_or_404"), patch(
-            "routes.returns.ReturnService.create_return", side_effect=ValueError("bad")
+        with (
+            _returns_patches(),
+            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.ReturnService.create_return", side_effect=ValueError("bad")),
         ):
             resp = returns_client.post(
                 "/returns/api/create",
@@ -130,8 +134,10 @@ class TestReturnsApiCreate:
         assert resp.status_code == 400
 
     def test_create_server_error(self, returns_client):
-        with _returns_patches(), patch("utils.tenanting.tenant_get_or_404"), patch(
-            "routes.returns.ReturnService.create_return", side_effect=RuntimeError("db")
+        with (
+            _returns_patches(),
+            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.ReturnService.create_return", side_effect=RuntimeError("db")),
         ):
             resp = returns_client.post(
                 "/returns/api/create",
@@ -161,9 +167,10 @@ class TestReturnsSearchSales:
             {"id": 2, "text": "S-002 — Cust2 — 200 AED", "sale_number": "S-002"},
         ]
         pagination = _mock_pagination(items, total=2)
-        with _returns_patches(), patch(
-            "routes.returns.ReturnService.search_sales_for_return", return_value=(items, pagination)
-        ) as mocked:
+        with (
+            _returns_patches(),
+            patch("routes.returns.ReturnService.search_sales_for_return", return_value=(items, pagination)) as mocked,
+        ):
             resp = returns_client.get("/returns/api/search_sales?q=S-00&page=1")
         assert resp.status_code == 200
         body = resp.get_json()
@@ -175,8 +182,9 @@ class TestReturnsSearchSales:
     def test_search_sales_strips_whitespace(self, returns_client):
         items = [{"id": 1, "text": "S-1"}]
         pagination = _mock_pagination(items)
-        with _returns_patches(), patch(
-            "routes.returns.ReturnService.search_sales_for_return", return_value=(items, pagination)
+        with (
+            _returns_patches(),
+            patch("routes.returns.ReturnService.search_sales_for_return", return_value=(items, pagination)),
         ):
             resp = returns_client.get("/returns/api/search_sales?q=  test  ")
         assert resp.status_code == 200
@@ -184,9 +192,7 @@ class TestReturnsSearchSales:
         assert body["success"] is True
 
     def test_search_sales_with_whitespace_only_returns_empty(self, returns_client):
-        with _returns_patches(), patch(
-            "routes.returns.ReturnService.search_sales_for_return"
-        ) as mocked:
+        with _returns_patches(), patch("routes.returns.ReturnService.search_sales_for_return") as mocked:
             resp = returns_client.get("/returns/api/search_sales?q=   ")
         assert resp.status_code == 200
         assert resp.get_json()["data"] == []
@@ -282,9 +288,7 @@ class TestReturnsGetSaleLines:
         assert resp.get_json()["data"]["lines"][0]["available_qty"] == 3
 
     def test_sale_lines_product_none_fallback(self, returns_client):
-        sale = self._make_sale(
-            [{"id": 7, "quantity": 1, "has_product": False, "variant_name": "Red"}]
-        )
+        sale = self._make_sale([{"id": 7, "quantity": 1, "has_product": False, "variant_name": "Red"}])
         # product is None => line.product fallback to "—"
         sale.lines[0].product = None
         with _returns_patches(), patch("routes.returns.tenant_get_or_404", return_value=sale):
