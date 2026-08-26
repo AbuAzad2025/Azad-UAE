@@ -181,6 +181,8 @@ def leave_ledger():
 @login_required
 @permission_required("hr:leave_manage")
 def accrue_leave():
+    year = request.args.get("year", date.today().year, type=int)
+    user_id = request.form.get("user_id", type=int)
     try:
         user_id = int(request.form["user_id"])
         leave_type_id = int(request.form["leave_type_id"])
@@ -191,7 +193,9 @@ def accrue_leave():
         flash(gettext("تم احتساب أيام الإجازة"), "success")
     except (ValueError, KeyError) as e:
         flash(str(e), "danger")
-    return redirect(url_for("hr.leave_ledger", user_id=user_id, year=year))
+    if user_id is not None:
+        return redirect(url_for("hr.leave_ledger", user_id=user_id, year=year))
+    return redirect(url_for("hr.leave_ledger", year=year))
 
 
 @hr_bp.route("/leave-ledger/carry-forward", methods=["POST"])

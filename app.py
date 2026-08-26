@@ -70,35 +70,6 @@ if __name__ == "__main__":
         host = os.environ.get("HOST", "0.0.0.0")  # nosec B104
         debug_mode = bool(app.config.get("DEBUG", False))
 
-        def _mask_db_uri(uri: str) -> str:
-            if not uri:
-                return uri
-            try:
-                if "://" not in uri or "@" not in uri:
-                    return uri
-                scheme, rest = uri.split("://", 1)
-                creds, tail = rest.split("@", 1)
-                if ":" not in creds:
-                    return uri
-                user = creds.split(":", 1)[0]
-                return f"{scheme}://{user}:***@{tail}"
-            except Exception as exc:
-                try:
-                    from services.logging_core import LoggingCore
-
-                    LoggingCore.log_error(
-                        message=str(exc) or "Failed to mask DB URI",
-                        category="SYSTEM_INIT",
-                        level="WARNING",
-                        source="app._mask_db_uri",
-                        exception=exc,
-                    )
-                except Exception:
-                    import logging
-
-                    logging.getLogger(__name__).exception("Failed to log DB URI masking warning")
-                return uri
-
         app.logger.info("Starting UAE-Sale System")
         app.logger.info("Host: %s", host)
         app.logger.info("Port: %s", port)

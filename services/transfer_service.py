@@ -83,7 +83,6 @@ class TransferService:
                     from_warehouse_id=transfer.from_warehouse_id,
                     to_warehouse_id=transfer.to_warehouse_id,
                     quantity=qty,
-                    tenant_id=transfer.tenant_id,
                 )
 
         transfer.status = "completed"

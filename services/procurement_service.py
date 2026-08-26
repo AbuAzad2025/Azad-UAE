@@ -102,7 +102,7 @@ class ProcurementService:
             tenant_id=tid,
             po_number=generate_number("PO", PurchaseOrder, "po_number"),
             supplier_id=supplier_id,
-            warehouse_id=warehouse_id or requisition.branch_id,
+            warehouse_id=warehouse_id,
             branch_id=branch_id or requisition.branch_id,
             requisition_id=requisition.id,
             order_date=datetime.now(UTC).date(),

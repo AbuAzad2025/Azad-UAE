@@ -93,7 +93,7 @@ class QuotationService:
 
         if "lines" in data:
             for line in list(quotation.lines):
-                db.session.delete(line)
+                quotation.lines.remove(line)
             db.session.flush()
 
             for line_data in data.get("lines", []):
@@ -115,6 +115,7 @@ class QuotationService:
                     line_total=line_total + tax_amt,
                     sort_order=line_data.get("sort_order", 0),
                 )
+                quotation.lines.append(line)
                 db.session.add(line)
 
         db.session.flush()

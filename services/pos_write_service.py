@@ -51,7 +51,6 @@ class PosWriteService:
     def create_floor(
         tenant_id: int,
         name: str,
-        name_en: str = "",
         name_ar: str = "",
         sort_order: int = 0,
     ):
@@ -62,7 +61,6 @@ class PosWriteService:
             tenant_id=tenant_id,
             name=name,
             name_ar=name_ar or None,
-            name_en=name_en or None,
             sort_order=sort_order,
             is_active=True,
         )
@@ -77,8 +75,8 @@ class PosWriteService:
         table = PosTable(
             tenant_id=tenant_id,
             floor_id=floor_id,
-            name=name,
-            seats=seats,
+            label=name,
+            capacity=seats,
             pos_x=pos_x,
             pos_y=pos_y,
             is_active=True,

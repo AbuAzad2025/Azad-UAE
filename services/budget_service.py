@@ -67,10 +67,12 @@ class BudgetService:
 
         for field in ("name_ar", "name_en", "notes", "enforcement", "branch_id"):
             if field in data:
-                budget[field] = data[field]
+                setattr(budget, field, data[field])
 
         if "lines" in data:
-            BudgetLine.query.filter_by(budget_id=budget.id).delete()
+            for line in list(budget.lines):
+                budget.lines.remove(line)
+            db.session.flush()
             for line in data["lines"]:
                 account = GLAccount.query.filter_by(
                     tenant_id=budget.tenant_id,
@@ -85,6 +87,7 @@ class BudgetService:
                     budgeted_amount=Decimal(str(line["budgeted_amount"])),
                     notes=line.get("notes"),
                 )
+                budget.lines.append(bl)
                 db.session.add(bl)
 
         cls._recalculate_totals(budget)

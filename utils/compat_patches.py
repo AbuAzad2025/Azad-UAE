@@ -16,7 +16,7 @@ try:
             return None
         try:
             return json.loads(value.decode("utf-8"))
-        except (TypeError, ValueError) as e:
+        except (AttributeError, TypeError, ValueError) as e:
             self._warn(e)
             return None
 

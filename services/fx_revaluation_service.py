@@ -234,7 +234,7 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
                 ]
             )
 
-    if all_lines and total_fx_diff != 0:
+    if all_lines:
         entry = post_or_fail(
             all_lines,
             description=f"FX Revaluation — AR — {now.strftime('%Y-%m')}",
@@ -307,7 +307,7 @@ def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_conce
                 ]
             )
 
-    if all_lines and total_fx_diff != 0:
+    if all_lines:
         entry = post_or_fail(
             all_lines,
             description=f"FX Revaluation — AP — {now.strftime('%Y-%m')}",

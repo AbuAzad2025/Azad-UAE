@@ -90,8 +90,8 @@ class TenantAwareCache:
 
     def get_many(self, *keys):
         mapped = {self._tenant_key(k): k for k in keys}
-        results = self._cache.get_many(*mapped.keys())
-        return {mapped[k]: v for k, v in results.items()}
+        values = self._cache.get_many(*mapped.keys())
+        return dict(zip(mapped.values(), values, strict=True))
 
     def set_many(self, mapping, timeout=None):
         mapped = {self._tenant_key(k): v for k, v in mapping.items()}

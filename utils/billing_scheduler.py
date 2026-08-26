@@ -40,8 +40,8 @@ def run_subscription_check() -> dict:
             end = end.replace(tzinfo=UTC)
 
         if end <= now:
-            _suspend_tenant(tenant)
-            suspended += 1
+            if _suspend_tenant(tenant):
+                suspended += 1
         elif end <= reminder_cutoff:
             _send_expiry_reminder(tenant)
             reminded += 1
@@ -62,15 +62,17 @@ def run_subscription_check() -> dict:
     }
 
 
-def _suspend_tenant(tenant):
-    """Mark a tenant as suspended due to subscription expiry."""
+def _suspend_tenant(tenant) -> bool:
+    """Mark a tenant as suspended due to subscription expiry. True on success."""
     try:
         with atomic_transaction("subscription_auto_suspend"):
             tenant.is_active = False
             tenant.is_suspended = True
             tenant.suspension_reason = f"Subscription expired on {tenant.subscription_end.isoformat()}"
+        return True
     except Exception as exc:
         logger.error("Failed to suspend tenant %s: %s", tenant.id, exc)
+        return False
 
 
 def _send_expiry_reminder(tenant):
@@ -79,7 +81,10 @@ def _send_expiry_reminder(tenant):
         from services.whatsapp_service import WhatsAppService
 
         admin_email = _get_tenant_admin_email(tenant.id)
-        days_left = (tenant.subscription_end - datetime.now(UTC)).days
+        end = tenant.subscription_end
+        if end.tzinfo is None:
+            end = end.replace(tzinfo=UTC)
+        days_left = (end - datetime.now(UTC)).days
         wa_number = _resolve_whatsapp_number()
 
         if not wa_number:
