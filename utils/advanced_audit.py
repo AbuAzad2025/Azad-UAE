@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from extensions import db
 from utils.db_safety import atomic_transaction
+from utils.tenanting import get_active_tenant_id
 
 
 def generate_device_fingerprint() -> str:
@@ -30,8 +31,10 @@ def log_sensitive_action(
     from models import AuditLog
 
     try:
+        user_id = current_user.id if current_user.is_authenticated else None
         audit_entry = AuditLog(
-            user_id=current_user.id if current_user.is_authenticated else None,
+            user_id=user_id,
+            tenant_id=get_active_tenant_id(current_user),
             action=action,
             table_name=table_name,
             record_id=record_id,

@@ -3,6 +3,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.quotation_service import QuotationService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 
 quotations_bp = Blueprint("quotations", __name__, url_prefix="/quotations")
@@ -24,7 +25,8 @@ def create():
     if request.method == "POST":
         try:
             data = _parse_quotation_form(request.form)
-            q = QuotationService.create_quotation(data, current_user)
+            with atomic_transaction("quotation_create"):
+                q = QuotationService.create_quotation(data, current_user)
             flash(gettext("تم إنشاء عرض السعر"), "success")
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
@@ -48,7 +50,8 @@ def edit(quotation_id):
     if request.method == "POST":
         try:
             data = _parse_quotation_form(request.form)
-            QuotationService.update_quotation(q, data)
+            with atomic_transaction("quotation_update"):
+                QuotationService.update_quotation(q, data)
             flash(gettext("تم تحديث عرض السعر"), "success")
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
@@ -62,7 +65,8 @@ def edit(quotation_id):
 def send(quotation_id):
     q = QuotationService.get_quotation(quotation_id, None)
     try:
-        QuotationService.send_quotation(q)
+        with atomic_transaction("quotation_send"):
+            QuotationService.send_quotation(q)
         flash(gettext("تم إرسال عرض السعر"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -75,7 +79,8 @@ def send(quotation_id):
 def accept(quotation_id):
     q = QuotationService.get_quotation(quotation_id, None)
     try:
-        QuotationService.accept_quotation(q)
+        with atomic_transaction("quotation_accept"):
+            QuotationService.accept_quotation(q)
         flash(gettext("تم قبول عرض السعر"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -88,7 +93,8 @@ def accept(quotation_id):
 def reject(quotation_id):
     q = QuotationService.get_quotation(quotation_id, None)
     try:
-        QuotationService.reject_quotation(q)
+        with atomic_transaction("quotation_reject"):
+            QuotationService.reject_quotation(q)
         flash(gettext("تم رفض عرض السعر"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -101,7 +107,8 @@ def reject(quotation_id):
 def convert(quotation_id):
     q = QuotationService.get_quotation(quotation_id, None)
     try:
-        sale = QuotationService.convert_to_sale(q, current_user)
+        with atomic_transaction("quotation_convert_to_sale"):
+            sale = QuotationService.convert_to_sale(q, current_user)
         flash(gettext("تم تحويل العرض إلى فاتورة"), "success")
         return redirect(url_for("sales.detail", id=sale.id))
     except ValueError as e:
@@ -115,7 +122,8 @@ def convert(quotation_id):
 def duplicate(quotation_id):
     q = QuotationService.get_quotation(quotation_id, None)
     try:
-        new_q = QuotationService.duplicate_quotation(q, current_user)
+        with atomic_transaction("quotation_duplicate"):
+            new_q = QuotationService.duplicate_quotation(q, current_user)
         flash(gettext("تم نسخ عرض السعر"), "success")
         return redirect(url_for("quotations.detail", quotation_id=new_q.id))
     except ValueError as e:

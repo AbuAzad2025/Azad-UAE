@@ -77,6 +77,7 @@ class TestLogSensitiveAction:
 
         audit_ctor.assert_called_once_with(
             user_id=9,
+            tenant_id=1,
             action="update",
             table_name="users",
             record_id=3,

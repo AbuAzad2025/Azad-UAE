@@ -3,6 +3,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.transfer_service import TransferService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 
 transfers_bp = Blueprint("transfers", __name__, url_prefix="/transfers")
@@ -24,7 +25,8 @@ def create():
     if request.method == "POST":
         try:
             data = _parse_transfer_form(request.form)
-            t = TransferService.create_transfer(data, current_user)
+            with atomic_transaction("transfer_create"):
+                t = TransferService.create_transfer(data, current_user)
             flash(gettext("تم إنشاء طلب النقل"), "success")
             return redirect(url_for("transfers.detail", transfer_id=t.id))
         except (ValueError, KeyError) as e:
@@ -46,7 +48,8 @@ def detail(transfer_id):
 def approve(transfer_id):
     t = TransferService.get_transfer(transfer_id, None)
     try:
-        TransferService.approve_transfer(t, current_user)
+        with atomic_transaction("transfer_approve"):
+            TransferService.approve_transfer(t, current_user)
         flash(gettext("تمت الموافقة على النقل"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -59,7 +62,8 @@ def approve(transfer_id):
 def ship(transfer_id):
     t = TransferService.get_transfer(transfer_id, None)
     try:
-        TransferService.ship_transfer(t)
+        with atomic_transaction("transfer_ship"):
+            TransferService.ship_transfer(t)
         flash(gettext("تم شحن النقل"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -72,8 +76,9 @@ def ship(transfer_id):
 def receive(transfer_id):
     t = TransferService.get_transfer(transfer_id, None)
     try:
-        TransferService.confirm_receive(t, current_user)
-        TransferService.complete_transfer(t, current_user)
+        with atomic_transaction("transfer_receive_complete"):
+            TransferService.confirm_receive(t, current_user)
+            TransferService.complete_transfer(t, current_user)
         flash(gettext("تم استلام وإتمام النقل"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -86,7 +91,8 @@ def receive(transfer_id):
 def cancel(transfer_id):
     t = TransferService.get_transfer(transfer_id, None)
     try:
-        TransferService.cancel_transfer(t)
+        with atomic_transaction("transfer_cancel"):
+            TransferService.cancel_transfer(t)
         flash(gettext("تم إلغاء النقل"), "success")
     except ValueError as e:
         flash(str(e), "danger")

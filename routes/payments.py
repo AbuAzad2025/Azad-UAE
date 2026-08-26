@@ -1594,6 +1594,7 @@ def create_payment(purchase_id):
                         status="pending",
                         notes=notes,
                         branch_id=purchase.branch_id,
+                        user_id=current_user.id,
                     )
                     db.session.add(cheque)
                     db.session.flush()

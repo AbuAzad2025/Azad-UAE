@@ -13,6 +13,7 @@ from flask_babel import gettext
 from flask_login import current_user as flask_user
 
 from extensions import db
+from utils.db_safety import atomic_transaction
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,12 @@ class AIExecutor:
     def _current_user_id(self):
         return getattr(self.user, "id", None)
 
+    def _require_user_id(self):
+        user_id = self._current_user_id()
+        if not user_id:
+            raise AIExecutorError(gettext("لا يمكن تنفيذ عملية مالية دون مستخدم موثّق"))
+        return user_id
+
     def _current_branch_id(self):
         return getattr(self.user, "branch_id", None)
 
@@ -74,8 +81,9 @@ class AIExecutor:
             customer_type=customer_type,
             credit_limit=Decimal(str(credit_limit)),
         )
-        db.session.add(customer)
-        db.session.flush()
+        with atomic_transaction("ai_create_customer"):
+            db.session.add(customer)
+            db.session.flush()
 
         return {
             "success": True,
@@ -158,8 +166,9 @@ class AIExecutor:
             category_id=category_id,
             is_active=True,
         )
-        db.session.add(product)
-        db.session.flush()
+        with atomic_transaction("ai_create_product"):
+            db.session.add(product)
+            db.session.flush()
 
         return {
             "success": True,
@@ -269,13 +278,14 @@ class AIExecutor:
                 "currency": "AED",
             }
 
-        sale = SaleService.create_sale(
-            customer=customer,
-            seller=seller,
-            lines_data=lines_data,
-            payment_data=payment_data,
-            notes=notes,
-        )
+        with atomic_transaction("ai_create_sale"):
+            sale = SaleService.create_sale(
+                customer=customer,
+                seller=seller,
+                lines_data=lines_data,
+                payment_data=payment_data,
+                notes=notes,
+            )
 
         return {
             "success": True,
@@ -327,56 +337,58 @@ class AIExecutor:
 
         amount_dec = Decimal(str(amount))
 
+        user_id = self._require_user_id()
         payment_number = self._generate_number("PAY", Payment)
-        payment = Payment(
-            tenant_id=self.tenant_id,
-            payment_number=payment_number,
-            payment_type="sale_payment",
-            direction="incoming",
-            customer_id=customer.id,
-            amount=amount_dec,
-            currency="AED",
-            exchange_rate=Decimal("1"),
-            amount_aed=amount_dec,
-            payment_method=method.lower(),
-            notes=notes,
-            user_id=self._current_user_id() or 1,
-            branch_id=self._current_branch_id(),
-        )
-        db.session.add(payment)
-        db.session.flush()
-
-        from services.customer_service import CustomerService
-
-        CustomerService.adjust_balance(customer.id, -amount_dec, self.tenant_id)
-
-        unpaid = (
-            Sale.query.filter(
-                Sale.tenant_id == self.tenant_id,
-                Sale.customer_id == customer.id,
-                Sale.balance_due > 0,
-                Sale.status.in_(["confirmed", "active"]),
+        with atomic_transaction("ai_receive_payment"):
+            payment = Payment(
+                tenant_id=self.tenant_id,
+                payment_number=payment_number,
+                payment_type="sale_payment",
+                direction="incoming",
+                customer_id=customer.id,
+                amount=amount_dec,
+                currency="AED",
+                exchange_rate=Decimal("1"),
+                amount_aed=amount_dec,
+                payment_method=method.lower(),
+                notes=notes,
+                user_id=user_id,
+                branch_id=self._current_branch_id(),
             )
-            .order_by(Sale.sale_date)
-            .all()
-        )
+            db.session.add(payment)
+            db.session.flush()
 
-        remaining = amount_dec
-        for sale in unpaid:
-            if remaining <= 0:
-                break
-            due = sale.balance_due or Decimal("0")
-            if remaining >= due:
-                sale.paid_amount = (sale.paid_amount or Decimal("0")) + due
-                sale.balance_due = Decimal("0")
-                sale.payment_status = "paid"
-                remaining -= due
-            else:
-                sale.paid_amount = (sale.paid_amount or Decimal("0")) + remaining
-                sale.balance_due = due - remaining
-                sale.payment_status = "partial"
-                remaining = Decimal("0")
-        db.session.flush()
+            from services.customer_service import CustomerService
+
+            CustomerService.adjust_balance(customer.id, -amount_dec, self.tenant_id)
+
+            unpaid = (
+                Sale.query.filter(
+                    Sale.tenant_id == self.tenant_id,
+                    Sale.customer_id == customer.id,
+                    Sale.balance_due > 0,
+                    Sale.status.in_(["confirmed", "active"]),
+                )
+                .order_by(Sale.sale_date)
+                .all()
+            )
+
+            remaining = amount_dec
+            for sale in unpaid:
+                if remaining <= 0:
+                    break
+                due = sale.balance_due or Decimal("0")
+                if remaining >= due:
+                    sale.paid_amount = (sale.paid_amount or Decimal("0")) + due
+                    sale.balance_due = Decimal("0")
+                    sale.payment_status = "paid"
+                    remaining -= due
+                else:
+                    sale.paid_amount = (sale.paid_amount or Decimal("0")) + remaining
+                    sale.balance_due = due - remaining
+                    sale.payment_status = "partial"
+                    remaining = Decimal("0")
+            db.session.flush()
 
         return {
             "success": True,
@@ -418,22 +430,24 @@ class AIExecutor:
             tenant_id=self.tenant_id,
         )
         amount_dec = Decimal(str(amount))
-        expense = Expense(
-            tenant_id=self.tenant_id,
-            expense_number=expense_number,
-            category_id=category_id,
-            description=description,
-            amount=amount_dec,
-            currency="AED",
-            exchange_rate=Decimal("1"),
-            amount_aed=amount_dec,
-            payment_method=payment_method.lower(),
-            notes=notes,
-            user_id=self._current_user_id() or 1,
-            branch_id=self._current_branch_id(),
-        )
-        db.session.add(expense)
-        db.session.flush()
+        user_id = self._require_user_id()
+        with atomic_transaction("ai_add_expense"):
+            expense = Expense(
+                tenant_id=self.tenant_id,
+                expense_number=expense_number,
+                category_id=category_id,
+                description=description,
+                amount=amount_dec,
+                currency="AED",
+                exchange_rate=Decimal("1"),
+                amount_aed=amount_dec,
+                payment_method=payment_method.lower(),
+                notes=notes,
+                user_id=user_id,
+                branch_id=self._current_branch_id(),
+            )
+            db.session.add(expense)
+            db.session.flush()
 
         return {
             "success": True,
@@ -467,8 +481,9 @@ class AIExecutor:
             tax_number=tax_number,
             is_active=True,
         )
-        db.session.add(supplier)
-        db.session.flush()
+        with atomic_transaction("ai_create_supplier"):
+            db.session.add(supplier)
+            db.session.flush()
 
         return {
             "success": True,
@@ -502,8 +517,9 @@ class AIExecutor:
             branch_id=self._current_branch_id(),
             is_active=True,
         )
-        db.session.add(employee)
-        db.session.flush()
+        with atomic_transaction("ai_create_employee"):
+            db.session.add(employee)
+            db.session.flush()
 
         return {
             "success": True,
@@ -546,13 +562,14 @@ class AIExecutor:
                 }
             )
 
-        purchase = PurchaseService.create_purchase(
-            user=self.user,
-            supplier_data={"supplier_id": supplier.id, "supplier_name": supplier.name},
-            lines_data=lines_data,
-            warehouse_id=warehouse.id,
-            notes=notes,
-        )
+        with atomic_transaction("ai_create_purchase"):
+            purchase = PurchaseService.create_purchase(
+                user=self.user,
+                supplier_data={"supplier_id": supplier.id, "supplier_name": supplier.name},
+                lines_data=lines_data,
+                warehouse_id=warehouse.id,
+                notes=notes,
+            )
 
         return {
             "success": True,
