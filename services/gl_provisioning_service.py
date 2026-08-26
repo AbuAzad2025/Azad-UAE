@@ -40,10 +40,10 @@ class GLProvisioningService:
             result.errors.append(f"Tenant {tenant_id} not found")
             return result
         try:
-            GLProvisioningService._provision_base_accounts(tenant, result)
-            GLProvisioningService._provision_industry_accounts(tenant, result)
-            GLProvisioningService._provision_module_mappings(tenant, result)
             with atomic_transaction("provision_tenant"):
+                GLProvisioningService._provision_base_accounts(tenant, result)
+                GLProvisioningService._provision_industry_accounts(tenant, result)
+                GLProvisioningService._provision_module_mappings(tenant, result)
                 db.session.flush()
         except Exception as e:
             result.errors.append(str(e))

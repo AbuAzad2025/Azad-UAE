@@ -133,10 +133,11 @@ class GLTreeBuilder:
         )
 
         if has_changes:
-            db.session.flush()
             if commit:
                 with atomic_transaction("gl_tree_builder_build"):
-                    pass
+                    db.session.flush()
+            else:
+                db.session.flush()
 
         # Expose the canonical {code: GLAccount} mapping so callers (and test
         # fixtures) can consume the ensured accounts directly without extra queries.

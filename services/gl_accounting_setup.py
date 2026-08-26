@@ -910,7 +910,7 @@ class GLAccountingSetupService:
             is_active=True,
             is_header=False,
             level=level,
-            currency="AED",
+            currency=getattr(tenant, "default_currency", None) or "AED",
             liquidity_kind=tmpl.get("liquidity_kind"),
             is_default_liquidity=bool(tmpl.get("is_default_liquidity", False)),
         )
