@@ -500,9 +500,7 @@ def api_tenant_update_package(tenant_id):
     if not request.is_json:
         return error_response(message="JSON required", status_code=400)
     try:
-        data = request.get_json(silent=True)
-        if not data:
-            return error_response(message="JSON required", status_code=400)
+        data = request.get_json(silent=True) or {}
         tenant = OwnerOpsService.get_tenant(tenant_id)
         if not tenant:
             return error_response(message="Tenant not found", status_code=404)
@@ -521,7 +519,7 @@ def api_tenant_update_package(tenant_id):
         if field not in allowed_fields:
             return error_response(message=f"Unknown field: {field}", status_code=400)
         try:
-            val = int(value)
+            val = int(str(value))
         except (ValueError, TypeError):
             return error_response(message="Invalid integer value", status_code=400)
         with atomic_transaction("api_tenant_update_package"):
