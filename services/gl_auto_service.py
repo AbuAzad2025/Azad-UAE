@@ -47,7 +47,7 @@ def validate_journal_entry_balance(mapper, connection, target):
     try:
         debit = target.total_debit or Decimal("0")
         credit = target.total_credit or Decimal("0")
-        if (debit > 0 or credit > 0) and abs(debit - credit) > Decimal("0.01"):
+        if (debit > 0 or credit > 0) and abs(debit - credit) > Decimal("0.001"):
             logger.error(f"Journal entry {target.entry_number} is UNBALANCED! Debit: {debit}, Credit: {credit}")
             raise ValueError(gettext(f"القيد غير متوازن! المدين: {debit}, الدائن: {credit}"))
         logger.info(f"Journal entry {target.entry_number} is balanced: {debit} = {credit}")

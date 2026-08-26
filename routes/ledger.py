@@ -345,11 +345,11 @@ def manual_entry():
                 line_description = request.form.get(f"line_{i}_description", "")
 
                 try:
-                    debit_value = float(debit) if debit and debit.strip() else 0
-                    credit_value = float(credit) if credit and credit.strip() else 0
-                except (ValueError, AttributeError):
-                    debit_value = 0
-                    credit_value = 0
+                    debit_value = Decimal(debit.strip()) if debit and debit.strip() else Decimal("0")
+                    credit_value = Decimal(credit.strip()) if credit and credit.strip() else Decimal("0")
+                except (ValueError, ArithmeticError, AttributeError):
+                    debit_value = Decimal("0")
+                    credit_value = Decimal("0")
 
                 if debit_value > 0 or credit_value > 0:
                     lines.append(
@@ -937,11 +937,13 @@ def budget_vs_actual():
     # Get active budgets
     budgets = GLService.list_active_budgets(tenant_id, branch_id=branch_id)
 
+    with atomic_transaction("budget_update_actuals"):
+        for budget in budgets:
+            # Update actuals from GL
+            budget.update_actuals()
+
     budget_data = []
     for budget in budgets:
-        # Update actuals from GL
-        budget.update_actuals()
-
         lines_data = []
         for line in budget.lines:
             lines_data.append(

@@ -1,5 +1,6 @@
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from flask_babel import gettext
 
@@ -81,7 +82,7 @@ class AdvancedJournalEntryManager:
         errors = []
         # 1. Balance check
         try:
-            lines_data = [{"debit": float(line.debit or 0), "credit": float(line.credit or 0)} for line in entry.lines]
+            lines_data = [{"debit": str(line.debit or 0), "credit": str(line.credit or 0)} for line in entry.lines]
             assert_balanced_lines(lines_data, currency=entry.currency)
         except Exception as exc:
             errors.append(f"Balance: {exc}")
@@ -119,8 +120,6 @@ class AdvancedJournalEntryManager:
     @staticmethod
     def create_entry_with_validation(description, lines, entry_date=None, notes=None, created_by=None, **kwargs):
         """إنشاء قيد — defaults to 'draft' so it must be validated before posting."""
-        from decimal import Decimal
-
         from services.gl_service import GLService
 
         # Inline balance check (fast-fail before DB round-trip)
@@ -183,16 +182,17 @@ class AdvancedJournalEntryManager:
         if entry.status not in ("draft", "error"):
             raise ValueError(gettext(f"لا يمكن تعديل قيد بحالة: {entry.status}"))
 
+        if "lines" in updates:
+            # Balance check (Decimal, pre-persist) BEFORE mutating the entry
+            total_debit = sum(Decimal(str(line.get("debit", 0) or 0)) for line in updates["lines"])
+            total_credit = sum(Decimal(str(line.get("credit", 0) or 0)) for line in updates["lines"])
+            if abs(total_debit - total_credit) > Decimal("0.001"):
+                raise ValueError(gettext(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}"))
+
         old_values = entry.to_dict()
         for field, value in updates.items():
             if hasattr(entry, field):
                 setattr(entry, field, value)
-
-        if "lines" in updates:
-            total_debit = sum(line.get("debit", 0) for line in updates["lines"])
-            total_credit = sum(line.get("credit", 0) for line in updates["lines"])
-            if abs(total_debit - total_credit) > 0.01:
-                raise ValueError(gettext(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}"))
 
         entry.updated_at = datetime.now(UTC)
         AdvancedJournalEntryManager._log_audit(

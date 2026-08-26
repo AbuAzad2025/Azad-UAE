@@ -347,7 +347,7 @@ def reverse_journal_entry(entry_id):
         with atomic_transaction("reverse_journal_entry"):
             reversal_entry = AdvancedJournalEntryManager.reverse_entry_advanced(
                 entry_id=entry_id,
-                reversed_by=current_user,
+                reversed_by=current_user.id,
                 reason=reason,
                 create_reversal_entry=True,
             )
@@ -375,7 +375,7 @@ def delete_journal_entry(entry_id):
         reason = request.form.get("reason", gettext("حذف القيد"))
 
         with atomic_transaction("delete_journal_entry"):
-            AdvancedJournalEntryManager.delete_entry(entry_id=entry_id, deleted_by=current_user, reason=reason)
+            AdvancedJournalEntryManager.delete_entry(entry_id=entry_id, deleted_by=current_user.id, reason=reason)
 
         flash(gettext("✅ تم إلغاء القيد بنجاح"), "success")
 
@@ -399,7 +399,7 @@ def approve_journal_entry(entry_id):
         with atomic_transaction("approve_journal_entry"):
             AdvancedJournalEntryManager.approve_entry(
                 entry_id=entry_id,
-                approved_by=current_user,
+                approved_by=current_user.id,
                 approval_notes=approval_notes,
             )
 
