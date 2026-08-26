@@ -256,6 +256,7 @@ body.pos-layout .erp-mobile-nav {
 [dir="rtl"] .pos-grid {
 	direction: rtl;
 }
+
 [dir="rtl"] .pos-main,
 [dir="rtl"] .pos-side {
 	direction: rtl;
@@ -508,6 +509,7 @@ body.pos-layout .erp-mobile-nav {
 	padding: 8px 4px;
 	align-content: start;
 }
+
 .pos-products:has(.pos-cart-empty) {
 	display: flex;
 	align-items: center;
@@ -769,11 +771,13 @@ body.pos-layout .erp-mobile-nav {
 	border-radius: 12px;
 	background: rgba(255, 255, 255, 0.02);
 }
+
 .pos-products .pos-cart-empty {
 	border: none;
 	background: transparent;
 	padding: 40px 20px;
 }
+
 .pos-products .pos-cart-empty .small {
 	color: var(--pos-muted);
 	font-size: 12px;
@@ -1262,13 +1266,16 @@ body:has(.pos-app) {
 	font-size: 13px;
 	backdrop-filter: blur(4px);
 }
+
 #posOfflineBar .btn {
 	border-radius: 8px;
 	font-weight: 700;
 }
+
 #posOfflineBar.d-none {
 	display: none !important;
 }
+
 .has-selection {
 	border-color: var(--pos-accent) !important;
 	color: var(--pos-accent);

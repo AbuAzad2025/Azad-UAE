@@ -91,13 +91,10 @@ class ARReconciliationService:
         if branch_id is not None:
             refs_q = refs_q.filter(Payment.branch_id == branch_id)
 
-        receipts_q = (
-            db.session.query(func.coalesce(func.sum(Receipt.amount_aed), 0))
-            .filter(
-                Receipt.customer_id.in_(customer_ids_q),
-                receipt_effective,
-                Receipt.receipt_number.notin_(refs_q),
-            )
+        receipts_q = db.session.query(func.coalesce(func.sum(Receipt.amount_aed), 0)).filter(
+            Receipt.customer_id.in_(customer_ids_q),
+            receipt_effective,
+            Receipt.receipt_number.notin_(refs_q),
         )
         if tenant_id is not None:
             receipts_q = receipts_q.filter(Receipt.tenant_id == int(tenant_id))

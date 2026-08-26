@@ -45,8 +45,8 @@
       <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause"></i></button>
       <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list"></i></a>
       <!-- grid POS removed: unified single screen -->
-      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="سجل الفواتير"><i class="fas fa-file-invoice"></i></a>
-      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="الرئيسية"><i class="fas fa-home"></i></a>
+      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ _('سجل الفواتير') }}"><i class="fas fa-file-invoice"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home"></i></a>
     </div>
   </div>
 
@@ -98,7 +98,7 @@
       <div class="pos-side-head">
         <h3>{{ t('Cart') }}</h3>
         <span class="cnt" id="cartCount">0</span>
-        <button id="clearCartBtn" class="pos-icon-btn" type="button" title="تفريغ السلة"><i class="fas fa-trash"></i></button>
+        <button id="clearCartBtn" class="pos-icon-btn" type="button" title="{{ _('تفريغ السلة') }}"><i class="fas fa-trash"></i></button>
       </div>
 
       <div class="pos-cart-scroll">

@@ -376,7 +376,8 @@ class TestPosPages:
             patch("utils.tax_settings.get_prices_include_vat", return_value=False),
         ):
             resp = pos_client.get("/pos/grid")
-        assert resp.status_code == 200
+        assert resp.status_code == 302
+        assert resp.headers["Location"].rstrip("/").endswith("/pos")
 
 
 class TestPosCatalogApi:
@@ -749,7 +750,13 @@ class TestPosSessionApi:
         assert resp.status_code == 201
 
     def test_session_open_no_branch(self, pos_client):
-        with _pos_api_patches(session=None, branch_id=None):
+        no_branch_q = MagicMock()
+        no_branch_q.filter_by.return_value = no_branch_q
+        no_branch_q.first.return_value = None
+        with (
+            _pos_api_patches(session=None, branch_id=None),
+            patch("models.Branch.query", no_branch_q),
+        ):
             resp = pos_client.post("/pos/api/session/open", json={"opening_balance": 0})
         assert resp.status_code == 400
 

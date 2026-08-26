@@ -102,7 +102,7 @@ qs("#cartBody").addEventListener("click", (e) => {
 	state.idemKey = newCartKey();
 	void renderCart();
 });
-qs("#clearCartBtn").addEventListener("click", () => {
+qs("#clearCartBtn")?.addEventListener("click", () => {
 	if (!confirm(window.t("تفريغ السلة بالكامل؟"))) return;
 	state.cart = [];
 	state.idemKey = newCartKey();
@@ -293,7 +293,7 @@ const checkout = async (autoPrint) => {
 		})),
 	};
 	if (payload.payment_method === "cash" && toNum(qs("#paidAmount").value) <= 0) {
-		payload.paid_amount = Math.max(0, toNum(_totals && _totals.total));
+		payload.paid_amount = Math.max(0, toNum(_totals?.total));
 	}
 	if (splitEnabled()) {
 		const chunks = readSplitPayments();
@@ -478,7 +478,8 @@ const holdBtn = qs("#posHoldBtn");
 const refreshHoldBadge = () => {
 	const n = heldCount();
 	const b = qs("#posHoldBtn");
-	if (b) b.innerHTML = '<i class="fas fa-pause"></i>' + (n ? '<span class="badge warn">' + n + "</span>" : "");
+	if (b)
+		b.innerHTML = `<i class="fas fa-pause"></i>${n ? `<span class="badge warn">${n}</span>` : ""}`;
 };
 if (POS_CONFIG.enable_tables && tablesBtn) tablesBtn.classList.remove("d-none");
 if (POS_CONFIG.enable_hold && holdBtn) holdBtn.classList.remove("d-none");

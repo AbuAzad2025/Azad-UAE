@@ -146,7 +146,14 @@ const addFirstOrLookup = async (q) => {
 	}
 	const res = await fetchJson(`/pos/api/product?code=${encodeURIComponent(q)}${warehouseParam()}`);
 	if (!res.ok) {
-		showAlert(res.error || "لم يُعثر على المنتج: " + q, "warning");
+		const fallback = (state.lastProductResults || [])[0];
+		if (!fallback) {
+			showAlert(res.error || `لم يُعثر على المنتج: ${q}`, "warning");
+			return;
+		}
+		await addToCart(fallback);
+		qs("#productSearch").value = "";
+		qs("#productResults").classList.add("d-none");
 		return;
 	}
 	const p = res.data;

@@ -1109,6 +1109,7 @@ def api_session_open():
     if not branch_id:
         # Fallback: use tenant's main branch for global users or users without branch
         from models import Branch
+
         tenant_id = getattr(current_user, "tenant_id", None)
         if tenant_id:
             main_branch = Branch.query.filter_by(tenant_id=tenant_id, is_main=True, is_active=True).first()

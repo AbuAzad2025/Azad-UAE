@@ -87,10 +87,15 @@ class TestFactoryRoutes:
                 resp = func(resp)
             csp = resp.headers.get("Content-Security-Policy", "")
             assert "'nonce-testnonce'" in csp
-            # Phase 1e complete: unsafe-inline is dropped in strict mode.
-            assert "'unsafe-inline'" not in csp
-            # Phase 2 complete: no eval paths found, unsafe-eval is dropped in strict mode.
-            assert "'unsafe-eval'" not in csp
+            # Phase 1e: strict mode drops unsafe-inline/unsafe-eval from script-src.
+            script_src = next(part for part in csp.split(";") if part.strip().startswith("script-src"))
+            assert "'unsafe-inline'" not in script_src
+            assert "'unsafe-eval'" not in script_src
+            assert "'nonce-testnonce'" in script_src
+            # style-src deliberately keeps unsafe-inline (style= attributes are
+            # not covered by nonces) but must NOT carry a nonce alongside it.
+            style_src = next(part for part in csp.split(";") if part.strip().startswith("style-src"))
+            assert "'nonce-" not in style_src
 
     def test_csp_header_keeps_unsafe_directives_when_not_strict(self, monkeypatch):
         monkeypatch.setenv("SKIP_SYSTEM_INTEGRITY", "1")

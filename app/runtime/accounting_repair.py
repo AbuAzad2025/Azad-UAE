@@ -47,9 +47,7 @@ def repair_accounting_data():
 
     with atomic_transaction("accounting_repair_data"):
         merchant = (
-            Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id)
-            .order_by(Customer.id.asc())
-            .first()
+            Customer.query.filter_by(customer_type="merchant", tenant_id=tenant_id).order_by(Customer.id.asc()).first()
         )
         if not merchant:
             merchant = Customer(

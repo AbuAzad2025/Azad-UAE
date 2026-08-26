@@ -102,7 +102,8 @@ const recalc = async () => {
 				if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
 				state.lastTotals = exactTotals;
 				const chg = qs("#kpiChange");
-				if (chg) chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - data.total));
+				if (chg)
+					chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - data.total));
 				return exactTotals;
 			}
 		} catch (_) {}

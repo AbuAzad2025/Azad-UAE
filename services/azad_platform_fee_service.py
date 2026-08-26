@@ -89,9 +89,7 @@ class AzadPlatformFeeService:
             raise ValueError("Online store sale is missing tenant_id.")
 
         key = AzadPlatformFeeService._idempotency_key(sale, payment, gateway_reference)
-        existing = (
-            AzadPlatformFee.query.filter_by(idempotency_key=key, tenant_id=int(tenant_id)).first()
-        )
+        existing = AzadPlatformFee.query.filter_by(idempotency_key=key, tenant_id=int(tenant_id)).first()
         if existing:
             return existing
 

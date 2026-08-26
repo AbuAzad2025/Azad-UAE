@@ -101,9 +101,7 @@ class CustomerStatementService:
                 Payment.rejection_reason,
             ).all()
             pre_payments_net = sum(
-                (
-                    Decimal(str(amount or 0)) if direction == "incoming" else -Decimal(str(amount or 0))
-                )
+                (Decimal(str(amount or 0)) if direction == "incoming" else -Decimal(str(amount or 0)))
                 for direction, amount, confirmed, method, rejection in pre_pay_rows
                 if confirmed or (method == "cheque" and not rejection)
             )
