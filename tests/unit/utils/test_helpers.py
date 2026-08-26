@@ -166,7 +166,7 @@ class TestResolveFormatCurrencySettings:
 
 class TestFormatCurrency:
     def test_zero_amount(self):
-        assert h.format_currency(0) == "0.00"
+        assert "0.00" in h.format_currency(0)
 
     def test_ar_default_position(self, app):
         with (

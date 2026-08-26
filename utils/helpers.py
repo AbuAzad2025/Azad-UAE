@@ -205,7 +205,7 @@ def _resolve_format_currency_settings():
 
 def format_currency(amount, currency=None, lang=None):
     if not amount:
-        return "0.00"
+        amount = Decimal("0")
 
     try:
         if isinstance(amount, (int, float)):
@@ -233,8 +233,13 @@ def format_currency(amount, currency=None, lang=None):
             position = "after" if lang == "ar" else "before"
 
         if position == "before":
-            return f"{symbol} {formatted}"
-        return f"{formatted} {symbol}"
+            result = f"{symbol} {formatted}"
+        else:
+            result = f"{formatted} {symbol}"
+
+        if lang == "ar":
+            return f"\u2066{result}\u2069"
+        return result
 
     except Exception:
         return str(amount)

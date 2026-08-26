@@ -75,16 +75,16 @@
               <th style="width: 100px">{{ t('النوع') }}</th>
               <th>{{ t('Description') }}</th>
               <th style="width: 100px">{{ t('المرجع') }}</th>
-              <th style="width: 120px" class="text-center">{{ t('مدين') }}</th>
-              <th style="width: 120px" class="text-center">{{ t('دائن') }}</th>
-              <th style="width: 120px" class="text-center">{{ t('Balance') }}</th>
+              <th style="width: 120px" class="col-num">{{ t('مدين') }}</th>
+              <th style="width: 120px" class="col-num">{{ t('دائن') }}</th>
+              <th style="width: 120px" class="col-num">{{ t('Balance') }}</th>
             </tr>
           </thead>
           <tbody>
             {% if statement.opening_balance != 0 %}
             <tr class="table-info">
               <td colspan="7" class="text-center"><strong>{{ t('Opening Balance') }}</strong></td>
-              <td class="text-center">
+              <td class="col-num">
                 <strong>{{ format_currency(statement.opening_balance) }}</strong>
               </td>
             </tr>
@@ -101,13 +101,13 @@
               <td><small class="badge badge-secondary">{{ trans.entry_type }}</small></td>
               <td>{{ trans.description }}</td>
               <td><small>{{ trans.reference }}</small></td>
-              <td class="text-center text-success">
+              <td class="col-num text-success">
                 {% if trans.debit > 0 %}{{ format_currency(trans.debit) }}{% else %}-{% endif %}
               </td>
-              <td class="text-center text-danger">
+              <td class="col-num text-danger">
                 {% if trans.credit > 0 %}{{ format_currency(trans.credit) }}{% else %}-{% endif %}
               </td>
-              <td class="text-center">
+              <td class="col-num">
                 {% set bal_cls = 'text-success' if trans.balance > 0 else ('text-danger' if trans.balance < 0 else '') %}
                 <strong class="{{ bal_cls }}">
                   {{ format_currency(trans.balance) }}
@@ -118,10 +118,10 @@
           </tbody>
           <tfoot class="bg-light">
             <tr>
-              <th colspan="5" class="text-left">{{ t('Total_3') }}:</th>
-              <th class="text-center text-success">{{ format_currency(statement.total_debit) }}</th>
-              <th class="text-center text-danger">{{ format_currency(statement.total_credit) }}</th>
-              <th class="text-center">
+              <th colspan="5" class="text-start">{{ t('Total_3') }}:</th>
+              <th class="col-num text-success">{{ format_currency(statement.total_debit) }}</th>
+              <th class="col-num text-danger">{{ format_currency(statement.total_credit) }}</th>
+              <th class="col-num">
                 {% set close_bal_cls = 'text-success' if statement.closing_balance > 0 else ('text-danger' if statement.closing_balance < 0 else '') %}
                 <strong class="{{ close_bal_cls }}">
                   {{ format_currency(statement.closing_balance) }}

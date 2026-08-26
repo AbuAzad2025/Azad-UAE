@@ -125,11 +125,11 @@
 
             <th><i class="far fa-calendar mr-2"></i>{{ t('date') }}</th>
 
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('amount') }}</th>
+            <th class="col-num"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('amount') }}</th>
 
-            <th><i class="fas fa-check-circle mr-2"></i>{{ t('paid') }}</th>
+            <th class="col-num"><i class="fas fa-check-circle mr-2"></i>{{ t('paid') }}</th>
 
-            <th><i class="fas fa-exclamation-circle mr-2"></i>{{ t('remaining') }}</th>
+            <th class="col-num"><i class="fas fa-exclamation-circle mr-2"></i>{{ t('remaining') }}</th>
 
             <th><i class="fas fa-exchange-alt mr-2"></i>{{ t('exchange_rate') }}</th>
 
@@ -189,7 +189,7 @@
 
             </td>
 
-            <td>
+            <td class="col-num">
 
               <strong class="ic-3">{{ format_currency(sale.total_amount) }}</strong>
 
@@ -197,7 +197,7 @@
 
             </td>
 
-            <td>
+            <td class="col-num">
 
               <strong class="text-success">{{ format_currency(sale.paid_amount) }}</strong>
 
@@ -211,7 +211,7 @@
 
             </td>
 
-            <td>
+            <td class="col-num">
 
               {% if sale.balance_due > 0 %}
 
@@ -261,7 +261,7 @@
 
               {% if sale.payment_status == 'paid' %}
 
-                <span class="badge badge-success px-3">
+                <span class="badge badge-paid px-3">
 
                   <i class="fas fa-check mr-1"></i>{{ t('paid') }}
 
@@ -269,7 +269,7 @@
 
               {% elif sale.payment_status == 'partial' %}
 
-                <span class="badge badge-warning px-3">
+                <span class="badge badge-partial px-3">
 
                   <i class="fas fa-clock mr-1"></i>{{ t('partial') }}
 
@@ -277,7 +277,7 @@
 
               {% else %}
 
-                <span class="badge badge-danger px-3">
+                <span class="badge badge-unpaid px-3">
 
                   <i class="fas fa-hourglass-half mr-1"></i>{{ t('credit') }}
 

@@ -26,14 +26,10 @@ $(document).ready(() => {
 					const val = m ? parseFloat(m[0].replace(/,/g, "")) : 0;
 					return Number.isNaN(val) ? 0 : val;
 				};
-				const total = api
-					.column(3, { page: "current" })
-					.data()
-					.reduce((a, b) => a + firstNumber(b), 0);
-				const paid = api
-					.column(4, { page: "current" })
-					.data()
-					.reduce((a, b) => a + firstNumber(b), 0);
+				const sumCents = (cells) =>
+					cells.reduce((acc, raw) => acc + Math.round(firstNumber(raw) * 100), 0) / 100;
+				const total = sumCents(api.column(3, { page: "current" }).data());
+				const paid = sumCents(api.column(4, { page: "current" }).data());
 				const info = `${window.t("page_total")}: ${total.toFixed(2)} | ${window.t("paid_status")}: ${paid.toFixed(2)}`;
 				window.azad && typeof window.azad.showInfo === "function"
 					? window.azad.showInfo(info)

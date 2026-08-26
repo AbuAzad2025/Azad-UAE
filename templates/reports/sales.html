@@ -104,7 +104,7 @@
           {% endif %}
           <th>{{ t('Customer_2') }}</th>
           <th>{{ t('Date') }}</th>
-          <th>{{ t('Amount') }}</th>
+          <th class="col-num">{{ t('Amount') }}</th>
           <th><i class="fas fa-exchange-alt mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
           <th>{{ t('Status') }}</th>
         </tr>
@@ -117,7 +117,7 @@
           {% endif %}
           <td>{{ sale.customer.name if sale.customer else '-' }}</td>
           <td>{{ sale.sale_date.strftime('%Y-%m-%d') }}</td>
-          <td>{{ format_currency(sale.base_amount) }}</td>
+          <td class="col-num">{{ format_currency(sale.base_amount) }}</td>
           <td>
             {% if sale.exchange_rate and sale.exchange_rate != 1 %}
               <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('transaction') }}">
@@ -128,9 +128,9 @@
             {% endif %}
           </td>
           <td>
-            {% if sale.payment_status == 'paid' %}<span class="badge badge-success">{{ t('Paid_4') }}</span>
-            {% elif sale.payment_status == 'partial' %}<span class="badge badge-warning">{{ t('Partial_2') }}</span>
-            {% else %}<span class="badge badge-danger">{{ t('Credit') }}</span>{% endif %}
+            {% if sale.payment_status == 'paid' %}<span class="badge badge-paid">{{ t('Paid_4') }}</span>
+            {% elif sale.payment_status == 'partial' %}<span class="badge badge-partial">{{ t('Partial_2') }}</span>
+            {% else %}<span class="badge badge-unpaid">{{ t('Credit') }}</span>{% endif %}
           </td>
         </tr>
         {% endfor %}
