@@ -104,14 +104,13 @@ class TestReplayIfCompleted:
 
 
 class TestIsExpiredBranches:
-    def test_created_at_none_means_never_expired(self, db_session, sample_tenant):
-        _make_record(db_session, sample_tenant, key="nul", body='{"ok": 1}', created_at=None)
-        record = IdempotencyKey.query.filter_by(tenant_id=sample_tenant.id, key="nul").first()
-        record.created_at = None
-        # No flush: the identity-map instance carries the None into the service read.
-        assert IdempotencyService.replay_if_completed(
-            tenant_id=sample_tenant.id, endpoint="pos.checkout", key="nul", request_hash=_hash()
-        ) == ({"ok": 1}, 200)
+    def test_created_at_none_means_never_expired(self):
+        """A NULL created_at record never expires (defensive clock branch)."""
+        from types import SimpleNamespace
+
+        from services.idempotency_service import _is_expired
+
+        assert _is_expired(SimpleNamespace(created_at=None)) is False
 
     def test_naive_timestamp_compared_as_utc(self, db_session, sample_tenant):
         naive_stale = (datetime.now(UTC) - IDEMPOTENCY_TTL - timedelta(hours=2)).replace(tzinfo=None)

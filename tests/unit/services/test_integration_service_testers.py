@@ -161,7 +161,8 @@ class TestEmailTester:
         assert ok is True
         sent = send.call_args.args[0]
         assert sent.recipients == ["erp@test.local"]
-        assert sent.sender == ("Azadexa", "erp@test.local")
+        # flask_mail normalizes (name, addr) tuples into RFC display strings.
+        assert sent.sender == "Azadexa <erp@test.local>"
         _assert_recorded(settings_spy["email"], True, "erp@test.local")
 
     def test_send_failure_records_exception(self, app, settings_spy, mocker):

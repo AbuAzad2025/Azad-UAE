@@ -29,7 +29,7 @@ def _asset_data(tenant_id, *, category="equipment", price="6000", life="5", bran
         "category": category,
         "asset_account_id": _acct(tenant_id, "1180"),
         "depreciation_account_id": _acct(tenant_id, "1190"),
-        "expense_account_id": _acct(tenant_id, "6180"),
+        "expense_account_id": _acct(tenant_id, "6300"),
         "purchase_date": date(2026, 1, 1),
         "purchase_price": price,
         "salvage_value": "100",

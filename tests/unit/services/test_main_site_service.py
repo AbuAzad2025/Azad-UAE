@@ -233,7 +233,7 @@ class TestRecentConfirmedSales:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = ["a", "b"]
-        with patch("models.Sale", mock_sale):
+        with patch("models.Sale", mock_sale), patch("sqlalchemy.orm.joinedload", return_value=MagicMock()):
             out = MainSiteService.recent_confirmed_sales(tenant_id=1, branch_id=2, limit=5)
             assert out == ["a", "b"]
             # tenant filter should have been called, branch filter too
@@ -249,7 +249,7 @@ class TestRecentConfirmedSales:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = []
-        with patch("models.Sale", mock_sale):
+        with patch("models.Sale", mock_sale), patch("sqlalchemy.orm.joinedload", return_value=MagicMock()):
             out = MainSiteService.recent_confirmed_sales(tenant_id=None, branch_id=1, limit=10)
             assert out == []
             # tenant filter not called when tenant_id is None, only branch filter
@@ -265,7 +265,7 @@ class TestRecentConfirmedSales:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = []
-        with patch("models.Sale", mock_sale):
+        with patch("models.Sale", mock_sale), patch("sqlalchemy.orm.joinedload", return_value=MagicMock()):
             out = MainSiteService.recent_confirmed_sales(tenant_id=None, branch_id=None)
             assert out == []
 

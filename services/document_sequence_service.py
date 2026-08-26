@@ -103,9 +103,14 @@ class DocumentSequenceService:
 
         date = date or datetime.now(UTC)
 
-        # Lock the sequence row with retry logic
+        # Lock the sequence row with retry logic. ``populate_existing`` is
+        # mandatory: the preceding ``get_or_create`` may have loaded a stale
+        # snapshot of the row into this session's identity map while another
+        # transaction held the lock; without it the ORM would serve the cached
+        # object after the blocked FOR UPDATE wakes up, issuing duplicate
+        # numbers despite correct PostgreSQL row locking.
         locked = _safe_for_update(
-            db.session.query(DocumentSequence).filter_by(id=seq.id),
+            db.session.query(DocumentSequence).filter_by(id=seq.id).populate_existing(),
             label=f"DocumentSequence({code})",
         )
 

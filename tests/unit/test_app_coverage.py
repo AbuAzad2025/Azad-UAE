@@ -17,7 +17,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 APP_PY = ROOT / "app.py"
 
-_LOADED = {}
+_LOADED: dict[str, object] = {}
 
 
 def _load_entry_module():

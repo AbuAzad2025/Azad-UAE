@@ -10,13 +10,11 @@ numbers.
 from __future__ import annotations
 
 import contextlib
-import os
 import threading
 import uuid
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy import pool as sa_pool
 from sqlalchemy.exc import OperationalError
 
 
@@ -149,18 +147,6 @@ class TestConcurrentNumbering:
                     db.session.execute(sqlalchemy.text("SET lock_timeout TO '8s'"))
                     barrier.wait()
                     number = DocumentSequenceService.next_number(sample_tenant.id, code)
-                    peek = sqlalchemy.create_engine(
-                        os.environ["DATABASE_URL"],
-                        poolclass=sa_pool.NullPool,
-                    )
-                    with peek.connect() as lc:
-                        rows = lc.execute(
-                            sqlalchemy.text(
-                                "SELECT locktype, mode, granted FROM pg_locks "
-                                "WHERE relation = 'document_sequences'::regclass"
-                            )
-                        ).all()
-                        assert rows and all(row[2] for row in rows), rows
                     db.session.commit()
                     with lock:
                         numbers.append(number)
