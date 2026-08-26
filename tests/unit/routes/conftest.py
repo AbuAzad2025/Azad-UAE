@@ -47,7 +47,10 @@ def pytest_configure(config):
 
     import sqlalchemy.orm.dependency as _dep
 
-    if not hasattr(_dep, "_direction_to_processor"):
+    # Under coverage tracing on Python 3.14 this first import can complete
+    # with a partially-initialised module: `_direction_to_processor` exists
+    # but is empty. Reload rebuilds it in place (module identity kept).
+    if len(getattr(_dep, "_direction_to_processor", ()) or ()) < 3:
         importlib.reload(_dep)
 
 

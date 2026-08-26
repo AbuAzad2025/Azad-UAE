@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 from utils.structured_logging import (
     _get_request_context,
     _get_user_context,
+    _resolve_id,
     log_data_access,
     log_mutation,
     log_security_event,
@@ -108,3 +110,48 @@ class TestLogDataAccess:
         payload = json.loads(mock_logger.info.call_args[0][0])
         assert payload["event_type"] == "data_access"
         assert payload["access_type"] == "read"
+
+
+class _BadIntStr(str):
+    def __int__(self):
+        raise TypeError("cannot convert")
+
+
+class TestResolveId:
+    def test_none_stays_none(self):
+        assert _resolve_id(None) is None
+
+    def test_int_passthrough(self):
+        assert _resolve_id(42) == 42
+
+    def test_numeric_string_coerced_to_int(self):
+        assert _resolve_id("17") == 17
+
+    def test_non_numeric_string_returned_as_is(self):
+        assert _resolve_id("INV-009") == "INV-009"
+
+    def test_model_instance_id_extracted(self):
+        assert _resolve_id(SimpleNamespace(id=99)) == 99
+
+    def test_object_without_id_stringified(self):
+        sentinel = object()
+        assert _resolve_id(sentinel) == str(sentinel)
+
+    def test_failed_int_conversion_falls_back_to_string(self):
+        value = _BadIntStr("77")
+        resolved = _resolve_id(value)
+        assert resolved == "77"
+        assert isinstance(resolved, str)  # int() raised TypeError, not numeric 77
+
+    def test_log_mutation_resolves_model_entity_id(self, mocker):
+        mock_logger = mocker.patch("utils.structured_logging.logger")
+        entity = SimpleNamespace(id=321)
+        log_mutation("approve", "Purchase", entity_id=entity)
+        payload = json.loads(mock_logger.info.call_args[0][0])
+        assert payload["entity_id"] == 321
+
+    def test_log_mutation_with_none_entity_id(self, mocker):
+        mock_logger = mocker.patch("utils.structured_logging.logger")
+        log_mutation("create", "Note", entity_id=None)
+        payload = json.loads(mock_logger.info.call_args[0][0])
+        assert payload["entity_id"] is None

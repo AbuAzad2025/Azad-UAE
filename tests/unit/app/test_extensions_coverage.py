@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import uuid
 from unittest.mock import MagicMock, patch
 
-from flask import Flask, session
+import pytest
+from flask import Flask, g, session
 
 
 class TestGetLocale:
@@ -139,6 +141,180 @@ class TestGetOrCreate:
         assert result is instance
         assert created is True
         mock_session.add.assert_called_once_with(instance)
+
+
+class TestGetLocaleRuntimeError:
+    def test_runtime_error_outside_request_falls_back_to_ar(self):
+        from extensions import get_locale
+
+        with patch("flask.has_request_context", side_effect=RuntimeError("no request context")):
+            assert get_locale() == "ar"
+
+
+class TestTenantAwareCache:
+    @pytest.fixture
+    def flask_app(self):
+        app = Flask(__name__)
+        app.config["SECRET_KEY"] = "test"
+        return app
+
+    @pytest.fixture
+    def backend(self):
+        return MagicMock()
+
+    @pytest.fixture
+    def tenant_cache(self, backend):
+        from extensions import TenantAwareCache
+
+        return TenantAwareCache(backend)
+
+    def test_key_prefixed_with_active_tenant_in_request(self, tenant_cache, flask_app):
+        with flask_app.test_request_context():
+            g.active_tenant_id = 5
+            assert tenant_cache._tenant_key("dashboard") == "t:5:dashboard"
+
+    def test_key_falls_back_to_plain_tenant_id(self, tenant_cache, flask_app):
+        with flask_app.test_request_context():
+            g.tenant_id = 9
+            assert tenant_cache._tenant_key("report") == "t:9:report"
+
+    def test_key_untouched_outside_request(self, tenant_cache):
+        assert tenant_cache._tenant_key("global") == "global"
+
+    def test_key_resolution_failure_returns_raw_key(self, tenant_cache):
+        with patch("flask.has_request_context", side_effect=RuntimeError("boom")):
+            assert tenant_cache._tenant_key("safe") == "safe"
+
+    def test_get_delegates_with_prefixed_key(self, tenant_cache, backend, flask_app):
+        backend.get.return_value = {"v": 1}
+        with flask_app.test_request_context():
+            g.active_tenant_id = 3
+            assert tenant_cache.get("sales") == {"v": 1}
+        backend.get.assert_called_once_with("t:3:sales")
+
+    def test_set_delegates_with_prefixed_key_and_timeout(self, tenant_cache, backend, flask_app):
+        with flask_app.test_request_context():
+            g.active_tenant_id = 3
+            tenant_cache.set("k", [1, 2], timeout=60)
+        backend.set.assert_called_once_with("t:3:k", [1, 2], timeout=60)
+
+    def test_delete_delegates_with_prefixed_key(self, tenant_cache, backend, flask_app):
+        with flask_app.test_request_context():
+            g.active_tenant_id = 4
+            tenant_cache.delete("stale")
+        backend.delete.assert_called_once_with("t:4:stale")
+
+    def test_delete_many_prefixes_every_key(self, tenant_cache, backend, flask_app):
+        with flask_app.test_request_context():
+            g.active_tenant_id = 6
+            tenant_cache.delete_many("a", "b")
+        backend.delete_many.assert_called_once_with("t:6:a", "t:6:b")
+
+    def test_get_many_maps_values_back_to_original_keys(self, tenant_cache, backend, flask_app):
+        """Regression: flask-caching returns a list; the old dict-based mapping crashed."""
+        backend.get_many.return_value = ["va", "vb"]
+        with flask_app.test_request_context():
+            g.active_tenant_id = 7
+            result = tenant_cache.get_many("ka", "kb")
+        backend.get_many.assert_called_once_with("t:7:ka", "t:7:kb")
+        assert result == {"ka": "va", "kb": "vb"}
+
+    def test_get_many_works_against_real_null_backend(self, flask_app):
+        from extensions import Cache, TenantAwareCache
+
+        cache = TenantAwareCache(Cache())
+        cache.init_app(flask_app, config={"CACHE_TYPE": "simple"})
+        with flask_app.test_request_context():
+            g.active_tenant_id = 11
+            cache.set("multi_a", 1)
+            cache.set("multi_b", 2)
+            assert cache.get_many("multi_a", "multi_b", "missing") == {
+                "multi_a": 1,
+                "multi_b": 2,
+                "missing": None,
+            }
+
+    def test_set_many_prefixes_mapping_values(self, tenant_cache, backend, flask_app):
+        with flask_app.test_request_context():
+            g.active_tenant_id = 8
+            tenant_cache.set_many({"x": 1, "y": 2}, timeout=30)
+        backend.set_many.assert_called_once_with({"t:8:x": 1, "t:8:y": 2}, timeout=30)
+
+    def test_init_app_suppresses_null_warning_outside_production(self, tenant_cache, backend):
+        app = Flask(__name__)
+        app.config["APP_ENV"] = "testing"
+        tenant_cache.init_app(app)
+        assert app.config["CACHE_NO_NULL_WARNING"] is True
+        backend.init_app.assert_called_once_with(app, config=None)
+
+    def test_init_app_keeps_warning_in_production(self, tenant_cache, backend):
+        app = Flask(__name__)
+        app.config["APP_ENV"] = "production"
+        tenant_cache.init_app(app, config={"CACHE_TYPE": "null"})
+        assert "CACHE_NO_NULL_WARNING" not in app.config
+
+    def test_unknown_attribute_delegates_to_inner_cache(self, tenant_cache, backend):
+        backend.some_plugin_hook = "hook-value"
+        assert tenant_cache.some_plugin_hook == "hook-value"
+
+
+class TestGetOrCreateRealDatabase:
+    def test_creates_missing_row_without_defaults(self, db_session):
+        from extensions import get_or_create
+        from models import Currency
+
+        code = "C" + uuid.uuid4().hex[:2].upper()
+        instance, created = get_or_create(
+            db_session,
+            Currency,
+            code=code,
+            name="No Defaults",
+            symbol="N",
+        )
+        assert created is True
+        assert instance.code == code
+        db_session.commit()
+
+    def test_second_call_returns_existing_row(self, db_session):
+        from extensions import get_or_create
+        from models import Currency
+
+        code = "C" + uuid.uuid4().hex[:2].upper()
+        first, created_first = get_or_create(
+            db_session,
+            Currency,
+            code=code,
+            name="Reuse Me",
+            symbol="R",
+        )
+        db_session.commit()
+        second, created_second = get_or_create(
+            db_session,
+            Currency,
+            code=code,
+            name="Reuse Me",
+            symbol="R",
+        )
+        assert created_first is True
+        assert created_second is False
+        assert second.id == first.id
+
+    def test_defaults_applied_on_creation_only(self, db_session):
+        from extensions import get_or_create
+        from models import Currency
+
+        code = "C" + uuid.uuid4().hex[:2].upper()
+        instance, created = get_or_create(
+            db_session,
+            Currency,
+            defaults={"name": "Agent Test", "symbol": "T"},
+            code=code,
+        )
+        db_session.commit()
+        assert created is True
+        assert instance.name == "Agent Test"
+        again, _ = get_or_create(db_session, Currency, code=code)
+        assert again.name == "Agent Test"
 
 
 class TestRateLimitKeyException:

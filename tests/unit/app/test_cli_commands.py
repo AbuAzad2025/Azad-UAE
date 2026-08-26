@@ -331,3 +331,151 @@ class TestSanitizeLegacyIndustries:
             result = runner.invoke(args=["sanitize-legacy-industries", "--commit"])
         assert result.exit_code == 0
         assert "ERROR" in result.output
+
+class TestSeedPackagesCommand:
+    """flask seed-packages — real idempotent upsert against the test database."""
+
+    def test_creates_then_updates_idempotently(self, app):
+        runner = app.test_cli_runner()
+        first = runner.invoke(args=["seed-packages"])
+        assert first.exit_code == 0, f"{first.output}\nEXC={first.exception!r}"
+        assert "created=['basic', 'pro', 'enterprise']" in first.output
+        assert "updated=[]" in first.output
+
+        second = runner.invoke(args=["seed-packages"])
+        assert second.exit_code == 0, f"{second.output}\nEXC={second.exception!r}"
+        assert "created=[]" in second.output
+        assert "updated=['basic', 'pro', 'enterprise']" in second.output
+
+
+class TestSeedDemoIntegration:
+    """Real end-to-end execution of the demo seeder against the test database.
+
+    Covers the command wrapper, the full seeding pipeline (branches,
+    warehouses, users, products, partners, customers, suppliers, sales via
+    SaleService, purchases via PurchaseService/PaymentService, expenses,
+    salary advances, POS sessions, returns via ReturnService) and the
+    destructive re-seed wipe path.
+    """
+
+    def _demo_counts(self, app):
+        from models import PosSession, SalaryAdvance
+        from models.branch import Branch
+        from models.cash_box import CashBox
+        from models.customer import Customer
+        from models.expense import Expense
+        from models.partner import Partner
+        from models.product import Product
+        from models.sale import Sale
+        from models.supplier import Supplier
+        from models.tenant import Tenant
+        from models.tenant_store import TenantStore
+        from models.user import User
+        from models.warehouse import Warehouse
+
+        with app.app_context():
+            tenant = Tenant.query.filter_by(slug="demo").one()
+            tid = tenant.id
+            summary = {
+                "business_type": tenant.business_type,
+                "enable_pos": tenant.enable_pos,
+                "enable_payroll": tenant.enable_payroll,
+                "store_slug": TenantStore.query.filter_by(tenant_id=tid).one().store_slug,
+                "admin_ok": User.query.filter_by(username="demo_admin").one().check_password("Demo@2026"),
+                "branches": Branch.query.filter_by(tenant_id=tid).count(),
+                "warehouses": Warehouse.query.filter_by(tenant_id=tid).count(),
+                "cashboxes": CashBox.query.filter_by(tenant_id=tid).count(),
+                "products": Product.query.filter_by(tenant_id=tid).count(),
+                "partners": Partner.query.filter_by(tenant_id=tid).count(),
+                "customers": Customer.query.filter_by(tenant_id=tid).count(),
+                "suppliers": Supplier.query.filter_by(tenant_id=tid).count(),
+                "sales": Sale.query.filter_by(tenant_id=tid).count(),
+                "expenses": Expense.query.filter_by(tenant_id=tid).count(),
+                "pos_sessions": PosSession.query.filter_by(tenant_id=tid).count(),
+                "advances": SalaryAdvance.query.filter_by(tenant_id=tid).count(),
+                "users": User.query.filter_by(tenant_id=tid).count(),
+            }
+        return summary
+
+    def test_01_full_seed_builds_complete_demo_dataset(self, app):
+        runner = app.test_cli_runner()
+        result = runner.invoke(args=["seed-demo"])
+        assert result.exit_code == 0, f"{result.output}\nEXC={result.exception!r}"
+        assert "Demo tenant seeded successfully" in result.output
+
+        s = self._demo_counts(app)
+        assert s["business_type"] == "multi_branch_retail"
+        assert s["enable_pos"] is True
+        assert s["enable_payroll"] is True
+        assert s["store_slug"] == "demo"
+        assert s["admin_ok"] is True
+        assert s["branches"] == 4
+        assert s["warehouses"] == 4
+        assert s["cashboxes"] == 4
+        assert s["products"] >= 17
+        assert s["partners"] == 5
+        assert s["customers"] == 5
+        assert s["suppliers"] == 5
+        assert s["expenses"] == 3
+        assert s["pos_sessions"] == 2
+        assert s["advances"] >= 1
+        assert s["users"] == 11
+        assert s["sales"] >= 3
+
+    def test_02_returns_posted_through_return_service(self, app):
+        from models import ProductReturn
+        from models.tenant import Tenant
+
+        with app.app_context():
+            tenant = Tenant.query.filter_by(slug="demo").one()
+            returns = ProductReturn.query.filter_by(tenant_id=tenant.id).count()
+        assert returns >= 1
+
+    def test_03_customer_balances_recomputed_from_sales(self, app):
+        from decimal import Decimal
+
+        from models.customer import Customer
+        from models.tenant import Tenant
+
+        with app.app_context():
+            tenant = Tenant.query.filter_by(slug="demo").one()
+            balances = [c.balance for c in Customer.query.filter_by(tenant_id=tenant.id).all()]
+        assert balances and all(isinstance(b, Decimal) for b in balances)
+
+    def test_04_second_run_without_force_short_circuits(self, app):
+        from models.product import Product
+        from models.tenant import Tenant
+
+        with app.app_context():
+            before = Product.query.filter_by(
+                tenant_id=Tenant.query.filter_by(slug="demo").first().id
+            ).count()
+        runner = app.test_cli_runner()
+        result = runner.invoke(args=["seed-demo"])
+        assert result.exit_code == 0, result.output
+        assert "already exists" in result.output
+        assert "re-seeding with --force" not in result.output
+        with app.app_context():
+            after = Product.query.filter_by(
+                tenant_id=Tenant.query.filter_by(slug="demo").first().id
+            ).count()
+        assert after == before
+
+    def test_05_direct_reseed_wipes_existing_demo_data(self, app, capsys):
+        import cli_commands
+        from models.branch import Branch
+        from models.product import Product
+        from models.tenant import Tenant
+
+        with app.app_context():
+            cli_commands._do_seed_demo(app)
+        captured = capsys.readouterr().out
+        assert "Dropping existing demo data..." in captured
+        assert "Old demo data removed." in captured
+        assert "Demo tenant seeded successfully" in captured
+
+        with app.app_context():
+            tenant = Tenant.query.filter_by(slug="demo").one()
+            assert Branch.query.filter_by(tenant_id=tenant.id).count() == 4
+            skus = [p.sku for p in Product.query.filter_by(tenant_id=tenant.id).all()]
+        assert any(sku.startswith("DEMO-MAIN-") for sku in skus)

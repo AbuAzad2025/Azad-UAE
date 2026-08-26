@@ -132,6 +132,15 @@ class TestParkCart:
         with pytest.raises(ValueError, match="جلسة"):
             PosCartService.park_cart(user=sample_user, session=None, payload=_payload())
 
+    def test_park_rejects_non_dict_line_row(self, db_session, sample_user, pos_session):
+        payload = _payload(lines=[{"product_id": 1, "quantity": "2", "unit_price": "5"}, "junk"])
+        with pytest.raises(ValueError, match="غير صالحة"):
+            PosCartService.park_cart(user=sample_user, session=pos_session, payload=payload)
+
+    def test_park_requires_active_tenant(self, db_session, pos_session, tenantless_user):
+        with pytest.raises(ValueError, match="شركة نشطة"):
+            PosCartService.park_cart(user=tenantless_user, session=pos_session, payload=_payload())
+
     def test_park_update_replaces_payload_and_reparks(self, db_session, sample_user, pos_session):
         cart = PosCartService.park_cart(user=sample_user, session=pos_session, payload=_payload())
         PosCartService.resume_cart(user=sample_user, cart_id=cart.id)
@@ -226,6 +235,72 @@ class TestResumeCart:
             PosCartService.resume_cart(user=other_user, cart_id=cart.id)
         # The cart itself remains parked for the real owner.
         assert db_session.get(PosCart, cart.id).status == PosCart.STATUS_PARKED
+
+
+@pytest.fixture
+def tenantless_user(db_session, sample_role):
+    """An authenticated cashier with no active company behind them."""
+    import uuid
+
+    from models import User
+
+    unique = uuid.uuid4().hex[:8]
+    user = User(
+        username=f"tenantless-{unique}",
+        email=f"tenantless-{unique}@example.com",
+        full_name="No Tenant",
+        tenant_id=None,
+        role_id=sample_role.id,
+        branch_id=None,
+    )
+    user.set_password("password123")
+    db_session.add(user)
+    db_session.commit()
+    return user
+
+
+class TestVoidLine:
+    def test_void_removes_line_and_recomputes_summary(self, db_session, sample_user, pos_session):
+        cart = PosCartService.park_cart(user=sample_user, session=pos_session, payload=_payload())
+        updated = PosCartService.void_line(user=sample_user, cart_id=cart.id, product_id=1)
+        assert updated.id == cart.id
+        assert updated.status == PosCart.STATUS_PARKED
+        assert updated.item_count == 1
+        # Only 1*10*0.9 remains.
+        assert Decimal(str(updated.total_estimate)) == Decimal("9.000")
+        assert [row["product_id"] for row in updated.payload["lines"]] == [2]
+
+    def test_void_missing_cart_raises(self, db_session, sample_user):
+        with pytest.raises(LookupError):
+            PosCartService.void_line(user=sample_user, cart_id=999999, product_id=1)
+
+    def test_void_on_resumed_cart_conflicts(self, db_session, sample_user, pos_session):
+        cart = PosCartService.park_cart(user=sample_user, session=pos_session, payload=_payload())
+        PosCartService.resume_cart(user=sample_user, cart_id=cart.id)
+        with pytest.raises(PosCartConflictError, match="استرجاعها"):
+            PosCartService.void_line(user=sample_user, cart_id=cart.id, product_id=1)
+
+    def test_void_unknown_product_raises(self, db_session, sample_user, pos_session):
+        cart = PosCartService.park_cart(user=sample_user, session=pos_session, payload=_payload())
+        with pytest.raises(LookupError, match="الصنف غير موجود"):
+            PosCartService.void_line(user=sample_user, cart_id=cart.id, product_id=777)
+        # Nothing changed.
+        assert cart.item_count == 2
+
+    def test_void_cannot_empty_the_cart(self, db_session, sample_user, pos_session):
+        cart = PosCartService.park_cart(
+            user=sample_user,
+            session=pos_session,
+            payload=_payload(lines=_lines((5, "1", "10", "0"))),
+        )
+        with pytest.raises(ValueError, match="إفراغ السلة"):
+            PosCartService.void_line(user=sample_user, cart_id=cart.id, product_id=5)
+
+    def test_void_scoped_to_owning_user(self, db_session, sample_user, other_user, pos_session):
+        cart = PosCartService.park_cart(user=sample_user, session=pos_session, payload=_payload())
+        with pytest.raises(LookupError):
+            PosCartService.void_line(user=other_user, cart_id=cart.id, product_id=1)
+        assert db_session.get(PosCart, cart.id).item_count == 2
 
 
 class TestDeleteCart:

@@ -43,3 +43,52 @@ class TestCompatPatches:
                 sys.modules[mod_name] = saved
             else:
                 importlib.import_module(mod_name)
+
+    def test_dumps_returns_none_for_unserializable_value(self):
+        _compat_patches = __import__("utils.compat_patches")
+        assert _compat_patches is not None
+        from cachelib.serializers import BaseSerializer
+
+        ser = BaseSerializer()
+        ser._warn = MagicMock()
+        assert ser.dumps({"unserializable": object()}) is None
+        ser._warn.assert_called_once()
+
+    def test_loads_roundtrips_dumps_output(self):
+        _compat_patches = __import__("utils.compat_patches")
+        assert _compat_patches is not None
+        from cachelib.serializers import BaseSerializer
+
+        ser = BaseSerializer()
+        payload = {"tenant": 7, "items": [1, 2, 3], "nested": {"a": True}}
+        assert ser.loads(ser.dumps(payload)) == payload
+
+    def test_loads_none_returns_none_without_warning(self):
+        _compat_patches = __import__("utils.compat_patches")
+        assert _compat_patches is not None
+        from cachelib.serializers import BaseSerializer
+
+        ser = BaseSerializer()
+        ser._warn = MagicMock()
+        assert ser.loads(None) is None
+        ser._warn.assert_not_called()
+
+    def test_loads_invalid_json_returns_none_and_warns(self):
+        _compat_patches = __import__("utils.compat_patches")
+        assert _compat_patches is not None
+        from cachelib.serializers import BaseSerializer
+
+        ser = BaseSerializer()
+        ser._warn = MagicMock()
+        assert ser.loads(b"{not json") is None
+        ser._warn.assert_called_once()
+
+    def test_loads_non_bytes_input_returns_none_and_warns(self):
+        _compat_patches = __import__("utils.compat_patches")
+        assert _compat_patches is not None
+        from cachelib.serializers import BaseSerializer
+
+        ser = BaseSerializer()
+        ser._warn = MagicMock()
+        assert ser.loads(12345) is None
+        ser._warn.assert_called_once()

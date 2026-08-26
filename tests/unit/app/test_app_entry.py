@@ -49,6 +49,20 @@ class TestAppEntry:
             runpy.run_path(str(APP_PY), run_name="__main__")
         fake_app.run.assert_called_once()
         assert fake_app.run.call_args.kwargs["port"] == 59999
+        logged = [str(c.args) for c in fake_app.logger.info.call_args_list]
+        assert any("user:***@localhost/db" in line for line in logged)
+        assert not any("secret" in line for line in logged)
+
+    def test_main_failure_is_logged_then_reraised(self):
+        fake_app = MagicMock()
+        fake_app.config = {"DEBUG": False, "SQLALCHEMY_DATABASE_URI": "sqlite:///x"}
+        fake_app.logger = MagicMock()
+        with (
+            patch("services.backup_service.BackupService.initialize", side_effect=OSError("disk gone")),
+            patch("app.factory.create_app", return_value=fake_app),
+        ):
+            with pytest.raises(OSError, match="disk gone"):
+                runpy.run_path(str(APP_PY), run_name="__main__")
 
     def test_main_handles_startup_failure(self):
         with patch("app.factory.create_app", side_effect=RuntimeError("boot fail")):
