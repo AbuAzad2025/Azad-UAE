@@ -1452,8 +1452,12 @@ class AIService:
                 ctx_user = flask_current_user
 
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
+            # The ``None`` branch intentionally raises so the outer except
+            # returns the unified data-gathering error message (pre-existing
+            # contract asserted by tests and relied on by chat flows).
+            missing_user_msg = gettext("تعذّر تحديد هوية المستخدم الحالي.")
             if ctx_user is None:
-                return gettext("تعذّر تحديد هوية المستخدم الحالي.")
+                raise RuntimeError(str(missing_user_msg))
             tid = ctx_user.tenant_id
 
             # P4-2: Per-tenant AI privacy opt-out — إن عطّلت المنشأة مشاركة
