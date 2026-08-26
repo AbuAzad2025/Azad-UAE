@@ -3,7 +3,10 @@ Tax Calculation Service — Phase 9
 Dispatches to country-specific strategy based on Tenant.vat_country.
 """
 
+import logging
 from decimal import Decimal
+
+logger = logging.getLogger(__name__)
 
 
 class TaxService:
@@ -72,6 +75,7 @@ class TaxService:
             output_vat = Decimal(str(gl_report.get("vat_output", 0)))
             input_vat = Decimal(str(gl_report.get("vat_input", 0)))
         except Exception:
+            logger.warning("GL VAT report unavailable; VAT return falls back to zero amounts", exc_info=True)
             output_vat = Decimal("0")
             input_vat = Decimal("0")
 

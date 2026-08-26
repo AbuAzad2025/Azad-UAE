@@ -12,7 +12,7 @@ from extensions import db
 from models import AzadPlatformFee
 from models.payment_vault import PaymentTransaction, PaymentVault
 from services.gl_posting import post_or_fail
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GLService
 from utils.db_safety import atomic_transaction
 from utils.gl_reference_types import GLRef
 from utils.tax_settings import _resolve_main_branch
@@ -26,7 +26,7 @@ class AzadPlatformFeeService:
 
         settings = SystemSettings.get_current()
         stored = settings.azad_platform_fee_rate
-        rate = Decimal(str(stored if stored is not None else 1.00))
+        rate = Decimal(str(stored if stored is not None else "1.00"))
         return (rate / Decimal("100")).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP), rate
 
     @staticmethod
@@ -89,7 +89,9 @@ class AzadPlatformFeeService:
             raise ValueError("Online store sale is missing tenant_id.")
 
         key = AzadPlatformFeeService._idempotency_key(sale, payment, gateway_reference)
-        existing = AzadPlatformFee.query.filter_by(idempotency_key=key).first()
+        existing = (
+            AzadPlatformFee.query.filter_by(idempotency_key=key, tenant_id=int(tenant_id)).first()
+        )
         if existing:
             return existing
 
@@ -126,13 +128,23 @@ class AzadPlatformFeeService:
         post_or_fail(
             [
                 {
-                    "account": GL_ACCOUNTS["commission_expense"],
+                    "account": GLService.get_account_code_for_concept(
+                        "COMMISSION_EXPENSE",
+                        branch_id=getattr(sale, "branch_id", None),
+                        tenant_id=int(tenant_id or 0),
+                        fallback_key="commission_expense",
+                    ),
                     "concept_code": "COMMISSION_EXPENSE",
                     "debit": fee_amount,
                     "description": f"Azad online platform fee {rate_percent}% - {sale.sale_number}",
                 },
                 {
-                    "account": GL_ACCOUNTS["azad_platform_payable"],
+                    "account": GLService.get_account_code_for_concept(
+                        "AZAD_PLATFORM_PAYABLE",
+                        branch_id=getattr(sale, "branch_id", None),
+                        tenant_id=int(tenant_id or 0),
+                        fallback_key="azad_platform_payable",
+                    ),
                     "concept_code": "AZAD_PLATFORM_PAYABLE",
                     "credit": fee_amount,
                     "description": f"Azad payable - online platform fee {sale.sale_number}",
@@ -141,7 +153,7 @@ class AzadPlatformFeeService:
             description=f"Azad platform fee ({rate_percent}%) {sale.sale_number}",
             reference_type=GLRef.AZAD_PLATFORM_FEE,
             reference_id=fee.id,
-            exchange_rate=1.0,
+            exchange_rate=Decimal("1"),
             branch_id=getattr(sale, "branch_id", None),
             tenant_id=int(tenant_id or 0),
         )
@@ -212,13 +224,23 @@ class AzadPlatformFeeService:
                 continue
             lines = [
                 {
-                    "account": GL_ACCOUNTS["azad_platform_payable"],
+                    "account": GLService.get_account_code_for_concept(
+                        "AZAD_PLATFORM_PAYABLE",
+                        branch_id=_resolve_main_branch(tid),
+                        tenant_id=tid,
+                        fallback_key="azad_platform_payable",
+                    ),
                     "concept_code": "AZAD_PLATFORM_PAYABLE",
                     "debit": total,
                     "description": gettext(f"تسوية رسوم منصة أزاد — {len(fees)} سجل"),
                 },
                 {
-                    "account": GL_ACCOUNTS[payment_method],
+                    "account": GLService.get_account_code_for_concept(
+                        "BANK" if payment_method == "bank" else "CASH",
+                        branch_id=_resolve_main_branch(tid),
+                        tenant_id=tid,
+                        fallback_key=payment_method,
+                    ),
                     "concept_code": "BANK" if payment_method == "bank" else "CASH",
                     "credit": total,
                     "description": gettext(f"دفع رسوم منصة أزاد — {total} AED"),
@@ -230,7 +252,7 @@ class AzadPlatformFeeService:
                 reference_type=GLRef.AZAD_PLATFORM_FEE,
                 reference_id=fees[0].id,
                 date=settlement_date,
-                exchange_rate=1.0,
+                exchange_rate=Decimal("1"),
                 branch_id=_resolve_main_branch(tid),
                 tenant_id=tid,
             )
@@ -285,7 +307,7 @@ class AzadPlatformFeeService:
         txn_id = f"PLATFORM-SETTLE-{generate_number('SETT', PaymentTransaction, 'transaction_id')}"
         txn = PaymentTransaction(
             transaction_id=txn_id,
-            amount_usd=float(total),
+            amount_usd=total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
             amount_crypto=0,
             crypto_currency="AED",
             payment_status="completed",

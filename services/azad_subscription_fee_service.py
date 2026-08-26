@@ -90,13 +90,23 @@ class AzadSubscriptionFeeService:
         post_or_fail(
             [
                 {
-                    "account": GL_ACCOUNTS["azad_subscription_expense"],
+                    "account": GLService.get_account_code_for_concept(
+                        "AZAD_SUBSCRIPTION_EXPENSE",
+                        branch_id=branch_id,
+                        tenant_id=int(tenant_id),
+                        fallback_key="azad_subscription_expense",
+                    ),
                     "concept_code": "AZAD_SUBSCRIPTION_EXPENSE",
                     "debit": amount,
                     "description": f"Subscription fee ({fee_type}) - Tenant {tenant_id}",
                 },
                 {
-                    "account": GL_ACCOUNTS["azad_platform_payable"],
+                    "account": GLService.get_account_code_for_concept(
+                        "AZAD_PLATFORM_PAYABLE",
+                        branch_id=branch_id,
+                        tenant_id=int(tenant_id),
+                        fallback_key="azad_platform_payable",
+                    ),
                     "concept_code": "AZAD_PLATFORM_PAYABLE",
                     "credit": amount,
                     "description": f"Azad payable - subscription ({fee_type}) Tenant {tenant_id}",
@@ -105,7 +115,7 @@ class AzadSubscriptionFeeService:
             description=f"Subscription fee ({fee_type}) - Tenant {tenant_id}",
             reference_type=GLRef.AZAD_SUBSCRIPTION_FEE,
             reference_id=fee.id,
-            exchange_rate=1.0,
+            exchange_rate=Decimal("1"),
             branch_id=branch_id,
             tenant_id=int(tenant_id),
         )
@@ -133,6 +143,8 @@ class AzadSubscriptionFeeService:
         fee = db.session.get(AzadSubscriptionFee, fee_id)
         if not fee:
             raise ValueError(f"Subscription fee {fee_id} not found")
+        if tenant_id is not None and int(fee.tenant_id or 0) != int(tenant_id):
+            raise ValueError("Subscription fee belongs to a different tenant.")
         if fee.status != "accrued":
             raise ValueError(f"Subscription fee must be accrued before payment (current: {fee.status})")
 
@@ -141,10 +153,17 @@ class AzadSubscriptionFeeService:
             amount = fee.amount_aed
         amount = Decimal(str(amount)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-        tid = tenant_id or fee.tenant_id
+        tid = int(tenant_id or fee.tenant_id)
+
+        from utils.tax_settings import _resolve_main_branch
 
         # Post GL: Dr Azad Platform Payable, Cr Cash/Bank
-        debit_account = GL_ACCOUNTS["azad_platform_payable"]
+        debit_account = GLService.get_account_code_for_concept(
+            "AZAD_PLATFORM_PAYABLE",
+            branch_id=_resolve_main_branch(tid),
+            tenant_id=tid,
+            fallback_key="azad_platform_payable",
+        )
         credit_concept = GLService.get_payment_credit_concept(payment_method)
         if credit_concept:
             credit_account = GLService._resolve_journal_line_account(
@@ -157,8 +176,6 @@ class AzadSubscriptionFeeService:
             credit_code = GL_ACCOUNTS.get("cash")
 
         GLService.ensure_core_accounts(tenant_id=int(tid))
-        from utils.tax_settings import _resolve_main_branch
-
         branch_id = _resolve_main_branch(tid)
         post_or_fail(
             [
@@ -178,7 +195,7 @@ class AzadSubscriptionFeeService:
             description=f"Subscription fee paid ({fee.fee_type}) - Tenant {tid}",
             reference_type=GLRef.AZAD_SUBSCRIPTION_FEE,
             reference_id=fee.id,
-            exchange_rate=1.0,
+            exchange_rate=Decimal("1"),
             branch_id=branch_id,
             tenant_id=int(tid),
         )
@@ -202,10 +219,12 @@ class AzadSubscriptionFeeService:
         fee = db.session.get(AzadSubscriptionFee, fee_id)
         if not fee:
             raise ValueError(f"Subscription fee {fee_id} not found")
+        if tenant_id is not None and int(fee.tenant_id or 0) != int(tenant_id):
+            raise ValueError("Subscription fee belongs to a different tenant.")
         if fee.status == "cancelled":
             return fee
 
-        tid = tenant_id or fee.tenant_id
+        tid = int(tenant_id or fee.tenant_id)
 
         if fee.gl_posted and fee.status == "accrued":
             # Reverse the original accrued entry

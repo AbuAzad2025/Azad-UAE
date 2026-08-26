@@ -3,6 +3,8 @@
 Inspired by Odoo's account.fiscal.position
 """
 
+from decimal import ROUND_HALF_UP, Decimal
+
 from extensions import db
 from models import Customer, FiscalPosition, FiscalPositionTaxRule, TaxCalculationRule
 
@@ -73,20 +75,24 @@ class FiscalPositionService:
         Compute tax amount for a sale line considering fiscal position.
         Returns (tax_amount, tax_rate).
         """
-        from decimal import Decimal
-
+        tenant_scope = None
         if fiscal_position_id is None and customer_id:
             pos = FiscalPositionService.get_for_customer(customer_id)
-            fiscal_position_id = pos.id if pos else None
+            if pos:
+                fiscal_position_id = pos.id
+                tenant_scope = getattr(pos, "tenant_id", None)
 
         # Get tax rule
         source_tax_id = getattr(line, "tax_id", None)
+        rule_filter = {
+            "fiscal_position_id": fiscal_position_id,
+            "source_tax_id": source_tax_id,
+            "rule_type": "tax",
+        }
+        if tenant_scope is not None:
+            rule_filter["tenant_id"] = tenant_scope
         if fiscal_position_id and source_tax_id:
-            rule = FiscalPositionTaxRule.query.filter_by(
-                fiscal_position_id=fiscal_position_id,
-                source_tax_id=source_tax_id,
-                rule_type="tax",
-            ).first()
+            rule = FiscalPositionTaxRule.query.filter_by(**rule_filter).first()
             if rule and rule.destination_tax:
                 tax_rate = Decimal(str(rule.destination_tax.rate or 0))
             else:
@@ -97,5 +103,5 @@ class FiscalPositionService:
             tax_rate = Decimal(str(tax.rate if tax else 0))
 
         net = Decimal(str(line.unit_price or 0)) * Decimal(str(line.quantity or 1))
-        tax_amount = (net * tax_rate / Decimal("100")).quantize(Decimal("0.001"))
+        tax_amount = (net * tax_rate / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         return tax_amount, tax_rate
