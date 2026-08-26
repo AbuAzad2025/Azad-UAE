@@ -16747,6 +16747,9 @@ msgstr "Opening Balance (cash)"
 msgid "رصيد الافتتاح:"
 msgstr "Opening Balance:"
 
+msgid "رصيد افتتاحي"
+msgstr "Opening balance"
+
 msgid "رصيد البنك"
 msgstr "Bank Balance"
 

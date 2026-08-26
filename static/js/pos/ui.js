@@ -16,14 +16,17 @@ const _customerTimer = null;
 const _productTimer = null;
 let productBusy = false;
 
+let _alertTimer = null;
 const showAlert = (msg, level = "danger") => {
 	const el = qs("#posAlert");
 	el.className = `alert alert-${level}`;
 	el.textContent = msg;
+	el.setAttribute("role", level === "success" ? "status" : "alert");
 	el.classList.remove("d-none");
 	const duration =
 		level === "success" ? 4000 : level === "danger" || level === "warning" ? 15000 : 5000;
-	setTimeout(() => {
+	if (_alertTimer) clearTimeout(_alertTimer);
+	_alertTimer = setTimeout(() => {
 		el.classList.add("d-none");
 	}, duration);
 };
@@ -383,6 +386,10 @@ const loadTables = async (floorId) => {
 		grid.appendChild(card);
 	});
 };
+
+window.addEventListener("pos:alert", (e) => {
+	showAlert(e.detail?.msg || "", e.detail?.level || "danger");
+});
 
 export {
 	addFirstOrLookup,

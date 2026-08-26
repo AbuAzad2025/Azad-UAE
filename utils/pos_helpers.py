@@ -260,6 +260,7 @@ def serialize_pos_product(product: Product, stock_map: dict, *, warehouse_id: in
         "is_inactive": inactive,
         "is_out_of_stock": no_stock,
         "is_weight_product": (product.unit or "").strip().lower() in _WEIGHT_UNITS,
+        "has_serial_number": bool(getattr(product, "has_serial_number", False)),
         "warehouse_id": warehouse_id,
         "text": label,
     }

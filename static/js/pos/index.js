@@ -23,6 +23,7 @@ import {
 	qs,
 	qsa,
 	selectedCurrency,
+	sessionHeaders,
 	state,
 	toNum,
 	warehouseParam,
@@ -64,7 +65,13 @@ qs("#cartBody").addEventListener("click", (e) => {
 	const idx = Number(btn.getAttribute("data-i"));
 	if (!Number.isFinite(idx) || !state.cart[idx]) return;
 	const act = btn.getAttribute("data-act");
-	if (act === "inc") state.cart[idx].qty = Number(state.cart[idx].qty) + 1;
+	if (act === "inc") {
+		if (state.cart[idx].serial) {
+			showAlert(window.t("المنتج المتسلسل يُباع بوحدة واحدة لكل رقم تسلسلي"), "warning");
+			return;
+		}
+		state.cart[idx].qty = Number(state.cart[idx].qty) + 1;
+	}
 	if (act === "dec") {
 		const nq = Number(state.cart[idx].qty) - 1;
 		if (nq <= 0) {
@@ -81,7 +88,14 @@ qs("#cartBody").addEventListener("input", (e) => {
 	const idx = Number(t.getAttribute("data-i"));
 	const k = t.getAttribute("data-k");
 	if (!Number.isFinite(idx) || !state.cart[idx]) return;
-	if (k === "qty") state.cart[idx].qty = Math.max(0.001, toNum(t.value));
+	if (k === "qty") {
+		if (state.cart[idx].serial) {
+			t.value = 1;
+			state.cart[idx].qty = 1;
+		} else {
+			state.cart[idx].qty = Math.max(0.001, toNum(t.value));
+		}
+	}
 	if (k === "price") {
 		state.cart[idx].price = Math.max(0, toNum(t.value));
 		state.cart[idx].basePrice =
@@ -292,6 +306,11 @@ const checkout = async (autoPrint) => {
 			discount_percent: it.discountPercent,
 		})),
 	};
+	const serialsByProduct = {};
+	state.cart.forEach((it) => {
+		if (it.serial) (serialsByProduct[it.id] ||= []).push(it.serial);
+	});
+	if (Object.keys(serialsByProduct).length) payload.serials = serialsByProduct;
 	if (payload.payment_method === "cash" && toNum(qs("#paidAmount").value) <= 0) {
 		payload.paid_amount = Math.max(0, toNum(_totals?.total));
 	}
@@ -315,6 +334,7 @@ const checkout = async (autoPrint) => {
 					Accept: "application/json",
 					"X-CSRFToken": csrf,
 					"Idempotency-Key": state.idemKey,
+					...sessionHeaders(),
 				},
 				credentials: "same-origin",
 				body: JSON.stringify(body),
@@ -432,14 +452,21 @@ if (calcGrid && paidEl) {
 		paidEl.value = cur;
 		if (typeof recalc === "function") recalc();
 	});
-	paidEl.addEventListener("input", () => {});
+	paidEl.addEventListener("input", recalc);
 }
 
 const paySel = qs("#paymentMethod");
 qsa("#posPayMethod .pm").forEach((pm) => {
-	pm.addEventListener("click", () => {
+	const selectMethod = () => {
 		if (paySel) paySel.value = pm.getAttribute("data-method");
 		syncPay();
+	};
+	pm.addEventListener("click", selectMethod);
+	pm.addEventListener("keydown", (e) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			selectMethod();
+		}
 	});
 });
 if (paySel) paySel.addEventListener("change", syncPay);
@@ -675,6 +702,11 @@ qs("#openSessionConfirm").addEventListener("click", async () => {
 			showModalAlert("openSession", j.message || j.error || "فشل فتح الجلسة", "danger");
 			return;
 		}
+		const openedToken = j.data?.session_token ?? j.session_token;
+		if (openedToken) {
+			state.sessionToken = openedToken;
+			sessionStorage.setItem("posSessionToken", openedToken);
+		}
 		window.$("#openSessionModal").modal("hide");
 		await loadSession();
 		const opened = j.data?.session || j.session;
@@ -728,7 +760,11 @@ qs("#closeSessionConfirm").addEventListener("click", async () => {
 	try {
 		const r = await fetch("/pos/api/session/close", {
 			method: "POST",
-			headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+			headers: {
+				"Content-Type": "application/json",
+				"X-CSRFToken": csrf,
+				...sessionHeaders(),
+			},
 			credentials: "same-origin",
 			body: JSON.stringify({
 				closing_balance: balance,
@@ -740,6 +776,8 @@ qs("#closeSessionConfirm").addEventListener("click", async () => {
 			showModalAlert("closeSession", j.message || j.error || "فشل إغلاق الجلسة", "danger");
 			return;
 		}
+		state.sessionToken = null;
+		sessionStorage.removeItem("posSessionToken");
 		window.$("#closeSessionModal").modal("hide");
 		await loadSession();
 		const closed = j.data?.session || j.session;

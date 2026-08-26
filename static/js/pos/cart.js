@@ -202,6 +202,7 @@ const renderCart = async () => {
                             <span class="ci-price">${fmt(lineTotal)} ${sym}</span>
                         </div>
                         ${meta ? `<div class="ci-meta">${meta}</div>` : ""}
+                        ${it.serial ? `<div class="ci-meta">SN: ${esc(it.serial)}</div>` : ""}
                         <div class="ci-controls">
                             <button class="ci-remove" data-k="del" data-i="${idx}" title="حذف">✕</button>
                             <button class="pos-qty-btn" data-act="dec" data-i="${idx}" type="button" aria-label="نقص">−</button>
@@ -219,9 +220,12 @@ const renderCart = async () => {
 	scheduleUpsellEval();
 };
 
-const addToCart = async (p, qty = 1) => {
-	state.idemKey = newCartKey();
-	const existing = state.cart.find((x) => x.id === p.id);
+const notify = (msg, level = "warning") => {
+	window.dispatchEvent(new CustomEvent("pos:alert", { detail: { msg, level } }));
+};
+
+const pushLine = async (p, qty, serial) => {
+	const existing = !serial ? state.cart.find((x) => x.id === p.id) : null;
 	if (existing) {
 		existing.qty = Number(existing.qty) + qty;
 	} else {
@@ -234,9 +238,27 @@ const addToCart = async (p, qty = 1) => {
 			basePrice: toNum(p.price),
 			price: priceForCurrency(toNum(p.price)),
 			discountPercent: 0,
+			...(serial ? { serial } : {}),
 		});
 	}
 	await renderCart();
+};
+
+const addToCart = async (p, qty = 1) => {
+	state.idemKey = newCartKey();
+	if (p.has_serial_number) {
+		const serial = (
+			window.prompt(`${window.t("أدخل الرقم التسلسلي")}: ${p.name}`) || ""
+		).trim();
+		if (!serial) {
+			notify(window.t("تم إلغاء الإضافة — الرقم التسلسلي مطلوب"), "warning");
+			return false;
+		}
+		await pushLine(p, 1, serial);
+		return true;
+	}
+	await pushLine(p, qty, null);
+	return true;
 };
 
 const heldCount = () => {

@@ -6,7 +6,9 @@ const state = {
 	lastProductResults: [],
 	barcodeScanner: null,
 	selectedTable: null,
+	sessionToken: sessionStorage.getItem("posSessionToken") || null,
 };
+const sessionHeaders = () => (state.sessionToken ? { "X-POS-Session-Token": state.sessionToken } : {});
 const newCartKey = () =>
 	window.crypto && crypto.randomUUID
 		? crypto.randomUUID()
@@ -126,6 +128,7 @@ export {
 	qs,
 	qsa,
 	selectedCurrency,
+	sessionHeaders,
 	state,
 	t,
 	toNum,
