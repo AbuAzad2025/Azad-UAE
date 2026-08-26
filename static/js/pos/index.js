@@ -65,7 +65,15 @@ qs("#cartBody").addEventListener("click", (e) => {
 	if (!Number.isFinite(idx) || !state.cart[idx]) return;
 	const act = btn.getAttribute("data-act");
 	if (act === "inc") state.cart[idx].qty = Number(state.cart[idx].qty) + 1;
-	if (act === "dec") state.cart[idx].qty = Math.max(0.001, Number(state.cart[idx].qty) - 1);
+	if (act === "dec") {
+		const nq = Number(state.cart[idx].qty) - 1;
+		if (nq <= 0) {
+			state.cart.splice(idx, 1);
+			state.idemKey = newCartKey();
+		} else {
+			state.cart[idx].qty = nq;
+		}
+	}
 	void renderCart();
 });
 qs("#cartBody").addEventListener("input", (e) => {
@@ -91,6 +99,12 @@ qs("#cartBody").addEventListener("click", (e) => {
 	const idx = Number(btn.getAttribute("data-i"));
 	if (!Number.isFinite(idx)) return;
 	state.cart.splice(idx, 1);
+	state.idemKey = newCartKey();
+	void renderCart();
+});
+qs("#clearCartBtn").addEventListener("click", () => {
+	if (!confirm(window.t("تفريغ السلة بالكامل؟"))) return;
+	state.cart = [];
 	state.idemKey = newCartKey();
 	void renderCart();
 });
@@ -224,7 +238,7 @@ const resetAfterSale = async () => {
 	qs("#splitTenderBox")?.classList.add("d-none");
 	const splitRows = qs("#splitTenderRows");
 	if (splitRows) splitRows.innerHTML = "";
-	qs("#paymentMethod").value = "";
+	qs("#paymentMethod").value = "cash";
 	qs("#referenceNumber").value = "";
 	if (qs("#orderNote")) qs("#orderNote").value = "";
 	if (typeof syncPay === "function") syncPay();
@@ -232,7 +246,17 @@ const resetAfterSale = async () => {
 const checkout = async (autoPrint) => {
 	if (checkoutBusy) return;
 	if (!state.customer) {
-		showAlert("يرجى اختيار العميل أو «نقدي».", "warning");
+		try {
+			const res = await fetchJson("/pos/api/walkin-customer");
+			if (res.ok && res.data) {
+				state.customer = res.data;
+				qs("#customerSearch").value = res.data.text || res.data.name || "";
+				customerHint();
+			}
+		} catch (_) {}
+	}
+	if (!state.customer) {
+		showAlert("تعذر تحميل عميل نقدي — تحقق من الاتصال.", "warning");
 		return;
 	}
 	if (!state.cart.length) {
@@ -268,6 +292,9 @@ const checkout = async (autoPrint) => {
 			discount_percent: it.discountPercent,
 		})),
 	};
+	if (payload.payment_method === "cash" && toNum(qs("#paidAmount").value) <= 0) {
+		payload.paid_amount = Math.max(0, toNum(_totals && _totals.total));
+	}
 	if (splitEnabled()) {
 		const chunks = readSplitPayments();
 		if (!chunks) return;
@@ -399,6 +426,8 @@ if (calcGrid && paidEl) {
 			cur = "0";
 		} else if (act === "add") {
 			cur = (toNum(cur) + toNum(b.getAttribute("data-val"))).toFixed(2).replace(/\.00$/, "");
+		} else if (act === "total") {
+			cur = String(state.lastTotals?.total ?? toNum(cur));
 		}
 		paidEl.value = cur;
 		if (typeof recalc === "function") recalc();
@@ -414,6 +443,7 @@ qsa("#posPayMethod .pm").forEach((pm) => {
 	});
 });
 if (paySel) paySel.addEventListener("change", syncPay);
+if (paySel) paySel.value = paySel.value || "cash";
 syncPay();
 
 if (window.setupTerminalButton) {
@@ -445,8 +475,14 @@ const POS_CONFIG = window.POS_CONFIG || {
 };
 const tablesBtn = qs("#posTablesBtn");
 const holdBtn = qs("#posHoldBtn");
+const refreshHoldBadge = () => {
+	const n = heldCount();
+	const b = qs("#posHoldBtn");
+	if (b) b.innerHTML = '<i class="fas fa-pause"></i>' + (n ? '<span class="badge warn">' + n + "</span>" : "");
+};
 if (POS_CONFIG.enable_tables && tablesBtn) tablesBtn.classList.remove("d-none");
 if (POS_CONFIG.enable_hold && holdBtn) holdBtn.classList.remove("d-none");
+refreshHoldBadge();
 
 const orderTypeSel = qs("#orderType");
 if (orderTypeSel) orderTypeSel.addEventListener("change", toggleTableField);
@@ -508,6 +544,7 @@ if (holdBtn) {
 							if (qs("#orderNote") && p.note) qs("#orderNote").value = p.note;
 							await renderCart();
 							customerHint();
+							refreshHoldBadge();
 							showAlert("تم استئناف الفاتورة المعلّقة (خادم)", "success");
 							return;
 						}
@@ -529,6 +566,7 @@ if (holdBtn) {
 			if (qs("#orderNote")) qs("#orderNote").value = last.note || "";
 			await renderCart();
 			customerHint();
+			refreshHoldBadge();
 			showAlert("تم استئناف الفاتورة المعلّقة", "success");
 			return;
 		}
@@ -561,6 +599,7 @@ if (holdBtn) {
 		state.cart = [];
 		state.idemKey = newCartKey();
 		await renderCart();
+		refreshHoldBadge();
 		if (qs("#orderNote")) qs("#orderNote").value = "";
 		const suffix = serverParked ? "" : " (محلياً)";
 		showAlert(
@@ -588,8 +627,20 @@ async function loadSession() {
 			qs("#sessionTotal").textContent = fmt(s.total_sales);
 			qs("#sessionTime").textContent =
 				`${window.t("مفتوحة منذ")} ${s.duration_minutes} ${window.t("دقيقة")}`;
+			if (window.__sesTimer) clearInterval(window.__sesTimer);
+			window.__sesTimer = setInterval(() => {
+				const el = qs("#sessionTime");
+				if (el && s.opened_at) {
+					const m = Math.floor((Date.now() - new Date(s.opened_at).getTime()) / 60000);
+					el.textContent = `${window.t("مفتوحة منذ")} ${m} ${window.t("دقيقة")}`;
+				}
+			}, 60000);
 			qs("#closeOpening").textContent = fmt(s.opening_balance);
 		} else {
+			if (window.__sesTimer) {
+				clearInterval(window.__sesTimer);
+				window.__sesTimer = null;
+			}
 			if (window.cfdBroadcast) cfdBroadcast.setSession(null);
 			bar.classList.add("d-none");
 			required.classList.remove("d-none");

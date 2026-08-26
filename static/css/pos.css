@@ -88,6 +88,7 @@ body.pos-layout .erp-mobile-nav {
 .pos-app {
 	background: var(--pos-bg);
 	color: var(--pos-text);
+	font-size: 16px;
 	font-family:
 
 		system-ui,
@@ -184,8 +185,8 @@ body.pos-layout .erp-mobile-nav {
 	border: 1px solid var(--pos-border);
 	color: var(--pos-text);
 	border-radius: 999px;
-	padding: 8px 14px;
-	font-size: 13px;
+	padding: 10px 16px;
+	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.15s ease;
@@ -207,8 +208,9 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-icon-btn {
-	width: 42px;
-	height: 42px;
+	position: relative;
+	width: 44px;
+	height: 44px;
 	border-radius: 12px;
 	background: var(--pos-surface-2);
 	border: 1px solid var(--pos-border);
@@ -225,8 +227,19 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-icon-btn svg {
-	width: 20px;
-	height: 20px;
+	width: 22px;
+	height: 22px;
+}
+
+.pos-icon-btn .badge.warn {
+	position: absolute;
+	top: -6px;
+	inset-inline-end: -6px;
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 999px;
+	background: var(--pos-warn);
+	color: #111;
 }
 
 /* ---------- main grid ---------- */
@@ -295,7 +308,7 @@ body.pos-layout .erp-mobile-nav {
 	border: 0;
 	outline: 0;
 	color: var(--pos-text);
-	font-size: 14px;
+	font-size: 15px;
 	font-family: inherit;
 }
 
@@ -304,6 +317,8 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-search .kbd {
+	display: inline-block;
+	vertical-align: middle;
 	font-size: 11px;
 	color: var(--pos-muted);
 	border: 1px solid var(--pos-border);
@@ -468,7 +483,7 @@ body.pos-layout .erp-mobile-nav {
 	border: 1px solid var(--pos-border);
 	color: var(--pos-muted);
 	font-weight: 600;
-	font-size: 13px;
+	font-size: 14px;
 	white-space: nowrap;
 	transition: all 0.15s ease;
 }
@@ -486,9 +501,9 @@ body.pos-layout .erp-mobile-nav {
 /* ---------- product grid ---------- */
 .pos-products {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: 12px;
-	max-height: calc(100vh - 280px);
+	grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+	gap: 14px;
+	max-height: calc(100vh - 300px);
 	overflow: auto;
 	padding: 8px 4px;
 	align-content: start;
@@ -504,13 +519,13 @@ body.pos-layout .erp-mobile-nav {
 	background: var(--pos-surface-2);
 	border: 1px solid var(--pos-border);
 	border-radius: 14px;
-	padding: 14px;
+	padding: 16px;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 10px;
 	cursor: pointer;
 	transition: all 0.15s ease;
-	min-height: 120px;
+	min-height: 150px;
 	justify-content: space-between;
 }
 
@@ -520,19 +535,20 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-card .icon {
-	width: 46px;
-	height: 46px;
+	width: 52px;
+	height: 52px;
 	border-radius: 12px;
 	background: var(--pos-surface);
 	display: grid;
 	place-items: center;
-	font-size: 24px;
+	font-size: 28px;
 }
 
-.pos-card .name { overflow-wrap: break-word; } {
+.pos-card .name {
+	overflow-wrap: break-word;
 	font-weight: 700;
-	font-size: 14px;
-	line-height: 1.2;
+	font-size: 17px;
+	line-height: 1.25;
 }
 
 .pos-card .meta {
@@ -545,12 +561,12 @@ body.pos-layout .erp-mobile-nav {
 .pos-card .price {
 	color: var(--pos-accent);
 	font-weight: 800;
-	font-size: 15px;
+	font-size: 18px;
 }
 
 .pos-card .stock {
 	color: var(--pos-muted);
-	font-size: 11px;
+	font-size: 13px;
 }
 
 .pos-card.out {
@@ -640,7 +656,7 @@ body.pos-layout .erp-mobile-nav {
 
 .pos-cart-table td {
 	border-bottom: 1px solid var(--pos-border);
-	padding: 10px 6px;
+	padding: 12px 8px;
 	vertical-align: top;
 }
 
@@ -656,9 +672,10 @@ body.pos-layout .erp-mobile-nav {
 	gap: 8px;
 }
 
-.pos-cart-item .ci-name { overflow-wrap: break-word; } {
+.pos-cart-item .ci-name {
+	overflow-wrap: break-word;
 	font-weight: 700;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .pos-cart-item .ci-meta {
@@ -682,6 +699,7 @@ body.pos-layout .erp-mobile-nav {
 
 .pos-cart-item .ci-price-in {
 	width: 64px;
+	height: 36px;
 	text-align: center;
 	background: var(--pos-surface);
 	border: 1px solid var(--pos-border);
@@ -689,7 +707,7 @@ body.pos-layout .erp-mobile-nav {
 	color: var(--pos-text);
 	padding: 4px;
 	font-family: inherit;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .pos-cart-item .ci-price-in:focus {
@@ -698,13 +716,14 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-qty-btn {
-	width: 28px;
-	height: 28px;
+	width: 36px;
+	height: 36px;
 	border-radius: 8px;
 	border: 1px solid var(--pos-border);
 	background: var(--pos-surface-2);
 	color: var(--pos-text);
 	cursor: pointer;
+	font-size: 18px;
 	font-weight: 700;
 }
 
@@ -714,6 +733,7 @@ body.pos-layout .erp-mobile-nav {
 
 .pos-cart-item .ci-qty {
 	width: 46px;
+	height: 36px;
 	text-align: center;
 	background: var(--pos-surface);
 	border: 1px solid var(--pos-border);
@@ -721,15 +741,18 @@ body.pos-layout .erp-mobile-nav {
 	color: var(--pos-text);
 	padding: 4px;
 	font-family: inherit;
+	font-size: 14px;
 }
 
 .pos-cart-item .ci-remove {
 	margin-inline-end: auto;
+	min-width: 32px;
+	min-height: 32px;
 	background: transparent;
 	border: 0;
 	color: var(--pos-muted);
 	cursor: pointer;
-	font-size: 14px;
+	font-size: 16px;
 }
 
 .pos-cart-item .ci-remove:hover {
@@ -770,7 +793,7 @@ body.pos-layout .erp-mobile-nav {
 	border: 1px solid var(--pos-border);
 	border-radius: 10px;
 	color: var(--pos-accent);
-	font-size: 22px;
+	font-size: 24px;
 	font-weight: 800;
 	padding: 8px 12px;
 	margin-bottom: 10px;
@@ -801,8 +824,9 @@ body.pos-layout .erp-mobile-nav {
 	border: 1px solid var(--pos-border);
 	color: var(--pos-text);
 	border-radius: 10px;
-	padding: 12px 0;
-	font-size: 16px;
+	min-height: 56px;
+	padding: 0 10px;
+	font-size: 20px;
 	font-weight: 700;
 	cursor: pointer;
 	font-family: inherit;
@@ -853,7 +877,7 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-totals .row.grand {
-	font-size: 18px;
+	font-size: 24px;
 	font-weight: 800;
 	color: var(--pos-text);
 	margin-top: 4px;
@@ -1009,9 +1033,9 @@ body.pos-layout .erp-mobile-nav {
 .pos-btn {
 	border: 0;
 	border-radius: 12px;
-	padding: 13px;
+	padding: 16px;
 	font-weight: 800;
-	font-size: 15px;
+	font-size: 20px;
 	cursor: pointer;
 	font-family: inherit;
 	transition: all 0.15s ease;
@@ -1173,6 +1197,7 @@ body.pos-layout .erp-mobile-nav {
 /* cart per-line discount input */
 .pos-cart-item .ci-disc {
 	width: 52px;
+	height: 36px;
 	text-align: center;
 	background: var(--pos-surface);
 	border: 1px solid var(--pos-border);
@@ -1180,7 +1205,7 @@ body.pos-layout .erp-mobile-nav {
 	color: var(--pos-text);
 	padding: 4px;
 	font-family: inherit;
-	font-size: 12px;
+	font-size: 14px;
 }
 
 .pos-cart-item .ci-disc:focus {
@@ -1267,3 +1292,46 @@ body:has(.pos-app) {
 }
 
 /* purgecss end ignore */
+
+/* full-viewport POS register on wide desktop screens */
+@media (min-width: 1400px) {
+	html:has(.pos-app),
+	body:has(.pos-app) {
+		height: 100% !important;
+		overflow: hidden !important;
+	}
+
+	.pos-app {
+		height: 100vh;
+		min-height: 0;
+		overflow: hidden !important;
+		padding: 14px;
+		gap: 12px;
+	}
+
+	.pos-topbar {
+		flex-shrink: 0;
+	}
+
+	.pos-grid {
+		grid-template-columns: minmax(0, 1fr) 440px;
+		align-items: stretch;
+		min-height: 0;
+	}
+
+	.pos-main {
+		min-height: 0;
+	}
+
+	.pos-side {
+		position: static;
+		height: 100%;
+		max-height: none;
+	}
+
+	.pos-products {
+		flex: 1 1 0%;
+		min-height: 0;
+		max-height: none;
+	}
+}

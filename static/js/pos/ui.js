@@ -21,9 +21,11 @@ const showAlert = (msg, level = "danger") => {
 	el.className = `alert alert-${level}`;
 	el.textContent = msg;
 	el.classList.remove("d-none");
+	const duration =
+		level === "success" ? 4000 : level === "danger" || level === "warning" ? 15000 : 5000;
 	setTimeout(() => {
 		el.classList.add("d-none");
-	}, 5000);
+	}, duration);
 };
 const showModalAlert = (modalId, msg, level = "danger") => {
 	const el = qs(`#${modalId}Alert`);
@@ -144,11 +146,7 @@ const addFirstOrLookup = async (q) => {
 	}
 	const res = await fetchJson(`/pos/api/product?code=${encodeURIComponent(q)}${warehouseParam()}`);
 	if (!res.ok) {
-		if ((state.lastProductResults || []).length) {
-			await addToCart(state.lastProductResults[0]);
-			qs("#productSearch").value = "";
-			qs("#productResults").classList.add("d-none");
-		}
+		showAlert(res.error || "لم يُعثر على المنتج: " + q, "warning");
 		return;
 	}
 	const p = res.data;

@@ -101,6 +101,8 @@ const recalc = async () => {
 				};
 				if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
 				state.lastTotals = exactTotals;
+				const chg = qs("#kpiChange");
+				if (chg) chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - data.total));
 				return exactTotals;
 			}
 		} catch (_) {}
@@ -116,6 +118,8 @@ const recalc = async () => {
 	};
 	if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
 	state.lastTotals = quickTotals;
+	const chg = qs("#kpiChange");
+	if (chg) chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - quickTotal));
 	return quickTotals;
 };
 
@@ -178,7 +182,7 @@ const renderCart = async () => {
 	if (cnt) cnt.textContent = String(state.cart.length);
 	if (!state.cart.length) {
 		body.innerHTML =
-			'<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة</td></tr>';
+			'<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
 		await recalc();
 		scheduleUpsellEval();
 		return;
