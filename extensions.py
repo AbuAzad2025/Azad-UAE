@@ -145,7 +145,8 @@ def init_extensions(app):
     csrf.init_app(app)
     cache.init_app(app)
     limiter.init_app(app)
-    limiter.storage_uri = app.config.get("RATELIMIT_STORAGE_URI", "memory://")
+    dynamic_limiter: Any = limiter
+    dynamic_limiter.storage_uri = app.config.get("RATELIMIT_STORAGE_URI", "memory://")
     if compress:
         compress.init_app(app)
         logging.info("[OK] Compression enabled")
@@ -154,9 +155,9 @@ def init_extensions(app):
     default_limit = app.config.get("RATELIMIT_DEFAULT")
     if default_limit:
         if isinstance(default_limit, str):
-            limiter.default_limits = [part.strip() for part in default_limit.split(";") if part.strip()]
+            dynamic_limiter.default_limits = [part.strip() for part in default_limit.split(";") if part.strip()]
         else:
-            limiter.default_limits = [default_limit]
+            dynamic_limiter.default_limits = [default_limit]
     if app.config.get("MAIL_USERNAME"):
         mail.init_app(app)
     babel.init_app(app, locale_selector=get_locale)

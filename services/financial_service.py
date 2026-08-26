@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import func
 
@@ -12,7 +13,7 @@ class FinancialService:
     def get_financial_dashboard_advanced_context(tenant_id, branch_id=None):
         today = datetime.now().date()
         month_start = today.replace(day=1)
-        months_data = []
+        months_data: list[dict[str, Any]] = []
         for i in range(12):
             month_date = month_start - timedelta(days=30 * i)
             month_start_date = month_date.replace(day=1)

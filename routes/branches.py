@@ -38,7 +38,7 @@ def create():
         address = request.form.get("address")
         from utils.field_validators import normalize_phone_optional
 
-        phone = normalize_phone_optional(request.form.get("phone"))
+        phone = normalize_phone_optional(request.form.get("phone")) or ""
         is_main = request.form.get("is_main") == "on"
 
         if not name or not code:
@@ -63,8 +63,8 @@ def create():
         branch = BranchService.create_branch(
             name=name,
             code=code,
-            city=city,
-            address=address,
+            city=city or "",
+            address=address or "",
             phone=phone,
             is_main=is_main,
             tenant_id=get_active_tenant_id(current_user),

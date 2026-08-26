@@ -52,6 +52,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Any
 
 from flask_babel import gettext
 
@@ -318,7 +319,7 @@ class PromotionService:
             return None
         cap = getattr(campaign, "max_discount_amount", None)
         cap = Decimal(str(cap)) if cap else None
-        by_product = {}
+        by_product: dict[Any, list[Any]] = {}
         for u in units:
             if not u.consumed and u.product_id in required:
                 by_product.setdefault(u.product_id, []).append(u)
@@ -472,7 +473,7 @@ class PromotionService:
 
     @staticmethod
     def _remaining_by_product(campaign, lines, units):
-        remaining = {}
+        remaining: dict[Any, list[Any]] = {}
         for u in PromotionService._eligible_units(campaign, lines, units):
             remaining.setdefault(u.product_id, []).append(u)
         return remaining
@@ -560,13 +561,13 @@ class PromotionService:
                         )
                     )
                 elif min_qty > 0 and Decimal(total_remaining) < min_qty:
-                    needed = (min_qty - Decimal(total_remaining)).normalize()
+                    needed_qty = (min_qty - Decimal(total_remaining)).normalize()
                     prompts.append(
                         PromotionService._prompt(
                             campaign,
                             RULE_TIERED,
-                            gettext(f"أضف {needed} قطعة إضافية للحصول على الخصم."),
-                            needed_quantity=needed,
+                            gettext(f"أضف {needed_qty} قطعة إضافية للحصول على الخصم."),
+                            needed_quantity=needed_qty,
                         )
                     )
 

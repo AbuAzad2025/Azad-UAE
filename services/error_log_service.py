@@ -1,6 +1,7 @@
 import os
 import re
 from collections import Counter
+from typing import Any
 
 
 class ErrorLogService:
@@ -90,7 +91,7 @@ class ErrorLogService:
         total_pages = max(1, (total + per_page - 1) // per_page)
 
         # Stats
-        stats = {}
+        stats: dict[str, Any] = {}
         if parsed_errors:
             stats["by_level"] = dict(Counter(e["level"] for e in parsed_errors))
             stats["by_module"] = dict(Counter(e["module"] for e in parsed_errors if e["module"]).most_common(10))

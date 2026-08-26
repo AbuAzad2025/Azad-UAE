@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -459,7 +460,8 @@ def _neural_auto_retrain(mapper, connection, target):
             try:
                 import threading
 
-                app = current_app._get_current_object()
+                current_app_proxy: Any = current_app
+                app = current_app_proxy._get_current_object()
 
                 def _run():
                     with app.app_context():

@@ -70,6 +70,8 @@ def _process_user_action(message, user):
         msg_lower = message.lower()
         user_id = user.id
         tid = get_active_tenant_id(user)
+        if not tid:
+            return "🚫 لا يوجد تينانت نشط مرتبط بهذا الحساب."
         ctx = _conversation_ctx(user_id, tid)
 
         # ── Per-flow RBAC: validate permission for the current wizard context ──
@@ -1744,9 +1746,11 @@ def _process_user_action(message, user):
                     with atomic_transaction("ai_create_cheque"):
                         cheque = ChequeService.create_cheque(
                             cheque_number=data["cheque_number"],
+                            cheque_bank_number=data["cheque_number"],
                             amount=data["amount"],
                             due_date=due_date,
                             cheque_type=data["cheque_type"],
+                            bank_name=data.get("bank_name", ""),
                             user_id=user.id,
                             tenant_id=tid,
                         )

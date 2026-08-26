@@ -4,8 +4,9 @@
 """
 
 import statistics
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 
 class DataAnalyzer:
@@ -111,7 +112,7 @@ class DataAnalyzer:
             avg_daily_sales = total_amount / period_days
 
             # المبيعات اليومية
-            daily_sales = {}
+            daily_sales: dict[date, float] = {}
             for sale in sales:
                 date_key = sale.created_at.date()
                 if date_key not in daily_sales:
@@ -134,7 +135,7 @@ class DataAnalyzer:
                 trend = "غير محدد"
 
             # أفضل العملاء
-            customer_sales = {}
+            customer_sales: dict[str, float] = {}
             for sale in sales:
                 if sale.customer:
                     customer_name = sale.customer.name
@@ -277,7 +278,7 @@ class DataAnalyzer:
                 }
 
             # تحليل طرق الدفع
-            payment_methods = {}
+            payment_methods: dict[str, dict[str, Any]] = {}
             total_amount = Decimal("0")
 
             for payment in payments:

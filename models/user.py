@@ -1,12 +1,17 @@
 # User, Role, and Permission models
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from flask_login import UserMixin
+from sqlalchemy.orm import Mapped, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from extensions import db
 from models.enums import PermissionEnum, RoleEnum
+
+if TYPE_CHECKING:
+    from models.branch import Branch
 
 role_permissions = db.Table(
     "role_permissions",
@@ -59,7 +64,9 @@ class Role(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    permissions = db.relationship("Permission", secondary=role_permissions, backref="roles", lazy="joined")
+    permissions: Mapped[list["Permission"]] = relationship(
+        "Permission", secondary=role_permissions, backref="roles", lazy="joined"
+    )
     users = db.relationship("User", back_populates="role", lazy="dynamic")
 
     def __repr__(self):
@@ -95,7 +102,7 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(50))
 
     role_id = db.Column(db.Integer, db.ForeignKey("roles.id", ondelete="RESTRICT"), nullable=False, index=True)
-    role = db.relationship("Role", back_populates="users")
+    role: Mapped["Role | None"] = relationship("Role", back_populates="users")
     tenant_id = db.Column(
         db.Integer,
         db.ForeignKey("tenants.id", ondelete="CASCADE"),
@@ -105,7 +112,7 @@ class User(UserMixin, db.Model):
     branch_id = db.Column(
         db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # User Home Branch
-    branch = db.relationship("Branch", backref="users", foreign_keys=[branch_id])
+    branch: Mapped["Branch | None"] = relationship("Branch", backref="users", foreign_keys=[branch_id])
     tenant = db.relationship("Tenant", backref="users", foreign_keys=[tenant_id])
 
     is_owner = db.Column(db.Boolean, default=False, nullable=False, index=True)

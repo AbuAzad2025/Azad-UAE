@@ -6,6 +6,8 @@ Create Date: 2026-08-21 01:06:59.782223
 
 """
 
+from typing import Any
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -117,7 +119,8 @@ def downgrade():
     if _table_exists("card_payments"):
         with op.batch_alter_table("card_payments", schema=None) as batch_op:
             batch_op.drop_constraint("uq_card_payments_tenant_transaction", type_="unique")
-            batch_op.create_unique_constraint(None, ["transaction_id"])
+            constraint_name: Any = None
+            batch_op.create_unique_constraint(constraint_name, ["transaction_id"])
 
     # ── Restore suppliers/customer tenant-scoped email unique ───────────────
     if _table_exists("suppliers"):

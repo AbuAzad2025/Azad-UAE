@@ -4,6 +4,7 @@
 """
 
 import logging
+from typing import Any
 
 from ai_knowledge.analytics.data_analyzer import data_analyzer
 from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
@@ -38,7 +39,7 @@ class ContextEngine:
         intent = ContextEngine._detect_intent(msg_lower)
 
         # جمع البيانات السياقية
-        context_data = {
+        context_data: dict[str, Any] = {
             "user_role": context.get("is_owner", False) if context else False,
             "previous_interactions": [],  # سيتم تطويره لاحقاً
             "system_state": (system_integrator.get_system_summary() if intent in ["analysis", "data_query"] else None),

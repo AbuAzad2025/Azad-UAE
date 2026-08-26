@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Any, cast
 
 from flask import (
     Blueprint,
@@ -845,11 +846,11 @@ def create_voucher_submit():
                         supplier_id=supplier.id,
                         amount=amount_decimal,
                         currency=currency,
-                        payment_method=payment_method,
-                        notes=notes,
-                        cheque_number=cheque_number,
+                        payment_method=payment_method or "",
+                        notes=notes or "",
+                        cheque_number=cheque_number or "",
                         cheque_date=cheque_date,
-                        bank_name=bank_name,
+                        bank_name=bank_name or "",
                         branch_id=branch_id,
                     )
                 flash(gettext("تم إنشاء سند قبض من مورد بنجاح"), "success")
@@ -1020,7 +1021,8 @@ def create_voucher_submit():
 @permission_required("manage_payments")
 def create_receipt():
     """إعادة توجيه المسار القديم إلى سند موحد مع الحفاظ على معاملات الرابط."""
-    return redirect(url_for("payments.create_voucher", **request.args.to_dict()))
+    redirect_args: dict[str, Any] = request.args.to_dict()
+    return redirect(url_for("payments.create_voucher", **redirect_args))
 
 
 @payments_bp.route("/receipts/<int:id>")
@@ -1510,7 +1512,7 @@ def create_payment(purchase_id):
             card_last4 = request.form.get("card_last4")
             reference_number_card = request.form.get("reference_number_card")
 
-            if amount <= 0:
+            if (amount or 0) <= 0:
                 flash(
                     gettext("المبلغ غير صحيح.\nتحقق من الصيغة الصحيحة وحاول مرة أخرى."),
                     "danger",
@@ -1638,7 +1640,7 @@ def create_payment(purchase_id):
 
                     PaymentService._post_supplier_fx_gain_loss(payment, purchase, tenant_id)
 
-                supplier.apply_payment(Decimal(str(payment.amount_aed or 0)))
+                cast(Supplier, supplier).apply_payment(Decimal(str(payment.amount_aed or 0)))
 
             flash(gettext("تم إنشاء سند الصرف بنجاح"), "success")
             return redirect(url_for("purchases.view", id=purchase_id))

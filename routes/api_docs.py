@@ -4,6 +4,7 @@ API Documentation using OpenAPI/Swagger
 
 import copy
 import os
+from typing import Any, cast
 
 from flask import Blueprint, abort, current_app, jsonify, render_template_string
 from flask_login import current_user
@@ -227,7 +228,7 @@ OPENAPI_SPEC = {
 @api_docs_bp.route("/openapi.json")
 def openapi_spec():
     """Return OpenAPI specification as JSON"""
-    spec = copy.deepcopy(OPENAPI_SPEC)
+    spec = cast("dict[str, Any]", copy.deepcopy(OPENAPI_SPEC))
     spec["info"]["contact"]["name"] = current_app.config.get("DEVELOPER_NAME", spec["info"]["contact"].get("name"))
     spec["info"]["contact"]["email"] = current_app.config.get("DEVELOPER_EMAIL", spec["info"]["contact"].get("email"))
     spec["info"]["contact"]["url"] = current_app.config.get("DEVELOPER_WEBSITE", spec["info"]["contact"].get("url"))

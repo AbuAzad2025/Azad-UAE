@@ -33,6 +33,16 @@ from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_quer
 purchases_bp = Blueprint("purchases", __name__, url_prefix="/purchases")
 
 
+def safe_float(value, default=0.0):
+    """Parse a float from form data — returns *default* on empty/invalid input."""
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 @purchases_bp.route("/")
 @login_required
 @permission_required("manage_purchases")
@@ -91,7 +101,7 @@ def create():
                 product_id = request.form.get(f"lines[{i}][product_id]", type=int)
                 quantity = request.form.get(f"lines[{i}][quantity]", type=float)
                 unit_cost = request.form.get(f"lines[{i}][unit_cost]", type=float)
-                discount_percent = request.form.get(f"lines[{i}][discount_percent]", type=float, default=0)
+                discount_percent = safe_float(request.form.get(f"lines[{i}][discount_percent]"))
                 serials_raw = request.form.get(f"lines[{i}][serials]", "")
                 serials = [s.strip() for s in serials_raw.split("\n") if s.strip()] if serials_raw else []
                 if product_id and quantity and quantity > 0:
@@ -126,13 +136,13 @@ def create():
                     warehouse_id=warehouse_id_val,
                     currency=request.form.get("currency") or default_currency,
                     user_exchange_rate=request.form.get("exchange_rate", type=float),
-                    discount_amount=request.form.get("discount_amount", type=float, default=0),
-                    tax_rate=request.form.get("tax_rate", type=float, default=0),
+                    discount_amount=safe_float(request.form.get("discount_amount")),
+                    tax_rate=safe_float(request.form.get("tax_rate")),
                     notes=request.form.get("notes"),
-                    freight=request.form.get("freight", type=float, default=0),
-                    insurance=request.form.get("insurance", type=float, default=0),
-                    customs_duty=request.form.get("customs_duty", type=float, default=0),
-                    other_landed_cost=request.form.get("other_landed_cost", type=float, default=0),
+                    freight=safe_float(request.form.get("freight")),
+                    insurance=safe_float(request.form.get("insurance")),
+                    customs_duty=safe_float(request.form.get("customs_duty")),
+                    other_landed_cost=safe_float(request.form.get("other_landed_cost")),
                 )
 
             flash(gettext("✅ تم إنشاء فاتورة الشراء بنجاح!"), "success")

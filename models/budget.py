@@ -5,6 +5,8 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from sqlalchemy.orm import Mapped, relationship
+
 from extensions import db
 
 
@@ -65,7 +67,9 @@ class Budget(db.Model):
     approved_at = db.Column(db.DateTime(timezone=True))
 
     tenant = db.relationship("Tenant", backref="budgets", foreign_keys=[tenant_id])
-    lines = db.relationship("BudgetLine", back_populates="budget", cascade="all, delete-orphan")
+    lines: Mapped[list["BudgetLine"]] = relationship(
+        "BudgetLine", back_populates="budget", cascade="all, delete-orphan"
+    )
     creator = db.relationship("User", foreign_keys=[created_by])
     approver = db.relationship("User", foreign_keys=[approved_by])
     branch = db.relationship("Branch", backref="budgets", foreign_keys=[branch_id])

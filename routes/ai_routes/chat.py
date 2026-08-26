@@ -241,7 +241,10 @@ def chat():
 
     action_result = None
     ai_state = getattr(g, "ai_access_state", None) or get_ai_access_state(current_user)
-    can_execute_mutations = ai_state.get("is_platform_user") or ai_level_allows(ai_state.get("ai_level"), "execute")
+    can_execute_mutations = ai_state.get("is_platform_user") or ai_level_allows(
+        ai_state.get("ai_level") or "",
+        "execute",
+    )
 
     # Try new action dispatcher first (clean, permission-validated, error-logged)
     if can_execute_mutations and _user_can_ai_execute_actions(current_user):

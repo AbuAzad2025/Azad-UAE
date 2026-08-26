@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from decimal import Decimal
+from typing import Any
 
 from flask import current_app
 
@@ -108,17 +109,23 @@ def repair_accounting_data():
             raise RuntimeError(f"الحسابات 1140 أو 3200 غير موجودة لـ tenant_id={tenant_id}.")
 
         gl_inventory = sum(
-            Decimal(str(line.debit or 0)) - Decimal(str(line.credit or 0))
-            for line in GLJournalLine.query.filter(
-                GLJournalLine.account_id == inventory_account.id,
-                GLJournalLine.tenant_id == int(tenant_id),
-            ).all()
+            (
+                Decimal(str(line.debit or 0)) - Decimal(str(line.credit or 0))
+                for line in GLJournalLine.query.filter(
+                    GLJournalLine.account_id == inventory_account.id,
+                    GLJournalLine.tenant_id == int(tenant_id),
+                ).all()
+            ),
+            Decimal("0"),
         )
         from utils.tenant_orm import tenant_query
 
         estimated_inventory = sum(
-            Decimal(str(product.current_stock or 0)) * Decimal(str(product.cost_price or 0))
-            for product in tenant_query(Product).all()
+            (
+                Decimal(str(product.current_stock or 0)) * Decimal(str(product.cost_price or 0))
+                for product in tenant_query(Product).all()
+            ),
+            Decimal("0"),
         )
         inventory_diff = estimated_inventory - gl_inventory
 
@@ -126,10 +133,12 @@ def repair_accounting_data():
             reference_type="InventoryMigration",
             tenant_id=int(tenant_id),
         ).first()
+        posted_inventory_adjustment: Decimal
         if existing_migration:
             posted_inventory_adjustment = Decimal("0")
         elif abs(inventory_diff) > Decimal("0.01"):
             posted_inventory_adjustment = inventory_diff
+            lines: list[dict[str, Any]]
             if inventory_diff > 0:
                 lines = [
                     {

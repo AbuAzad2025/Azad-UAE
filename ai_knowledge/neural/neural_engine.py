@@ -27,6 +27,7 @@ import logging
 import os
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import joblib
 import numpy as np
@@ -237,8 +238,8 @@ class AzadNeuralEngine:
             }
 
         # تحضير البيانات
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for product in products:
             # الميزات
@@ -418,8 +419,8 @@ class AzadNeuralEngine:
         if len(entries) < 10:
             return {"success": False, "error": "Not enough accounting data"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for entry in entries:
             # الميزات
@@ -632,8 +633,8 @@ class AzadNeuralEngine:
             )
 
         # تحضير للتدريب (always 12 months from the loop above)
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for i in range(len(monthly_data) - 1):
             current = monthly_data[i]
@@ -866,8 +867,8 @@ class AzadNeuralEngine:
                 "samples": len(sales_data),
             }
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for sale in sales_data:
             # الميزات
@@ -1058,8 +1059,8 @@ class AzadNeuralEngine:
             return {"success": False, "error": "Not enough daily sales data"}
 
         # تحضير البيانات الزمنية
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         # يمكن تخزين خريطة تاريخ المبيعات إذا لزم الأمر: {sale.sale_date: sale for sale in daily_sales}
 
@@ -1272,8 +1273,8 @@ class AzadNeuralEngine:
         if len(customers_data) < 20:
             return {"success": False, "error": "Not enough customer data"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for customer in customers_data:
             # الميزات
@@ -1470,8 +1471,8 @@ class AzadNeuralEngine:
         if len(sales) < 50:
             return {"success": False, "error": "Not enough sales for fraud detection"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for sale in sales:
             # الميزات
@@ -1634,8 +1635,8 @@ class AzadNeuralEngine:
         if len(products_data) < 20:
             return {"success": False, "error": "Not enough inventory data"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for product in products_data:
             # الميزات
@@ -1825,8 +1826,8 @@ class AzadNeuralEngine:
                 {"date": demand.sale_date, "quantity": float(demand.total_quantity)}
             )
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         # لكل منتج له بيانات كافية
         for _product_id, demands in product_demand.items():
@@ -2026,8 +2027,8 @@ class AzadNeuralEngine:
         if len(sales) < 50:
             return {"success": False, "error": "Not enough profit data"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for sale in sales:
             # الميزات
@@ -2108,8 +2109,8 @@ class AzadNeuralEngine:
         if len(customers) < 30:
             return {"success": False, "error": "Not enough customer data for churn"}
 
-        x = []
-        y = []
+        x: Any = []
+        y: Any = []
 
         for customer in customers:
             # الميزات
@@ -2264,7 +2265,7 @@ class AzadNeuralEngine:
 
     def get_status(self):
         """الحصول على حالة جميع النماذج"""
-        status = {"models": {}, "total_models": len(self.models), "trained_models": 0}
+        status: dict[str, Any] = {"models": {}, "total_models": len(self.models), "trained_models": 0}
 
         for model_name in self.models:
             model_path = os.path.join(self.models_dir, f"{model_name}.pkl")

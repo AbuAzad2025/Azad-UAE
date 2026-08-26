@@ -123,8 +123,8 @@ class AdvancedJournalEntryManager:
         from services.gl_service import GLService
 
         # Inline balance check (fast-fail before DB round-trip)
-        total_debit = sum(Decimal(str(line.get("debit", 0))) for line in lines)
-        total_credit = sum(Decimal(str(line.get("credit", 0))) for line in lines)
+        total_debit = sum((Decimal(str(line.get("debit", 0))) for line in lines), Decimal("0"))
+        total_credit = sum((Decimal(str(line.get("credit", 0))) for line in lines), Decimal("0"))
         if abs(total_debit - total_credit) > Decimal("0.001"):
             raise ValueError(gettext(f"القيد غير متوازن: المدين {total_debit} ≠ الدائن {total_credit}"))
 
@@ -184,8 +184,8 @@ class AdvancedJournalEntryManager:
 
         if "lines" in updates:
             # Balance check (Decimal, pre-persist) BEFORE mutating the entry
-            total_debit = sum(Decimal(str(line.get("debit", 0) or 0)) for line in updates["lines"])
-            total_credit = sum(Decimal(str(line.get("credit", 0) or 0)) for line in updates["lines"])
+            total_debit = sum((Decimal(str(line.get("debit", 0) or 0)) for line in updates["lines"]), Decimal("0"))
+            total_credit = sum((Decimal(str(line.get("credit", 0) or 0)) for line in updates["lines"]), Decimal("0"))
             if abs(total_debit - total_credit) > Decimal("0.001"):
                 raise ValueError(gettext(f"القيد غير متوازن بعد التحديث: المدين {total_debit} ≠ الدائن {total_credit}"))
 

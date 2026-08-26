@@ -121,7 +121,7 @@ class ReportsQueryService:
         from models.receipt import Receipt
 
         partners_data = []
-        partner_share_totals = {}
+        partner_share_totals: dict[Any, Decimal] = {}
 
         entries_query = (
             db.session.query(PartnerCommissionEntry.id)
@@ -224,7 +224,7 @@ class ReportsQueryService:
                 total_revenue = sum(line.line_total for line in sales_lines)
                 total_qty = sum(line.quantity for line in sales_lines)
 
-                avg_unit_price = total_revenue / total_qty if total_qty > 0 else 0
+                avg_price = total_revenue / total_qty if total_qty > 0 else 0
 
                 if total_revenue > 0:
                     for share in product.partner_shares:
@@ -235,7 +235,7 @@ class ReportsQueryService:
                                 "product_name": product.name,
                                 "partner_name": share.partner_customer.name,
                                 "percentage": share.percentage,
-                                "avg_unit_price": avg_unit_price,
+                                "avg_unit_price": avg_price,
                                 "total_qty": total_qty,
                                 "total_revenue": total_revenue,
                                 "partner_share_amount": partner_amount,
@@ -252,7 +252,7 @@ class ReportsQueryService:
         merchant_products = merchant_products.all()
 
         merchants_data = []
-        merchant_share_totals = {}
+        merchant_share_totals: dict[Any, Decimal] = {}
 
         for product in merchant_products:
             sales_query = (
@@ -274,7 +274,7 @@ class ReportsQueryService:
             total_qty = sum(line.quantity for line in sales_lines)
 
             # Calculate average unit price
-            avg_unit_price = total_revenue / total_qty if total_qty > 0 else 0
+            avg_price = total_revenue / total_qty if total_qty > 0 else 0
 
             if total_revenue > 0:
                 merchant_percentage = float(product.merchant_share or 100)
@@ -287,7 +287,7 @@ class ReportsQueryService:
                         "product_name": product.name,
                         "merchant_name": merchant_name,
                         "percentage": merchant_percentage,
-                        "avg_unit_price": avg_unit_price,
+                        "avg_unit_price": avg_price,
                         "total_qty": total_qty,
                         "total_revenue": total_revenue,
                         "merchant_share_amount": merchant_amount,
@@ -624,7 +624,7 @@ class ReportsQueryService:
 
         from models import Payment
 
-        supplier_payments = {}
+        supplier_payments: dict[Any, list[Decimal]] = {}
         pmt_query = tenant_query(Payment).filter(
             Payment.direction == "outgoing",
             Payment.supplier_id.isnot(None),
@@ -901,7 +901,7 @@ class ReportsQueryService:
         has_direct_allocation = len(direct_payments) > 0
 
         if has_direct_allocation:
-            paid_map = {}
+            paid_map: dict[Any, Decimal] = {}
             for pymt in direct_payments:
                 pid = pymt.purchase_id
                 if pid:

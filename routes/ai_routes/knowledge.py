@@ -96,6 +96,11 @@ def set_improvement_goal():
     """تعيين هدف تحسين"""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         area = data.get("area")
         target_score = data.get("target_score")
         timeframe = data.get("timeframe", "30_days")
@@ -171,6 +176,11 @@ def add_knowledge_website():
     """إضافة موقع ويب للمعرفة"""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         url = data.get("url")
         category = data.get("category", "general")
         description = data.get("description", "")
@@ -194,6 +204,11 @@ def add_knowledge_document():
     """إضافة مستند للمعرفة"""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         content = data.get("content")
         title = data.get("title")
         category = data.get("category", "general")

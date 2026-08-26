@@ -596,12 +596,13 @@ def _do_seed_demo(_app):
 
     # 9. Branch employees
     for username, full_name_ar, role_slug, br_code in branch_employees:
-        br, _ = branch_map.get(br_code, (None, None))
+        br_pair = branch_map.get(br_code)
+        emp_branch = br_pair[0] if br_pair else None
         u = User(
             username=username,
             email=f"{username}@demo.azad.com",
             tenant_id=tid,
-            branch_id=br.id if br else None,
+            branch_id=emp_branch.id if emp_branch else None,
             role_id=role_map[role_slug].id,
             full_name_ar=full_name_ar,
         )
@@ -635,8 +636,8 @@ def _do_seed_demo(_app):
         for i in range(3):
             if product_idx >= len(products):
                 break
-            pdata = products[product_idx]
-            name_ar_text, cat_idx, price, cost, stock = pdata
+            prod_tuple = products[product_idx]
+            name_ar_text, cat_idx, price, cost, stock = prod_tuple
             sku = f"DEMO-{br_code}-{i + 1:03d}"
             prod = Product(
                 tenant_id=tid,

@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
+from sqlalchemy.orm import Mapped, relationship
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -79,7 +81,7 @@ class ProductReturn(db.Model):
     customer = db.relationship("Customer", backref="returns")
     branch = db.relationship("Branch", backref="returns", foreign_keys=[branch_id])
     user = db.relationship("User", foreign_keys=[processed_by])
-    lines = db.relationship(
+    lines: Mapped[list["ProductReturnLine"]] = relationship(
         "ProductReturnLine",
         back_populates="product_return",
         lazy="joined",

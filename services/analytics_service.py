@@ -5,6 +5,7 @@ Analytics Service - خدمة التحليلات
 
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from flask_babel import gettext
 from sqlalchemy import desc, func
@@ -219,7 +220,7 @@ class AnalyticsService:
     def get_forecasting_data(tenant_id, branch_id=None):
         months_back = 12
         today = datetime.now().date()
-        historical_data = []
+        historical_data: list[dict[str, Any]] = []
         for i in range(months_back):
             month_start = (today.replace(day=1) - timedelta(days=30 * i)).replace(day=1)
             if month_start.month == 12:
@@ -297,7 +298,7 @@ class AnalyticsService:
             month_label = month_start.strftime("%b %Y")
 
             # حساب المشتريات
-            month_purchases = 0
+            month_purchases: float = 0
             for d in donations:
                 if d.transaction_type == "purchase" and d.created_at:
                     try:
@@ -311,7 +312,7 @@ class AnalyticsService:
                         )
 
             # حساب التبرعات
-            month_donations = 0
+            month_donations: float = 0
             for d in donations:
                 if d.transaction_type == "donation" and d.created_at:
                     try:
@@ -384,7 +385,7 @@ class AnalyticsService:
             query = query.filter_by(tenant_id=tid)
         donations = query.all()
 
-        methods = {}
+        methods: dict[str, dict[str, float]] = {}
         for donation in donations:
             method = donation.payment_method or "unknown"
             if method not in methods:
@@ -413,7 +414,7 @@ class AnalyticsService:
         purchases = query.all()
 
         # تحليل توزيع العملاء
-        customers = {}
+        customers: dict[str, dict[str, Any]] = {}
         for purchase in purchases:
             email = purchase.customer_email
             if email not in customers:

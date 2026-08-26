@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from extensions import db
 
@@ -126,7 +127,7 @@ class SupplierService:
         """{supplier_id: [branch_label, ...]} aggregated from purchases/payments branches."""
         from models import Branch, Payment, Purchase
 
-        branch_map = {sid: set() for sid in supplier_ids}
+        branch_map: dict[Any, set[int]] = {sid: set() for sid in supplier_ids}
 
         purchase_rows = (
             db.session.query(Purchase.supplier_id, Purchase.branch_id)

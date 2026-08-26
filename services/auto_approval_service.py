@@ -41,7 +41,7 @@ class AutoApprovalService:
             ).all()
 
             approved_count = 0
-            approved_amount = 0
+            approved_amount: float = 0
 
             for donation in pending_donations:
                 donation.status = "completed"
@@ -100,7 +100,7 @@ class AutoApprovalService:
             ).all()
 
             approved_count = 0
-            approved_amount = 0
+            approved_amount: float = 0
 
             for purchase in pending_purchases:
                 purchase.payment_status = "completed"

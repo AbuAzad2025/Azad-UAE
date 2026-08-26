@@ -31,6 +31,16 @@ from utils.shop_i18n import shop_lang, t
 shop_bp = Blueprint("shop", __name__, url_prefix="/s")
 
 
+def safe_float(value, default=0.0):
+    """Parse a float from form data — returns *default* on empty/invalid input."""
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 def _shop_redirect_after_login(next_url, store):
     if is_safe_redirect_url(next_url):
         return redirect(next_url)
@@ -674,7 +684,7 @@ def cart_add(slug):
 
     product_id = request.form.get("product_id", type=int)
 
-    quantity = request.form.get("quantity", type=float, default=1)
+    quantity = safe_float(request.form.get("quantity"), default=1)
 
     if not product_id or quantity <= 0:
         if _is_ajax():

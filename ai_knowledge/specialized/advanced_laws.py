@@ -1,10 +1,12 @@
 """Advanced laws knowledge for Azad."""
 
+from typing import Any
+
 
 class AdvancedLaws:
     """معرفة القوانين المتقدمة لأزاد"""
 
-    PALESTINIAN_TAX_LAWS = {
+    PALESTINIAN_TAX_LAWS: dict[str, Any] = {
         "vat_rate": 16,
         "income_tax_rates": {
             "individual": {
@@ -24,7 +26,7 @@ class AdvancedLaws:
         ],
     }
 
-    ISRAELI_TAX_LAWS = {
+    ISRAELI_TAX_LAWS: dict[str, Any] = {
         "vat_rate": 17,
         "income_tax_rates": {
             "individual": {
@@ -45,7 +47,7 @@ class AdvancedLaws:
         ],
     }
 
-    GULF_TAX_LAWS = {
+    GULF_TAX_LAWS: dict[str, Any] = {
         "uae": {
             "vat_rate": 5,
             "corporate_tax_rate": 9,
@@ -56,7 +58,7 @@ class AdvancedLaws:
         "qatar": {"vat_rate": 0, "corporate_tax_rate": 10},
     }
 
-    SHIPPING_LAWS = {
+    SHIPPING_LAWS: dict[str, Any] = {
         "documentation_required": [
             "فاتورة تجارية",
             "قائمة تعبئة",
@@ -84,7 +86,7 @@ class AdvancedLaws:
         },
     }
 
-    QUALITY_LAWS = {
+    QUALITY_LAWS: dict[str, Any] = {
         "standards_organizations": {
             "uae": "هيئة الإمارات للمواصفات والمقاييس",
             "saudi": "الهيئة السعودية للمواصفات والمقاييس",

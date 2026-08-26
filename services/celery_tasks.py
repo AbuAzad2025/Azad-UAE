@@ -1,5 +1,6 @@
 import os
 from datetime import UTC
+from typing import Any
 
 from celery import Celery
 from celery.schedules import crontab
@@ -221,7 +222,10 @@ def update_exchange_rates():
 
     app = create_app()
     with app.app_context():
-        result = CurrencyService.update_all_rates()
+        update_all_rates = getattr(CurrencyService, "update_all_rates", None)
+        if update_all_rates is None:
+            raise AttributeError("CurrencyService.update_all_rates is not implemented")
+        result = update_all_rates()
         return result
 
 
@@ -252,7 +256,7 @@ def send_payment_reminders():
 
         customers = Customer.query.filter_by(is_active=True).all()
         # group by tenant to keep tenant context isolated
-        by_tenant = {}
+        by_tenant: dict[Any, list[Customer]] = {}
         for c in customers:
             by_tenant.setdefault(c.tenant_id, []).append(c)
         sent = 0

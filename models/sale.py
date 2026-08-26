@@ -1,8 +1,17 @@
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
+from typing import TYPE_CHECKING
+
+from sqlalchemy.orm import Mapped, relationship
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
+
+if TYPE_CHECKING:
+    from models.branch import Branch
+    from models.customer import Customer
+    from models.payment import Payment
+    from models.user import User
 
 
 class Sale(db.Model):
@@ -136,13 +145,13 @@ class Sale(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    customer = db.relationship("Customer", back_populates="sales")
-    seller = db.relationship("User", back_populates="sales", foreign_keys=[seller_id])
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="sales")
+    seller: Mapped["User"] = relationship("User", back_populates="sales", foreign_keys=[seller_id])
     sales_rep = db.relationship("User", foreign_keys=[sales_rep_id])
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
-    branch = db.relationship("Branch", backref="sales", foreign_keys=[branch_id])
-    lines = db.relationship("SaleLine", back_populates="sale", lazy="joined")
-    payments = db.relationship("Payment", back_populates="sale", lazy="dynamic")
+    branch: Mapped["Branch | None"] = relationship("Branch", backref="sales", foreign_keys=[branch_id])
+    lines: Mapped[list["SaleLine"]] = relationship("SaleLine", back_populates="sale", lazy="joined")
+    payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="sale", lazy="dynamic")
     tenant = db.relationship("Tenant", backref="sales", foreign_keys=[tenant_id])
 
     def __repr__(self):

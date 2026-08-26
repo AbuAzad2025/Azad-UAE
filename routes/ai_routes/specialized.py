@@ -90,6 +90,11 @@ def ask_genius():
     """🌟 API: اسأل العبقري - الواجهة الموحدة (JSON callers must send X-CSRFToken)."""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         question = data.get("question", "")
         context = data.get("context", {})
 
@@ -113,6 +118,11 @@ def quick_calc():
     """⚡ API: حسابات سريعة — whitelist formulas only; no DB, files, or external calls."""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         formula = data.get("formula", "")
         params = data.get("params", {})
 
@@ -138,6 +148,11 @@ def transformers_understand():
     """🤖 API: فهم بالـ Transformers — local in-memory only; no DB, files, or ERP actions."""
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(
+                message="Request body must be JSON",
+                status_code=400,
+            )
         text = data.get("text", "")
 
         if not text:

@@ -295,10 +295,10 @@ class CurrencyService:
                 "timestamp": now_ts,
                 "rates": http_rates,
             }
-            rate = http_rates.get(to_currency)
-            if rate and rate > Decimal("0"):
+            http_rate = http_rates.get(to_currency)
+            if http_rate and http_rate > Decimal("0"):
                 return {
-                    "rate": Decimal(str(rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP),
+                    "rate": Decimal(str(http_rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP),
                     "source": "open_er_api",
                     "cached": False,
                     "age_seconds": 0,

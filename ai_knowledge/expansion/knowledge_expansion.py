@@ -295,7 +295,7 @@ class KnowledgeExpander:
             total_sources = len(self.sources.get("websites") or []) + len(self.sources.get("documents") or [])
 
             # فئات المعرفة
-            categories = {}
+            categories: dict[str, int] = {}
             for source_type in ["websites", "documents"]:
                 for source in self.sources.get(source_type) or []:
                     category = source.get("category", "general")

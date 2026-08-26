@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlalchemy import event, text
+from sqlalchemy.orm import Mapped, relationship
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
@@ -249,7 +250,7 @@ class GLJournalEntry(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    lines = db.relationship("GLJournalLine", back_populates="entry", lazy="dynamic")
+    lines: Mapped[list["GLJournalLine"]] = relationship("GLJournalLine", back_populates="entry", lazy="dynamic")
     reversed_entry = db.relationship("GLJournalEntry", remote_side=[id], foreign_keys=[reversed_entry_id])
     user = db.relationship("User", foreign_keys=[created_by])
     branch = db.relationship("Branch", backref="journal_entries", foreign_keys=[branch_id])
@@ -405,7 +406,7 @@ class GLJournalLine(db.Model):
     )
     partner_id = db.Column(db.Integer, db.ForeignKey("partners.id", ondelete="RESTRICT"), nullable=True, index=True)
 
-    entry = db.relationship("GLJournalEntry", back_populates="lines")
+    entry: Mapped["GLJournalEntry"] = relationship("GLJournalEntry", back_populates="lines")
     account = db.relationship("GLAccount")
     cost_center = db.relationship("CostCenter")
     branch = db.relationship("Branch", foreign_keys=[branch_id])

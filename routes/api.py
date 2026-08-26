@@ -1,5 +1,6 @@
 import os
 from datetime import UTC, datetime
+from typing import Any
 from urllib.parse import urlparse
 
 from flask import Blueprint, abort, current_app, make_response, request
@@ -634,7 +635,7 @@ def log_client_error():
         enriched_message += f" [HTTP {status}]"
 
     # Build extra WITHOUT cookies, tokens, or auth headers
-    extra = {
+    extra: dict[str, Any] = {
         "type": event_type,
         "source_file": source_file,
         "line": lineno,

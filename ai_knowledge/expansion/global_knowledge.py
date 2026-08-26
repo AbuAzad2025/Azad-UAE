@@ -4,6 +4,7 @@
 """
 
 from datetime import datetime
+from typing import Any
 
 import requests
 
@@ -209,7 +210,7 @@ class GlobalKnowledgeConnector:
         """تحليل تأثير الاتجاهات العالمية على البيانات المحلية"""
         global_insights = self.get_global_insights()
 
-        analysis = {
+        analysis: dict[str, Any] = {
             "local_vs_global": {},
             "opportunities": [],
             "threats": [],

@@ -1,5 +1,6 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 from models import GLAccount, GLJournalEntry, GLJournalLine
 
@@ -190,7 +191,7 @@ class AdvancedFinancialAnalytics:
         end_date = date.today()
         start_date = end_date - timedelta(days=months * 30)
 
-        trends = []
+        trends: list[dict[str, Any]] = []
         current_date = start_date
 
         for i in range(months):

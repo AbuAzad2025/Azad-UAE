@@ -131,7 +131,7 @@ class AzadSelfImprovement:
     def _calculate_overall_score(self):
         """حساب النقاط الإجمالية"""
         total_score = 0
-        total_weight = 0
+        total_weight = 0.0
 
         weights = {
             "response_quality": 0.25,
@@ -464,7 +464,7 @@ class AzadSelfImprovement:
 
     def evolve_capabilities(self):
         """تطوير القدرات"""
-        evolution_report = {
+        evolution_report: dict[str, Any] = {
             "new_capabilities": [],
             "enhanced_capabilities": [],
             "evolution_timestamp": datetime.now().isoformat(),

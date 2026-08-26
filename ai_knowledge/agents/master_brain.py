@@ -40,7 +40,7 @@ class MasterBrain:
         self.knowledge_base = self._initialize_ultimate_knowledge()
 
         # الذاكرة الموحدة
-        self.unified_memory = {
+        self.unified_memory: dict[str, Any] = {
             "conversations": [],
             "facts": [],
             "procedures": [],

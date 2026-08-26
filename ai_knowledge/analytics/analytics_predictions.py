@@ -4,6 +4,7 @@ Analytics and Predictions Module
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 
 
 class SalesAnalytics:
@@ -61,13 +62,13 @@ class SalesAnalytics:
             return {"pattern": "no_data"}
 
         # تحليل يومي
-        daily = {}
+        daily: dict[str, int] = {}
         for sale in sales_data:
             day = sale.sale_date.strftime("%A")
             daily[day] = daily.get(day, 0) + 1
 
         # أكثر يوم مبيعات
-        peak_day = max(daily, key=daily.get) if daily else None
+        peak_day = max(daily, key=lambda day_key: daily[day_key]) if daily else None
 
         # تحليل شهري
 
@@ -82,7 +83,7 @@ class SalesAnalytics:
         """
         تقسيم الزبائن (Segmentation)
         """
-        segments = {
+        segments: dict[str, Any] = {
             "vip": [],  # أعلى 10%
             "regular": [],  # 80%
             "inactive": [],  # لم يشتروا منذ 3 شهور
@@ -120,7 +121,7 @@ class SalesAnalytics:
         total_revenue = sum(p.get("revenue", 0) for p in sorted_products)
 
         cumulative = 0
-        categories = {"A": [], "B": [], "C": []}
+        categories: dict[str, list[Any]] = {"A": [], "B": [], "C": []}
 
         for product in sorted_products:
             revenue = product.get("revenue", 0)

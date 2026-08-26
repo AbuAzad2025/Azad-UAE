@@ -39,9 +39,10 @@ class AIExecutor:
 
     # ── helpers ────────────────────────────────────────────────
 
-    def _require_tenant(self):
+    def _require_tenant(self) -> int:
         if not self.tenant_id:
             raise AIExecutorError(gettext("لا يوجد تينانت نشط — يرجى تسجيل الدخول لشركة محددة"))
+        return int(self.tenant_id)
 
     def _current_user_id(self):
         return getattr(self.user, "id", None)
@@ -360,7 +361,7 @@ class AIExecutor:
 
             from services.customer_service import CustomerService
 
-            CustomerService.adjust_balance(customer.id, -amount_dec, self.tenant_id)
+            CustomerService.adjust_balance(customer.id, -amount_dec, self._require_tenant())
 
             unpaid = (
                 Sale.query.filter(

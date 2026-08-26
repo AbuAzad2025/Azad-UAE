@@ -6,6 +6,8 @@ Create Date: 2026-07-31 00:33:15.415225
 
 """
 
+from typing import Any
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
@@ -1425,9 +1427,8 @@ def downgrade():
         batch_op.create_foreign_key(batch_op.f("fk_sales_sales_rep_id"), "users", ["sales_rep_id"], ["id"])
         batch_op.create_foreign_key(batch_op.f("fk_sales_warehouse_id"), "warehouses", ["warehouse_id"], ["id"])
         batch_op.drop_index("idx_sales_tenant_date")
-        batch_op.create_index(
-            batch_op.f("idx_sales_tenant_date"), ["tenant_id", sa.literal_column("sale_date DESC")], unique=False
-        )
+        _cols_sales_date: list[Any] = ["tenant_id", sa.literal_column("sale_date DESC")]
+        batch_op.create_index(batch_op.f("idx_sales_tenant_date"), _cols_sales_date, unique=False)
         batch_op.drop_index("idx_sale_status_date")
         batch_op.create_index(batch_op.f("idx_sale_status_date"), ["status", "sale_date"], unique=False)
         batch_op.drop_index("idx_sale_payment_status")
@@ -1523,18 +1524,16 @@ def downgrade():
         batch_op.create_index(batch_op.f("idx_product_category_active"), ["category_id", "is_active"], unique=False)
         batch_op.drop_index("idx_product_active_stock")
         batch_op.create_index(batch_op.f("idx_product_active_stock"), ["is_active", "current_stock"], unique=False)
-        batch_op.create_index(
-            batch_op.f("idx_products_tenant_lower_sku"),
-            ["tenant_id", sa.literal_column("lower(sku::text)")],
-            unique=False,
-        )
+        _cols_sku_lower: list[Any] = ["tenant_id", sa.literal_column("lower(sku::text)")]
+        batch_op.create_index(batch_op.f("idx_products_tenant_lower_sku"), _cols_sku_lower, unique=False)
+        _fts_products: list[Any] = [
+            sa.literal_column(
+                "to_tsvector('simple'::regconfig, (((((COALESCE(name, ''::character varying)::text || ' '::text) || COALESCE(name_ar, ''::character varying)::text) || ' '::text) || COALESCE(commercial_name, ''::character varying)::text) || ' '::text) || COALESCE(description, ''::text))"
+            )
+        ]
         batch_op.create_index(
             batch_op.f("idx_products_fts_gin"),
-            [
-                sa.literal_column(
-                    "to_tsvector('simple'::regconfig, (((((COALESCE(name, ''::character varying)::text || ' '::text) || COALESCE(name_ar, ''::character varying)::text) || ' '::text) || COALESCE(commercial_name, ''::character varying)::text) || ' '::text) || COALESCE(description, ''::text))"
-                )
-            ],
+            _fts_products,
             unique=False,
             postgresql_using="gin",
         )
@@ -1904,9 +1903,8 @@ def downgrade():
         )
         batch_op.create_foreign_key(batch_op.f("fk_gl_journal_entries_created_by"), "users", ["created_by"], ["id"])
         batch_op.drop_index("idx_gl_entries_tenant_date")
-        batch_op.create_index(
-            batch_op.f("idx_gl_entries_tenant_date"), ["tenant_id", sa.literal_column("entry_date DESC")], unique=False
-        )
+        _cols_gl_date: list[Any] = ["tenant_id", sa.literal_column("entry_date DESC")]
+        batch_op.create_index(batch_op.f("idx_gl_entries_tenant_date"), _cols_gl_date, unique=False)
 
     with op.batch_alter_table("gl_accounts", schema=None) as batch_op:
         batch_op.drop_constraint("fk_gl_accounts_branch_id_rest", type_="foreignkey")
@@ -2049,13 +2047,14 @@ def downgrade():
         )
         batch_op.drop_index("idx_customer_active_type")
         batch_op.create_index(batch_op.f("idx_customer_active_type"), ["is_active", "customer_type"], unique=False)
+        _fts_customers: list[Any] = [
+            sa.literal_column(
+                "to_tsvector('simple'::regconfig, (((((COALESCE(name, ''::character varying)::text || ' '::text) || COALESCE(name_ar, ''::character varying)::text) || ' '::text) || COALESCE(phone, ''::character varying)::text) || ' '::text) || COALESCE(email, ''::character varying)::text)"
+            )
+        ]
         batch_op.create_index(
             batch_op.f("idx_customers_fts_gin"),
-            [
-                sa.literal_column(
-                    "to_tsvector('simple'::regconfig, (((((COALESCE(name, ''::character varying)::text || ' '::text) || COALESCE(name_ar, ''::character varying)::text) || ' '::text) || COALESCE(phone, ''::character varying)::text) || ' '::text) || COALESCE(email, ''::character varying)::text)"
-                )
-            ],
+            _fts_customers,
             unique=False,
             postgresql_using="gin",
         )
@@ -2201,11 +2200,8 @@ def downgrade():
         batch_op.drop_constraint("fk_audit_logs_user_id_rest", type_="foreignkey")
         batch_op.create_foreign_key(batch_op.f("fk_audit_logs_user_id"), "users", ["user_id"], ["id"])
         batch_op.drop_index("idx_audit_logs_tenant_created")
-        batch_op.create_index(
-            batch_op.f("idx_audit_logs_tenant_created"),
-            ["tenant_id", sa.literal_column("created_at DESC")],
-            unique=False,
-        )
+        _cols_audit_created: list[Any] = ["tenant_id", sa.literal_column("created_at DESC")]
+        batch_op.create_index(batch_op.f("idx_audit_logs_tenant_created"), _cols_audit_created, unique=False)
 
     with op.batch_alter_table("attendances", schema=None) as batch_op:
         batch_op.drop_index("ix_attendance_user_date")

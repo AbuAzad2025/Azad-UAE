@@ -28,7 +28,7 @@ class ReasoningEngine:
     def __init__(self):
         self.reasoning_history = []
         self.knowledge_base = {}
-        self.reasoning_patterns = {
+        self.reasoning_patterns: dict[str, list[Any]] = {
             "mathematical": [],
             "logical": [],
             "financial": [],

@@ -4,6 +4,7 @@ Knowledge Sources - External Resources for Continuous Learning
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 
 import requests
 
@@ -294,7 +295,7 @@ class KnowledgeSourceManager:
     @staticmethod
     def get_all_sources_summary():
         """ملخص جميع المصادر"""
-        summary = {
+        summary: dict[str, Any] = {
             "total_categories": len(KNOWLEDGE_SOURCES),
             "total_sources": sum(len(sources) for sources in KNOWLEDGE_SOURCES.values()),
             "categories": {},

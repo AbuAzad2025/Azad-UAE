@@ -5,6 +5,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 
 def _active_tid():
@@ -381,7 +382,7 @@ class SystemIntegrator:
         try:
             from models import Customer, Product, Sale
 
-            results = {"customers": [], "products": [], "sales": []}
+            results: dict[str, Any] = {"customers": [], "products": [], "sales": []}
             base_c = _maybe_tenant_query(Customer)
             base_pr = _maybe_tenant_query(Product)
 

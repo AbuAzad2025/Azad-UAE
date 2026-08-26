@@ -4,6 +4,7 @@ Print Service — Professional Printing Engine
 """
 
 import logging
+from typing import Any
 
 from flask import current_app
 from flask_login import current_user
@@ -18,7 +19,7 @@ class PrintService:
     INVOICE_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple"}
     RECEIPT_TEMPLATES = {"modern", "classic", "gulf", "minimal", "simple", "payment_voucher"}
 
-    PRINTABLE_DOCUMENTS = {
+    PRINTABLE_DOCUMENTS: dict[str, dict[str, Any]] = {
         "purchase": {
             "template": "purchases/print.html",
             "model": "Purchase",
@@ -180,6 +181,8 @@ class PrintService:
             html_ready = html
             try:
                 static_folder = current_app.static_folder
+                if not static_folder:
+                    raise ValueError("static folder is not configured")
                 root = os.path.abspath(os.path.join(static_folder, os.pardir))
                 root_uri = Path(root).as_uri()
                 html_ready = re.sub(

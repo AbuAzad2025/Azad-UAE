@@ -202,7 +202,7 @@ def get_visible_reports(user):
 
 
 def get_reports_by_category(user):
-    grouped = {}
+    grouped: dict[str, list[dict]] = {}
     for r in get_visible_reports(user):
         cat = r["category"]
         if cat not in grouped:

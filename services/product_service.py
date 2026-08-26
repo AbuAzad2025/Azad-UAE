@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from extensions import db
 
@@ -260,7 +261,7 @@ class ProductService:
             .all()
         )
 
-        by_product = {}
+        by_product: dict[Any, dict[str, set[str]]] = {}
         for product_id, wh_name, wh_name_ar, branch_name, branch_code in rows:
             bucket = by_product.setdefault(product_id, {"warehouses": set(), "branches": set()})
             if wh_name_ar or wh_name:

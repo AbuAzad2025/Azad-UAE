@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
+from sqlalchemy.orm import Mapped, relationship
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -112,7 +114,7 @@ class Purchase(db.Model):
     user = db.relationship("User", foreign_keys=[user_id])
     supplier = db.relationship("Supplier", back_populates="purchases")
     branch = db.relationship("Branch", backref="purchases", foreign_keys=[branch_id])
-    lines = db.relationship("PurchaseLine", back_populates="purchase", lazy="joined")
+    lines: Mapped[list["PurchaseLine"]] = relationship("PurchaseLine", back_populates="purchase", lazy="joined")
     tenant = db.relationship("Tenant", backref="purchases", foreign_keys=[tenant_id])
     purchase_order = db.relationship("PurchaseOrder", backref="invoices", foreign_keys=[po_id])
     goods_receipt = db.relationship("GoodsReceipt", backref="invoices", foreign_keys=[grn_id])
@@ -527,7 +529,9 @@ class PurchaseOrder(db.Model):
     requisition = db.relationship("PurchaseRequisition", backref="converted_po", foreign_keys=[requisition_id])
     creator = db.relationship("User", foreign_keys=[created_by])
     confirmer = db.relationship("User", foreign_keys=[confirmed_by])
-    lines = db.relationship("PurchaseOrderLine", back_populates="order", lazy="joined", cascade="all, delete-orphan")
+    lines: Mapped[list["PurchaseOrderLine"]] = relationship(
+        "PurchaseOrderLine", back_populates="order", lazy="joined", cascade="all, delete-orphan"
+    )
     goods_receipts = db.relationship("GoodsReceipt", back_populates="purchase_order")
 
     def __repr__(self):

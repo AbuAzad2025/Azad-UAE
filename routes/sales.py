@@ -42,6 +42,16 @@ from utils.tenanting import (
 sales_bp = Blueprint("sales", __name__, url_prefix="/sales")
 
 
+def safe_float(value, default=0.0):
+    """Parse a float from form data — returns *default* on empty/invalid input."""
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 @sales_bp.route("/")
 @login_required
 @permission_required("manage_sales")
@@ -187,9 +197,9 @@ def create():
             exchange_rate_server = request.form.get("exchange_rate_server", type=float)
             exchange_rate_diff = request.form.get("exchange_rate_difference", type=float)
 
-            discount_amount = request.form.get("discount_amount", type=float, default=0)
-            shipping_cost = request.form.get("shipping_cost", type=float, default=0)
-            tax_rate = request.form.get("tax_rate", type=float, default=0)
+            discount_amount = safe_float(request.form.get("discount_amount"))
+            shipping_cost = safe_float(request.form.get("shipping_cost"))
+            tax_rate = safe_float(request.form.get("tax_rate"))
             notes = request.form.get("notes")
             sales_rep_id = request.form.get("sales_rep_id", type=int)
             coupon_code = request.form.get("coupon_code", "").strip()
@@ -203,7 +213,7 @@ def create():
                     )
                     notes = (notes or "") + audit_note
 
-            payment_amount = request.form.get("payment_amount", type=float, default=0)
+            payment_amount = safe_float(request.form.get("payment_amount"))
             payment_method = request.form.get("payment_method", "cash")
 
             payment_data = (
@@ -461,7 +471,7 @@ def edit(**kwargs):
                     sale.notes = request.form.get("notes", "")
                     discount_amount = max(
                         0,
-                        request.form.get("discount_amount", type=float, default=0) or 0,
+                        safe_float(request.form.get("discount_amount")) or 0,
                     )
                     sale.discount_amount = discount_amount
                     sale.calculate_totals()

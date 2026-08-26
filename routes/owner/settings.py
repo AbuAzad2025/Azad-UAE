@@ -3,6 +3,7 @@
 import logging
 from datetime import UTC, datetime
 from decimal import Decimal
+from typing import Any
 
 from flask_babel import gettext
 
@@ -65,7 +66,7 @@ def update_integration(service):
         # HTML checkboxes send "on" when checked; JS callers may send true/1.
         integration.enabled = request.form.get("enabled") in ("true", "1", "on")
 
-        config_data = {}
+        config_data: dict[str, Any] = {}
 
         if service == "whatsapp":
             config_data = {

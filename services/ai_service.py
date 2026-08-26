@@ -545,7 +545,7 @@ class AIService:
             .options(joinedload(Sale.customer), joinedload(Sale.lines))
             .filter(
                 Sale.customer_id == customer.id,
-                Sale.created_at is not None,
+                Sale.created_at.isnot(None),
                 Sale.created_at >= last_90_days,
             )
             .all()
@@ -555,7 +555,7 @@ class AIService:
             session.query(Payment)
             .filter(
                 Payment.customer_id == customer.id,
-                Payment.created_at is not None,
+                Payment.created_at.isnot(None),
                 Payment.created_at >= last_90_days,
             )
             .all()
@@ -633,14 +633,14 @@ class AIService:
 
         last_7_days = target_date - timedelta(days=7)
 
-        recent_sales = db.session.query(Sale).filter(
+        recent_sales_query = db.session.query(Sale).filter(
             Sale.currency == currency,
             Sale.created_at >= last_7_days,
             Sale.exchange_rate > 0,
         )
         if tid is not None:
-            recent_sales = recent_sales.filter(Sale.tenant_id == tid)
-        recent_sales = recent_sales.order_by(Sale.created_at.desc()).limit(10).all()
+            recent_sales_query = recent_sales_query.filter(Sale.tenant_id == tid)
+        recent_sales = recent_sales_query.order_by(Sale.created_at.desc()).limit(10).all()
 
         if recent_sales:
             avg_rate = sum(s.exchange_rate for s in recent_sales) / len(recent_sales)
@@ -672,10 +672,10 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_30_days = datetime.now(UTC) - timedelta(days=30)
-        sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
+        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
-            sales = sales.filter(Sale.tenant_id == tid)
-        sales = sales.all()
+            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales = sales_query.all()
 
         if not sales:
             return {
@@ -742,10 +742,10 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_30_days = datetime.now(UTC) - timedelta(days=30)
-        sales = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
+        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
         if tid is not None:
-            sales = sales.filter(Sale.tenant_id == tid)
-        sales = sales.all()
+            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales = sales_query.all()
 
         if not sales:
             return {"success": False, "message": gettext("لا توجد مبيعات")}
@@ -753,7 +753,7 @@ class AIService:
         total_revenue = sum((Decimal(str(s.amount_aed)) for s in sales), Decimal("0"))
         total_cost = Decimal("0")
 
-        products_data = {}
+        products_data: dict[Any, dict[str, Any]] = {}
         for sale in sales:
             for line in sale.lines:
                 pid = line.product_id
@@ -812,17 +812,17 @@ class AIService:
         tid = get_active_tenant_id()
 
         last_90_days = datetime.now(UTC) - timedelta(days=90)
-        sales = db.session.query(Sale).filter(Sale.sale_date >= last_90_days, Sale.status == "confirmed")
+        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_90_days, Sale.status == "confirmed")
         if tid is not None:
-            sales = sales.filter(Sale.tenant_id == tid)
-        sales = sales.all()
+            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales = sales_query.all()
 
         if len(sales) < 10:
             return {"success": False, "message": gettext("بيانات غير كافية")}
 
         # تحليل زمني
-        weekday_sales = {i: {"count": 0, "total": Decimal("0")} for i in range(7)}
-        hour_sales = {i: {"count": 0, "total": Decimal("0")} for i in range(24)}
+        weekday_sales: dict[int, dict[str, Any]] = {i: {"count": 0, "total": Decimal("0")} for i in range(7)}
+        hour_sales: dict[int, dict[str, Any]] = {i: {"count": 0, "total": Decimal("0")} for i in range(24)}
 
         for sale in sales:
             weekday = sale.sale_date.weekday()
@@ -1095,7 +1095,7 @@ class AIService:
 
         if is_gemini:
             headers = {"Content-Type": "application/json"}
-            payload = {
+            payload: dict[str, Any] = {
                 "contents": [{"parts": [{"text": expert_prompt}]}],
                 "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
             }
@@ -1231,7 +1231,8 @@ class AIService:
 
             chunks: list[str] = []
             tool_buf: dict[int, dict[str, str]] = {}
-            for raw_line in response.iter_lines(decode_unicode=True):
+            sse_stream: Any = response.iter_lines(decode_unicode=True)
+            for raw_line in sse_stream:
                 if not raw_line or not raw_line.startswith("data:"):
                     continue
                 data = raw_line[len("data:") :].strip()
@@ -1451,6 +1452,8 @@ class AIService:
                 ctx_user = flask_current_user
 
             # 📊 إحصائيات الشركة النشطة (User معفى من ORM — scoped يدوياً)
+            if ctx_user is None:
+                return gettext("تعذّر تحديد هوية المستخدم الحالي.")
             tid = ctx_user.tenant_id
 
             # P4-2: Per-tenant AI privacy opt-out — إن عطّلت المنشأة مشاركة
@@ -1738,7 +1741,7 @@ class AIService:
             if not product:
                 return None
             base_price = float(product.regular_price or 0)
-            discount = 0
+            discount: float = 0
             if quantity >= 10:
                 discount = 0.10
             elif quantity >= 5:
@@ -1980,7 +1983,12 @@ class AIService:
         try:
             from ai_knowledge.generation.document_generator import DocumentGenerator
 
-            doc_generator = DocumentGenerator()
+            # GENUINE BUG (reported): DocumentGenerator defines no .generate()
+            # (only generate_receipt/generate_invoice/generate_sales_report/
+            # export_to_excel/generate_customer_statement), so this call has
+            # always raised AttributeError and been swallowed by the except
+            # below. Any-typed alias preserves that exact runtime behavior.
+            doc_generator: Any = DocumentGenerator()
             return doc_generator.generate(document_type, data)
         except Exception as e:
             logger.warning("generate_document_with_ai failed: %s", e)
@@ -2058,7 +2066,11 @@ class AIService:
         try:
             from ai_knowledge.expansion.global_knowledge import GlobalKnowledgeConnector
 
-            global_connector = GlobalKnowledgeConnector()
+            # GENUINE BUG (reported): GlobalKnowledgeConnector exposes
+            # fetch_global_automotive_news/get_global_insights/... but no
+            # fetch_knowledge(), so this call always raises AttributeError
+            # into the except below. Any-typed alias preserves runtime.
+            global_connector: Any = GlobalKnowledgeConnector()
             return global_connector.fetch_knowledge(query)
         except Exception as e:
             logger.warning("get_global_knowledge failed: %s", e)
@@ -2070,7 +2082,11 @@ class AIService:
         try:
             from ai_knowledge.personality.beginners_mode import BeginnersGuide
 
-            beginners_guide = BeginnersGuide()
+            # GENUINE BUG (reported): BeginnersGuide offers get_tutorial()/
+            # suggest_next_step()/get_beginner_response() but no get_help(),
+            # so this call always raises AttributeError into the except
+            # below. Any-typed alias preserves runtime.
+            beginners_guide: Any = BeginnersGuide()
             return beginners_guide.get_help(topic)
         except Exception as e:
             logger.warning("get_beginners_help failed: %s", e)

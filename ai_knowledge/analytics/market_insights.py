@@ -2,7 +2,9 @@
 📈 فهم السوق - Market Insights
 """
 
-MARKET_INSIGHTS = {
+from typing import Any
+
+MARKET_INSIGHTS: dict[str, Any] = {
     "uae_market": {
         "construction_sector": "قطاع الإنشاءات نشط جداً - طلب عالي على المعدات الثقيلة",
         "automotive_sector": "سوق السيارات متنوع - طلب على قطع الغيار الأصلية والتجارية",

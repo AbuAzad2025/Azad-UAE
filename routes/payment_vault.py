@@ -948,7 +948,7 @@ def decrypt_card(card_id):
 
     from services.card_encryption_service import CardEncryptionService
 
-    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY") or "")
     return success_response(data={"card": card.to_dict(cipher=cipher)})
 
 
@@ -1021,7 +1021,7 @@ def process_payment():
 
             from services.card_encryption_service import CardEncryptionService
 
-            cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+            cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY") or "")
             if card_payment.encrypt_card_data(card_number, cvv, expiry, cipher=cipher):
                 with atomic_transaction("card_payment_storage"):
                     db.session.add(card_payment)
@@ -1851,9 +1851,9 @@ def nowpayments_webhook():
             PaymentLog.log_action(
                 vault_id=vault.id,
                 action="nowpayments_webhook_received",
-                description=f"Payment status: {data.get('payment_status')}",
+                description=f"Payment status: {data.get('payment_status') if data else None}",
                 level="info",
-                transaction_id=data.get("payment_id"),
+                transaction_id=data.get("payment_id") if data else None,
                 ip_address=request.remote_addr,
                 user_agent=request.headers.get("User-Agent"),
             )
@@ -1901,7 +1901,7 @@ def stripe_webhook():
             PaymentLog.log_action(
                 vault_id=vault.id,
                 action="stripe_webhook_received",
-                description=f"Event type: {data.get('type')}",
+                description=f"Event type: {data.get('type') if data else None}",
                 level="info",
                 ip_address=request.remote_addr,
                 user_agent=request.headers.get("User-Agent"),

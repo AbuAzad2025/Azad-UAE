@@ -1075,7 +1075,7 @@ class GLService:
             lines_query = lines_query.filter(func.date(GLJournalEntry.entry_date) <= date_to)
         all_lines = lines_query.all()
 
-        lines_by_account = {}
+        lines_by_account: dict[int, list[GLJournalLine]] = {}
         for line in all_lines:
             lines_by_account.setdefault(line.account_id, []).append(line)
 

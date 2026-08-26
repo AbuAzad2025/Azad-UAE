@@ -344,6 +344,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
+        obj = cast("Any", obj)
         obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             if tid is not None:
@@ -361,6 +362,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
+        obj = cast("Any", obj)
         obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             continue
@@ -377,6 +379,7 @@ def _inject_tenant_write_guard(session, flush_context, instances):
         mapper = sa_inspect(obj.__class__, raiseerr=False)
         if mapper is None or "tenant_id" not in mapper.columns:
             continue
+        obj = cast("Any", obj)
         obj_tid = obj.tenant_id if obj is not None else None
         if obj_tid is None:
             continue

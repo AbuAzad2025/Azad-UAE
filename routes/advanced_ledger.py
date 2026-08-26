@@ -492,7 +492,7 @@ def real_time_events():
     """مستمعات الأحداث اللحظية"""
     recent_events = accounting_event_stream.get_recent_events(limit=100)
 
-    event_stats = {}
+    event_stats: dict[str, int] = {}
     for event in recent_events:
         event_type = event["type"]
         event_stats[event_type] = event_stats.get(event_type, 0) + 1
@@ -638,13 +638,10 @@ def advanced_analytics():
 @permission_required("view_ledger")
 def api_financial_ratios():
     """API للنسب المالية"""
-    date_from = request.args.get("date_from")
-    date_to = request.args.get("date_to")
-
-    if date_from:
-        date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
-    if date_to:
-        date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+    date_from_raw = request.args.get("date_from")
+    date_to_raw = request.args.get("date_to")
+    date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date() if date_from_raw else None
+    date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date() if date_to_raw else None
 
     ratios = AdvancedFinancialAnalytics.get_financial_ratios(date_from, date_to)
 

@@ -6,6 +6,7 @@ import gzip
 import hashlib
 import os
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -57,7 +58,7 @@ class AssetCompressor:
     @classmethod
     def process_css_files(cls, base_dir="static/css"):
         """Process all CSS files"""
-        results = []
+        results: list[dict[str, Any]] = []
         css_dir = Path(base_dir)
 
         if not css_dir.exists():
@@ -105,7 +106,7 @@ class AssetCompressor:
     @classmethod
     def process_js_files(cls, base_dir="static/js"):
         """Process all JS files"""
-        results = []
+        results: list[dict[str, Any]] = []
         js_dir = Path(base_dir)
 
         if not js_dir.exists():

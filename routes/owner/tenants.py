@@ -501,6 +501,8 @@ def api_tenant_update_package(tenant_id):
         return error_response(message="JSON required", status_code=400)
     try:
         data = request.get_json(silent=True)
+        if not data:
+            return error_response(message="JSON required", status_code=400)
         tenant = OwnerOpsService.get_tenant(tenant_id)
         if not tenant:
             return error_response(message="Tenant not found", status_code=404)
@@ -551,8 +553,8 @@ def tenant_extend_subscription(tenant_id):
     explicit_end = (request.form.get("subscription_end") or "").strip() or None
     plan = (request.form.get("subscription_plan") or "").strip() or None
     duration = (request.form.get("subscription_plan_duration") or "").strip() or None
-    is_trial = request.form.get("is_trial")
-    is_trial = None if is_trial in (None, "") else (is_trial == "1" or is_trial == "on")
+    is_trial_raw = request.form.get("is_trial")
+    is_trial = None if is_trial_raw in (None, "") else (is_trial_raw == "1" or is_trial_raw == "on")
 
     try:
         with atomic_transaction("tenant_extend_subscription"):

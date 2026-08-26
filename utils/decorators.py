@@ -124,7 +124,7 @@ def seller_or_above(f):
         from utils.constants import ROLE_LEVELS
 
         user_slug = getattr(getattr(current_user, "role", None), "slug", None)
-        user_level = ROLE_LEVELS.get(user_slug, 0)
+        user_level = ROLE_LEVELS.get(str(user_slug or ""), 0)
         if user_level < ROLE_LEVELS.get("seller", 10):
             flash("ليس لديك صلاحية للوصول لهذه الصفحة", "danger")
             abort(403)

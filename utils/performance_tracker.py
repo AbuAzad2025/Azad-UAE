@@ -37,13 +37,15 @@ def track_performance(threshold_ms=1000):
 class PerformanceContext:
     def __init__(self, operation_name):
         self.operation_name = operation_name
-        self.start_time = None
+        self.start_time: float | None = None
 
     def __enter__(self):
         self.start_time = time.time()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.start_time is None:
+            return
         elapsed = (time.time() - self.start_time) * 1000
         logger.info(f"{self.operation_name} took {elapsed:.2f}ms")
 

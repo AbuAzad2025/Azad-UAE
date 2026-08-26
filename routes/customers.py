@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import cast
 
 from flask import (
     Blueprint,
@@ -543,7 +544,7 @@ def statement(**kwargs):
         date_to=date_to,
         transaction_type=transaction_type,
         default_currency=default_currency,
-        tenant_id=get_active_tenant_id(current_user),
+        tenant_id=cast(int, get_active_tenant_id(current_user)),
         branch_id=branch_scope_id(),
     )
 

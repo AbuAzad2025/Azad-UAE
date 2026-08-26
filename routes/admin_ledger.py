@@ -380,12 +380,12 @@ def reports():
 @admin_required
 def trial_balance():
     """ميزان المراجعة"""
-    date_from = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
-    date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
+    date_from_raw = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
+    date_to_raw = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
     try:
-        date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
-        date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date()
+        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in admin trial balance, falling back to today")
         date_from = date_to = date.today()
@@ -426,10 +426,10 @@ def trial_balance():
 @admin_required
 def balance_sheet():
     """الميزانية العمومية"""
-    as_of_date = request.args.get("as_of_date", date.today().strftime("%Y-%m-%d"))
+    as_of_date_raw = request.args.get("as_of_date", date.today().strftime("%Y-%m-%d"))
 
     try:
-        as_of_date = datetime.strptime(as_of_date, "%Y-%m-%d").date()
+        as_of_date = datetime.strptime(as_of_date_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in admin balance sheet, falling back to today")
         as_of_date = date.today()
@@ -466,12 +466,12 @@ def balance_sheet():
 @admin_required
 def income_statement():
     """قائمة الدخل"""
-    date_from = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
-    date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
+    date_from_raw = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
+    date_to_raw = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
     try:
-        date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
-        date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date()
+        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in admin income statement, falling back to defaults")
         date_from = date.today() - timedelta(days=30)

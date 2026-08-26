@@ -326,11 +326,12 @@ def manual_entry():
     if request.method == "POST":
         try:
             description = request.form.get("description")
-            entry_date = request.form.get("entry_date")
+            entry_date_raw = request.form.get("entry_date")
             notes = request.form.get("notes")
 
-            if entry_date:
-                entry_date = datetime.strptime(entry_date, "%Y-%m-%d")
+            entry_date: datetime | None = None
+            if entry_date_raw:
+                entry_date = datetime.strptime(entry_date_raw, "%Y-%m-%d")
 
             lines = []
 
@@ -340,8 +341,8 @@ def manual_entry():
                 if not account_code:
                     break
 
-                debit = request.form.get(f"line_{i}_debit", 0)
-                credit = request.form.get(f"line_{i}_credit", 0)
+                debit = request.form.get(f"line_{i}_debit") or ""
+                credit = request.form.get(f"line_{i}_credit") or ""
                 line_description = request.form.get(f"line_{i}_description", "")
 
                 try:
@@ -840,12 +841,12 @@ def admin_reports():
 @admin_required
 def admin_trial_balance():
     """ميزان المراجعة"""
-    date_from = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
-    date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
+    date_from_raw = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
+    date_to_raw = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
     try:
-        date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
-        date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date()
+        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in trial balance, falling back to today")
         date_from = date_to = date.today()
@@ -887,10 +888,10 @@ def admin_trial_balance():
 @admin_required
 def admin_balance_sheet():
     """الميزانية العمومية"""
-    as_of_date = request.args.get("as_of_date", date.today().strftime("%Y-%m-%d"))
+    as_of_date_raw = request.args.get("as_of_date", date.today().strftime("%Y-%m-%d"))
 
     try:
-        as_of_date = datetime.strptime(as_of_date, "%Y-%m-%d").date()
+        as_of_date = datetime.strptime(as_of_date_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in balance sheet, falling back to today")
         as_of_date = date.today()
@@ -982,12 +983,12 @@ def budget_vs_actual():
 @admin_required
 def admin_income_statement():
     """قائمة الدخل"""
-    date_from = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
-    date_to = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
+    date_from_raw = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
+    date_to_raw = request.args.get("date_to", date.today().strftime("%Y-%m-%d"))
 
     try:
-        date_from = datetime.strptime(date_from, "%Y-%m-%d").date()
-        date_to = datetime.strptime(date_to, "%Y-%m-%d").date()
+        date_from = datetime.strptime(date_from_raw, "%Y-%m-%d").date()
+        date_to = datetime.strptime(date_to_raw, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         current_app.logger.warning("Invalid date format in income statement, falling back to defaults")
         date_from = date.today() - timedelta(days=30)

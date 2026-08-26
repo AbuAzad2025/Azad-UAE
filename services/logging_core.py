@@ -645,8 +645,7 @@ class LoggingCore:
                             exc_info=True,
                         )
                 logger.warning(msg)
-                if original_showwarning:
-                    original_showwarning(message, category, filename, lineno, file, line)
+                original_showwarning(message, category, filename, lineno, file, line)
 
             _builtin_warnings.showwarning = _log_warning
             app.logger.info("[OK] Python warnings captured via logging")

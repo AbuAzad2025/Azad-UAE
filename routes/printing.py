@@ -4,6 +4,7 @@ Printing Routes — Unified Professional Printing
 """
 
 from io import BytesIO
+from typing import Any, cast
 
 from flask import (
     Blueprint,
@@ -57,7 +58,8 @@ def print_document(doc_type, **kwargs):
     """Generic print handler — dispatches to the correct template via PRINTABLE_DOCUMENTS registry."""
     record_id = kwargs.pop("id")
     doc_type = _normalize_doc_type(doc_type)
-    entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
+    registry = cast("dict[str, Any]", PrintService.PRINTABLE_DOCUMENTS)
+    entry = registry.get(doc_type)
     if not entry:
         current_app.logger.warning("Unknown doc_type requested for print: %s", doc_type)
         return render_template("errors/404.html"), 404
@@ -112,7 +114,8 @@ def print_document_pdf(doc_type, **kwargs):
     """Generic PDF handler — renders a document as PDF download via the PRINTABLE_DOCUMENTS registry."""
     record_id = kwargs.pop("id")
     doc_type = _normalize_doc_type(doc_type)
-    entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
+    registry = cast("dict[str, Any]", PrintService.PRINTABLE_DOCUMENTS)
+    entry = registry.get(doc_type)
     if not entry:
         current_app.logger.warning("Unknown doc_type requested for PDF: %s", doc_type)
         return render_template("errors/404.html"), 404
@@ -253,7 +256,8 @@ def bulk_print():
     doc_ids = request.json.get("ids", [])
     doc_type = request.json.get("type", "sale")
     doc_type = _normalize_doc_type(doc_type)
-    entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
+    registry = cast("dict[str, Any]", PrintService.PRINTABLE_DOCUMENTS)
+    entry = registry.get(doc_type)
     if not entry:
         return error_response(message=f"Unknown document type: {doc_type}", status_code=400)
 
@@ -272,7 +276,7 @@ def bulk_print():
     template_map = {}
     for d in documents:
         dt = d.get("type", doc_type)
-        ent = PrintService.PRINTABLE_DOCUMENTS.get(dt)
+        ent = registry.get(dt)
         tmpl = ent["template"] if ent else None
         if tmpl is None:
             tmpl = PrintService.resolve_template(dt, tenant_id=tid)
@@ -301,7 +305,8 @@ def print_preview_api():
         return error_response(message="Missing type or id", status_code=400)
 
     doc_type = _normalize_doc_type(doc_type)
-    entry = PrintService.PRINTABLE_DOCUMENTS.get(doc_type)
+    registry = cast("dict[str, Any]", PrintService.PRINTABLE_DOCUMENTS)
+    entry = registry.get(doc_type)
     if not entry:
         return error_response(message=f"Unsupported type: {doc_type}", status_code=400)
 

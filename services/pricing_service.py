@@ -65,8 +65,10 @@ class PricingService:
 
     @staticmethod
     def format_price(price, currency="AED"):
-        from decimal import Decimal
+        amount = Decimal(str(price))
+        import utils.currency_utils as currency_utils
 
-        from utils.currency_utils import format_currency_value
-
-        return format_currency_value(Decimal(str(price)), currency)
+        formatter = getattr(currency_utils, "format_currency_value", None)
+        if formatter is not None:
+            return formatter(amount, currency)
+        return f"{currency}:{amount}"

@@ -217,7 +217,7 @@ class AzadPlatformFeeService:
             fees = AzadPlatformFee.query.filter_by(tenant_id=tid, status="accrued", gl_posted=True).all()
             if not fees:
                 continue
-            total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
+            total = sum((Decimal(str(f.fee_amount_aed or 0)) for f in fees), Decimal("0"))
             if total <= Decimal("0"):
                 continue
             lines = [
@@ -299,7 +299,7 @@ class AzadPlatformFeeService:
         vault = PaymentVault.get_platform_vault()
         if not vault:
             raise ValueError("Platform vault does not exist — cannot record payout.")
-        total = sum(Decimal(str(f.fee_amount_aed or 0)) for f in fees)
+        total = sum((Decimal(str(f.fee_amount_aed or 0)) for f in fees), Decimal("0"))
         if total <= Decimal("0"):
             raise ValueError("Total payout amount is zero.")
         txn_id = f"PLATFORM-SETTLE-{generate_number('SETT', PaymentTransaction, 'transaction_id')}"

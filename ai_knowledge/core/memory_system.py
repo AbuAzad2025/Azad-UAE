@@ -15,6 +15,7 @@ import logging
 import os
 from collections import defaultdict
 from datetime import datetime, timedelta
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class LongTermMemory:
     def _load_memory(self, memory_type):
         """تحميل نوع محدد من الذاكرة"""
         file_path = os.path.join(self.memory_dir, f"{memory_type}_memory.json")
-        default = {} if memory_type == "preferences" else {"memories": []}
+        default: dict[str, Any] = {} if memory_type == "preferences" else {"memories": []}
 
         if os.path.exists(file_path):
             try:

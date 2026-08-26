@@ -4,6 +4,9 @@ import sys
 
 from flask import g, has_request_context
 
+_stdout_wrapped = False
+_stderr_wrapped = False
+
 try:
     from colorama import Fore, Style
     from colorama import init as colorama_init
@@ -76,14 +79,13 @@ def setup_logging(app):
     if sys.platform == "win32":
         import io
 
-        if hasattr(sys.stdout, "buffer") and not getattr(sys.stdout, "_azad_utf8_wrapped", False):
-            wrapped_out = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-            wrapped_out._azad_utf8_wrapped = True
-            sys.stdout = wrapped_out
-        if hasattr(sys.stderr, "buffer") and not getattr(sys.stderr, "_azad_utf8_wrapped", False):
-            wrapped_err = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
-            wrapped_err._azad_utf8_wrapped = True
-            sys.stderr = wrapped_err
+        global _stdout_wrapped, _stderr_wrapped
+        if hasattr(sys.stdout, "buffer") and not _stdout_wrapped:
+            sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+            _stdout_wrapped = True
+        if hasattr(sys.stderr, "buffer") and not _stderr_wrapped:
+            sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+            _stderr_wrapped = True
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level)
     console_handler.addFilter(RequestIdFilter())

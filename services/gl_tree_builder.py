@@ -70,7 +70,7 @@ class GLTreeBuilder:
         account_query = GLAccount.query.filter_by(tenant_id=tenant_id).all()
         for acc in account_query:
             existing_accounts[acc.code] = acc
-        processed = {}
+        processed: dict[str, GLAccount] = {}
         core_tree = _get_core_account_tree()
         industry_tree = []
         try:

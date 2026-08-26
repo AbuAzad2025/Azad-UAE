@@ -356,8 +356,8 @@ def delete(**kwargs):
 
         if has_sales:
             flash(
-                gettext(f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). '),
-                gettext("لا يمكن حذفه نهائياً للحفاظ على السجلات."),
+                gettext(f'تم إلغاء تفعيل المستخدم "{user.username}" (لديه {sales_count} عملية مسجلة). ')
+                + gettext("لا يمكن حذفه نهائياً للحفاظ على السجلات."),
                 "warning",
             )
         else:

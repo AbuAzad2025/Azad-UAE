@@ -32,6 +32,16 @@ from utils.tenanting import get_active_tenant_id, tenant_get_or_404
 suppliers_bp = Blueprint("suppliers", __name__, url_prefix="/suppliers")
 
 
+def safe_float(value, default=0.0):
+    """Parse a float from form data — returns *default* on empty/invalid input."""
+    if value is None or (isinstance(value, str) and value.strip() == ""):
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
 def _scoped_supplier_query():
     return SupplierService.scoped_suppliers_query(branch_id=branch_scope_id())
 
@@ -140,7 +150,7 @@ def create():
             except Exception:
                 default_currency = get_system_default_currency()
 
-            initial_balance = request.form.get("initial_balance", type=float, default=0)
+            initial_balance = safe_float(request.form.get("initial_balance"))
 
             # Check tenant supplier limit
             from utils.tenant_limits import TenantLimitError, check_suppliers_limit
@@ -156,27 +166,27 @@ def create():
 
             supplier = SupplierService.create_supplier(
                 tenant_id=tid,
-                name=request.form.get("name"),
-                name_en=request.form.get("name_en"),
-                company_name=request.form.get("company_name"),
-                phone=normalize_phone_optional(request.form.get("phone")),
-                phone2=normalize_phone_optional(request.form.get("phone2"), field_label="phone2"),
-                email=request.form.get("email"),
-                website=request.form.get("website"),
-                address=request.form.get("address"),
-                city=request.form.get("city"),
+                name=request.form.get("name") or "",
+                name_en=request.form.get("name_en") or "",
+                company_name=request.form.get("company_name") or "",
+                phone=normalize_phone_optional(request.form.get("phone")) or "",
+                phone2=normalize_phone_optional(request.form.get("phone2"), field_label="phone2") or "",
+                email=request.form.get("email") or "",
+                website=request.form.get("website") or "",
+                address=request.form.get("address") or "",
+                city=request.form.get("city") or "",
                 country=request.form.get("country", "PS"),
-                tax_number=request.form.get("tax_number"),
-                commercial_registration=request.form.get("commercial_registration"),
+                tax_number=request.form.get("tax_number") or "",
+                commercial_registration=request.form.get("commercial_registration") or "",
                 supplier_type=supplier_type_value,
                 rating=rating if rating is not None else None,
-                credit_limit=request.form.get("credit_limit", type=float, default=0),
+                credit_limit=safe_float(request.form.get("credit_limit")),
                 payment_terms_days=request.form.get("payment_terms_days", type=int, default=30),
                 preferred_currency=validate_currency_code(request.form.get("preferred_currency", default_currency)),
                 total_purchases_aed=initial_balance,
                 total_paid_aed=0,
-                notes=request.form.get("notes"),
-                tags=request.form.get("tags"),
+                notes=request.form.get("notes") or "",
+                tags=request.form.get("tags") or "",
                 is_verified=request.form.get("is_verified") == "on",
                 created_by=current_user.id,
             )

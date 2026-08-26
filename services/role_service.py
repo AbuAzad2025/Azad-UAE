@@ -10,7 +10,7 @@ class RoleService:
         roles = Role.query.filter_by(is_active=True).options(joinedload(Role.permissions)).order_by(Role.name).all()
         permissions = Permission.query.order_by(Permission.category, Permission.name).all()
 
-        perm_categories = {}
+        perm_categories: dict[str, list[Permission]] = {}
         for p in permissions:
             perm_categories.setdefault(p.category or gettext("عام"), []).append(p)
 

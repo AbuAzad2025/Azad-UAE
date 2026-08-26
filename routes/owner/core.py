@@ -262,7 +262,7 @@ def view_card(**kwargs):
 
     from services.card_encryption_service import CardEncryptionService
 
-    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY"))
+    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY") or "")
     try:
         card_data = card.to_dict(cipher=cipher)
     except Exception:

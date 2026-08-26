@@ -1,3 +1,5 @@
+from typing import Any
+
 from sqlalchemy.orm import joinedload, selectinload, subqueryload
 
 
@@ -42,7 +44,7 @@ def prefetch_related(instances, relationship_name, related_model):
     foreign_key = f"{instances[0].__tablename__}_id"
     related_items = related_model.query.filter(getattr(related_model, foreign_key).in_(instance_ids)).all()
 
-    related_map = {}
+    related_map: dict[Any, list[Any]] = {}
     for item in related_items:
         fk_value = getattr(item, foreign_key)
         if fk_value not in related_map:

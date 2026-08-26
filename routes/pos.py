@@ -5,6 +5,7 @@ import queue as _queue
 import time
 from datetime import UTC
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from typing import cast
 
 import requests
 from flask import (
@@ -502,7 +503,7 @@ def printer_settings():
                         serial_port=(request.form.get("serial_port") or "").strip() or None,
                         baud_rate=int(request.form.get("baud_rate") or 0) or None,
                         encoding=(request.form.get("encoding") or "cp864").strip() or "cp864",
-                        category_ids=_parse_category_ids(request.form.get("category_ids")),
+                        category_ids=_parse_category_ids(request.form.get("category_ids") or ""),
                         is_active=request.form.get("is_active") == "on",
                         sort_order=int(request.form.get("sort_order") or 0),
                     )
@@ -517,7 +518,7 @@ def printer_settings():
                     printer.serial_port = (request.form.get("serial_port") or "").strip() or None
                     printer.baud_rate = int(request.form.get("baud_rate") or 0) or None
                     printer.encoding = (request.form.get("encoding") or "cp864").strip() or "cp864"
-                    printer.category_ids = _parse_category_ids(request.form.get("category_ids"))
+                    printer.category_ids = _parse_category_ids(request.form.get("category_ids") or "")
                     printer.is_active = request.form.get("is_active") == "on"
                     printer.sort_order = int(request.form.get("sort_order") or 0)
                     flash(gettext("تم تحديث الطابعة."), "success")
@@ -1075,7 +1076,7 @@ def api_session_current():
         "pos.customer_display",
         session_id=session.id,
         tenant_id=tid,
-        token=issue_customer_display_token(session.id, tid),
+        token=issue_customer_display_token(session.id, cast(int, tid)),
     )
     if _can_view_expected():
         payload.update(
@@ -2005,7 +2006,7 @@ def kds_stream():
     subscriber_tid = get_active_tenant_id(current_user)
 
     def stream():
-        q = _queue.Queue()
+        q: _queue.Queue = _queue.Queue()
         _KDS_SUBSCRIBERS.append((subscriber_tid, q))
         try:
             while True:
@@ -2073,7 +2074,7 @@ def kds_update_status(order_id):
         tenant_id=tid,
     )
     if order.sale is not None and order.sale.pos_session_id:
-        _publish_cfd_refresh(tid, order.sale.pos_session_id)
+        _publish_cfd_refresh(cast(int, tid), order.sale.pos_session_id)
     return success_response()
 
 
@@ -2105,7 +2106,7 @@ def customer_display_stream(session_id):
         return build_cfd_order_payload(latest, kds_order.status if kds_order else "confirmed")
 
     def stream():
-        q = _queue.Queue()
+        q: _queue.Queue = _queue.Queue()
         subscriber = (display_tenant_id, session_id, q)
         _CFD_SUBSCRIBERS.append(subscriber)
         channel = f"pos:cfd:{display_tenant_id}:{session_id}"
@@ -2382,7 +2383,7 @@ def api_floor_create():
     tid = get_active_tenant_id(current_user)
     from services.pos_write_service import PosWriteService
 
-    floor = PosWriteService.create_floor(tenant_id=tid, name=name, name_ar=name_ar)
+    floor = PosWriteService.create_floor(tenant_id=cast(int, tid), name=name, name_ar=name_ar)
     with atomic_transaction("pos_floor_create"):
         db.session.flush()
     return success_response(data={"floor_id": floor.id})
@@ -2432,7 +2433,7 @@ def api_table_create():
     from services.pos_write_service import PosWriteService
 
     table = PosWriteService.create_table(
-        tenant_id=tid,
+        tenant_id=cast(int, tid),
         floor_id=floor_id,
         name=label,
         seats=payload.get("capacity", 4),
@@ -2484,7 +2485,7 @@ def api_table_assign(table_id):
     from services.pos_write_service import PosWriteService
 
     PosWriteService.create_table_order_model(
-        tenant_id=tid,
+        tenant_id=cast(int, tid),
         table_id=table_id,
         sale_id=sale.id,
         guest_count=payload.get("guest_count", 1),

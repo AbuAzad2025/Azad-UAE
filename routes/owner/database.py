@@ -4,6 +4,7 @@ import json
 import logging
 import os
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from flask_babel import gettext
 
@@ -116,7 +117,7 @@ def execute_query():
             current_user.id,
             validation_error,
         )
-        return error_response(message=validation_error, status_code=400)
+        return error_response(message=validation_error or "Invalid SQL query", status_code=400)
 
     try:
         result = db.session.execute(text(query_text))
@@ -229,7 +230,7 @@ def browse_table(table_name):
 
     try:
         count_result = db.session.execute(count_query(db.engine, safe_table))
-        total = count_result.scalar()
+        total = count_result.scalar() or 0
 
         offset = (page - 1) * per_page
         result = db.session.execute(select_all_query(db.engine, safe_table, limit=per_page, offset=offset))
@@ -484,12 +485,13 @@ def convert_database():
                     if not rows:
                         continue
 
-                    row_columns = [c for c in result if c in allowed_columns]
+                    row_keys = list(result.keys())
+                    row_columns = [c for c in row_keys if c in allowed_columns]
                     if not row_columns:
                         continue
 
                     for row in rows:
-                        row_dict = dict(zip(result.keys(), row, strict=False))
+                        row_dict: dict[str, Any] = dict(zip(result.keys(), row, strict=False))
                         payload = {col: row_dict[col] for col in row_columns}
                         conn.execute(insert_query(db.engine, table_name, payload))
                         rows_copied += 1

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from extensions import db
 from utils.tenanting import tenant_query
@@ -175,7 +176,7 @@ class CustomerService:
         from models.receipt import Receipt
 
         customer_ids = [c.id for c in customers]
-        branch_map = {cid: set() for cid in customer_ids}
+        branch_map: dict[Any, set[int]] = {cid: set() for cid in customer_ids}
 
         sale_rows = (
             db.session.query(Sale.customer_id, Sale.branch_id)
