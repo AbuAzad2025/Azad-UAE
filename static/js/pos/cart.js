@@ -247,9 +247,7 @@ const pushLine = async (p, qty, serial) => {
 const addToCart = async (p, qty = 1) => {
 	state.idemKey = newCartKey();
 	if (p.has_serial_number) {
-		const serial = (
-			window.prompt(`${window.t("أدخل الرقم التسلسلي")}: ${p.name}`) || ""
-		).trim();
+		const serial = (window.prompt(`${window.t("أدخل الرقم التسلسلي")}: ${p.name}`) || "").trim();
 		if (!serial) {
 			notify(window.t("تم إلغاء الإضافة — الرقم التسلسلي مطلوب"), "warning");
 			return false;

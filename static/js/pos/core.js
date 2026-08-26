@@ -8,7 +8,8 @@ const state = {
 	selectedTable: null,
 	sessionToken: sessionStorage.getItem("posSessionToken") || null,
 };
-const sessionHeaders = () => (state.sessionToken ? { "X-POS-Session-Token": state.sessionToken } : {});
+const sessionHeaders = () =>
+	state.sessionToken ? { "X-POS-Session-Token": state.sessionToken } : {};
 const newCartKey = () =>
 	window.crypto && crypto.randomUUID
 		? crypto.randomUUID()

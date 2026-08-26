@@ -308,7 +308,9 @@ const checkout = async (autoPrint) => {
 	};
 	const serialsByProduct = {};
 	state.cart.forEach((it) => {
-		if (it.serial) (serialsByProduct[it.id] ||= []).push(it.serial);
+		if (!it.serial) return;
+		if (!serialsByProduct[it.id]) serialsByProduct[it.id] = [];
+		serialsByProduct[it.id].push(it.serial);
 	});
 	if (Object.keys(serialsByProduct).length) payload.serials = serialsByProduct;
 	if (payload.payment_method === "cash" && toNum(qs("#paidAmount").value) <= 0) {
