@@ -109,6 +109,9 @@ def _find_thread(name):
     return None
 
 
+_SENTINEL_THREAD = threading.Thread(name="sse-backplane-sentinel", daemon=True)
+
+
 def _wait_until(predicate, timeout=5.0):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
@@ -283,8 +286,9 @@ class TestSubscribeFanout:
         with caplog.at_level(logging.WARNING, logger="utils.sse_backplane"):
             subscribe("tenant-7:kds", queue.Queue(maxsize=4))
 
-        thread = _find_thread("sse-backplane-tenant-7:kds")
-        assert _wait_until(lambda: pubsub.closed and not thread.is_alive())
+        assert _wait_until(
+            lambda: pubsub.closed and not (_find_thread("sse-backplane-tenant-7:kds") or _SENTINEL_THREAD).is_alive()
+        )
         assert any("SSE backplane reader stopped on tenant-7:kds" in r.message for r in caplog.records)
 
     def test_pubsub_close_failure_is_swallowed_at_debug_level(self, redis_env):
