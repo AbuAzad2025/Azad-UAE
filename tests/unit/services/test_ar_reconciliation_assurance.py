@@ -46,22 +46,32 @@ class TestARGLBalance:
 class TestAROpsUnpaid:
     """_ops_unpaid — partial payments, receipts, overpayment skip."""
 
-    def test_full_payment_zeroes_due(self, mocker):
+    @staticmethod
+    def _patch_ops_unpaid_queries(mocker, sales_rows, paid_total, receipts_total):
         sales_q = MagicMock()
         sales_q.filter.return_value = sales_q
         sales_q.join.return_value = sales_q
-        sales_q.all.return_value = [(1, Decimal("1000"), 5)]
+        sales_q.all.return_value = sales_rows
 
-        pay_q = MagicMock()
-        pay_q.filter.return_value = pay_q
-        pay_q.scalar.return_value = Decimal("1000")
+        cust_ids_q = MagicMock()
+        cust_ids_q.filter.return_value = cust_ids_q
+
+        refs_q = MagicMock()
+        refs_q.filter.return_value = refs_q
 
         rcpt_q = MagicMock()
         rcpt_q.filter.return_value = rcpt_q
-        rcpt_q.scalar.return_value = Decimal("0")
+        rcpt_q.scalar.return_value = receipts_total
+
+        pay_q = MagicMock()
+        pay_q.filter.return_value = pay_q
+        pay_q.scalar.return_value = paid_total
 
         session = mocker.patch("services.ar_reconciliation_service.db.session")
-        session.query.side_effect = [sales_q, pay_q, rcpt_q]
+        session.query.side_effect = [sales_q, cust_ids_q, refs_q, rcpt_q, pay_q]
+
+    def test_full_payment_zeroes_due(self, mocker):
+        self._patch_ops_unpaid_queries(mocker, [(1, Decimal("1000"), 5)], Decimal("1000"), Decimal("0"))
 
         from services.ar_reconciliation_service import ARReconciliationService
 
@@ -69,21 +79,7 @@ class TestAROpsUnpaid:
         assert unpaid == Decimal("0")
 
     def test_partial_payment_leaves_residual(self, mocker):
-        sales_q = MagicMock()
-        sales_q.filter.return_value = sales_q
-        sales_q.join.return_value = sales_q
-        sales_q.all.return_value = [(2, Decimal("2000"), 7)]
-
-        pay_q = MagicMock()
-        pay_q.filter.return_value = pay_q
-        pay_q.scalar.return_value = Decimal("750")
-
-        rcpt_q = MagicMock()
-        rcpt_q.filter.return_value = rcpt_q
-        rcpt_q.scalar.return_value = Decimal("250")
-
-        session = mocker.patch("services.ar_reconciliation_service.db.session")
-        session.query.side_effect = [sales_q, pay_q, rcpt_q]
+        self._patch_ops_unpaid_queries(mocker, [(2, Decimal("2000"), 7)], Decimal("750"), Decimal("250"))
 
         from services.ar_reconciliation_service import ARReconciliationService
 
@@ -92,21 +88,7 @@ class TestAROpsUnpaid:
 
     def test_currency_fluctuation_uses_amount_aed(self, mocker):
         """Foreign sale amount_aed is authoritative for ops balance."""
-        sales_q = MagicMock()
-        sales_q.filter.return_value = sales_q
-        sales_q.join.return_value = sales_q
-        sales_q.all.return_value = [(3, Decimal("3675.50"), 9)]
-
-        pay_q = MagicMock()
-        pay_q.filter.return_value = pay_q
-        pay_q.scalar.return_value = Decimal("1000.50")
-
-        rcpt_q = MagicMock()
-        rcpt_q.filter.return_value = rcpt_q
-        rcpt_q.scalar.return_value = Decimal("0")
-
-        session = mocker.patch("services.ar_reconciliation_service.db.session")
-        session.query.side_effect = [sales_q, pay_q, rcpt_q]
+        self._patch_ops_unpaid_queries(mocker, [(3, Decimal("3675.50"), 9)], Decimal("1000.50"), Decimal("0"))
 
         from services.ar_reconciliation_service import ARReconciliationService
 
@@ -185,11 +167,11 @@ class TestARBuildReport:
         "gl,ops,matched",
         [
             (1000, 1000, True),
-            (1000, 999.00, True),
-            (1000, 997, False),
+            (1000, 999.99, True),
+            (1000, 999.90, False),
         ],
     )
-    def test_one_aed_tolerance_boundary(self, mocker, app, gl, ops, matched):
+    def test_cent_tolerance_boundary(self, mocker, app, gl, ops, matched):
         with app.app_context():
             self._patch_row(mocker, gl, ops)
             from services.ar_reconciliation_service import ARReconciliationService

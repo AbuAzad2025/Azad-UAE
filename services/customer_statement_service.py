@@ -3,13 +3,23 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from flask_babel import gettext
 from sqlalchemy import func
 
 from models import ProductReturn, Sale
 from models.receipt import Receipt
+
+
+def _scalar_to_decimal(value) -> Decimal:
+    """Coerce an aggregate scalar (Decimal/float/int) to Decimal; zero when unavailable."""
+    if isinstance(value, Decimal):
+        return value
+    try:
+        return Decimal(str(value or 0))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal("0")
 
 
 class CustomerStatementService:
@@ -50,7 +60,7 @@ class CustomerStatementService:
             receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) >= date_from)
             returns_query = returns_query.filter(func.date(ProductReturn.return_date) >= date_from)
 
-        opening_balance = 0.0
+        opening_balance = Decimal("0")
         if date_from:
             pre_sales_q = Sale.query.filter(
                 Sale.customer_id == record_id,
@@ -80,8 +90,8 @@ class CustomerStatementService:
                 pre_receipts_q = pre_receipts_q.filter(Receipt.branch_id == branch_id)
                 pre_returns_q = pre_returns_q.filter(ProductReturn.branch_id == branch_id)
 
-            pre_sales_total = float(
-                pre_sales_q.with_entities(func.coalesce(func.sum(Sale.amount_aed), 0)).scalar() or 0
+            pre_sales_total = _scalar_to_decimal(
+                pre_sales_q.with_entities(func.coalesce(func.sum(Sale.amount_aed), 0)).scalar()
             )
             pre_pay_rows = pre_payments_q.with_entities(
                 Payment.direction,
@@ -91,19 +101,24 @@ class CustomerStatementService:
                 Payment.rejection_reason,
             ).all()
             pre_payments_net = sum(
-                (float(amount or 0) if direction == "incoming" else -float(amount or 0))
+                (
+                    Decimal(str(amount or 0)) if direction == "incoming" else -Decimal(str(amount or 0))
+                )
                 for direction, amount, confirmed, method, rejection in pre_pay_rows
                 if confirmed or (method == "cheque" and not rejection)
             )
             pre_payment_refs = {ref for (ref,) in pre_payments_q.with_entities(Payment.reference_number).all() if ref}
             pre_receipts_total = sum(
-                float(r.amount_aed or 0)
-                for r in pre_receipts_q.all()
-                if (r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason))
-                and (r.receipt_number or "") not in pre_payment_refs
+                (
+                    Decimal(str(r.amount_aed or 0))
+                    for r in pre_receipts_q.all()
+                    if (r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason))
+                    and (r.receipt_number or "") not in pre_payment_refs
+                ),
+                Decimal("0"),
             )
-            pre_returns_total = float(
-                pre_returns_q.with_entities(func.coalesce(func.sum(ProductReturn.amount_aed), 0)).scalar() or 0
+            pre_returns_total = _scalar_to_decimal(
+                pre_returns_q.with_entities(func.coalesce(func.sum(ProductReturn.amount_aed), 0)).scalar()
             )
             opening_balance = (pre_payments_net + pre_receipts_total + pre_returns_total) - pre_sales_total
 
@@ -234,12 +249,16 @@ class CustomerStatementService:
                     "balance_due": float(sale.balance_due or 0),
                     "status": sale.payment_status,
                     "sale": sale_data,
+                    "_debit_exact": Decimal(str(sale.amount_aed or 0)),
+                    "_credit_exact": Decimal("0"),
                 }
             )
 
         for payment in payments:
-            credit_amount = float(payment.amount_aed or 0) if payment.direction == "incoming" else 0.0
-            debit_amount = float(payment.amount_aed or 0) if payment.direction != "incoming" else 0.0
+            payment_amount_dec = Decimal(str(payment.amount_aed or 0))
+            is_incoming = payment.direction == "incoming"
+            credit_amount = float(payment_amount_dec) if is_incoming else 0.0
+            debit_amount = float(payment_amount_dec) if not is_incoming else 0.0
 
             cheque = payment.cheque if hasattr(payment, "cheque") else None
 
@@ -298,6 +317,8 @@ class CustomerStatementService:
                         "cheque_due_date": (cheque.due_date if cheque else payment.cheque_date),
                         "cheque_clearance_date": cheque.clearance_date if cheque else None,
                     },
+                    "_debit_exact": payment_amount_dec if not is_incoming else Decimal("0"),
+                    "_credit_exact": payment_amount_dec if is_incoming else Decimal("0"),
                 }
             )
 
@@ -329,6 +350,8 @@ class CustomerStatementService:
                     "payment_method": receipt.payment_method,
                     "payment_confirmed": receipt.payment_confirmed,
                     "rejection_reason": getattr(receipt, "rejection_reason", None),
+                    "_debit_exact": Decimal("0"),
+                    "_credit_exact": Decimal(str(receipt.amount_aed or 0)),
                 }
             )
 
@@ -347,6 +370,8 @@ class CustomerStatementService:
                     "paid_amount": 0,
                     "balance_due": 0,
                     "status": gettext("معتمد"),
+                    "_debit_exact": Decimal("0"),
+                    "_credit_exact": Decimal(str(ret.amount_aed or 0)),
                 }
             )
 
@@ -372,7 +397,7 @@ class CustomerStatementService:
                     "reference": "",
                     "debit": 0,
                     "credit": 0,
-                    "balance": opening_balance,
+                    "balance": float(opening_balance),
                     "description": gettext("الرصيد الافتتاحي"),
                     "currency": default_currency,
                     "exchange_rate": 1.0,
@@ -386,7 +411,7 @@ class CustomerStatementService:
         running_balance = opening_balance
         for trans in transactions:
             if trans["type"] == "opening":
-                trans["balance"] = running_balance
+                trans["balance"] = float(running_balance)
                 continue
             if trans["type"] in ("payment", "receipt"):
                 source = trans.get("payment") or trans
@@ -395,14 +420,16 @@ class CustomerStatementService:
                 is_confirmed = confirmed or pending_cheque
             else:
                 is_confirmed = True
+            credit_exact = trans.pop("_credit_exact", Decimal("0"))
+            debit_exact = trans.pop("_debit_exact", Decimal("0"))
             if is_confirmed:
-                running_balance += trans["credit"] - trans["debit"]
-            trans["balance"] = running_balance
+                running_balance += credit_exact - debit_exact
+            trans["balance"] = float(running_balance)
             trans["is_confirmed"] = is_confirmed
 
         return {
             "transactions": transactions,
-            "final_balance": running_balance,
+            "final_balance": float(running_balance),
             "filters": {
                 "date_from": date_from or "",
                 "date_to": date_to or "",

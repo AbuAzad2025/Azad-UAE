@@ -121,14 +121,18 @@ class Receipt(db.Model):
         # عكس الدفعات المرتبطة بالسند (التوزيع على فواتير البيع)
         from models import Payment
 
-        linked_payments = Payment.query.filter(
-            db.or_(
-                Payment.cheque_id == self.cheque_id,
-                Payment.reference_number == self.receipt_number,
-            ),
+        link_conditions = [Payment.reference_number == self.receipt_number]
+        if self.cheque_id:
+            link_conditions.append(Payment.cheque_id == self.cheque_id)
+        linked_payments_query = Payment.query.filter(
+            db.or_(*link_conditions),
             Payment.payment_type == "sale_payment",
             Payment.payment_confirmed,
-        ).all()
+        )
+        tenant_id = getattr(self, "tenant_id", None)
+        if tenant_id is not None:
+            linked_payments_query = linked_payments_query.filter(Payment.tenant_id == tenant_id)
+        linked_payments = linked_payments_query.all()
         for pmt in linked_payments:
             pmt.payment_confirmed = False
             pmt.rejection_reason = reason

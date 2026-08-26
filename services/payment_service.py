@@ -484,8 +484,8 @@ class PaymentService:
         payment = Payment(
             payment_number=payment_number,
             customer_id=customer.id,
-            amount=Decimal(str(amount)),
-            amount_aed=Decimal(str(amount)),
+            amount=Decimal(str(amount or 0)),
+            amount_aed=Decimal(str(amount or 0)),
             currency="AED",
             exchange_rate=1,
             payment_date=datetime.now(UTC),
@@ -494,11 +494,12 @@ class PaymentService:
             direction="incoming",
             payment_type="customer_payment",
             tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
+            branch_id=resolved_branch_id,
         )
         db.session.add(payment)
         db.session.flush()
 
-        customer.apply_receipt(Decimal(str(amount)))
+        customer.apply_receipt(Decimal(str(amount or 0)))
 
         return payment
 
@@ -987,6 +988,7 @@ class PaymentService:
         الصيغة: Receipts - Sales - Outgoing_Payments_to_customer (refunds)
         يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد بالفرع)."""
         from models import Payment as PaymentModel
+        from models.payment import payment_affects_balance
 
         if tenant_id is None:
             tenant_id = get_active_tenant_id()
@@ -997,10 +999,12 @@ class PaymentService:
         )
         receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
             Receipt.customer_id == customer_id,
+            payment_affects_balance(Receipt),
         )
         outgoing_total = db.session.query(db.func.sum(PaymentModel.amount_aed)).filter(
             PaymentModel.customer_id == customer_id,
             PaymentModel.direction == "outgoing",
+            payment_affects_balance(PaymentModel),
         )
         if tenant_id is not None:
             sales_total = sales_total.filter(Sale.tenant_id == tenant_id)
@@ -1024,6 +1028,7 @@ class PaymentService:
         الصيغة: Purchases - Outgoing_Payments + Incoming_Payments (refunds from supplier)
         """
         from models import Payment, Purchase
+        from models.payment import payment_affects_balance
 
         if tenant_id is None:
             tenant_id = get_active_tenant_id()
@@ -1035,10 +1040,12 @@ class PaymentService:
         outgoing_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == supplier_id,
             Payment.direction == "outgoing",
+            payment_affects_balance(Payment),
         )
         incoming_total = db.session.query(db.func.sum(Payment.amount_aed)).filter(
             Payment.supplier_id == supplier_id,
             Payment.direction == "incoming",
+            payment_affects_balance(Payment),
         )
         if tenant_id is not None:
             purchases_total = purchases_total.filter(Purchase.tenant_id == tenant_id)

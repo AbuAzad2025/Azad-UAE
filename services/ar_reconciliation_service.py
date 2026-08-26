@@ -62,39 +62,69 @@ class ARReconciliationService:
         if branch_id is not None:
             sales_q = sales_q.filter(Sale.branch_id == branch_id)
 
+        customer_ids_q = db.session.query(Customer.id).filter(Customer.customer_type.in_(customer_types))
+        if tenant_id is not None:
+            customer_ids_q = customer_ids_q.filter(Customer.tenant_id == int(tenant_id))
+
+        # القاعدة موحّدة مع الكشوفات ودفتر الأستاذ: الدفعة المؤكدة تؤثر،
+        # والشيك المعلق يؤثر فوراً (Dr شيكات تحت التحصيل / Cr ذمم)،
+        # والمرفوض (مرتد) لا أثر له.
+        payment_effective = db.or_(
+            Payment.payment_confirmed,
+            db.and_(Payment.payment_method == "cheque", Payment.rejection_reason.is_(None)),
+        )
+        receipt_effective = db.or_(
+            Receipt.payment_confirmed,
+            db.and_(Receipt.payment_method == "cheque", Receipt.rejection_reason.is_(None)),
+        )
+
+        # سندات القبض تُخصم مرة واحدة فقط (ليست لكل فاتورة)، ويُستثنى منها ما
+        # وزّع فعلياً على فواتير عبر دفعات مرتبطة تحمل رقم السند كمرجع.
+        refs_q = db.session.query(Payment.reference_number).filter(
+            Payment.reference_number.isnot(None),
+            Payment.direction == "incoming",
+            Payment.customer_id.in_(customer_ids_q),
+            payment_effective,
+        )
+        if tenant_id is not None:
+            refs_q = refs_q.filter(Payment.tenant_id == int(tenant_id))
+        if branch_id is not None:
+            refs_q = refs_q.filter(Payment.branch_id == branch_id)
+
+        receipts_q = (
+            db.session.query(func.coalesce(func.sum(Receipt.amount_aed), 0))
+            .filter(
+                Receipt.customer_id.in_(customer_ids_q),
+                receipt_effective,
+                Receipt.receipt_number.notin_(refs_q),
+            )
+        )
+        if tenant_id is not None:
+            receipts_q = receipts_q.filter(Receipt.tenant_id == int(tenant_id))
+        if branch_id is not None:
+            receipts_q = receipts_q.filter(Receipt.branch_id == branch_id)
+
+        unallocated_receipts = Decimal(str(receipts_q.scalar() or 0))
+
         total_unpaid = Decimal("0")
-        for sale_id, amount_aed, customer_id in sales_q.all():
-            # القاعدة موحّدة مع الكشوفات ودفتر الأستاذ: الدفعة المؤكدة تؤثر،
-            # والشيك المعلق يؤثر فوراً (Dr شيكات تحت التحصيل / Cr ذمم)،
-            # والمرفوض (مرتد) لا أثر له.
+        for sale_id, amount_aed, _customer_id in sales_q.all():
             confirmed_payments = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
                 Payment.sale_id == sale_id,
-                db.or_(
-                    Payment.payment_confirmed,
-                    db.and_(Payment.payment_method == "cheque", Payment.rejection_reason.is_(None)),
-                ),
+                payment_effective,
                 Payment.direction == "incoming",
-            )
-            confirmed_receipts = db.session.query(func.coalesce(func.sum(Receipt.amount_aed), 0)).filter(
-                Receipt.customer_id == customer_id,
-                db.or_(
-                    Receipt.payment_confirmed,
-                    db.and_(Receipt.payment_method == "cheque", Receipt.rejection_reason.is_(None)),
-                ),
             )
             if tenant_id is not None:
                 confirmed_payments = confirmed_payments.filter(Payment.tenant_id == int(tenant_id))
-                confirmed_receipts = confirmed_receipts.filter(Receipt.tenant_id == int(tenant_id))
             if branch_id is not None:
                 confirmed_payments = confirmed_payments.filter(Payment.branch_id == branch_id)
-                confirmed_receipts = confirmed_receipts.filter(Receipt.branch_id == branch_id)
 
-            paid = Decimal(str(confirmed_payments.scalar() or 0)) + Decimal(str(confirmed_receipts.scalar() or 0))
+            paid = Decimal(str(confirmed_payments.scalar() or 0))
             due = Decimal(str(amount_aed or 0)) - paid
             if due > Decimal("0"):
                 total_unpaid += due
 
-        return total_unpaid
+        total_unpaid -= unallocated_receipts
+        return max(total_unpaid, Decimal("0"))
 
     @staticmethod
     def build_report(tenant_id: int | None = None, branch_id: int | None = None) -> dict:
@@ -117,7 +147,7 @@ class ARReconciliationService:
                     "gl_balance": float(gl_bal),
                     "ops_balance": float(ops_bal),
                     "difference": float(diff),
-                    "matched": abs(diff) <= Decimal("1.00"),
+                    "matched": abs(diff) <= Decimal("0.01"),
                 }
             )
             total_gl += gl_bal
