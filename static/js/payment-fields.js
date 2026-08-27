@@ -213,7 +213,7 @@
 		const fields = methodConfig.fields;
 
 		if (fields.length === 0) {
-			$container.html(`
+			$(containerSelector).html(`
         <div class="alert alert-success">
           <i class="${methodConfig.icon} mr-2"></i>
           <strong>${methodConfig.title_ar}</strong> - لا توجد حقول إضافية مطلوبة
@@ -270,7 +270,7 @@
       </div>
     `;
 
-		$container.html(html);
+		$(containerSelector).html(html);
 	}
 
 	// =====================================
