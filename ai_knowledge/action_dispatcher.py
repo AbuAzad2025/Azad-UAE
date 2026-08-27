@@ -12,6 +12,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
+from uuid import uuid4
 
 from flask_login import current_user
 from sqlalchemy import func
@@ -374,7 +375,7 @@ class ActionDispatcher:
                             "name": p.name,
                             "sku": p.sku,
                             "stock": float(p.current_stock or 0),
-                            "min": float(p.min_stock_level or 0),
+                            "min": float(p.min_stock_alert or 0),
                         }
                         for p in products
                     ]
@@ -393,13 +394,13 @@ class ActionDispatcher:
                 low = Product.query.filter(
                     Product.tenant_id == tid,
                     Product.is_active,
-                    Product.current_stock <= Product.min_stock_level,
+                    Product.current_stock <= Product.min_stock_alert,
                 ).all()
                 data = [
                     {
                         "name": p.name,
                         "stock": float(p.current_stock or 0),
-                        "min": float(p.min_stock_level or 0),
+                        "min": float(p.min_stock_alert or 0),
                     }
                     for p in low[:20]
                 ]
@@ -649,6 +650,10 @@ class ActionDispatcher:
                         )
                 expense = Expense(
                     tenant_id=tid,
+                    # expense_number is NOT NULL and unique per tenant; the AI
+                    # path previously omitted it so every insert died in the
+                    # error funnel (NotNullViolation). Generate when absent.
+                    expense_number=str(args.get("expense_number") or f"AIE-{uuid4().hex[:12].upper()}"),
                     description=description,
                     amount=amount,
                     currency="AED",
@@ -657,6 +662,7 @@ class ActionDispatcher:
                     payment_method=args.get("method", "cash"),
                     category_id=category_id,
                     branch_id=args.get("branch_id"),
+                    user_id=getattr(current_user, "id", None),
                 )
                 db.session.add(expense)
                 db.session.flush()

@@ -208,14 +208,16 @@ class TestConfig:
             "url": _TEST_DATABASE_URL,
             "poolclass": NullPool,
             "pool_pre_ping": True,
-            "connect_args": {"connect_timeout": 3},
+            "connect_args": {"connect_timeout": 10},
         },
     }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "poolclass": NullPool,
         "pool_pre_ping": True,
-        "connect_args": {"connect_timeout": 3},
+        # 3s proved flaky on hosts whose Postgres is still settling after
+        # crash-recovery fsyncs; new-backend spawn occasionally exceeded it.
+        "connect_args": {"connect_timeout": 10},
     }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"

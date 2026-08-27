@@ -1125,7 +1125,7 @@ class TestActionDispatcherWave3:
     def test_check_stock_paths(self, permitted, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher
 
-        product = MagicMock(name="Low", current_stock=Decimal("1"), min_stock_level=Decimal("5"))
+        product = MagicMock(name="Low", current_stock=Decimal("1"), min_stock_alert=Decimal("5"))
         with (
             permitted[0],
             permitted[1],
@@ -1136,7 +1136,9 @@ class TestActionDispatcherWave3:
             Product.tenant_id = _Col()
             Product.is_active = _Col()
             Product.current_stock = _Col()
-            Product.min_stock_level = _Col()
+            # min_stock_alert is the real column the dispatcher reads for
+            # low-stock detection (fixed from min_stock_level).
+            Product.min_stock_alert = _Col()
             Product.query.filter.return_value.all.return_value = [product]
             low = action_dispatcher.dispatch("check_stock", {})
             assert low.success is True
