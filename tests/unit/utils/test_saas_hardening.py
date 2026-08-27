@@ -183,7 +183,9 @@ class TestDynamicResourceLimits:
             with pytest.raises(TenantLimitError):
                 check_sales_monthly_limit()
 
-    def test_enforce_resource_limit_decorator_returns_403(self, app, db_session, sample_tenant, sample_user):
+    def test_enforce_resource_limit_decorator_returns_403(
+        self, app, db_session, sample_tenant, sample_user, sample_customer
+    ):
         from datetime import datetime
         from decimal import Decimal
 
@@ -199,7 +201,7 @@ class TestDynamicResourceLimits:
             s = Sale(
                 tenant_id=sample_tenant.id,
                 sale_number=f"SLS-{uuid.uuid4().hex[:8]}",
-                customer_id=1,
+                customer_id=sample_customer.id,
                 seller_id=sample_user.id,
                 sale_date=datetime.now(UTC),
                 subtotal=Decimal("100.000"),
