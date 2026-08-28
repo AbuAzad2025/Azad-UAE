@@ -37,6 +37,7 @@ BACKEND_CATEGORIES = [
 _SCRIPT_RE = re.compile(r'<script[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 _INCLUDE_RE = re.compile(r'{%-?\s*(?:include|extends|from)\s+["\']([^"\']+)["\']', re.IGNORECASE)
 _JS_URLFOR_RE = re.compile(r"""url_for\(['"]static['"],\s*filename=['"](js/[^'"]+)['"]""")
+_JS_DIST_URL_RE = re.compile(r"""dist_url\(['"](js/[^'"]+)['"]""")
 
 
 def _norm(p: str) -> str:
@@ -212,6 +213,8 @@ def get_js_coverage(rendered_templates: set[str]):
                 js_rel = m[len("static/js/") :]
                 referenced.add(_norm(js_rel))
         for m in _JS_URLFOR_RE.findall(content):
+            referenced.add(_norm(m))
+        for m in _JS_DIST_URL_RE.findall(content):
             referenced.add(_norm(m))
     return all_js, referenced
 
