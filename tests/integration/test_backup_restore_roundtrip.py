@@ -14,12 +14,13 @@ from services.backup_service import BackupService
 from utils.db_safety import atomic_transaction
 
 
-class TestBackupRestoreRoundtrip:
-    @pytest.fixture(scope="class")
-    def backup_key(self):
-        """32-byte encryption key for backup round-trip tests."""
-        return "backup-test-key-32-chars-long!!"
+@pytest.fixture(scope="class")
+def backup_key():
+    """32-byte encryption key for backup round-trip tests."""
+    return "backup-test-key-32-chars-long!!"
 
+
+class TestBackupRestoreRoundtrip:
     def _admin_database_url(self, url: str) -> str:
         parsed = urlparse(url)
         return urlunparse(parsed._replace(path="/postgres"))
