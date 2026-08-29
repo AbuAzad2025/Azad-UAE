@@ -232,6 +232,7 @@ def update_exchange_rates():
 @celery.task
 def train_neural_models():
     from ai_knowledge.neural_engine import get_neural_engine
+
     from app import create_app
 
     app = create_app()
