@@ -67,7 +67,7 @@ def _origin_from_referer(referer: str) -> str | None:
 def _split_origins(value) -> set[str]:
     if not value:
         return set()
-    raw_items = value if isinstance(value, (list, tuple, set)) else str(value).split(",")
+    raw_items = value if isinstance(value, list | tuple | set) else str(value).split(",")
     return {str(item).strip().rstrip("/") for item in raw_items if str(item).strip()}
 
 

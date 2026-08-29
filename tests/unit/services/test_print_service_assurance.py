@@ -126,7 +126,7 @@ class TestRenderPdf:
         with app.app_context():
             try:
                 PrintService.render_pdf("t.html")
-                assert False, "Expected RuntimeError"
+                raise AssertionError("Expected RuntimeError")
             except RuntimeError as e:
                 assert "WeasyPrint" in str(e)
 

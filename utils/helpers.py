@@ -208,7 +208,7 @@ def format_currency(amount, currency=None, lang=None):
         amount = Decimal("0")
 
     try:
-        if isinstance(amount, (int, float)):
+        if isinstance(amount, int | float):
             amount = Decimal(str(amount))
 
         settings_currency, settings_symbol, settings_position, settings_decimals = _resolve_format_currency_settings()

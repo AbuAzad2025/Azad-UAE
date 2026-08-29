@@ -19,7 +19,6 @@ _INTROSPECTION_RE = re.compile(r"__schema\b|__type\s*\(", re.IGNORECASE)
 
 
 def _mutations_allowed():
-
     app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
 
     debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
@@ -28,7 +27,6 @@ def _mutations_allowed():
 
 
 def _is_production_env() -> bool:
-
     app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
 
     debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
@@ -37,7 +35,6 @@ def _is_production_env() -> bool:
 
 
 def _query_depth(query: str) -> int:
-
     depth = 0
 
     max_depth = 0
@@ -55,7 +52,6 @@ def _query_depth(query: str) -> int:
 
 
 def _is_introspection_query(query: str) -> bool:
-
     normalized = " ".join(query.split())
 
     return bool(_INTROSPECTION_RE.search(normalized))
@@ -65,7 +61,6 @@ def _is_introspection_query(query: str) -> bool:
 @login_required
 @limiter.limit("60 per minute")
 def graphql_query():
-
     data = request.get_json(silent=True) or {}
 
     query = (data.get("query") or "").strip()
@@ -122,7 +117,6 @@ def graphql_query():
 @graphql_bp.route("/playground", methods=["GET"])
 @login_required
 def graphql_playground():
-
     if not _mutations_allowed():
         abort(404)
 

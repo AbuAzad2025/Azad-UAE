@@ -1233,7 +1233,7 @@ class TestSecondarySweepWave5:
 
         matcher = SemanticMatcher()
         intent, confidence, scores = matcher.find_best_intent("مبيعات اليوم")
-        assert isinstance(intent, (str, type(None)))
+        assert isinstance(intent, str | type(None))
         assert isinstance(confidence, float)
 
     def test_advanced_laws_and_security(self):

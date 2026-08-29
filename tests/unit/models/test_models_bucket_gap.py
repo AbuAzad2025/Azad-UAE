@@ -76,7 +76,6 @@ class TestDocumentSequence:
         [("year", "2026"), ("monthly", "2026-08"), ("daily", "2026-08-27"), ("never", "")],
     )
     def test_period_key_matrix(self, sample_tenant, mode, expected_period):
-
         seq = self._seq(sample_tenant, "{counter}", reset=mode if mode != "never" else "never")
         key = seq._get_period_key(datetime(2026, 8, 27, tzinfo=UTC))
         assert key == expected_period
@@ -127,7 +126,6 @@ class TestBudgetCheck:
         return accounts
 
     def test_inactive_budget_allows_everything(self, db_session, sample_tenant):
-
         b = self._budget(sample_tenant, status="closed")
         result = b.check_budget(1, amount=Decimal("999999"))
         assert result["allowed"] is True and result["enforcement"] == "off"
@@ -229,7 +227,7 @@ class TestDashboardModels:
         db.session.add(layout)
         db.session.flush()
         fresh = db.session.get(UserDashboardLayout, layout.id)
-        assert isinstance(fresh.layout_json, (list, dict))
+        assert isinstance(fresh.layout_json, list | dict)
         assert "<UserDashboardLayout" in repr(fresh)
 
 

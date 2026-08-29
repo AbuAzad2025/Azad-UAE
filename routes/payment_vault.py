@@ -154,7 +154,7 @@ def _reject_stale_webhook_timestamp(data: dict | None) -> tuple | None:
     if not ts_str:
         return None
     try:
-        if isinstance(ts_str, (int, float)):
+        if isinstance(ts_str, int | float):
             ts = datetime.fromtimestamp(ts_str, tz=UTC)
         else:
             ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))

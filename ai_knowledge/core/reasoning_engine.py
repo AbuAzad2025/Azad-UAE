@@ -262,7 +262,7 @@ class ReasoningEngine:
         verification_notes = []
 
         # التحقق من الأسعار
-        if isinstance(solution, (int, float, Decimal)):
+        if isinstance(solution, int | float | Decimal):
             if solution <= 0:
                 is_valid = False
                 confidence = 0.0
@@ -290,7 +290,7 @@ class ReasoningEngine:
         """توليد حلول بديلة"""
         alternatives = []
 
-        if isinstance(main_solution, (int, float)):
+        if isinstance(main_solution, int | float):
             # حلول بديلة للأسعار
             alternatives.append(
                 {

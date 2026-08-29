@@ -33,7 +33,6 @@ class PayrollService:
 
     @staticmethod
     def create_employee(data):
-
         branch_id = data.get("branch_id")
 
         if not branch_id:
@@ -66,7 +65,6 @@ class PayrollService:
 
     @staticmethod
     def create_advance(employee_id, amount, description, user_id, actor_user=None):
-
         employee = Employee.query.get_or_404(employee_id)
 
         tenant_id = PayrollService._require_employee_tenant_id(employee)
@@ -154,7 +152,6 @@ class PayrollService:
         user_id,
         actor_user=None,
     ):
-
         employee = Employee.query.get_or_404(employee_id)
 
         tenant_id = PayrollService._require_employee_tenant_id(employee)

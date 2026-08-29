@@ -68,7 +68,7 @@ class TestKnowledgeSources:
         assert mgr.fetch_exchange_rates() is not None
 
     def test_learning_resources(self):
-        assert isinstance(get_learning_resources("accounting"), (list, dict))
+        assert isinstance(get_learning_resources("accounting"), list | dict)
 
 
 class TestLearningSystem:

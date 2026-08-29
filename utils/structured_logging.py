@@ -45,7 +45,7 @@ def _resolve_id(value):
     """Safely extract a numeric ID from a value that might be a model object."""
     if value is None:
         return None
-    if isinstance(value, (int, str)):
+    if isinstance(value, int | str):
         try:
             return int(value)
         except (ValueError, TypeError):

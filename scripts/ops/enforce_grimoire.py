@@ -536,7 +536,7 @@ def check_function_length(root: Path, max_lines: int = 80) -> Iterator[Violation
             continue
 
         for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
             if node.end_lineno is None:
                 continue

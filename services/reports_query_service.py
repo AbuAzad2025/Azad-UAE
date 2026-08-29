@@ -100,14 +100,12 @@ class ReportsQueryService:
 
     @staticmethod
     def supplier_in_branch_scope(record_id):
-
         return bool(
             db.session.query(ReportsQueryService._scoped_supplier_query().filter_by(id=record_id).exists()).scalar()
         )
 
     @staticmethod
     def customer_in_branch_scope(record_id):
-
         return bool(
             db.session.query(ReportsQueryService._scoped_customer_query().filter_by(id=record_id).exists()).scalar()
         )

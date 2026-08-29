@@ -242,7 +242,7 @@ def _serialize_row(item: dict[str, Any]) -> dict[str, Any]:
     for key, val in list(item.items()):
         if hasattr(val, "isoformat"):
             item[key] = val.isoformat()
-        elif isinstance(val, (bytes, bytearray)):
+        elif isinstance(val, bytes | bytearray):
             item[key] = val.hex()
     return item
 

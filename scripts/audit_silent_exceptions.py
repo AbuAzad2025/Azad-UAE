@@ -98,7 +98,7 @@ def _handler_stats(handler: ast.ExceptHandler) -> _HandlerVisitor:
 
 def _is_swallow_only(handler: ast.ExceptHandler) -> bool:
     return all(
-        isinstance(stmt, (ast.Pass, ast.Continue))
+        isinstance(stmt, ast.Pass | ast.Continue)
         or (isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant) and stmt.value.value is Ellipsis)
         for stmt in handler.body
     )
@@ -112,7 +112,7 @@ def _returns_constant(handler: ast.ExceptHandler) -> bool:
                 return True
             if isinstance(value, ast.Constant) and value.value in (None, False):
                 return True
-            if isinstance(value, (ast.List, ast.Dict, ast.Set)) and not getattr(
+            if isinstance(value, ast.List | ast.Dict | ast.Set) and not getattr(
                 value, "elts", getattr(value, "keys", [])
             ):
                 return True

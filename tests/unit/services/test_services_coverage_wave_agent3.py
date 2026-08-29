@@ -523,20 +523,17 @@ class TestGlAutoValidationBranches:
         return handlers[model_name][0]
 
     def test_purchase_negative_amount_raises_error(self):
-
         target = MagicMock(purchase_number="P-9", amount_aed=Decimal("-3"))
         with pytest.raises(ValueError, match="P-9"):
             self._handler_for("Purchase")(None, None, target)
 
     def test_purchase_validation_exception_propagates(self):
-
         target = MagicMock()
         type(target).amount_aed = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
         with pytest.raises(RuntimeError, match="boom"):
             self._handler_for("Purchase")(None, None, target)
 
     def test_receipt_negative_amount_raises_error(self):
-
         target = MagicMock(receipt_number="R-9", amount_aed=Decimal("-1"))
         with pytest.raises(ValueError, match="R-9"):
             self._handler_for("Receipt")(None, None, target)

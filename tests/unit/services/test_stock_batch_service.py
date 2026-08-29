@@ -136,7 +136,6 @@ class TestFefoCogsIntegration:
     def test_reverse_sale_restores_batch_at_original_cost(
         self, app, db_session, sample_tenant, sample_product, sample_warehouse, batches_on
     ):
-
         tid = sample_tenant.id
         StockService._update_wac_on_receipt(
             tid, sample_product.id, sample_warehouse.id, Decimal("10"), Decimal("10"), "purchase", 1

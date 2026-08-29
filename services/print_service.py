@@ -100,14 +100,6 @@ class PrintService:
             "filename_attr": None,
             "filename_prefix": "statement",
         },
-        "expense": {
-            "template": "expenses/print.html",
-            "model": "Expense",
-            "context_key": "expense",
-            "permission": "manage_expenses",
-            "filename_attr": "expense_number",
-            "filename_prefix": "expense",
-        },
         "advanced_ledger": {
             "template": "ledger/professional_printing.html",
             "model": None,  # no model, custom query
@@ -230,7 +222,9 @@ class PrintService:
             return pdf_bytes
         except ImportError:
             logger.warning("WeasyPrint not available, falling back to HTML-only response")
-            raise RuntimeError("PDF export requires WeasyPrint to be installed. Please install WeasyPrint for PDF generation.")
+            raise RuntimeError(
+                "PDF export requires WeasyPrint to be installed. Please install WeasyPrint for PDF generation."
+            )
         except Exception as e:
             logger.error("PDF generation failed: %s", e)
             current_app.logger.error("PDF generation error: %s", e)
@@ -244,11 +238,11 @@ class PrintService:
 
         if isinstance(value, Decimal):
             return float(value)
-        if isinstance(value, (datetime, date)):
+        if isinstance(value, datetime | date):
             return value.isoformat()
         if isinstance(value, dict):
             return {k: PrintService._json_safe(v) for k, v in value.items()}
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, list | tuple):
             return [PrintService._json_safe(v) for v in value]
         return value
 

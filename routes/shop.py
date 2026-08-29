@@ -48,7 +48,6 @@ def _shop_redirect_after_login(next_url, store):
 
 
 def _resolve_store(slug):
-
     store = StoreService.get_store_by_slug(slug)
 
     if not store:
@@ -64,7 +63,6 @@ def _closed_response(store, reason):
 
 
 def _require_open_store(store):
-
     if not StoreService.stores_globally_enabled():
         return _closed_response(store, "platform")
 
@@ -83,12 +81,10 @@ def _require_open_store(store):
 
 
 def _shop_account(store):
-
     return ShopCustomerAuthService.get_logged_in_account(store.tenant_id)
 
 
 def _require_shop_account(store, ctx):
-
     account = ctx.get("shop_account") or _shop_account(store)
 
     if not account:
@@ -100,7 +96,6 @@ def _require_shop_account(store, ctx):
 
 
 def _store_context(store):
-
     from services.store_pricing_service import StorePricingService
 
     tenant = db.session.get(Tenant, store.tenant_id)
@@ -138,7 +133,6 @@ def _store_context(store):
 
 
 def _require_shop_customer(store, next_url=None):
-
     if _shop_account(store):
         return None
 
@@ -148,7 +142,6 @@ def _require_shop_customer(store, next_url=None):
 
 
 def _whatsapp_digits(store) -> str:
-
     import re
 
     wa = (store.whatsapp or store.phone or "").strip()
@@ -180,7 +173,6 @@ def _track_cart_activity(store, account, session):
 
 @shop_bp.route("/<slug>/lang/<lang_code>")
 def set_lang(slug, lang_code):
-
     store = _resolve_store(slug)
 
     session["shop_lang"] = "en" if str(lang_code).lower().startswith("en") else "ar"
@@ -248,7 +240,6 @@ def wishlist_view(slug):
 @shop_bp.route("/<slug>/account/login", methods=["GET", "POST"])
 @limiter.limit("20 per minute", methods=["POST"])
 def account_login(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -286,7 +277,6 @@ def account_login(slug):
 @shop_bp.route("/<slug>/account/register", methods=["GET", "POST"])
 @limiter.limit("15 per minute", methods=["POST"])
 def account_register(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -327,7 +317,6 @@ def account_register(slug):
 
 @shop_bp.route("/<slug>/account/logout", methods=["POST"])
 def account_logout(slug):
-
     store = _resolve_store(slug)
 
     ShopCustomerAuthService.logout(session, store.tenant_id)
@@ -341,7 +330,6 @@ def account_logout(slug):
 
 @shop_bp.route("/<slug>/account/orders")
 def account_orders(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -371,7 +359,6 @@ def account_orders(slug):
 
 @shop_bp.route("/<slug>/account/orders/<int:order_id>")
 def account_order_detail(slug, order_id):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -406,7 +393,6 @@ def account_order_detail(slug, order_id):
 @shop_bp.route("/<slug>")
 @shop_bp.route("/<slug>/")
 def catalog(slug):
-
     store = _resolve_store(slug)
 
     for param in [
@@ -504,7 +490,6 @@ def api_search(slug):
 
 @shop_bp.route("/<slug>/p/<int:product_id>")
 def product_detail(slug, product_id):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -656,7 +641,6 @@ def newsletter_subscribe(slug):
 
 @shop_bp.route("/<slug>/cart")
 def cart_view(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -676,7 +660,6 @@ def cart_view(slug):
 @shop_bp.route("/<slug>/cart/add", methods=["POST"])
 @limiter.limit("30 per minute")
 def cart_add(slug):
-
     store = _resolve_store(slug)
 
     if _require_open_store(store):
@@ -744,7 +727,6 @@ def cart_add(slug):
 @shop_bp.route("/<slug>/cart/update", methods=["POST"])
 @limiter.limit("40 per minute")
 def cart_update(slug):
-
     store = _resolve_store(slug)
 
     if _require_open_store(store):
@@ -800,7 +782,6 @@ def cart_update(slug):
 @shop_bp.route("/<slug>/cart/remove/<int:product_id>", methods=["POST"])
 @limiter.limit("40 per minute")
 def cart_remove(slug, product_id):
-
     store = _resolve_store(slug)
 
     cart = StoreService.get_cart(session, store.tenant_id)
@@ -829,7 +810,6 @@ def cart_count(slug):
 @shop_bp.route("/<slug>/checkout", methods=["GET", "POST"])
 @limiter.limit("15 per minute", methods=["POST"])
 def checkout(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -987,7 +967,6 @@ def checkout(slug):
 
 @shop_bp.route("/<slug>/return-policy")
 def return_policy(slug):
-
     store = _resolve_store(slug)
 
     ctx = _store_context(store)
@@ -1024,7 +1003,6 @@ def quick_view(slug, product_id):
 
 @shop_bp.route("/<slug>/sitemap.xml")
 def store_sitemap(slug):
-
     from datetime import datetime
 
     from flask import Response
@@ -1081,7 +1059,6 @@ def store_robots(slug):
 @shop_bp.route("/<slug>/account/forgot-password", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
 def account_forgot_password(slug):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -1118,7 +1095,6 @@ def account_forgot_password(slug):
 @shop_bp.route("/<slug>/account/reset-password/<token>", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
 def account_reset_password(slug, token):
-
     store = _resolve_store(slug)
 
     blocked = _require_open_store(store)
@@ -1261,7 +1237,6 @@ def order_track(slug):
 
 @shop_bp.route("/<slug>/order/<token>")
 def order_confirmation(slug, token):
-
     store = _resolve_store(slug)
 
     ctx = _store_context(store)

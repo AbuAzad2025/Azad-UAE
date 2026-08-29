@@ -178,7 +178,6 @@ class TestPackageApply:
         assert sample_tenant.enable_reports is True
 
     def test_package_repr_and_dict(self, db_session):
-
         pkg = self._package()
         assert "<Package" in repr(pkg)
         d = pkg.to_dict()

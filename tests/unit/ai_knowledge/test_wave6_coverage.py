@@ -1225,7 +1225,7 @@ class TestWave6FinalPush:
 
         assert sk.get_model_info("Sale") or sk.get_model_info("sales")
         assert sk.get_model_info("unknown_model_xyz") is None
-        assert sk.get_permission_info("manage_sales") or isinstance(sk.get_permission_info("x"), (dict, type(None)))
+        assert sk.get_permission_info("manage_sales") or isinstance(sk.get_permission_info("x"), dict | type(None))
         assert sk.get_role_info("owner") or sk.get_role_info("seller")
         hits = sk.search_knowledge("tenant")
         assert isinstance(hits, list)

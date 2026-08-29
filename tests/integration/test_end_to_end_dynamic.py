@@ -1004,7 +1004,6 @@ class TestInvoicePrintEngineIsolation:
     """Verify print invoice route enforces tenant isolation, dynamic template, and dynamic currency."""
 
     def test_print_invoice_rejects_cross_tenant_access(self, app, db_session):
-
         t1 = _make_tenant(db_session, "T1", "t1", "USD")
         t2 = _make_tenant(db_session, "T2", "t2", "AED")
         b1 = _make_branch(db_session, t1.id, "B1", "B1")
@@ -1113,7 +1112,6 @@ class TestInvoicePrintEngineIsolation:
             assert "S-MAIN" in html
 
     def test_print_invoice_shows_correct_currency_not_hardcoded_aed(self, app, db_session):
-
         t = _make_tenant(db_session, "TUSD", "tusd", "USD")
         b = _make_branch(db_session, t.id, "Main", "MAIN")
         wh = _make_wh(db_session, t.id, b.id, True)

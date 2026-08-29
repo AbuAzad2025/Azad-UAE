@@ -348,6 +348,7 @@ def api_print_history():
 # CONSOLIDATED PRINT ROUTES — Unified entry points for all document printing
 # ═════════════════════════════════════════════════════════════════════
 
+
 @printing_bp.route("/customer-statement/<int:id>")
 @login_required
 @permission_required("manage_customers")
@@ -377,14 +378,15 @@ def print_expense(id):
 @permission_required("view_ledger")
 def print_advanced_ledger():
     """Print advanced ledger trial balance (professional printing)."""
-    tid = get_active_tenant_id(current_user)
+    from datetime import date, timedelta
 
     from models import GLAccount
     from models.invoice_settings import InvoiceSettings
     from utils.tenant_branding import get_print_header_context
-    from datetime import date, timedelta
 
-    accounts = GLAccount.query.filter_by(tenant_id=get_active_tenant_id(current_user), is_active=True, is_header=False).limit(20).all()
+    tid = get_active_tenant_id(current_user)
+
+    accounts = GLAccount.query.filter_by(tenant_id=tid, is_active=True, is_header=False).limit(20).all()
 
     trial_balance_data = []
     total_debit = total_credit = 0
@@ -402,12 +404,6 @@ def print_advanced_ledger():
             total_debit += balance if balance > 0 else 0
             total_credit += abs(balance) if balance < 0 else 0
 
-    from models.invoice_settings import InvoiceSettings
-    from utils.tenant_branding import get_print_header_context
-
-    print_branding = get_print_header_context()
-    settings = InvoiceSettings.get_active(user=current_user)
-
     return PrintService.render_print(
         "ledger/professional_printing.html",
         {
@@ -420,14 +416,13 @@ def print_advanced_ledger():
                 for item in [
                     {"account": a, "debit": d, "credit": c}
                     for a, d, c in zip(
-                        [a for a in accounts],
+                        accounts,
                         [a.get_balance() if a.get_balance() > 0 else 0 for a in accounts],
-                        [abs(a.get_balance()) if a.get_balance() < 0 else 0 for a in accounts]
+                        [abs(a.get_balance()) if a.get_balance() < 0 else 0 for a in accounts],
+                        strict=True,
                     )
                 ]
             ],
-            "total_debit": sum(a.get_balance() for a in accounts if a.get_balance() > 0),
-            "total_credit": sum(abs(a.get_balance()) for a in accounts if a.get_balance() < 0),
             "date_from": date.today() - timedelta(days=30),
             "date_to": date.today(),
             "print_branding": get_print_header_context(),

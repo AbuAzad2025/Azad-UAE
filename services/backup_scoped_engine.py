@@ -144,11 +144,11 @@ class ExportResult:
 
 
 def _json_default(val: Any) -> Any:
-    if isinstance(val, (datetime, date, time)):
+    if isinstance(val, datetime | date | time):
         return val.isoformat()
     if isinstance(val, Decimal):
         return str(val)
-    if isinstance(val, (bytes, bytearray)):
+    if isinstance(val, bytes | bytearray):
         return val.hex()
     if isinstance(val, UUID):
         return str(val)

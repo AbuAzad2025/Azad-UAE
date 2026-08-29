@@ -89,7 +89,6 @@ def _create_ctx(customer, seller, product, line_extra=None, **create_kw):
 
 class TestCreateSaleSerialBranches:
     def test_serial_status_not_available(self, app):
-
         customer, seller, product = _actors(has_serial_number=True)
         existing = MagicMock(status="sold", warehouse_id=1)
         with _create_ctx(customer, seller, product, {"serials": ["SN1"]}, expect_error=True) as (svc, _, _, _):
@@ -111,7 +110,6 @@ class TestCreateSaleSerialBranches:
                     )
 
     def test_serial_wrong_warehouse(self, app):
-
         customer, seller, product = _actors(has_serial_number=True)
         existing = MagicMock(status="available", warehouse_id=99)
         with _create_ctx(customer, seller, product, {"serials": ["SN1"]}, expect_error=True) as (svc, _, _, _):
@@ -214,7 +212,6 @@ class TestCreateSaleCommissionAndOptions:
         assert db_sess.add.called
 
     def test_cogs_resolve_exception_uses_line_cost(self, app):
-
         customer, seller, product = _actors()
         with _create_ctx(customer, seller, product) as (svc, stock, _, _):
             stock._resolve_cogs_unit_cost.side_effect = RuntimeError("no cost")
@@ -328,7 +325,6 @@ class TestCreateSaleCommissionAndOptions:
         assert sale is not None
 
     def test_sale_status_and_checkout_method(self, app):
-
         customer, seller, product = _actors()
         with _create_ctx(customer, seller, product) as (svc, _, _, _):
             sale = svc.create_sale(

@@ -51,10 +51,10 @@ class TestTenantIsolationHardening:
 
         def _fetch():
             db_row = db_session.get(Tenant, tenant_id)
-            if db_row is None or isinstance(db_row, (MagicMock, NonCallableMock)):
+            if db_row is None or isinstance(db_row, MagicMock | NonCallableMock):
                 db_session.expire_all()
                 db_row = db_session.get(Tenant, tenant_id)
-            if db_row is None or isinstance(db_row, (MagicMock, NonCallableMock)):
+            if db_row is None or isinstance(db_row, MagicMock | NonCallableMock):
                 db_row = Tenant.query.filter_by(id=tenant_id).first()
             return db_row
 
