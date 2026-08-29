@@ -1,13 +1,13 @@
 """Forms validation gap coverage — hits the 7 missed statements."""
+
 from __future__ import annotations
 
-import pytest
 from flask import Flask
 
 from forms.auth import LoginForm
 from forms.customer import CustomerForm
 from forms.payment import ReceiptForm
-from forms.product import ProductForm, ProductCategoryForm
+from forms.product import ProductCategoryForm, ProductForm
 from forms.purchase import PurchaseForm
 from forms.sale import SaleForm
 
