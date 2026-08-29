@@ -20,6 +20,7 @@ from flask import (
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
+from extensions import db
 from models.invoice_settings import InvoiceSettings
 from services.print_service import PrintService
 from utils.api_response import error_response, success_response
@@ -343,26 +344,122 @@ def api_print_history():
     )
 
 
-@printing_bp.route("/settings", methods=["GET", "POST"])
+# ═════════════════════════════════════════════════════════════════════
+# CONSOLIDATED PRINT ROUTES — Unified entry points for all document printing
+# ═════════════════════════════════════════════════════════════════════
+
+@printing_bp.route("/customer-statement/<int:id>")
+@login_required
+@permission_required("manage_customers")
+def print_customer_statement(id):
+    """Print customer statement (delegates to unified print handler)."""
+    return print_document("customer_statement", id=id)
+
+
+@printing_bp.route("/supplier-statement/<int:id>")
+@login_required
+@permission_required("manage_suppliers")
+def print_supplier_statement(id):
+    """Print supplier statement (delegates to unified print handler)."""
+    return print_document("supplier_statement", id=id)
+
+
+@printing_bp.route("/expense/<int:id>")
+@login_required
+@permission_required("manage_expenses")
+def print_expense(id):
+    """Print expense voucher (delegates to unified print handler)."""
+    return print_document("expense", id=id)
+
+
+@printing_bp.route("/advanced-ledger/professional-printing")
+@login_required
+@permission_required("view_ledger")
+def print_advanced_ledger():
+    """Print advanced ledger trial balance (professional printing)."""
+    tid = get_active_tenant_id(current_user)
+
+    from models import GLAccount
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+    from datetime import date, timedelta
+
+    accounts = GLAccount.query.filter_by(tenant_id=get_active_tenant_id(current_user), is_active=True, is_header=False).limit(20).all()
+
+    trial_balance_data = []
+    total_debit = total_credit = 0
+
+    for account in accounts:
+        balance = account.get_balance()
+        if balance != 0:
+            trial_balance_data.append(
+                {
+                    "account": account,
+                    "debit": balance if balance > 0 else 0,
+                    "credit": abs(balance) if balance < 0 else 0,
+                }
+            )
+            total_debit += balance if balance > 0 else 0
+            total_credit += abs(balance) if balance < 0 else 0
+
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+
+    print_branding = get_print_header_context()
+    settings = InvoiceSettings.get_active(user=current_user)
+
+    return PrintService.render_print(
+        "ledger/professional_printing.html",
+        {
+            "trial_balance_data": [
+                {
+                    "account": item["account"],
+                    "debit": item["debit"],
+                    "credit": item["credit"],
+                }
+                for item in [
+                    {"account": a, "debit": d, "credit": c}
+                    for a, d, c in zip(
+                        [a for a in accounts],
+                        [a.get_balance() if a.get_balance() > 0 else 0 for a in accounts],
+                        [abs(a.get_balance()) if a.get_balance() < 0 else 0 for a in accounts]
+                    )
+                ]
+            ],
+            "total_debit": sum(a.get_balance() for a in accounts if a.get_balance() > 0),
+            "total_credit": sum(abs(a.get_balance()) for a in accounts if a.get_balance() < 0),
+            "date_from": date.today() - timedelta(days=30),
+            "date_to": date.today(),
+            "print_branding": get_print_header_context(),
+            "settings": InvoiceSettings.get_active(user=current_user),
+        },
+        tenant_id=get_active_tenant_id(current_user),
+    )
+
+
+# ═════════════════════════════════════════════════════════════════════
+# SETTINGS
+# ════════════════════════════════════════════════════════════════════
 @login_required
 @admin_required
+@printing_bp.route("/settings", methods=["GET", "POST"])
 def print_settings():
     tid = get_active_tenant_id(current_user)
     settings = InvoiceSettings.get_active(tid)
 
     if request.method == "POST":
-        settings.paper_size = request.form.get("paper_size", "A4")
-        settings.orientation = request.form.get("orientation", "portrait")
-        settings.active_template = request.form.get("active_template", "modern")
-        settings.header_color = request.form.get("header_color", "#667eea")
-        settings.accent_color = request.form.get("accent_color", "#764ba2")
-        settings.show_logo = request.form.get("show_logo") == "on"
-        settings.enable_qr_code = request.form.get("enable_qr_code") == "on"
-        settings.enable_watermark = request.form.get("enable_watermark") == "on"
-        settings.show_terms = request.form.get("show_terms") == "on"
         with atomic_transaction("print_settings"):
-            pass
-        flash(gettext("تم حفظ إعدادات الطباعة"), "success")
-        return redirect(url_for("printing.print_settings"))
+            settings.paper_size = request.form.get("paper_size", "A4")
+            settings.orientation = request.form.get("orientation", "portrait")
+            settings.active_template = request.form.get("active_template", "modern")
+            settings.header_color = request.form.get("header_color", "#667eea")
+            settings.accent_color = request.form.get("accent_color", "#764ba2")
+            settings.show_logo = request.form.get("show_logo") == "on"
+            settings.enable_qr_code = request.form.get("enable_qr_code") == "on"
+            settings.enable_watermark = request.form.get("enable_watermark") == "on"
+            settings.show_terms = request.form.get("show_terms") == "on"
+            db.session.flush()
+            flash(gettext("تم حفظ إعدادات الطباعة"), "success")
+            return redirect(url_for("printing.print_settings"))
 
     return render_template("printing/settings.html", settings=settings)

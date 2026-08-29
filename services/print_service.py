@@ -84,6 +84,38 @@ class PrintService:
             "filename_attr": "payment_number",
             "filename_prefix": "payment",
         },
+        "customer_statement": {
+            "template": "customers/statement_print.html",
+            "model": "Customer",
+            "context_key": "customer",
+            "permission": "manage_customers",
+            "filename_attr": None,
+            "filename_prefix": "statement",
+        },
+        "supplier_statement": {
+            "template": "suppliers/statement_print.html",
+            "model": "Supplier",
+            "context_key": "supplier",
+            "permission": "manage_suppliers",
+            "filename_attr": None,
+            "filename_prefix": "statement",
+        },
+        "expense": {
+            "template": "expenses/print.html",
+            "model": "Expense",
+            "context_key": "expense",
+            "permission": "manage_expenses",
+            "filename_attr": "expense_number",
+            "filename_prefix": "expense",
+        },
+        "advanced_ledger": {
+            "template": "ledger/professional_printing.html",
+            "model": None,  # no model, custom query
+            "context_key": "trial_balance_data",
+            "permission": "view_ledger",
+            "filename_attr": None,
+            "filename_prefix": "trial_balance",
+        },
     }
 
     @staticmethod
@@ -197,14 +229,8 @@ class PrintService:
             logger.info("PDF generated via WeasyPrint: %s (%d bytes)", filename, len(pdf_bytes))
             return pdf_bytes
         except ImportError:
-            logger.warning("WeasyPrint not available, falling back to HTML-only PDF wrappers")
-            pdf_header = (
-                b'<!DOCTYPE html><html><head><meta charset="UTF-8">'
-                b"<style>body{font-family:sans-serif}</style></head><body>"
-            )
-            pdf_footer = b'<p style="text-align:center;color:#999;margin-top:2cm">'
-            pdf_footer += b"PDF export requires WeasyPrint to be installed.</p></body></html>"
-            return pdf_header + html.encode("utf-8") + pdf_footer
+            logger.warning("WeasyPrint not available, falling back to HTML-only response")
+            raise RuntimeError("PDF export requires WeasyPrint to be installed. Please install WeasyPrint for PDF generation.")
         except Exception as e:
             logger.error("PDF generation failed: %s", e)
             current_app.logger.error("PDF generation error: %s", e)

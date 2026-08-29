@@ -124,8 +124,11 @@ class TestRenderPdf:
         from services.print_service import PrintService
 
         with app.app_context():
-            result = PrintService.render_pdf("t.html")
-        assert b"WeasyPrint" in result
+            try:
+                PrintService.render_pdf("t.html")
+                assert False, "Expected RuntimeError"
+            except RuntimeError as e:
+                assert "WeasyPrint" in str(e)
 
     def test_generation_error_returns_html_bytes(self, app, mocker):
         mocker.patch("services.print_service.PrintService.render_print", return_value="<html/>")

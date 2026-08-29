@@ -36,12 +36,48 @@ function _withTimeout(promise, ms, message) {
 	});
 }
 
+function _encodeCp864(text) {
+	// Map common Arabic characters to CP864 (Arabic DOS encoding)
+	// This is a simplified mapping - in production, use a full CP864 table
+	const cp864Map = {
+		'ا': 0xC7, 'ب': 0xD6, 'ت': 0xD8, 'ث': 0xD9, 'ج': 0xDA, 'ح': 0xDC,
+		'خ': 0xDD, 'د': 0xDE, 'ذ': 0xDF, 'ر': 0xE0, 'ز': 0xE1,
+		'س': 0xE3, 'ش': 0xE4, 'ص': 0xE5, 'ض': 0xE6, 'ط': 0xE7,
+		'ظ': 0xE8, 'ع': 0xE9, 'غ': 0xEA, 'ف': 0xEB, 'ق': 0xEC,
+		'ك': 0xED, 'ل': 0xEE, 'م': 0xEF, 'ن': 0xF0, 'ه': 0xF1,
+		'و': 0xF2, 'ي': 0xF3, 'ة': 0xF4, 'ى': 0xF5, 'أ': 0xC5,
+		'إ': 0xC6, 'ؤ': 0xC8, 'ئ': 0xC9, 'ء': 0xCA, 'آ': 0xCB,
+		'٠': 0xA0, '١': 0xA1, '٢': 0xA2, '٣': 0xA3, '٤': 0xA4,
+		'٥': 0xA5, '٦': 0xA6, '٧': 0xA7, '٨': 0xA8, '٩': 0xA9,
+		'٠': 0xA0, '،': 0xAC, '؛': 0xBB, '؟': 0xBF, '٪': 0x25,
+		'٫': 0xB0, '٪': 0x25, '٪': 0x25,
+		' ': 0x20, '.': 0x2E, ':': 0x3A, '-': 0x2D,
+		'(': 0x28, ')': 0x29, '+': 0x2B, '/': 0x2F,
+		'0': 0x30, '1': 0x31, '2': 0x32, '3': 0x33, '4': 0x34,
+		'5': 0x35, '6': 0x36, '7': 0x37, '8': 0x38, '9': 0x39,
+	};
+	const bytes = [];
+	for (const ch of String(text)) {
+		if (cp864Map[ch] !== undefined) {
+			bytes.push(cp864Map[ch]);
+		} else if (ch.charCodeAt(0) < 128) {
+			// ASCII characters
+			bytes.push(ch.charCodeAt(0));
+		} else {
+			// Fallback for unmapped Arabic - use UTF-8 bytes as fallback
+			for (const b of new TextEncoder().encode(ch)) bytes.push(b);
+		}
+	}
+	bytes.push(0x0a); // LF
+	return bytes;
+}
+
 function _lineBytes(text, { align = "left", bold = false, double = false } = {}) {
 	const bytes = [];
 	bytes.push(ESC, 0x61, _ALIGN[align] ?? 0);
 	bytes.push(ESC, 0x45, bold ? 1 : 0);
 	bytes.push(GS, 0x21, double ? 0x11 : 0x00);
-	for (const b of new TextEncoder().encode(String(text))) bytes.push(b);
+	bytes.push(..._encodeCp864(text));
 	bytes.push(0x0a);
 	bytes.push(ESC, 0x45, 0, GS, 0x21, 0x00, ESC, 0x61, 0);
 	return bytes;

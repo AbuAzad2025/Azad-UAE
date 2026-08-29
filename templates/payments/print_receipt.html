@@ -114,31 +114,76 @@
     .btn-close { padding: 10px 30px; font-size: 1.1em; margin-right: 10px; }
 
     @media print {
-      html, body { width: auto !important; height: auto !important; overflow: visible !important; background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0 !important; margin: 0 !important; }
-      .receipt { width: 100% !important; max-width: none !important; height: auto !important; min-height: auto !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; padding: 8px !important; }
-      table { width: 100% !important; table-layout: auto !important; border-collapse: collapse !important; }
-      thead { display: table-header-group; } tfoot { display: table-footer-group; }
-      tr, .total, .totals, .footer, .qr-code, .notes, .signature { page-break-inside: avoid; break-inside: avoid; }
+      body { background: #fff; padding: 0; margin: 0; }
       .no-print { display: none !important; }
+      .receipt {
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 6mm 5mm !important;
+      }
+    }
+
+    /* Semantic CSS class names */
+    .logo-container { margin-bottom: 8px; }
+    .doc-title { margin: 8px 0 0 0; font-size: 14px; }
+    .amount-in-words { margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937; font-weight: 500; }
+    .qr-container { margin: 10px 0 6px 0; text-align: center; }
+    .qr-image { width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; }
+    .qr-label { font-size: 8px; color: #64748b; margin-top: 4px; }
+    .notes-section { margin-top: 20px; }
+    .print-meta { font-size: 0.9em; color: #666; }
+    .no-print-actions { text-align: center; margin-top: 20px; }
+    .btn-print { padding: 10px 30px; font-size: 1.1em; }
+    .btn-close { padding: 10px 30px; font-size: 1.1em; margin-right: 10px; }
+
+    @media print {
+      body { background: #fff; padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+      .receipt {
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 6mm 5mm !important;
+      }
+    }
+
+    /* Semantic CSS class names */
+    .logo-container { margin-bottom: 8px; }
+    .doc-title { margin: 8px 0 0 0; font-size: 14px; }
+    .amount-in-words { margin: 10px 0; padding: 8px 10px; background: #f8fafc; border-right: 4px solid #64748b; border-radius: 6px; font-size: 9px; color: #1f2937; font-weight: 500; }
+    .qr-container { margin: 10px 0 6px 0; text-align: center; }
+    .qr-image { width: 110px; height: 110px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px; background: #fff; }
+    .qr-label { font-size: 8px; color: #64748b; margin-top: 4px; }
+    .notes-section { margin-top: 20px; }
+    .print-meta { font-size: 0.9em; color: #666; }
+    .no-print-actions { text-align: center; margin-top: 20px; }
+    .btn-print { padding: 10px 30px; font-size: 1.1em; }
+    .btn-close { padding: 10px 30px; font-size: 1.1em; margin-right: 10px; }
+
+    @media print {
+      body { background: #fff; padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+      .receipt {
+        width: 100% !important;
+        height: auto !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 6mm 5mm !important;
+      }
     }
   </style>
 </head>
 <body class="receipt-print payment-receipt">
   <div class="receipt">
-    <div class="header">
-      <div class="logo-container">{% include 'partials/print_tenant_logo.html' %}</div>
-      <h1>{{ company.name_ar if company else (print_branding.company_name_ar if print_branding is defined else (tenant_name_ar or company_name_ar or '')) }}</h1>
-      <p>{{ company.address or '' }}</p>
-      <p>{{ _('الهاتف') }}: {{ company.phone or '' }}</p>
-      {% if print_branch %}
-      <p><strong>{{ _('الفرع') }}:</strong> {{ print_branch.name }}{% if print_branch.code %} ({{ print_branch.code }}){% endif %}</p>
-      {% if print_branch.address %}
-      <p><strong>{{ _('عنوان الفرع') }}:</strong> {{ print_branch.address }}</p>
-      {% endif %}
-      {% endif %}
-      <h2 class="doc-title">{{ _('سند صرف') if is_payment else _('سند قبض') }}</h2>
-    </div>
-
     {% set doc_title = (_('سند صرف') if is_payment else _('سند قبض')) %}
     {% set doc_number = doc_number or receipt.receipt_number or receipt.payment_number %}
     {% include 'partials/print_unified_banner.html' %}

@@ -4,7 +4,7 @@ from services.print_service import PrintService
 from utils.tenanting import tenant_get_or_404
 
 
-def _build_label_context(product, branch_id=None):
+def _build_label_context(product, branch_id=None, tenant_id=None):
     from models import ProductWarehouseCost
 
     cost = None
@@ -32,7 +32,7 @@ def get_product_labels_html(product_ids, tenant_id, branch_id=None):
     products = []
     for pid in product_ids:
         p = tenant_get_or_404(Product, pid, tenant_id)
-        products.append(_build_label_context(p, branch_id))
+        products.append(_build_label_context(p, branch_id, tenant_id))
     return PrintService.render_print(
         "printing/product_label.html",
         {"products": products},
@@ -41,7 +41,7 @@ def get_product_labels_html(product_ids, tenant_id, branch_id=None):
 
 
 def get_single_label_html(product, branch_id=None, tenant_id=None):
-    ctx = _build_label_context(product, branch_id)
+    ctx = _build_label_context(product, branch_id, tenant_id)
     return PrintService.render_print(
         "printing/product_label.html",
         {"products": [ctx]},
