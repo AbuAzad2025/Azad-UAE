@@ -61,9 +61,7 @@ class Sale(db.Model):
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True)
     seller_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    sales_rep_id = db.Column(
-        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
-    )
+    sales_rep_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     sales_rep_name = db.Column(db.String(200), nullable=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
     branch_id = db.Column(
@@ -188,10 +186,15 @@ class Sale(db.Model):
         if self.sales_rep_name:
             return self.sales_rep_name
         if self.sales_rep:
-            return self.sales_rep.get_display_name() if hasattr(self.sales_rep, "get_display_name") else self.sales_rep.username
+            return (
+                self.sales_rep.get_display_name()
+                if hasattr(self.sales_rep, "get_display_name")
+                else self.sales_rep.username
+            )
         if self.seller:
             return self.seller.get_display_name() if hasattr(self.seller, "get_display_name") else self.seller.username
         return None
+
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
     branch: Mapped["Branch | None"] = relationship("Branch", backref="sales", foreign_keys=[branch_id])
     lines: Mapped[list["SaleLine"]] = relationship("SaleLine", back_populates="sale", lazy="joined")
