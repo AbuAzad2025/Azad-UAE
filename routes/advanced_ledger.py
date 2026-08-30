@@ -41,56 +41,10 @@ def _accounts():
 @login_required
 @permission_required("view_ledger")
 def professional_printing():
-    """نظام الطباعة الاحترافي"""
-    trial_balance_data = []
-    accounts = _accounts().filter_by(is_active=True, is_header=False).limit(20).all()
+    """نظام الطباعة الاحترافي — موحد عبر printing facade."""
+    from routes.printing import print_advanced_ledger as facade_ledger
 
-    total_debit = total_credit = 0
-
-    for account in accounts:
-        balance = account.get_balance()
-        if balance != 0:
-            trial_balance_data.append(
-                {
-                    "account": account,
-                    "debit": balance if balance > 0 else 0,
-                    "credit": abs(balance) if balance < 0 else 0,
-                }
-            )
-            total_debit += balance if balance > 0 else 0
-            total_credit += abs(balance) if balance < 0 else 0
-
-    from models.invoice_settings import InvoiceSettings
-    from utils.tenant_branding import get_print_header_context
-
-    print_branding = get_print_header_context()
-    settings = InvoiceSettings.get_active(user=current_user)
-
-    trial_balance_json = [
-        {
-            "code": item["account"].code,
-            "full_name": item["account"].full_name,
-            "type_ar": item["account"].type_ar,
-            "debit": item["debit"],
-            "credit": item["credit"],
-            "balance": item["account"].get_balance(),
-        }
-        for item in trial_balance_data
-    ]
-
-    return render_template(
-        "ledger/professional_printing.html",
-        trial_balance_data=trial_balance_data,
-        trial_balance_json=trial_balance_json,
-        total_debit=total_debit,
-        total_credit=total_credit,
-        date_from=date.today() - timedelta(days=30),
-        date_to=date.today(),
-        date=date,
-        datetime=datetime,
-        print_branding=print_branding,
-        settings=settings,
-    )
+    return facade_ledger()
 
 
 @advanced_ledger_bp.route("/customs-taxes")

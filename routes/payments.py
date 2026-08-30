@@ -463,101 +463,11 @@ def view_payment(**kwargs):
 @login_required
 @permission_required("manage_payments")
 def print_payment(**kwargs):
-    """طباعة سند صرف - يستخدم نفس قالب طباعة سندات القبض"""
-    from models import Payment
+    """طباعة سند صرف — موحد عبر printing facade."""
+    from routes.printing import print_document
 
     record_id = kwargs.pop("id")
-    payment = tenant_get_or_404(Payment, record_id)
-    payment_branch_id = payment.branch_id
-    if not _in_scope_branch(payment_branch_id):
-        return render_template("errors/403.html"), 403
-    tid = getattr(payment, "tenant_id", None)
-    from utils.tenant_branding import get_print_header_context
-
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    print_branding = get_print_header_context(tid)
-    print_branch = PaymentService.get_print_branch(payment_branch_id, tid)
-    try:
-        default_currency = resolve_default_currency(tenant)
-    except Exception:
-        default_currency = get_system_default_currency()
-    print_user_name = (
-        payment.user.get_display_name("ar")
-        if payment.user and hasattr(payment.user, "get_display_name")
-        else (
-            payment.user.full_name
-            if payment.user and payment.user.full_name
-            else (payment.user.username if payment.user else "")
-        )
-    )
-    amount_in_words = number_to_arabic_words(float(payment.amount or 0), payment.currency or default_currency)
-    qr_data_url = ""
-    if settings and settings.enable_qr_code:
-        from services.document_verification_service import DocumentVerificationService
-
-        ver = DocumentVerificationService.get_or_create_verification("payment", payment.id, tid)
-        if ver:
-            ver_url = url_for("public.verify_document", token=ver.public_token, _external=True)
-            qr_data_url = generate_qr_data_url(ver_url)
-        else:
-            qr_data_url = generate_qr_data_url(
-                {
-                    "t": "payment",
-                    "n": payment.payment_number,
-                    "a": float(payment.amount or 0),
-                    "c": payment.currency or default_currency,
-                    "d": (payment.payment_date.strftime("%Y-%m-%d") if payment.payment_date else ""),
-                    "co": company.get("name_ar") or (tenant.name_ar if tenant else ""),
-                    "u": print_user_name,
-                    "b": print_branch.name if print_branch else "",
-                }
-            )
-    # ── Template resolution: respect active_template + ?template= override ──
-    from services.print_service import PrintService
-
-    requested_template = (request.args.get("template") or "").strip().lower()
-    template_path = PrintService.resolve_template("payment", tenant_id=tid, requested_template=requested_template)
-
-    ctx = {
-        "receipt": payment,
-        "payment": payment,
-        "is_payment": True,
-        "company": company,
-        "settings": settings,
-        "printed_at": datetime.now(),
-        "print_branch": print_branch,
-        "print_user_name": print_user_name,
-        "amount_in_words": amount_in_words,
-        "qr_data_url": qr_data_url,
-        "doc_number": payment.payment_number,
-        "print_branding": print_branding,
-        "print_tenant_id": tid,
-    }
-
-    ctx["available_templates"] = sorted(PrintService.RECEIPT_TEMPLATES)
-    ctx["current_template"] = requested_template or (
-        settings.active_template if settings and settings.active_template else "modern"
-    )
-
-    try:
-        return render_template(template_path, **ctx)
-    except Exception as e:
-        import sys
-        import traceback
-
-        sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render payment template {template_path}, falling back: {e}\n")
-        traceback.print_exc()
-        try:
-            LoggingCore.log_error(
-                message=str(e),
-                category="PAYMENTS",
-                source="routes.payments.print_payment.render_template",
-                level="WARNING",
-                exception=e,
-            )
-        except Exception:
-            current_app.logger.exception("Failed to log payment template rendering error")
-        return render_template("payments/print_receipt.html", **ctx)
+    return print_document("payment", id=record_id)
 
 
 @payments_bp.route("/payments/<int:id>/archive", methods=["POST"])

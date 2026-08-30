@@ -353,16 +353,280 @@ def api_print_history():
 @login_required
 @permission_required("manage_customers")
 def print_customer_statement(id):
-    """Print customer statement (delegates to unified print handler)."""
-    return print_document("customer_statement", id=id)
+    """Print customer statement — unified facade with full transaction logic."""
+    from datetime import datetime
+
+    from models import Customer
+    from services.customer_service import CustomerService
+    from utils.tenanting import tenant_get_or_404
+
+    record_id = id
+    customer = tenant_get_or_404(Customer, record_id)
+    # Use the same scope check as legacy customers route
+    from routes.customers import _customer_in_scope
+
+    if not _customer_in_scope(record_id):
+        return render_template("errors/403.html"), 403
+
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+    tid = get_active_tenant_id(current_user)
+
+    opening_balance = 0.0
+    if date_from:
+        opening_balance = CustomerService.statement_opening_balance(record_id, tid, date_from)
+
+    records = CustomerService.statement_records(record_id, tid, date_from, date_to, branch_id=branch_scope_id())
+
+    transactions = []
+    for s in records["sales"]:
+        transactions.append(
+            {
+                "date": s.sale_date,
+                "type": "sale",
+                "reference": s.sale_number,
+                "debit": float(s.amount_aed or 0),
+                "credit": 0,
+                "description": gettext("فاتورة بيع"),
+            }
+        )
+    for p in records["payments"]:
+        amt = float(p.amount_aed or 0)
+        if p.direction == "incoming":
+            transactions.append(
+                {
+                    "date": p.payment_date,
+                    "type": "payment",
+                    "reference": p.payment_number or p.reference_number or "",
+                    "debit": 0,
+                    "credit": amt,
+                    "description": gettext("دفعة"),
+                }
+            )
+        else:
+            transactions.append(
+                {
+                    "date": p.payment_date,
+                    "type": "payment",
+                    "reference": p.payment_number or p.reference_number or "",
+                    "debit": amt,
+                    "credit": 0,
+                    "description": gettext("استرداد"),
+                }
+            )
+    for r in records["receipts"]:
+        transactions.append(
+            {
+                "date": r.receipt_date,
+                "type": "receipt",
+                "reference": r.receipt_number,
+                "debit": 0,
+                "credit": float(r.amount_aed or 0),
+                "description": gettext("سند قبض"),
+            }
+        )
+    for ret in records["returns"]:
+        transactions.append(
+            {
+                "date": ret.return_date,
+                "type": "return",
+                "reference": ret.return_number,
+                "debit": 0,
+                "credit": float(ret.amount_aed or 0),
+                "description": gettext("مرتجع مبيعات"),
+            }
+        )
+
+    transactions.sort(key=lambda x: x["date"] or datetime.min)
+
+    if date_from:
+        transactions.insert(
+            0,
+            {
+                "date": date_from,
+                "type": "opening",
+                "reference": "",
+                "debit": 0,
+                "credit": 0,
+                "balance": opening_balance,
+                "description": gettext("الرصيد الافتتاحي"),
+            },
+        )
+
+    running = opening_balance if date_from else 0
+    for t in transactions:
+        if t["type"] != "opening":
+            running += t["credit"] - t["debit"]
+        t["balance"] = running
+
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    branding = get_print_header_context(tid)
+
+    eff_tid = tid or getattr(customer, "tenant_id", None)
+    PrintService.create_snapshot(eff_tid, "customer_statement", record_id, reason="print", document=customer)
+    PrintService.audit_print(eff_tid, "customer_statement", record_id, action="print")
+
+    return PrintService.render_print(
+        "customers/statement_print.html",
+        {
+            "customer": customer,
+            "transactions": transactions,
+            "final_balance": running,
+            "filters": {"date_from": date_from or "", "date_to": date_to or ""},
+            "settings": settings,
+            "company": company,
+            "print_branding": branding,
+            "print_tenant_id": eff_tid,
+            "tenant": tenant,
+        },
+        tenant_id=eff_tid,
+    )
 
 
 @printing_bp.route("/supplier-statement/<int:id>")
 @login_required
 @permission_required("manage_suppliers")
 def print_supplier_statement(id):
-    """Print supplier statement (delegates to unified print handler)."""
-    return print_document("supplier_statement", id=id)
+    """Print supplier statement — unified facade with full transaction logic."""
+    from datetime import datetime
+
+    from sqlalchemy import func
+
+    from models import Payment, Purchase, PurchaseReturn, Supplier
+    from services.supplier_service import SupplierService
+    from utils.tenanting import tenant_get_or_404
+
+    record_id = id
+    supplier = tenant_get_or_404(Supplier, record_id)
+    from routes.suppliers import _supplier_in_scope
+
+    if not _supplier_in_scope(record_id):
+        return render_template("errors/403.html"), 403
+
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+    tid = get_active_tenant_id(current_user)
+
+    purchases_q, payments_q, returns_q = SupplierService.print_statement_queries(
+        record_id, tenant_id=tid, branch_id=branch_scope_id()
+    )
+
+    opening_balance = SupplierService.preperiod_opening_balance(record_id, date_from, tenant_id=tid)
+    if date_from:
+        purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
+        returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) >= date_from)
+    if date_to:
+        purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) <= date_to)
+        payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
+        returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) <= date_to)
+
+    transactions = []
+    for p_ in purchases_q.order_by(Purchase.purchase_date.asc()).all():
+        transactions.append(
+            {
+                "date": p_.purchase_date,
+                "type": "purchase",
+                "reference": p_.purchase_number,
+                "debit": float(p_.amount_aed or 0),
+                "credit": 0,
+                "description": gettext("فاتورة شراء"),
+            }
+        )
+    for pm in payments_q.order_by(Payment.payment_date.asc()).all():
+        amt = float(pm.amount_aed or 0)
+        if pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason):
+            if pm.direction == "incoming":
+                transactions.append(
+                    {
+                        "date": pm.payment_date,
+                        "type": "refund",
+                        "reference": pm.payment_number or "",
+                        "debit": amt,
+                        "credit": 0,
+                        "description": gettext("استرداد من المورد"),
+                    }
+                )
+            else:
+                transactions.append(
+                    {
+                        "date": pm.payment_date,
+                        "type": "payment",
+                        "reference": pm.payment_number or "",
+                        "debit": 0,
+                        "credit": amt,
+                        "description": gettext("دفعة"),
+                    }
+                )
+    for pr in returns_q.order_by(PurchaseReturn.return_date.asc()).all():
+        transactions.append(
+            {
+                "date": pr.return_date,
+                "type": "return",
+                "reference": pr.return_number,
+                "debit": 0,
+                "credit": float(pr.amount_aed or 0),
+                "description": gettext("مرتجع مشتريات"),
+            }
+        )
+
+    def _sort_key(t):
+        d = t.get("date")
+        if d is None:
+            return datetime.min
+        if isinstance(d, datetime):
+            return d.replace(tzinfo=None) if d.tzinfo else d
+        return datetime(d.year, d.month, d.day)
+
+    transactions.sort(key=_sort_key)
+
+    if date_from:
+        transactions.insert(
+            0,
+            {
+                "date": date_from,
+                "type": "opening",
+                "reference": "",
+                "debit": 0,
+                "credit": 0,
+                "balance": opening_balance,
+                "description": gettext("الرصيد الافتتاحي"),
+            },
+        )
+
+    running = opening_balance if date_from else 0
+    for t in transactions:
+        if t["type"] != "opening":
+            running += t["credit"] - t["debit"]
+        t["balance"] = running
+
+    from models.invoice_settings import InvoiceSettings
+    from utils.tenant_branding import get_print_header_context
+
+    tenant, settings, company = InvoiceSettings.company_print_context(tid)
+    branding = get_print_header_context(tid)
+    eff_tid = tid or getattr(supplier, "tenant_id", None)
+    PrintService.create_snapshot(eff_tid, "supplier_statement", record_id, reason="print", document=supplier)
+    PrintService.audit_print(eff_tid, "supplier_statement", record_id, action="print")
+
+    return PrintService.render_print(
+        "suppliers/statement_print.html",
+        {
+            "supplier": supplier,
+            "transactions": transactions,
+            "final_balance": running,
+            "filters": {"date_from": date_from or "", "date_to": date_to or ""},
+            "settings": settings,
+            "company": company,
+            "print_branding": branding,
+            "print_tenant_id": eff_tid,
+            "tenant": tenant,
+        },
+        tenant_id=eff_tid,
+    )
 
 
 @printing_bp.route("/expense/<int:id>")

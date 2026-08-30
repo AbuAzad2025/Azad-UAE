@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from flask import (
@@ -306,18 +306,11 @@ def view(**kwargs):
 @login_required
 @permission_required("manage_expenses")
 def print_expense(**kwargs):
+    """طباعة سند مصروف — موحد عبر printing facade."""
+    from routes.printing import print_expense as facade_print_expense
+
     record_id = kwargs.pop("id")
-    expense = tenant_get_or_404(Expense, record_id)
-    if not _expense_in_scope(expense):
-        return render_template("errors/403.html"), 403
-    tid = getattr(expense, "tenant_id", None)
-
-    from services.print_service import PrintService
-
-    ctx = PrintService._get_tenant_context(tid)
-    ctx.update(PrintService._user_context())
-    ctx["printed_at"] = datetime.now(UTC)
-    return render_template("expenses/print.html", expense=expense, **ctx)
+    return facade_print_expense(record_id)
 
 
 @expenses_bp.route("/<int:id>/edit", methods=["GET", "POST"])

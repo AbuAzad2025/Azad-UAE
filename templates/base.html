@@ -190,26 +190,15 @@
       }
     };
 
-    // Global action delegation (performance: single listener)
+    // Global action delegation (performance: single listener) — print actions handled via print-handlers.js
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
       const action = btn.dataset.action;
       switch(action) {
-        case 'window-print': e.preventDefault(); window.print(); break;
-        case 'window-close': e.preventDefault(); window.close(); break;
-        case 'history-back': 
-          e.preventDefault(); 
-          window.history.length > 1 ? window.history.back() : window.location.href = '{{ url_for("main.dashboard") }}';
-          break;
         case 'location-reload': e.preventDefault(); window.location.reload(); break;
       }
     });
-
-    // Auto-print support
-    if (new URLSearchParams(window.location.search).get('auto_print') === 'true') {
-      window.addEventListener('DOMContentLoaded', () => setTimeout(() => window.print(), 300));
-    }
 
     // Form submit loading state with debounce
     document.addEventListener('submit', (ev) => {

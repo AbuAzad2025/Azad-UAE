@@ -45,8 +45,9 @@
     </style>
 </head>
 <body>
-    <div class="r-no-print">
-        {% include 'partials/print_controls.html' %}
+    <div class="r-no-print no-print" style="text-align:center;padding:12px;">
+        <button type="button" class="btn btn-primary" data-action="window-print" style="padding:10px 24px;font-size:14px;"><i class="fas fa-print"></i> {{ _('طباعة') }}</button>
+        <button type="button" class="btn btn-secondary" data-action="window-close" style="padding:10px 24px;font-size:14px;margin-inline-start:8px;">{{ _('إغلاق') }}</button>
     </div>
     <div class="receipt print-container-pos">
         <div class="r-header">
