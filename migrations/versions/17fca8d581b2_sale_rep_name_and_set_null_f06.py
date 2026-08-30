@@ -67,10 +67,10 @@ def upgrade():
         if fk_name:
             with contextlib.suppress(Exception):
                 op.execute(sa.text(f'ALTER TABLE sales DROP CONSTRAINT "{fk_name}"'))
-        # Now ensure SET NULL FK exists (idempotent)
+        # Now ensure SET NULL FK exists (idempotent) — use name expected by downgrade of 313
         with op.batch_alter_table("sales", schema=None) as batch_op, contextlib.suppress(Exception):
             batch_op.create_foreign_key(
-                "fk_sales_sales_rep_id_users",
+                "fk_sales_sales_rep_id",
                 "users",
                 ["sales_rep_id"],
                 ["id"],
@@ -83,7 +83,7 @@ def downgrade():
         with op.batch_alter_table("sales", schema=None) as batch_op:
             batch_op.drop_column("sales_rep_name")
 
-    # Revert FK to RESTRICT
+    # Revert FK to RESTRICT — must match name expected by 313 downgrade
     if _column_exists("sales", "sales_rep_id"):
         from sqlalchemy import inspect as _inspect
 
@@ -102,7 +102,7 @@ def downgrade():
                 op.execute(sa.text(f'ALTER TABLE sales DROP CONSTRAINT "{fk_name}"'))
         with op.batch_alter_table("sales", schema=None) as batch_op, contextlib.suppress(Exception):
             batch_op.create_foreign_key(
-                "fk_sales_sales_rep_id_users",
+                "fk_sales_sales_rep_id_rest",
                 "users",
                 ["sales_rep_id"],
                 ["id"],
