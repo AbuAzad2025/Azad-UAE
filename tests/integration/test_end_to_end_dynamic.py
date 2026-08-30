@@ -839,31 +839,28 @@ class TestSecurityAuditFixes:
         b = Branch(tenant_id=t.id, name=f"Main_{suffix}", code=f"M{suffix[:4]}")
         db_session.add(b)
         db_session.flush()
-        r = Role.query.filter_by(slug="seller").first()
-        if not r:
-            r = Role(slug="seller", name=f"Cashier_{suffix}", is_active=True)
-            db_session.add(r)
-            db_session.flush()
+        # Use a unique non-admin slug to avoid reusing a polluted super_admin role.
+        r = Role(slug=f"seller_{suffix}", name=f"Cashier_{suffix}", is_active=True)
+        db_session.add(r)
+        db_session.flush()
         u = User(
             tenant_id=t.id,
             branch_id=b.id,
             username=f"cashier_print_{suffix}",
             email=f"cashier_{suffix}@test.com",
-            password_hash="fakehash",
             role_id=r.id,
             is_active=True,
         )
+        u.set_password("password123")
         db_session.add(u)
         db_session.flush()
         db_session.commit()
-        with app.test_client() as client, app.app_context():
-            from flask_login import login_user
-
-            login_user(u)
-            with client.session_transaction() as sess:
-                sess["_user_id"] = str(u.id)
-                sess["_fresh"] = True
-                sess["active_tenant_id"] = t.id
+        with app.test_client() as client:
+            client.post(
+                "/auth/login",
+                data={"username": u.username, "password": "password123"},
+                follow_redirects=True,
+            )
             resp = client.get("/printing/settings")
         assert resp.status_code == 403
 

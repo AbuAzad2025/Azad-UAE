@@ -466,10 +466,20 @@ class TestReceiptViewPrintAssurance:
 
     def test_print_payment_branch_forbidden(self, payments_client):
         payment = _mock_payment(branch_id=9)
+
+        def _render_print(template, extra_context=None, tenant_id=None):
+            from routes.printing import render_template as rt
+
+            return rt("errors/403.html"), 403
+
         with (
             _payments_patches(payment=payment, branch_scope=1),
             patch("routes.payments.tenant_get_or_404", return_value=payment),
-            patch("routes.payments.render_template", return_value="403") as render,
+            patch("routes.printing.PrintService.get_document", return_value=payment),
+            patch("routes.printing.PrintService.create_snapshot"),
+            patch("routes.printing.PrintService.audit_print"),
+            patch("routes.printing.PrintService.render_print", side_effect=_render_print),
+            patch("routes.printing.render_template", return_value="403") as render,
         ):
             resp = payments_client.get("/payments/payments/2/print")
         assert resp.status_code == 403
