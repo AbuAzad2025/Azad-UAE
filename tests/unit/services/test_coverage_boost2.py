@@ -57,18 +57,22 @@ class TestPaymentServiceCoverage:
 
 class TestReportsQueryCoverage:
     def test_get_confirmed_sale_paid_aed(self):
-        with patch("services.reports_query_service.tenant_query") as mock_tq:
-            mock_q = MagicMock()
-            mock_q.scalar.return_value = Decimal("123.45")
-            mock_tq.return_value = mock_q
+        mock_scalar = MagicMock()
+        mock_scalar.scalar.return_value = Decimal("123.45")
+        mock_filter = MagicMock()
+        mock_filter.filter.return_value = mock_scalar
+        mock_filter.scalar.return_value = Decimal("123.45")
+        with patch("services.reports_query_service.db.session.query", return_value=mock_filter):
             result = ReportsQueryService.get_confirmed_sale_paid_aed(sale_id=1, tenant_id=1)
             assert result == Decimal("123.45")
 
     def test_get_confirmed_supplier_paid_aed(self):
-        with patch("services.reports_query_service.tenant_query") as mock_tq:
-            mock_q = MagicMock()
-            mock_q.scalar.return_value = Decimal("0")
-            mock_tq.return_value = mock_q
+        mock_scalar = MagicMock()
+        mock_scalar.scalar.return_value = Decimal("0")
+        mock_filter = MagicMock()
+        mock_filter.filter.return_value = mock_scalar
+        mock_filter.scalar.return_value = Decimal("0")
+        with patch("services.reports_query_service.db.session.query", return_value=mock_filter):
             result = ReportsQueryService.get_confirmed_supplier_paid_aed(supplier_id=1, tenant_id=1)
             assert result == Decimal("0")
 
