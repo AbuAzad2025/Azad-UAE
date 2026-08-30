@@ -913,7 +913,16 @@ def app_factory():
 
         app.jinja_env.globals["t"] = t
         app.jinja_env.globals["csrf_token"] = lambda: ""
+        app.jinja_env.globals["dist_url"] = lambda f: f"/static/{f}?v=mock"
+        app.jinja_env.globals["csp_nonce"] = lambda: "mock-nonce"
+        app.jinja_env.globals["url_for"] = lambda *a, **k: "#"
+        from utils.number_to_arabic import number_to_arabic_words
+
+        app.jinja_env.globals["number_to_arabic_words"] = number_to_arabic_words
+        app.jinja_env.globals["tenant_default_currency"] = "AED"
         from flask_login import current_user
+
+        app.jinja_env.globals["current_user"] = current_user
 
         app.jinja_env.globals["current_user"] = current_user
 

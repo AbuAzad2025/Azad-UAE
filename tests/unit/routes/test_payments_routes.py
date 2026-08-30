@@ -310,30 +310,16 @@ class TestViewAndPrint:
         payment.amount = Decimal("100")
         payment.currency = "AED"
         payment.payment_date = datetime.now(UTC)
-        settings = MagicMock(enable_qr_code=True, active_template="modern")
-        tenant = MagicMock(name_ar="Co")
         with (
             _payments_patches(payment=payment, branch_scope=None),
-            patch("routes.payments.tenant_get_or_404", return_value=payment),
-            patch(
-                "routes.payments.InvoiceSettings.company_print_context",
-                return_value=(tenant, settings, {"name_ar": "Co"}),
-            ),
-            patch("utils.tenant_branding.get_print_header_context", return_value={}),
-            patch("routes.payments.number_to_arabic_words", return_value="مائة"),
-            patch(
-                "routes.payments.generate_qr_data_url",
-                return_value="data:image/png;base64,x",
-            ),
-            patch("routes.payments.resolve_default_currency", return_value="AED"),
-            patch("routes.payments.get_system_default_currency", return_value="AED"),
-            patch("routes.payments.render_template", return_value="ok") as render,
-            patch("models.Branch") as branch_q,
+            patch("routes.printing.PrintService.get_document", return_value=payment),
+            patch("routes.printing.PrintService.create_snapshot"),
+            patch("routes.printing.PrintService.audit_print"),
+            patch("routes.printing.PrintService.render_print", return_value="ok"),
+            patch("routes.printing.PrintService.resolve_template", return_value="payments/payment_voucher.html"),
         ):
-            branch_q.query.filter_by.return_value.first.return_value = MagicMock(name="Branch")
             resp = payments_client.get("/payments/payments/2/print")
         assert resp.status_code == 200
-        render.assert_called_once()
 
 
 class TestVoucherFlows:
@@ -1380,26 +1366,14 @@ class TestPaymentsDeepCoverage:
         payment.amount = Decimal("50")
         payment.currency = "AED"
         payment.payment_date = datetime.now(UTC)
-        settings = MagicMock(enable_qr_code=False, active_template="modern")
-        tenant = MagicMock(name_ar="Co")
         with (
             _payments_patches(payment=payment, branch_scope=None),
-            patch("routes.payments.tenant_get_or_404", return_value=payment),
-            patch(
-                "routes.payments.InvoiceSettings.company_print_context",
-                return_value=(tenant, settings, {"name_ar": "Co"}),
-            ),
-            patch("utils.tenant_branding.get_print_header_context", return_value={}),
-            patch("routes.payments.number_to_arabic_words", return_value="خمسون"),
-            patch(
-                "routes.payments.resolve_default_currency",
-                side_effect=RuntimeError("curr"),
-            ),
-            patch("routes.payments.get_system_default_currency", return_value="AED"),
-            patch("routes.payments.render_template", return_value="ok"),
-            patch("models.Branch") as branch_q,
+            patch("routes.printing.PrintService.get_document", return_value=payment),
+            patch("routes.printing.PrintService.create_snapshot"),
+            patch("routes.printing.PrintService.audit_print"),
+            patch("routes.printing.PrintService.render_print", return_value="ok"),
+            patch("routes.printing.PrintService.resolve_template", return_value="payments/payment_voucher.html"),
         ):
-            branch_q.query.filter_by.return_value.first.return_value = MagicMock(name="Branch")
             resp = payments_client.get("/payments/payments/2/print")
         assert resp.status_code == 200
 

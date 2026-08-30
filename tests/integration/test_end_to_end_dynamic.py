@@ -856,10 +856,14 @@ class TestSecurityAuditFixes:
         db_session.add(u)
         db_session.flush()
         db_session.commit()
-        with app.test_client() as client:
+        with app.test_client() as client, app.app_context():
+            from flask_login import login_user
+
+            login_user(u)
             with client.session_transaction() as sess:
                 sess["_user_id"] = str(u.id)
                 sess["_fresh"] = True
+                sess["active_tenant_id"] = t.id
             resp = client.get("/printing/settings")
         assert resp.status_code == 403
 

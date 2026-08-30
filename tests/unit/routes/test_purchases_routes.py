@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from decimal import ROUND_HALF_UP, Decimal
 from unittest.mock import MagicMock, patch
 
@@ -41,30 +41,38 @@ def _purchase_patches(
     pag_items = pag_items if pag_items is not None else [purchase]
     query = _chain_query(all=pag_items, count=len(pag_items))
 
-    with (
-        patch("routes.purchases.tenant_query", return_value=query),
-        patch("routes.purchases.tenant_get_or_404", return_value=purchase),
-        patch("routes.purchases.render_template", return_value="ok") as render,
-        patch("utils.decorators.branch_scope_id", return_value=branch_scope),
-        patch("routes.purchases.db.session") as session,
-        patch("routes.purchases.LoggingCore.log_audit") as log_audit,
-        patch("routes.purchases.should_show_all_branch_columns", return_value=True),
-        patch("routes.purchases.PurchaseService") as purchase_service,
-        patch("routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}),
-        patch("routes.purchases.get_accessible_warehouses", return_value=warehouses or []),
-        patch("routes.purchases.ensure_warehouse_access"),
-        patch("routes.purchases.resolve_default_currency", return_value="AED"),
-        patch("routes.purchases.get_system_default_currency", return_value="AED"),
-        patch("routes.purchases.get_active_tenant_id", return_value=1),
-        patch("utils.branching.get_active_branch_id", return_value=None),
-        patch(
-            "routes.purchases.get_active_branch_id",
-            MagicMock(return_value=None),
-            create=True,
-        ),
-        patch("utils.tax_settings.get_prices_include_vat", return_value=False),
-        patch("routes.purchases.ROUND_HALF_UP", ROUND_HALF_UP, create=True),
-    ):
+    with ExitStack() as stack:
+        stack.enter_context(patch("routes.purchases.tenant_query", return_value=query))
+        stack.enter_context(patch("routes.purchases.tenant_get_or_404", return_value=purchase))
+        render = stack.enter_context(patch("routes.purchases.render_template", return_value="ok"))
+        stack.enter_context(patch("utils.decorators.branch_scope_id", return_value=branch_scope))
+        session = stack.enter_context(patch("routes.purchases.db.session"))
+        log_audit = stack.enter_context(patch("routes.purchases.LoggingCore.log_audit"))
+        stack.enter_context(patch("routes.purchases.should_show_all_branch_columns", return_value=True))
+        purchase_service = stack.enter_context(patch("routes.purchases.PurchaseService"))
+        stack.enter_context(patch("routes.purchases.CurrencyService.get_all_rates", return_value={"AED": 1.0}))
+        stack.enter_context(patch("routes.purchases.get_accessible_warehouses", return_value=warehouses or []))
+        stack.enter_context(patch("routes.purchases.ensure_warehouse_access"))
+        stack.enter_context(patch("routes.purchases.resolve_default_currency", return_value="AED"))
+        stack.enter_context(patch("routes.purchases.get_system_default_currency", return_value="AED"))
+        stack.enter_context(patch("routes.purchases.get_active_tenant_id", return_value=1))
+        stack.enter_context(patch("utils.branching.get_active_branch_id", return_value=None))
+        stack.enter_context(
+            patch(
+                "routes.purchases.get_active_branch_id",
+                MagicMock(return_value=None),
+                create=True,
+            )
+        )
+        stack.enter_context(patch("utils.tax_settings.get_prices_include_vat", return_value=False))
+        stack.enter_context(patch("routes.purchases.ROUND_HALF_UP", ROUND_HALF_UP, create=True))
+        stack.enter_context(patch("routes.printing.PrintService.get_document", return_value=purchase))
+        stack.enter_context(patch("routes.printing.PrintService.create_snapshot"))
+        stack.enter_context(patch("routes.printing.PrintService.audit_print"))
+        stack.enter_context(patch("routes.printing.PrintService.render_print", return_value="ok"))
+        stack.enter_context(patch("routes.printing.PrintService.resolve_template", return_value="purchases/print.html"))
+        stack.enter_context(patch("routes.printing.render_template", return_value="ok"))
+        stack.enter_context(patch("routes.printing.branch_scope_id", return_value=branch_scope))
         yield {
             "render": render,
             "session": session,

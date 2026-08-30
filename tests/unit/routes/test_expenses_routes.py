@@ -65,6 +65,7 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         )
         stack.enter_context(patch("routes.expenses.branch_scope_id", return_value=branch_scope))
         stack.enter_context(patch("routes.expenses.should_show_all_branch_columns", return_value=False))
+        stack.enter_context(patch("routes.printing.branch_scope_id", return_value=branch_scope))
         stack.enter_context(patch("extensions.db.session"))
         stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
         stack.enter_context(
@@ -100,6 +101,12 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
         stack.enter_context(patch("services.budget_enforcement.check_budget_for_account", return_value=None))
         stack.enter_context(patch("routes.expenses.convert_and_quantize_aed", return_value=Decimal("0")))
+        stack.enter_context(patch("routes.printing.PrintService.get_document", return_value=expense))
+        stack.enter_context(patch("routes.printing.PrintService.create_snapshot"))
+        stack.enter_context(patch("routes.printing.PrintService.audit_print"))
+        stack.enter_context(patch("routes.printing.PrintService.render_print", return_value="ok"))
+        stack.enter_context(patch("routes.printing.PrintService.resolve_template", return_value="expenses/print_voucher.html"))
+        stack.enter_context(patch("routes.printing.render_template", return_value="ok"))
         if tenant_get_raises:
             stack.enter_context(patch("routes.expenses.tenant_get_or_404", side_effect=NotFound()))
         render = stack.enter_context(patch("routes.expenses.render_template", return_value="ok"))
@@ -359,30 +366,15 @@ class TestExpensesViewScope:
             resp = expenses_client.get("/expenses/999")
         assert resp.status_code == 404
 
+    def test_print_success(self, expenses_client):
+        with _expense_patches(expense=_mock_expense()):
+            resp = expenses_client.get("/expenses/1/print")
+        assert resp.status_code == 200
+
     def test_print_branch_forbidden(self, expenses_client):
         with _expense_patches(expense=_mock_expense(branch_id=9), branch_scope=1):
             resp = expenses_client.get("/expenses/1/print")
         assert resp.status_code == 403
-
-    def test_print_success(self, expenses_client):
-        company = {"name_ar": "Co", "address": "Addr", "phone": "123"}
-        with (
-            _expense_patches(expense=_mock_expense()) as mocks,
-            patch(
-                "models.invoice_settings.InvoiceSettings.company_print_context",
-                return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), company),
-            ),
-            patch(
-                "utils.tenant_branding.get_print_header_context",
-                return_value={},
-            ),
-        ):
-            resp = expenses_client.get("/expenses/1/print")
-        assert resp.status_code == 200
-        _, kwargs = mocks["render"].call_args
-        assert kwargs["company"] is company
-        assert "settings" in kwargs
-        assert "tenant" in kwargs
 
 
 class TestExpensesEdit:
