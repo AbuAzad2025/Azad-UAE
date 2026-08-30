@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from services.payment_service import PaymentService
-from services.product_service import ProductService
-from services.sale_service import SaleService
 from services.reports_query_service import ReportsQueryService
 
 
 class TestPaymentServiceCoverage:
     def test_create_receipt_manual_sale_id_none(self):
-        with patch("services.payment_service.db.session", MagicMock()), patch(
-            "services.payment_service.convert_and_quantize_aed", return_value=Decimal("10")
-        ), patch("services.payment_service.resolve_tenant_base_currency", return_value="AED"):
+        with (
+            patch("services.payment_service.db.session", MagicMock()),
+            patch("services.payment_service.convert_and_quantize_aed", return_value=Decimal("10")),
+            patch("services.payment_service.resolve_tenant_base_currency", return_value="AED"),
+        ):
             from models import Customer
 
             cust = MagicMock(spec=Customer)
@@ -42,11 +41,11 @@ class TestPaymentServiceCoverage:
                 assert r.source_type == "manual"
 
     def test_create_receipt_sale_sets_sale_id(self):
-        with patch("services.payment_service.db.session", MagicMock()), patch(
-            "services.payment_service.convert_and_quantize_aed", return_value=Decimal("20")
-        ), patch("services.payment_service.resolve_tenant_base_currency", return_value="AED"):
-            from models import Customer
-
+        with (
+            patch("services.payment_service.db.session", MagicMock()),
+            patch("services.payment_service.convert_and_quantize_aed", return_value=Decimal("20")),
+            patch("services.payment_service.resolve_tenant_base_currency", return_value="AED"),
+        ):
             cust = MagicMock()
             cust.id = 2
             cust.tenant_id = 1
@@ -104,7 +103,12 @@ class TestSaleServiceCoverage:
             exchange_rate=Decimal("1"),
         )
         line = SaleLine(
-            tenant_id=1, sale_id=1, product_id=1, quantity=Decimal("2"), unit_price=Decimal("100"), line_total=Decimal("200")
+            tenant_id=1,
+            sale_id=1,
+            product_id=1,
+            quantity=Decimal("2"),
+            unit_price=Decimal("100"),
+            line_total=Decimal("200"),
         )
         sale.lines = [line]
         sale.subtotal = Decimal("200")
@@ -131,7 +135,12 @@ class TestSaleServiceCoverage:
             exchange_rate=Decimal("1"),
         )
         line = SaleLine(
-            tenant_id=1, sale_id=1, product_id=1, quantity=Decimal("1"), unit_price=Decimal("100"), line_total=Decimal("100")
+            tenant_id=1,
+            sale_id=1,
+            product_id=1,
+            quantity=Decimal("1"),
+            unit_price=Decimal("100"),
+            line_total=Decimal("100"),
         )
         sale.lines = [line]
         sale.subtotal = Decimal("100")

@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-import os
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ── helpers ──────────────────────────────────────────────────────────────────
+
 
 class TestHelpersCoverageBoost:
     def test_sanitize_masks_internal_pattern(self, app):
@@ -139,18 +138,21 @@ class TestHelpersCoverageBoost:
         class Bad:
             def __format__(self, spec):
                 raise RuntimeError("boom")
+
             def __str__(self):
                 return "bad-obj"
+
         assert h.format_currency(Bad()) == "bad-obj"
 
 
 # ── tenanting ────────────────────────────────────────────────────────────────
 
+
 class TestTenantingCoverageBoost:
     def test_get_active_tenant_resolves_from_g(self, app):
         from utils.tenanting import get_active_tenant_id
 
-        user = MagicMock(is_authenticated=True, is_owner=True, tenant_id=None)
+        MagicMock(is_authenticated=True, is_owner=True, tenant_id=None)
         with app.test_request_context("/"):
             from flask import g
 
@@ -182,6 +184,7 @@ class TestTenantingCoverageBoost:
         class M:
             tenant_id = MagicMock()
             tenant_id.__lt__ = lambda self, other: "lt"
+
         q = MagicMock()
         q.filter.return_value = "filtered"
         result = apply_tenant_scope(q, M, MagicMock(is_owner=True))
@@ -211,6 +214,7 @@ class TestTenantingCoverageBoost:
         class _Col:
             def __lt__(self, other):
                 return "lt"
+
         user_model = MagicMock()
         q = MagicMock()
         q.filter.return_value = q
@@ -221,7 +225,7 @@ class TestTenantingCoverageBoost:
         mocker.patch("models.user.User", user_model, create=True)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
         mocker.patch("utils.tenanting.is_platform_owner", return_value=False)
-        result = scoped_user_query(MagicMock(is_authenticated=True, is_owner=False, tenant_id=None))
+        scoped_user_query(MagicMock(is_authenticated=True, is_owner=False, tenant_id=None))
         q.filter.assert_called()
 
     def test_tenant_get_or_404_success_via_tid_match(self, app, mocker):
@@ -236,15 +240,18 @@ class TestTenantingCoverageBoost:
 
 # ── tenant_orm ───────────────────────────────────────────────────────────────
 
+
 class TestTenantOrmCoverageBoost:
     def test_criteria_for_model_platform_owner_shows_all(self, mocker):
         mocker.patch("utils.tenanting.is_platform_owner", return_value=True)
+
         from utils.tenant_orm import _criteria_for_model
-        from sqlalchemy import true as sql_true
 
         crit = _criteria_for_model(None)
+
         class M:
             pass
+
         # platform owner with tid None => sql_true
         assert crit(M) is not None
 
@@ -253,9 +260,11 @@ class TestTenantOrmCoverageBoost:
         from utils.tenant_orm import _criteria_for_model
 
         crit = _criteria_for_model(None)
+
         class M:
             tenant_id = MagicMock()
             tenant_id.__lt__ = lambda self, o: "hidden"
+
         assert crit(M) == "hidden"
 
     def test_get_criteria_cached_and_fallback(self, app, mocker):
@@ -264,6 +273,7 @@ class TestTenantOrmCoverageBoost:
 
         with app.test_request_context("/"):
             from flask import g
+
             # ensure clean cache
             if hasattr(g, "_tenant_criteria_cache"):
                 delattr(g, "_tenant_criteria_cache")
@@ -285,6 +295,7 @@ class TestTenantOrmCoverageBoost:
 
         class Sale:
             __name__ = "Sale"
+
         obj = Sale()
         obj.tenant_id = None
         assert _validate_instance_tenant(obj) is True
@@ -297,6 +308,7 @@ class TestTenantOrmCoverageBoost:
 
         class Sale:
             __name__ = "Sale"
+
         obj = Sale()
         obj.tenant_id = 5
         assert _validate_instance_tenant(obj) is False
@@ -306,6 +318,7 @@ class TestTenantOrmCoverageBoost:
 
         with app.test_request_context("/"):
             from flask import g
+
             g.active_tenant_id = 77
             assert _active_tenant_for_orm() == 77
 
@@ -314,12 +327,13 @@ class TestTenantOrmCoverageBoost:
         mocker.patch("utils.tenant_orm.has_request_context", return_value=True)
         # simulate exception during g access by making g raise
         import utils.tenant_orm as torm
-        orig_g = torm.g
+
         fake_g = MagicMock()
         type(fake_g).active_tenant_id = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
         mocker.patch.object(torm, "g", fake_g)
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=9)
         from utils.tenant_orm import _active_tenant_for_orm
+
         # should not raise, fallback to tenanting
         assert _active_tenant_for_orm() == 9
 
@@ -329,9 +343,11 @@ class TestTenantOrmCoverageBoost:
         # need request context
         with app.test_request_context("/"):
             mocker.patch("utils.tenant_orm._active_tenant_for_orm", return_value=10)
+
             # tenant model discovery
             class FakeModel:
                 __name__ = "Sale"
+
             FakeModel.__tablename__ = "sales"
             mocker.patch("utils.tenant_orm._discover_tenant_models", return_value=[FakeModel])
             mocker.patch("utils.tenant_orm.sa_inspect", return_value=MagicMock(columns={"tenant_id": object()}))
@@ -368,6 +384,7 @@ class TestTenantOrmCoverageBoost:
 
             # skip when g.skip_tenant_scope
             from flask import g
+
             g.skip_tenant_scope = True
             session.deleted = []
             _inject_tenant_write_guard(session, None, None)  # no raise
@@ -376,11 +393,13 @@ class TestTenantOrmCoverageBoost:
     def test_log_cross_tenant_warning_handles_exception(self, mocker):
         mocker.patch("flask.current_app.logger.warning", side_effect=RuntimeError("log fail"))
         from utils.tenant_orm import _log_cross_tenant_warning
+
         # should not raise
         _log_cross_tenant_warning("Sale", 1, 2)
 
     def test_discover_returns_empty_without_cache(self, mocker):
         import utils.tenant_orm as torm
+
         torm._TENANT_MODELS = None
         # registry has no tenant-bearing models
         registry = MagicMock()
@@ -393,6 +412,7 @@ class TestTenantOrmCoverageBoost:
 
 
 # ── branching ────────────────────────────────────────────────────────────────
+
 
 class TestBranchingCoverageBoost:
     def test_is_global_user_non_callable_super_admin(self):
@@ -414,17 +434,20 @@ class TestBranchingCoverageBoost:
         mocker.patch("utils.branching.is_global_user", return_value=True)
         mocker.patch("utils.branching.get_active_branch_mode", return_value="single")
         mocker.patch("utils.branching.user_can_access_branch", return_value=False)
-        user = MagicMock(is_authenticated=True, is_owner=False, tenant_id=1, branch_id=2, role=MagicMock(slug="super_admin"))
+        user = MagicMock(
+            is_authenticated=True, is_owner=False, tenant_id=1, branch_id=2, role=MagicMock(slug="super_admin")
+        )
         user.is_super_admin.return_value = True
         with app.test_request_context("/"):
             from flask import session
+
             session[ACTIVE_BRANCH_SESSION_KEY] = 999
             assert get_active_branch_id(user) is None
             assert ACTIVE_BRANCH_SESSION_KEY not in session
             assert session[ACTIVE_BRANCH_MODE_SESSION_KEY] == "single"
 
     def test_get_warehouse_stock_map(self, mocker):
-        from utils.branching import get_warehouse_stock_map, get_branch_stock_map
+        from utils.branching import get_branch_stock_map, get_warehouse_stock_map
 
         assert get_branch_stock_map(warehouse_ids=None) == {}
         assert get_warehouse_stock_map(warehouse_ids=[]) == {}
@@ -453,15 +476,18 @@ class TestBranchingCoverageBoost:
     def test_user_can_access_branch_none_is_global(self, mocker):
         mocker.patch("utils.branching.is_global_user", return_value=True)
         from utils.branching import user_can_access_branch
+
         assert user_can_access_branch(None, MagicMock()) is True
         assert user_can_access_branch("all", MagicMock()) is True
 
     def test_get_active_branch_mode_no_context(self, mocker):
         mocker.patch("utils.branching.has_request_context", return_value=False)
         from utils.branching import get_active_branch_mode
+
         assert get_active_branch_mode() == "single"
 
     def test_role_requires_branch(self):
         from utils.branching import role_requires_branch
+
         assert role_requires_branch(is_owner=True) is False
         assert role_requires_branch(role=MagicMock(slug=None), is_owner=False) is True

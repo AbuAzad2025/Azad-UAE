@@ -13,10 +13,9 @@ no direct DB writes, patched at the route/service boundary.
 
 from __future__ import annotations
 
-import os
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -60,7 +59,9 @@ class TestMaintenanceCoverage:
         engine.begin.return_value.__exit__.return_value = False
         mocker.patch.object(ms_module, "create_engine", return_value=engine)
         result = MaintenanceService.fix_cost_centers_index()
-        assert result["dropped_index"] is False  # exception path sets not True? actually code sets True only on success, exception prints
+        assert (
+            result["dropped_index"] is False
+        )  # exception path sets not True? actually code sets True only on success, exception prints
         # In current impl dropped_index stays False on exception for DROP
         # If impl sets True after execute, adjust expectation
         # We just verify deleted_rows captured
@@ -137,7 +138,9 @@ class TestMaintenanceCoverage:
         # run_default calls create_engine twice: once for conflict check, once inside fix
         # We patch fix to avoid second engine complexity
         mocker.patch.object(ms_module, "create_engine", return_value=dup_engine)
-        mocker.patch.object(MaintenanceService, "fix_default_tenant_metadata", return_value=["tenants.name <- '' (character varying)"])
+        mocker.patch.object(
+            MaintenanceService, "fix_default_tenant_metadata", return_value=["tenants.name <- '' (character varying)"]
+        )
         mocker.patch.object(MaintenanceService, "regenerate_default_backup", return_value="backup.sql.gz")
         result = MaintenanceService.run_default_tenant_maintenance(dry_run=False)
         assert len(result["conflicts"]) == 1
@@ -160,6 +163,7 @@ class TestMaintenanceCoverage:
 
     def test_cleanup_test_databases_failed_drop(self, mocker):
         conn = MagicMock()
+
         # Simulate first DROP raising, second succeeding, then listing
         def _exec_side_effect(stmt, *args, **kwargs):
             text = str(stmt)
@@ -201,9 +205,14 @@ class TestMaintenanceCoverage:
         mock_app_instance.app_context.return_value.__exit__ = MagicMock(return_value=False)
         mocker.patch("app.create_app", return_value=mock_app_instance)
         mocker.patch("services.backup_service.BackupService.initialize")
-        mocker.patch("services.backup_service.BackupService.create_backup", return_value={"manifest": {"backup_scope": "tenant"}})
+        mocker.patch(
+            "services.backup_service.BackupService.create_backup", return_value={"manifest": {"backup_scope": "tenant"}}
+        )
         # Patch Tenant.query to return None (no default)
-        mocker.patch("models.tenant.Tenant.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))))
+        mocker.patch(
+            "models.tenant.Tenant.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))),
+        )
         result = MaintenanceService.regenerate_default_backup(dry_run=False)
         assert result in ("No default tenant found", "tenant", "(skipped: --check mode)")
 
@@ -224,24 +233,27 @@ class TestPosRmaCoverage:
         assert _money(0) == Decimal("0.000")
 
     def test_promo_allocations_zero_promo_returns_empty(self):
-        from services.pos_rma_service import _promo_allocations
         from types import SimpleNamespace
+
+        from services.pos_rma_service import _promo_allocations
 
         sale = SimpleNamespace(subtotal=Decimal("100"), lines=[])
         sale.__dict__["promotion_discount_amount"] = Decimal("0")
         assert _promo_allocations(sale) == {}
 
     def test_promo_allocations_zero_subtotal_returns_empty(self):
-        from services.pos_rma_service import _promo_allocations
         from types import SimpleNamespace
+
+        from services.pos_rma_service import _promo_allocations
 
         sale = SimpleNamespace(subtotal=Decimal("0"), lines=[])
         sale.__dict__["promotion_discount_amount"] = Decimal("10")
         assert _promo_allocations(sale) == {}
 
     def test_promo_allocations_proportional_with_residual(self):
-        from services.pos_rma_service import _promo_allocations
         from types import SimpleNamespace
+
+        from services.pos_rma_service import _promo_allocations
 
         line1 = SimpleNamespace(id=1, line_total=Decimal("60"))
         line2 = SimpleNamespace(id=2, line_total=Decimal("40"))
@@ -309,9 +321,35 @@ class TestPosRmaCoverage:
         from types import SimpleNamespace
 
         prod = SimpleNamespace(name="Widget", sku="W-1", barcode="B-1")
-        line = SimpleNamespace(id=11, product_id=101, quantity=Decimal("2"), unit_price=Decimal("50"), discount_percent=Decimal("0"), line_total=Decimal("100"), product=prod)
+        line = SimpleNamespace(
+            id=11,
+            product_id=101,
+            quantity=Decimal("2"),
+            unit_price=Decimal("50"),
+            discount_percent=Decimal("0"),
+            line_total=Decimal("100"),
+            product=prod,
+        )
         customer = SimpleNamespace(name="Cust A")
-        sale = SimpleNamespace(id=1, tenant_id=10, sale_number="SAL-1", sale_date=datetime(2026, 1, 1), status="completed", payment_status="paid", customer_id=9, customer=customer, currency="AED", exchange_rate=Decimal("1"), subtotal=Decimal("100"), discount_amount=Decimal("0"), shipping_cost=Decimal("0"), tax_rate=Decimal("0"), tax_amount=Decimal("0"), total_amount=Decimal("100"), lines=[line])
+        sale = SimpleNamespace(
+            id=1,
+            tenant_id=10,
+            sale_number="SAL-1",
+            sale_date=datetime(2026, 1, 1),
+            status="completed",
+            payment_status="paid",
+            customer_id=9,
+            customer=customer,
+            currency="AED",
+            exchange_rate=Decimal("1"),
+            subtotal=Decimal("100"),
+            discount_amount=Decimal("0"),
+            shipping_cost=Decimal("0"),
+            tax_rate=Decimal("0"),
+            tax_amount=Decimal("0"),
+            total_amount=Decimal("100"),
+            lines=[line],
+        )
         sale.__dict__["promotion_discount_amount"] = Decimal("0")
         chain = MagicMock()
         chain.first.return_value = sale
@@ -368,12 +406,21 @@ class TestPosRmaCoverage:
         session = MagicMock()
         with app.app_context():
             with pytest.raises(ValueError, match="مبلغ الاسترداد النقدي"):
-                PosRmaService._create_cash_refund_payment(product_return=pr, sale=sale, session=session, user=MagicMock())
+                PosRmaService._create_cash_refund_payment(
+                    product_return=pr, sale=sale, session=session, user=MagicMock()
+                )
 
     def test_create_pos_return_invalid_refund_method(self, app):
         with app.app_context():
             with pytest.raises(ValueError, match="طريقة الاسترداد"):
-                PosRmaService.create_pos_return(user=MagicMock(), session=MagicMock(), shift=None, sale_id=1, return_lines=[], refund_method="invalid")
+                PosRmaService.create_pos_return(
+                    user=MagicMock(),
+                    session=MagicMock(),
+                    shift=None,
+                    sale_id=1,
+                    return_lines=[],
+                    refund_method="invalid",
+                )
 
     def test_create_pos_return_credit_no_cash_leg(self, mocker, app):
         user = MagicMock()
@@ -385,7 +432,15 @@ class TestPosRmaCoverage:
         mocker.patch("services.pos_rma_service.ReturnService.create_return", return_value=pr)
         mocker.patch("services.pos_rma_service.db.session", MagicMock())
         with app.app_context():
-            ret, pay = PosRmaService.create_pos_return(user=user, session=session, shift=shift, sale_id=1, return_lines=[{"sale_line_id": 1, "quantity": 1}], refund_method="credit", notes="test")
+            ret, pay = PosRmaService.create_pos_return(
+                user=user,
+                session=session,
+                shift=shift,
+                sale_id=1,
+                return_lines=[{"sale_line_id": 1, "quantity": 1}],
+                refund_method="credit",
+                notes="test",
+            )
         assert ret is pr
         assert pay is None
 
@@ -408,7 +463,14 @@ class TestPosRmaCoverage:
         mocker.patch.object(PosRmaService, "_create_cash_refund_payment", return_value=mock_payment)
         mocker.patch("services.pos_rma_service.db.session", MagicMock())
         with app.app_context():
-            ret, pay = PosRmaService.create_pos_return(user=user, session=session, shift=shift, sale_id=1, return_lines=[{"sale_line_id": 1, "quantity": 1}], refund_method="cash")
+            ret, pay = PosRmaService.create_pos_return(
+                user=user,
+                session=session,
+                shift=shift,
+                sale_id=1,
+                return_lines=[{"sale_line_id": 1, "quantity": 1}],
+                refund_method="cash",
+            )
         assert pay is mock_payment
         assert session.total_cash_refunds == Decimal("15")
 
@@ -498,7 +560,9 @@ class TestPayrollCoverage:
         mocker.patch("utils.tenanting.get_active_tenant_id", return_value=1)
         with app.app_context():
             with pytest.raises(ValueError, match="فرع آخر"):
-                PayrollService.create_advance(emp.id if hasattr(emp, "id") else 1, "1000", "desc", user_id=1, actor_user=actor)
+                PayrollService.create_advance(
+                    emp.id if hasattr(emp, "id") else 1, "1000", "desc", user_id=1, actor_user=actor
+                )
 
     def test_calculate_eos_monthly_provision_zero(self):
         assert PayrollService._calculate_eos_monthly_provision(0) == Decimal("0")
@@ -512,7 +576,9 @@ class TestPayrollCoverage:
 
     def test_calculate_leave_monthly_accrual_zero(self):
         assert PayrollService._calculate_leave_monthly_accrual(0) == Decimal("0")
-        assert PayrollService._calculate_leave_monthly_accrual(Decimal("3000"), annual_leave_days=0) > Decimal("0")  # fallback 30
+        assert PayrollService._calculate_leave_monthly_accrual(Decimal("3000"), annual_leave_days=0) > Decimal(
+            "0"
+        )  # fallback 30
 
     def test_calculate_leave_monthly_accrual_positive(self):
         val = PayrollService._calculate_leave_monthly_accrual(Decimal("3000"), annual_leave_days=30)
@@ -589,7 +655,10 @@ class TestPayrollCoverage:
         adv.total_amount = Decimal("500")
         adv.deducted_amount = Decimal("0")
         adv.is_deducted = False
-        mocker.patch("models.SalaryAdvance.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[adv])))))
+        mocker.patch(
+            "models.SalaryAdvance.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[adv])))),
+        )
         mocker.patch.object(PayrollService, "settle_eosb", return_value={"eosb_amount": Decimal("100")})
         mocker.patch("services.payroll_service.db.session", MagicMock())
         with app.app_context():
@@ -617,8 +686,14 @@ class TestPayrollCoverage:
         emp.basic_salary = Decimal("3000")
         emp.name = "Dup Emp"
         mocker.patch("models.Employee.query", MagicMock(get_or_404=MagicMock(return_value=emp)))
-        mocker.patch("models.SalaryAdvance.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))))
-        mocker.patch("models.PayrollTransaction.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=MagicMock())))))
+        mocker.patch(
+            "models.SalaryAdvance.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))),
+        )
+        mocker.patch(
+            "models.PayrollTransaction.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=MagicMock())))),
+        )
         mocker.patch("services.payroll_service.db.session", MagicMock())
         with app.app_context():
             with pytest.raises(ValueError, match="تمت معالجة راتب"):
@@ -632,8 +707,14 @@ class TestPayrollCoverage:
         emp_daily = MagicMock()
         emp_daily.id = 2
         emp_daily.employment_type = "daily"
-        mocker.patch("models.Employee.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[emp_salary, emp_daily])))))
-        mocker.patch("models.PayrollTransaction.query", MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))))
+        mocker.patch(
+            "models.Employee.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(all=MagicMock(return_value=[emp_salary, emp_daily])))),
+        )
+        mocker.patch(
+            "models.PayrollTransaction.query",
+            MagicMock(filter_by=MagicMock(return_value=MagicMock(first=MagicMock(return_value=None)))),
+        )
         mocker.patch.object(PayrollService, "process_payroll", return_value=MagicMock())
         count, skipped = PayrollService.generate_branch_payroll(5, 8, 2026, user_id=1)
         assert count == 1
@@ -691,9 +772,9 @@ class TestProductCoverage:
             MockProd2.return_value = instance2
             # ensure tenant_id attribute not set beforehand
             delattr(instance2, "tenant_id") if hasattr(instance2, "tenant_id") else None
-            result2 = ProductService.create_product(name="P2", regular_price=Decimal("10"))
+            ProductService.create_product(name="P2", regular_price=Decimal("10"))
             # should not have tenant_id set to something
-            assert not hasattr(result2, "tenant_id") or result2.tenant_id is not None or True
+            assert True
             mock_session.add.assert_called()
 
     def test_create_category_and_price_tier(self, mocker):
@@ -821,7 +902,7 @@ class TestProductCoverage:
         mock_db.session.query.return_value.join.return_value.outerjoin.return_value.filter.return_value.filter.return_value.all.return_value = rows
         mocker.patch("services.product_service.db", mock_db)
         # Need Warehouse/Branch models not used beyond query builder, so patch doesn't matter
-        result = ProductService.annotate_branch_and_warehouse_info([p1, p2], warehouse_ids=[10, 20])
+        ProductService.annotate_branch_and_warehouse_info([p1, p2], warehouse_ids=[10, 20])
         assert hasattr(p1, "visible_warehouse_names")
         assert hasattr(p2, "visible_branch_names")
 
@@ -846,7 +927,12 @@ class TestProductCoverage:
 # ---------------------------------------------------------------------------
 # stock_service — 95% with 18 uncovered lines
 # ---------------------------------------------------------------------------
-from services.stock_service import StockService, _MWACHelper, _resolve_gl_concept_account, _safe_for_update  # noqa: E402
+from services.stock_service import (  # noqa: E402
+    StockService,
+    _MWACHelper,
+    _resolve_gl_concept_account,
+    _safe_for_update,
+)
 
 
 class TestStockCoverage:
@@ -886,7 +972,9 @@ class TestStockCoverage:
 
         mock_query.first.side_effect = [OperationalError("lock", None, None), MagicMock(id=1)]
         mock_session = MagicMock()
-        mock_session.begin_nested.return_value.__enter__ = MagicMock(return_value=MagicMock(commit=MagicMock(), rollback=MagicMock()))
+        mock_session.begin_nested.return_value.__enter__ = MagicMock(
+            return_value=MagicMock(commit=MagicMock(), rollback=MagicMock())
+        )
         mock_session.begin_nested.return_value.__exit__ = MagicMock(return_value=False)
         # The savepoint mock
         savepoint = MagicMock()
@@ -923,7 +1011,15 @@ class TestStockCoverage:
         m2 = StockService.remove_stock(product_id=1, quantity=3, warehouse_id=10)
         assert m2.id == 1
         # Verify sign handling: add uses abs, remove uses -abs
-        StockService.create_movement.assert_any_call(product_id=1, quantity=Decimal("5"), movement_type="purchase", reference_type=None, reference_id=None, notes=None, warehouse_id=10)
+        StockService.create_movement.assert_any_call(
+            product_id=1,
+            quantity=Decimal("5"),
+            movement_type="purchase",
+            reference_type=None,
+            reference_id=None,
+            notes=None,
+            warehouse_id=10,
+        )
         # remove call
         call_args = StockService.create_movement.call_args_list[-1]
         assert call_args.kwargs["quantity"] == -abs(Decimal("3"))
