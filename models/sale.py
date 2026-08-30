@@ -18,24 +18,24 @@ if TYPE_CHECKING:
 
 ARCHITECTURE NOTE: USER IDENTITY FIELDS IN SALE
 ================================================
-Sale tracks user identity using three distinct FK fields to users.id:
+Sale tracks user identity using distinct fields:
 
-  seller_id (mandatory):  The primary operator who created/closed this sale.
-                          In POS context, this is the cashier who processed the transaction.
+  seller_id (mandatory):  The system user who created/closed this sale.
+                          Single source of truth for ownership, branch_scope,
+                          tenant isolation and audit. Always = current_user.id.
                           Use: Sale.seller → User.
 
-  sales_rep_id (optional):  The sales representative who earns commission on this sale.
-                          May be the same as seller_id or a different person.
-                          May be NULL for POS sales with no commission structure.
+  sales_rep_id (optional FK):  Sales representative for commission. May be
+                          same as seller_id or different. NULL → commission
+                          attributed to seller_id.
                           Use: Sale.sales_rep → User.
 
-  NOTE: Unlike other transaction models (Purchase, Payment, Expense, Receipt),
-  Sale does NOT have a generic user_id FK. All user attribution is via the
-  two semantic fields above. When searching for "who created this sale",
-  use seller_id. When calculating commission, use sales_rep_id.
+  sales_rep_name (optional text):  Free-text rep name when no User account
+                          exists (external agent). If both sales_rep_id and
+                          sales_rep_name are NULL, the rep is the seller.
 
-If you need a generic "created_by" field, add user_id as a nullable FK
-and update all Sale instantiation sites.
+  Ownership and permissions ALWAYS use seller_id. Commission logic uses
+  effective_rep = sales_rep_id or sales_rep_name or seller_id.
 """
 
 
@@ -61,7 +61,10 @@ class Sale(db.Model):
 
     customer_id = db.Column(db.Integer, db.ForeignKey("customers.id", ondelete="RESTRICT"), nullable=False, index=True)
     seller_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    sales_rep_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True)
+    sales_rep_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    sales_rep_name = db.Column(db.String(200), nullable=True)
     warehouse_id = db.Column(db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True)
     branch_id = db.Column(
         db.Integer, db.ForeignKey("branches.id", ondelete="RESTRICT"), nullable=True, index=True
@@ -173,6 +176,22 @@ class Sale(db.Model):
     customer: Mapped["Customer"] = relationship("Customer", back_populates="sales")
     seller: Mapped["User"] = relationship("User", back_populates="sales", foreign_keys=[seller_id])
     sales_rep = db.relationship("User", foreign_keys=[sales_rep_id])
+
+    @property
+    def effective_rep_id(self):
+        """Commission rep: sales_rep_id if set, else seller_id."""
+        return self.sales_rep_id if self.sales_rep_id is not None else self.seller_id
+
+    @property
+    def effective_rep_name(self):
+        """Display name for rep: sales_rep_name > sales_rep.full_name > seller.full_name."""
+        if self.sales_rep_name:
+            return self.sales_rep_name
+        if self.sales_rep:
+            return self.sales_rep.get_display_name() if hasattr(self.sales_rep, "get_display_name") else self.sales_rep.username
+        if self.seller:
+            return self.seller.get_display_name() if hasattr(self.seller, "get_display_name") else self.seller.username
+        return None
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
     branch: Mapped["Branch | None"] = relationship("Branch", backref="sales", foreign_keys=[branch_id])
     lines: Mapped[list["SaleLine"]] = relationship("SaleLine", back_populates="sale", lazy="joined")
