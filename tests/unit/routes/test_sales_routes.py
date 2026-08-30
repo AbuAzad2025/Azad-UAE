@@ -195,7 +195,9 @@ def _sales_patches(**kwargs):
         stack.enter_context(patch("routes.printing.PrintService.create_snapshot"))
         stack.enter_context(patch("routes.printing.PrintService.audit_print"))
         stack.enter_context(patch("routes.printing.PrintService.render_print", return_value="ok"))
-        stack.enter_context(patch("routes.printing.PrintService.resolve_template", return_value="sales/print_invoice.html"))
+        stack.enter_context(
+            patch("routes.printing.PrintService.resolve_template", return_value="sales/print_invoice.html")
+        )
         yield {"sale": sale}
 
 

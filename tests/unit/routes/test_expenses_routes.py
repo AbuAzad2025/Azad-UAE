@@ -105,7 +105,9 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         stack.enter_context(patch("routes.printing.PrintService.create_snapshot"))
         stack.enter_context(patch("routes.printing.PrintService.audit_print"))
         stack.enter_context(patch("routes.printing.PrintService.render_print", return_value="ok"))
-        stack.enter_context(patch("routes.printing.PrintService.resolve_template", return_value="expenses/print_voucher.html"))
+        stack.enter_context(
+            patch("routes.printing.PrintService.resolve_template", return_value="expenses/print_voucher.html")
+        )
         stack.enter_context(patch("routes.printing.render_template", return_value="ok"))
         if tenant_get_raises:
             stack.enter_context(patch("routes.expenses.tenant_get_or_404", side_effect=NotFound()))
