@@ -699,9 +699,9 @@ def print_advanced_ledger():
 # ═════════════════════════════════════════════════════════════════════
 # SETTINGS
 # ════════════════════════════════════════════════════════════════════
+@printing_bp.route("/settings", methods=["GET", "POST"])
 @login_required
 @admin_required
-@printing_bp.route("/settings", methods=["GET", "POST"])
 def print_settings():
     tid = get_active_tenant_id(current_user)
     settings = InvoiceSettings.get_active(tid)
