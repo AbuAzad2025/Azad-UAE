@@ -1,6 +1,1 @@
-exclude_paths = [
-  "tests/**",
-]
-
-[git.authors]
-  alow = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+exclude_paths = ["tests/**"]
