@@ -36,9 +36,12 @@ function _withTimeout(promise, ms, message) {
 	});
 }
 
-function _encodeCp864(text) {
-	// Map common Arabic characters to CP864 (Arabic DOS encoding)
-	// This is a simplified mapping - in production, use a full CP864 table
+function _encodeText(text, useCp864 = false) {
+	// Map common Arabic characters to CP864 (Arabic DOS encoding) when
+	// the caller requests it. UTF-8 is the default for modern browsers.
+	if (!useCp864) {
+		return Array.from(new TextEncoder().encode(String(text)));
+	}
 	const cp864Map = {
 		ا: 0xc7,
 		ب: 0xd6,
@@ -118,20 +121,19 @@ function _encodeCp864(text) {
 			// ASCII characters
 			bytes.push(ch.charCodeAt(0));
 		} else {
-			// Fallback for unmapped Arabic - use UTF-8 bytes as fallback
+			// Fallback for unmapped characters - use UTF-8 bytes
 			for (const b of new TextEncoder().encode(ch)) bytes.push(b);
 		}
 	}
-	bytes.push(0x0a); // LF
 	return bytes;
 }
 
-function _lineBytes(text, { align = "left", bold = false, double = false } = {}) {
+function _lineBytes(text, { align = "left", bold = false, double = false, encoding } = {}) {
 	const bytes = [];
 	bytes.push(ESC, 0x61, _ALIGN[align] ?? 0);
 	bytes.push(ESC, 0x45, bold ? 1 : 0);
 	bytes.push(GS, 0x21, double ? 0x11 : 0x00);
-	bytes.push(..._encodeCp864(text));
+	bytes.push(..._encodeText(text, encoding === "cp864"));
 	bytes.push(0x0a);
 	bytes.push(ESC, 0x45, 0, GS, 0x21, 0x00, ESC, 0x61, 0);
 	return bytes;
@@ -154,6 +156,7 @@ function buildReceiptBytes(content = {}) {
 				align: line.align,
 				bold: !!line.bold,
 				double: !!line.double,
+				encoding: line.encoding,
 			}),
 		);
 	}
