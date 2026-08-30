@@ -117,14 +117,20 @@ class Payment(db.Model):
     cheque = db.relationship("Cheque", backref="payment_record", foreign_keys=[cheque_id])
     tenant = db.relationship("Tenant", backref="payments", foreign_keys=[tenant_id])
 
+    _SOURCE_FIELDS = ("sale_id", "purchase_id")
+
     @validates("sale_id", "purchase_id")
     def _validate_payment_direction(self, key, value):
         """Invariant: Payment.direction must match the source-document type.
 
         - sale_id   → must be incoming (customer paying us for a sale)
         - purchase_id → must be outgoing (us paying supplier for a purchase)
+        Also enforces at-most-one source FK.
         """
         if value is not None:
+            others = [f for f in self._SOURCE_FIELDS if f != key and getattr(self, f, None) is not None]
+            if others:
+                raise ValueError(f"Payment can reference at most one source document, {key} vs {others}")
             direction = getattr(self, "direction", None)
             if key == "sale_id" and direction == "outgoing":
                 raise ValueError(

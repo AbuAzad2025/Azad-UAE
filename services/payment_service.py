@@ -585,6 +585,7 @@ class PaymentService:
                 receipt_number=receipt_number,
                 source_type=source_type,
                 source_id=source_id,
+                sale_id=source_id if source_type in ("sale", "refund", "adjustment") and source_id else None,
                 direction=direction,
                 customer_id=customer.id,
                 amount=Decimal(str(amount)),

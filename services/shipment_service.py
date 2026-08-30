@@ -12,6 +12,8 @@ class ShipmentService:
             tenant_id=kwargs.get("tenant_id"),
             source_type=source_type,
             source_id=source_id,
+            sale_id=source_id if source_type == "sale" else None,
+            purchase_return_id=source_id if source_type == "purchase_return" else None,
             carrier_name=carrier_name,
             tracking_number=tracking_number,
             tracking_url=kwargs.get("tracking_url"),

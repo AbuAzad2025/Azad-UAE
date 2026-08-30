@@ -27,6 +27,8 @@ If adding new source types, update the VALID_SOURCE_TYPES set below.
 
 from datetime import UTC, datetime
 
+from sqlalchemy.orm import validates
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.payment_utils import normalize_payment_method_code
@@ -50,7 +52,9 @@ class Receipt(db.Model):
     # For referential integrity in new code, prefer separate nullable FK columns.
     VALID_SOURCE_TYPES = frozenset({"sale", "manual", "refund", "adjustment", "other"})
     source_type = db.Column(db.String(20), default="sale", index=True)  # sale, manual, refund, etc.
-    source_id = db.Column(db.Integer, index=True)  # ID of the source (sale_id, etc.)
+    source_id = db.Column(db.Integer, index=True)  # LEGACY polymorphic FK — retained for backward compat
+    # Explicit FKs (F-01 remediation) — nullable, SET NULL on delete, with DB-level FK
+    sale_id = db.Column(db.Integer, db.ForeignKey("sales.id", ondelete="SET NULL"), index=True, nullable=True)
 
     # اتجاه المدفوعات
     direction = db.Column(db.String(10), default="incoming", index=True)  # incoming, outgoing
@@ -118,6 +122,30 @@ class Receipt(db.Model):
     user = db.relationship("User", foreign_keys=[user_id])
     cheque = db.relationship("Cheque", backref="receipt_record", foreign_keys=[cheque_id])
     tenant = db.relationship("Tenant", backref="receipts", foreign_keys=[tenant_id])
+    sale = db.relationship("Sale", foreign_keys=[sale_id])
+
+    @validates("sale_id")
+    def _validate_sale_id(self, key, value):
+        """F-01: explicit FK must be consistent with polymorphic source fields.
+
+        If sale_id is set, source_type must be sale-like and source_id (if set)
+        must match sale_id. Allows gradual migration: legacy rows keep
+        source_id only, new rows set both.
+        """
+        if value is not None:
+            if self.source_type not in ("sale", "refund", "adjustment"):
+                raise ValueError(
+                    f"Receipt.sale_id requires source_type in sale/refund/adjustment, got {self.source_type}"
+                )
+            if self.source_id is not None and self.source_id != value:
+                raise ValueError(f"Receipt.sale_id ({value}) must match source_id ({self.source_id}) when both are set")
+        return value
+
+    @validates("source_type")
+    def _validate_source_type(self, key, value):
+        if value not in self.VALID_SOURCE_TYPES:
+            raise ValueError(f"Invalid source_type {value!r}, must be one of {sorted(self.VALID_SOURCE_TYPES)}")
+        return value
 
     def __repr__(self):
         return f"<Receipt {self.receipt_number}>"
