@@ -34,8 +34,9 @@ def is_admin_surface_user(user):
     if getattr(user, "is_owner", False):
         return True
     role = getattr(user, "role", None)
-    slug = getattr(role, "slug", None) if role else None
-    return slug == RoleEnum.SUPER_ADMIN.value
+    if not role:
+        return False
+    return role.name == RoleEnum.SUPER_ADMIN.name
 
 
 def is_global_owner_user(user):
