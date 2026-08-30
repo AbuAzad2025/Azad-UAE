@@ -855,13 +855,27 @@ class TestSecurityAuditFixes:
         db_session.add(u)
         db_session.flush()
         db_session.commit()
+        # Pre-login sanity: ensure is_admin is False
+        from utils.auth_helpers import is_admin_surface_user
+
+        assert not is_admin_surface_user(u), f"pre-check role {r.slug}/{r.name} is_admin unexpectedly True"
+        assert r.slug == f"seller_{suffix}"
         with app.test_client() as client:
-            client.post(
+            login_resp = client.post(
                 "/auth/login",
                 data={"username": u.username, "password": "password123"},
-                follow_redirects=True,
+                follow_redirects=False,
+            )
+            # login should redirect (302) not 200 login page on failure
+            assert login_resp.status_code in (302, 303), (
+                f"login failed: {login_resp.status_code} {login_resp.get_data(as_text=True)[:500]}"
             )
             resp = client.get("/printing/settings")
+            if resp.status_code != 403:
+                # dump diagnostics for CI
+                print(
+                    f"DIAG role slug={r.slug} name={r.name} is_admin={is_admin_surface_user(u)} user_id={u.id} tenant={t.id} resp={resp.status_code} data={resp.get_data(as_text=True)[:2000]}"
+                )
         assert resp.status_code == 403
 
     def test_api_product_info_rejects_cross_warehouse(self, app, db_session):
