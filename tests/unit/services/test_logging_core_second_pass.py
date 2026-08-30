@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import warnings
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
+
 import contextlib
 import io
 import logging
