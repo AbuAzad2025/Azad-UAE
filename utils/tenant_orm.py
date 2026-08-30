@@ -2,6 +2,78 @@
 Automatic ORM-level tenant isolation:
 - SELECT auto-scoping via do_orm_execute + with_loader_criteria
 - INSERT/UPDATE/DELETE guard via before_flush (TenantIsolationError)
+
+=============================================================================
+TENANT SCOPING CONTRACT
+=============================================================================
+
+The ORM listener (`_inject_tenant_criteria`) automatically appends
+`WHERE tenant_id = <active_tenant_id>` to every SELECT statement that flows
+through a tenant-scoped blueprint. This applies to top-level queries:
+
+    Sale.query.filter_by(id=42)              # listener adds tenant_id filter
+    tenant_query(Sale).filter_by(id=42)      # explicit, identical result
+
+----------------------------------------------------------------------------
+LAZY-LOADED RELATIONSHIPS — INHERITED SCOPE
+----------------------------------------------------------------------------
+
+When SQLAlchemy lazy-loads a relationship (`obj.<rel_name>`), the listener
+**inherits** the tenant criteria from the parent query. This is a property
+of `with_loader_criteria(include_aliases=True)` and is the safe, intended
+behavior:
+
+    sale = Sale.query.get(42)        # tenant-scoped (parent)
+    sale.items                        # items are also tenant-scoped
+    customer.sales                    # sales are also tenant-scoped
+
+The parent query establishes the tenant boundary; the lazy-load SQL
+emitted for the relationship re-uses it.
+
+**Contract:** If the parent was fetched via a tenant-scoped query, the
+relationship accessor is also tenant-scoped. You do NOT need to add a
+manual `tenant_id` filter to relationship accessors in normal flow.
+
+----------------------------------------------------------------------------
+RELATIONSHIPS THAT BYPASS THE LISTENER
+----------------------------------------------------------------------------
+
+The following patterns break the inheritance contract and MUST add an
+explicit `tenant_id` filter at the call site:
+
+1. **Detached / already-loaded parents** — if a parent object was loaded
+   outside the current request context (e.g., from a Celery task, an
+   admin-only session, or a `db.session.expire_all()`), the relationship
+   accessor will NOT inherit the listener criteria.
+
+2. **Refresh / expire + re-access** — calling `db.session.expire(obj)`
+   and then accessing a relationship re-fetches without the original
+   statement options.
+
+3. **Standalone relationship queries** — calling
+   `Model.<rel_name>.filter(...)` from a class accessor (not an instance)
+   bypasses the parent-query context.
+
+4. **Cross-tenant relationship traversal** — code that fetches a parent
+   in Tenant A and intentionally walks a relationship that the system
+   does not consider tenant-scoped (rare; e.g., a global lookup table).
+
+**Audit reference:** See audit finding H-2. Any relationship access that
+falls into the four patterns above MUST be reviewed and either:
+  (a) wrapped in `with_tenant_scope(tid)` to make the scope explicit, or
+  (b) given an explicit `.filter(RelModel.tenant_id == tid)` filter.
+
+----------------------------------------------------------------------------
+WRITE-PATH GUARANTEE
+----------------------------------------------------------------------------
+
+`before_flush` is unconditional: any tenant-bearing object whose
+`tenant_id` does not match the active tenant at flush time raises
+`TenantIsolationError`. This applies to BOTH ORM-driven writes and raw
+session operations. There is no opt-out except inside an explicit
+`without_tenant_scope()` context manager (e.g., for cross-tenant
+platform-owner operations).
+=============================================================================
 """
 
 from __future__ import annotations

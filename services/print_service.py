@@ -368,12 +368,16 @@ class PrintService:
     # ─── Route-facing scoped fetches ───
 
     @staticmethod
-    def get_document(model_cls, record_id, tenant_id=None):
-        """Fetch a printable document by id; tenant filter applied only when provided."""
-        query = model_cls.query.filter_by(id=record_id)
-        if tenant_id is not None:
-            query = query.filter(model_cls.tenant_id == tenant_id)
-        return query.first()
+    def get_document(model_cls, record_id, tenant_id):
+        """Fetch a printable document by id with strict tenant scoping.
+
+        tenant_id is REQUIRED. Passing None raises ValueError so callers cannot
+        accidentally skip the security boundary. This complements the SQLAlchemy
+        ORM listener (utils/tenant_orm.py) with explicit, defense-in-depth filtering.
+        """
+        if tenant_id is None:
+            raise ValueError("tenant_id is required for security")
+        return model_cls.query.filter_by(id=record_id, tenant_id=tenant_id).first()
 
     @staticmethod
     def get_tenant_document(model_cls, doc_id, tenant_id):
