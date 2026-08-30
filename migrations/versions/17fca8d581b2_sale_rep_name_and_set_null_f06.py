@@ -50,29 +50,32 @@ def upgrade():
             batch_op.add_column(sa.Column("sales_rep_name", sa.String(length=200), nullable=True))
 
     # Change sales_rep_id FK ondelete to SET NULL (if currently RESTRICT)
-    # We need to drop and recreate FK. Name is auto-generated; find it.
-    # For batch mode, we can drop constraint if exists and recreate.
-    # Use batch alter to handle.
     if _column_exists("sales", "sales_rep_id"):
-        # Check if FK exists with RESTRICT - we will recreate as SET NULL
-        # In batch mode, alter the FK by dropping and adding
-        with op.batch_alter_table("sales", schema=None) as batch_op:
-            # Drop old FK if exists (name may vary)
+        from sqlalchemy import inspect
+
+        bind = op.get_bind()
+        insp = inspect(bind)
+        # Find existing FK name for sales_rep_id
+        fk_name = None
+        try:
+            for fk in insp.get_foreign_keys("sales"):
+                if "sales_rep_id" in fk.get("constrained_columns", []):
+                    fk_name = fk["name"]
+                    break
+        except Exception:
+            fk_name = None
+        if fk_name:
             with contextlib.suppress(Exception):
-                batch_op.drop_constraint("sales_sales_rep_id_fkey", type_="foreignkey")
-            with contextlib.suppress(Exception):
-                batch_op.drop_constraint("fk_sales_sales_rep_id_users", type_="foreignkey")
-            # Recreate with SET NULL
-            # Only create if not already exists with correct ondelete
-            # We attempt to create; if fails due to existing, suppress
-            with contextlib.suppress(Exception):
-                batch_op.create_foreign_key(
-                    "fk_sales_sales_rep_id_users",
-                    "users",
-                    ["sales_rep_id"],
-                    ["id"],
-                    ondelete="SET NULL",
-                )
+                op.execute(sa.text(f'ALTER TABLE sales DROP CONSTRAINT "{fk_name}"'))
+        # Now ensure SET NULL FK exists (idempotent)
+        with op.batch_alter_table("sales", schema=None) as batch_op, contextlib.suppress(Exception):
+            batch_op.create_foreign_key(
+                "fk_sales_sales_rep_id_users",
+                "users",
+                ["sales_rep_id"],
+                ["id"],
+                ondelete="SET NULL",
+            )
 
 
 def downgrade():
@@ -82,14 +85,26 @@ def downgrade():
 
     # Revert FK to RESTRICT
     if _column_exists("sales", "sales_rep_id"):
-        with op.batch_alter_table("sales", schema=None) as batch_op:
+        from sqlalchemy import inspect as _inspect
+
+        bind = op.get_bind()
+        insp = _inspect(bind)
+        fk_name = None
+        try:
+            for fk in insp.get_foreign_keys("sales"):
+                if "sales_rep_id" in fk.get("constrained_columns", []):
+                    fk_name = fk["name"]
+                    break
+        except Exception:
+            fk_name = None
+        if fk_name:
             with contextlib.suppress(Exception):
-                batch_op.drop_constraint("fk_sales_sales_rep_id_users", type_="foreignkey")
-            with contextlib.suppress(Exception):
-                batch_op.create_foreign_key(
-                    "fk_sales_sales_rep_id_users",
-                    "users",
-                    ["sales_rep_id"],
-                    ["id"],
-                    ondelete="RESTRICT",
-                )
+                op.execute(sa.text(f'ALTER TABLE sales DROP CONSTRAINT "{fk_name}"'))
+        with op.batch_alter_table("sales", schema=None) as batch_op, contextlib.suppress(Exception):
+            batch_op.create_foreign_key(
+                "fk_sales_sales_rep_id_users",
+                "users",
+                ["sales_rep_id"],
+                ["id"],
+                ondelete="RESTRICT",
+            )
