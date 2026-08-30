@@ -14,6 +14,31 @@ if TYPE_CHECKING:
     from models.user import User
 
 
+"""Sale and SaleLine models.
+
+ARCHITECTURE NOTE: USER IDENTITY FIELDS IN SALE
+================================================
+Sale tracks user identity using three distinct FK fields to users.id:
+
+  seller_id (mandatory):  The primary operator who created/closed this sale.
+                          In POS context, this is the cashier who processed the transaction.
+                          Use: Sale.seller → User.
+
+  sales_rep_id (optional):  The sales representative who earns commission on this sale.
+                          May be the same as seller_id or a different person.
+                          May be NULL for POS sales with no commission structure.
+                          Use: Sale.sales_rep → User.
+
+  NOTE: Unlike other transaction models (Purchase, Payment, Expense, Receipt),
+  Sale does NOT have a generic user_id FK. All user attribution is via the
+  two semantic fields above. When searching for "who created this sale",
+  use seller_id. When calculating commission, use sales_rep_id.
+
+If you need a generic "created_by" field, add user_id as a nullable FK
+and update all Sale instantiation sites.
+"""
+
+
 class Sale(db.Model):
     __tablename__ = "sales"
 

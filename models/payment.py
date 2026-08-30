@@ -2,6 +2,8 @@
 
 from datetime import UTC, datetime
 
+from sqlalchemy.orm import validates
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.payment_utils import normalize_payment_method_code
@@ -114,6 +116,27 @@ class Payment(db.Model):
     user = db.relationship("User", foreign_keys=[user_id])
     cheque = db.relationship("Cheque", backref="payment_record", foreign_keys=[cheque_id])
     tenant = db.relationship("Tenant", backref="payments", foreign_keys=[tenant_id])
+
+    @validates("sale_id", "purchase_id")
+    def _validate_payment_direction(self, key, value):
+        """Invariant: Payment.direction must match the source-document type.
+
+        - sale_id   → must be incoming (customer paying us for a sale)
+        - purchase_id → must be outgoing (us paying supplier for a purchase)
+        """
+        if value is not None:
+            direction = getattr(self, "direction", None)
+            if key == "sale_id" and direction == "outgoing":
+                raise ValueError(
+                    f"Payment.sale_id cannot be set on an outgoing payment "
+                    f"(direction='{direction}'). Use purchase_id for outgoing."
+                )
+            if key == "purchase_id" and direction == "incoming":
+                raise ValueError(
+                    f"Payment.purchase_id cannot be set on an incoming payment "
+                    f"(direction='{direction}'). Use sale_id for incoming."
+                )
+        return value
 
     def __repr__(self):
         return f"<Payment {self.payment_number}>"

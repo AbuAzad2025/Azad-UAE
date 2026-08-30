@@ -1,4 +1,29 @@
-"""Receipt model - payment receipts for incoming/outgoing funds."""
+"""Receipt model - payment receipts for incoming/outgoing funds.
+
+ARCHITECTURE NOTE: RECEIPT SOURCE IDENTITY PATTERN
+================================================
+Receipt uses a polymorphic source pattern (source_type + source_id) rather
+than separate nullable FKs. This design was chosen to support multiple
+source document types (sale, manual, refund, adjustment, etc.) without
+adding a nullable FK column per source type.
+
+Trade-offs vs. separate FK columns:
+  PRO: Clean schema — only two columns for N source types.
+  CON: No DB-level referential integrity on source_id.
+  CON: Application must validate source_type/source_id consistency.
+
+For new development, prefer separate nullable FK columns per source type
+(e.g., sale_id, purchase_id, expense_id) with a UNIQUE CHECK constraint
+ensuring exactly one is non-NULL. This provides both referential integrity
+and explicit domain semantics.
+
+Existing code pattern:
+  source_type = "sale" → source_id = sale.id
+  source_type = "manual" → source_id = None (no FK target)
+  source_type = "refund" → source_id = sale.id
+
+If adding new source types, update the VALID_SOURCE_TYPES set below.
+"""
 
 from datetime import UTC, datetime
 
@@ -21,6 +46,9 @@ class Receipt(db.Model):
     receipt_number = db.Column(db.String(50), nullable=False, index=True)
 
     # تصنيف مصدر السند
+    # NOTE: see module docstring for the polymorphic source pattern trade-offs.
+    # For referential integrity in new code, prefer separate nullable FK columns.
+    VALID_SOURCE_TYPES = frozenset({"sale", "manual", "refund", "adjustment", "other"})
     source_type = db.Column(db.String(20), default="sale", index=True)  # sale, manual, refund, etc.
     source_id = db.Column(db.Integer, index=True)  # ID of the source (sale_id, etc.)
 

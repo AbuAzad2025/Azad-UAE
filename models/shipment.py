@@ -4,6 +4,23 @@ from extensions import db
 
 
 class Shipment(db.Model):
+    """
+    Tracks physical shipment/delivery of a sale order.
+
+    ARCHITECTURE NOTE: POLYMORPHIC SOURCE PATTERN
+    ===============================================
+    Shipment uses source_type + source_id as a polymorphic reference.
+    The source_id is NOT NULL but has no FK constraint — it is a
+    logical reference only.
+
+    Supported source_type values and their semantic meaning:
+      "sale" → source_id = sale.id  (most common)
+
+    Unlike Receipt, Shipment currently has no FK enforcement on source_id.
+    Adding proper nullable FKs per source type is recommended for future
+    releases to provide referential integrity.
+    """
+
     __tablename__ = "shipments"
 
     id = db.Column(db.Integer, primary_key=True)
@@ -13,6 +30,7 @@ class Shipment(db.Model):
         nullable=False,
         index=True,
     )
+    VALID_SOURCE_TYPES = frozenset({"sale", "purchase_return"})
     source_type = db.Column(db.String(20), nullable=False)
     source_id = db.Column(db.Integer, nullable=False, index=True)
     carrier_name = db.Column(db.String(100))

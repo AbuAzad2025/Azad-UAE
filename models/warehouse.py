@@ -2,6 +2,8 @@
 
 from datetime import UTC, datetime
 
+from sqlalchemy.orm import validates
+
 from extensions import db
 
 
@@ -51,6 +53,32 @@ class Warehouse(db.Model):
 
     def __repr__(self):
         return f"<Warehouse {self.name}>"
+
+    @validates("tenant_id")
+    def _validate_tenant_consistency(self, key, value):
+        """Enforce that Warehouse.tenant_id matches Branch.tenant_id when branch is set.
+
+        Prevents the split-brain problem where a warehouse's tenant_id
+        differs from its branch's tenant_id. Skip validation when no
+        request context is active (CLI scripts, tests) to avoid premature
+        DB lookups during model construction.
+
+        NOTE: For full DB-level enforcement, also add a CHECK constraint:
+            CHECK (branch_id IS NULL OR tenant_id = (SELECT tenant_id FROM branches WHERE id = branch_id))
+        """
+        from flask import has_request_context
+
+        if value is not None and self.branch_id and has_request_context():
+            from models.branch import Branch
+
+            branch = db.session.get(Branch, self.branch_id)
+            if branch is not None and branch.tenant_id != value:
+                raise ValueError(
+                    f"Warehouse.tenant_id ({value}) must match "
+                    f"Branch.tenant_id ({branch.tenant_id}) when branch_id is set. "
+                    "Warehouse tenant should be derived from its Branch."
+                )
+        return value
 
     @property
     def is_online(self):

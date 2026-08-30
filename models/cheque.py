@@ -6,6 +6,8 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from sqlalchemy.orm import validates
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 
@@ -127,6 +129,35 @@ class Cheque(db.Model):
 
     def __repr__(self):
         return f"<Cheque {self.cheque_number} - {self.cheque_type} - {self.status}>"
+
+    _SOURCE_FIELDS = (
+        "sale_id",
+        "purchase_id",
+        "payment_id",
+        "receipt_id",
+        "expense_id",
+    )
+
+    @validates("sale_id", "purchase_id", "payment_id", "receipt_id", "expense_id")
+    def _validate_exactly_one_source(self, key, value):
+        """Invariant: a Cheque may reference AT MOST ONE source document.
+
+        Real-world accounting rule: a cheque is issued to settle exactly one
+        counterparty obligation (a sale payment, a purchase payment, an expense,
+        or a manual receipt/payment). Linking the same cheque to multiple
+        source documents would create ambiguous GL postings and double-counting.
+
+        Counterparty fields (customer_id, supplier_id) are allowed alongside
+        the source since they describe the cheque's payer/payee, not its
+        accounting origin.
+        """
+        others = [f for f in self._SOURCE_FIELDS if f != key and getattr(self, f, None) is not None]
+        if value is not None and others:
+            raise ValueError(
+                f"Cheque can reference at most one source document. "
+                f"Attempted to set {key}={value} but {others} already set."
+            )
+        return value
 
     @property
     def cheque_type_ar(self):
