@@ -32,7 +32,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 def _run(cmd: list[str], env: dict | None = None) -> None:
     print(f"$ {' '.join(cmd)}")
-    subprocess.run(cmd, check=True, cwd=str(PROJECT_ROOT), env=env)
+    subprocess.run(cmd, check=True, cwd=str(PROJECT_ROOT), env=env)  # nosec B603
 
 
 def _ensure_db(db_url: str) -> None:

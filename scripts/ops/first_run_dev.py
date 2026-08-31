@@ -29,7 +29,7 @@ DEFAULT_TEST_DB_URL = "postgresql+psycopg2://postgres:123@localhost:5432/azad_ua
 
 def _run(cmd: list[str], env: dict | None = None) -> None:
     print(f"$ {' '.join(cmd)}")
-    subprocess.run(cmd, check=True, cwd=str(PROJECT_ROOT), env=env)
+    subprocess.run(cmd, check=True, cwd=str(PROJECT_ROOT), env=env)  # nosec B603
 
 
 def _ensure_db(db_url: str) -> None:
