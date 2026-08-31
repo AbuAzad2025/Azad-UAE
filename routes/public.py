@@ -52,8 +52,8 @@ def landing():
     from flask_login import current_user
 
     if current_user.is_authenticated:
-        return redirect(url_for("main.dashboard"))
-    return redirect(url_for("auth.login"))
+        return redirect("/dashboard")
+    return redirect("/auth/login")
 
 
 @public_bp.route("/welcome")

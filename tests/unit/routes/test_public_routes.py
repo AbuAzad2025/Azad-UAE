@@ -48,14 +48,14 @@ class TestPublicLanding:
             mock_user.is_authenticated = False
             resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
-        assert "/auth/login" in resp.headers["Location"]
+        assert resp.headers["Location"].endswith("/auth/login")
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
         with patch("flask_login.current_user") as mock_user:
             mock_user.is_authenticated = True
             resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
-        assert "/dashboard" in resp.headers["Location"]
+        assert resp.headers["Location"].endswith("/dashboard")
 
     def test_welcome_renders_landing(self, public_client):
         with patch("routes.public.render_template", return_value="landing") as render:
