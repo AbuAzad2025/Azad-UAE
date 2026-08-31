@@ -81,6 +81,10 @@ def main() -> None:
     env.setdefault("DATABASE_URL", DEFAULT_DB_URL)
     env.setdefault("TEST_DATABASE_URL", DEFAULT_TEST_DB_URL)
     env.setdefault("SKIP_SYSTEM_INTEGRITY", "0")
+    env.setdefault("CACHE_TYPE", "null")
+    env.setdefault("RATELIMIT_STORAGE_URI", "memory://")
+    env.setdefault("CELERY_BROKER_URL", "memory://")
+    env.setdefault("CELERY_RESULT_BACKEND", "memory://")
 
     # 1. Drop and create DBs
     _ensure_db(env["DATABASE_URL"])
@@ -104,7 +108,7 @@ def main() -> None:
 
     # 6. Verify
     _run([sys.executable, "-m", "flask", "db", "current"], env=env)
-    print("\n✅ Dev first-run complete — clean DB ready at", env["DATABASE_URL"])
+    print("\n[OK] Dev first-run complete - clean DB ready at", env["DATABASE_URL"])
     print("   Owner: username=owner  password from OWNER_PASSWORD env or auto-generated (see instance/secret_key)")
     print("   Run: python app.py  -> http://127.0.0.1:5000  (GET / -> 302 /auth/login)")
 

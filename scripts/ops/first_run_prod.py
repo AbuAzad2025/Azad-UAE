@@ -71,6 +71,10 @@ def main() -> None:
     env.setdefault("FLASK_ENV", "production")
     env.setdefault("OWNER_USERNAME", "owner")
     env.setdefault("OWNER_EMAIL", "owner@system.local")
+    env.setdefault("CACHE_TYPE", "null")
+    env.setdefault("RATELIMIT_STORAGE_URI", "memory://")
+    env.setdefault("CELERY_BROKER_URL", "memory://")
+    env.setdefault("CELERY_RESULT_BACKEND", "memory://")
 
     # 1. Ensure DB exists (does not drop existing data in prod)
     _ensure_db(env["DATABASE_URL"])
@@ -86,7 +90,7 @@ def main() -> None:
 
     # 5. Verify
     _run([sys.executable, "-m", "flask", "db", "current"], env=env)
-    print("\n✅ Prod first-run complete — DB ready at", env["DATABASE_URL"].split("@")[-1])
+    print("\n[OK] Prod first-run complete - DB ready at", env["DATABASE_URL"].split("@")[-1])
     print(f"   Owner: {env['OWNER_USERNAME']} / {env['OWNER_EMAIL']}")
     print("   No demo data created. Create tenants via Owner panel: /owner/tenants/new")
     print("   Run: gunicorn -w 4 -b 0.0.0.0:8000 wsgi:app")
