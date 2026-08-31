@@ -44,17 +44,18 @@ def _vault_patch(vault):
 
 class TestPublicLanding:
     def test_landing_redirects_to_login_when_anonymous(self, public_client):
-        resp = public_client.get("/", follow_redirects=False)
+        with patch("routes.public.current_user") as mock_user:
+            mock_user.is_authenticated = False
+            resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
         assert "/auth/login" in resp.headers["Location"]
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
-        with public_client.session_transaction() as sess:
-            sess["_user_id"] = "1"
-            sess["_fresh"] = True
-        resp = public_client.get("/", follow_redirects=False)
+        with patch("routes.public.current_user") as mock_user:
+            mock_user.is_authenticated = True
+            resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
-        assert "/dashboard" in resp.headers["Location"] or "/auth/login" in resp.headers["Location"]
+        assert "/dashboard" in resp.headers["Location"]
 
     def test_welcome_renders_landing(self, public_client):
         with patch("routes.public.render_template", return_value="landing") as render:
