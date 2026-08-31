@@ -171,6 +171,14 @@ def get_or_create(db_session, model, defaults=None, **kwargs):
     params = dict(kwargs.items())
     if defaults:
         params.update(defaults)
-    instance = model(**params)
-    db_session.add(instance)
+    try:
+        instance = model(**params)
+        db_session.add(instance)
+        db_session.flush()
+    except Exception:
+        db_session.rollback()
+        instance = db_session.query(model).filter_by(**kwargs).first()
+        if instance:
+            return instance, False
+        raise
     return instance, True
