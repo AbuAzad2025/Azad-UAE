@@ -44,14 +44,14 @@ def _vault_patch(vault):
 
 class TestPublicLanding:
     def test_landing_redirects_to_login_when_anonymous(self, public_client):
-        with patch("routes.public.current_user") as mock_user:
+        with patch("flask_login.current_user") as mock_user:
             mock_user.is_authenticated = False
             resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
         assert "/auth/login" in resp.headers["Location"]
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
-        with patch("routes.public.current_user") as mock_user:
+        with patch("flask_login.current_user") as mock_user:
             mock_user.is_authenticated = True
             resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 302
