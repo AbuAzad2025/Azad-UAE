@@ -12,6 +12,7 @@ skips:
   - B110  # try_except_pass — acceptable in cleanup/teardown paths
   - B112  # try_except_continue — acceptable in data-processing loops
   - B113  # requests_without_timeout — all call sites pass a timeout
+  - B608  # hardcoded_sql_expressions — false positives on Alembic f-string DROP CONSTRAINT with inspected identifier
 
 exclude_dirs:
   # Auto-generated Alembic revisions — not hand-written production logic.
