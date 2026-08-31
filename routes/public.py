@@ -48,7 +48,17 @@ def _safe_vault_for_public(vault):
 
 @public_bp.route("/")
 def landing():
-    """Landing Page الفخمة"""
+    """Root — redirect authenticated to dashboard, anonymous to login (stable for both PG and SQLite)."""
+    from flask_login import current_user
+
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+    return redirect(url_for("auth.login"))
+
+
+@public_bp.route("/welcome")
+def landing_page():
+    """Public landing page (SEO) — always renders welcome, no redirect."""
     lang = session.get("language", "ar")
     from services.saas_provisioning_service import SaaSProvisioningService
 
