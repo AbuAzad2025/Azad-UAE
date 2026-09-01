@@ -38,6 +38,7 @@ class GLAccount(db.Model):
     )  # TODO: use Config.DEFAULT_CURRENCY
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     is_header = db.Column(db.Boolean, default=False)  # حساب رئيسي (لا يقبل قيود مباشرة)
+    is_contra = db.Column(db.Boolean, default=False, nullable=False)  # contra-asset/contra-equity (credit normal)
     level = db.Column(db.Integer, default=0)  # مستوى الحساب في الشجرة
     description = db.Column(db.Text)
     industry_code = db.Column(db.String(50), nullable=True, index=True)
@@ -160,7 +161,13 @@ class GLAccount(db.Model):
 
         balance = q.scalar()
 
-        if self.type in ("liability", "equity", "revenue"):
+        is_contra = getattr(self, "is_contra", False)
+        if is_contra:
+            # Contra-asset/contra-equity has opposite normal balance
+            if self.type in ("asset", "equity"):
+                # Asset with credit normal (e.g., Accum.Dep) or Equity with debit normal (Drawings)
+                balance = -balance
+        elif self.type in ("liability", "equity", "revenue"):
             balance = -balance
 
         return balance

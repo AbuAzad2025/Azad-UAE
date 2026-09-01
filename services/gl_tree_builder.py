@@ -19,6 +19,7 @@ def _template_to_tuple(tmpl):
         tmpl.parent_code,
         tmpl.is_header,
         tmpl.level,
+        getattr(tmpl, "is_contra", False),
     )
 
 
@@ -90,6 +91,7 @@ class GLTreeBuilder:
             parent_code,
             is_header,
             level,
+            is_contra,
         ) in full_tree:
             try:
                 result = GLTreeBuilder._process_account(
@@ -101,6 +103,7 @@ class GLTreeBuilder:
                     parent_code,
                     is_header,
                     level,
+                    is_contra,
                     existing_accounts,
                     processed,
                 )
@@ -154,6 +157,7 @@ class GLTreeBuilder:
         parent_code,
         is_header,
         level,
+        is_contra,
         existing_accounts,
         processed,
     ):
@@ -192,6 +196,11 @@ class GLTreeBuilder:
 
             if acc.level != level:
                 acc.level = level
+                needs_update = True
+
+            is_contra_value = is_contra if isinstance(is_contra, bool) else False
+            if getattr(acc, "is_contra", False) != is_contra_value:
+                acc.is_contra = is_contra_value
                 needs_update = True
 
             # Preserve existing account currency; do not force AED
@@ -234,6 +243,7 @@ class GLTreeBuilder:
                 parent_id=parent_id,
                 is_header=is_header,
                 level=level,
+                is_contra=is_contra,
                 is_active=True,
                 currency=GLTreeBuilder._resolve_tenant_currency(tenant_id),
             )
