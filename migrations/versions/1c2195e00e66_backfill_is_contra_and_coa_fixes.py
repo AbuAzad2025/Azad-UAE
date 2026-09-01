@@ -8,7 +8,8 @@ F-08 (audit fix):
 - Mark 1190 (Accum.Dep), 3300 (Owner Drawings), 5201 (Inventory Gain) is_contra=true
 - Move 2122 (VAT Input) parent from 2120 (liability) to 1100 (Current Assets)
 - Move 2122 from level 3 to level 2
-- Mark 4100/5100/1130/1140/2110/2120/5150 as is_header=true (postable groups with children)
+- Note: postable group accounts (1130/1140/2110/2120/4100/5100/5150) stay is_header=false
+  because the GL engine posts directly to them via concepts; forcing headers would break posting.
 - All idempotent via WHERE guards
 """
 
@@ -47,22 +48,8 @@ def upgrade():
         )
     )
 
-    # 3. Mark postable groups as headers (has children)
-    op.execute(
-        sa.text(
-            "UPDATE gl_accounts SET is_header = true "
-            "WHERE code IN ('4100','5100','1130','1140','2110','2120','5150') AND is_header = false"
-        )
-    )
-
 
 def downgrade():
-    with contextlib.suppress(Exception):
-        op.execute(
-            sa.text(
-                "UPDATE gl_accounts SET is_header = false WHERE code IN ('4100','5100','1130','1140','2110','2120','5150')"
-            )
-        )
     with contextlib.suppress(Exception):
         op.execute(sa.text("UPDATE gl_accounts SET is_contra = false WHERE code IN ('1190','3300','5201')"))
     with contextlib.suppress(Exception):
