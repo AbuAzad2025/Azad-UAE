@@ -35,11 +35,12 @@ $(document).ready(() => {
 				const currentPrice = parseFloat(priceInput.val()) || 0;
 
 				if (currentPrice === 0 || Math.abs(currentPrice - response.recommended_price) > 0.01) {
-					// إظهار توصية
+					// إظهار توصية — event delegation بدل onclick (متوافق مع nonce-CSP)
+					const btnId = `aiApplyPrice_${lineIndex}`;
 					const badge = `
                         <span class="badge badge-info ai-recommendation" style="margin-right: 5px;">
                             <i class="fas fa-robot"></i> موصى به: ${response.recommended_price.toFixed(2)}
-                            <button type="button" class="btn btn-xs btn-light ml-1" onclick="applyRecommendedPrice(${lineIndex}, ${response.recommended_price})">
+                            <button type="button" id="${btnId}" class="btn btn-xs btn-light ml-1" data-price="${response.recommended_price.toFixed(2)}">
                                 تطبيق
                             </button>
                         </span>
@@ -47,6 +48,10 @@ $(document).ready(() => {
 
 					priceInput.parent().find(".ai-recommendation").remove();
 					priceInput.after(badge);
+					document.getElementById(btnId)?.addEventListener("click", () => {
+						const p = parseFloat(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
+						window._applyRecommendedPrice(lineIndex, p);
+					});
 				}
 			},
 			error: () => {},
@@ -151,6 +156,7 @@ $(document).ready(() => {
 			method: "GET",
 			success: (result) => {
 				if (result.found && result.suggested_price_aed) {
+					const btnId = `aiApplyMarket_${lineIndex}`;
 					const marketInfo = `
                         <div class="alert alert-success alert-sm mt-2">
                             <strong>💰 سعر السوق العالمي:</strong><br>
@@ -158,12 +164,16 @@ $(document).ready(() => {
                             <span class="badge badge-info">${result.suggested_price_aed.toFixed(2)} ${window._FX_FALLBACK_BASE || "ILS"}</span><br>
                             <small>${esc(result.notes || "")}</small>
                             ${result.markets ? `<br><small>الأسواق: ${result.markets.map(esc).join(", ")}</small>` : ""}
-                            <button type="button" class="btn btn-xs btn-success mt-1" onclick="applyMarketPrice(${lineIndex}, ${result.suggested_price_aed})">
+                            <button type="button" id="${btnId}" class="btn btn-xs btn-success mt-1" data-price="${result.suggested_price_aed.toFixed(2)}">
                                 تطبيق السعر
                             </button>
                         </div>
                     `;
 					$(`#market_info_${lineIndex}`).html(marketInfo);
+					document.getElementById(btnId)?.addEventListener("click", () => {
+						const p = parseFloat(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
+						window._applyMarketPrice(lineIndex, p);
+					});
 				} else if (result.message) {
 					// Backend is honest about the feature state (e.g. قيد التطوير) — surface it as-is.
 					$(`#market_info_${lineIndex}`).html(
@@ -288,6 +298,6 @@ function _applyMarketPrice(lineIndex, price) {
 	$(`#market_info_${lineIndex}`).fadeOut();
 }
 
-// Expose the handlers referenced by inline onclick attributes in generated badges.
+// Expose the handlers; generated badges use addEventListener (nonce-CSP-safe), no inline onclick.
 window.applyRecommendedPrice = _applyRecommendedPrice;
 window.applyMarketPrice = _applyMarketPrice;
