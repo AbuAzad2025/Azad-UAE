@@ -9,7 +9,6 @@ from extensions import db
 from utils.gl_services import (
     gl_ensure_core_accounts,
     gl_get_default_liquidity_account,
-    gl_post_entry,
     gl_post_or_fail,
 )
 
@@ -338,7 +337,7 @@ class FixedAsset(db.Model):
         )
 
         disposal_type = "بيع" if self.disposal_price > 0 else "إتلاف"
-        gl_post_entry(
+        gl_post_or_fail(
             lines=lines,
             description=f"قيد {disposal_type} أصل - {self.asset_number}",
             reference_type=GLRef.ASSET_DISPOSAL,

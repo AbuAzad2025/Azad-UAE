@@ -110,7 +110,7 @@ class PayrollService:
         gl_entry = post_or_fail(
             [
                 {
-                    "account": "1160",
+                    "account": "1170",
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": Decimal(str(amount)),
                     "credit": 0,
@@ -307,7 +307,7 @@ class PayrollService:
         if actual_deduction > 0:
             lines.append(
                 {
-                    "account": "1160",
+                    "account": "1170",
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": 0,
                     "credit": Decimal(str(actual_deduction)),
