@@ -951,12 +951,13 @@ class TestStockCoverage:
         mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=MagicMock(account_code="9999"))
         assert _resolve_gl_concept_account("CASH", "1010", tenant_id=1) == "9999"
 
-    def test_resolve_gl_concept_dynamic_fails_fallback(self, mocker):
+    def test_resolve_gl_concept_dynamic_fails_raises_gl_mapping_error(self, mocker):
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_account_resolver.resolve_gl_account", side_effect=Exception("db down"))
-        # Should fallback to static mapping or fallback_account_code
-        result = _resolve_gl_concept_account("UNKNOWN_CONCEPT", "9999", tenant_id=1)
-        assert result == "9999"
+        from services.gl_account_resolver import GLMappingError
+
+        with pytest.raises(GLMappingError):
+            _resolve_gl_concept_account("UNKNOWN_CONCEPT", "9999", tenant_id=1)
 
     def test_resolve_gl_concept_static_mapping(self, mocker):
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=False)

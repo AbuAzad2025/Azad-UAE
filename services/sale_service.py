@@ -654,11 +654,11 @@ class SaleService:
             tax_rate = Decimal(str(sale.tax_rate)) if sale.tax_rate else Decimal("0")
             if tax_rate > 0:
                 divisor = Decimal("1") + (tax_rate / Decimal("100"))
-                discount_debit = (sale.discount_amount / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                promo_debit = (promotion_discount / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                shipping_credit = (sale.shipping_cost / divisor).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                discount_debit = (sale.discount_amount / divisor).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                promo_debit = (promotion_discount / divisor).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                shipping_credit = (sale.shipping_cost / divisor).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 revenue_credit = (sale.taxable_amount - shipping_credit + discount_debit + promo_debit).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
             else:
                 revenue_credit = sale.subtotal

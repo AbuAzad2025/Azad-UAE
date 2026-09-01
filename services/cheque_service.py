@@ -661,43 +661,54 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
         _create_bounce_journal_entry(cheque)
         if bounce_fee is not None and bounce_fee > 0:
             try:
+                from models import GLJournalEntry
                 from services.gl_posting import post_or_fail
 
-                expense_account = GLService.get_account_code_for_concept(
-                    "MISC_EXPENSE",
-                    branch_id=cheque.branch_id,
-                    tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="misc_expense",
+                fee_desc = gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}")
+                existing_fee_q = GLJournalEntry.query.filter(
+                    GLJournalEntry.reference_type == GLRef.CHEQUE_BOUNCE,
+                    GLJournalEntry.reference_id == cheque.id,
+                    GLJournalEntry.status == "posted",
+                    GLJournalEntry.description == fee_desc,
                 )
-                bank_account = gl_get_default_liquidity_account(
-                    "bank",
-                    branch_id=cheque.branch_id,
-                    tenant_id=(cheque.tenant_id if cheque is not None else None),
-                )
-                fee_lines = [
-                    {
-                        "account": expense_account,
-                        "concept_code": "MISC_EXPENSE",
-                        "debit": Decimal(str(bounce_fee)),
-                        "credit": 0,
-                        "description": gettext(f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
-                    },
-                    {
-                        "account": bank_account,
-                        "concept_code": "BANK",
-                        "debit": 0,
-                        "credit": Decimal(str(bounce_fee)),
-                        "description": gettext(f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
-                    },
-                ]
-                post_or_fail(
-                    fee_lines,
-                    description=gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}"),
-                    reference_type=GLRef.CHEQUE_BOUNCE,
-                    reference_id=cheque.id,
-                    branch_id=cheque.branch_id,
-                    tenant_id=(cheque.tenant_id if cheque is not None else None),
-                )
+                if cheque.tenant_id is not None:
+                    existing_fee_q = existing_fee_q.filter(GLJournalEntry.tenant_id == cheque.tenant_id)
+                if existing_fee_q.first() is None:
+                    expense_account = GLService.get_account_code_for_concept(
+                        "MISC_EXPENSE",
+                        branch_id=cheque.branch_id,
+                        tenant_id=(cheque.tenant_id if cheque is not None else None),
+                        fallback_key="misc_expense",
+                    )
+                    bank_account = gl_get_default_liquidity_account(
+                        "bank",
+                        branch_id=cheque.branch_id,
+                        tenant_id=(cheque.tenant_id if cheque is not None else None),
+                    )
+                    fee_lines = [
+                        {
+                            "account": expense_account,
+                            "concept_code": "MISC_EXPENSE",
+                            "debit": Decimal(str(bounce_fee)),
+                            "credit": 0,
+                            "description": gettext(f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
+                        },
+                        {
+                            "account": bank_account,
+                            "concept_code": "BANK",
+                            "debit": 0,
+                            "credit": Decimal(str(bounce_fee)),
+                            "description": gettext(f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
+                        },
+                    ]
+                    post_or_fail(
+                        fee_lines,
+                        description=fee_desc,
+                        reference_type=GLRef.CHEQUE_BOUNCE,
+                        reference_id=cheque.id,
+                        branch_id=cheque.branch_id,
+                        tenant_id=(cheque.tenant_id if cheque is not None else None),
+                    )
             except Exception as fee_err:
                 logger.error(f"Failed to post bounce fee for cheque {cheque.id}: {fee_err}")
         if cheque.cheque_type == "incoming" and cheque.customer_id:

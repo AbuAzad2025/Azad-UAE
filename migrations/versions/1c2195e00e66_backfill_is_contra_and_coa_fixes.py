@@ -11,6 +11,7 @@ F-08 (audit fix):
 - Mark 4100/5100/1130/1140/2110/2120/5150 as is_header=true (postable groups with children)
 - All idempotent via WHERE guards
 """
+
 import contextlib
 
 import sqlalchemy as sa
@@ -25,10 +26,7 @@ depends_on = None
 def upgrade():
     # 1. Mark contra accounts
     op.execute(
-        sa.text(
-            "UPDATE gl_accounts SET is_contra = true "
-            "WHERE code IN ('1190','3300','5201') AND is_contra = false"
-        )
+        sa.text("UPDATE gl_accounts SET is_contra = true WHERE code IN ('1190','3300','5201') AND is_contra = false")
     )
 
     # 2. Re-parent 2122 (VAT Input) under 1100 (Current Assets) instead of 2120
@@ -60,7 +58,11 @@ def upgrade():
 
 def downgrade():
     with contextlib.suppress(Exception):
-        op.execute(sa.text("UPDATE gl_accounts SET is_header = false WHERE code IN ('4100','5100','1130','1140','2110','2120','5150')"))
+        op.execute(
+            sa.text(
+                "UPDATE gl_accounts SET is_header = false WHERE code IN ('4100','5100','1130','1140','2110','2120','5150')"
+            )
+        )
     with contextlib.suppress(Exception):
         op.execute(sa.text("UPDATE gl_accounts SET is_contra = false WHERE code IN ('1190','3300','5201')"))
     with contextlib.suppress(Exception):

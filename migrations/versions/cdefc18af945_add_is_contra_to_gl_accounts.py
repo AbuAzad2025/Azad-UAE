@@ -8,6 +8,7 @@ F-08 (audit fix): add is_contra BOOLEAN default false to gl_accounts.
 Required for proper accounting of Accumulated Depreciation (1190),
 Owner Drawings (3300), Inventory Gain (5201).
 """
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -19,6 +20,7 @@ depends_on = None
 
 def _column_exists(table: str, column: str) -> bool:
     from sqlalchemy import inspect
+
     bind = op.get_bind()
     insp = inspect(bind)
     try:
@@ -30,9 +32,7 @@ def _column_exists(table: str, column: str) -> bool:
 def upgrade():
     if not _column_exists("gl_accounts", "is_contra"):
         with op.batch_alter_table("gl_accounts", schema=None) as batch_op:
-            batch_op.add_column(
-                sa.Column("is_contra", sa.Boolean(), nullable=False, server_default=sa.text("false"))
-            )
+            batch_op.add_column(sa.Column("is_contra", sa.Boolean(), nullable=False, server_default=sa.text("false")))
 
 
 def downgrade():

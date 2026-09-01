@@ -77,6 +77,7 @@ class _MWACHelper:
 
 def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=None):
     from services.gl_account_resolver import (
+        GLMappingError,
         is_dynamic_gl_mapping_enabled,
         resolve_gl_account,
     )
@@ -87,12 +88,20 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
             resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
             if resolved:
                 return resolved.account_code
+        except GLMappingError:
+            raise
         except Exception:
             logger.warning(
                 "Dynamic GL mapping failed for concept %s, falling back to static",
                 concept_code,
                 exc_info=True,
             )
+            raise GLMappingError(
+                tenant_id=tenant_id,
+                concept_code=concept_code,
+                branch_id=None,
+                issue="dynamic mapping failure",
+            ) from None
     concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
     if concept_key and concept_key in GL_ACCOUNTS:
         return GL_ACCOUNTS[concept_key]
@@ -513,6 +522,44 @@ class StockService:
             raise ValueError(gettext(f"الكمية غير متوفرة في المستودع المصدر (المتوفر: {available})."))
 
         label = notes or gettext(f"تحويل من {from_wh.name_ar or from_wh.name} إلى {to_wh.name_ar or to_wh.name}")
+        # --- PWC valuation transfer (audit fix D-C8) ---
+        # Move average cost value from source to destination
+        from models import ProductWarehouseCost
+
+        src_pwc = ProductWarehouseCost.query.filter_by(
+            tenant_id=tenant_id, product_id=product_id, warehouse_id=from_wh.id
+        ).first()
+        if src_pwc and src_pwc.total_quantity and src_pwc.average_cost:
+            unit_cost = src_pwc.average_cost
+            transfer_value = (qty * unit_cost).quantize(Decimal("0.001"))
+            # Deduct from source
+            src_pwc.total_quantity = (src_pwc.total_quantity - qty).quantize(Decimal("0.001"))
+            src_pwc.total_value = (src_pwc.total_value - transfer_value).quantize(Decimal("0.001"))
+            if src_pwc.total_quantity > 0:
+                src_pwc.average_cost = (src_pwc.total_value / src_pwc.total_quantity).quantize(Decimal("0.0001"))
+            else:
+                src_pwc.average_cost = Decimal("0.0000")
+                src_pwc.total_value = Decimal("0.001") if src_pwc.total_quantity == 0 else src_pwc.total_value
+            # Add to destination
+            dest_pwc = ProductWarehouseCost.query.filter_by(
+                tenant_id=tenant_id, product_id=product_id, warehouse_id=to_wh.id
+            ).first()
+            if not dest_pwc:
+                dest_pwc = ProductWarehouseCost(
+                    tenant_id=tenant_id,
+                    product_id=product_id,
+                    warehouse_id=to_wh.id,
+                    total_quantity=Decimal("0"),
+                    total_value=Decimal("0"),
+                    average_cost=Decimal("0"),
+                )
+                db.session.add(dest_pwc)
+                db.session.flush()
+            dest_pwc.total_quantity = (dest_pwc.total_quantity + qty).quantize(Decimal("0.001"))
+            dest_pwc.total_value = (dest_pwc.total_value + transfer_value).quantize(Decimal("0.001"))
+            dest_pwc.average_cost = (dest_pwc.total_value / dest_pwc.total_quantity).quantize(Decimal("0.0001"))
+            db.session.flush()
+
         out_movement = StockService.create_movement(
             product_id=product_id,
             quantity=-qty,

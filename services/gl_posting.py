@@ -23,7 +23,7 @@ from utils.currency_utils import (
 logger = logging.getLogger(__name__)
 
 _BASE_QUANTUM = Decimal("0.001")
-_ROUNDING_PLUG_MAX = Decimal("0.01")
+_ROUNDING_PLUG_MAX = Decimal("0.001")
 
 
 class GlPostingError(Exception):

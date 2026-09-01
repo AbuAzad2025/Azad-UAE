@@ -181,7 +181,11 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
 
 
 def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, fx_gain, fx_loss, summary):
-    all_lines = []
+    """Post one FX revaluation entry PER SALE (audit fix D-C13).
+
+    Per-voucher entries preserve branch P&L isolation and voucher traceability:
+    each entry carries the sale's branch_id and reference_id=sale.id.
+    """
     total_fx_diff = Decimal("0")
 
     for sale in open_sales:
@@ -219,41 +223,37 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
         desc = f"Unrealized FX Revaluation — Sale #{sale.sale_number} ({sale.currency})"
 
         if fx_diff > 0:
-            all_lines.extend(
-                [
-                    {"account": ar_concept, "concept_code": "AR", "debit": fx_diff, "description": desc},
-                    {"account": fx_gain, "concept_code": "FX_GAIN", "credit": fx_diff, "description": desc},
-                ]
-            )
+            lines = [
+                {"account": ar_concept, "concept_code": "AR", "debit": fx_diff, "description": desc},
+                {"account": fx_gain, "concept_code": "FX_GAIN", "credit": fx_diff, "description": desc},
+            ]
         else:
             loss_amount = abs(fx_diff)
-            all_lines.extend(
-                [
-                    {"account": fx_loss, "concept_code": "FX_LOSS", "debit": loss_amount, "description": desc},
-                    {"account": ar_concept, "concept_code": "AR", "credit": loss_amount, "description": desc},
-                ]
-            )
+            lines = [
+                {"account": fx_loss, "concept_code": "FX_LOSS", "debit": loss_amount, "description": desc},
+                {"account": ar_concept, "concept_code": "AR", "credit": loss_amount, "description": desc},
+            ]
 
-    if all_lines:
         entry = post_or_fail(
-            all_lines,
-            description=f"FX Revaluation — AR — {now.strftime('%Y-%m')}",
+            lines,
+            description=desc,
             reference_type=GLRef.FX_GAIN_LOSS,
-            reference_id=0,
+            reference_id=sale.id,
             date=now.replace(tzinfo=None),
             currency=base_currency,
             exchange_rate=Decimal("1"),
-            branch_id=None,
+            branch_id=sale.branch_id,
             tenant_id=tenant_id,
         )
-        entry.notes = f"{_REVALUATION_TAG}|{now.strftime('%Y-%m')}"
+        entry.notes = f"{_REVALUATION_TAG}|{now.strftime('%Y-%m')}|sale:{sale.id}"
         db.session.flush()
-        summary["ar_diff"] = total_fx_diff
         summary["entry_ids"].append(entry.id)
+
+    summary["ar_diff"] = total_fx_diff
 
 
 def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_concept, fx_gain, fx_loss, summary):
-    all_lines = []
+    """Post one FX revaluation entry PER PURCHASE (audit fix D-C13)."""
     total_fx_diff = Decimal("0")
 
     for purchase, balance_aed in open_purchases:
@@ -292,37 +292,33 @@ def _post_ap_revaluation(open_purchases, base_currency, tenant_id, now, ap_conce
         desc = f"Unrealized FX Revaluation — Purchase #{purchase.purchase_number} ({purchase.currency})"
 
         if fx_diff > 0:
-            all_lines.extend(
-                [
-                    {"account": fx_loss, "concept_code": "FX_LOSS", "debit": fx_diff, "description": desc},
-                    {"account": ap_concept, "concept_code": "AP", "credit": fx_diff, "description": desc},
-                ]
-            )
+            lines = [
+                {"account": fx_loss, "concept_code": "FX_LOSS", "debit": fx_diff, "description": desc},
+                {"account": ap_concept, "concept_code": "AP", "credit": fx_diff, "description": desc},
+            ]
         else:
             gain_amount = abs(fx_diff)
-            all_lines.extend(
-                [
-                    {"account": ap_concept, "concept_code": "AP", "debit": gain_amount, "description": desc},
-                    {"account": fx_gain, "concept_code": "FX_GAIN", "credit": gain_amount, "description": desc},
-                ]
-            )
+            lines = [
+                {"account": ap_concept, "concept_code": "AP", "debit": gain_amount, "description": desc},
+                {"account": fx_gain, "concept_code": "FX_GAIN", "credit": gain_amount, "description": desc},
+            ]
 
-    if all_lines:
         entry = post_or_fail(
-            all_lines,
-            description=f"FX Revaluation — AP — {now.strftime('%Y-%m')}",
+            lines,
+            description=desc,
             reference_type=GLRef.FX_GAIN_LOSS,
-            reference_id=0,
+            reference_id=purchase.id,
             date=now.replace(tzinfo=None),
             currency=base_currency,
             exchange_rate=Decimal("1"),
-            branch_id=None,
+            branch_id=purchase.branch_id,
             tenant_id=tenant_id,
         )
-        entry.notes = f"{_REVALUATION_TAG}|{now.strftime('%Y-%m')}"
+        entry.notes = f"{_REVALUATION_TAG}|{now.strftime('%Y-%m')}|purchase:{purchase.id}"
         db.session.flush()
-        summary["ap_diff"] = total_fx_diff
         summary["entry_ids"].append(entry.id)
+
+    summary["ap_diff"] = total_fx_diff
 
 
 def reverse_previous_revaluation(
