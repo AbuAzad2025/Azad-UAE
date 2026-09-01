@@ -454,24 +454,22 @@ def delete(**kwargs):
             )
 
         else:
-            with atomic_transaction("expense_delete"):
-                from services.gl_service import GLService
-
-                GLService.reverse_entry(
-                    reference_type=GLRef.EXPENSE,
-                    reference_id=expense.id,
-                    description=f"Reverse Expense {expense.expense_number} (Deleted)",
-                    tenant_id=expense.tenant_id,
+            with atomic_transaction("expense_archive"):
+                archive_service = ArchiveService()
+                archive_service.archive_record(
+                    "expenses",
+                    expense,
+                    reason=gettext("تم أرشفة المصروف"),
                 )
                 if cheque:
-                    from services.cheque_service import process_cheque_cancel
-
-                    process_cheque_cancel(cheque, reason=gettext(f"حذف المصروف {expense.expense_number}"))
-                    db.session.delete(cheque)
-                db.session.delete(expense)
-                LoggingCore.log_audit("delete", "expenses", record_id)
+                    archive_service.archive_record(
+                        "cheques",
+                        cheque,
+                        reason=gettext("تم أرشفة الشيك لارتباطه بمصروف مؤرشف"),
+                    )
+                LoggingCore.log_audit("archive", "expenses", record_id)
             flash(
-                gettext(f'✅ تم حذف المصروف "{expense.expense_number}" نهائياً'),
+                gettext(f'✅ تم أرشفة المصروف "{expense.expense_number}"'),
                 "success",
             )
 
