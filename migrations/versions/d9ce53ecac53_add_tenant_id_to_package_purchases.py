@@ -49,10 +49,35 @@ def upgrade():
 
 
 def downgrade():
-    if _column_exists("package_purchases", "tenant_id"):
+    from sqlalchemy import inspect
+
+    bind = op.get_bind()
+    insp = inspect(bind)
+    # Only drop resources THIS migration created. On databases that already
+    # ran 313a6a9fb20f (always the case in the linear chain), tenant_id and its
+    # FK are owned by that migration; its downgrade restores the constraint
+    # name. Dropping here would create a duplicate-drop failure in the
+    # alembic round-trip.
+    fk_names = []
+    try:
+        fk_names = [
+            fk["name"]
+            for fk in insp.get_foreign_keys("package_purchases")
+            if "tenant_id" in fk.get("constrained_columns", [])
+        ]
+    except Exception:
+        fk_names = []
+    if "fk_package_purchases_tenant_id_tenants" in fk_names:
         with op.batch_alter_table("package_purchases", schema=None) as batch_op:
-            with contextlib.suppress(Exception):
-                batch_op.drop_constraint("fk_package_purchases_tenant_id_tenants", type_="foreignkey")
-            with contextlib.suppress(Exception):
-                batch_op.drop_index(batch_op.f("ix_package_purchases_tenant_id"))
-            batch_op.drop_column("tenant_id")
+            batch_op.drop_constraint("fk_package_purchases_tenant_id_tenants", type_="foreignkey")
+    if _column_exists("package_purchases", "tenant_id"):
+        # Only drop the column if no tenant FK references it (i.e. column was
+        # introduced by this migration on a non-standard DB).
+        remaining = [
+            fk["name"] for fk in insp.get_foreign_keys("package_purchases") if "tenant_id" in fk.get("constrained_columns", [])
+        ]
+        if not remaining:
+            with op.batch_alter_table("package_purchases", schema=None) as batch_op:
+                with contextlib.suppress(Exception):
+                    batch_op.drop_index(batch_op.f("ix_package_purchases_tenant_id"))
+                batch_op.drop_column("tenant_id")
