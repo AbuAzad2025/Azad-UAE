@@ -74,7 +74,9 @@ def downgrade():
         # Only drop the column if no tenant FK references it (i.e. column was
         # introduced by this migration on a non-standard DB).
         remaining = [
-            fk["name"] for fk in insp.get_foreign_keys("package_purchases") if "tenant_id" in fk.get("constrained_columns", [])
+            fk["name"]
+            for fk in insp.get_foreign_keys("package_purchases")
+            if "tenant_id" in fk.get("constrained_columns", [])
         ]
         if not remaining:
             with op.batch_alter_table("package_purchases", schema=None) as batch_op:

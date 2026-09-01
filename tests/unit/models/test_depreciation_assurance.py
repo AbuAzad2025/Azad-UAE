@@ -333,7 +333,7 @@ class TestFixedAssetModelCoverage:
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 4
         mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
-        mocker.patch("models.fixed_asset.gl_post_entry")
+        mocker.patch("models.fixed_asset.gl_post_or_fail")
         mocker.patch("models.fixed_asset.db.session")
         with app.app_context():
             asset.dispose(date(2026, 6, 1), 5000)
@@ -345,7 +345,7 @@ class TestFixedAssetModelCoverage:
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 3
         mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
-        mocker.patch("models.fixed_asset.gl_post_entry")
+        mocker.patch("models.fixed_asset.gl_post_or_fail")
         mock_session = mocker.patch("models.fixed_asset.db.session")
         with app.app_context():
             asset.dispose(date(2026, 5, 1), 7000, notes="sold unit")
