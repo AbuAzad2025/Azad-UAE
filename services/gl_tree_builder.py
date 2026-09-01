@@ -103,9 +103,9 @@ class GLTreeBuilder:
                     parent_code,
                     is_header,
                     level,
-                    is_contra,
                     existing_accounts,
                     processed,
+                    is_contra=is_contra,
                 )
                 if result["action"] == "created":
                     audit_report["created"].append(result)
@@ -157,9 +157,9 @@ class GLTreeBuilder:
         parent_code,
         is_header,
         level,
-        is_contra,
         existing_accounts,
         processed,
+        is_contra=False,
     ):
         """معالجة حساب واحد"""
         result = {"code": code, "name_ar": name_ar, "action": "none"}

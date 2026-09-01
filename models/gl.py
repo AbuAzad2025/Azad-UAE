@@ -414,6 +414,7 @@ class GLJournalLine(db.Model):
         db.Integer, db.ForeignKey("profit_centers.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     partner_id = db.Column(db.Integer, db.ForeignKey("partners.id", ondelete="RESTRICT"), nullable=True, index=True)
+    explicit_account_allowed = db.Column(db.Boolean, default=False, server_default=text("false"), nullable=False)
 
     entry: Mapped["GLJournalEntry"] = relationship("GLJournalEntry", back_populates="lines")
     account = db.relationship("GLAccount")

@@ -201,7 +201,7 @@ class TestResolveGlConceptAccount:
 
         assert _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1) == "9999"
 
-    def test_dynamic_mapping_exception_falls_back(self, mocker):
+    def test_dynamic_mapping_exception_raises(self, mocker):
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=True,
@@ -212,9 +212,11 @@ class TestResolveGlConceptAccount:
         )
         mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
         mocker.patch("services.gl_service.GL_ACCOUNTS", {})
+        from services.gl_account_resolver import GLMappingError
         from services.stock_service import _resolve_gl_concept_account
 
-        assert _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1) == "1140"
+        with pytest.raises(GLMappingError):
+            _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1)
 
     def test_legacy_concept_lookup(self, mocker):
         mocker.patch(
@@ -698,6 +700,10 @@ class TestTransferStock:
             "services.stock_service.StockService.create_movement",
             side_effect=[out_mv, in_mv],
         )
+        # No PWC row (MagicMock default) — skip valuation-transfer branch.
+        pwc_q = MagicMock()
+        pwc_q.filter_by.return_value.first.return_value = None
+        mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
         from services.stock_service import StockService
 
         result = StockService.transfer_stock(1, 1, 2, Decimal("5"))

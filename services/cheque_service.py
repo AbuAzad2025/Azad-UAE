@@ -665,11 +665,14 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 from services.gl_posting import post_or_fail
 
                 fee_desc = gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}")
+                # Idempotency guard: reuse the canonical existence checker (no
+                # description match) so a repeated bounce never double-posts.
+                from utils.gl_reference_types import ref_variants
+
                 existing_fee_q = GLJournalEntry.query.filter(
-                    GLJournalEntry.reference_type == GLRef.CHEQUE_BOUNCE,
+                    GLJournalEntry.reference_type.in_(ref_variants(GLRef.CHEQUE_BOUNCE)),
                     GLJournalEntry.reference_id == cheque.id,
                     GLJournalEntry.status == "posted",
-                    GLJournalEntry.description == fee_desc,
                 )
                 if cheque.tenant_id is not None:
                     existing_fee_q = existing_fee_q.filter(GLJournalEntry.tenant_id == cheque.tenant_id)

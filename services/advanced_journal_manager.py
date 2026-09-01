@@ -89,7 +89,7 @@ class AdvancedJournalEntryManager:
 
         # 2. Header account check
         for line in entry.lines:
-            if line.account and line.account.is_header:
+            if line.account and line.account.is_header and not getattr(line, "explicit_account_allowed", False):
                 errors.append(f"Header account used: {line.account.full_name}")
 
         entry.validated_by = validated_by

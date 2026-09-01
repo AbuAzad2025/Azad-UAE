@@ -279,14 +279,16 @@ class TestAutoMatch:
 
 class TestSuspenseAndApply:
     def test_route_orphans_to_suspense(self, mocker, db_session, sample_tenant, bank_gl_account):
-        suspense = GLAccount(
-            tenant_id=sample_tenant.id,
-            code="2999",
-            name="Suspense",
-            type="liability",
-            is_active=True,
-        )
-        db_session.add(suspense)
+        suspense = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2999").first()
+        if suspense is None:
+            suspense = GLAccount(
+                tenant_id=sample_tenant.id,
+                code="2999",
+                name="Suspense",
+                type="liability",
+                is_active=True,
+            )
+            db_session.add(suspense)
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,
@@ -656,13 +658,15 @@ class TestAutoMatchAndOrphans:
         assert len(matches) == 1
 
     def test_route_orphans_commit_rollback(self, mocker, db_session, sample_tenant, bank_gl_account):
-        suspense = GLAccount(
-            tenant_id=sample_tenant.id,
-            code="2999",
-            name="Suspense",
-            type="liability",
-            is_active=True,
-        )
+        suspense = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="2999").first()
+        if suspense is None:
+            suspense = GLAccount(
+                tenant_id=sample_tenant.id,
+                code="2999",
+                name="Suspense",
+                type="liability",
+                is_active=True,
+            )
         stmt = BankStatementLine(
             tenant_id=sample_tenant.id,
             bank_account_id=bank_gl_account.id,

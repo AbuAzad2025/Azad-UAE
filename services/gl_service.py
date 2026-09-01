@@ -489,6 +489,7 @@ class GLService:
                 description=line.get("description", description),
                 amount=original_debit - original_credit,
                 amount_aed=debit - credit,
+                explicit_account_allowed=line.get("explicit_account_allowed", False),
                 # الأبعاد المالية
                 branch_id=line.get("branch_id") or branch_id,
                 warehouse_id=line.get("warehouse_id"),

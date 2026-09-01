@@ -334,6 +334,11 @@ class TestChequeBounceGL:
             "services.cheque_service.GLService.get_account_code_for_concept",
             return_value="1150",
         )
+        # No prior bounce-fee GL row → post_or_fail must run for the fee.
+        gl_q = MagicMock()
+        gl_q.filter.return_value = gl_q
+        gl_q.first.return_value = None
+        mocker.patch("models.GLJournalEntry.query", gl_q)
 
         cheque = MagicMock()
         cheque.cheque_type = "incoming"
