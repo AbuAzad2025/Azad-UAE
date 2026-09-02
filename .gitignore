@@ -179,6 +179,10 @@ load_tests/
 # Agent / tooling workspace state (not part of the application)
 .openclaw/
 
+# Playwright auth state — generated at CI/e2e time by scripts/auth/setup_test_users.py
+scripts/auth/*_state.json
+scripts/auth/test_users.json
+
 nul
 .schemathesis/
 audit_output/
