@@ -14,7 +14,8 @@ Usage:
     python scripts/ops/first_run_prod.py
 
 Idempotent: safe to re-run. Will not delete existing tenant data;
-only creates missing rows (permissions, roles, currencies, GL base, packages).
+only creates missing rows (permissions, roles, currencies, GL base). SaaS
+packages are created by the platform owner from the Owner panel, not here.
 
 For PostgreSQL and SQLite (SQLite file is created automatically).
 """
@@ -85,8 +86,8 @@ def main() -> None:
     # 3. Trigger system_init (perms, roles, owner, currencies, industry fields, GL base)
     _run([sys.executable, "-c", "from app import create_app; app=create_app(); print('system_init done')"], env=env)
 
-    # 4. Seed commercial packages (idempotent, no demo tenant)
-    _run([sys.executable, "-m", "flask", "seed-packages"], env=env)
+    # 4. No seed-packages: the platform owner creates SaaS packages from the
+    # Owner panel (payment_vault/packages-management).
 
     # 5. Verify
     _run([sys.executable, "-m", "flask", "db", "current"], env=env)

@@ -96,8 +96,10 @@ def main() -> None:
     # 3. Trigger system_init via app boot (creates 37 perms, 8 roles, owner, 3 currencies, 76 industry fields, GL base)
     _run([sys.executable, "-c", "from app import create_app; app=create_app(); print('system_init done')"], env=env)
 
-    # 4. Seed commercial packages (3 tiers) — idempotent
-    _run([sys.executable, "-m", "flask", "seed-packages"], env=env)
+    # 4. No seed-packages: the platform owner creates SaaS packages from the
+    # Owner panel (payment_vault/packages-management). Only first-run platform
+    # essentials remain (permissions, roles, owner user, currencies, industry
+    # fields, GL base) — all created idempotently by system_init app boot.
 
     # 5. Optional demo data
     if args.with_demo:
