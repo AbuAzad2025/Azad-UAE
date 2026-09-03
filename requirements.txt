@@ -49,7 +49,7 @@ markupsafe==3.0.3
 jsmin>=3.0.1
 cssmin>=0.2.0
 rcssmin>=1.1.2
-coverage>=7.15.4
+coverage>=7.16.0
 
 # Utilities
 python-dotenv==1.2.3
