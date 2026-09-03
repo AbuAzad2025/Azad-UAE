@@ -116,7 +116,7 @@ hypothesis>=6.165.10
 psutil>=5.9.8,<8
 
 # Misc
-packaging>=24.0,<27
+packaging>=26.3,<27
 certifi==2026.7.22
 urllib3==2.7.0
 six==1.17.0
