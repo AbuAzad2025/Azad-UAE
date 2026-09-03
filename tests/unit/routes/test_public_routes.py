@@ -43,12 +43,21 @@ def _vault_patch(vault):
 
 
 class TestPublicLanding:
-    def test_landing_redirects_to_login_when_anonymous(self, public_client):
+    def test_landing_renders_for_anonymous(self, public_client):
         with patch("flask_login.current_user") as mock_user:
             mock_user.is_authenticated = False
-            resp = public_client.get("/", follow_redirects=False)
-        assert resp.status_code == 302
-        assert resp.headers["Location"].endswith("/auth/login")
+            with patch("routes.public.render_template", return_value="landing") as render:
+                resp = public_client.get("/", follow_redirects=False)
+        assert resp.status_code == 200
+        render.assert_called_once_with("public/landing.html", packages=[], is_en=False)
+
+    def test_landing_lang_arg_renders_english(self, public_client):
+        with patch("flask_login.current_user") as mock_user:
+            mock_user.is_authenticated = False
+            with patch("routes.public.render_template", return_value="landing") as render:
+                resp = public_client.get("/?lang=en", follow_redirects=False)
+        assert resp.status_code == 200
+        render.assert_called_once_with("public/landing.html", packages=[], is_en=True)
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
         with patch("flask_login.current_user") as mock_user:
@@ -57,11 +66,15 @@ class TestPublicLanding:
         assert resp.status_code == 302
         assert resp.headers["Location"].endswith("/dashboard")
 
-    def test_welcome_renders_landing(self, public_client):
-        with patch("routes.public.render_template", return_value="landing") as render:
-            resp = public_client.get("/welcome")
-        assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html", packages=[], is_en=False)
+    def test_welcome_permanently_redirects_to_root(self, public_client):
+        resp = public_client.get("/welcome", follow_redirects=False)
+        assert resp.status_code == 301
+        assert resp.headers["Location"].endswith("/")
+
+    def test_welcome_forwards_lang_to_root(self, public_client):
+        resp = public_client.get("/welcome?lang=en", follow_redirects=False)
+        assert resp.status_code == 301
+        assert "lang=en" in resp.headers["Location"]
 
 
 class TestPublicPricing:

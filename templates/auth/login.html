@@ -27,6 +27,7 @@
   </div>
 
   <nav class="azad-login-lang" aria-label="{{ _('تغيير اللغة') }}">
+    <a href="{{ url_for('public.landing') }}">{{ _('الرئيسية') }}</a>
     <a href="{{ url_for('language.set_language', lang='ar', next=request.full_path) }}" class="{% if session.get('language', 'ar') == 'ar' %}is-active{% endif %}">AR</a>
     <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
   </nav>

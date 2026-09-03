@@ -57,7 +57,16 @@
 </head>
 <body>
 
-{% set is_en = (current_language == 'en') %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="azad-flash-stack" aria-live="polite">
+        {% for category, message in messages %}
+        <div class="azad-flash-item azad-flash-item--{{ 'success' if category == 'success' else ('danger' if category in ('error', 'danger') else 'warning') }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endwith %}
+
 {% set _company_name = (config.COMPANY_NAME_AR or 'شركة أزاد للأنظمة الذكية') if not is_en else (config.COMPANY_NAME or 'Azad Smart Systems') %}
 {% set _company_address_ar = config.COMPANY_ADDRESS_AR or company_address or tenant_address %}
 {% set _company_address_en = config.COMPANY_ADDRESS_EN or company_address or tenant_address %}

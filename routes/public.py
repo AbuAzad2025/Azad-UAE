@@ -48,22 +48,31 @@ def _safe_vault_for_public(vault):
 
 @public_bp.route("/")
 def landing():
-    """Root — redirect authenticated to dashboard, anonymous to login (stable for both PG and SQLite)."""
+    """Root — marketing landing for visitors, dashboard redirect for authenticated users.
+
+    ``?lang=`` renders the requested language directly (no session write) so
+    hreflang variants stay indexable for cookieless clients.
+    """
     from flask_login import current_user
 
     if current_user.is_authenticated:
         return redirect("/dashboard")
-    return redirect("/auth/login")
-
-
-@public_bp.route("/welcome")
-def landing_page():
-    """Public landing page (SEO) — always renders welcome, no redirect."""
-    lang = session.get("language", "ar")
+    lang = request.args.get("lang")
+    if lang not in ("ar", "en"):
+        lang = session.get("language", "ar")
     from services.saas_provisioning_service import SaaSProvisioningService
 
     packages = SaaSProvisioningService.list_active_packages()
     return render_template("public/landing.html", packages=packages, is_en=lang == "en")
+
+
+@public_bp.route("/welcome")
+def landing_page():
+    """Legacy landing alias — permanent redirect to root (canonical landing)."""
+    lang = request.args.get("lang")
+    if lang in ("ar", "en"):
+        return redirect(url_for("public.landing", lang=lang), code=301)
+    return redirect(url_for("public.landing"), code=301)
 
 
 @public_bp.route("/pricing")
