@@ -11,7 +11,9 @@ Output: list of files + lines + a 50-char preview, with CLEAN categories
 (AdminLTE i18n, fonts, images, encrypted backups, ruff cache, ai_knowledge
   knowledge base, etc.) excluded.
 """
-import pathlib, re, sys, json
+import pathlib
+import re
+import sys
 
 ROOT = pathlib.Path(r"D:\recovers\data\karaj\azad-uae")
 
@@ -41,9 +43,7 @@ EXTRA = re.compile(r"[\ufffa-\uffff]")
 def is_probably_text(path: pathlib.Path) -> bool:
     if path.is_dir():
         return False
-    if path.suffix.lower() in SKIP_SUFFIX:
-        return False
-    return True
+    return path.suffix.lower() not in SKIP_SUFFIX
 
 
 def should_skip(rel: str) -> bool:

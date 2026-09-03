@@ -469,6 +469,7 @@ def _chain_query(**terminals):
         "group_by",
         "limit",
         "offset",
+        "execution_options",
     ):
         getattr(q, method).return_value = q
     inner = q.filter.return_value
@@ -506,6 +507,7 @@ def _stub_query(**terminals):
         "select_from",
         "distinct",
         "having",
+        "execution_options",
     ):
         getattr(q, method).return_value = q
     inner = q.filter.return_value
