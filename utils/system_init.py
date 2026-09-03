@@ -168,6 +168,12 @@ def _ensure_functional_roles():
                 "slug": "kitchen",
                 "description": "Kitchen display (KDS) viewer - sees live kitchen orders only",
             },
+            {
+                "name": "Cashier",
+                "name_ar": "أمين الصندوق",
+                "slug": "cashier",
+                "description": "POS cashier - processes sales and receipts, opens/closes register; no reports, costs, or ledger access",
+            },
         ]
         for r_data in roles:
             role = Role.query.filter((Role.slug == r_data["slug"]) | (Role.name == r_data["name"])).first()
@@ -270,6 +276,24 @@ def _ensure_functional_roles():
         if kitchen_role:
             kitchen_codes = ["view_kds"]
             kitchen_role.permissions = get_perms(*kitchen_codes)
+
+        cashier_role = Role.query.filter_by(slug="cashier").first()
+        if cashier_role:
+            # POS cashier: executes sales/receipts and register ops only.
+            # Explicitly NO view_reports (that stays with seller/manager),
+            # NO view_ledger/manage_ledger, NO payroll/users.
+            cashier_codes = [
+                "manage_sales",
+                "manage_customers",
+                "view_kds",
+                "pos_void_line",
+                "pos_discount_override",
+                "pos_no_sale_drawer",
+                "pos_pay_in_out",
+                "pos_view_expected",
+                "pos_return",
+            ]
+            cashier_role.permissions = get_perms(*cashier_codes)
 
 
 def _ensure_platform_reference_data():

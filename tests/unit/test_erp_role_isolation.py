@@ -107,6 +107,7 @@ def _seller_and_sibling_blocks() -> dict[str, set[str]]:
         "branch_manager": _function_role_codes(body, "branch_mgr"),
         "accountant": _function_role_codes(body, "acc"),
         "kitchen": _function_role_codes(body, "kitchen"),
+        "cashier": _function_role_codes(body, "cashier"),
     }
 
 
@@ -134,6 +135,39 @@ def test_branch_manager_distinct_from_manager():
         assert banned not in bm, f"branch_manager leaked {banned!r}"
     # Branch manager is a strict subset: everything it has, manager also has
     assert bm <= mgr, f"branch_manager has perms manager lacks: {sorted(bm - mgr)}"
+
+
+def test_cashier_strict_scope():
+    """Cashier = POS execution only; no reports/ledger/cost, no user admin."""
+    blocks = _seller_and_sibling_blocks()
+    cashier = blocks.get("cashier", set())
+    assert cashier, "cashier_codes list not found"
+    # must have the register operations
+    for must in (
+        "manage_sales",
+        "manage_customers",
+        "pos_return",
+        "pos_pay_in_out",
+        "pos_void_line",
+        "pos_view_expected",
+    ):
+        assert must in cashier, f"cashier missing {must!r}"
+    # pos_discount_override is an AUDIT-LOG event (recorded with the supervisor
+    # who authorized the override), not a permission gate — so it is allowed.
+    # Everything cost/ledger/report/user-admin surfaced must remain absent.
+    cashier_allowed_extra = {
+        "pos_discount_override",
+        "pos_no_sale_drawer",
+        "pos_pay_in_out",
+        "pos_void_line",
+        "pos_view_expected",
+        "pos_return",
+    }
+    banned_set = (
+        COST_OR_ADMIN_PERMS | {"view_reports", "view_ledger", "manage_ledger", "manage_users", "manage_payroll"}
+    ) - cashier_allowed_extra
+    for banned in banned_set:
+        assert banned not in cashier, f"cashier leaked {banned!r}"
 
 
 def test_accountant_scope():
