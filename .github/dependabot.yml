@@ -14,6 +14,10 @@ updates:
     ignore:
       # Ruff is deliberately pinned to match CI lint gates; bump manually.
       - dependency-name: "ruff"
+      # Flask-Caching 2.5.0 removed the 'null' cache backend used by
+      # CACHE_TYPE="null" (config/tests/first-run). Bump manually only
+      # together with a CACHE_TYPE migration.
+      - dependency-name: "flask-caching"
 
   - package-ecosystem: github-actions
     directory: "/"

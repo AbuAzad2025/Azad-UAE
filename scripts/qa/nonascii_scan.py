@@ -141,7 +141,7 @@ def main() -> int:
         if len(findings) >= 400:
             break
 
-    by_file = {}
+    by_file: dict[str, list[tuple[int, str, str]]] = {}
     for rel, lineno, snippet, marker in findings:
         by_file.setdefault(rel, []).append((lineno, snippet, marker))
 
