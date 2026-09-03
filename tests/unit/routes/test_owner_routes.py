@@ -998,6 +998,7 @@ def _owner_route_patches(mock_db=None, **overrides):
             "SaleLine",
             "Branch",
             "Tenant",
+            "Package",
         ):
             if model_name == "Tenant":
                 patched_cls = tenant_cls
