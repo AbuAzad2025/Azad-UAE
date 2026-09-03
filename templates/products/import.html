@@ -2,9 +2,9 @@
 {% block title %}{{ t('Import') }} {{ t('Products') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="text-gradient mb-0"><i class="fas fa-file-import mr-3"></i>{{ t('Import') }} {{ t('Products') }}</h1>
+  <h1 class="text-gradient mb-0"><i class="fas fa-file-import mr-3" aria-hidden="true"></i>{{ t('Import') }} {{ t('Products') }}</h1>
   <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-    <i class="fas fa-arrow-left mr-2"></i>{{ t('Back_To_List') }}
+    <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('Back_To_List') }}
   </a>
 </div>
 {% endblock %}
@@ -24,11 +24,11 @@
 {% block content %}
 <div class="card shadow-lg">
   <div class="card-header bg-primary text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-upload mr-2"></i>{{ t('Import') }} {{ t('File') }} Excel/CSV</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-upload mr-2" aria-hidden="true"></i>{{ t('Import') }} {{ t('File') }} Excel/CSV</h3>
   </div>
   <div class="card-body">
     <div class="alert alert-info">
-      <h5><i class="fas fa-info-circle mr-2"></i>{{ t('Import_Instructions') }}:</h5>
+      <h5><i class="fas fa-info-circle mr-2" aria-hidden="true"></i>{{ t('Import_Instructions') }}:</h5>
       <ul class="mb-0">
         <li>{{ t('File') }} {{ t('Must_Be') }} <strong>.xlsx</strong> {{ t('Or') }} <strong>.csv</strong>.</li>
         <li>{{ t('Required_Columns') }}: <code>{{ t('Name_Product') }}</code>, <code>{{ t('Price') }}</code>.</li>
@@ -54,7 +54,7 @@
       </div>
 
       <button type="submit" class="btn btn-success btn-lg btn-block" id="submitBtn">
-        <i class="fas fa-cloud-upload-alt mr-2"></i>{{ t('Start_Import') }}
+        <i class="fas fa-cloud-upload-alt mr-2" aria-hidden="true"></i>{{ t('Start_Import') }}
       </button>
     </form>
 
@@ -69,11 +69,11 @@
 
 <div class="card mt-4 shadow-lg">
   <div class="card-header bg-success text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Quick_Entry') }} (Grid Entry)</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ t('Quick_Entry') }} (Grid Entry)</h3>
   </div>
   <div class="card-body">
     <div class="alert alert-light border">
-      <i class="fas fa-keyboard mr-2"></i> {{ t('Enter_Products_Directly_In_Table') }} ({{ t('Press_Tab_To_Next_Cell') }}).
+      <i class="fas fa-keyboard mr-2" aria-hidden="true"></i> {{ t('Enter_Products_Directly_In_Table') }} ({{ t('Press_Tab_To_Next_Cell') }}).
     </div>
 
     <form method="POST" action="{{ url_for('products.import_grid') }}" id="gridForm">
@@ -101,7 +101,7 @@
               <td><input type="text" name="sku[]" class="form-control form-control-sm" placeholder="{{ t('Auto') }}" maxlength="50" aria-label="sku[]"></td>
               <td><input type="text" name="barcode[]" class="form-control form-control-sm" placeholder="{{ t('Auto') }}" maxlength="50" aria-label="barcode[]"></td>
               <td class="text-center">
-                <button type="button" class="btn btn-outline-danger remove-row" tabindex="-1" title="{{ t('Close') }}"><i class="fas fa-times"></i></button>
+                <button type="button" class="btn btn-outline-danger remove-row" tabindex="-1" title="{{ t('Close') }}"><i class="fas fa-times" aria-hidden="true"></i></button>
               </td>
             </tr>
             {% endfor %}
@@ -111,10 +111,10 @@
 
       <div class="d-flex justify-content-between mt-3">
         <button type="button" class="btn btn-outline-secondary" id="addRowBtn">
-          <i class="fas fa-plus mr-1"></i> {{ t('Add') }} 10 {{ t('Rows') }}
+          <i class="fas fa-plus mr-1" aria-hidden="true"></i> {{ t('Add') }} 10 {{ t('Rows') }}
         </button>
         <button type="submit" class="btn btn-success px-5">
-          <i class="fas fa-save mr-2"></i> {{ t('Save') }} {{ t('Products') }}
+          <i class="fas fa-save mr-2" aria-hidden="true"></i> {{ t('Save') }} {{ t('Products') }}
         </button>
       </div>
     </form>
@@ -123,12 +123,12 @@
 
 <div class="card mt-4">
   <div class="card-header">
-    <h3 class="card-title"><i class="fas fa-download mr-2"></i>{{ t('Import_Template') }}</h3>
+    <h3 class="card-title"><i class="fas fa-download mr-2" aria-hidden="true"></i>{{ t('Import_Template') }}</h3>
   </div>
   <div class="card-body">
     <p>{{ t('You_Can_Download_Template') }}:</p>
     <a href="{{ url_for('products.download_import_template') }}" class="btn btn-outline-primary">
-      <i class="fas fa-file-excel mr-2"></i>{{ t('Download') }} {{ t('Template') }} (Excel)
+      <i class="fas fa-file-excel mr-2" aria-hidden="true"></i>{{ t('Download') }} {{ t('Template') }} (Excel)
     </a>
   </div>
 </div>
@@ -143,7 +143,7 @@ $('.custom-file-input').on('change', function() {
 });
 
 $('#importForm').on('submit', () => {
-    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>{{ t('Importing') }}...');
+    $('#submitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>{{ t('Importing') }}...');
     $('#progressArea').removeClass('d-none');
 
     // Honest indeterminate state: the form POSTs normally and real progress

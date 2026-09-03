@@ -4,11 +4,11 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('Edit_Table_Label') }}: {{ table_name|default('') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ t('Edit_Table_Label') }}: {{ table_name|default('') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}</a>
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -17,13 +17,13 @@
 <div class="card">
   <div class="card-header bg-primary text-white">
     <h3 class="card-title">
-      <i class="fas fa-edit mr-2"></i>
+      <i class="fas fa-edit mr-2" aria-hidden="true"></i>
       {{ t('Visual_Edit') }}: <code>{{ table_name|default('') }}</code>
     </h3>
   </div>
   <div class="card-body">
     <div class="alert alert-warning">
-      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
       <strong>{{ t('Warning') }}</strong> {{ t('Edit_Data_Directly_Warning') }}
     </div>
 
@@ -41,9 +41,9 @@
         <thead class="thead-dark">
           <tr>
             {% for col in columns %}
-            <th><i class="fas fa-database mr-1"></i>{{ col }}</th>
+            <th><i class="fas fa-database mr-1" aria-hidden="true"></i>{{ col }}</th>
             {% endfor %}
-            <th style="width: 200px"><i class="fas fa-tools mr-1"></i>{{ t('Actions') }}</th>
+            <th style="width: 200px"><i class="fas fa-tools mr-1" aria-hidden="true"></i>{{ t('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -62,13 +62,13 @@
             {% endfor %}
             <td class="text-center">
               <button class="btn btn-warning edit-btn" data-action="enable-edit">
-                <i class="fas fa-pencil-alt"></i> {{ t('Edit') }}
+                <i class="fas fa-pencil-alt" aria-hidden="true"></i> {{ t('Edit') }}
               </button>
               <button class="btn btn-success save-btn ic-1" data-action="save-row">
-                <i class="fas fa-save"></i> {{ t('Save') }}
+                <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}
               </button>
               <button class="btn btn-secondary cancel-btn ic-1" data-action="cancel-edit">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
               </button>
             </td>
           </tr>
@@ -79,17 +79,17 @@
 
     {% if not rows %}
     <div class="alert alert-warning text-center">
-      <i class="fas fa-exclamation-triangle mr-2"></i>
+      <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
       {{ t('No_Data_In_Table') }}
     </div>
     {% endif %}
   </div>
   <div class="card-footer">
     <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i> {{ t('Back_To_Tables') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i> {{ t('Back_To_Tables') }}
     </a>
     <a href="{{ url_for('owner.sql_console') }}" class="btn btn-warning">
-      <i class="fas fa-code mr-2"></i> {{ t('Advanced_Edit_SQL') }}
+      <i class="fas fa-code mr-2" aria-hidden="true"></i> {{ t('Advanced_Edit_SQL') }}
     </a>
   </div>
 </div>

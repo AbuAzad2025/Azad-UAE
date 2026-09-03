@@ -4,16 +4,16 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
-      <i class="fas fa-link"></i> {{ t('SMS') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ t('SMS') }}
     </a>
     <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> {{ t('WhatsApp') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ t('WhatsApp') }}
     </a>
     <a href="{{ url_for('owner.notification_templates') }}" class="btn btn-info">
-      <i class="fas fa-link"></i> {{ t('Templates') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ t('Templates') }}
     </a>
   </div>
   <div class="card">
@@ -33,7 +33,7 @@
           <div class="col-md-6"><div class="form-group"><label for="email_from">From Email</label><input type="email" name="email_from" id="email_from" class="form-control" value="{{ settings.email_from|default('') }}"></div></div>
           <div class="col-md-6"><div class="form-group"><div class="custom-control custom-switch mt-4"><input type="checkbox" class="custom-control-input" id="use_tls" name="smtp_use_tls" {% if settings.smtp_use_tls|default(false) %}checked{% endif %} aria-label="smtp use tls"><label class="custom-control-label" for="use_tls">{{ t('Use_TLS') }}</label></div></div></div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}</button>
       </form>
     </div>
   </div>

@@ -4,7 +4,7 @@
 
 {% block page_title %}
 <div class="d-flex align-items-center">
-    <i class="fas fa-cog text-primary mr-3 inline-form"></i>
+    <i class="fas fa-cog text-primary mr-3 inline-form" aria-hidden="true"></i>
     <div>
         <h1 class="mb-0">{{ _('Payment Vault Settings') }}</h1>
         <p class="text-muted mb-0">{{ _('Configure payment settings and security') }}</p>
@@ -27,7 +27,7 @@
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-cog mr-2"></i>{{ _('Vault Settings') }}
+                            <i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ _('Vault Settings') }}
                         </h5>
                     </div>
                     <div class="card-body">
@@ -38,7 +38,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="nowpayments_api_key">
-                                            <i class="fas fa-key mr-2"></i>{{ _('NOWPayments API Key') }}
+                                            <i class="fas fa-key mr-2" aria-hidden="true"></i>{{ _('NOWPayments API Key') }}
                                         </label>
                                         <input type="text" 
                                                class="form-control" 
@@ -51,7 +51,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label for="nowpayments_ipn_secret">
-                                            <i class="fas fa-shield-alt mr-2"></i>{{ _('IPN Secret') }}
+                                            <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>{{ _('IPN Secret') }}
                                         </label>
                                         <input type="text" 
                                                class="form-control" 
@@ -68,7 +68,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="bitcoin_address">
-                                            <i class="fab fa-bitcoin mr-2"></i>{{ _('Bitcoin Address') }}
+                                            <i class="fab fa-bitcoin mr-2" aria-hidden="true"></i>{{ _('Bitcoin Address') }}
                                         </label>
                                         <input type="text" 
                                                class="form-control" 
@@ -81,7 +81,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="ethereum_address">
-                                            <i class="fab fa-ethereum mr-2"></i>{{ _('Ethereum Address') }}
+                                            <i class="fab fa-ethereum mr-2" aria-hidden="true"></i>{{ _('Ethereum Address') }}
                                         </label>
                                         <input type="text" 
                                                class="form-control" 
@@ -94,7 +94,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="usdt_address">
-                                            <i class="fas fa-dollar-sign mr-2"></i>{{ _('USDT Address') }}
+                                            <i class="fas fa-dollar-sign mr-2" aria-hidden="true"></i>{{ _('USDT Address') }}
                                         </label>
                                         <input type="text" 
                                                class="form-control" 
@@ -110,12 +110,12 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fab fa-paypal text-primary"></i> {{ _('PayPal Settings') }}
+                                <i class="fab fa-paypal text-primary" aria-hidden="true"></i> {{ _('PayPal Settings') }}
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="paypal_business_email"><i class="fas fa-envelope mr-2"></i>{{ _('PayPal Business Email') }}</label>
+                                        <label for="paypal_business_email"><i class="fas fa-envelope mr-2" aria-hidden="true"></i>{{ _('PayPal Business Email') }}</label>
                                         <input type="email" class="form-control" name="paypal_business_email" id="paypal_business_email"
                                                value="{{ vault.paypal_business_email or '' }}" 
                                                placeholder="business@company.com">
@@ -123,7 +123,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label><i class="fas fa-cog mr-2"></i>{{ _('PayPal Mode') }}</label>
+                                        <label><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ _('PayPal Mode') }}</label>
                                         <select class="form-control" name="paypal_mode" aria-label="paypal mode">
                                             <option value="sandbox" {% if vault.paypal_mode == 'sandbox' %}selected{% endif %}>{{ _('Sandbox (Test)') }}</option>
                                             <option value="live" {% if vault.paypal_mode == 'live' %}selected{% endif %}>{{ _('Live (Production)') }}</option>
@@ -134,7 +134,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="paypal_client_id"><i class="fas fa-key mr-2"></i>{{ _('PayPal Client ID') }}</label>
+                                        <label for="paypal_client_id"><i class="fas fa-key mr-2" aria-hidden="true"></i>{{ _('PayPal Client ID') }}</label>
                                         <input type="text" class="form-control" name="paypal_client_id" id="paypal_client_id"
                                                value="{{ vault.paypal_client_id or '' }}" 
                                                placeholder="Client ID">
@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="paypal_client_secret"><i class="fas fa-lock mr-2"></i>{{ _('PayPal Secret') }}</label>
+                                        <label for="paypal_client_secret"><i class="fas fa-lock mr-2" aria-hidden="true"></i>{{ _('PayPal Secret') }}</label>
                                         <input type="password" class="form-control" name="paypal_client_secret" id="paypal_client_secret"
                                                value="{{ vault.paypal_client_secret or '' }}" 
                                                placeholder="Secret Key">
@@ -154,12 +154,12 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fas fa-university text-success"></i> {{ _('Bank Account Info') }}
+                                <i class="fas fa-university text-success" aria-hidden="true"></i> {{ _('Bank Account Info') }}
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="bank_name"><i class="fas fa-building mr-2"></i>{{ _('Bank Name') }}</label>
+                                        <label for="bank_name"><i class="fas fa-building mr-2" aria-hidden="true"></i>{{ _('Bank Name') }}</label>
                                         <input type="text" class="form-control" name="bank_name" id="bank_name"
                                                value="{{ vault.bank_name or '' }}" 
                                                placeholder="{{ _('Bank Name (Arabic)') }}" minlength="2" maxlength="100">
@@ -167,7 +167,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="bank_account_name"><i class="fas fa-user mr-2"></i>{{ _('Account Holder Name') }}</label>
+                                        <label for="bank_account_name"><i class="fas fa-user mr-2" aria-hidden="true"></i>{{ _('Account Holder Name') }}</label>
                                         <input type="text" class="form-control" name="bank_account_name" id="bank_account_name" 
                                                value="{{ vault.bank_account_name or '' }}" 
                                                placeholder="Azad Systems LLC" minlength="2" maxlength="100">
@@ -177,7 +177,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="bank_account_number"><i class="fas fa-hashtag mr-2"></i>{{ _('Account Number') }}</label>
+                                        <label for="bank_account_number"><i class="fas fa-hashtag mr-2" aria-hidden="true"></i>{{ _('Account Number') }}</label>
                                         <input type="text" class="form-control" name="bank_account_number" id="bank_account_number"
                                                value="{{ vault.bank_account_number or '' }}" 
                                                placeholder="123456789" maxlength="34">
@@ -185,7 +185,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="bank_iban"><i class="fas fa-barcode mr-2"></i>{{ _('IBAN') }}</label>
+                                        <label for="bank_iban"><i class="fas fa-barcode mr-2" aria-hidden="true"></i>{{ _('IBAN') }}</label>
                                         <input type="text" class="form-control" name="bank_iban" id="bank_iban"
                                                value="{{ vault.bank_iban or '' }}" 
                                                placeholder="AE123456789012345678901" maxlength="34">
@@ -195,7 +195,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="bank_swift_code"><i class="fas fa-globe mr-2"></i>{{ _('SWIFT Code') }}</label>
+                                        <label for="bank_swift_code"><i class="fas fa-globe mr-2" aria-hidden="true"></i>{{ _('SWIFT Code') }}</label>
                                         <input type="text" class="form-control" name="bank_swift_code" id="bank_swift_code"
                                                value="{{ vault.bank_swift_code or '' }}" 
                                                placeholder="ARABAEADXXX">
@@ -203,7 +203,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="bank_branch"><i class="fas fa-map-marker-alt mr-2"></i>{{ _('Branch') }}</label>
+                                        <label for="bank_branch"><i class="fas fa-map-marker-alt mr-2" aria-hidden="true"></i>{{ _('Branch') }}</label>
                                         <input type="text" class="form-control" name="bank_branch" id="bank_branch"
                                                value="{{ vault.bank_branch or '' }}" 
                                                placeholder="{{ _('Dubai - Main Branch') }}">
@@ -211,7 +211,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
-                                        <label for="bank_country"><i class="fas fa-flag mr-2"></i>{{ _('Country') }}</label>
+                                        <label for="bank_country"><i class="fas fa-flag mr-2" aria-hidden="true"></i>{{ _('Country') }}</label>
                                         <input type="text" class="form-control" name="bank_country" id="bank_country"
                                                value="{{ vault.bank_country or '' }}" 
                                                placeholder="{{ _('UAE') }}">
@@ -223,12 +223,12 @@
                             
                             
                             <h5 class="border-bottom pb-2 mb-3">
-                                <i class="fab fa-stripe-s text-info"></i> {{ _('Stripe Settings') }}
+                                <i class="fab fa-stripe-s text-info" aria-hidden="true"></i> {{ _('Stripe Settings') }}
                             </h5>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="stripe_publishable_key"><i class="fas fa-key mr-2"></i>{{ _('Publishable Key') }}</label>
+                                        <label for="stripe_publishable_key"><i class="fas fa-key mr-2" aria-hidden="true"></i>{{ _('Publishable Key') }}</label>
                                         <input type="text" class="form-control" name="stripe_publishable_key" id="stripe_publishable_key"
                                                value="{{ vault.stripe_publishable_key or '' }}" 
                                                placeholder="pk_test_...">
@@ -236,7 +236,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="stripe_secret_key"><i class="fas fa-lock mr-2"></i>{{ _('Secret Key') }}</label>
+                                        <label for="stripe_secret_key"><i class="fas fa-lock mr-2" aria-hidden="true"></i>{{ _('Secret Key') }}</label>
                                         <input type="password" class="form-control" name="stripe_secret_key" id="stripe_secret_key"
                                                value="{{ vault.stripe_secret_key or '' }}" 
                                                placeholder="sk_test_...">
@@ -246,7 +246,7 @@
                             
                             <hr>
                             <h5 class="border-bottom pb-2 mb-3 inline-form">
-                                <i class="fas fa-hand-holding-heart text-success"></i> {{ _('Azad Company Donations') }}
+                                <i class="fas fa-hand-holding-heart text-success" aria-hidden="true"></i> {{ _('Azad Company Donations') }}
                             </h5>
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -280,7 +280,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="min_donation_amount">
-                                            <i class="fas fa-arrow-up mr-2"></i>{{ _('Minimum Limit') }} ($)
+                                            <i class="fas fa-arrow-up mr-2" aria-hidden="true"></i>{{ _('Minimum Limit') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -293,7 +293,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="max_donation_amount">
-                                            <i class="fas fa-arrow-down mr-2"></i>{{ _('Maximum Limit') }} ($)
+                                            <i class="fas fa-arrow-down mr-2" aria-hidden="true"></i>{{ _('Maximum Limit') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -306,7 +306,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="daily_limit">
-                                            <i class="fas fa-calendar-day mr-2"></i>{{ _('Daily Limit') }} ($)
+                                            <i class="fas fa-calendar-day mr-2" aria-hidden="true"></i>{{ _('Daily Limit') }} ($)
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -329,7 +329,7 @@
                                                    name="require_2fa" 
                                                    {% if vault.require_2fa %}checked{% endif %} aria-label="require 2fa">
                                             <label class="form-check-label" for="require_2fa">
-                                                <i class="fas fa-shield-alt mr-2"></i>{{ _('Require Two-Factor Authentication') }}
+                                                <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>{{ _('Require Two-Factor Authentication') }}
                                             </label>
                                         </div>
                                     </div>
@@ -337,7 +337,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="auto_lock_minutes">
-                                            <i class="fas fa-clock mr-2"></i>{{ _('Auto Lock (Minutes)') }}
+                                            <i class="fas fa-clock mr-2" aria-hidden="true"></i>{{ _('Auto Lock (Minutes)') }}
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -350,7 +350,7 @@
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="max_failed_attempts">
-                                            <i class="fas fa-ban mr-2"></i>{{ _('Failed Attempts') }}
+                                            <i class="fas fa-ban mr-2" aria-hidden="true"></i>{{ _('Failed Attempts') }}
                                         </label>
                                         <input type="number" 
                                                class="form-control" 
@@ -364,7 +364,7 @@
                             
                             <div class="text-center mt-4">
                                 <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-save mr-2"></i>
+                                    <i class="fas fa-save mr-2" aria-hidden="true"></i>
                                     {{ _('Save Settings') }}
                                 </button>
                             </div>
@@ -377,7 +377,7 @@
                 <div class="card">
                     <div class="card-header bg-success text-white">
                         <h5 class="mb-0">
-                            <i class="fas fa-info-circle mr-2"></i>{{ _('Vault Info') }}
+                            <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>{{ _('Vault Info') }}
                         </h5>
                     </div>
                     <div class="card-body">
@@ -405,21 +405,21 @@
                 <div class="card mt-3">
                     <div class="card-header bg-warning text-dark">
                         <h5 class="mb-0">
-                            <i class="fas fa-tools mr-2"></i>{{ _('Quick Actions') }}
+                            <i class="fas fa-tools mr-2" aria-hidden="true"></i>{{ _('Quick Actions') }}
                         </h5>
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
                             <a href="{{ url_for('payment_vault.change_password') }}" class="btn btn-outline-warning">
-                                <i class="fas fa-key mr-2"></i>
+                                <i class="fas fa-key mr-2" aria-hidden="true"></i>
                                 {{ _('Change Password') }}
                             </a>
                             <a href="{{ url_for('payment_vault.lock_vault') }}" class="btn btn-outline-danger">
-                                <i class="fas fa-lock mr-2"></i>
+                                <i class="fas fa-lock mr-2" aria-hidden="true"></i>
                                 {{ _('Lock Vault') }}
                             </a>
                             <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                                <i class="fas fa-arrow-right mr-2"></i>
+                                <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>
                                 {{ _('Back to Owner Dashboard') }}
                             </a>
                         </div>

@@ -12,10 +12,10 @@
                 <div class="col-sm-6">
                     <div class="float-right">
                         <button type="button" class="btn btn-primary js-category-add" data-toggle="modal" data-target="#categoryModal">
-                            <i class="fas fa-plus"></i> {{ t('Add_New_Category') }}
+                            <i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add_New_Category') }}
                         </button>
                         <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-right ml-2"></i>{{ t('Back_To_Products') }}
+                            <i class="fas fa-arrow-right ml-2" aria-hidden="true"></i>{{ t('Back_To_Products') }}
                         </a>
                     </div>
                 </div>
@@ -51,12 +51,12 @@
                                           data-name="{{ category.name|e }}"
                                           data-name-ar="{{ (category.name_ar or '')|e }}"
                                           data-description="{{ (category.description or '')|e }}">
-                                            <i class="fas fa-edit"></i> {{ t('Edit') }}
+                                            <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit') }}
                                         </button>
                                         <button type="button" class="btn btn-sm btn-danger js-category-row-delete"
                                           data-id="{{ category.id }}"
                                           data-label="{{ (category.name_ar or category.name)|e }}">
-                                            <i class="fas fa-trash"></i> {{ t('Delete') }}
+                                            <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Delete') }}
                                         </button>
                                     </td>
                                 </tr>

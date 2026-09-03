@@ -4,7 +4,7 @@
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Branch') }}: {{ branch.name }}</h3>
+      <h3><i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit') }} {{ t('Branch') }}: {{ branch.name }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post" novalidate>
@@ -59,13 +59,13 @@
           <input type="checkbox" name="is_main" class="form-check-input" id="isMain" {% if branch.is_main %}checked{% endif %} aria-label="is main">
           <label class="form-check-label" for="isMain">{{ _('هذا هو') }} {{ t('Branch') }} {{ t('Main') }}</label>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
-        <a href="{{ url_for('branches.index') }}" class="btn btn-secondary"><i class="fas fa-times"></i> {{ t('Cancel') }}</a>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}</button>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-secondary"><i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}</a>
       </form>
       <hr>
       <form method="post" action="{{ url_for('branches.delete', id=branch.id) }}" data-action="confirm-submit" data-confirm-message="{{ _('هل أنت متأكد من حذف هذا الفرع؟') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-        <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Branch') }}</button>
+        <button type="submit" class="btn btn-danger"><i class="fas fa-trash" aria-hidden="true"></i> {{ t('Delete') }} {{ t('Branch') }}</button>
       </form>
     </div>
   </div>

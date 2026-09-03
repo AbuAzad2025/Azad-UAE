@@ -54,7 +54,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-warehouse"></i> {{ t('create_new_warehouse') }}</h1>
+        <h1 class="m-0"><i class="fas fa-warehouse" aria-hidden="true"></i> {{ t('create_new_warehouse') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
@@ -75,7 +75,7 @@
       <div class="col-md-8">
         <div class="card">
           <div class="card-header bg-success">
-            <h3 class="card-title text-white"><i class="fas fa-plus-circle"></i> {{ t('warehouse_info') }}</h3>
+            <h3 class="card-title text-white"><i class="fas fa-plus-circle" aria-hidden="true"></i> {{ t('warehouse_info') }}</h3>
           </div>
           {% set form_data = form_data if form_data is defined else request.form %}
           <form method="POST" action="{{ url_for('warehouse.create_warehouse') }}" class="needs-validation warehouse-create-form">
@@ -85,7 +85,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_name">
-                      <i class="fas fa-warehouse text-primary"></i> {{ t('name_in_english') }}
+                      <i class="fas fa-warehouse text-primary" aria-hidden="true"></i> {{ t('name_in_english') }}
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="warehouse_name" name="name" placeholder="{{ t('name_in_english') }}" required value="{{ form_data.get('name', '') }}" minlength="2" maxlength="100">
@@ -94,7 +94,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_name_ar">
-                      <i class="fas fa-font text-info"></i> {{ t('Name') }} ({{ t('in_arabic') }})
+                      <i class="fas fa-font text-info" aria-hidden="true"></i> {{ t('Name') }} ({{ t('in_arabic') }})
                     </label>
                     <input type="text" class="form-control" id="warehouse_name_ar" name="name_ar" placeholder="{{ t('Name') }} ({{ t('in_arabic') }})" value="{{ form_data.get('name_ar', '') }}" minlength="2" maxlength="100">
                   </div>
@@ -105,7 +105,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_code">
-                      <i class="fas fa-barcode text-secondary"></i> {{ t('warehouse_code') }}
+                      <i class="fas fa-barcode text-secondary" aria-hidden="true"></i> {{ t('warehouse_code') }}
                     </label>
                     <input type="text" class="form-control" id="warehouse_code" name="code" placeholder="WH001" value="{{ form_data.get('code', '') }}">
                   </div>
@@ -113,7 +113,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_location">
-                      <i class="fas fa-map-marker-alt text-danger"></i> {{ t('Website') }}
+                      <i class="fas fa-map-marker-alt text-danger" aria-hidden="true"></i> {{ t('Website') }}
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" id="warehouse_location" name="location" required value="{{ form_data.get('location', '') }}">
@@ -124,7 +124,7 @@
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
-                    <label for="warehouse_type"><i class="fas fa-layer-group text-purple"></i> {{ t('warehouse_type_label') }}</label>
+                    <label for="warehouse_type"><i class="fas fa-layer-group text-purple" aria-hidden="true"></i> {{ t('warehouse_type_label') }}</label>
                     {% set selected_type = form_data.get('warehouse_type', 'physical') %}
                     <select class="form-control" id="warehouse_type" name="warehouse_type">
                       <option value="physical" {% if selected_type == 'physical' %}selected{% endif %}>{{ t('physical_inventory') }}</option>
@@ -136,7 +136,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_parent_id">
-                      <i class="fas fa-sitemap text-success"></i> {{ t('parent_warehouse') }} ({{ t('for_sub_warehouses') }})
+                      <i class="fas fa-sitemap text-success" aria-hidden="true"></i> {{ t('parent_warehouse') }} ({{ t('for_sub_warehouses') }})
                     </label>
                     <select class="form-control" id="warehouse_parent_id" name="parent_id">
                       <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>{{ t('None') }}</option>
@@ -156,7 +156,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_manager_id">
-                      <i class="fas fa-user-tie text-primary"></i> {{ t('warehouse_manager') }}
+                      <i class="fas fa-user-tie text-primary" aria-hidden="true"></i> {{ t('warehouse_manager') }}
                     </label>
                     <select class="form-control" id="warehouse_manager_id" name="manager_id">
                       <option value="" {% if not form_data.get('manager_id') %}selected{% endif %}>{{ t('None') }}</option>
@@ -173,7 +173,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="warehouse_branch_id">
-                      <i class="fas fa-building text-info"></i> {{ t('Branch') }}
+                      <i class="fas fa-building text-info" aria-hidden="true"></i> {{ t('Branch') }}
                     </label>
                     <select class="form-control" id="warehouse_branch_id" name="branch_id">
                       <option value="" {% if not form_data.get('branch_id') %}selected{% endif %}>-- {{ t('General_2') }} --</option>
@@ -193,7 +193,7 @@
                 <div class="custom-control custom-checkbox">
                   <input type="checkbox" class="custom-control-input" id="allow_negative_inventory" name="allow_negative_inventory" {% if form_data.get('allow_negative_inventory') %}checked{% endif %} aria-label="allow negative inventory">
                   <label class="custom-control-label" for="allow_negative_inventory">
-                    <i class="fas fa-exclamation-triangle text-warning"></i> {{ t('allow_negative_inventory') }}
+                    <i class="fas fa-exclamation-triangle text-warning" aria-hidden="true"></i> {{ t('allow_negative_inventory') }}
                   </label>
                   <small class="text-muted d-block">{{ t('allow_negative_inventory_help') }}</small>
                 </div>
@@ -202,7 +202,7 @@
                 <div class="custom-control custom-checkbox">
                   <input type="checkbox" class="custom-control-input" id="is_main" name="is_main" {% if form_data.get('is_main') %}checked{% endif %} aria-label="is main">
                   <label class="custom-control-label" for="is_main">
-                    <i class="fas fa-star text-warning"></i> {{ t('main_warehouse_label') }}
+                    <i class="fas fa-star text-warning" aria-hidden="true"></i> {{ t('main_warehouse_label') }}
                   </label>
                 </div>
               </div>
@@ -210,11 +210,11 @@
 
             <div class="card-footer">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save mr-2"></i> {{ t('create_warehouse') }}
+                <i class="fas fa-save mr-2" aria-hidden="true"></i> {{ t('create_warehouse') }}
               </button>
               {% if current_user.has_permission('manage_warehouse') %}
               <a href="{{ url_for('warehouse.list_warehouses') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
+                <i class="fas fa-times mr-2" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
               {% endif %}
             </div>

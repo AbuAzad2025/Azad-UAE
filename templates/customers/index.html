@@ -3,13 +3,13 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-users mr-3"></i>{{ t('Management') }} {{ t('Customers') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-users mr-3" aria-hidden="true"></i>{{ t('Management') }} {{ t('Customers') }}</h1>
     <p class="text-muted">{{ t('قاعدة') }} {{ t('Data_2') }} {{ t('شاملة') }} {{ t('لجميع') }} {{ t('Customers_2') }}</p>
   </div>
   <div>
     <div class="btn-group mr-2">
       <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-        <i class="fas fa-download mr-2"></i>{{ t('Export') }}
+        <i class="fas fa-download mr-2" aria-hidden="true"></i>{{ t('Export') }}
       </button>
       <div class="dropdown-menu dropdown-menu-right">
         <a class="dropdown-item" href="{{ url_for('customers.export', format='csv', search=request.args.get('search'), type=request.args.get('type')) }}">CSV</a>
@@ -17,7 +17,7 @@
       </div>
     </div>
     <a href="{{ url_for('customers.create') }}" class="btn btn-primary">
-      <i class="fas fa-user-plus mr-2"></i>{{ t('Customer_3') }} {{ t('New') }}
+      <i class="fas fa-user-plus mr-2" aria-hidden="true"></i>{{ t('Customer_3') }} {{ t('New') }}
     </a>
   </div>
 </div>
@@ -60,23 +60,23 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Customers') }}
+        <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('List') }} {{ t('Customers') }}
       </h3>
       <div class="btn-group flex-wrap">
         <button type="button" class="btn btn-outline-primary" id="filterAll">
-          <i class="fas fa-users mr-1"></i>{{ t('All') }}
+          <i class="fas fa-users mr-1" aria-hidden="true"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterVIP">
-          <i class="fas fa-crown mr-1"></i>VIP
+          <i class="fas fa-crown mr-1" aria-hidden="true"></i>VIP
         </button>
         <button type="button" class="btn btn-outline-info" id="filterMerchant">
-          <i class="fas fa-store mr-1"></i>{{ t('تجار') }}
+          <i class="fas fa-store mr-1" aria-hidden="true"></i>{{ t('تجار') }}
         </button>
         <button type="button" class="btn btn-outline-success" id="filterRegular">
-          <i class="fas fa-user mr-1"></i>{{ t('عادي') }}
+          <i class="fas fa-user mr-1" aria-hidden="true"></i>{{ t('عادي') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterOverdue">
-          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Late_2') }}
+          <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ t('Late_2') }}
         </button>
       </div>
     </div>
@@ -109,13 +109,13 @@
       <table id="customersTable" class="table table-hover">
         <thead class="customers-table-header">
           <tr>
-            <th><i class="fas fa-user mr-2"></i>{{ t('Name') }}</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('النوع') }}</th>
-            <th><i class="fas fa-star mr-2"></i>{{ t('التصنيف') }}</th>
-            <th><i class="fas fa-phone mr-2"></i>{{ t('Phone') }}</th>
-            <th><i class="fas fa-wallet mr-2"></i>{{ t('Balance') }}</th>
-            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('الإجراءات') }}</th>
+            <th><i class="fas fa-user mr-2" aria-hidden="true"></i>{{ t('Name') }}</th>
+            <th><i class="fas fa-tag mr-2" aria-hidden="true"></i>{{ t('النوع') }}</th>
+            <th><i class="fas fa-star mr-2" aria-hidden="true"></i>{{ t('التصنيف') }}</th>
+            <th><i class="fas fa-phone mr-2" aria-hidden="true"></i>{{ t('Phone') }}</th>
+            <th><i class="fas fa-wallet mr-2" aria-hidden="true"></i>{{ t('Balance') }}</th>
+            <th><i class="fas fa-code-branch mr-2" aria-hidden="true"></i>{{ t('Branch') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('الإجراءات') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -136,25 +136,25 @@
             </td>
             <td>
               {% if customer.customer_type == 'regular' %}
-                <span class="badge badge-info"><i class="fas fa-user mr-1"></i>{{ t('عادي') }}</span>
+                <span class="badge badge-info"><i class="fas fa-user mr-1" aria-hidden="true"></i>{{ t('عادي') }}</span>
               {% elif customer.customer_type == 'merchant' %}
-                <span class="badge badge-warning"><i class="fas fa-store mr-1"></i>{{ t('تاجر') }}</span>
+                <span class="badge badge-warning"><i class="fas fa-store mr-1" aria-hidden="true"></i>{{ t('تاجر') }}</span>
               {% else %}
-                <span class="badge badge-success"><i class="fas fa-handshake mr-1"></i>{{ t('Partner') }}</span>
+                <span class="badge badge-success"><i class="fas fa-handshake mr-1" aria-hidden="true"></i>{{ t('Partner') }}</span>
               {% endif %}
             </td>
             <td>
               {% if customer.customer_classification == 'vip' %}
-                <span class="vip-badge"><i class="fas fa-crown mr-1"></i>VIP</span>
+                <span class="vip-badge"><i class="fas fa-crown mr-1" aria-hidden="true"></i>VIP</span>
               {% elif customer.customer_classification == 'premium' %}
-                <span class="badge badge-warning"><i class="fas fa-medal mr-1"></i>{{ t('Featured') }}</span>
+                <span class="badge badge-warning"><i class="fas fa-medal mr-1" aria-hidden="true"></i>{{ t('Featured') }}</span>
               {% else %}
                 <span class="badge badge-secondary">{{ t('عادي') }}</span>
               {% endif %}
             </td>
             <td>
               <a href="tel:{{ customer.phone }}" class="text-primary">
-                <i class="fas fa-phone mr-1"></i>{{ customer.phone or '-' }}
+                <i class="fas fa-phone mr-1" aria-hidden="true"></i>{{ customer.phone or '-' }}
               </a>
             </td>
             <td>
@@ -183,29 +183,29 @@
               <div class="btn-group flex-wrap btn-group-sm">
                 <a href="{{ url_for('customers.view', id=customer.id) }}" 
                    class="btn btn-info" title="{{ t('View') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </a>
                 <a href="{{ url_for('customers.edit', id=customer.id) }}" 
                    class="btn btn-warning" title="{{ t('Edit') }}">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{customer.id}}" data-item-type="customers" data-item-name="{{customer.name|tojson}}" 
                         title="{{ t('Delete') }}">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash" aria-hidden="true"></i>
                 </button>
                 <a href="{{ url_for('customers.statement', id=customer.id) }}" class="btn btn-success btn-icon-white" title="{{ t('كشف') }} {{ t('Account') }}">
-                  <i class="fas fa-file-invoice btn-icon-white"></i>
+                  <i class="fas fa-file-invoice btn-icon-white" aria-hidden="true"></i>
                 </a>
                 {% if current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', party_type='customer', party_id=customer.id) }}"
                    class="btn btn-primary" title="{{ t('Receipt') }} / {{ t('Payment') }}">
-                  <i class="fas fa-money-bill-wave"></i>
+                  <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_sales') %}
                 <a href="{{ url_for('sales.create', customer_id=customer.id) }}" class="btn btn-success btn-icon-white" title="{{ t('Sale') }}">
-                  <i class="fas fa-shopping-cart btn-icon-white"></i>
+                  <i class="fas fa-shopping-cart btn-icon-white" aria-hidden="true"></i>
                 </a>
                 {% endif %}
               </div>
@@ -214,7 +214,7 @@
           {% else %}
           <tr>
             <td colspan="7" class="text-center text-muted py-5">
-              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
+              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
               {{ t('لا توجد') }} {{ t('عملاء') }}
             </td>
           </tr>
@@ -241,7 +241,7 @@ $(document).ready(() => {
     buttons: [
       {
         extend: 'excel', 
-        text: '<i class="fas fa-file-excel mr-1"></i> Excel', 
+        text: '<i class="fas fa-file-excel mr-1" aria-hidden="true"></i> Excel', 
         className: ' btn-success',
         attr: {
           style: 'color: #ffffff !important;'
@@ -249,7 +249,7 @@ $(document).ready(() => {
       },
       {
         extend: 'pdf', 
-        text: '<i class="fas fa-file-pdf mr-1"></i> PDF', 
+        text: '<i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> PDF', 
         className: ' btn-danger',
         attr: {
           style: 'color: #ffffff !important;'
@@ -257,7 +257,7 @@ $(document).ready(() => {
       },
       {
         extend: 'print', 
-        text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', 
+        text: '<i class="fas fa-print mr-1" aria-hidden="true"></i> {{ t('Print') }}', 
         className: ' btn-info',
         attr: {
           style: 'color: #ffffff !important;'

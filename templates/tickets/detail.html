@@ -4,7 +4,7 @@
 <div class="container-fluid">
   <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h5>{% if ticket %}<i class="fas fa-ticket-alt"></i> {{ t('ticket') }} #{{ ticket.number }}{% else %}<i class="fas fa-plus"></i> {{ t('new_ticket') }}{% endif %}</h5>
+      <h5>{% if ticket %}<i class="fas fa-ticket-alt" aria-hidden="true"></i> {{ t('ticket') }} #{{ ticket.number }}{% else %}<i class="fas fa-plus" aria-hidden="true"></i> {{ t('new_ticket') }}{% endif %}</h5>
       <div>
         {% if ticket %}
         <span class="badge badge-{{ 'success' if ticket.status == 'resolved' or ticket.status == 'closed' else ('warning' if ticket.status == 'waiting' else 'info') }} badge-lg">{{ ticket.status }}</span>
@@ -18,7 +18,7 @@
         <div class="form-group"><label for="comment_body">{{ t('comment') }}</label>
           <textarea id="comment_body" name="body" class="form-control" rows="2" required></textarea></div>
         <div class="checkbox mb-2"><label><input type="checkbox" name="is_internal" value="1"> {{ t('internal') }}</label></div>
-        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-reply"></i> {{ t('add_comment') }}</button>
+        <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-reply" aria-hidden="true"></i> {{ t('add_comment') }}</button>
       </form>
       <hr>
       <div class="ticket-timeline">
@@ -50,25 +50,25 @@
           <option value="{{ u.id }}" {% if ticket.assigned_user_id == u.id %}selected{% endif %}>{{ u.name | e }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-sm btn-info"><i class="fas fa-user-check"></i> {{ t('assign') }}</button>
+        <button type="submit" class="btn btn-sm btn-info"><i class="fas fa-user-check" aria-hidden="true"></i> {{ t('assign') }}</button>
       </form>
       <div class="mt-2">
         {% if ticket.status == 'open' or ticket.status == 'waiting' %}
         <form method="POST" action="{{ url_for('tickets.resolve_ticket', ticket_id=ticket.id) }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i> {{ t('resolve') }}</button>
+          <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check" aria-hidden="true"></i> {{ t('resolve') }}</button>
         </form>
         {% endif %}
         {% if ticket.status != 'closed' %}
         <form method="POST" action="{{ url_for('tickets.close_ticket', ticket_id=ticket.id) }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-times"></i> {{ t('close') }}</button>
+          <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-times" aria-hidden="true"></i> {{ t('close') }}</button>
         </form>
         {% endif %}
         {% if ticket.status == 'resolved' or ticket.status == 'closed' %}
         <form method="POST" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" style="display:inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-redo"></i> {{ t('reopen') }}</button>
+          <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-redo" aria-hidden="true"></i> {{ t('reopen') }}</button>
         </form>
         {% endif %}
       </div>
@@ -108,7 +108,7 @@
               </select></div>
           </div>
         </div>
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('create') }}</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save" aria-hidden="true"></i> {{ t('create') }}</button>
         <a href="{{ url_for('tickets.list_tickets') }}" class="btn btn-secondary">{{ t('cancel') }}</a>
       </form>
       {% endif %}

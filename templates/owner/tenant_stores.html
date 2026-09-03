@@ -6,7 +6,7 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-store mr-2"></i>{{ t('Tenant_Stores_Platform_Control') }}</h1>
+        <h1 class="m-0"><i class="fas fa-store mr-2" aria-hidden="true"></i>{{ t('Tenant_Stores_Platform_Control') }}</h1>
         <p class="text-muted small mb-0">{{ t('Platform_Owner_Can_Disable_Store') }}</p>
       </div>
       <div class="col-sm-6 text-left">
@@ -20,13 +20,13 @@
   <div class="container-fluid">
     {% if not global_enabled|default(false) %}
     <div class="alert alert-warning">
-      <i class="fas fa-globe mr-1"></i>
+      <i class="fas fa-globe mr-1" aria-hidden="true"></i>
       {{ t('Stores_Stopped_At_Platform_Level') }} <a href="{{ url_for('owner.system_config') }}">{{ t('System_Settings') }}</a> {{ t('To_Show_Store_To_Customers') }}
     </div>
     {% endif %}
 
     <div class="alert alert-info">
-      <i class="fas fa-shield-halved mr-1"></i>
+      <i class="fas fa-shield-halved mr-1" aria-hidden="true"></i>
       {{ t('Platform_Owner_Can_Lock_Store') }}
     </div>
 
@@ -60,14 +60,14 @@
               </td>
               <td>
                 {% if row.platform_disabled|default(false) %}
-                <span class="badge badge-danger"><i class="fas fa-lock mr-1"></i>{{ t('Locked') }}</span>
+                <span class="badge badge-danger"><i class="fas fa-lock mr-1" aria-hidden="true"></i>{{ t('Locked') }}</span>
                 {% else %}
                 <span class="badge badge-light border">{{ t('Delegated_To_Tenant') }}</span>
                 {% endif %}
               </td>
               <td>
                 {% if row.public_available|default(false) %}
-                <span class="badge badge-success"><i class="fas fa-check mr-1"></i>{{ t('Available') }}</span>
+                <span class="badge badge-success"><i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('Available') }}</span>
                 {% else %}
                 <span class="badge badge-secondary">{{ t('Not_Available') }}</span>
                 {% endif %}
@@ -77,12 +77,12 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   {% if row.platform_disabled|default(false) %}
                   <input type="hidden" name="platform_disabled" value="0" aria-label="platform disabled">
-                  <button type="submit" class="btn btn-outline-success"><i class="fas fa-unlock mr-1"></i>{{ t('Unlock') }}</button>
+                  <button type="submit" class="btn btn-outline-success"><i class="fas fa-unlock mr-1" aria-hidden="true"></i>{{ t('Unlock') }}</button>
                   {% else %}
                   <input type="hidden" name="platform_disabled" value="1" aria-label="platform disabled">
                   <button type="submit" class="btn btn-outline-danger"
                           data-action="confirm-submit" data-confirm-message="{{ t('Disable_Store_From_Platform_Confirm') }}">
-                    <i class="fas fa-lock mr-1"></i>{{ t('Lock_Disable') }}
+                    <i class="fas fa-lock mr-1" aria-hidden="true"></i>{{ t('Lock_Disable') }}
                   </button>
                   {% endif %}
                 </form>

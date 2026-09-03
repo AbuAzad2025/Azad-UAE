@@ -3,13 +3,13 @@
 {% block content %}
 <div class="container-fluid">
   <div class="card">
-    <div class="card-header"><h3><i class="fas fa-stream"></i> {{ t('الأحداث') }} {{ t('Accounting') }} {{ t('الفورية') }}</h3></div>
+    <div class="card-header"><h3><i class="fas fa-stream" aria-hidden="true"></i> {{ t('الأحداث') }} {{ t('Accounting') }} {{ t('الفورية') }}</h3></div>
     <div class="card-body">
       <div class="row mb-4">
         {% for event_type, count in event_stats.items() %}
         <div class="col-md-3">
           <div class="info-box">
-            <span class="info-box-icon bg-info"><i class="fas fa-bell"></i></span>
+            <span class="info-box-icon bg-info"><i class="fas fa-bell" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ event_type }}</span>
               <span class="info-box-number">{{ count }}</span>
@@ -33,7 +33,7 @@
             <td>{{ event.journal_entry_id or t('None') }}</td>
           </tr>
           {% else %}
-          <tr><td colspan="5" class="text-center py-4"><i class="fas fa-bell-slash fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('أحداث') }}</td></tr>
+          <tr><td colspan="5" class="text-center py-4"><i class="fas fa-bell-slash fa-2x text-muted mb-2" aria-hidden="true"></i><br>{{ t('No_items_found') }} {{ t('أحداث') }}</td></tr>
           {% endfor %}
         </tbody>
       </table></div>

@@ -4,16 +4,16 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ _('رجوع للوحة المالك') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ _('رجوع للوحة المالك') }}
     </a>
     <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> {{ _('اللوحة المالية') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ _('اللوحة المالية') }}
     </a>
     <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-info">
-      <i class="fas fa-link"></i> {{ _('العملاء') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ _('العملاء') }}
     </a>
     <a href="{{ url_for('owner.product_performance') }}" class="btn btn-warning">
-      <i class="fas fa-link"></i>{{ _('المنتجات') }}</a>
+      <i class="fas fa-link" aria-hidden="true"></i>{{ _('المنتجات') }}</a>
   </div>
   <div class="card">
     <div class="card-header">

@@ -4,14 +4,14 @@
 <div class="container-fluid">
   <div class="card">
     <div class="card-header">
-      <h3 class="card-title mb-0"><i class="fas fa-print mr-2"></i>{{ _('Print_Settings') }}</h3>
+      <h3 class="card-title mb-0"><i class="fas fa-print mr-2" aria-hidden="true"></i>{{ _('Print_Settings') }}</h3>
     </div>
     <div class="card-body">
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="row">
           <div class="col-md-6">
-            <h5 class="mb-3"><i class="fas fa-file mr-2"></i>{{ _('Paper_Settings') }}</h5>
+            <h5 class="mb-3"><i class="fas fa-file mr-2" aria-hidden="true"></i>{{ _('Paper_Settings') }}</h5>
             <div class="form-group">
               <label for="paper_size">{{ _('Paper_Size') }}</label>
               <select name="paper_size" id="paper_size" class="form-control">
@@ -39,7 +39,7 @@
             </div>
           </div>
           <div class="col-md-6">
-            <h5 class="mb-3"><i class="fas fa-palette mr-2"></i>{{ _('Colors') }}</h5>
+            <h5 class="mb-3"><i class="fas fa-palette mr-2" aria-hidden="true"></i>{{ _('Colors') }}</h5>
             <div class="form-group">
               <label for="header_color">{{ _('Header_Color') }}</label>
               <input type="color" name="header_color" id="header_color" class="form-control form-control-color" value="{{ settings.header_color or '#667eea' }}" style="height:50px;">
@@ -52,7 +52,7 @@
         </div>
 
         <hr>
-        <h5 class="mb-3"><i class="fas fa-cog mr-2"></i>{{ _('Print_Options') }}</h5>
+        <h5 class="mb-3"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ _('Print_Options') }}</h5>
         <div class="row">
           <div class="col-md-4">
             <div class="custom-control custom-switch">
@@ -83,7 +83,7 @@
         <hr>
         <div class="text-center">
           <button type="submit" class="btn btn-primary btn-lg px-5">
-            <i class="fas fa-save mr-2"></i> {{ _('Save') }} {{ _('Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i> {{ _('Save') }} {{ _('Settings') }}
           </button>
           <a href="{{ url_for('printing.print_settings') }}" class="btn btn-secondary btn-lg px-5 mr-2">{{ _('Cancel') }}</a>
         </div>

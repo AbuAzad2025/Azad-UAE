@@ -6,7 +6,7 @@
 {% include 'shop/partials/breadcrumbs.html' with context %}
 {% endwith %}
 <div class="ps-panel ic-1">
-  <div class="ps-success-icon"><i class="fas fa-check"></i></div>
+  <div class="ps-success-icon"><i class="fas fa-check" aria-hidden="true"></i></div>
   <h2 class="ic-2">{{ t('order_success') }}</h2>
   <p class="ic-3">{{ t('order_number') }} <strong>{{ sale.sale_number }}</strong></p>
   <div class="ps-summary-row total ic-4">
@@ -20,7 +20,7 @@
   </div>
   {% endif %}
   <span class="ps-badge-cod ic-5">
-    <i class="{{ pay_method.icon if pay_method else 'fas fa-hand-holding-usd' }}"></i>
+    <i class="{{ pay_method.icon if pay_method else 'fas fa-hand-holding-usd' }}" aria-hidden="true"></i>
     {% if pay_method %}{{ pay_method.display_name(lang) }}{% else %}{{ t('cod') }}{% endif %}
   </span>
   <p class="ic-6">{{ t('made_in_palestine') }}</p>

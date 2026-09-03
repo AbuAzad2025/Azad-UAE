@@ -4,9 +4,9 @@
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="{{ url_for('crm.pipeline') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-filter"></i> خط {{ t('الأنابيب') }}</a>
+    <a href="{{ url_for('crm.pipeline') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-filter" aria-hidden="true"></i> خط {{ t('الأنابيب') }}</a>
     {% if current_user.has_permission('crm.manage') %}
-    <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('Add') }}</a>
+    <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add') }}</a>
     {% endif %}
   </div>
   <div class="card">
@@ -36,10 +36,10 @@
               <td>{{ (lead.expected_revenue or 0)|format_currency }}</td>
               <td><span class="badge badge-{{ 'success' if lead.status == 'won' else ('danger' if lead.status == 'lost' else 'info') }}">{{ t(lead.status) }}</span></td>
               <td>
-                <a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}" class="btn btn-sm btn-info" title="{{ t('View') }}"><i class="fas fa-eye"></i></a>
+                <a href="{{ url_for('crm.lead_detail', lead_id=lead.id) }}" class="btn btn-sm btn-info" title="{{ t('View') }}"><i class="fas fa-eye" aria-hidden="true"></i></a>
                 {% if current_user.has_permission('crm.manage') %}
-                <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-sm btn-warning" title="{{ t('Edit') }}"><i class="fas fa-edit"></i></a>
-                <button type="button" class="btn btn-sm btn-danger" data-delete-item="{{ lead.id }}" data-item-type="leads" data-item-name="{{ lead.name|tojson }}" title="{{ t('Delete') }}"><i class="fas fa-trash"></i></button>
+                <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-sm btn-warning" title="{{ t('Edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
+                <button type="button" class="btn btn-sm btn-danger" data-delete-item="{{ lead.id }}" data-item-type="leads" data-item-name="{{ lead.name|tojson }}" title="{{ t('Delete') }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
                 {% endif %}
               </td>
             </tr>

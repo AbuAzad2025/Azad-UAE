@@ -4,58 +4,58 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.email_settings') }}" class="btn btn-info">
-      <i class="fas fa-envelope"></i> {{ t('Email') }}
+      <i class="fas fa-envelope" aria-hidden="true"></i> {{ t('Email') }}
     </a>
     <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-warning">
-      <i class="fas fa-sms"></i> {{ t('SMS') }}
+      <i class="fas fa-sms" aria-hidden="true"></i> {{ t('SMS') }}
     </a>
     <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-success">
-      <i class="fab fa-whatsapp"></i> {{ t('WhatsApp') }}
+      <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('WhatsApp') }}
     </a>
   </div>
 
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-bell"></i> {{ t('Notification_Templates') }}</h3>
+      <h3><i class="fas fa-bell" aria-hidden="true"></i> {{ t('Notification_Templates') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
         <div class="form-group">
-          <label for="invoice_email_template"><i class="fas fa-envelope"></i> {{ t('Invoice_Email_Template') }}</label>
+          <label for="invoice_email_template"><i class="fas fa-envelope" aria-hidden="true"></i> {{ t('Invoice_Email_Template') }}</label>
           <textarea name="invoice_email_template" id="invoice_email_template" class="form-control" rows="5" placeholder="{{ t('Invoice_Email_Placeholder') }}" type="email">{{ templates.invoice_email|default('') }}</textarea>
           <small class="text-muted">
-            <i class="fas fa-info-circle"></i>{{ t('Available_Variables') }}<code>{customer_name}</code>, <code>{sale_number}</code>, <code>{total_amount}</code>, <code>{date}</code>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>{{ t('Available_Variables') }}<code>{customer_name}</code>, <code>{sale_number}</code>, <code>{total_amount}</code>, <code>{date}</code>
           </small>
         </div>
 
         <div class="form-group">
-          <label for="payment_sms_template"><i class="fas fa-sms"></i> {{ t('Payment_SMS_Template') }}</label>
+          <label for="payment_sms_template"><i class="fas fa-sms" aria-hidden="true"></i> {{ t('Payment_SMS_Template') }}</label>
           <textarea name="payment_sms_template" id="payment_sms_template" class="form-control" rows="4" placeholder="{{ t('Payment_SMS_Placeholder') }}">{{ templates.payment_sms|default('') }}</textarea>
           <small class="text-muted">
-            <i class="fas fa-info-circle"></i>{{ t('Available_Variables') }}<code>{amount}</code>, <code>{receipt_number}</code>, <code>{customer_name}</code>, <code>{date}</code>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>{{ t('Available_Variables') }}<code>{amount}</code>, <code>{receipt_number}</code>, <code>{customer_name}</code>, <code>{date}</code>
           </small>
         </div>
 
         <div class="form-group">
-          <label for="reminder_whatsapp_template"><i class="fab fa-whatsapp"></i> {{ t('WhatsApp_Reminder_Template') }}</label>
+          <label for="reminder_whatsapp_template"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('WhatsApp_Reminder_Template') }}</label>
           <textarea name="reminder_whatsapp_template" id="reminder_whatsapp_template" class="form-control" rows="4" placeholder="{{ t('Reminder_WhatsApp_Placeholder') }}">{{ templates.reminder_whatsapp|default('') }}</textarea>
           <small class="text-muted">
-            <i class="fas fa-info-circle"></i>{{ t('Available_Variables') }}<code>{customer_name}</code>, <code>{balance}</code>, <code>{phone}</code>, <code>{last_invoice}</code>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>{{ t('Available_Variables') }}<code>{customer_name}</code>, <code>{balance}</code>, <code>{phone}</code>, <code>{last_invoice}</code>
           </small>
         </div>
 
         <div class="alert alert-info">
-          <i class="fas fa-lightbulb"></i>
+          <i class="fas fa-lightbulb" aria-hidden="true"></i>
           <strong>{{ t('Tip') }}</strong> {{ t('Use_Variables_Above_For_Dynamic') }}
         </div>
 
         <button type="submit" class="btn btn-success btn-lg">
-          <i class="fas fa-save"></i> {{ t('Save_All_Templates') }}
+          <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save_All_Templates') }}
         </button>
       </form>
     </div>

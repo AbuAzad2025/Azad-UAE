@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3"></i>{{ t('sales_management') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-3" aria-hidden="true"></i>{{ t('sales_management') }}</h1>
 
     <p class="text-muted">{{ t('all') }} {{ t('invoices') }} {{ t('sale') }} {{ t('and_transactions') }} {{ t('financial') }}</p>
 
@@ -18,14 +18,14 @@
 
     <a href="{{ url_for('sales.create') }}" class="btn btn-primary btn-lg pulse text-white ic-1">
 
-      <i class="fas fa-plus-circle mr-2 ic-1"></i>{{ t('new_invoice') }}
+      <i class="fas fa-plus-circle mr-2 ic-1" aria-hidden="true"></i>{{ t('new_invoice') }}
 
     </a>
 
     {% if current_user.has_permission('manage_sales') %}
     <a href="{{ url_for('sales.archived') }}" class="btn btn-warning btn-lg">
 
-      <i class="fas fa-archive mr-2"></i>{{ t('archive') }}
+      <i class="fas fa-archive mr-2" aria-hidden="true"></i>{{ t('archive') }}
 
     </a>
     {% endif %}
@@ -67,7 +67,7 @@
 
       <h3 class="card-title mb-0">
 
-        <i class="fas fa-list mr-2"></i>{{ t('sales_log') }}
+        <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('sales_log') }}
 
       </h3>
 
@@ -75,31 +75,31 @@
 
         <button type="button" class="btn btn-outline-info" id="printSalesBtn">
 
-          <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+          <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-primary active" id="filterAll">
 
-          <i class="fas fa-list mr-1"></i>{{ t('All') }}
+          <i class="fas fa-list mr-1" aria-hidden="true"></i>{{ t('All') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-success" id="filterPaid">
 
-          <i class="fas fa-check mr-1"></i>{{ t('paid') }}
+          <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('paid') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-warning" id="filterPartial">
 
-          <i class="fas fa-clock mr-1"></i>{{ t('partial') }}
+          <i class="fas fa-clock mr-1" aria-hidden="true"></i>{{ t('partial') }}
 
         </button>
 
         <button type="button" class="btn btn-outline-danger" id="filterUnpaid">
 
-          <i class="fas fa-times mr-1"></i>{{ t('credit') }}
+          <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ t('credit') }}
 
         </button>
 
@@ -119,25 +119,25 @@
 
           <tr>
 
-            <th><i class="fas fa-hashtag mr-2"></i>{{ t('invoice_number') }}</th>
+            <th><i class="fas fa-hashtag mr-2" aria-hidden="true"></i>{{ t('invoice_number') }}</th>
 
-            <th><i class="fas fa-user mr-2"></i>{{ t('customer') }}</th>
+            <th><i class="fas fa-user mr-2" aria-hidden="true"></i>{{ t('customer') }}</th>
 
-            <th><i class="far fa-calendar mr-2"></i>{{ t('date') }}</th>
+            <th><i class="far fa-calendar mr-2" aria-hidden="true"></i>{{ t('date') }}</th>
 
-            <th class="col-num"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('amount') }}</th>
+            <th class="col-num"><i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ t('amount') }}</th>
 
-            <th class="col-num"><i class="fas fa-check-circle mr-2"></i>{{ t('paid') }}</th>
+            <th class="col-num"><i class="fas fa-check-circle mr-2" aria-hidden="true"></i>{{ t('paid') }}</th>
 
-            <th class="col-num"><i class="fas fa-exclamation-circle mr-2"></i>{{ t('remaining') }}</th>
+            <th class="col-num"><i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>{{ t('remaining') }}</th>
 
-            <th><i class="fas fa-exchange-alt mr-2"></i>{{ t('exchange_rate') }}</th>
+            <th><i class="fas fa-exchange-alt mr-2" aria-hidden="true"></i>{{ t('exchange_rate') }}</th>
 
-            <th><i class="fas fa-code-branch mr-2"></i>{{ t('branch') }}</th>
+            <th><i class="fas fa-code-branch mr-2" aria-hidden="true"></i>{{ t('branch') }}</th>
 
-            <th><i class="fas fa-wallet mr-2"></i>{{ t('status') }}</th>
+            <th><i class="fas fa-wallet mr-2" aria-hidden="true"></i>{{ t('status') }}</th>
 
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('actions') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('actions') }}</th>
 
           </tr>
 
@@ -163,7 +163,7 @@
 
               <div class="d-flex align-items-center">
 
-                <i class="fas fa-user-circle fa-2x text-muted mr-2"></i>
+                <i class="fas fa-user-circle fa-2x text-muted mr-2" aria-hidden="true"></i>
 
                 <div>
 
@@ -231,7 +231,7 @@
 
                 <span class="badge badge-info" title="{{ t('exchange_rate_at_transaction_time') }}">
 
-                  <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
+                  <i class="fas fa-exchange-alt mr-1" aria-hidden="true"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
 
                 </span>
 
@@ -263,7 +263,7 @@
 
                 <span class="badge badge-paid px-3">
 
-                  <i class="fas fa-check mr-1"></i>{{ t('paid') }}
+                  <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('paid') }}
 
                 </span>
 
@@ -271,7 +271,7 @@
 
                 <span class="badge badge-partial px-3">
 
-                  <i class="fas fa-clock mr-1"></i>{{ t('partial') }}
+                  <i class="fas fa-clock mr-1" aria-hidden="true"></i>{{ t('partial') }}
 
                 </span>
 
@@ -279,7 +279,7 @@
 
                 <span class="badge badge-unpaid px-3">
 
-                  <i class="fas fa-hourglass-half mr-1"></i>{{ t('credit') }}
+                  <i class="fas fa-hourglass-half mr-1" aria-hidden="true"></i>{{ t('credit') }}
 
                 </span>
 
@@ -295,7 +295,7 @@
 
                    class="btn btn-info" title="{{ t('View') }}">
 
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
 
                 </a>
 
@@ -303,14 +303,14 @@
 
                    class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ t('Print') }}">
 
-                  <i class="fas fa-print"></i>
+                  <i class="fas fa-print" aria-hidden="true"></i>
 
                 </a>
 
                 {% if sale.balance_due > 0 and current_user.has_permission('manage_payments') %}
                 <a href="{{ url_for('payments.create_voucher', direction='incoming', party_type='customer', party_id=sale.customer_id, amount=sale.balance_due) }}"
                    class="btn btn-success" title="{{ t('payment_voucher') }}">
-                  <i class="fas fa-credit-card"></i>
+                  <i class="fas fa-credit-card" aria-hidden="true"></i>
                 </a>
                 {% endif %}
 
@@ -322,7 +322,7 @@
 
                         title="{{ t('Delete') }}">
 
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash" aria-hidden="true"></i>
 
                 </button>
 
@@ -337,7 +337,7 @@
           {% else %}
           <tr>
             <td colspan="10" class="text-center text-muted py-5">
-              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
+              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
               {{ t('no_invoices_found') }}
             </td>
           </tr>

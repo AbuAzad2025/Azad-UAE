@@ -3,7 +3,7 @@
 {% block title %}{{ _('كشف حساب') }} {{ partner.name }}{% endblock %}
 
 {% block page_title %}
-<h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ _('كشف حساب') }}: {{ partner.name }}</h1>
+<h1 class="text-gradient mb-0"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ _('كشف حساب') }}: {{ partner.name }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -19,8 +19,8 @@
         <input type="date" name="end_date" class="form-control" value="{{ end_date }}" id="input_end_date" aria-label="end date">
       </div>
       <div class="col-md-4 d-flex flex-wrap">
-        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fas fa-filter mr-1"></i> {{ _('عرض') }}</button>
-        <button type="button" class="btn btn-outline-secondary mb-2 no-print" data-action="window-print"><i class="fas fa-print mr-1"></i> {{ _('طباعة') }}</button>
+        <button type="submit" class="btn btn-primary mr-2 mb-2"><i class="fas fa-filter mr-1" aria-hidden="true"></i> {{ _('عرض') }}</button>
+        <button type="button" class="btn btn-outline-secondary mb-2 no-print" data-action="window-print"><i class="fas fa-print mr-1" aria-hidden="true"></i> {{ _('طباعة') }}</button>
       </div>
     </form>
   </div>
@@ -65,7 +65,7 @@
 </div>
 
 <div class="card">
-  <div class="card-header"><i class="fas fa-list mr-2"></i>{{ _('تفاصيل الحركات') }}</div>
+  <div class="card-header"><i class="fas fa-list mr-2" aria-hidden="true"></i>{{ _('تفاصيل الحركات') }}</div>
   <div class="card-body p-0">
     <div class="table-responsive">
       <table class="table table-hover mb-0">

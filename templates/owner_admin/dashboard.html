@@ -152,19 +152,19 @@
 
 <div class="sa-stats-grid">
     <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-icon-purple"><i class="fas fa-building"></i></div>
+        <div class="sa-stat-icon sa-stat-icon-purple"><i class="fas fa-building" aria-hidden="true"></i></div>
         <div><div class="sa-stat-value">{{ stats.total }}</div><div class="sa-stat-label">{{ _('إجمالي المستأجرين') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-icon-green"><i class="fas fa-check-circle"></i></div>
+        <div class="sa-stat-icon sa-stat-icon-green"><i class="fas fa-check-circle" aria-hidden="true"></i></div>
         <div><div class="sa-stat-value">{{ stats.active }}</div><div class="sa-stat-label">{{ _('نشط') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-icon-red"><i class="fas fa-pause-circle"></i></div>
+        <div class="sa-stat-icon sa-stat-icon-red"><i class="fas fa-pause-circle" aria-hidden="true"></i></div>
         <div><div class="sa-stat-value">{{ stats.suspended }}</div><div class="sa-stat-label">{{ _('موقوف') }}</div></div>
     </div>
     <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-icon-yellow"><i class="fas fa-clock"></i></div>
+        <div class="sa-stat-icon sa-stat-icon-yellow"><i class="fas fa-clock" aria-hidden="true"></i></div>
         <div><div class="sa-stat-value">{{ stats.trial }}</div><div class="sa-stat-label">{{ _('في الفترة التجريبية') }}</div></div>
     </div>
 </div>
@@ -187,7 +187,7 @@
             {% if not tenant_rows %}
             <tr>
                 <td colspan="8" class="text-center py-5">
-                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                    <i class="fas fa-inbox fa-3x text-muted mb-3" aria-hidden="true"></i>
                     <p>{{ _('لا يوجد مستأجرين') }}</p>
                 </td>
             </tr>
@@ -226,7 +226,7 @@
                 </td>
                 <td>
                     <div class="sa-usage-text">
-                        <i class="fas fa-users sa-icon-users"></i>
+                        <i class="fas fa-users sa-icon-users" aria-hidden="true"></i>
                         {{ row.users_used }}/{{ tenant.max_users or '∞' }}
                         <span class="sa-usage-bar">
                             <span class="sa-usage-fill {% if user_pct >= 90 %}sa-usage-crit{% elif user_pct >= 75 %}sa-usage-warn{% else %}sa-usage-ok{% endif %}"
@@ -234,7 +234,7 @@
                         </span>
                     </div>
                     <div class="sa-usage-text sa-usage-row">
-                        <i class="fas fa-code-branch sa-icon-branches"></i>
+                        <i class="fas fa-code-branch sa-icon-branches" aria-hidden="true"></i>
                         {{ row.branches_used }}/{{ tenant.max_branches or '∞' }}
                         <span class="sa-usage-bar">
                             <span class="sa-usage-fill {% if branch_pct >= 90 %}sa-usage-crit{% elif branch_pct >= 75 %}sa-usage-warn{% else %}sa-usage-ok{% endif %}"
@@ -244,11 +244,11 @@
                 </td>
                 <td>
                     {% if tenant.is_suspended %}
-                        <span class="sa-badge sa-badge-suspended"><i class="fas fa-ban"></i> {{ _('موقوف') }}</span>
+                        <span class="sa-badge sa-badge-suspended"><i class="fas fa-ban" aria-hidden="true"></i> {{ _('موقوف') }}</span>
                     {% elif tenant.is_trial %}
-                        <span class="sa-badge sa-badge-trial"><i class="fas fa-clock"></i> {{ _('تجريبي') }}</span>
+                        <span class="sa-badge sa-badge-trial"><i class="fas fa-clock" aria-hidden="true"></i> {{ _('تجريبي') }}</span>
                     {% elif tenant.is_active %}
-                        <span class="sa-badge sa-badge-active"><i class="fas fa-check"></i> {{ _('نشط') }}</span>
+                        <span class="sa-badge sa-badge-active"><i class="fas fa-check" aria-hidden="true"></i> {{ _('نشط') }}</span>
                     {% else %}
                         <span class="sa-badge sa-badge-suspended">{{ _('غير نشط') }}</span>
                     {% endif %}
@@ -258,7 +258,7 @@
                             data-tenant-id="{{ tenant.id }}"
                             data-tenant-name="{{ tenant.name_ar or tenant.name }}"
                             data-current-plan="{{ tenant.subscription_plan }}">
-                        <i class="fas fa-bolt"></i> {{ _('تجاوز') }}
+                        <i class="fas fa-bolt" aria-hidden="true"></i> {{ _('تجاوز') }}
                     </button>
                 </td>
             </tr>
@@ -272,7 +272,7 @@
         <div class="modal-content sa-modal-content">
             <div class="modal-header sa-modal-header">
                 <h5 class="modal-title sa-modal-title">
-                    <i class="fas fa-bolt sa-modal-icon"></i> {{ _('تجاوز الاشتراك يدوياً') }}
+                    <i class="fas fa-bolt sa-modal-icon" aria-hidden="true"></i> {{ _('تجاوز الاشتراك يدوياً') }}
                 </h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
@@ -308,7 +308,7 @@
                 <div class="modal-footer sa-modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
                     <button type="submit" class="btn btn-primary sa-btn-gold">
-                        <i class="fas fa-check"></i> {{ _('تفعيل الاشتراك') }}
+                        <i class="fas fa-check" aria-hidden="true"></i> {{ _('تفعيل الاشتراك') }}
                     </button>
                 </div>
             </form>

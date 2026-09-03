@@ -5,11 +5,11 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-exchange-alt text-info"></i> {{ t('Exchange_Rate_Management') }}</h1>
+        <h1 class="m-0"><i class="fas fa-exchange-alt text-info" aria-hidden="true"></i> {{ t('Exchange_Rate_Management') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-          <i class="fas fa-arrow-right mr-1"></i> {{ t('Owner_Dashboard') }}
+          <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Owner_Dashboard') }}
         </a>
       </div>
     </div>
@@ -22,7 +22,7 @@
       <div class="col-md-5">
         <div class="card">
           <div class="card-header bg-info text-white">
-            <h3 class="card-title"><i class="fas fa-plus-circle mr-2"></i> {{ t('Add_Manual_Rate') }}</h3>
+            <h3 class="card-title"><i class="fas fa-plus-circle mr-2" aria-hidden="true"></i> {{ t('Add_Manual_Rate') }}</h3>
           </div>
           <div class="card-body">
             <form method="POST" action="{{ url_for('owner.exchange_rates') }}">
@@ -58,7 +58,7 @@
               </div>
 
               <button type="submit" class="btn btn-info btn-block">
-                <i class="fas fa-save mr-1"></i> {{ t('Save_Rate') }}
+                <i class="fas fa-save mr-1" aria-hidden="true"></i> {{ t('Save_Rate') }}
               </button>
             </form>
           </div>
@@ -68,7 +68,7 @@
       <div class="col-md-7">
         <div class="card">
           <div class="card-header bg-secondary text-white">
-            <h3 class="card-title"><i class="fas fa-history mr-2"></i> {{ t('Rate_History') }}</h3>
+            <h3 class="card-title"><i class="fas fa-history mr-2" aria-hidden="true"></i> {{ t('Rate_History') }}</h3>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -105,7 +105,7 @@
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="record_id" value="{{ r.id|default('') }}">
                         <button type="submit" class="btn btn-xs btn-outline-danger" aria-label="{{ t('Delete') }}" title="{{ t('Delete') }}">
-                          <i class="fas fa-trash"></i>
+                          <i class="fas fa-trash" aria-hidden="true"></i>
                         </button>
                       </form>
                     </td>

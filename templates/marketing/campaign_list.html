@@ -11,7 +11,7 @@
     <div class="tab-pane {% if tab != 'lists' and tab != 'templates' %}active{% endif %}" id="campaigns">
       <div class="d-flex justify-content-between mb-3">
         <h5>{{ t('Campaigns') }}</h5>
-        <a href="{{ url_for('email_marketing.create_campaign') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('New_Campaign') }}</a>
+        <a href="{{ url_for('email_marketing.create_campaign') }}" class="btn btn-success btn-sm"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('New_Campaign') }}</a>
       </div>
       <div class="table-responsive">
         <table class="table table-bordered" id="campaignsTable">
@@ -24,7 +24,7 @@
               <td><span class="badge badge-{{ 'success' if c.status == 'sent' else 'secondary' }}">{{ c.status }}</span></td>
               <td>{{ c.sent_count }}</td>
               <td>{{ c.open_count }}</td>
-              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign_Statistics') }}"><i class="fas fa-chart-bar"></i></a></td>
+              <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign_Statistics') }}"><i class="fas fa-chart-bar" aria-hidden="true"></i></a></td>
             </tr>
             {% else %}
             <tr><td colspan="6" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
@@ -34,7 +34,7 @@
       </div>
     </div>
     <div class="tab-pane {% if tab == 'lists' %}active{% endif %}" id="lists">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#listModal"><i class="fas fa-plus"></i> {{ t('New_List') }}</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#listModal"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('New_List') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
           <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Description') }}</th><th>{{ t('Subscribers') }}</th></tr></thead>
@@ -53,7 +53,7 @@
       </div>
     </div>
     <div class="tab-pane {% if tab == 'templates' %}active{% endif %}" id="templates">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#templateModal"><i class="fas fa-plus"></i> {{ t('New_Template') }}</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#templateModal"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('New_Template') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
           <thead><tr><th>{{ t('Name') }}</th><th>{{ t('Subject') }}</th><th>{{ t('Sender_Email') }}</th></tr></thead>

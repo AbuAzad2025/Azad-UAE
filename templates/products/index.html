@@ -3,15 +3,15 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-box-open mr-3"></i>{{ t('Product_Catalog') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-box-open mr-3" aria-hidden="true"></i>{{ t('Product_Catalog') }}</h1>
     <p class="text-muted">{{ t('Complete_Inventory_For_All_Products') }}</p>
   </div>
   <div>
     <a href="{{ url_for('products.import_products') }}" class="btn btn-secondary mr-2">
-      <i class="fas fa-file-import mr-2"></i>{{ t('Import') }}
+      <i class="fas fa-file-import mr-2" aria-hidden="true"></i>{{ t('Import') }}
     </a>
     <a href="{{ url_for('products.create') }}" class="btn btn-primary">
-      <i class="fas fa-plus mr-2"></i>{{ t('New_Product') }}
+      <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('New_Product') }}
     </a>
   </div>
 </div>
@@ -132,20 +132,20 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>{{ t('Product_Catalog') }}
+        <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('Product_Catalog') }}
       </h3>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-info" id="printProductsBtn">
-          <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+          <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print') }}
         </button>
         <button type="button" class="btn btn-outline-success active" id="filterAll">
-          <i class="fas fa-boxes mr-1"></i>{{ t('All') }}
+          <i class="fas fa-boxes mr-1" aria-hidden="true"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterLow">
-          <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Low_Inventory') }}
+          <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ t('Low_Inventory') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterOut">
-          <i class="fas fa-ban mr-1"></i>{{ t('Out_Of_Stock') }}
+          <i class="fas fa-ban mr-1" aria-hidden="true"></i>{{ t('Out_Of_Stock') }}
         </button>
       </div>
     </div>
@@ -155,15 +155,15 @@
       <table id="productsTable" class="table table-hover table-bordered">
         <thead class="ic-1">
           <tr>
-            <th><i class="fas fa-image mr-2"></i>{{ t('Image') }}</th>
-            <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
-            <th><i class="fas fa-barcode mr-2"></i>{{ t('SKU') }}</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('Category') }}</th>
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
-            <th><i class="fas fa-code-branch mr-2"></i>{{ t('Branch') }}</th>
-            <th><i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }}</th>
-            <th><i class="fas fa-warehouse mr-2"></i>{{ t('Inventory') }}</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+            <th><i class="fas fa-image mr-2" aria-hidden="true"></i>{{ t('Image') }}</th>
+            <th><i class="fas fa-box mr-2" aria-hidden="true"></i>{{ t('Product') }}</th>
+            <th><i class="fas fa-barcode mr-2" aria-hidden="true"></i>{{ t('SKU') }}</th>
+            <th><i class="fas fa-tag mr-2" aria-hidden="true"></i>{{ t('Category') }}</th>
+            <th><i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ t('Price') }}</th>
+            <th><i class="fas fa-code-branch mr-2" aria-hidden="true"></i>{{ t('Branch') }}</th>
+            <th><i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ t('Warehouse') }}</th>
+            <th><i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ t('Inventory') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -176,7 +176,7 @@
                      alt="{{ product.name }}" class="product-image">
               {% else %}
                 <div class="product-image d-flex align-items-center justify-content-center ic-2">
-                  <i class="fas fa-box text-white"></i>
+                  <i class="fas fa-box text-white" aria-hidden="true"></i>
                 </div>
               {% endif %}
             </td>
@@ -221,15 +221,15 @@
             <td>
               {% if shown_stock <= 0 %}
                 <span class="badge badge-danger stock-low px-3 py-2">
-                  <i class="fas fa-times mr-1"></i>{{ t('Out_Of_Stock') }} ({{ shown_stock }})
+                  <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ t('Out_Of_Stock') }} ({{ shown_stock }})
                 </span>
               {% elif shown_stock <= product.min_stock_alert %}
                 <span class="badge badge-warning px-3 py-2">
-                  <i class="fas fa-exclamation-triangle mr-1"></i>{{ shown_stock }}
+                  <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ shown_stock }}
                 </span>
               {% else %}
                 <span class="badge stock-good text-white px-3 py-2">
-                  <i class="fas fa-check mr-1"></i>{{ shown_stock }}
+                  <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ shown_stock }}
                 </span>
               {% endif %}
               <small class="text-muted d-block">{{ product.unit or t('None') }}</small>
@@ -238,25 +238,25 @@
               <div class="btn-group flex-wrap btn-group-sm">
                 <a href="{{ url_for('products.view', id=product.id) }}" 
                    class="btn btn-info" title="{{ t('View') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </a>
                 <a href="{{ url_for('products.edit', id=product.id) }}" 
                    class="btn btn-warning" title="{{ t('Edit') }}">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </a>
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{product.id}}" data-item-type="products" data-item-name="{{product.name|tojson}}" 
                         title="{{ t('Delete') }}">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash" aria-hidden="true"></i>
                 </button>
                 {% if current_user.has_permission('manage_sales') %}
                 <a href="{{ url_for('sales.create', product_id=product.id) }}" class="btn btn-success" title="{{ t('Sale') }}">
-                  <i class="fas fa-shopping-cart"></i>
+                  <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 <button type="button" class="btn btn-primary" title="{{ t('Add_Quantity') }}"
                         data-action="adjust-stock" data-product-id="{{ product.id }}" data-product-name="{{ product.name|tojson }}" data-current-stock="{{ shown_stock }}">
-                  <i class="fas fa-plus"></i>
+                  <i class="fas fa-plus" aria-hidden="true"></i>
                 </button>
               </div>
             </td>
@@ -264,7 +264,7 @@
           {% else %}
           <tr>
             <td colspan="9" class="text-center text-muted py-5">
-              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
+              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
               {{ t('No_Products') }}
             </td>
           </tr>

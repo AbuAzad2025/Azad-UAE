@@ -9,7 +9,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}
+            <i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}
           </h3>
         </div>
         <div class="card-body">
@@ -99,10 +99,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save') }}
+                <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}
               </button>
               <a href="{{ url_for('advanced_ledger.customs_taxes') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

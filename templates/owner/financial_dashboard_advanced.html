@@ -4,13 +4,13 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-primary">
-      <i class="fas fa-link"></i> {{ t('Sales') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ t('Sales') }}
     </a>
     <a href="{{ url_for('owner.forecasting') }}" class="btn btn-success">
-      <i class="fas fa-link"></i> {{ t('Forecasting') }}
+      <i class="fas fa-link" aria-hidden="true"></i> {{ t('Forecasting') }}
     </a>
   </div>
 

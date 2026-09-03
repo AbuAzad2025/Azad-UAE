@@ -56,7 +56,7 @@
 {% block content %}
 <div class="card voucher-form">
   <div class="card-header bg-primary text-white">
-    <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2"></i>{{ _('سند مالي جديد') }}</h3>
+    <h3 class="card-title mb-0"><i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ _('سند مالي جديد') }}</h3>
   </div>
   <form class="needs-validation" method="POST" action="{{ url_for('payments.create_voucher_submit') }}" id="voucherForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
@@ -67,7 +67,7 @@
       <div class="row mb-4 justify-content-center">
         <div class="col-md-5">
           <div class="card type-card text-center p-3 selected" id="card-incoming" data-action="select-direction" data-direction="incoming">
-            <i class="fas fa-arrow-down fa-2x text-success mb-2"></i>
+            <i class="fas fa-arrow-down fa-2x text-success mb-2" aria-hidden="true"></i>
             <h4>{{ _('سند قبض (وارد)') }}</h4>
             <p class="text-muted small mb-0">{{ _('استلام أموال من عميل أو مورد') }}</p>
             <input type="radio" name="direction" value="incoming" checked aria-label="direction" class="sr-only">
@@ -75,7 +75,7 @@
         </div>
         <div class="col-md-5">
           <div class="card type-card text-center p-3" id="card-outgoing" data-action="select-direction" data-direction="outgoing">
-            <i class="fas fa-arrow-up fa-2x text-danger mb-2"></i>
+            <i class="fas fa-arrow-up fa-2x text-danger mb-2" aria-hidden="true"></i>
             <h4>{{ _('سند صرف (منصرف)') }}</h4>
             <p class="text-muted small mb-0">{{ _('دفع أموال لمورد أو عميل') }}</p>
             <input type="radio" name="direction" value="outgoing" aria-label="direction" class="sr-only">
@@ -189,7 +189,7 @@
 
     </div>
     <div class="card-footer text-right">
-      <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save mr-2"></i>{{ _('حفظ السند') }}</button>
+      <button type="submit" class="btn btn-primary btn-lg px-5"><i class="fas fa-save mr-2" aria-hidden="true"></i>{{ _('حفظ السند') }}</button>
       <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary btn-lg ml-2">{{ _('إلغاء') }}</a>
     </div>
   </form>

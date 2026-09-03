@@ -130,11 +130,11 @@
         <div class="thank-you-content">
             <div class="success-icon">
                 {% if status == 'completed' %}
-                    <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle" aria-hidden="true"></i>
                 {% elif status == 'failed' %}
-                    <i class="fas fa-times-circle"></i>
+                    <i class="fas fa-times-circle" aria-hidden="true"></i>
                 {% else %}
-                    <i class="fas fa-clock"></i>
+                    <i class="fas fa-clock" aria-hidden="true"></i>
                 {% endif %}
             </div>
             <h1 class="thank-you-title">
@@ -157,50 +157,50 @@
             </p>
             {% if payment_id %}
             <div class="payment-info">
-                <h4><i class="fas fa-receipt mr-2"></i>{{ _('معلومات الدفع') }}</h4>
+                <h4><i class="fas fa-receipt mr-2" aria-hidden="true"></i>{{ _('معلومات الدفع') }}</h4>
                 <div class="payment-id">
-                    <i class="fas fa-hashtag mr-2"></i>
+                    <i class="fas fa-hashtag mr-2" aria-hidden="true"></i>
                     {{ _('معرف الدفع:') }} {{ payment_id }}
                 </div>
                 <div class="status-badge status-{{ status }}">
                     {% if status == 'completed' %}
-                        <i class="fas fa-check mr-2"></i>{{ _('مكتمل') }}
+                        <i class="fas fa-check mr-2" aria-hidden="true"></i>{{ _('مكتمل') }}
                     {% elif status == 'failed' %}
-                        <i class="fas fa-times mr-2"></i>{{ _('فشل') }}
+                        <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ _('فشل') }}
                     {% else %}
-                        <i class="fas fa-clock mr-2"></i>{{ _('في الانتظار') }}
+                        <i class="fas fa-clock mr-2" aria-hidden="true"></i>{{ _('في الانتظار') }}
                     {% endif %}
                 </div>
             </div>
             {% endif %}
             {% if status == 'pending' %}
             <div class="countdown">
-                <h4><i class="fas fa-hourglass-half mr-2"></i>{{ _('الوقت المتوقع للتأكيد') }}</h4>
+                <h4><i class="fas fa-hourglass-half mr-2" aria-hidden="true"></i>{{ _('الوقت المتوقع للتأكيد') }}</h4>
                 <div class="countdown-number">{{ _('10-30 دقيقة') }}</div>
                 <p>{{ _('سيتم تحديث الحالة تلقائياً عند وصول الدفع') }}</p>
             </div>
             {% endif %}
             <div class="features-list">
                 <div class="feature-item">
-                    <i class="fas fa-shield-alt"></i>
+                    <i class="fas fa-shield-alt" aria-hidden="true"></i>
                     <strong>{{ _('أمان كامل:') }}</strong> {{ _('جميع المعاملات محمية بتشفير متقدم') }}
                 </div>
                 <div class="feature-item">
-                    <i class="fas fa-heart"></i>
+                    <i class="fas fa-heart" aria-hidden="true"></i>
                     <strong>{{ _('تأثير إيجابي:') }}</strong> {{ _('تبرعك يساعد في تطوير النظام') }}
                 </div>
                 <div class="feature-item">
-                    <i class="fas fa-bolt"></i>
+                    <i class="fas fa-bolt" aria-hidden="true"></i>
                     <strong>{{ _('فوري:') }}</strong> {{ _('سيتم استخدام التبرع فوراً في التطوير') }}
                 </div>
             </div>
             <div class="mt-4">
                 <a href="{{ url_for('auth.support') }}?tab=donation" class="btn-home">
-                    <i class="fas fa-arrow-right mr-2"></i>
+                    <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>
                     {{ _('تبرع مرة أخرى') }}
                 </a>
                 <a href="{{ url_for('auth.login') }}" class="btn-home">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <i class="fas fa-sign-in-alt mr-2" aria-hidden="true"></i>
                     {{ _('تسجيل الدخول') }}
                 </a>
             </div>

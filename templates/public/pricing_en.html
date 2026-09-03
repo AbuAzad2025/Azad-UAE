@@ -54,7 +54,7 @@
 
   <div class="ic-1">
     <a href="{{ url_for('language.set_language', lang='ar') }}" class="btn ic-2">
-      <i class="fas fa-globe"></i> AR
+      <i class="fas fa-globe" aria-hidden="true"></i> AR
     </a>
   </div>
 
@@ -69,7 +69,7 @@
       <a href="{{ url_for('public.pricing') }}">Pricing</a>
       <a href="{{ url_for('public.user_guide') }}">User guide</a>
       <a href="{{ url_for('public.contact') }}">Contact</a>
-      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> Login</a>
+      <a href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login</a>
     </div>
   </nav>
 
@@ -88,19 +88,19 @@
         <div class="price">${{ pkg.price }}<small>/month</small></div>
         {% if pkg.description_en %}<div class="price-note">{{ pkg.description_en }}</div>{% endif %}
         <ul class="features-list">
-          {% if pkg.max_users %}<li><i class="fas fa-check"></i> Up to {{ pkg.max_users }} users</li>{% endif %}
-          {% if pkg.max_branches %}<li><i class="fas fa-check"></i> Up to {{ pkg.max_branches }} branches</li>{% endif %}
-          {% if pkg.has_pos %}<li><i class="fas fa-check"></i> Point of Sale (POS)</li>{% endif %}
-          {% if pkg.has_ai %}<li><i class="fas fa-check"></i> AI-powered features</li>{% endif %}
-          {% if pkg.has_whatsapp %}<li><i class="fas fa-check"></i> WhatsApp integration</li>{% endif %}
-          {% if pkg.has_advanced_reports %}<li><i class="fas fa-check"></i> Advanced reports</li>{% endif %}
+          {% if pkg.max_users %}<li><i class="fas fa-check" aria-hidden="true"></i> Up to {{ pkg.max_users }} users</li>{% endif %}
+          {% if pkg.max_branches %}<li><i class="fas fa-check" aria-hidden="true"></i> Up to {{ pkg.max_branches }} branches</li>{% endif %}
+          {% if pkg.has_pos %}<li><i class="fas fa-check" aria-hidden="true"></i> Point of Sale (POS)</li>{% endif %}
+          {% if pkg.has_ai %}<li><i class="fas fa-check" aria-hidden="true"></i> AI-powered features</li>{% endif %}
+          {% if pkg.has_whatsapp %}<li><i class="fas fa-check" aria-hidden="true"></i> WhatsApp integration</li>{% endif %}
+          {% if pkg.has_advanced_reports %}<li><i class="fas fa-check" aria-hidden="true"></i> Advanced reports</li>{% endif %}
           {% if pkg.features %}
-            {% for feat in pkg.features %}<li><i class="fas fa-check"></i> {{ feat }}</li>{% endfor %}
+            {% for feat in pkg.features %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>{% endfor %}
           {% endif %}
         </ul>
         {% set wa_msg = 'Hello, I want to subscribe to the ' ~ pkg.name_en ~ ' plan - Monthly' %}
         <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ wa_msg | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp"></i> Subscribe now
+          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
         </a>
       </div>
       {% endfor %}
@@ -115,15 +115,15 @@
         <div class="price">$29<small>/month</small></div>
         <div class="price-note">For small businesses — up to 200 invoices/month</div>
         <ul class="features-list">
-          <li><i class="fas fa-check"></i> Up to 3 users</li>
-          <li><i class="fas fa-check"></i> Sales, purchases & inventory</li>
-          <li><i class="fas fa-check"></i> E-invoices & printing</li>
-          <li><i class="fas fa-check"></i> Basic reports</li>
-          <li><i class="fas fa-check"></i> WhatsApp support</li>
-          <li><i class="fas fa-times" style="color:#e53e3e;"></i> Online storefront not included</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Up to 3 users</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Sales, purchases & inventory</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> E-invoices & printing</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Basic reports</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> WhatsApp support</li>
+          <li><i class="fas fa-times" style="color:#e53e3e;" aria-hidden="true"></i> Online storefront not included</li>
         </ul>
         <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Starter plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp"></i> Subscribe now
+          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
         </a>
       </div>
       <div class="price-card">
@@ -131,16 +131,16 @@
         <div class="price">$79<small>/month</small></div>
         <div class="price-note">For growing businesses — up to 1,000 invoices/month</div>
         <ul class="features-list">
-          <li><i class="fas fa-check"></i> Up to 10 users</li>
-          <li><i class="fas fa-check"></i> Everything in Starter</li>
-          <li><i class="fas fa-check"></i> Full AI features</li>
-          <li><i class="fas fa-check"></i> General Ledger (GL)</li>
-          <li><i class="fas fa-check"></i> Point of Sale (POS)</li>
-          <li><i class="fas fa-check"></i> Online storefront</li>
-          <li><i class="fas fa-check"></i> Advanced reports</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Up to 10 users</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Everything in Starter</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Full AI features</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> General Ledger (GL)</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Point of Sale (POS)</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Online storefront</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Advanced reports</li>
         </ul>
         <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Professional plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp"></i> Subscribe now
+          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
         </a>
       </div>
       <div class="price-card">
@@ -148,17 +148,17 @@
         <div class="price">$249<small>/month</small></div>
         <div class="price-note">For large organizations — unlimited invoices</div>
         <ul class="features-list">
-          <li><i class="fas fa-check"></i> Unlimited users</li>
-          <li><i class="fas fa-check"></i> All advanced features</li>
-          <li><i class="fas fa-check"></i> Online store + API</li>
-          <li><i class="fas fa-check"></i> HR, payroll & employee mgmt</li>
-          <li><i class="fas fa-check"></i> AI-powered business insights</li>
-          <li><i class="fas fa-check"></i> Automated daily cloud backups</li>
-          <li><i class="fas fa-check"></i> Full customization</li>
-          <li><i class="fas fa-check"></i> 24/7 priority support</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Unlimited users</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> All advanced features</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Online store + API</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> HR, payroll & employee mgmt</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> AI-powered business insights</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Automated daily cloud backups</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> Full customization</li>
+          <li><i class="fas fa-check" aria-hidden="true"></i> 24/7 priority support</li>
         </ul>
         <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Enterprise plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp"></i> Subscribe now
+          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
         </a>
       </div>
     </div>
@@ -170,10 +170,10 @@
     <p>Contact us via WhatsApp or email</p>
     <div class="cta-buttons">
       <a href="https://wa.me/{{ wa_number }}" class="btn-cta btn-white" target="_blank" rel="noopener">
-        <i class="fab fa-whatsapp"></i> Chat on WhatsApp
+        <i class="fab fa-whatsapp" aria-hidden="true"></i> Chat on WhatsApp
       </a>
       <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ 'Purchase or inquiry' | urlencode }}" class="btn-cta btn-outline">
-        <i class="fas fa-envelope"></i> Email us
+        <i class="fas fa-envelope" aria-hidden="true"></i> Email us
       </a>
     </div>
   </section>

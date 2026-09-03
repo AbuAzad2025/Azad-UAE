@@ -5,12 +5,12 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-sms text-info"></i> {{ t('SMS_Service_Settings') }}</h1>
+        <h1 class="m-0"><i class="fas fa-sms text-info" aria-hidden="true"></i> {{ t('SMS_Service_Settings') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -23,13 +23,13 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.sms_settings') }}" class="btn btn-info">
-            <i class="fas fa-sms"></i> SMS
+            <i class="fas fa-sms" aria-hidden="true"></i> SMS
           </a>
           <a href="{{ url_for('owner.email_settings') }}" class="btn btn-outline-info">
-            <i class="fas fa-envelope"></i> {{ t('Email') }}
+            <i class="fas fa-envelope" aria-hidden="true"></i> {{ t('Email') }}
           </a>
           <a href="{{ url_for('owner.whatsapp_settings') }}" class="btn btn-outline-success">
-            <i class="fab fa-whatsapp"></i> {{ t('WhatsApp') }}
+            <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('WhatsApp') }}
           </a>
         </div>
       </div>
@@ -41,7 +41,7 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-info text-white">
-        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2"></i> {{ t('SMS_Broadcast_Settings') }}</h3>
+        <h3 class="card-title"><i class="fas fa-broadcast-tower mr-2" aria-hidden="true"></i> {{ t('SMS_Broadcast_Settings') }}</h3>
       </div>
       <div class="card-body">
         <form class="needs-validation sms-settings-form" method="POST" action="{{ url_for('owner.sms_settings') }}">
@@ -100,7 +100,7 @@
           </div>
 
           <button type="submit" class="btn btn-info btn-lg">
-            <i class="fas fa-save mr-1"></i> {{ t('Save_Settings') }}
+            <i class="fas fa-save mr-1" aria-hidden="true"></i> {{ t('Save_Settings') }}
           </button>
         </form>
       </div>

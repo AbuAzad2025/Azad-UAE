@@ -10,7 +10,7 @@
   </div>
   <div class="d-none d-md-block">
     <span class="badge badge-primary px-3 py-2" style="font-size:0.9rem">
-      <i class="fas fa-calendar-alt mr-1"></i> {{ current_date or now().strftime('%Y-%m-%d') }}
+      <i class="fas fa-calendar-alt mr-1" aria-hidden="true"></i> {{ current_date or now().strftime('%Y-%m-%d') }}
     </span>
   </div>
 </div>
@@ -22,7 +22,7 @@
 {% if stats.usage_warnings %}
 <div class="alert alert-warning d-flex align-items-center flex-wrap mb-4 az-enter az-enter-d1" role="alert">
   <div class="erp-flash-icon mr-3">
-    <i class="fas fa-exclamation-triangle"></i>
+    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
   </div>
   <div class="flex-grow-1">
     <strong>{{ _('تنبيه الباقة:') }}</strong>
@@ -41,7 +41,7 @@
   <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.05s">
     <div class="stat-card az-stat-sales">
       <div class="stat-icon erp-stat-icon-sales az-pulse-glow">
-        <i class="fas fa-shopping-cart"></i>
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
       </div>
       <div class="stat-value az-counter" data-target="{{ stats.today_sales_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('مبيعات اليوم') }}</div>
@@ -52,7 +52,7 @@
         <small class="text-muted"> {{ tenant_currency_symbol }}</small>
       </div>
       <a href="{{ url_for('sales.index') }}" class="btn btn-primary mt-3 w-100">
-        <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('عرض الكل') }}
       </a>
     </div>
   </div>
@@ -62,7 +62,7 @@
   <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.1s">
     <div class="stat-card az-stat-customers">
       <div class="stat-icon erp-stat-icon-customers">
-        <i class="fas fa-users"></i>
+        <i class="fas fa-users" aria-hidden="true"></i>
       </div>
       <div class="stat-value az-counter" data-target="{{ stats.customers_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('إجمالي العملاء') }}</div>
@@ -70,7 +70,7 @@
         <small class="text-muted">{{ _('عملاء نشطون') }}</small>
       </div>
       <a href="{{ url_for('customers.index') }}" class="btn btn-success mt-3 w-100">
-        <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('عرض الكل') }}
       </a>
     </div>
   </div>
@@ -80,7 +80,7 @@
   <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.15s">
     <div class="stat-card az-stat-receivables">
       <div class="stat-icon erp-stat-icon-receivables">
-        <i class="fas fa-file-invoice-dollar"></i>
+        <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
       </div>
       <div class="stat-value az-counter" data-target="{{ stats.total_receivables|default(0) }}">0</div>
       <div class="stat-label">{{ _('إجمالي الذمم') }}</div>
@@ -88,7 +88,7 @@
         <small class="text-muted">{{ tenant_currency_name_ar }}</small>
       </div>
       <a href="{{ url_for('reports.receivables') }}" class="btn btn-warning mt-3 w-100">
-        <i class="fas fa-arrow-left"></i> {{ _('عرض التفاصيل') }}
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('عرض التفاصيل') }}
       </a>
     </div>
   </div>
@@ -98,7 +98,7 @@
   <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.2s">
     <div class="stat-card az-stat-products">
       <div class="stat-icon erp-stat-icon-products">
-        <i class="fas fa-box-open"></i>
+        <i class="fas fa-box-open" aria-hidden="true"></i>
       </div>
       <div class="stat-value az-counter" data-target="{{ stats.products_count|default(0) }}">0</div>
       <div class="stat-label">{{ _('المنتجات') }}</div>
@@ -106,7 +106,7 @@
         <small class="text-muted">{{ _('منتجات نشطة') }}</small>
       </div>
       <a href="{{ url_for('products.index') }}" class="btn btn-danger mt-3 w-100">
-        <i class="fas fa-arrow-left"></i> {{ _('عرض الكل') }}
+        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('عرض الكل') }}
       </a>
     </div>
   </div>
@@ -119,7 +119,7 @@
   <div class="col-12">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0">
-        <h5 class="mb-0"><i class="fas fa-chart-pie ml-2 text-primary"></i>{{ _('استهلاك الباقة') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-chart-pie ml-2 text-primary" aria-hidden="true"></i>{{ _('استهلاك الباقة') }}</h5>
       </div>
       <div class="card-body pt-3">
         <div class="row">
@@ -164,7 +164,7 @@
     <div class="card glass-effect border-0 az-financial-card az-financial-cash">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
-          <i class="fas fa-wallet fa-3x erp-stat-value-success"></i>
+          <i class="fas fa-wallet fa-3x erp-stat-value-success" aria-hidden="true"></i>
         </div>
         <h5 class="text-muted">{{ _('رصيد الصندوق') }}</h5>
         <h2 class="mb-0 erp-stat-value-success erp-stat-value-xl az-counter-currency" data-target="{{ stats.cash_balance|default(0) }}">
@@ -179,7 +179,7 @@
     <div class="card glass-effect border-0 az-financial-card az-financial-bank">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
-          <i class="fas fa-university fa-3x erp-stat-value-info"></i>
+          <i class="fas fa-university fa-3x erp-stat-value-info" aria-hidden="true"></i>
         </div>
         <h5 class="text-muted">{{ _('رصيد البنك') }}</h5>
         <h2 class="mb-0 erp-stat-value-info erp-stat-value-xl az-counter-currency" data-target="{{ stats.bank_balance|default(0) }}">
@@ -194,7 +194,7 @@
     <div class="card glass-effect border-0 az-financial-card az-financial-inventory">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
-          <i class="fas fa-boxes fa-3x erp-stat-value-warning"></i>
+          <i class="fas fa-boxes fa-3x erp-stat-value-warning" aria-hidden="true"></i>
         </div>
         <h5 class="text-muted">{{ _('قيمة المخزون') }}</h5>
         <h2 class="mb-0 erp-stat-value-warning erp-stat-value-xl az-counter-currency" data-target="{{ stats.inventory_value_gl|default(0) }}">
@@ -213,7 +213,7 @@
   <div class="col-lg-8 mb-3">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0">
-        <h5 class="mb-0"><i class="fas fa-chart-line ml-2 text-primary"></i>{{ _('اتجاه المبيعات — آخر 14 يوماً') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-chart-line ml-2 text-primary" aria-hidden="true"></i>{{ _('اتجاه المبيعات — آخر 14 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3">
         <div class="az-chart-wrap" style="height:280px; position:relative;">
@@ -227,7 +227,7 @@
   <div class="col-lg-4 col-md-6 mb-3">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0">
-        <h5 class="mb-0"><i class="fas fa-wallet ml-2 text-success"></i>{{ _('الوضع النقدي') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-wallet ml-2 text-success" aria-hidden="true"></i>{{ _('الوضع النقدي') }}</h5>
       </div>
       <div class="card-body pt-3">
         <div class="az-chart-wrap" style="height:260px; position:relative;">
@@ -241,7 +241,7 @@
   <div class="{% if current_user.can_see_costs() %}col-lg-4{% else %}col-lg-6{% endif %} col-md-6 mb-3">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0">
-        <h5 class="mb-0"><i class="fas fa-users ml-2 text-info"></i>{{ _('أفضل العملاء — آخر 30 يوماً') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-users ml-2 text-info" aria-hidden="true"></i>{{ _('أفضل العملاء — آخر 30 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3">
         <div class="az-chart-wrap" style="height:260px; position:relative;">
@@ -254,7 +254,7 @@
   <div class="{% if current_user.can_see_costs() %}col-lg-8{% else %}col-lg-6{% endif %} mb-3">
     <div class="card glass-effect border-0">
       <div class="card-header bg-transparent border-0 pb-0 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fas fa-exclamation-triangle ml-2 text-warning"></i>{{ _('تنبيهات المخزون') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-exclamation-triangle ml-2 text-warning" aria-hidden="true"></i>{{ _('تنبيهات المخزون') }}</h5>
         <span class="badge badge-danger">{{ stats.low_stock_count|default(0) }} {{ _('منخفض') }} · {{ stats.out_of_stock_count|default(0) }} {{ _('منتهي') }}</span>
       </div>
       <div class="card-body pt-3">
@@ -274,10 +274,10 @@
     <div class="card az-card-elevated">
       <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <h3 class="card-title mb-0">
-          <i class="fas fa-clock text-primary mr-2"></i>{{ _('آخر المبيعات') }}
+          <i class="fas fa-clock text-primary mr-2" aria-hidden="true"></i>{{ _('آخر المبيعات') }}
         </h3>
         <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
-          <i class="fas fa-plus mr-1"></i>{{ _('فاتورة جديدة') }}
+          <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ _('فاتورة جديدة') }}
         </a>
       </div>
       <div class="card-body p-0">
@@ -285,13 +285,13 @@
           <table class="table table-hover mb-0 erp-table-compact" id="recentSalesTable">
             <thead>
               <tr>
-                <th><i class="fas fa-hashtag mr-1"></i>{{ _('رقم الفاتورة') }}</th>
-                <th><i class="fas fa-user mr-1"></i>{{ _('العميل') }}</th>
-                <th><i class="far fa-calendar mr-1"></i>{{ _('التاريخ') }}</th>
-                <th class="text-center"><i class="fas fa-money-bill-wave mr-1"></i>{{ _('المبلغ') }}</th>
-                <th class="text-center"><i class="fas fa-wallet mr-1"></i>{{ _('الدفع') }}</th>
-                <th class="text-center"><i class="fas fa-check-circle mr-1"></i>{{ _('الحالة') }}</th>
-                <th class="text-center erp-col-actions"><i class="fas fa-cog mr-1"></i>{{ _('الإجراءات') }}</th>
+                <th><i class="fas fa-hashtag mr-1" aria-hidden="true"></i>{{ _('رقم الفاتورة') }}</th>
+                <th><i class="fas fa-user mr-1" aria-hidden="true"></i>{{ _('العميل') }}</th>
+                <th><i class="far fa-calendar mr-1" aria-hidden="true"></i>{{ _('التاريخ') }}</th>
+                <th class="text-center"><i class="fas fa-money-bill-wave mr-1" aria-hidden="true"></i>{{ _('المبلغ') }}</th>
+                <th class="text-center"><i class="fas fa-wallet mr-1" aria-hidden="true"></i>{{ _('الدفع') }}</th>
+                <th class="text-center"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ _('الحالة') }}</th>
+                <th class="text-center erp-col-actions"><i class="fas fa-cog mr-1" aria-hidden="true"></i>{{ _('الإجراءات') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -310,7 +310,7 @@
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="erp-table-user-icon mr-2">
-                        <i class="fas fa-user-circle"></i>
+                        <i class="fas fa-user-circle" aria-hidden="true"></i>
                       </div>
                       <div>
                         <strong>{{ sale.customer.name if sale.customer else '-' }}</strong>
@@ -331,26 +331,26 @@
                   <td class="text-center">
                     {% if sale.payment_status == 'paid' %}
                       <span class="badge badge-success">
-                        <i class="fas fa-check mr-1"></i>{{ _('مدفوع') }}
+                        <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ _('مدفوع') }}
                       </span>
                     {% elif sale.payment_status == 'partial' %}
                       <span class="badge badge-warning">
-                        <i class="fas fa-clock mr-1"></i>{{ _('جزئي') }}
+                        <i class="fas fa-clock mr-1" aria-hidden="true"></i>{{ _('جزئي') }}
                       </span>
                     {% else %}
                       <span class="badge badge-danger">
-                        <i class="fas fa-times mr-1"></i>{{ _('آجل') }}
+                        <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ _('آجل') }}
                       </span>
                     {% endif %}
                   </td>
                   <td class="text-center">
                     {% if sale.status == 'cancelled' %}
                       <span class="badge badge-danger">
-                        <i class="fas fa-ban mr-1"></i>{{ _('ملغي') }}
+                        <i class="fas fa-ban mr-1" aria-hidden="true"></i>{{ _('ملغي') }}
                       </span>
                     {% elif sale.status == 'confirmed' %}
                       <span class="badge badge-success">
-                        <i class="fas fa-check-circle mr-1"></i>{{ _('مؤكد') }}
+                        <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ _('مؤكد') }}
                       </span>
                     {% else %}
                       <span class="badge badge-secondary">{{ sale.status }}</span>
@@ -360,10 +360,10 @@
                     <div class="btn-group btn-group-sm erp-table-actions" role="group">
                       {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-info btn-sm" title="{{ _('عرض') }}">
-                        <i class="fas fa-eye"></i>
+                        <i class="fas fa-eye" aria-hidden="true"></i>
                       </a>
                       <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary btn-sm" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
-                        <i class="fas fa-print"></i>
+                        <i class="fas fa-print" aria-hidden="true"></i>
                       </a>
                       {% endif %}
                     </div>
@@ -374,11 +374,11 @@
                 <tr>
                   <td colspan="7" class="text-center py-5">
                     <div class="az-empty-state">
-                      <i class="fas fa-inbox fa-3x text-muted mb-3 az-empty-icon"></i>
+                      <i class="fas fa-inbox fa-3x text-muted mb-3 az-empty-icon" aria-hidden="true"></i>
                       <p class="text-muted">{{ _('لا توجد مبيعات حتى الآن') }}</p>
                       {% if current_user.has_permission('manage_sales') %}
                       <a href="{{ url_for('sales.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus mr-1"></i>{{ _('إنشاء فاتورة جديدة') }}
+                        <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ _('إنشاء فاتورة جديدة') }}
                       </a>
                       {% endif %}
                     </div>
@@ -393,7 +393,7 @@
       <div class="card-footer text-center">
         {% if current_user.has_permission('manage_sales') %}
         <a href="{{ url_for('sales.index') }}" class="btn btn-link">
-          {{ _('عرض جميع المبيعات') }} <i class="fas fa-arrow-left mr-1"></i>
+          {{ _('عرض جميع المبيعات') }} <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>
         </a>
         {% endif %}
       </div>
@@ -410,7 +410,7 @@
     <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-sales">
-          <i class="fas fa-plus-circle"></i>
+          <i class="fas fa-plus-circle" aria-hidden="true"></i>
         </div>
         <h5 class="mb-0">{{ _('فاتورة جديدة') }}</h5>
         <small class="text-muted">{{ _('إنشاء فاتورة مبيعات') }}</small>
@@ -423,7 +423,7 @@
     <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-customers">
-          <i class="fas fa-user-plus"></i>
+          <i class="fas fa-user-plus" aria-hidden="true"></i>
         </div>
         <h5 class="mb-0">{{ _('عميل جديد') }}</h5>
         <small class="text-muted">{{ _('إضافة عميل جديد') }}</small>
@@ -436,7 +436,7 @@
     <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-products">
-          <i class="fas fa-box"></i>
+          <i class="fas fa-box" aria-hidden="true"></i>
         </div>
         <h5 class="mb-0">{{ _('منتج جديد') }}</h5>
         <small class="text-muted">{{ _('إضافة منتج للمخزون') }}</small>
@@ -449,7 +449,7 @@
     <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-reports">
-          <i class="fas fa-chart-bar"></i>
+          <i class="fas fa-chart-bar" aria-hidden="true"></i>
         </div>
         <h5 class="mb-0">{{ _('التقارير') }}</h5>
         <small class="text-muted">{{ _('عرض التقارير والإحصائيات') }}</small>
@@ -462,7 +462,7 @@
 <!-- Permissions Alert -->
 {% if not stats.can_apply_discount or not stats.can_edit_price %}
 <div class="alert alert-warning alert-dismissible fade show az-enter" role="alert">
-  <i class="fas fa-shield-alt mr-2"></i>
+  <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>
   <strong>{{ _('صلاحياتك محدودة:') }}</strong>
   {% if not stats.can_apply_discount %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تطبيق الخصم') }}</span>{% endif %}
   {% if not stats.can_edit_price %}<span class="badge badge-warning ml-2">{{ _('لا يمكن تعديل السعر') }}</span>{% endif %}
@@ -476,7 +476,7 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header bg-warning text-white">
-        <h5 class="modal-title" id="supervisorOverrideLabel"><i class="fas fa-shield-alt mr-2"></i> {{ _('تفويض المشرف') }}</h5>
+        <h5 class="modal-title" id="supervisorOverrideLabel"><i class="fas fa-shield-alt mr-2" aria-hidden="true"></i> {{ _('تفويض المشرف') }}</h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ _('إغلاق') }}">&times;</button>
       </div>
       <form id="supervisorOverrideForm" class="needs-validation" novalidate>
@@ -499,7 +499,7 @@
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
           <button type="submit" class="btn btn-warning" id="overrideSubmitBtn">
-            <i class="fas fa-check mr-1"></i> {{ _('تأكيد التفويض') }}
+            <i class="fas fa-check mr-1" aria-hidden="true"></i> {{ _('تأكيد التفويض') }}
           </button>
         </div>
       </form>
@@ -724,7 +724,7 @@
       if (!window.FormValidation || !window.FormValidation.validateForm(form)) return;
 
       const btn = $('#overrideSubmitBtn');
-      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> {{ _("جاري التحقق...") }}');
+      btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1" aria-hidden="true"></i> {{ _("جاري التحقق...") }}');
       $('#overrideResult').addClass('d-none');
 
       $.ajax({
@@ -740,22 +740,22 @@
       }).done(function(res) {
         if (res.success) {
           $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-            '<i class="fas fa-check-circle mr-1"></i> {{ _("تم التفويض بنجاح") }} (' + res.supervisor_username + ')'
+            '<i class="fas fa-check-circle mr-1" aria-hidden="true"></i> {{ _("تم التفويض بنجاح") }} (' + res.supervisor_username + ')'
           );
           setTimeout(function() { $('#supervisorOverrideModal').modal('hide'); }, 1500);
         } else {
           $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-            '<i class="fas fa-times-circle mr-1"></i> ' + (res.error || '{{ _("فشل التفويض") }}')
+            '<i class="fas fa-times-circle mr-1" aria-hidden="true"></i> ' + (res.error || '{{ _("فشل التفويض") }}')
           );
         }
       }).fail(function(xhr) {
         let msg = '{{ _("خطأ في الاتصال") }}';
         try { msg = xhr.responseJSON.error || msg; } catch(e) {}
         $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-          '<i class="fas fa-times-circle mr-1"></i> ' + msg
+          '<i class="fas fa-times-circle mr-1" aria-hidden="true"></i> ' + msg
         );
       }).always(function() {
-        btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> {{ _("تأكيد التفويض") }}');
+        btn.prop('disabled', false).html('<i class="fas fa-check mr-1" aria-hidden="true"></i> {{ _("تأكيد التفويض") }}');
       });
     });
   });

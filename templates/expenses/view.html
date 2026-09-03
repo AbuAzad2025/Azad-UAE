@@ -4,16 +4,16 @@
 
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('View') }} {{ t('Expense_2') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('View') }} {{ t('Expense_2') }}</h1>
     <div>
         <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للقائمة') }}
+            <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('العودة') }} {{ t('للقائمة') }}
         </a>
         <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary">
-            <i class="fas fa-edit mr-2"></i>{{ t('Edit') }}
+            <i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ t('Edit') }}
         </a>
         <a href="{{ url_for('expenses.print_expense', id=expense.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-info">
-            <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+            <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
         </a>
     </div>
 </div>
@@ -101,25 +101,25 @@
             <div class="card-body">
                 <div class="btn-group-vertical w-100">
                     <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary mb-2">
-                        <i class="fas fa-arrow-left"></i> {{ t('العودة') }} {{ t('للقائمة') }}
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ t('العودة') }} {{ t('للقائمة') }}
                     </a>
                     <a href="{{ url_for('expenses.edit', id=expense.id) }}" class="btn btn-primary mb-2">
-                        <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Expense_2') }}
+                        <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit') }} {{ t('Expense_2') }}
                     </a>
                     <a href="{{ url_for('expenses.print_expense', id=expense.id) }}"
                        target="_blank" rel="noopener noreferrer"
                        class="btn btn-info mb-2">
-                        <i class="fas fa-print"></i> {{ t('Print') }}
+                        <i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}
                     </a>
                     <a href="{{ url_for('printing.print_document_pdf', doc_type='expense', id=expense.id) }}"
                        target="_blank" rel="noopener noreferrer"
                        class="btn btn-danger mb-2">
-                        <i class="fas fa-file-pdf"></i> PDF
+                        <i class="fas fa-file-pdf" aria-hidden="true"></i> PDF
                     </a>
                     <form class="needs-validation w-100" action="{{ url_for('expenses.delete', id=expense.id) }}" method="POST" data-action="confirm-submit" data-confirm-message={{ t('هل أنت متأكد من حذف هذا المصروف؟')|tojson }} novalidate>
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                         <button type="submit" class="btn btn-danger mb-2 w-100">
-                            <i class="fas fa-trash"></i> {{ t('Delete') }} {{ t('Expense_2') }}
+                            <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Delete') }} {{ t('Expense_2') }}
                         </button>
                     </form>
                 </div>

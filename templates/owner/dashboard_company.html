@@ -2,7 +2,7 @@
 
 {% block title %}{{ t('Company_Dashboard') }} | {{ tenant.name_ar or tenant.name }}{% endblock %}
 
-{% block page_title %}<i class="fas fa-building text-info"></i> {{ t('Company_Manager_Dashboard') }}{% endblock %}
+{% block page_title %}<i class="fas fa-building text-info" aria-hidden="true"></i> {{ t('Company_Manager_Dashboard') }}{% endblock %}
 
 {% block extra_css %}
 
@@ -14,7 +14,7 @@
 
 <div class="alert alert-info owner-panel-card">
 
-  <i class="fas fa-info-circle"></i>
+  <i class="fas fa-info-circle" aria-hidden="true"></i>
 
   <strong>{{ tenant.name_ar or tenant.name }}</strong> {{ t('Company_Data_Only_View') }}
 
@@ -193,28 +193,28 @@
       <div class="card-body">
 
         {% if current_user.has_permission('manage_users') %}
-        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary mb-1"><i class="fas fa-users"></i> {{ t('Users') }}</a>
+        <a href="{{ url_for('users.index') }}" class="btn btn-outline-primary mb-1"><i class="fas fa-users" aria-hidden="true"></i> {{ t('Users') }}</a>
         {% endif %}
 
         {% if current_user.has_permission('manage_backups') %}
 
-        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info mb-1"><i class="fas fa-database"></i> {{ t('Company_Backups') }}</a>
+        <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info mb-1"><i class="fas fa-database" aria-hidden="true"></i> {{ t('Company_Backups') }}</a>
 
         {% endif %}
 
-        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success mb-1"><i class="fas fa-building"></i> {{ t('Company_Data') }}</a>
+        <a href="{{ url_for('owner.company_info') }}" class="btn btn-outline-success mb-1"><i class="fas fa-building" aria-hidden="true"></i> {{ t('Company_Data') }}</a>
 
-        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info mb-1"><i class="fas fa-sitemap"></i> {{ t('Branches') }} ({{ branches_count|default(0) }})</a>
+        <a href="{{ url_for('branches.index') }}" class="btn btn-outline-info mb-1"><i class="fas fa-sitemap" aria-hidden="true"></i> {{ t('Branches') }} ({{ branches_count|default(0) }})</a>
 
         {% if current_user.has_permission('manage_store') %}
 
-        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning mb-1"><i class="fas fa-store"></i> {{ t('Store') }}</a>
+        <a href="{{ url_for('store.admin_index') }}" class="btn btn-outline-warning mb-1"><i class="fas fa-store" aria-hidden="true"></i> {{ t('Store') }}</a>
 
         {% endif %}
 
         {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'super_admin') %}
 
-        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark mb-1"><i class="fas fa-book"></i> {{ t('General_Ledger') }}</a>
+        <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-outline-dark mb-1"><i class="fas fa-book" aria-hidden="true"></i> {{ t('General_Ledger') }}</a>
 
         {% endif %}
 
@@ -228,7 +228,7 @@
 
     <div class="alert alert-secondary mt-2 mb-0">
 
-      <i class="fas fa-code-branch"></i> {{ t('Filtered_View_Current_Branch') }} (#{{ scoped_branch_id }}).
+      <i class="fas fa-code-branch" aria-hidden="true"></i> {{ t('Filtered_View_Current_Branch') }} (#{{ scoped_branch_id }}).
 
     </div>
 
@@ -246,7 +246,7 @@
 
       <div class="card-header">
 
-        <i class="fas fa-cog"></i> {{ t('Quick_Settings') }}
+        <i class="fas fa-cog" aria-hidden="true"></i> {{ t('Quick_Settings') }}
 
       </div>
 
@@ -266,7 +266,7 @@
 
                 <button type="button" class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="default_tax_rate" data-source="#taxRateInput" aria-label="{{ t('Save') }}">
 
-                  <i class="fas fa-save"></i>
+                  <i class="fas fa-save" aria-hidden="true"></i>
 
                 </button>
 
@@ -310,7 +310,7 @@
 
                 <button type="button" class="btn btn-outline-success btn-sm" data-action="update-tenant-setting" data-key="logo_url" data-source="#logoUrlInput" aria-label="{{ t('Save') }}">
 
-                  <i class="fas fa-save"></i>
+                  <i class="fas fa-save" aria-hidden="true"></i>
 
                 </button>
 
@@ -382,7 +382,7 @@ function updateTenantSetting(field, value, targetEl) {
 
   const btn = $(targetEl);
 
-  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>');
 
   $('#settingsResult').addClass('d-none');
 
@@ -404,7 +404,7 @@ function updateTenantSetting(field, value, targetEl) {
 
       $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
 
-        '<i class="fas fa-check-circle"></i> ' + (res.message || i18n.update_success)
+        '<i class="fas fa-check-circle" aria-hidden="true"></i> ' + (res.message || i18n.update_success)
 
       );
 
@@ -420,7 +420,7 @@ function updateTenantSetting(field, value, targetEl) {
 
       $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
 
-        '<i class="fas fa-times-circle"></i> ' + (res.error || i18n.update_failed)
+        '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + (res.error || i18n.update_failed)
 
       );
 
@@ -434,13 +434,13 @@ function updateTenantSetting(field, value, targetEl) {
 
     $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
 
-      '<i class="fas fa-times-circle"></i> ' + msg
+      '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + msg
 
     );
 
   }).always(() => {
 
-    btn.prop('disabled', false).html('<i class="fas fa-save"></i>');
+    btn.prop('disabled', false).html('<i class="fas fa-save" aria-hidden="true"></i>');
 
   });
 
@@ -468,7 +468,7 @@ function toggleWarehouseNegative() {
 
       $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
 
-        '<i class="fas fa-check-circle"></i> ' + (res.allow_negative_inventory ? i18n.negative_sales_enabled : i18n.negative_sales_disabled)
+        '<i class="fas fa-check-circle" aria-hidden="true"></i> ' + (res.allow_negative_inventory ? i18n.negative_sales_enabled : i18n.negative_sales_disabled)
 
       );
 
@@ -484,7 +484,7 @@ function toggleWarehouseNegative() {
 
     $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-danger').html(
 
-      '<i class="fas fa-times-circle"></i> ' + msg
+      '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + msg
 
     );
 

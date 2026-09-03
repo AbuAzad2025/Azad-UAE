@@ -6,7 +6,7 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('العودة') }}
     </a>
   </div>
 </div>
@@ -14,7 +14,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
+      <i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>{{ t('Add') }} {{ t('Account') }} {{ t('Accounting_3') }} {{ t('New') }}
     </h3>
   </div>
   <div class="card-body">
@@ -133,7 +133,7 @@
 
       <div id="bank_fields" class="row mt-4" style="display: none;">
         <div class="col-12">
-          <h5 class="mb-3"><i class="fas fa-university mr-2"></i>{{ _('معلومات البنك') }}</h5>
+          <h5 class="mb-3"><i class="fas fa-university mr-2" aria-hidden="true"></i>{{ _('معلومات البنك') }}</h5>
         </div>
         <div class="col-md-6">
           <div class="form-group">
@@ -172,10 +172,10 @@
       <div class="row mt-4">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Account') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Account') }}
           </button>
           <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+            <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}
           </a>
         </div>
       </div>
@@ -187,7 +187,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-info">
     <h5 class="card-title text-white mb-0">
-      <i class="fas fa-lightbulb mr-2"></i>{{ t('مساعدة') }} {{ t('Quick') }}
+      <i class="fas fa-lightbulb mr-2" aria-hidden="true"></i>{{ t('مساعدة') }} {{ t('Quick') }}
     </h5>
   </div>
   <div class="card-body">

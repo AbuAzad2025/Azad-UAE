@@ -8,7 +8,7 @@
 
 <div class="d-flex justify-content-between align-items-center flex-wrap">
 
-  <h1 class="mb-0"><i class="fas fa-chart-line mr-2"></i>{{ t('statistics') }} {{ t('Store') }}</h1>
+  <h1 class="mb-0"><i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('statistics') }} {{ t('Store') }}</h1>
 
   <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 
@@ -22,13 +22,13 @@
 
 <div class="row">
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-shopping-bag"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_today') }}</span><span class="info-box-number">{{ stats.orders_today }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-primary"><i class="fas fa-shopping-bag" aria-hidden="true"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_today') }}</span><span class="info-box-number">{{ stats.orders_today }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-coins"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_today') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_today) }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-coins" aria-hidden="true"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_today') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_today) }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-calendar-week"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_last_7_days') }}</span><span class="info-box-number">{{ stats.orders_week }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-info"><i class="fas fa-calendar-week" aria-hidden="true"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('orders_last_7_days') }}</span><span class="info-box-number">{{ stats.orders_week }}</span></div></div></div>
 
-  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-alt"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_last_30_days') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_month) }}</span></div></div></div>
+  <div class="col-md-3 col-sm-6"><div class="info-box"><span class="info-box-icon bg-warning"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span><div class="info-box-content"><span class="info-box-text">{{ t('revenue_last_30_days') }}</span><span class="info-box-number">{{ format_currency(stats.revenue_month) }}</span></div></div></div>
 
 </div>
 
@@ -132,7 +132,7 @@
 
             {% else %}
 
-            <tr><td colspan="2" class="text-center text-muted py-3">{{ t('inventory_good') }} <i class="fas fa-check text-success"></i></td></tr>
+            <tr><td colspan="2" class="text-center text-muted py-3">{{ t('inventory_good') }} <i class="fas fa-check text-success" aria-hidden="true"></i></td></tr>
 
             {% endfor %}
 

@@ -7,10 +7,10 @@
   </div>
   <div>
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back to Ledger') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back to Ledger') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -33,8 +33,8 @@
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> {{ t('تصفية') }}</button>
-          <button type="button" data-action="window-print" class="btn btn-info ml-auto"><i class="fas fa-print"></i> {{ t('Print') }}</button>
+          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter" aria-hidden="true"></i> {{ t('تصفية') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-info ml-auto"><i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}</button>
         </form>
       </div>
     </div>
@@ -54,7 +54,7 @@
     <div class="card-body">
       <div class="row">
         <div class="col-md-6">
-          <h4 class="text-success"><i class="fas fa-arrow-up"></i> {{ t('Revenue') }}</h4>
+          <h4 class="text-success"><i class="fas fa-arrow-up" aria-hidden="true"></i> {{ t('Revenue') }}</h4>
           <div class="table-responsive"><table class="table table-sm">
             {% for name, amount in revenues.items() %}
             <tr>
@@ -70,7 +70,7 @@
         </div>
 
         <div class="col-md-6">
-          <h4 class="text-danger"><i class="fas fa-arrow-down"></i> {{ t('Expenses') }}</h4>
+          <h4 class="text-danger"><i class="fas fa-arrow-down" aria-hidden="true"></i> {{ t('Expenses') }}</h4>
           <div class="table-responsive"><table class="table table-sm">
             {% for name, amount in expenses.items() %}
             <tr>

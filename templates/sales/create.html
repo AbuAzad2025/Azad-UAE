@@ -3,14 +3,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('new_invoice') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('new_invoice') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('sales.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_sales') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_sales') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('main_dashboard') }}
     </a>
   </div>
 </div>
@@ -43,29 +43,29 @@
     <div class="col-md-8">
       <div class="card">
         <div class="card-header bg-gradient-primary">
-          <h3 class="card-title text-white"><i class="fas fa-file-invoice mr-2"></i>{{ t('invoice_info') }}</h3>
+          <h3 class="card-title text-white"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('invoice_info') }}</h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-user text-primary mr-1"></i>{{ t('customer') }}
+                  <i class="fas fa-user text-primary mr-1" aria-hidden="true"></i>{{ t('customer') }}
                   <span class="text-danger">*</span>
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('customer_select_tooltip') }}"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('customer_select_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 <select name="customer_id" id="customer_id" class="form-control customer-select" required aria-label="customer id">
                   <option value="" selected>{{ t('None') }}</option>
                 </select>
-                <small class="form-text text-muted"><i class="fas fa-lightbulb"></i> {{ t('search_customer_hint') }}</small>
+                <small class="form-text text-muted"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ t('search_customer_hint') }}</small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-warehouse text-info mr-1"></i>{{ t('warehouse') }}
+                  <i class="fas fa-warehouse text-info mr-1" aria-hidden="true"></i>{{ t('warehouse') }}
                   <span class="text-danger">*</span>
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('warehouse_select_tooltip') }}"></i>
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('warehouse_select_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 <select name="warehouse_id" id="warehouse_id" class="form-control" required aria-label="warehouse id">
                   <option value="" selected>{{ t('None') }}</option>
@@ -82,15 +82,15 @@
                   {% endif %}
                 </select>
                 <small class="form-text text-info">
-                  <i class="fas fa-info-circle"></i> {{ t('inventory_will_be_deducted_from_warehouse') }}
+                  <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('inventory_will_be_deducted_from_warehouse') }}
                 </small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="form-group">
                 <label for="sale_sales_rep_id" class="font-weight-bold">
-                  <i class="fas fa-id-badge text-warning mr-1"></i>{{ t('sales_rep') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('sales_rep_tooltip') }}"></i>
+                  <i class="fas fa-id-badge text-warning mr-1" aria-hidden="true"></i>{{ t('sales_rep') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('sales_rep_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 <select name="sales_rep_id" id="sale_sales_rep_id" class="form-control">
                   <option value="">{{ t('None') }}</option>
@@ -103,8 +103,8 @@
             <div class="col-md-3">
               <div class="form-group">
                 <label for="sale_coupon_code" class="font-weight-bold">
-                  <i class="fas fa-ticket-alt text-success mr-1"></i>{{ t('coupon_discount') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('coupon_tooltip') }}"></i>
+                  <i class="fas fa-ticket-alt text-success mr-1" aria-hidden="true"></i>{{ t('coupon_discount') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('coupon_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 <input type="text" name="coupon_code" id="sale_coupon_code" class="form-control" placeholder="{{ t('coupon_code') }}" autocomplete="off">
               </div>
@@ -112,28 +112,28 @@
             <div class="col-md-2">
               <div class="form-group">
                 <label class="font-weight-bold">
-                  <i class="fas fa-money-bill-wave text-success mr-1"></i>{{ t('currency') }} {{ t('payment') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('currency_tooltip') }}"></i>
+                  <i class="fas fa-money-bill-wave text-success mr-1" aria-hidden="true"></i>{{ t('currency') }} {{ t('payment') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('currency_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 {% set dc = company_default_currency or system_default_currency or 'AED' %}
                 {% from 'macros/currency_options.html' import currency_select %}
                 {{ currency_select(name='currency', id='currency', default_code=dc) }}
                 <small class="form-text text-info">
-                  <i class="fas fa-lightbulb"></i> {{ t('prices_in_base_currency') }}
+                  <i class="fas fa-lightbulb" aria-hidden="true"></i> {{ t('prices_in_base_currency') }}
                 </small>
               </div>
             </div>
             <div class="col-md-2">
               <div class="form-group">
                 <label for="exchange_rate" class="font-weight-bold">
-                  <i class="fas fa-exchange-alt text-info mr-1"></i>{{ t('exchange_rate') }}
-                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('exchange_rate_tooltip') }}"></i>
+                  <i class="fas fa-exchange-alt text-info mr-1" aria-hidden="true"></i>{{ t('exchange_rate') }}
+                  <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('exchange_rate_tooltip') }}" aria-hidden="true"></i>
                 </label>
                 <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" 
                        value="1.000000" step="0.000001" min="0.000001" 
                        placeholder="1.000000">
                 <small class="form-text text-muted">
-                  <i class="fas fa-edit"></i> {{ t('editable_manually') }}
+                  <i class="fas fa-edit" aria-hidden="true"></i> {{ t('editable_manually') }}
                 </small>
               </div>
             </div>
@@ -141,9 +141,9 @@
 
           <hr>
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5><i class="fas fa-list mr-2"></i>{{ t('Items') }} (<span id="line_count_display">0</span>)</h5>
+            <h5><i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('Items') }} (<span id="line_count_display">0</span>)</h5>
             <button type="button" class="btn btn-success" data-action="add-line">
-              <i class="fas fa-plus mr-2"></i>{{ t('add_item') }}
+              <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('add_item') }}
             </button>
           </div>
           <div id="linesContainer"></div>
@@ -154,13 +154,13 @@
     <div class="col-md-4">
       <div class="card">
         <div class="card-header bg-gradient-info">
-          <h3 class="card-title text-white"><i class="fas fa-calculator mr-2"></i>{{ t('Totals') }}</h3>
+          <h3 class="card-title text-white"><i class="fas fa-calculator mr-2" aria-hidden="true"></i>{{ t('Totals') }}</h3>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label for="sale_discount_amount" class="font-weight-bold">
-              <i class="fas fa-percent text-danger mr-1"></i>{{ t('discount') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('discount_tooltip') }}"></i>
+              <i class="fas fa-percent text-danger mr-1" aria-hidden="true"></i>{{ t('discount') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('discount_tooltip') }}" aria-hidden="true"></i>
             </label>
             <div class="input-group">
               <input type="number" name="discount_amount" id="sale_discount_amount" class="form-control" value="0" step="0.01" min="0" 
@@ -175,8 +175,8 @@
 
           <div class="form-group">
             <label for="sale_shipping_cost" class="font-weight-bold">
-              <i class="fas fa-shipping-fast text-primary mr-1"></i>{{ t('shipping_cost') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('shipping_cost_tooltip') }}"></i>
+              <i class="fas fa-shipping-fast text-primary mr-1" aria-hidden="true"></i>{{ t('shipping_cost') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('shipping_cost_tooltip') }}" aria-hidden="true"></i>
             </label>
             <div class="input-group">
               <input type="number" name="shipping_cost" id="sale_shipping_cost" class="form-control" value="0" step="0.01" min="0" 
@@ -191,8 +191,8 @@
 
           <div id="tax-rate-group" class="form-group{% if not tenant_enable_tax %} d-none{% endif %}">
             <label for="sale_tax_rate" class="font-weight-bold">
-              <i class="fas fa-receipt text-warning mr-1"></i>{{ t('tax_rate') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('tax_rate_tooltip') }}"></i>
+              <i class="fas fa-receipt text-warning mr-1" aria-hidden="true"></i>{{ t('tax_rate') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('tax_rate_tooltip') }}" aria-hidden="true"></i>
             </label>
             <div class="input-group">
               {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
@@ -211,7 +211,7 @@
           
           <div class="total-box text-center">
             <div class="alert alert-info mb-3 ic-1">
-              <i class="fas fa-info-circle"></i>
+              <i class="fas fa-info-circle" aria-hidden="true"></i>
               <strong>{{ t('note') }}:</strong> {{ t('all_prices_in_currency') }} ({{ tenant_default_currency or 'AED' }})
             </div>
             <h6 class="mb-2">{{ t('subtotal') }}</h6>
@@ -220,25 +220,25 @@
             <h5 class="mb-2">{{ t('final_total') }}</h5>
             <h2 id="total" class="mb-0 ic-3">0.00</h2>
             <small class="ic-4">
-              <i class="fas fa-coins"></i> <span id="total_currency_label">{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})</span>
+              <i class="fas fa-coins" aria-hidden="true"></i> <span id="total_currency_label">{{ tenant_currency_name_ar or 'درهم إماراتي' }} ({{ tenant_default_currency or 'AED' }})</span>
             </small>
           </div>
 
           <div class="form-group mt-3">
             <label class="font-weight-bold">
-              <i class="fas fa-credit-card text-info"></i> {{ t('payment_method') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('payment_method_tooltip') }}"></i>
+              <i class="fas fa-credit-card text-info" aria-hidden="true"></i> {{ t('payment_method') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('payment_method_tooltip') }}" aria-hidden="true"></i>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" aria-label="payment method">
               <option value="">{{ t('credit_no_payment') }}</option>
-              <option value="cash"><i class="fas fa-money-bill-wave"></i> {{ t('cash') }}</option>
-              <option value="card"><i class="fas fa-credit-card"></i> {{ t('card') }}</option>
-              <option value="bank_transfer"><i class="fas fa-university"></i> {{ t('bank_transfer') }}</option>
-              <option value="cheque"><i class="fas fa-file-invoice"></i> {{ t('cheque') }}</option>
-              <option value="e_wallet"><i class="fas fa-wallet"></i> {{ t('e_wallet') }}</option>
+              <option value="cash"><i class="fas fa-money-bill-wave" aria-hidden="true"></i> {{ t('cash') }}</option>
+              <option value="card"><i class="fas fa-credit-card" aria-hidden="true"></i> {{ t('card') }}</option>
+              <option value="bank_transfer"><i class="fas fa-university" aria-hidden="true"></i> {{ t('bank_transfer') }}</option>
+              <option value="cheque"><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ t('cheque') }}</option>
+              <option value="e_wallet"><i class="fas fa-wallet" aria-hidden="true"></i> {{ t('e_wallet') }}</option>
             </select>
             <small class="form-text text-muted">
-              <i class="fas fa-info-circle"></i> {{ t('leave_empty_for_credit') }}
+              <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('leave_empty_for_credit') }}
             </small>
           </div>
 
@@ -247,8 +247,8 @@
 
           <div class="form-group ic-5" id="payment_amount_group">
             <label class="font-weight-bold">
-              <i class="fas fa-hand-holding-usd mr-1"></i>{{ t('paid_amount') }}
-              <i class="fas fa-info-circle text-info" title="{{ t('paid_amount_tooltip') }}"></i>
+              <i class="fas fa-hand-holding-usd mr-1" aria-hidden="true"></i>{{ t('paid_amount') }}
+              <i class="fas fa-info-circle text-info" title="{{ t('paid_amount_tooltip') }}" aria-hidden="true"></i>
             </label>
             <div class="input-group">
               <input type="number" name="payment_amount" id="payment_amount" class="form-control" 
@@ -259,24 +259,24 @@
               </div>
             </div>
             <small class="form-text text-success">
-              <i class="fas fa-calculator"></i> {{ t('auto_converted_to_base_currency') }}
+              <i class="fas fa-calculator" aria-hidden="true"></i> {{ t('auto_converted_to_base_currency') }}
             </small>
             <small class="text-muted d-block mt-1">{{ t('leave_zero_for_credit') }}</small>
           </div>
 
           <div class="form-group">
             <label for="sale_notes" class="font-weight-bold">
-              <i class="fas fa-sticky-note text-warning"></i> {{ t('notes') }}
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('notes_tooltip') }}"></i>
+              <i class="fas fa-sticky-note text-warning" aria-hidden="true"></i> {{ t('notes') }}
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('notes_tooltip') }}" aria-hidden="true"></i>
             </label>
             <textarea name="notes" id="sale_notes" class="form-control" rows="2" placeholder="{{ t('notes_placeholder') }}" maxlength="500"></textarea>
             <small class="form-text text-muted">
-              <i class="fas fa-lightbulb"></i> {{ t('notes_helper') }}
+              <i class="fas fa-lightbulb" aria-hidden="true"></i> {{ t('notes_helper') }}
             </small>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ t('save_invoice') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('save_invoice') }}
           </button>
         </div>
       </div>
@@ -289,7 +289,7 @@
     <div class="modal-content">
       <div class="modal-header bg-warning">
         <h5 class="modal-title" id="serialNumberModalLabel">
-          <i class="fas fa-fingerprint mr-2"></i>{{ t('enter_serial_numbers') }}
+          <i class="fas fa-fingerprint mr-2" aria-hidden="true"></i>{{ t('enter_serial_numbers') }}
         </h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
@@ -310,10 +310,10 @@
             <input type="text" id="serial_input" class="form-control" placeholder="Scan or type serial..." autofocus>
             <div class="input-group-append">
               <button class="btn btn-primary" type="button" id="add_serial_btn">
-                <i class="fas fa-plus"></i> {{ t('Add') }}
+                <i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add') }}
               </button>
               <button class="btn btn-secondary" type="button" id="generate_serial_btn" title="{{ t('generate_serial_auto') }}">
-                <i class="fas fa-magic"></i>
+                <i class="fas fa-magic" aria-hidden="true"></i>
               </button>
             </div>
           </div>
@@ -325,12 +325,12 @@
       </div>
       <div class="modal-footer justify-content-between">
         <button type="button" class="btn btn-outline-info ic-5" id="print_serials_btn">
-            <i class="fas fa-print mr-1"></i> {{ t('print_labels') }}
+            <i class="fas fa-print mr-1" aria-hidden="true"></i> {{ t('print_labels') }}
         </button>
         <div>
             <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('Cancel') }}</button>
             <button type="button" class="btn btn-success" id="save_serials_btn" disabled>
-              <i class="fas fa-check mr-2"></i>{{ t('confirm') }} (<span id="serial_count">0</span>)
+              <i class="fas fa-check mr-2" aria-hidden="true"></i>{{ t('confirm') }} (<span id="serial_count">0</span>)
             </button>
         </div>
       </div>

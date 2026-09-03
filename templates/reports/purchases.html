@@ -20,12 +20,12 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-shopping-cart"></i> {{ t('Report_2') }} {{ t('Purchases') }}
+            <i class="fas fa-shopping-cart" aria-hidden="true"></i> {{ t('Report_2') }} {{ t('Purchases') }}
           </h3>
           <div class="card-tools no-print">
             <div class="btn-group mr-2">
               <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-                <i class="fas fa-download mr-1"></i>{{ t('Export') }}
+                <i class="fas fa-download mr-1" aria-hidden="true"></i>{{ t('Export') }}
               </button>
               <div class="dropdown-menu dropdown-menu-right">
                 <a class="dropdown-item" href="{{ url_for('reports.purchases_export', start_date=start_date, end_date=end_date, supplier_id=supplier_id, format='csv') }}">CSV</a>
@@ -33,7 +33,7 @@
               </div>
             </div>
             <button data-action="window-print" class="btn btn-primary">
-              <i class="fas fa-print"></i> {{ t('Print') }}
+              <i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}
             </button>
           </div>
         </div>
@@ -64,7 +64,7 @@
               <div class="col-md-3">
                 <label aria-hidden="true">&nbsp;</label>
                 <button type="submit" class="btn btn-info btn-block no-print">
-                  <i class="fas fa-search"></i> {{ t('Search') }}
+                  <i class="fas fa-search" aria-hidden="true"></i> {{ t('Search') }}
                 </button>
               </div>
             </div>
@@ -80,7 +80,7 @@
                   <p>{{ t('Total_2') }} {{ t('Amounts') }}</p>
                 </div>
                 <div class="icon">
-                  <i class="fas fa-dollar-sign"></i>
+                  <i class="fas fa-dollar-sign" aria-hidden="true"></i>
                 </div>
               </div>
             </div>
@@ -91,7 +91,7 @@
                   <p>{{ t('Paid') }}</p>
                 </div>
                 <div class="icon">
-                  <i class="fas fa-check"></i>
+                  <i class="fas fa-check" aria-hidden="true"></i>
                 </div>
               </div>
             </div>
@@ -102,7 +102,7 @@
                   <p>{{ t('Remaining') }}</p>
                 </div>
                 <div class="icon">
-                  <i class="fas fa-exclamation"></i>
+                  <i class="fas fa-exclamation" aria-hidden="true"></i>
                 </div>
               </div>
             </div>
@@ -113,7 +113,7 @@
                   <p>{{ t('Total_2') }} {{ t('Purchases') }}</p>
                 </div>
                 <div class="icon">
-                  <i class="fas fa-shopping-cart"></i>
+                  <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 </div>
               </div>
             </div>

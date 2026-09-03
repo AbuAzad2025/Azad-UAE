@@ -9,14 +9,14 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-user"></i> {{ t('user_details') }} - {{ user.username | e }}
+            <i class="fas fa-user" aria-hidden="true"></i> {{ t('user_details') }} - {{ user.username | e }}
           </h3>
           <div class="card-tools">
             <a href="{{ url_for('users.edit', id=user.id) }}" class="btn btn-warning">
-              <i class="fas fa-edit"></i> {{ t('edit') }}
+              <i class="fas fa-edit" aria-hidden="true"></i> {{ t('edit') }}
             </a>
             <a href="{{ url_for('users.index') }}" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> {{ t('back') }}
+              <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ t('back') }}
             </a>
           </div>
         </div>
@@ -87,7 +87,7 @@
           {% if current_user.is_admin %}
           <button type="button" class="btn btn-danger" 
                   data-delete-item="{{user.id}}" data-item-type="users" data-item-name="{{ user.username | e }}" data-redirect-url="{{ url_for('users.index') }}">
-            <i class="fas fa-trash"></i> {{ t('delete') }}
+            <i class="fas fa-trash" aria-hidden="true"></i> {{ t('delete') }}
           </button>
           {% endif %}
         </div>

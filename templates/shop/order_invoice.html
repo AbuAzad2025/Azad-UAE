@@ -50,10 +50,10 @@
     <div class="header">
       <div class="header-left">
         <h1>{{ store.title | e }}</h1>
-        {% if store.phone %}<p><i class="fas fa-phone"></i> {{ store.phone | e }}</p>{% endif %}
-        {% if store.whatsapp %}<p><i class="fab fa-whatsapp"></i> WhatsApp: {{ store.whatsapp | e }}</p>{% endif %}
-        {% if store.email %}<p><i class="fas fa-envelope"></i> {{ store.email | e }}</p>{% endif %}
-        {% if store.address %}<p><i class="fas fa-map-marker-alt"></i> {{ store.address | e }}</p>{% endif %}
+        {% if store.phone %}<p><i class="fas fa-phone" aria-hidden="true"></i> {{ store.phone | e }}</p>{% endif %}
+        {% if store.whatsapp %}<p><i class="fab fa-whatsapp" aria-hidden="true"></i> WhatsApp: {{ store.whatsapp | e }}</p>{% endif %}
+        {% if store.email %}<p><i class="fas fa-envelope" aria-hidden="true"></i> {{ store.email | e }}</p>{% endif %}
+        {% if store.address %}<p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ store.address | e }}</p>{% endif %}
       </div>
       <div class="header-right">
         {% if store.logo_url %}<img src="{{ store.logo_url }}" alt="{{ store.title | e }}">{% endif %}
@@ -61,13 +61,13 @@
     </div>
 
     <div class="invoice-title-bar">
-      <h2><i class="fas fa-file-invoice"></i> {{ t('invoice') }} #{{ sale.sale_number }}</h2>
+      <h2><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ t('invoice') }} #{{ sale.sale_number }}</h2>
       <p>{{ sale.sale_date.strftime('%Y-%m-%d %H:%M') if sale.sale_date else '' }}</p>
     </div>
 
     <div class="content">
       <div class="customer-info">
-        <h4><i class="fas fa-user"></i> {{ t('customer_info') }}</h4>
+        <h4><i class="fas fa-user" aria-hidden="true"></i> {{ t('customer_info') }}</h4>
         <p><strong>{{ t('name') }}:</strong> {{ sale.customer.name if sale.customer else '—' }}</p>
         <p><strong>{{ t('phone') }}:</strong> {{ sale.customer.phone if sale.customer else '—' }}</p>
         <p><strong>{{ t('address') }}:</strong> {{ sale.customer.address if sale.customer else '—' }}</p>
@@ -101,9 +101,9 @@
       <div class="payment-info">
         <p><strong>{{ t('payment_method') }}:</strong> {{ pay_method.display_name(lang) if pay_method else sale.checkout_payment_method or '—' }}</p>
         <p><strong>{{ t('payment_status') }}:</strong>
-          {% if sale.payment_status == 'paid' %}<i class="fas fa-check-circle"></i> {{ t('paid') }}
-          {% elif sale.payment_status == 'partial' %}<i class="fas fa-clock"></i> {{ t('partial') }}
-          {% else %}<i class="fas fa-times-circle"></i> {{ t('unpaid') }}{% endif %}
+          {% if sale.payment_status == 'paid' %}<i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('paid') }}
+          {% elif sale.payment_status == 'partial' %}<i class="fas fa-clock" aria-hidden="true"></i> {{ t('partial') }}
+          {% else %}<i class="fas fa-times-circle" aria-hidden="true"></i> {{ t('unpaid') }}{% endif %}
         </p>
         <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
       </div>

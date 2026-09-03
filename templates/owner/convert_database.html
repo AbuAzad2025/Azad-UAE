@@ -4,16 +4,16 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-exchange-alt mr-2"></i>{{ t('Convert_Database') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-exchange-alt mr-2" aria-hidden="true"></i>{{ t('Convert_Database') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('owner.database_tools') }}" class="btn btn-info">
-      <i class="fas fa-tools mr-2"></i>{{ t('DB_Tools') }}
+      <i class="fas fa-tools mr-2" aria-hidden="true"></i>{{ t('DB_Tools') }}
     </a>
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Owner_Dashboard') }}</a>
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Home') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -23,13 +23,13 @@
   <div class="col-md-8 offset-md-2">
     <div class="card card-primary">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-database"></i> {{ t('Professional_Database_Conversion') }}</h3>
+        <h3 class="card-title"><i class="fas fa-database" aria-hidden="true"></i> {{ t('Professional_Database_Conversion') }}</h3>
       </div>
       <form class="needs-validation" method="POST" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
         <div class="card-body">
           <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
             <strong>{{ t('Note') }}</strong> {{ t('System_Currently_On_SQLite') }}
           </div>
 
@@ -52,7 +52,7 @@
           </div>
 
           <div class="alert alert-warning">
-            <h5><i class="fas fa-exclamation-triangle"></i> {{ t('Important_Warnings') }}</h5>
+            <h5><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('Important_Warnings') }}</h5>
             <ul>
               <li>{{ t('Ensure_Backup_Before_Conversion') }}</li>
               <li>{{ t('Target_DB_Must_Be_Empty') }}</li>
@@ -63,10 +63,10 @@
         </div>
         <div class="card-footer">
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-sync"></i> {{ t('Start_Conversion') }}
+            <i class="fas fa-sync" aria-hidden="true"></i> {{ t('Start_Conversion') }}
           </button>
           <a href="{{ url_for('owner.database_tools') }}" class="btn btn-secondary">
-            <i class="fas fa-times"></i> {{ t('Cancel') }}
+            <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
           </a>
         </div>
       </form>
@@ -74,7 +74,7 @@
 
     <div class="card card-info">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-question-circle"></i> {{ t('Conversion_Info') }}</h3>
+        <h3 class="card-title"><i class="fas fa-question-circle" aria-hidden="true"></i> {{ t('Conversion_Info') }}</h3>
       </div>
       <div class="card-body">
         <h5>{{ t('Why') }} PostgreSQL?</h5>

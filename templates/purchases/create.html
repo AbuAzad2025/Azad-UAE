@@ -8,7 +8,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice-dollar {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i>{{ t('Invoice') }} {{ t('Purchase') }} {{ t('New_3') }}</h1>
 
   </div>
 
@@ -16,13 +16,13 @@
 
     <a href="{{ url_for('purchases.index') }}" class="purchase-header-link purchase-header-link--primary">
 
-      <i class="fas fa-arrow-right {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Back_To_Purchases') }}
+      <i class="fas fa-arrow-right {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i>{{ t('Back_To_Purchases') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="purchase-header-link purchase-header-link--secondary">
 
-      <i class="fas fa-home {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i>{{ t('Main_2') }}
+      <i class="fas fa-home {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i>{{ t('Main_2') }}
 
     </a>
 
@@ -44,7 +44,7 @@
 
   <div class="card-header">
 
-    <h3 class="card-title"><i class="fas fa-shopping-cart"></i> {{ t('Purchase_Invoice_Data') }}</h3>
+    <h3 class="card-title"><i class="fas fa-shopping-cart" aria-hidden="true"></i> {{ t('Purchase_Invoice_Data') }}</h3>
 
   </div>
 
@@ -70,7 +70,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-truck"></i> {{ t('Supplier_Info') }}
+            <i class="fas fa-truck" aria-hidden="true"></i> {{ t('Supplier_Info') }}
 
           </h5>
 
@@ -88,11 +88,11 @@
 
             <label for="supplier_id">
 
-              <i class="fas fa-truck text-success"></i> {{ t('Supplier') }} 
+              <i class="fas fa-truck text-success" aria-hidden="true"></i> {{ t('Supplier') }} 
 
               <span class="text-danger">*</span>
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Select_Supplier_Required') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Select_Supplier_Required') }}" aria-hidden="true"></i>
 
             </label>
 
@@ -110,7 +110,7 @@
                 <a href="{{ url_for('suppliers.create') }}" class="btn btn-success" target="_blank" rel="noopener noreferrer" title="{{ t('Add_New_Supplier') }}">
                 {% endif %}
 
-                  <i class="fas fa-plus"></i>
+                  <i class="fas fa-plus" aria-hidden="true"></i>
 
                 </a>
 
@@ -136,11 +136,11 @@
 
             <label for="warehouse_id">
 
-              <i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}
+              <i class="fas fa-warehouse text-info" aria-hidden="true"></i> {{ t('Warehouse') }}
 
               <span class="text-danger">*</span>
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse_Goods_Tooltip') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Warehouse_Goods_Tooltip') }}" aria-hidden="true"></i>
 
             </label>
 
@@ -170,7 +170,7 @@
 
             <small class="form-text text-info">
 
-              <i class="fas fa-info-circle"></i> {{ t('Warehouse_Goods_Tooltip') }}
+              <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('Warehouse_Goods_Tooltip') }}
 
             </small>
 
@@ -186,9 +186,9 @@
 
             <label for="supplier_phone">
 
-              <i class="fas fa-phone text-info"></i> {{ t('Supplier_Phone') }}
+              <i class="fas fa-phone text-info" aria-hidden="true"></i> {{ t('Supplier_Phone') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Auto_Fill_Supplier_Tooltip') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Auto_Fill_Supplier_Tooltip') }}" aria-hidden="true"></i>
 
             </label>
 
@@ -206,9 +206,9 @@
 
             <label for="supplier_email">
 
-              <i class="fas fa-envelope text-secondary"></i> {{ t('Supplier_Email') }}
+              <i class="fas fa-envelope text-secondary" aria-hidden="true"></i> {{ t('Supplier_Email') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Auto_Fill_Supplier_Tooltip') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Auto_Fill_Supplier_Tooltip') }}" aria-hidden="true"></i>
 
             </label>
 
@@ -230,7 +230,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-dollar-sign"></i> {{ t('Currency_And_Tax') }}
+            <i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ t('Currency_And_Tax') }}
 
           </h5>
 
@@ -248,9 +248,9 @@
 
             <label>
 
-              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }}
+              <i class="fas fa-dollar-sign text-success" aria-hidden="true"></i> {{ t('Currency') }}
 
-              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency_Default_Tooltip', currency=tenant_default_currency or 'AED') }}"></i>
+              <i class="fas fa-info-circle text-muted" data-toggle="tooltip" title="{{ t('Currency_Default_Tooltip', currency=tenant_default_currency or 'AED') }}" aria-hidden="true"></i>
 
               {% set dc = company_default_currency or system_default_currency or 'AED' %}
               {% from 'macros/currency_options.html' import currency_select %}
@@ -313,7 +313,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-ship"></i> {{ t('Shipping_And_Import_Costs') }}
+            <i class="fas fa-ship" aria-hidden="true"></i> {{ t('Shipping_And_Import_Costs') }}
 
             <small class="text-muted">({{ t('Included') }} في {{ t('Inventory_Cost') }})</small>
 
@@ -329,7 +329,7 @@
 
           <div class="form-group">
 
-            <label for="freight"><i class="fas fa-truck"></i> {{ t('Shipping') }}</label>
+            <label for="freight"><i class="fas fa-truck" aria-hidden="true"></i> {{ t('Shipping') }}</label>
 
             <input type="number" name="freight" id="freight" class="form-control" value="0" step="0.01" min="0" aria-label="freight">
 
@@ -341,7 +341,7 @@
 
           <div class="form-group">
 
-            <label for="insurance"><i class="fas fa-shield-alt"></i> {{ t('Insurance') }}</label>
+            <label for="insurance"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ t('Insurance') }}</label>
 
             <input type="number" name="insurance" id="insurance" class="form-control" value="0" step="0.01" min="0" aria-label="insurance">
 
@@ -353,7 +353,7 @@
 
           <div class="form-group">
 
-            <label for="customs_duty"><i class="fas fa-landmark"></i> {{ t('Customs') }}</label>
+            <label for="customs_duty"><i class="fas fa-landmark" aria-hidden="true"></i> {{ t('Customs') }}</label>
 
             <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0" aria-label="customs duty">
 
@@ -365,7 +365,7 @@
 
           <div class="form-group">
 
-            <label for="other_landed_cost"><i class="fas fa-ellipsis-h"></i> {{ t('Other_Costs') }}</label>
+            <label for="other_landed_cost"><i class="fas fa-ellipsis-h" aria-hidden="true"></i> {{ t('Other_Costs') }}</label>
 
             <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0" aria-label="other landed cost">
 
@@ -381,7 +381,7 @@
 
           <h5 class="text-primary mb-3">
 
-            <i class="fas fa-boxes"></i> {{ t('Purchased_Products') }}
+            <i class="fas fa-boxes" aria-hidden="true"></i> {{ t('Purchased_Products') }}
 
           </h5>
 
@@ -397,7 +397,7 @@
 
       <button type="button" id="addLineBtn" class="btn btn-success">
 
-        <i class="fas fa-plus-circle {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Add') }} {{ t('Product_2') }}
+        <i class="fas fa-plus-circle {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Add') }} {{ t('Product_2') }}
 
       </button>
 
@@ -429,7 +429,7 @@
 
             <div class="card-body">
 
-              <h6 class="text-center mb-3"><i class="fas fa-calculator"></i> {{ t('Summary') }} {{ t('Invoice_2') }}</h6>
+              <h6 class="text-center mb-3"><i class="fas fa-calculator" aria-hidden="true"></i> {{ t('Summary') }} {{ t('Invoice_2') }}</h6>
 
               <div class="table-responsive"><table class="table table-sm">
 
@@ -485,19 +485,19 @@
 
       <button type="submit" class="btn btn-primary btn-lg">
 
-        <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Save_Purchase_Invoice') }}
+        <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Save_Purchase_Invoice') }}
 
       </button>
 
       <a href="{{ url_for('purchases.index') }}" class="btn btn-secondary btn-lg">
 
-        <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
+        <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Cancel') }}
 
       </a>
 
       <button type="button" id="recalcTotalsBtn" class="btn btn-info btn-lg {% if is_rtl %}float-right{% else %}float-left{% endif %}">
 
-        <i class="fas fa-calculator {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Recalculate') }}
+        <i class="fas fa-calculator {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Recalculate') }}
 
       </button>
 

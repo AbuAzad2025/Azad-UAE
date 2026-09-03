@@ -26,7 +26,7 @@
 <div class="container-fluid">
 <div class="row mb-3">
             <div class="col-12">
-              <h2><i class="fas fa-file-invoice-dollar mr-2"></i> VAT Return — {{ t('return_filing') }} {{ t('tax') }}</h2>
+              <h2><i class="fas fa-file-invoice-dollar mr-2" aria-hidden="true"></i> VAT Return — {{ t('return_filing') }} {{ t('tax') }}</h2>
             </div>
           </div>
 
@@ -44,7 +44,7 @@
               <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request.args.get('date_to', '') }}" aria-label="إلى {{ t('History') }}">
             </div>
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-calculator"></i> {{ t('Account') }}
+              <i class="fas fa-calculator" aria-hidden="true"></i> {{ t('Account') }}
             </button>
           </form>
         </div>
@@ -59,7 +59,7 @@
           <h3>{{ format_currency(report.output_vat, report.currency) }}</h3>
           <p>{{ t('Tax_2') }} {{ t('المخرجات') }} ({{ t('Sales_2') }})</p>
         </div>
-        <div class="icon"><i class="fas fa-arrow-up"></i></div>
+        <div class="icon"><i class="fas fa-arrow-up" aria-hidden="true"></i></div>
       </div>
     </div>
     <div class="col-md-4">
@@ -68,7 +68,7 @@
           <h3>{{ format_currency(report.input_vat, report.currency) }}</h3>
           <p>{{ t('Tax_2') }} {{ t('المدخلات') }} ({{ t('Purchases_2') }})</p>
         </div>
-        <div class="icon"><i class="fas fa-arrow-down"></i></div>
+        <div class="icon"><i class="fas fa-arrow-down" aria-hidden="true"></i></div>
       </div>
     </div>
     <div class="col-md-4">
@@ -77,7 +77,7 @@
           <h3>{{ format_currency(report.net_payable, report.currency) }}</h3>
           <p>{{ t('Net') }} {{ t('المستحق') }} ({{ report.currency }})</p>
         </div>
-        <div class="icon"><i class="fas fa-balance-scale"></i></div>
+        <div class="icon"><i class="fas fa-balance-scale" aria-hidden="true"></i></div>
       </div>
     </div>
   </div>

@@ -17,8 +17,8 @@
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>
             {% endfor %}
           </select>
-          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter"></i> {{ t('تصفية') }}</button>
-          <button type="button" data-action="window-print" class="btn btn-secondary"><i class="fas fa-print mr-2"></i>{{ t('Print') }}</button>
+          <button type="submit" class="btn btn-primary mr-2"><i class="fas fa-filter" aria-hidden="true"></i> {{ t('تصفية') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-secondary"><i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}</button>
         </form>
       </div>
     </div>

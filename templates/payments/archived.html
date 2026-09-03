@@ -14,7 +14,7 @@
 
     <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ _('رجوع') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ _('رجوع') }}
 
     </a>
 
@@ -80,11 +80,11 @@
 
             {% if item.customer_name %}
 
-              <i class="fas fa-user text-primary mr-1"></i>{{ item.customer_name }}
+              <i class="fas fa-user text-primary mr-1" aria-hidden="true"></i>{{ item.customer_name }}
 
             {% elif item.supplier_name %}
 
-              <i class="fas fa-truck text-danger mr-1"></i>{{ item.supplier_name }}
+              <i class="fas fa-truck text-danger mr-1" aria-hidden="true"></i>{{ item.supplier_name }}
 
             {% else %}
 
@@ -114,7 +114,7 @@
 
               <span class="badge badge-success">
 
-                <i class="fas fa-arrow-down mr-1"></i>{{ _('قبض') }}
+                <i class="fas fa-arrow-down mr-1" aria-hidden="true"></i>{{ _('قبض') }}
 
               </span>
 
@@ -122,7 +122,7 @@
 
               <span class="badge badge-danger">
 
-                <i class="fas fa-arrow-up mr-1"></i>{{ _('صرف') }}
+                <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>{{ _('صرف') }}
 
               </span>
 
@@ -136,7 +136,7 @@
 
               <span class="badge badge-primary">
 
-                <i class="fas fa-file-invoice mr-1"></i>{{ _('مبيعات') }}
+                <i class="fas fa-file-invoice mr-1" aria-hidden="true"></i>{{ _('مبيعات') }}
 
               </span>
 
@@ -144,7 +144,7 @@
 
               <span class="badge badge-warning">
 
-                <i class="fas fa-truck mr-1"></i>{{ _('دفعة مورد') }}
+                <i class="fas fa-truck mr-1" aria-hidden="true"></i>{{ _('دفعة مورد') }}
 
               </span>
 
@@ -152,7 +152,7 @@
 
               <span class="badge badge-info">
 
-                <i class="fas fa-user mr-1"></i>{{ _('دفعة عميل') }}
+                <i class="fas fa-user mr-1" aria-hidden="true"></i>{{ _('دفعة عميل') }}
 
               </span>
 
@@ -160,7 +160,7 @@
 
               <span class="badge badge-secondary">
 
-                <i class="fas fa-undo mr-1"></i>{{ _('استرداد') }}
+                <i class="fas fa-undo mr-1" aria-hidden="true"></i>{{ _('استرداد') }}
 
               </span>
 
@@ -188,7 +188,7 @@
 
                    class="btn btn-info" title="{{ _('عرض') }}">
 
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
 
                 </a>
 
@@ -196,7 +196,7 @@
 
                    class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
-                  <i class="fas fa-print"></i>
+                  <i class="fas fa-print" aria-hidden="true"></i>
 
                 </a>
 
@@ -206,7 +206,7 @@
 
                    class="btn btn-info" title="{{ _('عرض') }}">
 
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
 
                 </a>
 
@@ -214,7 +214,7 @@
 
                    class="btn btn-secondary" target="_blank" rel="noopener noreferrer" title="{{ _('طباعة') }}">
 
-                  <i class="fas fa-print"></i>
+                  <i class="fas fa-print" aria-hidden="true"></i>
 
                 </a>
 
@@ -228,7 +228,7 @@
 
                       title="{{ _('استعادة') }}">
 
-                <i class="fas fa-undo"></i>
+                <i class="fas fa-undo" aria-hidden="true"></i>
 
               </button>
 

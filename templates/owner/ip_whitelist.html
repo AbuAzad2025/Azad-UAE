@@ -4,19 +4,19 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.security_alerts') }}" class="btn btn-danger">
-      <i class="fas fa-shield-alt"></i> {{ t('Alerts') }}
+      <i class="fas fa-shield-alt" aria-hidden="true"></i> {{ t('Alerts') }}
     </a>
     <a href="{{ url_for('owner.api_keys') }}" class="btn btn-info">
-      <i class="fas fa-key"></i> API Keys
+      <i class="fas fa-key" aria-hidden="true"></i> API Keys
     </a>
   </div>
 
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-network-wired"></i> {{ t('IP_Whitelist') }}</h3>
+      <h3><i class="fas fa-network-wired" aria-hidden="true"></i> {{ t('IP_Whitelist') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation mb-4" method="post" action="">
@@ -38,7 +38,7 @@
             <div class="form-group">
               <label aria-hidden="true">&nbsp;</label>
               <button type="submit" class="btn btn-success btn-block">
-                <i class="fas fa-plus"></i> {{ t('Add') }}
+                <i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add') }}
               </button>
             </div>
           </div>
@@ -63,7 +63,7 @@
                 <form method="post" action="{{ url_for('owner.delete_ip_whitelist', index=loop.index0) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Delete_This_IP') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <button type="submit" class="btn btn-danger">
-                    <i class="fas fa-trash"></i> {{ t('Delete') }}
+                    <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Delete') }}
                   </button>
                 </form>
               </td>
@@ -72,7 +72,7 @@
           {% else %}
             <tr>
               <td colspan="3" class="text-center text-muted">
-                <i class="fas fa-info-circle"></i> {{ t('No_IPs_In_Whitelist') }}
+                <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('No_IPs_In_Whitelist') }}
               </td>
             </tr>
           {% endif %}

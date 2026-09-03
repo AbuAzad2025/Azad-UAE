@@ -6,11 +6,11 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('Back to Dashboard') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('Back to Dashboard') }}
     </a>
     {% if current_user.has_permission('manage_ledger') %}
     <a href="{{ url_for('ledger.manual_entry') }}" class="btn btn-success">
-      <i class="fas fa-plus mr-2"></i>{{ t('New Manual Entry') }}
+      <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('New Manual Entry') }}
     </a>
     {% endif %}
   </div>
@@ -19,7 +19,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-book mr-2"></i>{{ t('All Accounting Journals') }}
+      <i class="fas fa-book mr-2" aria-hidden="true"></i>{{ t('All Accounting Journals') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -79,11 +79,11 @@
             <td>
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('view_ledger') %}<a href="{{ url_for('ledger.view_entry', entry_id=entry.id) }}" class="btn btn-outline-primary" title="{{ t('View Entry') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </a>{% endif %}
                 {% if not entry.is_reversed %}
                 <button type="button" class="btn btn-outline-danger" data-action="reverse-entry" data-entry-id="{{ entry.id }}" title="{{ t('Reverse Entry') }}">
-                  <i class="fas fa-undo"></i>
+                  <i class="fas fa-undo" aria-hidden="true"></i>
                 </button>
                 {% endif %}
               </div>
@@ -93,7 +93,7 @@
           {% else %}
           <tr>
             <td colspan="7" class="text-center text-muted py-4">
-              <i class="fas fa-book-open fa-2x mb-2"></i>
+              <i class="fas fa-book-open fa-2x mb-2" aria-hidden="true"></i>
               <p>{{ _('لا توجد قيود.') }}</p>
             </td>
           </tr>
@@ -140,7 +140,7 @@
             <p class="mb-0">{{ t('Total Journals') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-book fa-2x"></i>
+            <i class="fas fa-book fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -157,7 +157,7 @@
             <p class="mb-0">{{ t('Posted Entries') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-check-circle fa-2x"></i>
+            <i class="fas fa-check-circle fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -174,7 +174,7 @@
             <p class="mb-0">{{ t('Drafts') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-edit fa-2x"></i>
+            <i class="fas fa-edit fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@
             <p class="mb-0">{{ t('Reversed Entries') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-undo fa-2x"></i>
+            <i class="fas fa-undo fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>

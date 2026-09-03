@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }} - {{ t('Alerts') }} {{ t('Cheques') }}{% endblock %}
-{% block page_title %}<i class="fas fa-bell"></i> {{ t('Alerts') }} {{ t('Cheques') }}{% endblock %}
+{% block page_title %}<i class="fas fa-bell" aria-hidden="true"></i> {{ t('Alerts') }} {{ t('Cheques') }}{% endblock %}
 
 {% block content %}
 
@@ -12,7 +12,7 @@
         <p>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} (7 {{ t('Days') }})</p>
       </div>
       <div class="icon">
-        <i class="fas fa-clock"></i>
+        <i class="fas fa-clock" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -24,7 +24,7 @@
         <p>{{ t('Cheques_2') }} {{ t('Late') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -36,7 +36,7 @@
         <p>{{ t('Cheques_2') }} {{ t('Returned') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-ban"></i>
+        <i class="fas fa-ban" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -47,7 +47,7 @@
 <div class="card card-warning">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-clock mr-2"></i>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} {{ t('خلال 7 أيام') }}
+      <i class="fas fa-clock mr-2" aria-hidden="true"></i>{{ t('Cheques_2') }} {{ t('Near') }} {{ t('Due') }} {{ t('خلال 7 أيام') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -82,7 +82,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '-' }}</td>
           <td>
             <span class="badge badge-warning">
-              <i class="fas fa-clock mr-1"></i>{{ cheque.days_until_due }} {{ t('يوم') }}
+              <i class="fas fa-clock mr-1" aria-hidden="true"></i>{{ cheque.days_until_due }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -97,10 +97,10 @@
           <td>
             <div class="btn-group btn-group-sm">
               <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
               <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
             </div>
           </td>
@@ -117,7 +117,7 @@
 <div class="card card-danger mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Cheques_2') }} {{ t('Late') }} - {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('فورية') }}!
+      <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>{{ t('Cheques_2') }} {{ t('Late') }} - {{ t('تحتاج') }} {{ t('متابعة') }} {{ t('فورية') }}!
     </h3>
   </div>
   <div class="card-body p-0">
@@ -161,7 +161,7 @@
           <td>{{ cheque.due_date.strftime('%Y-%m-%d') if cheque.due_date else '-' }}</td>
           <td>
             <span class="badge badge-danger">
-              <i class="fas fa-exclamation-circle mr-1"></i>{{ cheque.days_until_due|abs }} {{ t('يوم') }}
+              <i class="fas fa-exclamation-circle mr-1" aria-hidden="true"></i>{{ cheque.days_until_due|abs }} {{ t('يوم') }}
             </span>
           </td>
           {% if show_branch_columns %}
@@ -176,10 +176,10 @@
           <td>
             <div class="btn-group btn-group-sm">
               <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
               <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
             </div>
           </td>
@@ -196,7 +196,7 @@
 <div class="card card-dark mt-3">
   <div class="card-header">
     <h3 class="card-title">
-      <i class="fas fa-ban mr-2"></i>{{ t('Cheques_2') }} {{ t('Returned') }}
+      <i class="fas fa-ban mr-2" aria-hidden="true"></i>{{ t('Cheques_2') }} {{ t('Returned') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -229,7 +229,7 @@
           <td>{{ format_currency(cheque.amount, cheque.currency) }}</td>
           <td>
             <span class="text-danger">
-              <i class="fas fa-info-circle mr-1"></i>
+              <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
               {{ cheque.bounce_reason or _('غير محدد') }}
             </span>
           </td>
@@ -245,10 +245,10 @@
           <td>
             <div class="btn-group btn-group-sm">
               <a href="{{ url_for('cheques.view', id=cheque.id) }}" class="btn btn-info" title="{{ t('View') }}">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye" aria-hidden="true"></i>
               </a>
               <button type="button" class="btn btn-danger delete-cheque-btn" data-id="{{ cheque.id }}" title="{{ t('Delete') }}">
-                <i class="fas fa-trash"></i>
+                <i class="fas fa-trash" aria-hidden="true"></i>
               </button>
             </div>
           </td>
@@ -264,7 +264,7 @@
 {% if not due_soon and not overdue and not bounced %}
 <div class="card">
   <div class="card-body text-center py-5">
-    <i class="fas fa-check-circle fa-5x text-success mb-3"></i>
+    <i class="fas fa-check-circle fa-5x text-success mb-3" aria-hidden="true"></i>
     <h4>{{ t('لا توجد تنبيهات') }}</h4>
     <p class="text-muted">{{ t('لا توجد شيكات مستحقة أو متأخرة حالياً.') }}</p>
   </div>

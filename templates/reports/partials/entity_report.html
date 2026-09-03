@@ -4,12 +4,12 @@
 <div class="card shadow mb-4">
     <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-primary text-white">
         <h6 class="m-0 font-weight-bold">
-            <i class="fas fa-user-circle fa-lg {% if is_rtl %}ml-2{% else %}ml-2{% endif %}"></i>
+            <i class="fas fa-user-circle fa-lg {% if is_rtl %}ml-2{% else %}ml-2{% endif %}" aria-hidden="true"></i>
             {{ entity.name|e }}
             <span class="badge badge-light text-primary {% if is_rtl %}ml-2{% else %}ml-2{% endif %}">{{ t(type_label_key) }}</span>
         </h6>
         <div class="text-white">
-            <span class="{% if is_rtl %}ml-3{% else %}ml-3{% endif %}"><i class="fas fa-phone {% if is_rtl %}ml-1{% else %}ml-1{% endif %}"></i> {{ entity.phone|e or '---' }}</span>
+            <span class="{% if is_rtl %}ml-3{% else %}ml-3{% endif %}"><i class="fas fa-phone {% if is_rtl %}ml-1{% else %}ml-1{% endif %}" aria-hidden="true"></i> {{ entity.phone|e or '---' }}</span>
             <span class="font-weight-bold {% if is_rtl %}ml-3{% else %}ml-3{% endif %}">
                 {{ t('balance') }}: {{ format_currency(balance) }}
                 <small>({{ t(balance_label_key) }})</small>
@@ -21,17 +21,17 @@
         <ul class="nav nav-tabs" id="entityReportTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="products-tab" data-bs-toggle="tab" data-bs-target="#products" role="tab" aria-controls="products" aria-selected="true">
-                    <i class="fas fa-box-open text-info"></i> {{ t('products') }}
+                    <i class="fas fa-box-open text-info" aria-hidden="true"></i> {{ t('products') }}
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" role="tab" aria-controls="invoices" aria-selected="false">
-                    <i class="fas fa-file-invoice text-warning"></i> {{ t('invoices') }}
+                    <i class="fas fa-file-invoice text-warning" aria-hidden="true"></i> {{ t('invoices') }}
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" role="tab" aria-controls="payments" aria-selected="false">
-                    <i class="fas fa-money-bill-wave text-success"></i> {{ t('payments_and_receipts') }}
+                    <i class="fas fa-money-bill-wave text-success" aria-hidden="true"></i> {{ t('payments_and_receipts') }}
                 </button>
             </li>
         </ul>
@@ -119,9 +119,9 @@
                                 <td>{{ trans.number|e }}</td>
                                 <td>
                                     {% if trans.type == 'in' %}
-                                    <span class="badge badge-success"><i class="fas fa-arrow-down"></i> {{ t('receipt') }}</span>
+                                    <span class="badge badge-success"><i class="fas fa-arrow-down" aria-hidden="true"></i> {{ t('receipt') }}</span>
                                     {% else %}
-                                    <span class="badge badge-danger"><i class="fas fa-arrow-up"></i> {{ t('payment_out') }}</span>
+                                    <span class="badge badge-danger"><i class="fas fa-arrow-up" aria-hidden="true"></i> {{ t('payment_out') }}</span>
                                     {% endif %}
                                 </td>
                                 <td>{{ trans.date|format_date if trans.date else '-' }}</td>

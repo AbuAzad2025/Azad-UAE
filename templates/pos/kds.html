@@ -28,10 +28,10 @@
     <button class="btn btn-outline-primary filter-btn" data-filter="preparing">{{ _('قيد التحضير') }}</button>
     <button class="btn btn-outline-success filter-btn" data-filter="ready">{{ _('جاهز') }}</button>
   </div>
-  <button id="kdsRefreshBtn" class="btn btn-sm btn-outline-info float-left" aria-label="{{ _('تحديث') }}"><i class="fas fa-sync-alt"></i></button>
+  <button id="kdsRefreshBtn" class="btn btn-sm btn-outline-info float-left" aria-label="{{ _('تحديث') }}"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
 </div>
 <div id="kdsGrid" class="kds-grid">
-  <div class="text-center text-muted py-5 col-12"><i class="fas fa-spinner fa-spin fa-2x"></i><br>{{ _('جاري التحميل...') }}</div>
+  <div class="text-center text-muted py-5 col-12"><i class="fas fa-spinner fa-spin fa-2x" aria-hidden="true"></i><br>{{ _('جاري التحميل...') }}</div>
 </div>
 {% endblock %}
 {% block extra_js %}

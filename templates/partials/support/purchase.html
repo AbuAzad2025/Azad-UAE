@@ -18,7 +18,7 @@
 
             <div class="sp-payment-card sp-section-purchase">
                 <h3 class="sp-section-title">
-                    <i class="fas fa-box-open"></i> {{ t('Purchase_Select_Plan') }}
+                    <i class="fas fa-box-open" aria-hidden="true"></i> {{ t('Purchase_Select_Plan') }}
                 </h3>
 
                 <div class="sp-package-grid">
@@ -30,17 +30,17 @@
                             {% if package.badge_text %}
                             {% if package.badge_color == 'success' %}{% set badge_gradient = '#28a745 0%, #20c997' %}{% elif package.badge_color == 'danger' %}{% set badge_gradient = '#ff6b6b 0%, #ee5a24' %}{% else %}{% set badge_gradient = '#667eea 0%, #764ba2' %}{% endif %}
                             <div class="erp-badge-gradient" style="background: linear-gradient(135deg, {{ badge_gradient }} 100%);">
-                                {% if package.badge_color == 'success' %}<i class="fas fa-star"></i>{% elif package.badge_color == 'primary' %}<i class="fas fa-crown"></i>{% elif package.badge_color == 'danger' %}<i class="fas fa-gem"></i>{% else %}<i class="fas fa-star"></i>{% endif %} {{ package.badge_text }}
+                                {% if package.badge_color == 'success' %}<i class="fas fa-star" aria-hidden="true"></i>{% elif package.badge_color == 'primary' %}<i class="fas fa-crown" aria-hidden="true"></i>{% elif package.badge_color == 'danger' %}<i class="fas fa-gem" aria-hidden="true"></i>{% else %}<i class="fas fa-star" aria-hidden="true"></i>{% endif %} {{ package.badge_text }}
                             </div>
                             {% endif %}
                             <ul class="sp-package-features">{%- for feature in package.features %}
-                                <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
+                                <li><i class="fas fa-check" aria-hidden="true"></i> {{ feature }}</li>{%- endfor %}
                             </ul>
                         </div>
                         {% endfor %}
                     {% else %}
                         <div class="alert alert-warning sp-full-width">
-                            <i class="fas fa-exclamation-triangle"></i> {{ t('No_Packages_Available') }}
+                            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('No_Packages_Available') }}
                         </div>
                     {% endif %}
                 </div>
@@ -48,23 +48,23 @@
 
             <div class="sp-payment-card sp-section-contact">
                 <h4 class="sp-contact-title">
-                    <i class="fas fa-comments"></i> {{ t('Purchase_Direct_Contact') }}
+                    <i class="fas fa-comments" aria-hidden="true"></i> {{ t('Purchase_Direct_Contact') }}
                 </h4>
                 <p class="sp-contact-desc">
                     {{ t('Purchase_Direct_Description') }}
                 </p>
                 <div class="sp-quick-contact-actions">
                     <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="open-whatsapp" data-kind="buy_system">
-                        <i class="fab fa-whatsapp"></i> {{ t('Purchase_Buy_System_WhatsApp') }}
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('Purchase_Buy_System_WhatsApp') }}
                     </button>
                     <button type="button" class="sp-quick-contact-btn sp-btn-dark" data-action="open-whatsapp" data-kind="buy_code">
-                        <i class="fas fa-code"></i> {{ t('Purchase_Buy_Code_WhatsApp') }}
+                        <i class="fas fa-code" aria-hidden="true"></i> {{ t('Purchase_Buy_Code_WhatsApp') }}
                     </button>
                     <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_system">
-                        <i class="fas fa-envelope"></i> {{ t('Purchase_Buy_System_Email') }}
+                        <i class="fas fa-envelope" aria-hidden="true"></i> {{ t('Purchase_Buy_System_Email') }}
                     </button>
                     <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_code">
-                        <i class="fas fa-file-code"></i> {{ t('Purchase_Buy_Code_Email') }}
+                        <i class="fas fa-file-code" aria-hidden="true"></i> {{ t('Purchase_Buy_Code_Email') }}
                     </button>
                 </div>
             </div>
@@ -72,45 +72,45 @@
             <div id="purchase-payment-methods" class="sp-hidden">
                 <div class="sp-payment-card sp-payment-header">
                     <h3 class="sp-payment-header-title">
-                        <i class="fas fa-credit-card"></i> {{ t('Purchase_Payment_Header') }}
+                        <i class="fas fa-credit-card" aria-hidden="true"></i> {{ t('Purchase_Payment_Header') }}
                     </h3>
                     <p class="sp-payment-header-sub">{{ t('Purchase_Payment_Subheader') }}</p>
                 </div>
                 <div class="sp-payment-methods">
 
                 <div class="sp-payment-card" data-action="select-method" data-method="crypto">
-                    <i class="fab fa-bitcoin sp-payment-icon"></i>
+                    <i class="fab fa-bitcoin sp-payment-icon" aria-hidden="true"></i>
                     <div class="sp-payment-title">{{ t('Payment_Crypto') }}</div>
                     <p class="sp-payment-desc">
                         Bitcoin, Ethereum, USDT, BNB
-                        <br><small class="text-success"><i class="fas fa-shield-alt"></i> {{ t('Desc_Crypto') }}</small>
+                        <br><small class="text-success"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ t('Desc_Crypto') }}</small>
                     </p>
                 </div>
 
                 <div class="sp-payment-card" data-action="select-method" data-method="card">
-                    <i class="fas fa-credit-card sp-payment-icon"></i>
+                    <i class="fas fa-credit-card sp-payment-icon" aria-hidden="true"></i>
                     <div class="sp-payment-title">{{ t('Payment_Card') }}</div>
                     <p class="sp-payment-desc">
                         Visa, Mastercard, Amex
-                        <br><small class="text-info"><i class="fas fa-lock"></i> {{ t('Desc_Card') }}</small>
+                        <br><small class="text-info"><i class="fas fa-lock" aria-hidden="true"></i> {{ t('Desc_Card') }}</small>
                     </p>
                 </div>
 
                 <div class="sp-payment-card" data-action="select-method" data-method="paypal">
-                    <i class="fab fa-paypal sp-payment-icon"></i>
+                    <i class="fab fa-paypal sp-payment-icon" aria-hidden="true"></i>
                     <div class="sp-payment-title">PayPal</div>
                     <p class="sp-payment-desc">
                         {{ t('Desc_PayPal') }}
-                        <br><small class="text-primary"><i class="fas fa-check-circle"></i> {{ t('Desc_PayPal') }}</small>
+                        <br><small class="text-primary"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('Desc_PayPal') }}</small>
                     </p>
                 </div>
 
                 <div class="sp-payment-card" data-action="select-method" data-method="bank">
-                    <i class="fas fa-university sp-payment-icon"></i>
+                    <i class="fas fa-university sp-payment-icon" aria-hidden="true"></i>
                     <div class="sp-payment-title">{{ t('Payment_Bank_Transfer') }}</div>
                     <p class="sp-payment-desc">
                         {{ t('Desc_Bank') }}
-                        <br><small class="text-secondary"><i class="fas fa-building"></i> {{ t('Desc_Bank') }}</small>
+                        <br><small class="text-secondary"><i class="fas fa-building" aria-hidden="true"></i> {{ t('Desc_Bank') }}</small>
                     </p>
                 </div>
                 </div>

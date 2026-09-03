@@ -9,12 +9,12 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-archive"></i> {{ t('Cheques') }} {{ t('Archived') }}
+            <i class="fas fa-archive" aria-hidden="true"></i> {{ t('Cheques') }} {{ t('Archived') }}
           </h3>
           <div class="card-tools">
             {% if current_user.has_permission('manage_payments') %}
             <a href="{{ url_for('cheques.index') }}" class="btn btn-secondary">
-              <i class="fas fa-arrow-left"></i> {{ t('Back') }}
+              <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ t('Back') }}
             </a>
             {% endif %}
           </div>
@@ -55,7 +55,7 @@
                   <form class="needs-validation d-inline" method="post" action="{{ url_for('cheques.restore', id=cheque.id) }}" novalidate>
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="{{ t('Restore') }} هذا {{ t('Cheque_2') }}">
-                      <i class="fas fa-undo"></i> {{ t('Restore') }}
+                      <i class="fas fa-undo" aria-hidden="true"></i> {{ t('Restore') }}
                     </button>
                   </form>
                 </td>

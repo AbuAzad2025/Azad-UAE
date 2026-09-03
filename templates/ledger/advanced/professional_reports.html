@@ -153,19 +153,19 @@
   <div class="report-dashboard">
     <div class="row">
       <div class="col-md-8">
-        <h2><i class="fas fa-chart-line mr-2"></i>{{ t('Reports') }} {{ t('Finance') }} {{ t('الاحترافية') }}</h2>
+        <h2><i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('Reports') }} {{ t('Finance') }} {{ t('الاحترافية') }}</h2>
         <p>{{ t('Reports_3') }} {{ t('متقدمة') }} مع {{ t('رسوم') }} {{ t('بيانية') }} {{ t('تفاعلية') }} {{ t('وتحليلات') }} {{ t('شاملة') }}</p>
       </div>
       <div class="col-md-4 text-right">
         <div class="export-buttons">
           <button class="btn btn-light export-btn" data-action="print-report">
-            <i class="fas fa-file-pdf mr-1"></i>PDF
+            <i class="fas fa-file-pdf mr-1" aria-hidden="true"></i>PDF
           </button>
           <button class="btn btn-light export-btn" data-action="export-excel">
-            <i class="fas fa-file-excel mr-1"></i>Excel
+            <i class="fas fa-file-excel mr-1" aria-hidden="true"></i>Excel
           </button>
           <button class="btn btn-light export-btn" data-action="window-print">
-            <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+            <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print') }}
           </button>
         </div>
       </div>
@@ -234,7 +234,7 @@
         </select>
       </div>
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-filter mr-1"></i>{{ t('Apply') }} {{ t('Filter_3') }}
+        <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('Apply') }} {{ t('Filter_3') }}
       </button>
     </form>
   </div>
@@ -244,7 +244,7 @@
     
     <div class="col-md-6">
       <div class="report-card">
-        <h4><i class="fas fa-chart-bar mr-2"></i>{{ t('Revenue') }} {{ t('and Expenses') }} {{ t('Monthly') }}</h4>
+        <h4><i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>{{ t('Revenue') }} {{ t('and Expenses') }} {{ t('Monthly') }}</h4>
         <div class="chart-container">
           <canvas id="revenueExpenseChart"></canvas>
         </div>
@@ -264,13 +264,13 @@
     
     <div class="col-md-6">
       <div class="report-card">
-        <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Expenses') }} {{ t('حسب') }} {{ t('الفئة') }}</h4>
+        <h4><i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('توزيع') }} {{ t('Expenses') }} {{ t('حسب') }} {{ t('الفئة') }}</h4>
         <div class="chart-container">
           {% if expense_chart_data %}
           <canvas id="expenseDistributionChart"></canvas>
           {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted">
-            <i class="fas fa-chart-pie fa-3x mb-3"></i>
+            <i class="fas fa-chart-pie fa-3x mb-3" aria-hidden="true"></i>
             <p>{{ t('No_items_found') }} {{ t('Data_2') }}</p>
           </div>
           {% endif %}
@@ -283,7 +283,7 @@
     
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-chart-line mr-2"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('Monthly') }}</h4>
+        <h4><i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('اتجاه') }} {{ t('Profits') }} {{ t('Monthly') }}</h4>
         <div class="chart-container">
           <canvas id="profitTrendChart"></canvas>
         </div>
@@ -295,7 +295,7 @@
   <div class="row">
     <div class="col-md-12">
       <div class="report-card">
-        <h4><i class="fas fa-table mr-2"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('and Expenses') }}</h4>
+        <h4><i class="fas fa-table mr-2" aria-hidden="true"></i>{{ t('Details') }} {{ t('Revenue') }} {{ t('and Expenses') }}</h4>
         <div class="table-responsive">
           <table class="financial-table table table-hover">
             <thead>
@@ -318,9 +318,9 @@
                 <td>{{ "{:.1f}".format(month_data.margin) }}%</td>
                 <td>
                   {% if month_data.change > 0 %}
-                    <span class="trend-up"><i class="fas fa-arrow-up"></i> {{ "{:.1f}".format(month_data.change) }}%</span>
+                    <span class="trend-up"><i class="fas fa-arrow-up" aria-hidden="true"></i> {{ "{:.1f}".format(month_data.change) }}%</span>
                   {% else %}
-                    <span class="trend-down"><i class="fas fa-arrow-down"></i> {{ "{:.1f}".format(month_data.change|abs) }}%</span>
+                    <span class="trend-down"><i class="fas fa-arrow-down" aria-hidden="true"></i> {{ "{:.1f}".format(month_data.change|abs) }}%</span>
                   {% endif %}
                 </td>
               </tr>
@@ -346,7 +346,7 @@
   <div class="row">
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-analytics mr-2"></i>{{ t('Rate_3') }} {{ t('النمو') }} {{ t('Annual') }}</h5>
+        <h5><i class="fas fa-analytics mr-2" aria-hidden="true"></i>{{ t('Rate_3') }} {{ t('النمو') }} {{ t('Annual') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="growthRateChart"></canvas>
         </div>
@@ -366,7 +366,7 @@
     
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-balance-scale mr-2"></i>{{ t('Rate') }} {{ t('السيولة') }}</h5>
+        <h5><i class="fas fa-balance-scale mr-2" aria-hidden="true"></i>{{ t('Rate') }} {{ t('السيولة') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="liquidityChart"></canvas>
         </div>
@@ -379,7 +379,7 @@
     
     <div class="col-md-4">
       <div class="report-card">
-        <h5><i class="fas fa-percentage mr-2"></i>{{ t('Net') }} {{ t('Margin') }} {{ t('Profit') }}</h5>
+        <h5><i class="fas fa-percentage mr-2" aria-hidden="true"></i>{{ t('Net') }} {{ t('Margin') }} {{ t('Profit') }}</h5>
         <div class="chart-container ic-8">
           <canvas id="netMarginChart"></canvas>
         </div>

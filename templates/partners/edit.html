@@ -3,7 +3,7 @@
 {% block title %}{{ _('تعديل:') }} {{ partner.name }}{% endblock %}
 
 {% block page_title %}
-<h1 class="text-gradient mb-0"><i class="fas fa-user-edit mr-2"></i>{{ _('تعديل:') }} {{ partner.name }}</h1>
+<h1 class="text-gradient mb-0"><i class="fas fa-user-edit mr-2" aria-hidden="true"></i>{{ _('تعديل:') }} {{ partner.name }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -12,7 +12,7 @@
     <form class="needs-validation card" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       <div class="card-header bg-warning text-dark">
-        <i class="fas fa-edit mr-2"></i>{{ _('بيانات الشريك') }}
+        <i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ _('بيانات الشريك') }}
       </div>
       <div class="card-body">
         <div class="row g-3">
@@ -123,7 +123,7 @@
         {% if current_user.has_permission('view_reports') %}
         <a href="{{ url_for('partners.view', id=partner.id) }}" class="btn btn-secondary">{{ _('إلغاء') }}</a>
         {% endif %}
-        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1"></i> {{ _('حفظ التغييرات') }}</button>
+        <button type="submit" class="btn btn-warning"><i class="fas fa-save mr-1" aria-hidden="true"></i> {{ _('حفظ التغييرات') }}</button>
       </div>
     </form>
   </div>

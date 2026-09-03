@@ -12,7 +12,7 @@
 
       <div class="col-sm-6">
 
-        <h1 class="m-0"><i class="fas fa-user"></i> {{ t('User_Profile') }}: {{ user.username }}</h1>
+        <h1 class="m-0"><i class="fas fa-user" aria-hidden="true"></i> {{ t('User_Profile') }}: {{ user.username }}</h1>
 
       </div>
 
@@ -54,19 +54,19 @@
 
                 {% if user.is_owner %}
 
-                  <i class="fas fa-crown text-white ic-2"></i>
+                  <i class="fas fa-crown text-white ic-2" aria-hidden="true"></i>
 
                 {% elif user.role and user.role.name == 'Super Admin' %}
 
-                  <i class="fas fa-user-shield text-white ic-2"></i>
+                  <i class="fas fa-user-shield text-white ic-2" aria-hidden="true"></i>
 
                 {% elif user.role and user.role.name == 'Manager' %}
 
-                  <i class="fas fa-user-tie text-white ic-2"></i>
+                  <i class="fas fa-user-tie text-white ic-2" aria-hidden="true"></i>
 
                 {% else %}
 
-                  <i class="fas fa-user text-white ic-2"></i>
+                  <i class="fas fa-user text-white ic-2" aria-hidden="true"></i>
 
                 {% endif %}
 
@@ -100,7 +100,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-user mr-2"></i>{{ t('Username') }}</b>
+                <b><i class="fas fa-user mr-2" aria-hidden="true"></i>{{ t('Username') }}</b>
 
                 <span class="float-left">{{ user.username }}</span>
 
@@ -108,7 +108,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-envelope mr-2"></i>{{ t('Email') }}</b>
+                <b><i class="fas fa-envelope mr-2" aria-hidden="true"></i>{{ t('Email') }}</b>
 
                 <span class="float-left">{{ user.email or '-' }}</span>
 
@@ -116,7 +116,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-check-circle mr-2"></i>{{ t('Status') }}</b>
+                <b><i class="fas fa-check-circle mr-2" aria-hidden="true"></i>{{ t('Status') }}</b>
 
                 <span class="float-left">
 
@@ -136,7 +136,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-calendar-plus mr-2"></i>{{ t('Registration_Date') }}</b>
+                <b><i class="fas fa-calendar-plus mr-2" aria-hidden="true"></i>{{ t('Registration_Date') }}</b>
 
                 <span class="float-left">{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '-' }}</span>
 
@@ -144,7 +144,7 @@
 
               <li class="list-group-item">
 
-                <b><i class="fas fa-sign-in-alt mr-2"></i>{{ t('Last_Login') }}</b>
+                <b><i class="fas fa-sign-in-alt mr-2" aria-hidden="true"></i>{{ t('Last_Login') }}</b>
 
                 <span class="float-left">
 
@@ -166,7 +166,7 @@
 
             <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary btn-block">
 
-              <i class="fas fa-edit"></i> <b>{{ t('Edit_User') }}</b>
+              <i class="fas fa-edit" aria-hidden="true"></i> <b>{{ t('Edit_User') }}</b>
 
             </a>
 
@@ -178,7 +178,7 @@
 
               <button type="submit" class="btn btn-danger btn-block mt-2">
 
-                <i class="fas fa-ban"></i> <b>{{ t('Disable_User') }}</b>
+                <i class="fas fa-ban" aria-hidden="true"></i> <b>{{ t('Disable_User') }}</b>
 
               </button>
 
@@ -200,7 +200,7 @@
 
             <div class="info-box bg-info">
 
-              <span class="info-box-icon"><i class="fas fa-shopping-cart"></i></span>
+              <span class="info-box-icon"><i class="fas fa-shopping-cart" aria-hidden="true"></i></span>
 
               <div class="info-box-content">
 
@@ -218,7 +218,7 @@
 
             <div class="info-box bg-success">
 
-              <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
+              <span class="info-box-icon"><i class="fas fa-dollar-sign" aria-hidden="true"></i></span>
 
               <div class="info-box-content">
 
@@ -236,7 +236,7 @@
 
             <div class="info-box bg-warning">
 
-              <span class="info-box-icon"><i class="fas fa-receipt"></i></span>
+              <span class="info-box-icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
 
               <div class="info-box-content">
 
@@ -254,7 +254,7 @@
 
             <div class="info-box bg-danger">
 
-              <span class="info-box-icon"><i class="fas fa-clipboard-list"></i></span>
+              <span class="info-box-icon"><i class="fas fa-clipboard-list" aria-hidden="true"></i></span>
 
               <div class="info-box-content">
 
@@ -276,7 +276,7 @@
 
             <h3 class="card-title text-white">
 
-              <i class="fas fa-shopping-cart mr-2"></i>{{ t('Recent_Sales') }} (5)
+              <i class="fas fa-shopping-cart mr-2" aria-hidden="true"></i>{{ t('Recent_Sales') }} (5)
 
             </h3>
 
@@ -362,7 +362,7 @@
 
             <h3 class="card-title ic-3">
 
-              <i class="fas fa-clipboard-list mr-2"></i>{{ t('Recent_Activities') }} (10)
+              <i class="fas fa-clipboard-list mr-2" aria-hidden="true"></i>{{ t('Recent_Activities') }} (10)
 
             </h3>
 

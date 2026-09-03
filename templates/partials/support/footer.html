@@ -2,17 +2,17 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-shield-alt sp-footer-column-icon"></i>
+                    <i class="fas fa-shield-alt sp-footer-column-icon" aria-hidden="true"></i>
                     <h5 class="sp-footer-column-title">{{ t('Footer_Security_Guaranteed') }}</h5>
                     <p class="sp-footer-column-text">{{ t('Footer_Security_Desc') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-headset sp-footer-column-icon"></i>
+                    <i class="fas fa-headset sp-footer-column-icon" aria-hidden="true"></i>
                     <h5 class="sp-footer-column-title">{{ t('Footer_Support_24_7') }}</h5>
                     <p class="sp-footer-column-text">{{ t('Footer_Support_Desc') }}</p>
                 </div>
                 <div class="col-md-4 text-center mb-4">
-                    <i class="fas fa-rocket sp-footer-column-icon"></i>
+                    <i class="fas fa-rocket sp-footer-column-icon" aria-hidden="true"></i>
                     <h5 class="sp-footer-column-title">{{ t('Footer_Continuous_Updates') }}</h5>
                     <p class="sp-footer-column-text">{{ t('Footer_Updates_Desc') }}</p>
                 </div>
@@ -22,19 +22,19 @@
 
             <div class="text-center">
                 <div class="sp-footer-icon-wrap">
-                    <a href="https://wa.me/{{ developer_whatsapp_link }}" class="sp-footer-icon sp-footer-icon-wa">
-                        <i class="fab fa-whatsapp sp-btn-icon"></i>
+                    <a href="https://wa.me/{{ developer_whatsapp_link }}" class="sp-footer-icon sp-footer-icon-wa" title="{{ t('WhatsApp') }}">
+                        <i class="fab fa-whatsapp sp-btn-icon" aria-hidden="true"></i>
                     </a>
                     <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}" class="sp-footer-icon sp-footer-icon-email" title="Envelope">
-                        <i class="fas fa-envelope"></i>
+                        <i class="fas fa-envelope" aria-hidden="true"></i>
                     </a>
                     <a href="{{ developer_website or config.DEVELOPER_WEBSITE or 'https://azadsystems.com' }}" target="_blank" rel="noopener noreferrer" class="sp-footer-icon sp-footer-icon-web" title="Globe">
-                        <i class="fas fa-globe"></i>
+                        <i class="fas fa-globe" aria-hidden="true"></i>
                     </a>
                 </div>
 
                 <p class="sp-footer-text">
-                    <i class="fas fa-heart sp-footer-heart"></i>
+                    <i class="fas fa-heart sp-footer-heart" aria-hidden="true"></i>
                     {{ t('Footer_Made_With_Love') }} {{ developer_name_ar or developer_name or 'Azad Systems' }}
                 </p>
 

@@ -9,11 +9,11 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-file-invoice-dollar"></i> {{ t('الجمارك') }} {{ t('والضرائب') }}
+            <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i> {{ t('الجمارك') }} {{ t('والضرائب') }}
           </h3>
           <div class="card-tools">
             <a href="{{ url_for('advanced_ledger.add_customs_tax') }}" class="btn btn-success">
-              <i class="fas fa-plus"></i> {{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}
+              <i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add') }} {{ t('Tax_2') }} {{ t('جمركية') }}
             </a>
           </div>
         </div>
@@ -47,13 +47,13 @@
                 </td>
                 <td>
                   <a href="{{ url_for('advanced_ledger.add_customs_tax') }}?id={{ tax.id }}" class="btn btn-warning" title="{{ t('Edit') }}">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" aria-hidden="true"></i>
                   </a>
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="text-center py-4"><i class="fas fa-file-invoice-dollar fa-2x text-muted mb-2"></i><br>{{ t('No_items_found') }} {{ t('ضرائب') }}</td>
+                <td colspan="7" class="text-center py-4"><i class="fas fa-file-invoice-dollar fa-2x text-muted mb-2" aria-hidden="true"></i><br>{{ t('No_items_found') }} {{ t('ضرائب') }}</td>
               </tr>
               {% endfor %}
             </tbody>

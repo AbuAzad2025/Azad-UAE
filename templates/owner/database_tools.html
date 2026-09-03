@@ -5,18 +5,18 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ t('Advanced_Database_Tools') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-database mr-2" aria-hidden="true"></i>{{ t('Advanced_Database_Tools') }}</h1>
   </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
+        <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Owner_Dashboard') }}</a>
     {% else %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
+        <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Dashboard') }}</a>
     {% endif %}
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Home') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -26,16 +26,16 @@
   <div class="col-md-12">
     <div class="card card-danger">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle"></i> {{ t('Danger_Zone_Owner_Only') }}</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('Danger_Zone_Owner_Only') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
-          <i class="fas fa-skull-crossbones"></i>
+          <i class="fas fa-skull-crossbones" aria-hidden="true"></i>
           <strong>{{ t('Warning') }}</strong> {{ t('Tools_Are_Very_Powerful') }}
         </div>
         {% if restricted_tables %}
         <div class="alert alert-info">
-          <i class="fas fa-shield-alt"></i>
+          <i class="fas fa-shield-alt" aria-hidden="true"></i>
           <strong>{{ t('Protection') }}</strong> {{ restricted_tables }} {{ t('Sensitive_Tables_Hidden') }}
         </div>
         {% endif %}
@@ -48,7 +48,7 @@
                 <p>{{ t('Table_Count') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-table" aria-label="{{ t('Tables') }}"></i>
+                <i class="fas fa-table" aria-label="{{ t('Tables') }}" aria-hidden="true"></i>
               </div>
             </div>
           </div>
@@ -59,7 +59,7 @@
                 <p>{{ t('Total_Records') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-database" aria-label="{{ t('Total_Records') }}"></i>
+                <i class="fas fa-database" aria-label="{{ t('Total_Records') }}" aria-hidden="true"></i>
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@
                 <p>{{ t('Database_Type') }}</p>
               </div>
               <div class="icon">
-                <i class="fas fa-hdd" aria-label="{{ t('Database_Type') }}"></i>
+                <i class="fas fa-hdd" aria-label="{{ t('Database_Type') }}" aria-hidden="true"></i>
               </div>
             </div>
           </div>
@@ -141,25 +141,25 @@
                   <a href="{{ url_for('owner.browse_table', table_name=table.name) }}" 
                      class="btn btn-browse" 
                      title="{{ t('View_Data_Only_Safe') }}">
-                    <i class="fas fa-eye"></i> {{ t('Browse') }}
+                    <i class="fas fa-eye" aria-hidden="true"></i> {{ t('Browse') }}
                   </a>
                   {% if table.name not in ['alembic_version'] %}
                   <a href="{{ url_for('owner.edit_table_data', table_name=table.name) }}" 
                      class="btn btn-edit"
                      title="{{ t('Visual_Edit_Medium_Risk') }}">
-                    <i class="fas fa-edit"></i> {{ t('Visual_Edit') }}
+                    <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Visual_Edit') }}
                   </a>
                   <a href="{{ url_for('owner.sql_console') }}" 
                      class="btn btn-sql"
                      title="{{ t('Advanced_SQL_Dangerous') }}">
-                    <i class="fas fa-code"></i> SQL
+                    <i class="fas fa-code" aria-hidden="true"></i> SQL
                   </a>
                   {% endif %}
                   {% if table.name not in ['users', 'alembic_version', 'system_settings'] %}
                   <button class="btn btn-danger"
                           data-action="truncate-table" data-table-name="{{ table.name }}"
                           title="{{ t('Delete_All_Data_Very_Dangerous') }}">
-                    <i class="fas fa-trash"></i> {{ t('Truncate_All') }}
+                    <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Truncate_All') }}
                   </button>
                   {% endif %}
                 </td>
@@ -174,7 +174,7 @@
         <div class="row mt-4">
           <div class="col-md-4">
             <a href="{{ url_for('owner.sql_console') }}" class="btn btn-primary btn-block btn-lg">
-              <i class="fas fa-terminal"></i> SQL Console
+              <i class="fas fa-terminal" aria-hidden="true"></i> SQL Console
             </a>
           </div>
           <div class="col-md-4">
@@ -182,13 +182,13 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <input type="hidden" name="format" value="json" aria-label="format">
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-file-export"></i> {{ t('Export_JSON') }}
+                <i class="fas fa-file-export" aria-hidden="true"></i> {{ t('Export_JSON') }}
               </button>
             </form>
           </div>
           <div class="col-md-4">
             <a href="{{ url_for('owner.convert_database') }}" class="btn btn-warning btn-block btn-lg">
-              <i class="fas fa-exchange-alt"></i> {{ t('Convert_Database') }}
+              <i class="fas fa-exchange-alt" aria-hidden="true"></i> {{ t('Convert_Database') }}
             </a>
           </div>
         </div>
@@ -201,7 +201,7 @@
                   data-action="confirm-maintenance" data-key="FIX_COST_CENTERS">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <button type="submit" class="btn btn-warning btn-block btn-lg" id="btn-fix-cost-centers">
-                <i class="fas fa-wrench mr-2"></i> {{ t('Fix_Cost_Center_Indexes') }}
+                <i class="fas fa-wrench mr-2" aria-hidden="true"></i> {{ t('Fix_Cost_Center_Indexes') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 <strong>{{ t('Irreversible') }}</strong> {{ t('Desc_Removes_Old_Index') }} <code>ix_cost_centers_code</code>
@@ -217,11 +217,11 @@
               <div class="custom-control custom-checkbox mb-2">
                 <input type="checkbox" class="custom-control-input" id="cleanup_extra" name="cleanup_extra">
                 <label class="custom-control-label text-danger small" for="cleanup_extra">
-                  <i class="fas fa-exclamation-triangle"></i> {{ t('Disable_Extra_Accounts') }}
+                  <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('Disable_Extra_Accounts') }}
                 </label>
               </div>
               <button type="submit" class="btn btn-info btn-block btn-lg" id="btn-rebuild-gl-tree">
-                <i class="fas fa-sync-alt mr-2"></i> {{ t('Rebuild_GL_Tree') }}
+                <i class="fas fa-sync-alt mr-2" aria-hidden="true"></i> {{ t('Rebuild_GL_Tree') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 {{ t('Desc_Rebuilds_GL_Tree') }} <code>GLTreeBuilder</code>.
@@ -245,7 +245,7 @@
                 </label>
               </div>
               <button type="submit" class="btn btn-secondary btn-block btn-lg">
-                <i class="fas fa-user-shield mr-2"></i> {{ t('Default_Tenant_Maintenance') }}
+                <i class="fas fa-user-shield mr-2" aria-hidden="true"></i> {{ t('Default_Tenant_Maintenance') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 {{ t('Desc_Default_Tenant_Maintenance') }}
@@ -264,7 +264,7 @@
                 </label>
               </div>
               <button type="submit" class="btn btn-danger btn-block btn-lg">
-                <i class="fas fa-trash-alt mr-2"></i> {{ t('Cleanup_Test_Databases') }}
+                <i class="fas fa-trash-alt mr-2" aria-hidden="true"></i> {{ t('Cleanup_Test_Databases') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 {{ t('Desc_Cleanup_Test_DBs') }}
@@ -289,7 +289,7 @@
                 </label>
               </div>
               <button type="submit" class="btn btn-dark btn-block btn-lg">
-                <i class="fas fa-database mr-2"></i> {{ t('Fix_Default_Tenant_Only') }}
+                <i class="fas fa-database mr-2" aria-hidden="true"></i> {{ t('Fix_Default_Tenant_Only') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 {{ t('Desc_Fix_Default_Tenant') }}
@@ -313,7 +313,7 @@
                 </label>
               </div>
               <button type="submit" class="btn btn-success btn-block btn-lg">
-                <i class="fas fa-sync-alt mr-2"></i> {{ t('Regenerate_Default_Tenant_Backup') }}
+                <i class="fas fa-sync-alt mr-2" aria-hidden="true"></i> {{ t('Regenerate_Default_Tenant_Backup') }}
               </button>
               <small class="form-text text-muted d-block mt-2 text-center">
                 {{ t('Desc_Regenerate_Default_Backup') }}
@@ -327,9 +327,9 @@
           <div class="col-12">
             <div class="card">
               <div class="card-header d-flex justify-content-between">
-                <h5 class="mb-0"><i class="fas fa-history mr-2"></i>{{ t('Recent_Maintenance_Log') }}</h5>
+                <h5 class="mb-0"><i class="fas fa-history mr-2" aria-hidden="true"></i>{{ t('Recent_Maintenance_Log') }}</h5>
                 <button class="btn btn-sm btn-outline-secondary" data-action="refresh-audit-log">
-                  <i class="fas fa-sync-alt"></i> {{ t('Refresh') }}
+                  <i class="fas fa-sync-alt" aria-hidden="true"></i> {{ t('Refresh') }}
                 </button>
               </div>
               <div class="card-body p-0">
@@ -447,7 +447,7 @@ function confirmMaintenance(form, requiredWord) {
   const btn = form.querySelector('button[type="submit"]');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> {{ t('Processing') }}...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i> {{ t('Processing') }}...';
   }
 
   document.getElementById('maintenance-audit-log').style.display = 'block';

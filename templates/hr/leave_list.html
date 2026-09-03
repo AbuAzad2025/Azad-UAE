@@ -2,8 +2,8 @@
 {% block title %}{{ t('طلبات') }} {{ t('الإجازات') }}{% endblock %}
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0"><i class="fas fa-calendar-alt mr-2"></i>{{ t('طلبات الإجازات') }}</h1>
-  <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success"><i class="fas fa-plus mr-2"></i>{{ t('طلب إجازة') }}</a>
+  <h1 class="mb-0"><i class="fas fa-calendar-alt mr-2" aria-hidden="true"></i>{{ t('طلبات الإجازات') }}</h1>
+  <a href="{{ url_for('hr.request_leave') }}" class="btn btn-success"><i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('طلب إجازة') }}</a>
 </div>
 {% endblock %}
 {% block content %}
@@ -25,7 +25,7 @@
           <option value="{{ u.id }}" {% if request.args.user_id|string == u.id|string %}selected{% endif %}>{{ u.name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-sm btn-primary" title="{{ t('Search') }}"><i class="fas fa-search" aria-hidden="true"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="leavesTable">
@@ -46,11 +46,11 @@
                 {% if current_user.has_permission('hr.manage') %}
                 <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-sm btn-success" aria-label="{{ t('Approve') }} {{ t('Leave') }}"><i class="fas fa-check"></i></button>
+                  <button type="submit" class="btn btn-sm btn-success" aria-label="{{ t('Approve') }} {{ t('Leave') }}"><i class="fas fa-check" aria-hidden="true"></i></button>
                 </form>
                 <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}" style="display:inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="btn btn-sm btn-danger" aria-label="{{ t('Refuse') }} {{ t('Leave') }}"><i class="fas fa-times"></i></button>
+                  <button type="submit" class="btn btn-sm btn-danger" aria-label="{{ t('Refuse') }} {{ t('Leave') }}"><i class="fas fa-times" aria-hidden="true"></i></button>
                 </form>
                 {% endif %}
                 {% endif %}

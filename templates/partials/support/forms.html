@@ -1,7 +1,7 @@
 
         <div id="crypto-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-crypto">
-                <i class="fab fa-bitcoin sp-section-icon-large"></i>
+                <i class="fab fa-bitcoin sp-section-icon-large" aria-hidden="true"></i>
                 <h3 class="sp-payment-header-title">
                     {{ t('Crypto_Payment_Header') }}
                 </h3>
@@ -9,13 +9,13 @@
             </div>
 
             <div class="alert alert-success sp-alert-border-success">
-                <i class="fas fa-shield-alt mr-2"></i>
+                <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>
                 <strong>{{ t('Crypto_Security_Alert') }}</strong> ⚡
             </div>
 
             <div class="form-group">
                 <label for="customAmount" class="sp-form-label">
-                    <i class="fas fa-coins mr-2 sp-text-warning"></i>{{ t('Amount_Label') }}
+                    <i class="fas fa-coins mr-2 sp-text-warning" aria-hidden="true"></i>{{ t('Amount_Label') }}
                 </label>
                 <div class="sp-amount-options">
                     <button class="sp-amount-btn" data-action="select-amount" data-amount="15">
@@ -48,7 +48,7 @@
 
             <div class="form-group">
                 <label class="sp-form-label">
-                    <i class="fab fa-bitcoin mr-2 sp-crypto-color"></i>{{ t('Crypto_Type_Label') }}
+                    <i class="fab fa-bitcoin mr-2 sp-crypto-color" aria-hidden="true"></i>{{ t('Crypto_Type_Label') }}
                 </label>
                 <select class="form-control sp-select-crypto" id="cryptoType" aria-label="cryptoType">
                     <option value="btc">🟠 Bitcoin (BTC) - {{ t('Crypto_BTC_Desc') }}</option>
@@ -60,28 +60,28 @@
             </div>
 
             <button class="btn btn-donate btn-block sp-btn-payment" data-action="generate-crypto-payment">
-                <i class="fas fa-wallet mr-2"></i>
+                <i class="fas fa-wallet mr-2" aria-hidden="true"></i>
                 <span>{{ t('Generate_Payment_Address') }}</span>
-                <i class="fas fa-arrow-left mr-2"></i>
+                <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>
             </button>
 
             <div class="sp-crypto-info sp-hidden" id="cryptoPaymentInfo">
                 <h4 class="text-center mb-4">
-                    <i class="fas fa-qrcode mr-2"></i>
+                    <i class="fas fa-qrcode mr-2" aria-hidden="true"></i>
                     {{ t('Crypto_Payment_Info') }}
                 </h4>
 
                 <div class="sp-features-list">
                     <div class="sp-feature-item">
-                        <i class="fas fa-user-secret"></i>
+                        <i class="fas fa-user-secret" aria-hidden="true"></i>
                         <strong>{{ t('Crypto_Info_Privacy') }}</strong>
                     </div>
                     <div class="sp-feature-item">
-                        <i class="fas fa-bolt"></i>
+                        <i class="fas fa-bolt" aria-hidden="true"></i>
                         <strong>{{ t('Crypto_Info_Instant') }}</strong>
                     </div>
                     <div class="sp-feature-item">
-                        <i class="fas fa-shield-alt"></i>
+                        <i class="fas fa-shield-alt" aria-hidden="true"></i>
                         <strong>{{ t('Crypto_Info_Secure') }}</strong>
                     </div>
                 </div>
@@ -95,28 +95,28 @@
                 <div class="sp-wallet-address">
                     <span id="walletAddress">bc1q...</span>
                     <button class="sp-copy-btn" data-action="copy-address">
-                        <i class="fas fa-copy"></i> {{ t('Copy_Button') }}
+                        <i class="fas fa-copy" aria-hidden="true"></i> {{ t('Copy_Button') }}
                     </button>
                 </div>
 
                 <p class="text-center mt-3 mb-0">
                     <small>
-                        <i class="fas fa-info-circle"></i>
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
                         {{ t('Crypto_Send_Instruction') }}
                     </small>
                 </p>
             </div>
 
             <div class="text-center mt-4">
-                <span class="sp-security-badge"><i class="fas fa-lock mr-1"></i>{{ t('SSL_Encrypted') }}</span>
-                <span class="sp-security-badge"><i class="fas fa-shield-alt mr-1"></i>{{ t('Anonymous') }}</span>
-                <span class="sp-security-badge"><i class="fas fa-bolt mr-1"></i>{{ t('Instant') }}</span>
+                <span class="sp-security-badge"><i class="fas fa-lock mr-1" aria-hidden="true"></i>{{ t('SSL_Encrypted') }}</span>
+                <span class="sp-security-badge"><i class="fas fa-shield-alt mr-1" aria-hidden="true"></i>{{ t('Anonymous') }}</span>
+                <span class="sp-security-badge"><i class="fas fa-bolt mr-1" aria-hidden="true"></i>{{ t('Instant') }}</span>
             </div>
         </div>
 
         <div id="card-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-card">
-                <i class="fas fa-credit-card sp-section-icon-large"></i>
+                <i class="fas fa-credit-card sp-section-icon-large" aria-hidden="true"></i>
                 <h3 class="sp-payment-header-title">
                     {{ t('Card_Payment_Header') }}
                 </h3>
@@ -124,21 +124,21 @@
             </div>
 
             <div class="alert alert-info sp-alert-border-info">
-                <i class="fas fa-lock mr-2"></i>
+                <i class="fas fa-lock mr-2" aria-hidden="true"></i>
                 <strong>{{ t('Card_Security_Alert') }}</strong> 🔒
             </div>
 
             <div class="text-center py-4">
                 <p class="mb-3" style="font-size:1.2rem;color:#666;">
-                    <i class="fas fa-shield-alt sp-text-primary"></i>
+                    <i class="fas fa-shield-alt sp-text-primary" aria-hidden="true"></i>
                     {{ t('Card_Payment_Body') }}
                 </p>
                 <div class="sp-quick-contact-actions" style="justify-content:center;">
                     <button type="button" class="sp-quick-contact-btn sp-btn-whatsapp" data-action="quick-whatsapp">
-                        <i class="fab fa-whatsapp"></i> {{ t('Card_Contact_WhatsApp') }}
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('Card_Contact_WhatsApp') }}
                     </button>
                     <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="quick-support-email">
-                        <i class="fas fa-envelope"></i> {{ t('Card_Contact_Email') }}
+                        <i class="fas fa-envelope" aria-hidden="true"></i> {{ t('Card_Contact_Email') }}
                     </button>
                 </div>
             </div>
@@ -146,7 +146,7 @@
 
         <div id="paypal-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-paypal">
-                <i class="fab fa-paypal sp-section-icon-large"></i>
+                <i class="fab fa-paypal sp-section-icon-large" aria-hidden="true"></i>
                 <h3 class="sp-payment-header-title">
                     {{ t('PayPal_Payment_Header') }}
                 </h3>
@@ -154,24 +154,24 @@
             </div>
 
             <div class="alert alert-info sp-alert-border-paypal">
-                <i class="fas fa-shield-alt mr-2"></i>
+                <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>
                 <strong>{{ t('PayPal_Security_Alert') }}</strong> 💳
             </div>
 
             <div class="text-center" id="paypal-button-container">
                 <button class="btn btn-lg sp-btn-paypal" data-action="handle-paypal-payment">
-                    <i class="fab fa-paypal mr-2 sp-btn-icon"></i>
+                    <i class="fab fa-paypal mr-2 sp-btn-icon" aria-hidden="true"></i>
                     <span>{{ t('PayPal_Continue') }}</span>
                 </button>
                 <p class="mt-3 text-muted">
-                    <i class="fas fa-info-circle"></i> {{ t('PayPal_Redirect') }}
+                    <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('PayPal_Redirect') }}
                 </p>
             </div>
         </div>
 
         <div id="bank-form" class="sp-donation-form" data-sp-scope="forms">
             <div class="sp-banner-bank">
-                <i class="fas fa-university sp-section-icon-large"></i>
+                <i class="fas fa-university sp-section-icon-large" aria-hidden="true"></i>
                 <h3 class="sp-payment-header-title">
                     {{ t('Bank_Payment_Header') }}
                 </h3>
@@ -179,13 +179,13 @@
             </div>
 
             <div class="alert alert-warning sp-alert-border-warning">
-                <i class="fas fa-info-circle mr-2"></i>
+                <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>
                 <strong>{{ t('Bank_Payment_Alert') }}</strong>
             </div>
 
             <div class="text-center">
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject=Bank Transfer Request" class="btn btn-donate btn-lg sp-btn-lg">
-                    <i class="fas fa-envelope mr-2"></i>
+                    <i class="fas fa-envelope mr-2" aria-hidden="true"></i>
                     {{ t('Bank_Request_Details') }}
                 </a>
 
@@ -193,21 +193,21 @@
                     <strong>{{ t('Bank_Or_Contact') }}</strong>
                 </p>
                 <a href="https://wa.me/{{ developer_whatsapp_link }}" class="btn btn-lg mt-2 sp-btn-whatsapp-lg">
-                    <i class="fab fa-whatsapp mr-2 sp-btn-icon"></i>
+                    <i class="fab fa-whatsapp mr-2 sp-btn-icon" aria-hidden="true"></i>
                     {{ t('Card_Contact_WhatsApp') }}
                 </a>
 
                 <div class="sp-quick-contact-actions sp-actions-center">
                     <button type="button" class="sp-quick-contact-btn sp-btn-dark" data-action="open-whatsapp" data-kind="buy_code">
-                        <i class="fas fa-code"></i> {{ t('Bank_Buy_Code_WhatsApp') }}
+                        <i class="fas fa-code" aria-hidden="true"></i> {{ t('Bank_Buy_Code_WhatsApp') }}
                     </button>
                     <button type="button" class="sp-quick-contact-btn sp-btn-email" data-action="open-support-email" data-kind="buy_code">
-                        <i class="fas fa-file-code"></i> {{ t('Bank_Buy_Code_Email') }}
+                        <i class="fas fa-file-code" aria-hidden="true"></i> {{ t('Bank_Buy_Code_Email') }}
                     </button>
                 </div>
 
                 <div class="alert alert-info mt-3">
-                    <i class="fas fa-info-circle mr-2"></i>
+                    <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>
                     <strong>{{ t('Bank_Large_Amount_Note') }}</strong>
                 </div>
             </div>

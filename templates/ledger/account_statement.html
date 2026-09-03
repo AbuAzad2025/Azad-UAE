@@ -6,13 +6,13 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('ledger.account_statement', account_id=statement.account.id) }}?export=excel" class="btn btn-success">
-      <i class="fas fa-file-excel mr-2"></i>{{ t('Export') }} Excel
+      <i class="fas fa-file-excel mr-2" aria-hidden="true"></i>{{ t('Export') }} Excel
     </a>
   </div>
 </div>
@@ -33,7 +33,7 @@
       <div class="row mb-3 no-print">
         <div class="col-md-4">
           <div class="info-box bg-light">
-            <span class="info-box-icon bg-primary"><i class="fas fa-calculator"></i></span>
+            <span class="info-box-icon bg-primary"><i class="fas fa-calculator" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Opening Balance') }}</span>
               <span class="info-box-number">
@@ -44,7 +44,7 @@
         </div>
         <div class="col-md-4">
           <div class="info-box bg-light">
-            <span class="info-box-icon bg-success"><i class="fas fa-arrow-up"></i></span>
+            <span class="info-box-icon bg-success"><i class="fas fa-arrow-up" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Debit Total') }}</span>
               <span class="info-box-number text-success">
@@ -55,7 +55,7 @@
         </div>
         <div class="col-md-4">
           <div class="info-box bg-light">
-            <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down"></i></span>
+            <span class="info-box-icon bg-danger"><i class="fas fa-arrow-down" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Credit Total') }}</span>
               <span class="info-box-number text-danger">
@@ -134,7 +134,7 @@
 
       {% if not statement.transactions %}
       <div class="alert alert-info text-center">
-        <i class="fas fa-info-circle mr-2"></i>
+        <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>
         {{ t('No transactions for this account in the selected period') }}
       </div>
       {% endif %}

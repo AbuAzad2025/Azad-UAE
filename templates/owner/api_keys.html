@@ -5,12 +5,12 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-key text-warning"></i> {{ t('API_Key_Management') }}</h1>
+        <h1 class="m-0"><i class="fas fa-key text-warning" aria-hidden="true"></i> {{ t('API_Key_Management') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -23,10 +23,10 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.api_keys') }}" class="btn btn-warning">
-            <i class="fas fa-key"></i> API Keys
+            <i class="fas fa-key" aria-hidden="true"></i> API Keys
           </a>
           <a href="{{ url_for('owner.ip_whitelist') }}" class="btn btn-outline-warning">
-            <i class="fas fa-network-wired"></i> IP Whitelist
+            <i class="fas fa-network-wired" aria-hidden="true"></i> IP Whitelist
           </a>
         </div>
       </div>
@@ -38,7 +38,7 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-warning text-dark">
-        <h3 class="card-title"><i class="fas fa-user-shield mr-2"></i> {{ t('Create_New_API_Key') }}</h3>
+        <h3 class="card-title"><i class="fas fa-user-shield mr-2" aria-hidden="true"></i> {{ t('Create_New_API_Key') }}</h3>
       </div>
       <div class="card-body">
         <form class="needs-validation api-keys-form mb-4" method="POST" action="{{ url_for('owner.api_keys') }}">
@@ -65,13 +65,13 @@
             </div>
             <div class="col-md-2">
               <button type="submit" class="btn btn-warning btn-block">
-                <i class="fas fa-plus mr-1"></i> {{ t('Create') }}
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i> {{ t('Create') }}
               </button>
             </div>
           </div>
         </form>
 
-        <h5 class="mb-3"><i class="fas fa-list-alt text-warning"></i> {{ t('Existing_Keys') }}</h5>
+        <h5 class="mb-3"><i class="fas fa-list-alt text-warning" aria-hidden="true"></i> {{ t('Existing_Keys') }}</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
@@ -102,7 +102,7 @@
                   <form method="POST" action="{{ url_for('owner.toggle_api_key', id=key.id|default(0)) }}" class="d-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-outline-warning" title="{{ t('Toggle') }}">
-                      <i class="fas fa-toggle-on"></i>
+                      <i class="fas fa-toggle-on" aria-hidden="true"></i>
                     </button>
                   </form>
                 </td>
@@ -110,7 +110,7 @@
               {% else %}
               <tr>
                 <td colspan="6" class="text-center text-muted">
-                  <i class="fas fa-info-circle"></i> {{ t('No_API_Keys_Found') }}
+                  <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('No_API_Keys_Found') }}
                 </td>
               </tr>
               {% endfor %}

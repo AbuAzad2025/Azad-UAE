@@ -11,7 +11,7 @@
     <div class="row">
       <div class="col-md-3">
         <div class="info-box bg-gradient-primary">
-          <span class="info-box-icon"><i class="fas fa-file-invoice"></i></span>
+          <span class="info-box-icon"><i class="fas fa-file-invoice" aria-hidden="true"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('Count') }} {{ t('Invoices') }}</span>
             <span class="info-box-number">{{ summary.sales_count|default(0) }}</span>
@@ -21,7 +21,7 @@
 
       <div class="col-md-3">
         <div class="info-box bg-gradient-success">
-          <span class="info-box-icon"><i class="fas fa-dollar-sign"></i></span>
+          <span class="info-box-icon"><i class="fas fa-dollar-sign" aria-hidden="true"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('Total_2') }} {{ t('Sales') }}</span>
             <span class="info-box-number">{{ format_currency(summary.total_sales_aed|default(0)) }}</span>
@@ -31,7 +31,7 @@
 
       <div class="col-md-3">
         <div class="info-box bg-gradient-warning">
-          <span class="info-box-icon"><i class="fas fa-coins"></i></span>
+          <span class="info-box-icon"><i class="fas fa-coins" aria-hidden="true"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('Paid') }}</span>
             <span class="info-box-number">{{ format_currency(summary.total_paid_aed|default(0)) }}</span>
@@ -41,7 +41,7 @@
 
       <div class="col-md-3">
         <div class="info-box bg-gradient-danger">
-          <span class="info-box-icon"><i class="fas fa-exclamation-circle"></i></span>
+          <span class="info-box-icon"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
           <div class="info-box-content">
             <span class="info-box-text">{{ t('due') }}</span>
             <span class="info-box-number">{{ format_currency(summary.total_pending_aed|default(0)) }}</span>
@@ -82,7 +82,7 @@
 
       <div class="btn-group mr-2">
         <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-          <i class="fas fa-download mr-1"></i>{{ t('Export') }}
+          <i class="fas fa-download mr-1" aria-hidden="true"></i>{{ t('Export') }}
         </button>
         <div class="dropdown-menu dropdown-menu-right">
           <a class="dropdown-item" href="{{ url_for('reports.sales_export', date_from=date_from, date_to=date_to, customer=customer_id, seller=seller_id, format='csv') }}">CSV</a>
@@ -91,7 +91,7 @@
       </div>
 
       <button type="button" class="btn btn-outline-info" id="printSalesReportBtn">
-        <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+        <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print') }}
       </button>
     </div>
   </div>
@@ -105,7 +105,7 @@
           <th>{{ t('Customer_2') }}</th>
           <th>{{ t('Date') }}</th>
           <th class="col-num">{{ t('Amount') }}</th>
-          <th><i class="fas fa-exchange-alt mr-1"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
+          <th><i class="fas fa-exchange-alt mr-1" aria-hidden="true"></i>{{ t('Price_2') }} {{ t('Exchange') }}</th>
           <th>{{ t('Status') }}</th>
         </tr>
       </thead>
@@ -121,7 +121,7 @@
           <td>
             {% if sale.exchange_rate and sale.exchange_rate != 1 %}
               <span class="badge badge-info" title="{{ t('Price_2') }} {{ t('Exchange') }} {{ t('Time') }} {{ t('transaction') }}">
-                <i class="fas fa-exchange-alt mr-1"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
+                <i class="fas fa-exchange-alt mr-1" aria-hidden="true"></i>{{ "{:.4f}".format(sale.exchange_rate) }}
               </span>
             {% else %}
               <span class="text-muted">1.0000</span>

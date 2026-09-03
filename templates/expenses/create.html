@@ -3,14 +3,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2"></i>{{ t('Add') }} {{ t('Expense_3') }} {{ t('New') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>{{ t('Add') }} {{ t('Expense_3') }} {{ t('New') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('العودة') }} {{ t('Expenses_3') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Main_2') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Main_2') }}
     </a>
   </div>
 </div>
@@ -88,7 +88,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="expense_category">
-              <i class="fas fa-folder text-primary"></i> {{ t('الفئة') }}
+              <i class="fas fa-folder text-primary" aria-hidden="true"></i> {{ t('الفئة') }}
               <span class="text-danger">*</span>
             </label>
             <div class="input-group">
@@ -100,7 +100,7 @@
               </select>
               <div class="input-group-append">
                 <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addExpenseCategoryModal" title="{{ t('Add') }} {{ t('فئة') }} {{ t('New_3') }}">
-                  <i class="fas fa-plus"></i>
+                  <i class="fas fa-plus" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
@@ -110,7 +110,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="expense_description">
-              <i class="fas fa-align-left text-info"></i> {{ t('Description') }}
+              <i class="fas fa-align-left text-info" aria-hidden="true"></i> {{ t('Description') }}
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="description" id="expense_description" class="form-control" placeholder="{{ t('Description_2') }} {{ t('Expense_2') }}..." required maxlength="500">
@@ -122,7 +122,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="expense_amount">
-              <i class="fas fa-money-bill-wave text-success"></i> {{ t('Amount') }}
+              <i class="fas fa-money-bill-wave text-success" aria-hidden="true"></i> {{ t('Amount') }}
               <span class="text-danger">*</span>
             </label>
             <input type="number" name="amount" id="expense_amount" class="form-control" step="0.01" min="0.01" placeholder="0.00" required>
@@ -132,7 +132,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="currency">
-              <i class="fas fa-dollar-sign text-warning"></i> {{ t('Currency') }}
+              <i class="fas fa-dollar-sign text-warning" aria-hidden="true"></i> {{ t('Currency') }}
             </label>
             {% set dc = company_default_currency or system_default_currency or 'AED' %}
             {% from 'macros/currency_options.html' import currency_select %}
@@ -143,7 +143,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="exchange_rate">
-              <i class="fas fa-exchange-alt text-secondary"></i> {{ t('Price_2') }} {{ t('Exchange') }}
+              <i class="fas fa-exchange-alt text-secondary" aria-hidden="true"></i> {{ t('Price_2') }} {{ t('Exchange') }}
             </label>
             <input type="number" name="exchange_rate" id="exchange_rate" class="form-control" value="1.00" step="0.000001" readonly>
           </div>
@@ -154,7 +154,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="payment_method">
-              <i class="fas fa-credit-card text-primary"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
+              <i class="fas fa-credit-card text-primary" aria-hidden="true"></i> {{ t('طريقة') }} {{ t('Payment_2') }}
               <span class="text-danger">*</span>
             </label>
             <select name="payment_method" id="payment_method" class="form-control" required>
@@ -169,7 +169,7 @@
         <div class="col-md-6">
           <div class="form-group">
             <label for="expense_supplier_name">
-              <i class="fas fa-user-tie text-info"></i> {{ t('Name_2') }} {{ t('Supplier') }}/{{ t('الجهة') }}
+              <i class="fas fa-user-tie text-info" aria-hidden="true"></i> {{ t('Name_2') }} {{ t('Supplier') }}/{{ t('الجهة') }}
             </label>
             <input type="text" name="supplier_name" id="expense_supplier_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('المستفيد') }}..." minlength="2" maxlength="100">
           </div>
@@ -181,7 +181,7 @@
 
       <div class="form-group">
         <label for="expense_notes">
-          <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
+          <i class="fas fa-sticky-note text-secondary" aria-hidden="true"></i> {{ t('Notes') }}
         </label>
         <textarea name="notes" id="expense_notes" class="form-control" rows="3" placeholder="{{ t('أي ملاحظات...') }}" maxlength="500"></textarea>
       </div>
@@ -189,10 +189,10 @@
 
     <div class="card-footer">
       <button type="submit" class="btn btn-danger btn-lg">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Expense_2') }}
+        <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Expense_2') }}
       </button>
       <a href="{{ url_for('expenses.index') }}" class="btn btn-secondary btn-lg">
-        <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+        <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}
       </a>
     </div>
   </form>
@@ -204,7 +204,7 @@
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
-          <i class="fas fa-folder-plus mr-2"></i>{{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }} {{ t('New_3') }}
+          <i class="fas fa-folder-plus mr-2" aria-hidden="true"></i>{{ t('Add') }} {{ t('فئة') }} {{ t('Expenses_2') }} {{ t('New_3') }}
         </h5>
         <button type="button" class="close text-white" data-dismiss="modal">
           <span>&times;</span>
@@ -215,14 +215,14 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <div class="form-group">
             <label for="expense_category_name">
-              <i class="fas fa-font text-primary"></i> {{ t('Name') }} {{ t('In English_2') }}
+              <i class="fas fa-font text-primary" aria-hidden="true"></i> {{ t('Name') }} {{ t('In English_2') }}
               <span class="text-danger">*</span>
             </label>
             <input type="text" id="expense_category_name" class="form-control" placeholder="{{ t('مثال') }}: Salaries, Rent, Utilities..." required>
           </div>
           <div class="form-group">
             <label for="expense_category_name_ar">
-              <i class="fas fa-font text-info"></i> {{ t('Name') }} {{ t('In Arabic') }}
+              <i class="fas fa-font text-info" aria-hidden="true"></i> {{ t('Name') }} {{ t('In Arabic') }}
             </label>
             <input type="text" id="expense_category_name_ar" class="form-control" placeholder="{{ t('مثال') }}: {{ t('رواتب،') }} {{ t('إيجارات،') }} {{ t('مرافق') }}...">
           </div>
@@ -230,10 +230,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">
-          <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+          <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}
         </button>
         <button type="button" class="btn btn-success" id="saveExpenseCategoryBtn">
-          <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('الفئة') }}
+          <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('الفئة') }}
         </button>
       </div>
     </div>

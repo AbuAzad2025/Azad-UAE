@@ -9,7 +9,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> {{ t('Edit Account') }} - {{ account.code }}
+            <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit Account') }} - {{ account.code }}
           </h3>
         </div>
         <div class="card-body">
@@ -112,7 +112,7 @@
 
             <div id="bank_fields" class="row mt-4" style="display: none;">
               <div class="col-12">
-                <h5 class="mb-3"><i class="fas fa-university mr-2"></i>معلومات البنك</h5>
+                <h5 class="mb-3"><i class="fas fa-university mr-2" aria-hidden="true"></i>معلومات البنك</h5>
               </div>
               <div class="col-md-6">
                 <div class="form-group">
@@ -150,10 +150,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save Changes') }}
+                <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save Changes') }}
               </button>
               <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

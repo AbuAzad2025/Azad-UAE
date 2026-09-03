@@ -12,7 +12,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -27,13 +27,13 @@
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
     <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-primary">
-      <i class="fas fa-user-shield"></i> {{ t('Roles_Permissions') }}
+      <i class="fas fa-user-shield" aria-hidden="true"></i> {{ t('Roles_Permissions') }}
     </a>
     <a href="{{ url_for('owner.users_list') }}" class="btn btn-outline-primary">
-      <i class="fas fa-users"></i> {{ t('Users_Management') }}
+      <i class="fas fa-users" aria-hidden="true"></i> {{ t('Users_Management') }}
     </a>
     <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-history"></i>{{ t('Audit_Log') }}</a>
+      <i class="fas fa-history" aria-hidden="true"></i>{{ t('Audit_Log') }}</a>
   </div>
 </div>
 
@@ -41,7 +41,7 @@
   <div class="container-fluid">
 
     <div class="alert alert-info">
-      <i class="fas fa-info-circle mr-2"></i>{{ t('Roles_Description') }}
+      <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>{{ t('Roles_Description') }}
     </div>
 
     <div class="row">
@@ -50,12 +50,12 @@
         <div class="card card-outline {% if role.slug == 'owner' %}card-danger{% elif role.slug == 'super_admin' %}card-primary{% elif role.slug == 'manager' %}card-info{% else %}card-secondary{% endif %}">
           <div class="card-header">
             <h3 class="card-title">
-              <i class="fas fa-user-shield"></i>
+              <i class="fas fa-user-shield" aria-hidden="true"></i>
               <strong>{{ role.name_ar or role.name }}</strong>
               <span class="text-muted small">({{ role.slug }})</span>
             </h3>
             <span class="badge badge-dark float-left">
-              <i class="fas fa-users"></i> {{ role_user_counts.get(role.id, 0) }} {{ t('Users') }}</span>
+              <i class="fas fa-users" aria-hidden="true"></i> {{ role_user_counts.get(role.id, 0) }} {{ t('Users') }}</span>
           </div>
           <div class="card-body">
             <p class="text-muted">{{ role.description or t('No_Description') }}</p>
@@ -66,7 +66,7 @@
               {% for perm in role.permissions %}
               <div class="col-md-6 mb-1">
                 <span class="badge badge-light border">
-                  <i class="fas fa-check-circle text-success small mr-1"></i>
+                  <i class="fas fa-check-circle text-success small mr-1" aria-hidden="true"></i>
                   {{ perm.name_ar or perm.name }}
                 </span>
               </div>
@@ -88,7 +88,7 @@
             <h3>{{ roles|length }}</h3>
             <p>{{ t('Total_Roles') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-user-shield"></i></div>
+          <div class="icon"><i class="fas fa-user-shield" aria-hidden="true"></i></div>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
@@ -97,7 +97,7 @@
             <h3>{{ permissions|length }}</h3>
             <p>{{ t('Total_Permissions') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-key"></i></div>
+          <div class="icon"><i class="fas fa-key" aria-hidden="true"></i></div>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
@@ -106,7 +106,7 @@
             <h3>{{ perm_categories|length }}</h3>
             <p>{{ t('Permission_Categories') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-layer-group"></i></div>
+          <div class="icon"><i class="fas fa-layer-group" aria-hidden="true"></i></div>
         </div>
       </div>
       <div class="col-lg-3 col-md-6">
@@ -115,7 +115,7 @@
             <h3>{{ role_user_counts.values()|sum }}</h3>
             <p>{{ t('Total_Active_Users') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-users"></i></div>
+          <div class="icon"><i class="fas fa-users" aria-hidden="true"></i></div>
         </div>
       </div>
     </div>
@@ -123,7 +123,7 @@
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title text-white">
-          <i class="fas fa-table mr-2"></i>{{ t('Permissions_By_Category') }}
+          <i class="fas fa-table mr-2" aria-hidden="true"></i>{{ t('Permissions_By_Category') }}
         </h3>
       </div>
       <div class="card-body p-0">
@@ -141,7 +141,7 @@
               {% for category, perms in perm_categories.items() %}
               <tr class="table-active">
                 <td colspan="{{ roles|length + 1 }}" class="font-weight-bold bg-light">
-                  <i class="fas fa-folder-open mr-1 text-primary"></i>{{ category }}
+                  <i class="fas fa-folder-open mr-1 text-primary" aria-hidden="true"></i>{{ category }}
                 </td>
               </tr>
               {% for perm in perms %}
@@ -153,9 +153,9 @@
                 {% for role in roles %}
                 <td class="text-center">
                   {% if role.has_permission(perm.code) %}
-                  <i class="fas fa-check text-success"></i>
+                  <i class="fas fa-check text-success" aria-hidden="true"></i>
                   {% else %}
-                  <i class="fas fa-minus text-muted"></i>
+                  <i class="fas fa-minus text-muted" aria-hidden="true"></i>
                   {% endif %}
                 </td>
                 {% endfor %}
@@ -175,7 +175,7 @@
     <div class="card card-warning">
       <div class="card-header">
         <h3 class="card-title ic-2">
-          <i class="fas fa-shield-alt mr-2"></i>{{ t('Security_Standards') }}
+          <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>{{ t('Security_Standards') }}
         </h3>
       </div>
       <div class="card-body ic-2">
@@ -207,7 +207,7 @@
     <div class="card card-success">
       <div class="card-header">
         <h3 class="card-title text-white">
-          <i class="fas fa-lightbulb mr-2"></i>{{ t('Usage_Guidelines') }}
+          <i class="fas fa-lightbulb mr-2" aria-hidden="true"></i>{{ t('Usage_Guidelines') }}
         </h3>
       </div>
       <div class="card-body">
@@ -223,7 +223,7 @@
         </ol>
 
         <div class="alert alert-warning mt-3 ic-2">
-          <i class="fas fa-exclamation-triangle"></i>
+          <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
           <strong>{{ t('Remember') }}:</strong> {{ t('All_Actions_Logged') }}
         </div>
       </div>
@@ -232,10 +232,10 @@
     <div class="row">
       <div class="col-12">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg">
-          <i class="fas fa-arrow-left mr-2"></i>{{ t('Back_To_Owner_Dashboard') }}
+          <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('Back_To_Owner_Dashboard') }}
         </a>
         <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary btn-lg">
-          <i class="fas fa-users mr-2"></i>{{ t('Users_Management') }}
+          <i class="fas fa-users mr-2" aria-hidden="true"></i>{{ t('Users_Management') }}
         </a>
       </div>
     </div>

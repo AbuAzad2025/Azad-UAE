@@ -5,12 +5,12 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-credit-card text-primary"></i> {{ _('Management') }} {{ _('البطاقات') }} {{ _('المحفوظة') }}</h1>
+        <h1 class="mb-0"><i class="fas fa-credit-card text-primary" aria-hidden="true"></i> {{ _('Management') }} {{ _('البطاقات') }} {{ _('المحفوظة') }}</h1>
         <p class="text-muted mb-0">{{ _('جميع') }} {{ _('بطاقات') }} {{ _('Payment_2') }} {{ _('المسجلة') }} ({{ _('مشفرة') }} {{ _('وآمنة') }})</p>
     </div>
     <div>
         <button class="btn btn-warning" data-action="toggle-decryption">
-            <i class="fas fa-eye" id="decrypt-icon"></i> <span id="decrypt-text">{{ _('View') }} {{ _('Data') }} {{ _('المشفرة') }}</span>
+            <i class="fas fa-eye" id="decrypt-icon" aria-hidden="true"></i> <span id="decrypt-text">{{ _('View') }} {{ _('Data') }} {{ _('المشفرة') }}</span>
         </button>
     </div>
 </div>
@@ -125,7 +125,7 @@
 {% block content %}
 
 <div class="alert alert-danger">
-            <i class="fas fa-exclamation-triangle"></i>
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
             <strong>{{ _('Warning') }} {{ _('أمني') }}:</strong> {{ _('هذه') }} {{ _('Data') }} {{ _('حساسة') }} {{ _('للغاية') }}! {{ _('لا') }} {{ _('تشاركها') }} {{ _('مع') }} {{ _('أحد') }}. {{ _('جميع') }} {{ _('العمليات') }} {{ _('مسجلة') }} {{ _('ومراقبة') }}.
         </div>
         
@@ -194,9 +194,9 @@
                                         <td><strong>{{ _('النوع') }}:</strong></td>
                                         <td>
                                             {% if card.transaction_type == 'purchase' %}
-                                                <i class="fas fa-shopping-cart"></i> {{ _('مشترية') }}
+                                                <i class="fas fa-shopping-cart" aria-hidden="true"></i> {{ _('مشترية') }}
                                             {% else %}
-                                                <i class="fas fa-gift"></i> {{ _('تبرع') }}
+                                                <i class="fas fa-gift" aria-hidden="true"></i> {{ _('تبرع') }}
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -218,21 +218,21 @@
                                         <td><strong>{{ _('Status') }}:</strong></td>
                                         <td>
                                             {% if card.status == 'completed' %}
-                                                <span class="badge badge-success"><i class="fas fa-check"></i> {{ _('Completed_2') }}</span>
+                                                <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i> {{ _('Completed_2') }}</span>
                                             {% else %}
-                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ card.status }}</span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half" aria-hidden="true"></i> {{ card.status }}</span>
                                             {% endif %}
                                         </td>
                                     </tr>
                                 </table></div>
                                 
                                 <button class="btn btn-info btn-block" data-action="view-card" data-card-id="{{ card.id }}">
-                                    <i class="fas fa-eye"></i> {{ _('View') }} {{ _('Details_2') }}
+                                    <i class="fas fa-eye" aria-hidden="true"></i> {{ _('View') }} {{ _('Details_2') }}
                                 </button>
                                 
                                 
                                 <div class="encrypted-data" id="encrypted-{{ card.id }}">
-                                    <h6 class="text-danger"><i class="fas fa-lock-open"></i> {{ _('Data_2') }} {{ _('مفكوكة') }} {{ _('التشفير') }}</h6>
+                                    <h6 class="text-danger"><i class="fas fa-lock-open" aria-hidden="true"></i> {{ _('Data_2') }} {{ _('مفكوكة') }} {{ _('التشفير') }}</h6>
                                     <div class="card-decrypted-info">
                                         {{ _('جاري') }} {{ _('Download_2') }}{{ _('...') }}
                                     </div>
@@ -245,7 +245,7 @@
             {% else %}
                 <div class="col-12">
                     <div class="alert alert-info text-center">
-                        <i class="fas fa-info-circle fa-3x mb-3 inline-form"></i>
+                        <i class="fas fa-info-circle fa-3x mb-3 inline-form" aria-hidden="true"></i>
                         <h5>{{ _('لا') }} {{ _('توجد') }} {{ _('بطاقات') }} {{ _('محفوظة') }}</h5>
                         <p>{{ _('سيتم') }} {{ _('Save') }} {{ _('البطاقات') }} {{ _('تلقائياً') }} عند {{ _('إجراء') }} {{ _('عمليات') }} {{ _('Payment') }} {{ _('New_3') }}</p>
                     </div>
@@ -320,7 +320,7 @@
                         <p><strong>CVV:</strong> ${data.card.cvv}</p>
                         <p><strong>{{ _('History') }} {{ _('الانتهاء') }}:</strong> ${data.card.expiry}</p>
                         <hr>
-                        <p class="text-danger"><strong><i class="fas fa-exclamation-triangle"></i> {{ _('لا') }} {{ _('تشارك') }} {{ _('هذه') }} {{ _('Info_3') }}!</strong></p>
+                        <p class="text-danger"><strong><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ _('لا') }} {{ _('تشارك') }} {{ _('هذه') }} {{ _('Info_3') }}!</strong></p>
                     </div>
                 `;
                 

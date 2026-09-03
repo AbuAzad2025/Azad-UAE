@@ -95,21 +95,21 @@
             <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
             <span class="azad-brand-text">{{ _company_name }}</span>
         </a>
-        <button class="azad-drawer-close" id="drawerClose" aria-label="{{ _close }}"><i class="fas fa-times"></i></button>
+        <button class="azad-drawer-close" id="drawerClose" aria-label="{{ _close }}"><i class="fas fa-times" aria-hidden="true"></i></button>
     </div>
     <div class="azad-drawer-body">
-        <a class="azad-drawer-link" href="#features"><i class="fas fa-star"></i> {{ _features }}</a>
-        <a class="azad-drawer-link" href="#pricing"><i class="fas fa-tags"></i> {{ _pricing_label }}</a>
-        <a class="azad-drawer-link" href="#about"><i class="fas fa-building"></i> {{ _about }}</a>
-        <a class="azad-drawer-link" href="#faq"><i class="fas fa-question-circle"></i> {{ _faq }}</a>
-        <a class="azad-drawer-link" href="#contact"><i class="fas fa-phone-alt"></i> {{ _contact }}</a>
+        <a class="azad-drawer-link" href="#features"><i class="fas fa-star" aria-hidden="true"></i> {{ _features }}</a>
+        <a class="azad-drawer-link" href="#pricing"><i class="fas fa-tags" aria-hidden="true"></i> {{ _pricing_label }}</a>
+        <a class="azad-drawer-link" href="#about"><i class="fas fa-building" aria-hidden="true"></i> {{ _about }}</a>
+        <a class="azad-drawer-link" href="#faq"><i class="fas fa-question-circle" aria-hidden="true"></i> {{ _faq }}</a>
+        <a class="azad-drawer-link" href="#contact"><i class="fas fa-phone-alt" aria-hidden="true"></i> {{ _contact }}</a>
         <div class="azad-drawer-divider"></div>
-        <a class="azad-drawer-link" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> {{ _login }}</a>
-        <a class="azad-drawer-link" href="{{ _lang_url }}"><i class="fas fa-globe"></i> {{ _lang_label }}</a>
+        <a class="azad-drawer-link" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> {{ _login }}</a>
+        <a class="azad-drawer-link" href="{{ _lang_url }}"><i class="fas fa-globe" aria-hidden="true"></i> {{ _lang_label }}</a>
     </div>
     <div class="azad-drawer-actions">
         <a href="{{ url_for('auth.login') }}" class="btn-nav-ghost" style="text-align:center;">{{ _login }}</a>
-        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-nav-cta" style="text-align:center;" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _free_trial }}</a>
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-nav-cta" style="text-align:center;" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _free_trial }}</a>
     </div>
 </aside>
 
@@ -128,16 +128,16 @@
 
         <div class="azad-nav-links azad-nav-links-auto">
             <div class="azad-nav-dropdown">
-                <a class="azad-dropdown-trigger" role="button" tabindex="0" aria-haspopup="true">{{ 'المنتجات' if not is_en else 'Products' }} <i class="fas fa-chevron-down azad-dropdown-icon"></i></a>
+                <a class="azad-dropdown-trigger" role="button" tabindex="0" aria-haspopup="true">{{ 'المنتجات' if not is_en else 'Products' }} <i class="fas fa-chevron-down azad-dropdown-icon" aria-hidden="true"></i></a>
                 <div class="azad-dropdown-menu">
-                    <a href="{{ url_for('public.features') }}#accounting"><i class="fas fa-calculator"></i> {{ 'محاسبة' if not is_en else 'Accounting' }}</a>
-                    <a href="{{ url_for('public.features') }}#inventory"><i class="fas fa-warehouse"></i> {{ 'مخزون' if not is_en else 'Inventory' }}</a>
-                    <a href="{{ url_for('public.features') }}#pos"><i class="fas fa-cash-register"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale' }}</a>
-                    <a href="{{ url_for('public.features') }}#hr"><i class="fas fa-users-gear"></i> {{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</a>
-                    <a href="{{ url_for('public.features') }}#ai"><i class="fas fa-robot"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI Assistant' }}</a>
-                    <a href="{{ url_for('public.features') }}#store"><i class="fas fa-store"></i> {{ 'متجر إلكتروني' if not is_en else 'Online Store' }}</a>
+                    <a href="{{ url_for('public.features') }}#accounting"><i class="fas fa-calculator" aria-hidden="true"></i> {{ 'محاسبة' if not is_en else 'Accounting' }}</a>
+                    <a href="{{ url_for('public.features') }}#inventory"><i class="fas fa-warehouse" aria-hidden="true"></i> {{ 'مخزون' if not is_en else 'Inventory' }}</a>
+                    <a href="{{ url_for('public.features') }}#pos"><i class="fas fa-cash-register" aria-hidden="true"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale' }}</a>
+                    <a href="{{ url_for('public.features') }}#hr"><i class="fas fa-users-gear" aria-hidden="true"></i> {{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</a>
+                    <a href="{{ url_for('public.features') }}#ai"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'ذكاء اصطناعي' if not is_en else 'AI Assistant' }}</a>
+                    <a href="{{ url_for('public.features') }}#store"><i class="fas fa-store" aria-hidden="true"></i> {{ 'متجر إلكتروني' if not is_en else 'Online Store' }}</a>
                     <div class="azad-dropdown-divider"></div>
-                    <a href="{{ url_for('public.features') }}" style="color:var(--azad-accent-light);font-weight:700;"><i class="fas fa-th"></i> {{ 'عرض الكل' if not is_en else 'All features' }}</a>
+                    <a href="{{ url_for('public.features') }}" style="color:var(--azad-accent-light);font-weight:700;"><i class="fas fa-th" aria-hidden="true"></i> {{ 'عرض الكل' if not is_en else 'All features' }}</a>
                 </div>
             </div>
             <a href="#pricing">{{ _pricing_label }}</a>
@@ -147,10 +147,10 @@
         </div>
 
         <div class="azad-nav-actions">
-            <a class="nav-lang-btn" href="{{ _lang_url }}"><i class="fas fa-globe"></i> {{ _lang_btn }}</a>
-            <a class="btn-nav-ghost d-none d-sm-inline-flex" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> {{ _login }}</a>
-            <a class="btn-nav-cta d-none d-sm-inline-flex" href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _free_trial }}</a>
-            <button class="nav-hamburger" id="hamburgerBtn" aria-label="{{ _menu }}"><i class="fas fa-bars"></i></button>
+            <a class="nav-lang-btn" href="{{ _lang_url }}"><i class="fas fa-globe" aria-hidden="true"></i> {{ _lang_btn }}</a>
+            <a class="btn-nav-ghost d-none d-sm-inline-flex" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> {{ _login }}</a>
+            <a class="btn-nav-cta d-none d-sm-inline-flex" href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _free_trial }}</a>
+            <button class="nav-hamburger" id="hamburgerBtn" aria-label="{{ _menu }}"><i class="fas fa-bars" aria-hidden="true"></i></button>
         </div>
     </div>
 </nav>
@@ -162,7 +162,7 @@
     <div class="azad-hero-inner">
         <div class="azad-hero-grid">
             <div>
-                <div class="azad-hero-badge"><i class="fas fa-bolt"></i> <span>{{ '30 يوم تجربة مجانية - بدون بطاقة ائتمان' if not is_en else '30-day free trial - No credit card needed' }}</span></div>
+                <div class="azad-hero-badge"><i class="fas fa-bolt" aria-hidden="true"></i> <span>{{ '30 يوم تجربة مجانية - بدون بطاقة ائتمان' if not is_en else '30-day free trial - No credit card needed' }}</span></div>
                 <h1 class="azad-hero-title">
                     {% if not is_en %}
                     أدِر أعمالك <span class="highlight">بذكاء</span><br>مع 25+ وحدة ERP
@@ -178,14 +178,14 @@
                     {% endif %}
                 </p>
                 <div class="azad-hero-actions">
-                    <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-hero-primary" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'جرّب مجاناً 30 يوم' if not is_en else 'Free Trial - 30 Days' }}</a>
-                    <a href="#pricing" class="btn-hero-secondary"><i class="fas fa-gem"></i> {{ 'عرض الأسعار' if not is_en else 'View Pricing' }}</a>
+                    <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-hero-primary" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'جرّب مجاناً 30 يوم' if not is_en else 'Free Trial - 30 Days' }}</a>
+                    <a href="#pricing" class="btn-hero-secondary"><i class="fas fa-gem" aria-hidden="true"></i> {{ 'عرض الأسعار' if not is_en else 'View Pricing' }}</a>
                 </div>
                 <div class="azad-hero-trust">
-                    <span><i class="fas fa-check-circle"></i> {{ 'بدون بطاقة ائتمان' if not is_en else 'No credit card' }}</span>
-                    <span><i class="fas fa-check-circle"></i> {{ 'سحابي بالكامل' if not is_en else '100% Cloud' }}</span>
-                    <span><i class="fas fa-check-circle"></i> {{ 'دعم عربي كامل' if not is_en else 'Full Arabic support' }}</span>
-                    <span><i class="fas fa-check-circle"></i> {{ 'مطوّر في الإمارات' if not is_en else 'Built in UAE' }}</span>
+                    <span><i class="fas fa-check-circle" aria-hidden="true"></i> {{ 'بدون بطاقة ائتمان' if not is_en else 'No credit card' }}</span>
+                    <span><i class="fas fa-check-circle" aria-hidden="true"></i> {{ 'سحابي بالكامل' if not is_en else '100% Cloud' }}</span>
+                    <span><i class="fas fa-check-circle" aria-hidden="true"></i> {{ 'دعم عربي كامل' if not is_en else 'Full Arabic support' }}</span>
+                    <span><i class="fas fa-check-circle" aria-hidden="true"></i> {{ 'مطوّر في الإمارات' if not is_en else 'Built in UAE' }}</span>
                 </div>
             </div>
             <div class="azad-hero-visual">
@@ -203,12 +203,12 @@
 <section class="azad-industry-bar">
     <div class="azad-section-inner">
         <div class="azad-industry-row">
-            <div class="azad-industry-item"><i class="fas fa-car"></i> {{ 'قطع غيار' if not is_en else 'Auto Parts' }}</div>
-            <div class="azad-industry-item"><i class="fas fa-store"></i> {{ 'تجزئة' if not is_en else 'Retail' }}</div>
-            <div class="azad-industry-item"><i class="fas fa-shopping-cart"></i> {{ 'سوبرماركت' if not is_en else 'Supermarket' }}</div>
-            <div class="azad-industry-item"><i class="fas fa-utensils"></i> {{ 'مطاعم' if not is_en else 'Restaurant' }}</div>
-            <div class="azad-industry-item"><i class="fas fa-building"></i> {{ 'شركات' if not is_en else 'Enterprise' }}</div>
-            <div class="azad-industry-item"><i class="fas fa-wrench"></i> {{ 'ورش' if not is_en else 'Workshop' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-car" aria-hidden="true"></i> {{ 'قطع غيار' if not is_en else 'Auto Parts' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-store" aria-hidden="true"></i> {{ 'تجزئة' if not is_en else 'Retail' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-shopping-cart" aria-hidden="true"></i> {{ 'سوبرماركت' if not is_en else 'Supermarket' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-utensils" aria-hidden="true"></i> {{ 'مطاعم' if not is_en else 'Restaurant' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-building" aria-hidden="true"></i> {{ 'شركات' if not is_en else 'Enterprise' }}</div>
+            <div class="azad-industry-item"><i class="fas fa-wrench" aria-hidden="true"></i> {{ 'ورش' if not is_en else 'Workshop' }}</div>
         </div>
     </div>
 </section>
@@ -219,36 +219,36 @@
 <section class="azad-section" id="whats-new">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag" style="background:rgba(14,165,233,0.06);border-color:rgba(14,165,233,0.15);color:var(--azad-cyan);"><i class="fas fa-sparkles"></i> {{ 'جديد 2026' if not is_en else "What's New 2026" }}</div>
+            <div class="azad-section-tag" style="background:rgba(14,165,233,0.06);border-color:rgba(14,165,233,0.15);color:var(--azad-cyan);"><i class="fas fa-sparkles" aria-hidden="true"></i> {{ 'جديد 2026' if not is_en else "What's New 2026" }}</div>
             <h2 class="azad-section-title">{{ 'ميزات جديدة كلياً' if not is_en else 'Brand New Features' }}</h2>
             <p class="azad-section-desc">{{ 'توسّعنا بموديولات قوية: ذكاء اصطناعي عربي، متجر إلكتروني متكامل، ومستودعات متعددة.' if not is_en else 'New powerful modules: Arabic AI, integrated online store, and multi-warehouse management.' }}</p>
         </div>
         <div class="azad-whatsnew-grid">
             <div class="azad-new-card" style="border-top:4px solid var(--azad-cyan);">
                 <span class="azad-new-badge" style="background:var(--azad-cyan);color:#fff;">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-robot"></i></div>
+                <div class="azad-new-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-robot" aria-hidden="true"></i></div>
                 <h3>{{ 'مساعد ذكاء اصطناعي عربي' if not is_en else 'Arabic AI Assistant' }}</h3>
                 <p>{{ 'مساعد Groq المدمج يفهم العربية وينفذ أوامرك: ينشئ العملاء، يسجل الفواتير، يولد التقارير، ويكشف الشذوذ. بدون اشتراك ChatGPT.' if not is_en else 'Built-in Groq AI understands Arabic: creates customers, records invoices, generates reports, detects anomalies. No ChatGPT subscription needed.' }}</p>
             </div>
             <div class="azad-new-card" style="border-top:4px solid var(--azad-accent);">
                 <span class="azad-new-badge" style="background:var(--azad-accent);color:var(--azad-primary);">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(212,160,23,0.1);color:var(--azad-accent);"><i class="fas fa-store"></i></div>
+                <div class="azad-new-icon" style="background:rgba(212,160,23,0.1);color:var(--azad-accent);"><i class="fas fa-store" aria-hidden="true"></i></div>
                 <h3>{{ 'متجر إلكتروني متكامل' if not is_en else 'Online Storefront' }}</h3>
                 <p>{{ 'متجر مربوط بالمخزون والمحاسبة مباشرة. سلة شراء، تقييمات، قائمة أمنيات، برنامج ولاء، كوبونات خصم، وحجوزات. ينطلق مع بياناتك الفعلية.' if not is_en else 'Store linked to inventory & accounting. Cart, reviews, wishlist, loyalty, coupons, bookings. Launches with your live data.' }}</p>
             </div>
             <div class="azad-new-card" style="border-top:4px solid var(--azad-success);">
                 <span class="azad-new-badge" style="background:var(--azad-success);color:#fff;">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-warehouse"></i></div>
+                <div class="azad-new-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
                 <h3>{{ 'إدارة مستودعات متقدمة' if not is_en else 'Advanced Warehouses' }}</h3>
                 <p>{{ 'مستودعات غير محدودة، نقل مخزون، جرد بالباركود، تتبع دفعات وتواريخ صلاحية، أرقام تسلسلية، تنبيهات ذكية. كل التفاصيل تحت السيطرة.' if not is_en else 'Unlimited warehouses, transfers, barcode inventory, batch/serial tracking, expiry alerts, smart reorder suggestions.' }}</p>
             </div>
         </div>
         <div class="azad-mini-grid">
-            <div class="azad-mini-item"><i class="fas fa-share-nodes" style="color:#0ea5e9;"></i><span>{{ 'تكامل CRM' if not is_en else 'CRM Integration' }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-calculator" style="color:#a855f7;"></i><span>{{ 'محاسبة قيد مزدوج' if not is_en else 'Double-Entry GL' }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-cash-register" style="color:#f59e0b;"></i><span>{{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale' }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-users-gear" style="color:#ec4899;"></i><span>{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-chart-pie" style="color:#06b6d4;"></i><span>{{ 'تقارير ذكية' if not is_en else 'Smart Reports' }}</span></div>
+            <div class="azad-mini-item"><i class="fas fa-share-nodes" style="color:#0ea5e9;" aria-hidden="true"></i><span>{{ 'تكامل CRM' if not is_en else 'CRM Integration' }}</span></div>
+            <div class="azad-mini-item"><i class="fas fa-calculator" style="color:#a855f7;" aria-hidden="true"></i><span>{{ 'محاسبة قيد مزدوج' if not is_en else 'Double-Entry GL' }}</span></div>
+            <div class="azad-mini-item"><i class="fas fa-cash-register" style="color:#f59e0b;" aria-hidden="true"></i><span>{{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale' }}</span></div>
+            <div class="azad-mini-item"><i class="fas fa-users-gear" style="color:#ec4899;" aria-hidden="true"></i><span>{{ 'HR ورواتب' if not is_en else 'HR & Payroll' }}</span></div>
+            <div class="azad-mini-item"><i class="fas fa-chart-pie" style="color:#06b6d4;" aria-hidden="true"></i><span>{{ 'تقارير ذكية' if not is_en else 'Smart Reports' }}</span></div>
         </div>
     </div>
 </section>
@@ -259,67 +259,67 @@
 <section class="azad-section" id="features" style="background:linear-gradient(180deg, rgba(15,23,36,0.3) 0%, transparent 50%, rgba(15,23,36,0.3) 100%);">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag"><i class="fas fa-cube"></i> {{ 'أركان المنصة' if not is_en else 'Core Platform' }}</div>
+            <div class="azad-section-tag"><i class="fas fa-cube" aria-hidden="true"></i> {{ 'أركان المنصة' if not is_en else 'Core Platform' }}</div>
             <h2 class="azad-section-title">{{ 'أربعة أركان متكاملة' if not is_en else 'Four Integrated Pillars' }}</h2>
             <p class="azad-section-desc">{{ 'أكثر من 125 جدول بيانات و 25+ وحدة برمجية تغطي كل جوانب إدارة أعمالك.' if not is_en else '125+ database tables and 25+ software modules covering every aspect of your business.' }}</p>
         </div>
         <div class="azad-pillars-grid">
             <div class="azad-pillar-card">
-                <div class="azad-pillar-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-warehouse"></i></div>
+                <div class="azad-pillar-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
                 <h3>{{ 'المخازن المتعددة والباركود' if not is_en else 'Multi-Warehouse & Barcode' }}</h3>
                 <p>{{ 'إدارة غير محدودة للمستودعات مع تتبع الكميات والتكلفة والحركة.' if not is_en else 'Unlimited warehouse management with quantity, cost, and movement tracking.' }}</p>
                 <ul class="azad-pillar-features">
-                    <li><i class="fas fa-check"></i> {{ 'مستودعات غير محدودة' if not is_en else 'Unlimited warehouses' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'جرد بالباركود و QR' if not is_en else 'Barcode & QR inventory' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تحويلات بين المخازن' if not is_en else 'Warehouse transfers' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تتبع دفعات وصلاحية' if not is_en else 'Batch & expiry tracking' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تنبيهات إعادة طلب ذكية' if not is_en else 'Smart reorder alerts' }}</li>
-                    <li><i class="fas fa-check"></i> {{ '3 مستويات أسعار' if not is_en else '3 price tiers' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مستودعات غير محدودة' if not is_en else 'Unlimited warehouses' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'جرد بالباركود و QR' if not is_en else 'Barcode & QR inventory' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تحويلات بين المخازن' if not is_en else 'Warehouse transfers' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تتبع دفعات وصلاحية' if not is_en else 'Batch & expiry tracking' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تنبيهات إعادة طلب ذكية' if not is_en else 'Smart reorder alerts' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ '3 مستويات أسعار' if not is_en else '3 price tiers' }}</li>
                 </ul>
             </div>
             <div class="azad-pillar-card">
-                <div class="azad-pillar-icon" style="background:rgba(240,180,41,0.1);color:var(--azad-accent);"><i class="fas fa-cash-register"></i></div>
+                <div class="azad-pillar-icon" style="background:rgba(240,180,41,0.1);color:var(--azad-accent);"><i class="fas fa-cash-register" aria-hidden="true"></i></div>
                 <h3>{{ 'الكاشير والفواتير الإلكترونية' if not is_en else 'POS & E-Invoicing' }}</h3>
                 <p>{{ 'نقاط بيع سريعة مع فواتير إلكترونية متوافقة مع قوانين الإمارات.' if not is_en else 'Fast POS with UAE-compliant e-invoicing.' }}</p>
                 <ul class="azad-pillar-features">
-                    <li><i class="fas fa-check"></i> {{ 'واجهة كاشير لمسية' if not is_en else 'Touch POS interface' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'فاتورة إلكترونية + QR' if not is_en else 'E-invoice with QR' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'طباعة A4 / حراري' if not is_en else 'A4 / Thermal print' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'فواتير مبيعات ومشتريات' if not is_en else 'Sales & purchase invoices' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'مرتجعات وخصومات' if not is_en else 'Returns & discounts' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'ضرائب وعملات متعددة' if not is_en else 'Tax & multi-currency' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'واجهة كاشير لمسية' if not is_en else 'Touch POS interface' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'فاتورة إلكترونية + QR' if not is_en else 'E-invoice with QR' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'طباعة A4 / حراري' if not is_en else 'A4 / Thermal print' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'فواتير مبيعات ومشتريات' if not is_en else 'Sales & purchase invoices' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مرتجعات وخصومات' if not is_en else 'Returns & discounts' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'ضرائب وعملات متعددة' if not is_en else 'Tax & multi-currency' }}</li>
                 </ul>
             </div>
             <div class="azad-pillar-card wide">
-                <div class="azad-pillar-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-book"></i></div>
+                <div class="azad-pillar-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-book" aria-hidden="true"></i></div>
                 <h3>{{ 'محاسبة القيد المزدوج والتقارير الذكية' if not is_en else 'Double-Entry Accounting & Smart Reports' }}</h3>
                 <p>{{ 'دورة محاسبية كاملة بالقيد المزدوج: من القيد اليومي إلى الميزانية العمومية.' if not is_en else 'Full double-entry accounting cycle: from journal entries to balance sheet.' }}</p>
                 <ul class="azad-pillar-features" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-                    <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ عام' if not is_en else 'General ledger' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'ميزان مراجعة' if not is_en else 'Trial balance' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'ميزانية عمومية' if not is_en else 'Balance sheet' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'قائمة دخل' if not is_en else 'Income statement' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إهلاك الأصول الثابتة' if not is_en else 'Fixed asset depreciation' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تقارير ضريبة VAT' if not is_en else 'VAT reports' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'مراكز كلفة' if not is_en else 'Cost centers' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إدارة شيكات' if not is_en else 'Cheque management' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'تحليل ذمم' if not is_en else 'AR/AP analysis' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'نسخ احتياطي تلقائي' if not is_en else 'Auto backup' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'دفتر أستاذ عام' if not is_en else 'General ledger' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'ميزان مراجعة' if not is_en else 'Trial balance' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'ميزانية عمومية' if not is_en else 'Balance sheet' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'قائمة دخل' if not is_en else 'Income statement' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'إهلاك الأصول الثابتة' if not is_en else 'Fixed asset depreciation' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تقارير ضريبة VAT' if not is_en else 'VAT reports' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مراكز كلفة' if not is_en else 'Cost centers' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'إدارة شيكات' if not is_en else 'Cheque management' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تحليل ذمم' if not is_en else 'AR/AP analysis' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'نسخ احتياطي تلقائي' if not is_en else 'Auto backup' }}</li>
                 </ul>
             </div>
             <div class="azad-pillar-card wide">
-                <div class="azad-pillar-icon" style="background:rgba(236,72,153,0.1);color:#ec4899;"><i class="fas fa-users-gear"></i></div>
+                <div class="azad-pillar-icon" style="background:rgba(236,72,153,0.1);color:#ec4899;"><i class="fas fa-users-gear" aria-hidden="true"></i></div>
                 <h3>{{ 'الموظفين والرواتب والصلاحيات' if not is_en else 'HR, Payroll & Permissions' }}</h3>
                 <p>{{ 'إدارة متكاملة للموظفين: عقود، حضور، رواتب، إجازات، صلاحيات دقيقة.' if not is_en else 'Full employee management: contracts, attendance, payroll, leaves, granular permissions.' }}</p>
                 <ul class="azad-pillar-features" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
-                    <li><i class="fas fa-check"></i> {{ 'ملف موظف شامل' if not is_en else 'Employee profile' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'حضور وبصمة (ZKTeco)' if not is_en else 'Attendance (ZKTeco)' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'مسير رواتب' if not is_en else 'Payroll processing' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'إجازات بدورة موافقة' if not is_en else 'Leave with approval' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'سلف وعمل إضافي' if not is_en else 'Loans & overtime' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'صلاحيات لكل مستخدم' if not is_en else 'Per-user permissions' }}</li>
-                    <li><i class="fas fa-check"></i> {{ '6 أدوار افتراضية' if not is_en else '6 default roles' }}</li>
-                    <li><i class="fas fa-check"></i> {{ 'سجل تدقيق كامل' if not is_en else 'Full audit log' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'ملف موظف شامل' if not is_en else 'Employee profile' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'حضور وبصمة (ZKTeco)' if not is_en else 'Attendance (ZKTeco)' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مسير رواتب' if not is_en else 'Payroll processing' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'إجازات بدورة موافقة' if not is_en else 'Leave with approval' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'سلف وعمل إضافي' if not is_en else 'Loans & overtime' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'صلاحيات لكل مستخدم' if not is_en else 'Per-user permissions' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ '6 أدوار افتراضية' if not is_en else '6 default roles' }}</li>
+                    <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'سجل تدقيق كامل' if not is_en else 'Full audit log' }}</li>
                 </ul>
             </div>
         </div>
@@ -332,7 +332,7 @@
 <section class="azad-section" id="pricing" style="background:linear-gradient(180deg, transparent 0%, rgba(212,160,23,0.02) 50%, transparent 100%);">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag"><i class="fas fa-tags"></i> {{ 'أسعار شفافة' if not is_en else 'Transparent Pricing' }}</div>
+            <div class="azad-section-tag"><i class="fas fa-tags" aria-hidden="true"></i> {{ 'أسعار شفافة' if not is_en else 'Transparent Pricing' }}</div>
             <h2 class="azad-section-title">{{ 'باقات مرنة تناسب عملك' if not is_en else 'Flexible Plans for Your Business' }}</h2>
             <p class="azad-section-desc">{{ 'اختر الباقة المناسبة — كل الباقات تشمل المحاسبة والمخزون والفواتير والتقارير.' if not is_en else 'Choose the right plan — all include accounting, inventory, invoices, and reports.' }}</p>
         </div>
@@ -370,15 +370,15 @@
                         <div class="azad-tier-price-sub">{{ 'شهرياً - مناسب للشركات الصغيرة' if not is_en else '/month — for small businesses' }}</div>
                         <div class="azad-tier-badge">{{ '⭐ الأكثر طلباً' if not is_en else '⭐ Most popular' }}</div>
                         <ul class="azad-tier-features">
-                            <li><i class="fas fa-check"></i> {{ 'حتى 3 مستخدمين' if not is_en else 'Up to 3 users' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'مبيعات ومشتريات ومخزون' if not is_en else 'Sales, purchases & inventory' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'فواتير إلكترونية + طباعة' if not is_en else 'E-invoices + printing' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'دعم واتساب' if not is_en else 'WhatsApp support' }}</li>
-                            <li><i class="fas fa-times" style="color:#ef4444;"></i> {{ 'لا يشمل المتجر الإلكتروني' if not is_en else 'No online storefront' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'حتى 3 مستخدمين' if not is_en else 'Up to 3 users' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مبيعات ومشتريات ومخزون' if not is_en else 'Sales, purchases & inventory' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'فواتير إلكترونية + طباعة' if not is_en else 'E-invoices + printing' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تقارير أساسية' if not is_en else 'Basic reports' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'دعم واتساب' if not is_en else 'WhatsApp support' }}</li>
+                            <li><i class="fas fa-times" style="color:#ef4444;" aria-hidden="true"></i> {{ 'لا يشمل المتجر الإلكتروني' if not is_en else 'No online storefront' }}</li>
                         </ul>
                         {% set wa_msg_starter = 'مرحباً، أرغب في الاشتراك في الباقة الأساسية - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_starter | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
+                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_starter | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
                     </div>
                 </div>
                 <div class="azad-tier-card" data-tier="1">
@@ -387,16 +387,16 @@
                         <div class="azad-tier-price-big">$79</div>
                         <div class="azad-tier-price-sub">{{ 'شهرياً - للشركات المتوسطة' if not is_en else '/month — for growing businesses' }}</div>
                         <ul class="azad-tier-features">
-                            <li><i class="fas fa-check"></i> {{ 'حتى 10 مستخدمين' if not is_en else 'Up to 10 users' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'كل ميزات الأساسية' if not is_en else 'All Starter features' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'ذكاء اصطناعي كامل' if not is_en else 'Full AI features' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'دفتر أستاذ عام (GL)' if not is_en else 'General ledger (GL)' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني' if not is_en else 'Online storefront' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'تقارير متقدمة' if not is_en else 'Advanced reports' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'حتى 10 مستخدمين' if not is_en else 'Up to 10 users' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'كل ميزات الأساسية' if not is_en else 'All Starter features' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'ذكاء اصطناعي كامل' if not is_en else 'Full AI features' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'دفتر أستاذ عام (GL)' if not is_en else 'General ledger (GL)' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'نقاط بيع (POS)' if not is_en else 'Point of Sale (POS)' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'متجر إلكتروني' if not is_en else 'Online storefront' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تقارير متقدمة' if not is_en else 'Advanced reports' }}</li>
                         </ul>
                         {% set wa_msg_pro = 'مرحباً، أرغب في الاشتراك في الباقة الاحترافية - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_pro | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
+                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_pro | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
                     </div>
                 </div>
                 <div class="azad-tier-card" data-tier="2">
@@ -405,22 +405,22 @@
                         <div class="azad-tier-price-big">$249</div>
                         <div class="azad-tier-price-sub">{{ 'شهرياً - للشركات الكبيرة' if not is_en else '/month — for large enterprises' }}</div>
                         <ul class="azad-tier-features">
-                            <li><i class="fas fa-check"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'متجر إلكتروني + API' if not is_en else 'Online store + API' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'HR ورواتب وشؤون موظفين' if not is_en else 'HR & payroll' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'الذكاء الاصطناعي لتحليل البيانات' if not is_en else 'AI-powered business insights' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'النسخ الاحتياطي التلقائي اليومي' if not is_en else 'Automated daily cloud backups' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'تخصيص كامل + تقارير مخصصة' if not is_en else 'Full customization' }}</li>
-                            <li><i class="fas fa-check"></i> {{ 'دعم فني 24/7 + مدير حساب' if not is_en else '24/7 support + account manager' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'مستخدمين غير محدودين' if not is_en else 'Unlimited users' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'كل الميزات المتقدمة' if not is_en else 'All advanced features' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'متجر إلكتروني + API' if not is_en else 'Online store + API' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'HR ورواتب وشؤون موظفين' if not is_en else 'HR & payroll' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'الذكاء الاصطناعي لتحليل البيانات' if not is_en else 'AI-powered business insights' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'النسخ الاحتياطي التلقائي اليومي' if not is_en else 'Automated daily cloud backups' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'تخصيص كامل + تقارير مخصصة' if not is_en else 'Full customization' }}</li>
+                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ 'دعم فني 24/7 + مدير حساب' if not is_en else '24/7 support + account manager' }}</li>
                         </ul>
                         {% set wa_msg_enterprise = 'مرحباً، أرغب في الاشتراك في باقة المؤسسات - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_enterprise | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
+                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_enterprise | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}</a>
                     </div>
                 </div>
             </div>
             <div>
-                <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--azad-accent-light);"><i class="fas fa-puzzle-piece"></i> {{ 'موديولات إضافية (رسوم ثابتة)' if not is_en else 'Add-on Modules (Flat fee)' }}</div>
+                <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--azad-accent-light);"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ 'موديولات إضافية (رسوم ثابتة)' if not is_en else 'Add-on Modules (Flat fee)' }}</div>
                 <div class="azad-addon-grid">
                     <div class="azad-addon-item">
                         <input type="checkbox" id="addonPOS" aria-label="{{ 'نقاط البيع (POS)' if not is_en else 'Point of Sale' }}">
@@ -472,7 +472,7 @@
     <div class="azad-section-inner">
         <div class="azad-ai-grid">
             <div>
-                <div class="azad-section-tag" style="color:var(--azad-success);border-color:rgba(16,185,129,0.15);background:rgba(16,185,129,0.06);"><i class="fas fa-robot"></i> {{ 'مساعد ذكي' if not is_en else 'AI Assistant' }}</div>
+                <div class="azad-section-tag" style="color:var(--azad-success);border-color:rgba(16,185,129,0.15);background:rgba(16,185,129,0.06);"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مساعد ذكي' if not is_en else 'AI Assistant' }}</div>
                 <h2 class="azad-section-title">{{ 'ذكاء اصطناعي يتحدث بلغتك' if not is_en else 'AI That Speaks Your Language' }}</h2>
                 <p class="azad-section-desc" style="margin:0 0 20px;">
                     {% if not is_en %}
@@ -482,9 +482,9 @@
                     {% endif %}
                 </p>
                 <ul class="azad-ai-features">
-                    <li><i class="fas fa-microchip"></i> <span><strong>{{ 'تنفيذ عمليات حقيقية' if not is_en else 'Real operation execution' }}</strong> — {{ 'ينشئ عميل، يسجل فاتورة، يصرف سند، يولد تقرير بأمر نصي' if not is_en else 'creates customers, records invoices, generates reports via text command' }}</span></li>
-                    <li><i class="fas fa-chart-line"></i> <span><strong>{{ 'تنبؤ مبيعات وتحليل' if not is_en else 'Sales forecasting & analysis' }}</strong> — {{ 'يحلل بياناتك ويكشف الأنماط ويتوقع الاتجاهات' if not is_en else 'analyzes data, detects patterns, predicts trends' }}</span></li>
-                    <li><i class="fas fa-shield-alt"></i> <span><strong>{{ 'كشف شذوذ لحظي' if not is_en else 'Real-time anomaly detection' }}</strong> — {{ 'يفحص كل عملية حفظ ويكشف القيود غير المتوازنة فوراً' if not is_en else 'checks every save and flags unbalanced entries instantly' }}</span></li>
+                    <li><i class="fas fa-microchip" aria-hidden="true"></i> <span><strong>{{ 'تنفيذ عمليات حقيقية' if not is_en else 'Real operation execution' }}</strong> — {{ 'ينشئ عميل، يسجل فاتورة، يصرف سند، يولد تقرير بأمر نصي' if not is_en else 'creates customers, records invoices, generates reports via text command' }}</span></li>
+                    <li><i class="fas fa-chart-line" aria-hidden="true"></i> <span><strong>{{ 'تنبؤ مبيعات وتحليل' if not is_en else 'Sales forecasting & analysis' }}</strong> — {{ 'يحلل بياناتك ويكشف الأنماط ويتوقع الاتجاهات' if not is_en else 'analyzes data, detects patterns, predicts trends' }}</span></li>
+                    <li><i class="fas fa-shield-alt" aria-hidden="true"></i> <span><strong>{{ 'كشف شذوذ لحظي' if not is_en else 'Real-time anomaly detection' }}</strong> — {{ 'يفحص كل عملية حفظ ويكشف القيود غير المتوازنة فوراً' if not is_en else 'checks every save and flags unbalanced entries instantly' }}</span></li>
                 </ul>
             </div>
             <div class="azad-ai-chat">
@@ -503,7 +503,7 @@
 <section class="azad-section" id="about">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag"><i class="fas fa-medal"></i> {{ 'لماذا أزاد' if not is_en else 'Why Azad' }}</div>
+            <div class="azad-section-tag"><i class="fas fa-medal" aria-hidden="true"></i> {{ 'لماذا أزاد' if not is_en else 'Why Azad' }}</div>
             <h2 class="azad-section-title">{{ 'أرقام تتحدث عن نفسها' if not is_en else 'Numbers That Speak' }}</h2>
         </div>
         <div class="azad-stats-grid">
@@ -514,7 +514,7 @@
         </div>
         <div class="azad-testi-grid">
             <div class="azad-testi-card">
-                <div class="azad-testi-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <div class="azad-testi-stars"><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i></div>
                 <div class="azad-testi-text">{{ '"نظام متكامل ومريح جداً. إدارة المخزون والمبيعات صارت أسهل بكثير. الدعم الفني سريع ومتفهم."' if not is_en else '"An integrated and very convenient system. Inventory and sales management became much easier. Fast and understanding support."' }}</div>
                 <div class="azad-testi-author">
                     <div class="azad-testi-avatar" style="background:rgba(212,160,23,0.15);color:var(--azad-accent-light);">أ</div>
@@ -522,7 +522,7 @@
                 </div>
             </div>
             <div class="azad-testi-card">
-                <div class="azad-testi-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                <div class="azad-testi-stars"><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i></div>
                 <div class="azad-testi-text">{{ '"التقارير المالية والمحاسبة بالقيد المزدوج ساعدتنا في تنظيم حساباتنا بدقة. أنصح به بشدة."' if not is_en else '"Financial reports and double-entry accounting helped us organize our accounts accurately. Highly recommended."' }}</div>
                 <div class="azad-testi-author">
                     <div class="azad-testi-avatar" style="background:rgba(14,165,233,0.15);color:var(--azad-cyan);">س</div>
@@ -539,32 +539,32 @@
 <section class="azad-section" id="faq" style="background:linear-gradient(0deg, rgba(15,23,36,0.3) 0%, transparent 100%);">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag"><i class="fas fa-question-circle"></i> {{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</div>
+            <div class="azad-section-tag"><i class="fas fa-question-circle" aria-hidden="true"></i> {{ 'الأسئلة الشائعة' if not is_en else 'FAQ' }}</div>
             <h2 class="azad-section-title">{{ 'إجابات سريعة' if not is_en else 'Quick Answers' }}</h2>
         </div>
         <div class="azad-faq-list">
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'ما هي منصة أزاديكسا؟' if not is_en else 'What is Azadexa?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'ما هي منصة أزاديكسا؟' if not is_en else 'What is Azadexa?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'أزاديكسا (Azadexa) هي منصة ERP متعددة المستأجرين مطورة في الإمارات. تضم 25+ وحدة متكاملة: محاسبة قيد مزدوج، مبيعات، مشتريات، مخزون، HR، رواتب، نقاط بيع، متجر إلكتروني، CRM.' if not is_en else 'Azadexa is a multi-tenant ERP platform built in the UAE. It includes 25+ integrated modules: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM.' }}</div>
             </div>
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'ما الفرق بين أزاديكسا وبرامج المحاسبة العادية؟' if not is_en else 'What makes it different from basic accounting software?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'ما الفرق بين أزاديكسا وبرامج المحاسبة العادية؟' if not is_en else 'What makes it different from basic accounting software?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'المنصة تعمل بالقيد المزدوج (Double-Entry) وليس القيد المفرد. توفر دورة محاسبية كاملة: قيود يومية، ميزان مراجعة، ميزانية عمومية، قائمة دخل، تدفق نقدي، وإهلاك الأصول الثابتة.' if not is_en else 'Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation.' }}</div>
             </div>
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'هل تدعم ضريبة القيمة المضافة في الإمارات؟' if not is_en else 'Does it support UAE VAT?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'هل تدعم ضريبة القيمة المضافة في الإمارات؟' if not is_en else 'Does it support UAE VAT?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'نعم، تدعم VAT بنسبة 5% وفق متطلبات الهيئة الاتحادية للضرائب. توفر تقارير ضريبية شاملة وفواتير إلكترونية مع QR Code.' if not is_en else 'Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes.' }}</div>
             </div>
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'هل يوجد متجر إلكتروني مدمج؟' if not is_en else 'Is there a built-in online store?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'هل يوجد متجر إلكتروني مدمج؟' if not is_en else 'Is there a built-in online store?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'نعم، يتضمن المتجر الإلكتروني: سلة شراء، تقييمات، قائمة أمنيات، برنامج ولاء ونقاط، قسائم خصم، وحجوزات. مربوط مباشرة بالمخزون والمحاسبة.' if not is_en else 'Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting.' }}</div>
             </div>
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'هل تدعم الفروع المتعددة؟' if not is_en else 'Does it support multiple branches?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'هل تدعم الفروع المتعددة؟' if not is_en else 'Does it support multiple branches?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'نعم، تدعم الفروع والمستودعات المتعددة مع صلاحيات لكل فرع، تقارير منفصلة، نقل مخزون، وفصل محاسبي حسب الفرع.' if not is_en else 'Yes. Multi-branch and multi-warehouse with per-branch permissions, separate reports, stock transfers, and per-branch accounting.' }}</div>
             </div>
             <div class="azad-faq-item">
-                <div class="azad-faq-q">{{ 'كيف أبدأ باستخدام المنصة؟' if not is_en else 'How do I get started?' }} <i class="fas fa-chevron-down"></i></div>
+                <div class="azad-faq-q">{{ 'كيف أبدأ باستخدام المنصة؟' if not is_en else 'How do I get started?' }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
                 <div class="azad-faq-a">{{ 'تواصل معنا عبر واتساب. نحدد الباقة المناسبة، نجهز البيئة السحابية، ونقدم تدريباً مجانياً لفريقك. يمكنك البدء فوراً. ' if not is_en else 'Contact us via WhatsApp. We choose the right plan, set up the cloud, and provide free training. You start immediately. ' }}<a href="{{ url_for('public.pricing') }}">{{ 'شاهد الباقات' if not is_en else 'View plans' }}</a></div>
             </div>
         </div>
@@ -577,30 +577,30 @@
 <section class="azad-section" id="contact">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag"><i class="fas fa-phone-alt"></i> {{ 'تواصل' if not is_en else 'Contact' }}</div>
+            <div class="azad-section-tag"><i class="fas fa-phone-alt" aria-hidden="true"></i> {{ 'تواصل' if not is_en else 'Contact' }}</div>
             <h2 class="azad-section-title">{{ 'فريقنا جاهز لمساعدتك' if not is_en else 'We Are Here to Help' }}</h2>
             <p class="azad-section-desc">{{ 'تواصل معنا عبر القنوات التالية وسنرد خلال ساعات' if not is_en else 'Reach out via any channel below — we respond within hours' }}</p>
         </div>
         <div class="azad-contact-grid">
             <div class="azad-contact-card">
-                <i class="fab fa-whatsapp"></i>
+                <i class="fab fa-whatsapp" aria-hidden="true"></i>
                 <h4>{{ 'واتساب' if not is_en else 'WhatsApp' }}</h4>
                 <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}" target="_blank" rel="noopener">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
             </div>
             <div class="azad-contact-card">
-                <i class="fas fa-phone"></i>
+                <i class="fas fa-phone" aria-hidden="true"></i>
                 <h4>{{ 'اتصال' if not is_en else 'Phone' }}</h4>
                 <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
             </div>
             <div class="azad-contact-card">
-                <i class="fas fa-envelope"></i>
+                <i class="fas fa-envelope" aria-hidden="true"></i>
                 <h4>{{ 'بريد إلكتروني' if not is_en else 'Email' }}</h4>
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
             </div>
         </div>
         <div class="azad-contact-bottom">
-            <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-hero-primary" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'تواصل عبر واتساب' if not is_en else 'Chat on WhatsApp' }}</a>
-            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ _email_subject | urlencode }}" class="btn-hero-secondary"><i class="fas fa-envelope"></i> {{ 'راسلنا' if not is_en else 'Email Us' }}</a>
+            <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-hero-primary" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'تواصل عبر واتساب' if not is_en else 'Chat on WhatsApp' }}</a>
+            <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}?subject={{ _email_subject | urlencode }}" class="btn-hero-secondary"><i class="fas fa-envelope" aria-hidden="true"></i> {{ 'راسلنا' if not is_en else 'Email Us' }}</a>
         </div>
     </div>
 </section>
@@ -615,9 +615,9 @@
                 <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
                 <p>{{ 'منصة ERP سحابية متكاملة — محاسبة، مخازن، AI، نقاط بيع، متجر إلكتروني، موظفين ورواتب.' if not is_en else 'Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.' }}</p>
                 <div class="azad-footer-social">
-                    {% if developer_whatsapp_link %}<a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>{% endif %}
-                    {% if developer_phone %}<a href="tel:{{ developer_phone }}" aria-label="{{ 'اتصال' if not is_en else 'Phone' }}"><i class="fas fa-phone"></i></a>{% endif %}
-                    {% if developer_email %}<a href="mailto:{{ developer_email }}" aria-label="Email"><i class="fas fa-envelope"></i></a>{% endif %}
+                    {% if developer_whatsapp_link %}<a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
+                    {% if developer_phone %}<a href="tel:{{ developer_phone }}" aria-label="{{ 'اتصال' if not is_en else 'Phone' }}"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
+                    {% if developer_email %}<a href="mailto:{{ developer_email }}" aria-label="Email"><i class="fas fa-envelope" aria-hidden="true"></i></a>{% endif %}
                 </div>
             </div>
             <div class="azad-footer-col">
@@ -641,8 +641,8 @@
             <div class="azad-footer-col">
                 <h4>{{ 'معلومات' if not is_en else 'Info' }}</h4>
                 <ul class="azad-footer-links">
-                    <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch"></i> v{{ config.APP_VERSION }}</span></li>
-                    <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
+                    <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
+                    <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
                     {% if developer_credit %}<li><span style="font-size:0.8rem;color:var(--azad-text-muted);">{{ developer_credit }}</span></li>{% endif %}
                 </ul>
             </div>

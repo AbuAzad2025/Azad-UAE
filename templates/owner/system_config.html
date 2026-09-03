@@ -12,7 +12,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -40,7 +40,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_sales" name="enable_sales" {{ 'checked' if settings.enable_sales }} aria-label="enable sales">
                 <label class="custom-control-label" for="enable_sales">
-                  <i class="fas fa-shopping-cart text-success"></i> {{ t('Sales') }}
+                  <i class="fas fa-shopping-cart text-success" aria-hidden="true"></i> {{ t('Sales') }}
                 </label>
               </div>
             </div>
@@ -48,7 +48,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_purchases" name="enable_purchases" {{ 'checked' if settings.enable_purchases }} aria-label="enable purchases">
                 <label class="custom-control-label" for="enable_purchases">
-                  <i class="fas fa-truck text-primary"></i> {{ t('Purchases') }}
+                  <i class="fas fa-truck text-primary" aria-hidden="true"></i> {{ t('Purchases') }}
                 </label>
               </div>
             </div>
@@ -56,7 +56,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_inventory" name="enable_inventory" {{ 'checked' if settings.enable_inventory }} aria-label="enable inventory">
                 <label class="custom-control-label" for="enable_inventory">
-                  <i class="fas fa-boxes text-warning"></i> {{ t('Inventory') }}
+                  <i class="fas fa-boxes text-warning" aria-hidden="true"></i> {{ t('Inventory') }}
                 </label>
               </div>
             </div>
@@ -64,7 +64,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_customers" name="enable_customers" {{ 'checked' if settings.enable_customers }} aria-label="enable customers">
                 <label class="custom-control-label" for="enable_customers">
-                  <i class="fas fa-users text-info"></i> {{ t('Customers') }}
+                  <i class="fas fa-users text-info" aria-hidden="true"></i> {{ t('Customers') }}
                 </label>
               </div>
             </div>
@@ -75,7 +75,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_expenses" name="enable_expenses" {{ 'checked' if settings.enable_expenses }} aria-label="enable expenses">
                 <label class="custom-control-label" for="enable_expenses">
-                  <i class="fas fa-money-bill-wave text-danger"></i> {{ t('Expenses') }}
+                  <i class="fas fa-money-bill-wave text-danger" aria-hidden="true"></i> {{ t('Expenses') }}
                 </label>
               </div>
             </div>
@@ -83,7 +83,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_gl" name="enable_gl" {{ 'checked' if settings.enable_gl }} aria-label="enable gl">
                 <label class="custom-control-label" for="enable_gl">
-                  <i class="fas fa-book text-secondary"></i> {{ t('General_Ledger') }}
+                  <i class="fas fa-book text-secondary" aria-hidden="true"></i> {{ t('General_Ledger') }}
                 </label>
               </div>
             </div>
@@ -91,14 +91,14 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_reports" name="enable_reports" {{ 'checked' if settings.enable_reports }} aria-label="enable reports">
                 <label class="custom-control-label" for="enable_reports">
-                  <i class="fas fa-chart-line text-success"></i>{{ t('Reports') }}</label>
+                  <i class="fas fa-chart-line text-success" aria-hidden="true"></i>{{ t('Reports') }}</label>
               </div>
             </div>
             <div class="col-md-3">
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_ai_assistant" name="enable_ai_assistant" {{ 'checked' if settings.enable_ai_assistant }} aria-label="enable ai assistant">
                 <label class="custom-control-label" for="enable_ai_assistant">
-                  <i class="fas fa-robot text-primary"></i> {{ t('AI_Assistant') }}
+                  <i class="fas fa-robot text-primary" aria-hidden="true"></i> {{ t('AI_Assistant') }}
                 </label>
               </div>
             </div>
@@ -109,7 +109,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_pos" name="enable_pos" {{ 'checked' if settings.enable_pos }} aria-label="enable pos">
                 <label class="custom-control-label" for="enable_pos">
-                  <i class="fas fa-cash-register text-success"></i> {{ t('Point_Of_Sale_POS') }}
+                  <i class="fas fa-cash-register text-success" aria-hidden="true"></i> {{ t('Point_Of_Sale_POS') }}
                 </label>
               </div>
             </div>
@@ -128,7 +128,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_barcode_scanner" name="enable_barcode_scanner" {{ 'checked' if settings.enable_barcode_scanner }} aria-label="enable barcode scanner">
                 <label class="custom-control-label" for="enable_barcode_scanner">
-                  <i class="fas fa-barcode"></i> {{ t('Barcode_Scanner') }}
+                  <i class="fas fa-barcode" aria-hidden="true"></i> {{ t('Barcode_Scanner') }}
                 </label>
               </div>
             </div>
@@ -136,7 +136,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_multi_warehouse" name="enable_multi_warehouse" {{ 'checked' if settings.enable_multi_warehouse }} aria-label="enable multi warehouse">
                 <label class="custom-control-label" for="enable_multi_warehouse">
-                  <i class="fas fa-warehouse"></i> {{ t('Multiple_Warehouses') }}
+                  <i class="fas fa-warehouse" aria-hidden="true"></i> {{ t('Multiple_Warehouses') }}
                 </label>
               </div>
             </div>
@@ -144,7 +144,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_multi_currency" name="enable_multi_currency" {{ 'checked' if settings.enable_multi_currency }} aria-label="enable multi currency">
                 <label class="custom-control-label" for="enable_multi_currency">
-                  <i class="fas fa-dollar-sign"></i> {{ t('Multiple_Currencies') }}
+                  <i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ t('Multiple_Currencies') }}
                 </label>
               </div>
             </div>
@@ -155,7 +155,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_discounts" name="enable_discounts" {{ 'checked' if settings.enable_discounts }} aria-label="enable discounts">
                 <label class="custom-control-label" for="enable_discounts">
-                  <i class="fas fa-percent"></i> {{ t('Discounts') }}
+                  <i class="fas fa-percent" aria-hidden="true"></i> {{ t('Discounts') }}
                 </label>
               </div>
             </div>
@@ -163,7 +163,7 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_returns" name="enable_returns" {{ 'checked' if settings.enable_returns }} aria-label="enable returns">
                 <label class="custom-control-label" for="enable_returns">
-                  <i class="fas fa-undo"></i> {{ t('Returns') }}
+                  <i class="fas fa-undo" aria-hidden="true"></i> {{ t('Returns') }}
                 </label>
               </div>
             </div>
@@ -174,10 +174,10 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" id="enable_ecommerce" name="enable_ecommerce" {{ 'checked' if settings.enable_ecommerce }} aria-label="enable ecommerce">
                 <label class="custom-control-label font-weight-bold" for="enable_ecommerce">
-                  <i class="fas fa-store text-success"></i> {{ t('Ecommerce_Stores_Toggle') }}
+                  <i class="fas fa-store text-success" aria-hidden="true"></i> {{ t('Ecommerce_Stores_Toggle') }}
                 </label>
                 <small class="form-text text-muted d-block mt-1">{{ t('Ecommerce_Stop_Hint') }}</small>
-                <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success mt-2" aria-label="{{ t('Manage_Payment_Methods') }}"><i class="fas fa-credit-card mr-1"></i> {{ t('Manage_Payment_Methods') }}</a>
+                <a href="{{ url_for('owner.store_payment_methods') }}" class="btn btn-outline-success mt-2" aria-label="{{ t('Manage_Payment_Methods') }}"><i class="fas fa-credit-card mr-1" aria-hidden="true"></i> {{ t('Manage_Payment_Methods') }}</a>
               </div>
             </div>
           </div>
@@ -236,10 +236,10 @@
         <div class="row">
         <div class="col-12">
           <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ t('Save_Settings') }}">
-            <i class="fas fa-save mr-2"></i>{{ t('Save_Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save_Settings') }}
           </button>
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="{{ t('Cancel_And_Return') }}">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
+            <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>

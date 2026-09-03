@@ -43,10 +43,10 @@
         بإدارة المهندس أحمد غنام.') }}
       </p>
       <div class="azad-login-trust">
-        <span><i class="fas fa-shield-halved"></i> {{ _('أمان متقدم') }}</span>
-        <span><i class="fas fa-server"></i> {{ _('موثوقية عالية') }}</span>
-        <span><i class="fas fa-gauge-high"></i> {{ _('أداء استثنائي') }}</span>
-        <span><i class="fas fa-cloud"></i> {{ _('منصة سحابية') }}</span>
+        <span><i class="fas fa-shield-halved" aria-hidden="true"></i> {{ _('أمان متقدم') }}</span>
+        <span><i class="fas fa-server" aria-hidden="true"></i> {{ _('موثوقية عالية') }}</span>
+        <span><i class="fas fa-gauge-high" aria-hidden="true"></i> {{ _('أداء استثنائي') }}</span>
+        <span><i class="fas fa-cloud" aria-hidden="true"></i> {{ _('منصة سحابية') }}</span>
       </div>
     </aside>
 
@@ -80,7 +80,7 @@
           <div class="azad-login-field">
             <label for="username">{{ _('اسم المستخدم') }}</label>
             <div class="azad-login-input-wrap">
-              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-user"></i></span>
+              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-user" aria-hidden="true"></i></span>
               <input type="text" id="username" name="username" class="azad-ltr"
                 value="{{ username_value or '' }}" placeholder="{{ _('اسم المستخدم') }}"
                 required autofocus autocomplete="username" minlength="2" maxlength="100"
@@ -92,12 +92,12 @@
           <div class="azad-login-field">
             <label for="password">{{ _('كلمة المرور') }}</label>
             <div class="azad-login-input-wrap">
-              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
+              <span class="azad-login-input-wrap__icon" aria-hidden="true"><i class="fas fa-lock" aria-hidden="true"></i></span>
               <input type="password" id="password" name="password"
                 placeholder="••••••••" required autocomplete="current-password" minlength="6"
                 autocapitalize="none" autocorrect="off" spellcheck="false" maxlength="128">
               <button type="button" class="azad-login-toggle-pass" id="togglePassword" aria-label="{{ _('إظهار أو إخفاء كلمة المرور') }}" title="{{ _('عرض') }}">
-                <i class="fas fa-eye"></i>
+                <i class="fas fa-eye" aria-hidden="true"></i>
               </button>
             </div>
           </div>

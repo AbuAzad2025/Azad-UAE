@@ -6,7 +6,7 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('ledger.admin_dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('العودة') }} {{ t('للوحة') }} {{ t('Control') }}
     </a>
   </div>
 </div>
@@ -17,7 +17,7 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-cogs mr-2"></i>{{ t('Settings') }} {{ t('General') }}
+          <i class="fas fa-cogs mr-2" aria-hidden="true"></i>{{ t('Settings') }} {{ t('General') }}
         </h5>
       </div>
       <div class="card-body">
@@ -59,7 +59,7 @@
           </div>
           
           <button type="submit" class="btn btn-primary">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -71,7 +71,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-line mr-2"></i>{{ t('Settings_2') }} {{ t('Accounts') }}
+          <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('Settings_2') }} {{ t('Accounts') }}
         </h5>
       </div>
       <div class="card-body">
@@ -116,7 +116,7 @@
           </div>
           
           <button type="submit" class="btn btn-success">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -130,7 +130,7 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-pie mr-2"></i>{{ t('Settings_2') }} {{ t('Reports') }}
+          <i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('Settings_2') }} {{ t('Reports') }}
         </h5>
       </div>
       <div class="card-body">
@@ -173,7 +173,7 @@
           </div>
           
           <button type="submit" class="btn btn-info">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -185,7 +185,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-shield-alt mr-2"></i>{{ t('Settings_2') }} {{ t('الأمان') }}
+          <i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>{{ t('Settings_2') }} {{ t('الأمان') }}
         </h5>
       </div>
       <div class="card-body">
@@ -222,7 +222,7 @@
           </div>
           
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Settings') }}
           </button>
         </form>
       </div>
@@ -236,7 +236,7 @@
     <div class="card">
       <div class="card-header bg-gradient-secondary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-database mr-2"></i>{{ t('Settings_2') }} {{ t('Backups') }} {{ t('Reserve') }}
+          <i class="fas fa-database mr-2" aria-hidden="true"></i>{{ t('Settings_2') }} {{ t('Backups') }} {{ t('Reserve') }}
         </h5>
       </div>
       <div class="card-body">
@@ -264,7 +264,7 @@
               </div>
               
               <button type="submit" class="btn btn-secondary">
-                <i class="fas fa-save mr-2"></i>{{ t('Save') }} {{ t('Settings') }}
+                <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }} {{ t('Settings') }}
               </button>
             </form>
           </div>
@@ -274,7 +274,7 @@
               <h5>{{ t('Backups') }} {{ t('Reserve') }} {{ t('Manual_2') }}</h5>
               <p class="text-muted">{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }} {{ t('فورية') }} من {{ t('قاعدة') }} {{ t('Data') }}</p>
               <button type="button" class="btn btn-primary btn-lg" data-action="create-backup">
-                <i class="fas fa-download mr-2"></i>{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
+                <i class="fas fa-download mr-2" aria-hidden="true"></i>{{ t('Create') }} {{ t('نسخة') }} {{ t('Reserve_2') }}
               </button>
             </div>
           </div>
@@ -295,7 +295,7 @@
             <p class="mb-0">{{ t('Accounts_2') }} {{ t('Accounting_2') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-chart-line fa-2x"></i>
+            <i class="fas fa-chart-line fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -311,7 +311,7 @@
             <p class="mb-0">{{ t('Reports_3') }} {{ t('Available') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-chart-pie fa-2x"></i>
+            <i class="fas fa-chart-pie fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -327,7 +327,7 @@
             <p class="mb-0">{{ t('أنواع') }} {{ t('قيود') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-book fa-2x"></i>
+            <i class="fas fa-book fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -343,7 +343,7 @@
             <p class="mb-0">{{ t('أمان') }} {{ t('Data') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-shield-alt fa-2x"></i>
+            <i class="fas fa-shield-alt fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>

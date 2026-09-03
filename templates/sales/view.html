@@ -12,7 +12,7 @@
 
     <p class="text-muted mb-0">
 
-      <i class="far fa-calendar"></i> {{ sale.sale_date.strftime('%Y-%m-%d') }}
+      <i class="far fa-calendar" aria-hidden="true"></i> {{ sale.sale_date.strftime('%Y-%m-%d') }}
 
     </p>
 
@@ -22,19 +22,19 @@
 
     <a href="{{ url_for('sales.print_invoice', id=sale.id) }}" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
 
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
 
     </a>
 
     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#returnModal">
 
-      <i class="fas fa-undo mr-2"></i>{{ t('Return') }}
+      <i class="fas fa-undo mr-2" aria-hidden="true"></i>{{ t('Return') }}
 
     </button>
 
     <a href="{{ url_for('sales.index') }}" class="btn btn-info">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_list') }}
 
     </a>
 
@@ -42,13 +42,13 @@
 
             data-delete-item="{{sale.id}}" data-item-type="sales" data-item-name="{{ sale.sale_number | e }}">
 
-      <i class="fas fa-trash mr-2"></i>{{ t('Delete') }}
+      <i class="fas fa-trash mr-2" aria-hidden="true"></i>{{ t('Delete') }}
 
     </button>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('main_dashboard') }}
 
     </a>
 
@@ -173,7 +173,7 @@
 
           <div class="col-6">
 
-            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2"></i>{{ t('invoice') }} {{ t('sale') }}</h2>
+            <h2 class="mb-3"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('invoice') }} {{ t('sale') }}</h2>
 
             <p class="mb-1"><strong>{{ t('invoice_number') }}:</strong> {{ sale.sale_number }}</p>
 
@@ -189,7 +189,7 @@
 
             <p class="mb-0">
 
-              <i class="fas fa-phone mr-1"></i> {{ (tenant_phone or company_phone) | e }}
+              <i class="fas fa-phone mr-1" aria-hidden="true"></i> {{ (tenant_phone or company_phone) | e }}
 
             </p>
 
@@ -207,7 +207,7 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-primary"><i class="fas fa-user-circle mr-2"></i>{{ t('customer_info') }}</h5>
+            <h5 class="text-primary"><i class="fas fa-user-circle mr-2" aria-hidden="true"></i>{{ t('customer_info') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
@@ -243,7 +243,7 @@
 
           <div class="col-md-6">
 
-            <h5 class="text-success"><i class="fas fa-user-tie mr-2"></i>{{ t('seller_info') }}</h5>
+            <h5 class="text-success"><i class="fas fa-user-tie mr-2" aria-hidden="true"></i>{{ t('seller_info') }}</h5>
 
             <div class="p-3 bg-light rounded">
 
@@ -266,7 +266,7 @@
         {% if sale.seller_id or sale.pos_session_id or sale.taxable_amount %}
         <div class="row mb-4">
           <div class="col-12">
-            <h5 class="text-muted"><i class="fas fa-clipboard-check mr-2"></i>{{ t('Audit_Info') }}</h5>
+            <h5 class="text-muted"><i class="fas fa-clipboard-check mr-2" aria-hidden="true"></i>{{ t('Audit_Info') }}</h5>
             <div class="p-3 border rounded small">
               <div class="row">
                 {% if sale.seller_id %}
@@ -286,7 +286,7 @@
 
 
 
-        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2"></i>{{ t('Items') }}</h5>
+        <h5 class="text-primary mb-3"><i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('Items') }}</h5>
 
         <div class="table-responsive">
 
@@ -326,7 +326,7 @@
 
                   <div class="d-flex align-items-center">
 
-                    <i class="fas fa-box text-primary fa-2x mr-2"></i>
+                    <i class="fas fa-box text-primary fa-2x mr-2" aria-hidden="true"></i>
 
                     <div>
 
@@ -373,13 +373,13 @@
                     {% if line.warranty_end_date.date() >= now_date %}
 
                       <span class="badge badge-success" title="{{ t('Warranty_Valid_Until') }}: {{ line.warranty_end_date.strftime('%Y-%m-%d') }}">
-                        <i class="fas fa-shield-alt mr-1"></i>{{ t('Warranty_Active') }}
+                        <i class="fas fa-shield-alt mr-1" aria-hidden="true"></i>{{ t('Warranty_Active') }}
                       </span>
 
                     {% else %}
 
                       <span class="badge badge-danger" title="{{ t('Warranty_Ended_On') }}: {{ line.warranty_end_date.strftime('%Y-%m-%d') }}">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Warranty_Expired') }}
+                        <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ t('Warranty_Expired') }}
                       </span>
 
                     {% endif %}
@@ -416,7 +416,7 @@
 
         <div class="alert alert-info mt-3">
 
-          <h6><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}:</h6>
+          <h6><i class="fas fa-sticky-note mr-2" aria-hidden="true"></i>{{ t('Notes') }}:</h6>
 
           <p class="mb-0">{{ sale.notes | e }}</p>
 
@@ -430,7 +430,7 @@
 
         {% if sale.payments %}
 
-        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2"></i>{{ t('payments') }}</h5>
+        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ t('payments') }}</h5>
 
         <div class="table-responsive">
 
@@ -470,23 +470,23 @@
 
                   {% if payment.payment_method == 'cash' %}
 
-                    <span class="badge badge-success"><i class="fas fa-money-bill-wave"></i> {{ t('cash') }}</span>
+                    <span class="badge badge-success"><i class="fas fa-money-bill-wave" aria-hidden="true"></i> {{ t('cash') }}</span>
 
                   {% elif payment.payment_method == 'card' %}
 
-                    <span class="badge badge-info"><i class="fas fa-credit-card"></i> {{ t('card') }}</span>
+                    <span class="badge badge-info"><i class="fas fa-credit-card" aria-hidden="true"></i> {{ t('card') }}</span>
 
                   {% elif payment.payment_method == 'bank_transfer' %}
 
-                    <span class="badge badge-primary"><i class="fas fa-university"></i> {{ t('bank_transfer') }}</span>
+                    <span class="badge badge-primary"><i class="fas fa-university" aria-hidden="true"></i> {{ t('bank_transfer') }}</span>
 
                   {% elif payment.payment_method == 'cheque' %}
 
-                    <span class="badge badge-warning"><i class="fas fa-file-invoice"></i> {{ t('cheque') }}</span>
+                    <span class="badge badge-warning"><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ t('cheque') }}</span>
 
                   {% else %}
 
-                    <span class="badge badge-secondary"><i class="fas fa-wallet"></i> {{ t('e_wallet') }}</span>
+                    <span class="badge badge-secondary"><i class="fas fa-wallet" aria-hidden="true"></i> {{ t('e_wallet') }}</span>
 
                   {% endif %}
 
@@ -500,13 +500,13 @@
 
                       <small>
 
-                        <i class="fas fa-hashtag"></i> <strong>{{ t('cheque_number') }}:</strong> {{ payment.cheque_number | e }}<br>
+                        <i class="fas fa-hashtag" aria-hidden="true"></i> <strong>{{ t('cheque_number') }}:</strong> {{ payment.cheque_number | e }}<br>
 
-                        <i class="fas fa-calendar"></i> <strong>{{ t('due_date') }}:</strong> 
+                        <i class="fas fa-calendar" aria-hidden="true"></i> <strong>{{ t('due_date') }}:</strong> 
 
                         <span class="badge badge-info">{{ payment.cheque_date.strftime('%Y-%m-%d') if payment.cheque_date else '-' }}</span><br>
 
-                        <i class="fas fa-university"></i> <strong>{{ t('bank') }}:</strong> {{ (payment.bank_name or '-') | e }}
+                        <i class="fas fa-university" aria-hidden="true"></i> <strong>{{ t('bank') }}:</strong> {{ (payment.bank_name or '-') | e }}
 
                       </small>
 
@@ -514,7 +514,7 @@
 
                   {% elif payment.reference_number %}
 
-                    <small><i class="fas fa-hashtag"></i> {{ payment.reference_number | e }}</small>
+                    <small><i class="fas fa-hashtag" aria-hidden="true"></i> {{ payment.reference_number | e }}</small>
 
                   {% else %}
 
@@ -558,7 +558,7 @@
 
         <div class="status-badge badge-success">
 
-          <i class="fas fa-check-circle"></i> {{ t('paid_in_full') }}
+          <i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('paid_in_full') }}
 
         </div>
 
@@ -566,7 +566,7 @@
 
         <div class="status-badge badge-warning">
 
-          <i class="fas fa-clock"></i> {{ t('partially_paid') }}
+          <i class="fas fa-clock" aria-hidden="true"></i> {{ t('partially_paid') }}
 
         </div>
 
@@ -574,7 +574,7 @@
 
         <div class="status-badge badge-danger">
 
-          <i class="fas fa-hourglass-half"></i> {{ t('credit') }}
+          <i class="fas fa-hourglass-half" aria-hidden="true"></i> {{ t('credit') }}
 
         </div>
 
@@ -594,7 +594,7 @@
 
         <h3 class="card-title text-white mb-0">
 
-          <i class="fas fa-calculator mr-2"></i>{{ t('totals') }}
+          <i class="fas fa-calculator mr-2" aria-hidden="true"></i>{{ t('totals') }}
 
         </h3>
 
@@ -618,7 +618,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-tag text-danger mr-1"></i>{{ t('discount') }}:</span>
+            <span><i class="fas fa-tag text-danger mr-1" aria-hidden="true"></i>{{ t('discount') }}:</span>
 
             <strong class="text-danger">-{{ format_currency(sale.discount_amount) }}</strong>
 
@@ -632,7 +632,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-truck text-info mr-1"></i>{{ t('shipping') }}:</span>
+            <span><i class="fas fa-truck text-info mr-1" aria-hidden="true"></i>{{ t('shipping') }}:</span>
 
             <strong class="text-info">+{{ format_currency(sale.shipping_cost) }}</strong>
 
@@ -646,7 +646,7 @@
 
           <div class="d-flex justify-content-between mb-2">
 
-            <span><i class="fas fa-percent text-warning mr-1"></i>{{ t('tax') }}:</span>
+            <span><i class="fas fa-percent text-warning mr-1" aria-hidden="true"></i>{{ t('tax') }}:</span>
 
             <strong class="text-warning">+{{ format_currency(sale.tax_amount) }}</strong>
 
@@ -692,7 +692,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-check-circle text-success mr-1"></i>{{ t('paid_confirmed') }}:</span>
+          <span><i class="fas fa-check-circle text-success mr-1" aria-hidden="true"></i>{{ t('paid_confirmed') }}:</span>
 
           <strong class="text-success">{{ format_currency(sale.paid_amount, sale.currency) }}</strong>
 
@@ -704,7 +704,7 @@
 
         <div class="d-flex justify-content-between mb-2">
 
-          <span><i class="fas fa-hourglass-half text-warning mr-1"></i>{{ t('pending_cheques') }}:</span>
+          <span><i class="fas fa-hourglass-half text-warning mr-1" aria-hidden="true"></i>{{ t('pending_cheques') }}:</span>
 
           <strong class="text-warning">{{ format_currency(sale.pending_cheques_amount) }}</strong>
 
@@ -712,7 +712,7 @@
 
         <small class="text-muted d-block mb-2">
 
-          <i class="fas fa-info-circle"></i> {{ t('cheques_not_cashed_yet') }}
+          <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('cheques_not_cashed_yet') }}
 
         </small>
 
@@ -722,7 +722,7 @@
 
         <div class="d-flex justify-content-between mb-3">
 
-          <span><i class="fas fa-exclamation-circle text-danger mr-1"></i>{{ t('remaining') }}:</span>
+          <span><i class="fas fa-exclamation-circle text-danger mr-1" aria-hidden="true"></i>{{ t('remaining') }}:</span>
 
           <strong class="text-danger ic-4">
 
@@ -745,7 +745,7 @@
 
            class="btn btn-success btn-block btn-lg">
 
-          <i class="fas fa-money-bill-wave mr-2"></i>{{ t('add_payment') }}
+          <i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ t('add_payment') }}
 
         </a>
 
@@ -753,7 +753,7 @@
 
         <div class="alert alert-success text-center mb-0">
 
-          <i class="fas fa-check-circle fa-2x mb-2"></i>
+          <i class="fas fa-check-circle fa-2x mb-2" aria-hidden="true"></i>
 
           <p class="mb-0"><strong>{{ t('invoice_fully_paid') }}</strong></p>
 
@@ -773,7 +773,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-cog mr-2"></i>{{ t('actions') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('actions') }}</h3>
 
       </div>
 
@@ -785,13 +785,13 @@
 
              class="btn btn-secondary mb-2" target="_blank" rel="noopener noreferrer">
 
-            <i class="fas fa-print mr-2"></i>{{ t('print_invoice') }}
+            <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('print_invoice') }}
 
           </a>
 
           <a href="{{ url_for('sales.index') }}" class="btn btn-info mb-2">
 
-            <i class="fas fa-list mr-2"></i>{{ t('all_invoices') }}
+            <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('all_invoices') }}
 
           </a>
 
@@ -799,7 +799,7 @@
 
           <button type="button" class="btn btn-danger" data-action="cancel-sale">
 
-            <i class="fas fa-ban mr-2"></i>{{ t('cancel_invoice') }}
+            <i class="fas fa-ban mr-2" aria-hidden="true"></i>{{ t('cancel_invoice') }}
 
           </button>
 
@@ -817,7 +817,7 @@
 
           <button type="button" class="btn btn-outline-danger w-100" data-action="delete-sale">
 
-            <i class="fas fa-trash-alt mr-2"></i>{{ t('delete_invoice') }}
+            <i class="fas fa-trash-alt mr-2" aria-hidden="true"></i>{{ t('delete_invoice') }}
 
           </button>
 
@@ -853,7 +853,7 @@
 
       <div class="modal-header bg-warning text-white">
 
-        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2"></i>{{ t('create_sales_return') }}</h5>
+        <h5 class="modal-title" id="returnModalLabel"><i class="fas fa-undo mr-2" aria-hidden="true"></i>{{ t('create_sales_return') }}</h5>
 
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
 

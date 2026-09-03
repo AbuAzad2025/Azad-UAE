@@ -17,7 +17,7 @@
       <input type="hidden" name="date_to" value="{{ date_to or '' }}" aria-label="إلى {{ t('History') }}">
     </form>
     <button data-action="window-print" class="btn btn-secondary ml-2">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('ledger.index') }}" class="btn btn-info ml-2">{{ t('Back') }}</a>
   </div>

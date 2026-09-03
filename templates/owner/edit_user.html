@@ -12,7 +12,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -28,13 +28,13 @@
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
     <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary">
-      <i class="fas fa-users"></i> {{ t('All_Users') }}
+      <i class="fas fa-users" aria-hidden="true"></i> {{ t('All_Users') }}
     </a>
     <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary">
-      <i class="fas fa-user-plus"></i> {{ t('Create_User') }}
+      <i class="fas fa-user-plus" aria-hidden="true"></i> {{ t('Create_User') }}
     </a>
     <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-user-shield"></i> {{ t('Roles_Permissions') }}
+      <i class="fas fa-user-shield" aria-hidden="true"></i> {{ t('Roles_Permissions') }}
     </a>
   </div>
 </div>
@@ -71,7 +71,7 @@
               <hr>
 
               <div class="alert alert-warning text-dark">
-                <i class="fas fa-key"></i> <strong>{{ t('Change_Password') }}</strong>
+                <i class="fas fa-key" aria-hidden="true"></i> <strong>{{ t('Change_Password') }}</strong>
                 <p class="mb-0">{{ t('Leave_Blank_To_Keep_Current') }}</p>
               </div>
 
@@ -125,7 +125,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner"
                          {{ 'checked' if user.is_owner }} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
-                    <i class="fas fa-crown text-warning"></i> <strong>{{ t('System_Owner') }}</strong>
+                    <i class="fas fa-crown text-warning" aria-hidden="true"></i> <strong>{{ t('System_Owner') }}</strong>
                     <br><small class="text-danger">{{ t('Only_Owner_Access') }}</small>
                   </label>
                 </div>
@@ -136,7 +136,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
                          {{ 'checked' if user.is_active }} aria-label="is active">
                   <label class="custom-control-label" for="is_active">
-                    <i class="fas fa-check-circle text-success"></i> {{ t('Active') }}
+                    <i class="fas fa-check-circle text-success" aria-hidden="true"></i> {{ t('Active') }}
                   </label>
                 </div>
               </div>
@@ -148,11 +148,11 @@
               <h3 class="card-title text-white">{{ t('Information') }}</h3>
             </div>
             <div class="card-body">
-              <p><i class="fas fa-calendar-plus"></i> <strong>{{ t('Created_At') }}:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</p>
-              <p><i class="fas fa-sign-in-alt"></i> <strong>{{ t('Last_Login') }}:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else t('Never') }}</p>
-              <p><i class="fas fa-user-clock"></i> <strong>{{ t('Member_Since') }}:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else t('Unknown') }}</p>
+              <p><i class="fas fa-calendar-plus" aria-hidden="true"></i> <strong>{{ t('Created_At') }}:</strong> {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</p>
+              <p><i class="fas fa-sign-in-alt" aria-hidden="true"></i> <strong>{{ t('Last_Login') }}:</strong> {{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else t('Never') }}</p>
+              <p><i class="fas fa-user-clock" aria-hidden="true"></i> <strong>{{ t('Member_Since') }}:</strong> {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else t('Unknown') }}</p>
               {% if user.updated_at %}
-              <p><i class="fas fa-edit"></i> <strong>{{ t('Updated_At') }}:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
+              <p><i class="fas fa-edit" aria-hidden="true"></i> <strong>{{ t('Updated_At') }}:</strong> {{ user.updated_at.strftime('%Y-%m-%d %H:%M') }}</p>
               {% endif %}
             </div>
           </div>
@@ -162,13 +162,13 @@
       <div class="row">
         <div class="col-12">
           <button type="submit" class="btn btn-primary btn-lg">
-            <i class="fas fa-save mr-2"></i>{{ t('Save_Changes') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save_Changes') }}
           </button>
           <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info btn-lg">
-            <i class="fas fa-eye mr-2"></i>{{ t('View_Profile') }}
+            <i class="fas fa-eye mr-2" aria-hidden="true"></i>{{ t('View_Profile') }}
           </a>
           <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
+            <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>

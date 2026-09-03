@@ -5,17 +5,17 @@
 <div class="d-flex justify-content-between align-items-center">
   <div>
     <h1 class="mb-0 text-danger">
-      <i class="fas fa-ban mr-3"></i>{{ t('out_of_stock_view_title') }}
+      <i class="fas fa-ban mr-3" aria-hidden="true"></i>{{ t('out_of_stock_view_title') }}
     </h1>
     <p class="text-muted">{{ t('products_fully_out_of_stock') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info">
-      <i class="fas fa-warehouse mr-2"></i>{{ t('Warehouse') }}
+      <i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ t('Warehouse') }}
     </a>
     {% if current_user.has_permission('manage_purchases') %}
     <a href="{{ url_for('purchases.create') }}" class="btn btn-success pulse">
-      <i class="fas fa-shopping-cart mr-2"></i>{{ t('request_urgent_purchase') }}
+      <i class="fas fa-shopping-cart mr-2" aria-hidden="true"></i>{{ t('request_urgent_purchase') }}
     </a>
     {% endif %}
   </div>
@@ -71,7 +71,7 @@
   <div class="d-flex justify-content-between align-items-center">
     <div>
       <h4 class="mb-2 text-danger">
-        <i class="fas fa-ban mr-2"></i>{{ t('urgent_warning') }} — {{ t('out_of_stock_view_title') }}!
+        <i class="fas fa-ban mr-2" aria-hidden="true"></i>{{ t('urgent_warning') }} — {{ t('out_of_stock_view_title') }}!
       </h4>
       <p class="mb-0">
         <strong class="text-danger">{{ t('out_of_stock_products_count', count=products|length) }}</strong>
@@ -79,7 +79,7 @@
       </p>
     </div>
     <div>
-      <i class="fas fa-box-open fa-4x ic-out-muted"></i>
+      <i class="fas fa-box-open fa-4x ic-out-muted" aria-hidden="true"></i>
     </div>
   </div>
 </div>
@@ -87,7 +87,7 @@
 <div class="card">
   <div class="card-header ic-out-header-bg">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-times-circle mr-2"></i>{{ t('products_out_of_stock') }}
+      <i class="fas fa-times-circle mr-2" aria-hidden="true"></i>{{ t('products_out_of_stock') }}
     </h3>
   </div>
   <div class="card-body">
@@ -95,13 +95,13 @@
       <table id="outOfStockTable" class="table table-hover">
         <thead class="ic-out-primary-bg">
           <tr>
-            <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
-            <th><i class="fas fa-barcode mr-2"></i>SKU</th>
-            <th><i class="fas fa-ban mr-2"></i>{{ t('Inventory') }}</th>
-            <th><i class="fas fa-bell mr-2"></i>{{ t('Alert') }}</th>
-            <th><i class="fas fa-money-bill-wave mr-2"></i>{{ t('Price') }}</th>
-            <th><i class="fas fa-map-marker-alt mr-2"></i>{{ t('Website') }}</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('Actions') }}</th>
+            <th><i class="fas fa-box mr-2" aria-hidden="true"></i>{{ t('Product') }}</th>
+            <th><i class="fas fa-barcode mr-2" aria-hidden="true"></i>SKU</th>
+            <th><i class="fas fa-ban mr-2" aria-hidden="true"></i>{{ t('Inventory') }}</th>
+            <th><i class="fas fa-bell mr-2" aria-hidden="true"></i>{{ t('Alert') }}</th>
+            <th><i class="fas fa-money-bill-wave mr-2" aria-hidden="true"></i>{{ t('Price') }}</th>
+            <th><i class="fas fa-map-marker-alt mr-2" aria-hidden="true"></i>{{ t('Website') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('Actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -114,7 +114,7 @@
                        class="warehouse-product-img mr-2" alt="{{ product.name | e }}">
                 {% else %}
                   <div class="warehouse-product-img mr-2 d-flex align-items-center justify-content-center ic-out-header-bg">
-                    <i class="fas fa-box"></i>
+                    <i class="fas fa-box" aria-hidden="true"></i>
                   </div>
                 {% endif %}
                 <div>
@@ -128,7 +128,7 @@
             <td><code class="bg-light px-2 py-1 rounded">{{ product.sku | e }}</code></td>
             <td>
               <span class="badge badge-danger px-3 py-2 ic-out-badge">
-                <i class="fas fa-times mr-1"></i>{{ product.current_stock }}
+                <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ product.current_stock }}
               </span>
               <br><small class="text-muted">{{ product.unit or 'بلا' }}</small>
             </td>
@@ -139,24 +139,24 @@
               <strong class="ic-out-price">{{ format_currency(product.regular_price) }}</strong>
             </td>
             <td>
-              <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+              <i class="fas fa-map-marker-alt text-danger mr-1" aria-hidden="true"></i>
               {{ product.location or t('none') }}
             </td>
             <td class="text-center">
               <div class="btn-group btn-group-sm">
                 {% if current_user.has_permission('manage_products') %}
                 <a href="{{ url_for('products.view', id=product.id) }}" class="btn btn-info" title="{{ t('View') }}" aria-label="{{ t('View') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_products') %}
                 <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 {% if current_user.has_permission('manage_purchases') %}
                 <a href="{{ url_for('purchases.create') }}" class="btn btn-success" title="{{ t('request_urgent_purchase') }}" aria-label="{{ t('request_urgent_purchase') }}">
-                  <i class="fas fa-shopping-cart"></i>
+                  <i class="fas fa-shopping-cart" aria-hidden="true"></i>
                 </a>
                 {% endif %}
               </div>
@@ -182,11 +182,11 @@ $(document).ready((() => {
     buttons: [
       {
         extend: 'excel',
-        text: '<i class="fas fa-file-excel mr-1"></i> {{ t('export_for_purchase') }}',
+        text: '<i class="fas fa-file-excel mr-1" aria-hidden="true"></i> {{ t('export_for_purchase') }}',
         className: 'btn-success'
       },
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: 'btn-info'}
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> PDF', className: 'btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1" aria-hidden="true"></i> {{ t('Print') }}', className: 'btn-info'}
     ]
   });
 

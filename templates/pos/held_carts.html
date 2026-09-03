@@ -15,8 +15,8 @@
       <h5 class="m-0">{{ _('السلال المعلّقة') }}</h5>
     </div>
     <div class="pos-topbar-actions">
-      <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ _('رجوع') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}"></i></a>
-      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home"></i></a>
+      <a href="{{ url_for('pos.index') }}" class="pos-icon-btn" title="{{ _('رجوع') }}"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}" aria-hidden="true"></i></a>
+      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home" aria-hidden="true"></i></a>
     </div>
   </div>
 
@@ -49,10 +49,10 @@
                 <td>{{ cart.parked_at[:16] if cart.parked_at else '-' }}</td>
                 <td>
                   <a href="{{ url_for('pos.index') }}?resume_cart={{ cart.id }}" class="btn btn-sm btn-success">
-                    <i class="fas fa-play"></i> {{ _('استئناف') }}
+                    <i class="fas fa-play" aria-hidden="true"></i> {{ _('استئناف') }}
                   </a>
                   <button type="button" class="btn btn-sm btn-danger" data-delete-cart="{{ cart.id }}">
-                    <i class="fas fa-trash"></i> {{ _('حذف') }}
+                    <i class="fas fa-trash" aria-hidden="true"></i> {{ _('حذف') }}
                   </button>
                 </td>
               </tr>
@@ -62,7 +62,7 @@
         </div>
         {% else %}
         <div class="text-center text-muted py-5">
-          <i class="fas fa-pause-circle fa-3x mb-3"></i>
+          <i class="fas fa-pause-circle fa-3x mb-3" aria-hidden="true"></i>
           <h5>{{ _('لا توجد بيانات') }}</h5>
           <p>{{ _('لا توجد سلال معلّقة حالياً') }}</p>
           <a href="{{ url_for('pos.index') }}" class="btn btn-primary">{{ _('رجوع') }}</a>

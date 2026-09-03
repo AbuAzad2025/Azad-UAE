@@ -51,7 +51,7 @@
     <div class="cheque-content">
       <div class="cheque-header">
         <div>
-          <div class="bank-name"><i class="fas fa-university mr-2"></i> {{ cheque.bank_name or settings.bank_name or _('Bank_Name') }}</div>
+          <div class="bank-name"><i class="fas fa-university mr-2" aria-hidden="true"></i> {{ cheque.bank_name or settings.bank_name or _('Bank_Name') }}</div>
           <div class="company-info-cheque">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
         </div>
         <div class="cheque-number-display">{{ cheque.cheque_number or cheque.number or '—' }}</div>

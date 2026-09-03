@@ -4,16 +4,16 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.system_health') }}" class="btn btn-success">
-      <i class="fas fa-heartbeat"></i> {{ t('System_Health') }}
+      <i class="fas fa-heartbeat" aria-hidden="true"></i> {{ t('System_Health') }}
     </a>
     <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-danger">
-      <i class="fas fa-bug"></i> {{ t('Errors') }}
+      <i class="fas fa-bug" aria-hidden="true"></i> {{ t('Errors') }}
     </a>
     <a href="{{ url_for('owner.login_history') }}" class="btn btn-primary">
-      <i class="fas fa-history"></i> {{ t('Login_History') }}
+      <i class="fas fa-history" aria-hidden="true"></i> {{ t('Login_History') }}
     </a>
   </div>
 
@@ -25,7 +25,7 @@
           <p>{{ t('Active_Users_Now') }}</p>
         </div>
         <div class="icon">
-          <i class="fas fa-users"></i>
+          <i class="fas fa-users" aria-hidden="true"></i>
         </div>
       </div>
     </div>
@@ -37,7 +37,7 @@
           <p>{{ t('Today_Sales') }}</p>
         </div>
         <div class="icon">
-          <i class="fas fa-shopping-cart"></i>
+          <i class="fas fa-shopping-cart" aria-hidden="true"></i>
         </div>
       </div>
     </div>
@@ -49,7 +49,7 @@
           <p>{{ t('Recent_Actions') }}</p>
         </div>
         <div class="icon">
-          <i class="fas fa-clipboard-list"></i>
+          <i class="fas fa-clipboard-list" aria-hidden="true"></i>
         </div>
       </div>
     </div>
@@ -73,7 +73,7 @@
               {% for user in active_users|default([]) %}
               <tr>
                 <td>
-                  <i class="fas fa-circle text-success"></i>
+                  <i class="fas fa-circle text-success" aria-hidden="true"></i>
                   {{ user.full_name|default('') }}
                 </td>
                 <td>{{ user.last_seen.strftime('%H:%M') if user.last_seen else '-' }}</td>

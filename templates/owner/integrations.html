@@ -11,7 +11,7 @@
                 </div>
                 <div class="col-sm-6 text-left">
                     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+                        <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
                     </a>
                 </div>
             </div>
@@ -24,7 +24,7 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header bg-success">
-                            <h3 class="card-title"><i class="fab fa-whatsapp mr-2"></i>WhatsApp Business API</h3>
+                            <h3 class="card-title"><i class="fab fa-whatsapp mr-2" aria-hidden="true"></i>WhatsApp Business API</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -34,9 +34,9 @@
                                 </div>
                                 <div>
                                     {% if integrations.whatsapp.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ t('Enabled') }}</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('Enabled') }}</span>
                                     {% else %}
-                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>{{ t('Disabled') }}</span>
+                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1" aria-hidden="true"></i>{{ t('Disabled') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -48,7 +48,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ t('Enable_WhatsApp') }}
+                                        <i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>{{ t('Enable_WhatsApp') }}
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="whatsapp_enabled" name="enabled" {% if integrations.whatsapp.enabled %}checked{% endif %} aria-label="enabled">
@@ -57,20 +57,20 @@
                                 </div>
                                 
                                 <div class="alert alert-info">
-                                    <i class="fas fa-info-circle mr-1"></i>
+                                    <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
                                     <strong>{{ t('Note') }}</strong> {{ t('Desc_WhatsApp_Providers') }}
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_api_token">
-                                        <i class="fas fa-key text-warning mr-1"></i>API Token / Access Key
+                                        <i class="fas fa-key text-warning mr-1" aria-hidden="true"></i>API Token / Access Key
                                     </label>
                                     <input type="text" class="form-control" name="api_token" id="whatsapp_api_token" placeholder="{{ t('Enter_API_Token') }}" value="{{ integrations.whatsapp.config.api_token or '' }}">
                                 </div>
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_phone">
-                                        <i class="fas fa-phone text-primary mr-1"></i>{{ t('WhatsApp_Business_Number') }}
+                                        <i class="fas fa-phone text-primary mr-1" aria-hidden="true"></i>{{ t('WhatsApp_Business_Number') }}
                                     </label>
                                     <input type="text" class="form-control" name="phone_number" id="whatsapp_phone" placeholder="+971501234567" value="{{ integrations.whatsapp.config.phone_number or '' }}" pattern="^\+?[0-9\s\-]{8,20}$">
                                     <small class="form-text text-muted">
@@ -80,7 +80,7 @@
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_api_url">
-                                        <i class="fas fa-server text-info mr-1"></i>API Endpoint URL
+                                        <i class="fas fa-server text-info mr-1" aria-hidden="true"></i>API Endpoint URL
                                     </label>
                                     <input type="text" class="form-control" name="api_url" id="whatsapp_api_url" placeholder="https://api.whatsapp.com/send" value="{{ integrations.whatsapp.config.api_url or '' }}">
                                     <small class="form-text text-muted">
@@ -90,7 +90,7 @@
                                 
                                 <div class="form-group">
                                     <label for="whatsapp_message_template">
-                                        <i class="fas fa-comment-dots text-success mr-1"></i>{{ t('Default_Message_Template') }}
+                                        <i class="fas fa-comment-dots text-success mr-1" aria-hidden="true"></i>{{ t('Default_Message_Template') }}
                                     </label>
                                     <textarea class="form-control" name="message_template" id="whatsapp_message_template" rows="3" placeholder="{{ t('Example_Message_Template') }}">{{ integrations.whatsapp.config.message_template or '' }}</textarea>
                                     <small class="form-text text-muted">
@@ -99,7 +99,7 @@
                                 </div>
                                 
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save mr-1"></i>{{ t('Save_WhatsApp_Settings') }}
+                                    <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save_WhatsApp_Settings') }}
                                 </button>
                             </form>
                         </div>
@@ -109,7 +109,7 @@
                 <div class="col-md-12">
                     <div class="card">
                         <div class="card-header bg-info">
-                            <h3 class="card-title"><i class="fas fa-envelope mr-2"></i>{{ t('Email_SMTP') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-envelope mr-2" aria-hidden="true"></i>{{ t('Email_SMTP') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -119,9 +119,9 @@
                                 </div>
                                 <div>
                                     {% if integrations.email.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ t('Enabled') }}</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('Enabled') }}</span>
                                     {% else %}
-                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1"></i>{{ t('Disabled') }}</span>
+                                        <span class="badge badge-danger badge-lg"><i class="fas fa-times-circle mr-1" aria-hidden="true"></i>{{ t('Disabled') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -133,7 +133,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ t('Enable_Email') }}
+                                        <i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>{{ t('Enable_Email') }}
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="email_enabled" name="enabled" {% if integrations.email.enabled %}checked{% endif %} aria-label="enabled">
@@ -145,7 +145,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="smtp_host">
-                                                <i class="fas fa-server text-primary mr-1"></i>SMTP Server
+                                                <i class="fas fa-server text-primary mr-1" aria-hidden="true"></i>SMTP Server
                                             </label>
                                             <input type="text" class="form-control" name="smtp_host" id="smtp_host" placeholder="smtp.gmail.com" value="{{ integrations.email.config.smtp_host or '' }}">
                                             <small class="form-text text-muted">
@@ -160,7 +160,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="smtp_port">
-                                                <i class="fas fa-network-wired text-info mr-1"></i>SMTP Port
+                                                <i class="fas fa-network-wired text-info mr-1" aria-hidden="true"></i>SMTP Port
                                             </label>
                                             <input type="number" class="form-control" name="smtp_port" id="smtp_port" placeholder="587" value="{{ integrations.email.config.smtp_port or '587' }}">
                                             <small class="form-text text-muted">
@@ -176,7 +176,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="smtp_user">
-                                                <i class="fas fa-user text-warning mr-1"></i>SMTP Username / Email
+                                                <i class="fas fa-user text-warning mr-1" aria-hidden="true"></i>SMTP Username / Email
                                             </label>
                                             <input type="email" class="form-control" name="smtp_user" id="smtp_user" placeholder="your-email@gmail.com" value="{{ integrations.email.config.smtp_user or '' }}">
                                             <small class="form-text text-muted">
@@ -188,7 +188,7 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="smtp_password">
-                                                <i class="fas fa-lock text-danger mr-1"></i>SMTP Password / App Password
+                                                <i class="fas fa-lock text-danger mr-1" aria-hidden="true"></i>SMTP Password / App Password
                                             </label>
                                             <input type="password" class="form-control" name="smtp_password" id="smtp_password" placeholder="••••••••••" value="{{ integrations.email.config.smtp_password or '' }}" minlength="6">
                                             <small class="form-text text-muted">
@@ -201,7 +201,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-shield-alt text-success mr-1"></i>{{ t('Encryption_TLS_SSL') }}
+                                        <i class="fas fa-shield-alt text-success mr-1" aria-hidden="true"></i>{{ t('Encryption_TLS_SSL') }}
                                     </label>
                                     <select class="form-control" name="smtp_encryption" aria-label="smtp encryption">
                                         {% set encryption = integrations.email.config.smtp_encryption or 'tls' %}
@@ -216,7 +216,7 @@
                                 
                                 <div class="form-group">
                                     <label for="sender_name">
-                                        <i class="fas fa-paper-plane text-info mr-1"></i>{{ t('Sender_Name') }}
+                                        <i class="fas fa-paper-plane text-info mr-1" aria-hidden="true"></i>{{ t('Sender_Name') }}
                                     </label>
                                     <input type="text" class="form-control" name="sender_name" id="sender_name" placeholder="{{ t('Example_Sender_Name') }}" value="{{ integrations.email.config.sender_name or '' }}" minlength="2" maxlength="100">
                                     <small class="form-text text-muted">
@@ -225,10 +225,10 @@
                                 </div>
                                 
                                 <button type="submit" class="btn btn-info">
-                                    <i class="fas fa-save mr-1"></i>{{ t('Save_Email_Settings') }}
+                                    <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save_Email_Settings') }}
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" data-action="test-email">
-                                    <i class="fas fa-paper-plane mr-1"></i>{{ t('Test_Send') }}
+                                    <i class="fas fa-paper-plane mr-1" aria-hidden="true"></i>{{ t('Test_Send') }}
                                 </button>
                             </form>
                         </div>
@@ -238,7 +238,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header bg-danger">
-                            <h3 class="card-title"><i class="fas fa-database mr-2"></i>Redis Cache</h3>
+                            <h3 class="card-title"><i class="fas fa-database mr-2" aria-hidden="true"></i>Redis Cache</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -248,9 +248,9 @@
                                 </div>
                                 <div>
                                     {% if integrations.redis.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ t('Active') }}</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('Active') }}</span>
                                     {% else %}
-                                        <span class="badge badge-secondary badge-lg"><i class="fas fa-ban mr-1"></i>{{ t('Disabled') }}</span>
+                                        <span class="badge badge-secondary badge-lg"><i class="fas fa-ban mr-1" aria-hidden="true"></i>{{ t('Disabled') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -262,7 +262,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ t('Enable_Redis') }}
+                                        <i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>{{ t('Enable_Redis') }}
                                     </label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="redis_enabled" name="enabled" {% if integrations.redis.enabled %}checked{% endif %} aria-label="enabled">
@@ -272,7 +272,7 @@
                                 
                                 <div class="form-group">
                                     <label for="redis_host">
-                                        <i class="fas fa-server text-primary mr-1"></i>Redis Host
+                                        <i class="fas fa-server text-primary mr-1" aria-hidden="true"></i>Redis Host
                                     </label>
                                     <input type="text" class="form-control" name="redis_host" id="redis_host" placeholder="localhost" value="{{ integrations.redis.config.redis_host or 'localhost' }}">
                                     <small class="form-text text-muted">
@@ -283,7 +283,7 @@
                                 
                                 <div class="form-group">
                                     <label for="redis_port">
-                                        <i class="fas fa-network-wired text-info mr-1"></i>Redis Port
+                                        <i class="fas fa-network-wired text-info mr-1" aria-hidden="true"></i>Redis Port
                                     </label>
                                     <input type="number" class="form-control" name="redis_port" id="redis_port" placeholder="6379" value="{{ integrations.redis.config.redis_port or '6379' }}">
                                     <small class="form-text text-muted">
@@ -293,7 +293,7 @@
                                 
                                 <div class="form-group">
                                     <label for="redis_password">
-                                        <i class="fas fa-key text-warning mr-1"></i>Redis Password ({{ t('Optional') }})
+                                        <i class="fas fa-key text-warning mr-1" aria-hidden="true"></i>Redis Password ({{ t('Optional') }})
                                     </label>
                                     <input type="password" class="form-control" name="redis_password" id="redis_password" placeholder="••••••••••" value="{{ integrations.redis.config.redis_password or '' }}" minlength="6">
                                     <small class="form-text text-muted">
@@ -302,7 +302,7 @@
                                 </div>
                                 
                                 <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-save mr-1"></i>{{ t('Save_Redis_Settings') }}
+                                    <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save_Redis_Settings') }}
                                 </button>
                             </form>
                         </div>
@@ -312,7 +312,7 @@
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header bg-warning">
-                            <h3 class="card-title"><i class="fas fa-exchange-alt mr-2"></i>API {{ t('Exchange_Rate') }}</h3>
+                            <h3 class="card-title"><i class="fas fa-exchange-alt mr-2" aria-hidden="true"></i>API {{ t('Exchange_Rate') }}</h3>
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-3">
@@ -322,9 +322,9 @@
                                 </div>
                                 <div>
                                     {% if integrations.currency_api.enabled %}
-                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1"></i>{{ t('Enabled') }}</span>
+                                        <span class="badge badge-success badge-lg"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('Enabled') }}</span>
                                     {% else %}
-                                        <span class="badge badge-warning badge-lg"><i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Pending') }}</span>
+                                        <span class="badge badge-warning badge-lg"><i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ t('Pending') }}</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -336,7 +336,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-toggle-on text-success mr-1"></i>{{ t('Enable_Exchange_Rate_API') }}</label>
+                                        <i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>{{ t('Enable_Exchange_Rate_API') }}</label>
                                     <div class="custom-control custom-switch custom-switch-on-success">
                                         <input type="checkbox" class="custom-control-input" id="currency_enabled" name="enabled" {% if integrations.currency_api.enabled %}checked{% endif %} aria-label="enabled">
                                         <label class="custom-control-label" for="currency_enabled">{{ t('Desc_Enable_Exchange_Rate_Auto') }}</label>
@@ -344,13 +344,13 @@
                                 </div>
                                 
                                 <div class="alert alert-info">
-                                    <i class="fas fa-lightbulb mr-1"></i>
+                                    <i class="fas fa-lightbulb mr-1" aria-hidden="true"></i>
                                     <strong>{{ t('Free_Services') }}</strong> exchangerate-api.com, fixer.io, currencyapi.com
                                 </div>
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-link text-primary mr-1"></i>API Provider
+                                        <i class="fas fa-link text-primary mr-1" aria-hidden="true"></i>API Provider
                                     </label>
                                     {% set provider = integrations.currency_api.config.api_provider or 'exchangerate' %}
                                     <select class="form-control" name="api_provider" aria-label="api provider">
@@ -366,7 +366,7 @@
                                 
                                 <div class="form-group">
                                     <label for="currency_api_key">
-                                        <i class="fas fa-key text-warning mr-1"></i>API Key
+                                        <i class="fas fa-key text-warning mr-1" aria-hidden="true"></i>API Key
                                     </label>
                                     <input type="text" class="form-control" name="api_key" id="currency_api_key" placeholder="YOUR_API_KEY_HERE" value="{{ integrations.currency_api.config.api_key or '' }}">
                                     <small class="form-text text-muted">
@@ -378,7 +378,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-dollar-sign text-success mr-1"></i>{{ t('Base_Currency') }}
+                                        <i class="fas fa-dollar-sign text-success mr-1" aria-hidden="true"></i>{{ t('Base_Currency') }}
                                     </label>
                                     {% set base_currency = integrations.currency_api.config.base_currency or 'USD' %}
                                     <select class="form-control" name="base_currency" aria-label="base currency">
@@ -394,7 +394,7 @@
                                 
                                 <div class="form-group">
                                     <label>
-                                        <i class="fas fa-clock text-info mr-1"></i>{{ t('Update_Frequency') }}
+                                        <i class="fas fa-clock text-info mr-1" aria-hidden="true"></i>{{ t('Update_Frequency') }}
                                     </label>
                                     {% set freq = integrations.currency_api.config.update_frequency or 'daily' %}
                                     <select class="form-control" name="update_frequency" aria-label="update frequency">
@@ -408,10 +408,10 @@
                                 </div>
                                 
                                 <button type="submit" class="btn btn-warning">
-                                    <i class="fas fa-save mr-1"></i>{{ t('Save_Exchange_Rate_Settings') }}
+                                    <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save_Exchange_Rate_Settings') }}
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" data-action="test-currency-api">
-                                    <i class="fas fa-sync mr-1"></i>{{ t('Update_Rates_Now') }}
+                                    <i class="fas fa-sync mr-1" aria-hidden="true"></i>{{ t('Update_Rates_Now') }}
                                 </button>
                             </form>
                         </div>
@@ -443,7 +443,7 @@ document.addEventListener('click', function (e) {
     const service = btn.dataset.action === 'test-email' ? 'email' : 'currency_api';
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>' + i18n.testing;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1" aria-hidden="true"></i>' + i18n.testing;
     fetch('{{ url_for("owner.test_integration", service="__SERVICE__") }}'.replace('__SERVICE__', service), {
         method: 'POST',
         headers: {

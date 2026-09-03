@@ -18,10 +18,10 @@
             {% endfor %}
           </select>
           {{ extra_filters }}
-          <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-filter"></i> {{ t('Filter') }}</button>
-          <button type="button" data-action="window-print" class="btn btn-info btn-sm mr-1"><i class="fas fa-print"></i> {{ t('Print') }}</button>
+          <button type="submit" class="btn btn-primary btn-sm mr-1"><i class="fas fa-filter" aria-hidden="true"></i> {{ t('Filter') }}</button>
+          <button type="button" data-action="window-print" class="btn btn-info btn-sm mr-1"><i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}</button>
           {% for eu in export_urls %}
-          <a href="{{ eu.url }}" class="btn btn-{{ eu.color or 'secondary' }} btn-sm mr-1"><i class="fas fa-{{ eu.icon or 'download' }}"></i> {{ eu.label }}</a>
+          <a href="{{ eu.url }}" class="btn btn-{{ eu.color or 'secondary' }} btn-sm mr-1"><i class="fas fa-{{ eu.icon or 'download' }}" aria-hidden="true"></i> {{ eu.label }}</a>
           {% endfor %}
         </form>
       </div>
@@ -36,7 +36,7 @@
   <div class="col-md-{{ card.col_md or '3' }} col-6 mb-2">
     <div class="card fin-kpi-card bg-gradient-{{ card.color or 'primary' }} text-white">
       <div class="card-body position-relative">
-        <i class="fas {{ card.icon or 'fa-chart-bar' }} kpi-icon"></i>
+        <i class="fas {{ card.icon or 'fa-chart-bar' }} kpi-icon" aria-hidden="true"></i>
         <div class="kpi-value">{{ card.value }}</div>
         <div class="kpi-label">{{ card.label }}</div>
       </div>

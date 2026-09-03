@@ -4,24 +4,24 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.activity_monitor') }}" class="btn btn-info">
-      <i class="fas fa-chart-line"></i> {{ t('Live_Monitoring') }}
+      <i class="fas fa-chart-line" aria-hidden="true"></i> {{ t('Live_Monitoring') }}
     </a>
     <a href="{{ url_for('owner.performance_metrics') }}" class="btn btn-warning">
-      <i class="fas fa-tachometer-alt"></i> {{ t('Performance') }}
+      <i class="fas fa-tachometer-alt" aria-hidden="true"></i> {{ t('Performance') }}
     </a>
   </div>
 
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-heartbeat"></i> {{ t('System_Health') }}</h3>
+      <h3><i class="fas fa-heartbeat" aria-hidden="true"></i> {{ t('System_Health') }}</h3>
       <div class="card-tools">
         <form class="needs-validation d-inline" method="post" action="{{ url_for('owner.database_optimize') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-warning">
-            <i class="fas fa-tools"></i> {{ t('Optimize_Database') }}
+            <i class="fas fa-tools" aria-hidden="true"></i> {{ t('Optimize_Database') }}
           </button>
         </form>
       </div>
@@ -32,7 +32,7 @@
           {% set cpu_status = health.cpu.status|default('unknown') %}
           {% if cpu_status == 'good' %}{% set cpu_bg = 'success' %}{% elif cpu_status == 'warning' %}{% set cpu_bg = 'warning' %}{% else %}{% set cpu_bg = 'danger' %}{% endif %}
           <div class="info-box bg-{{ cpu_bg }}">
-            <span class="info-box-icon"><i class="fas fa-microchip"></i></span>
+            <span class="info-box-icon"><i class="fas fa-microchip" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('CPU_Usage') }}</span>
               <span class="info-box-number">{{ health.cpu.percent|default(0) }}%</span>
@@ -47,7 +47,7 @@
           {% set mem_status = health.memory.status|default('unknown') %}
           {% if mem_status == 'good' %}{% set mem_bg = 'success' %}{% elif mem_status == 'warning' %}{% set mem_bg = 'warning' %}{% else %}{% set mem_bg = 'danger' %}{% endif %}
           <div class="info-box bg-{{ mem_bg }}">
-            <span class="info-box-icon"><i class="fas fa-memory"></i></span>
+            <span class="info-box-icon"><i class="fas fa-memory" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Memory') }}</span>
               <span class="info-box-number">{{ health.memory.percent|default(0) }}%</span>
@@ -63,7 +63,7 @@
           {% set disk_status = health.disk.status|default('unknown') %}
           {% if disk_status == 'good' %}{% set disk_bg = 'success' %}{% elif disk_status == 'warning' %}{% set disk_bg = 'warning' %}{% else %}{% set disk_bg = 'danger' %}{% endif %}
           <div class="info-box bg-{{ disk_bg }}">
-            <span class="info-box-icon"><i class="fas fa-hdd"></i></span>
+            <span class="info-box-icon"><i class="fas fa-hdd" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Hard_Disk') }}</span>
               <span class="info-box-number">{{ health.disk.percent|default(0) }}%</span>
@@ -79,7 +79,7 @@
           {% set db_status = health.database.status|default('unknown') %}
           {% if db_status == 'good' %}{% set db_bg = 'success' %}{% elif db_status == 'warning' %}{% set db_bg = 'warning' %}{% else %}{% set db_bg = 'danger' %}{% endif %}
           <div class="info-box bg-{{ db_bg }}">
-            <span class="info-box-icon"><i class="fas fa-database"></i></span>
+            <span class="info-box-icon"><i class="fas fa-database" aria-hidden="true"></i></span>
             <div class="info-box-content">
               <span class="info-box-text">{{ t('Database') }}</span>
               <span class="info-box-number">{{ health.database.size_mb|default(0) }} MB</span>

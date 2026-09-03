@@ -4,7 +4,7 @@
 {% with current_page_name = t('wishlist') %}
 {% include 'shop/partials/breadcrumbs.html' with context %}
 {% endwith %}
-<h2><i class="fas fa-heart"></i> {{ t('wishlist') }}</h2>
+<h2><i class="fas fa-heart" aria-hidden="true"></i> {{ t('wishlist') }}</h2>
 {% if wishlist_items %}
 <div class="ps-grid">
   {% for item in wishlist_items %}
@@ -12,7 +12,7 @@
   <article class="ps-card">
     <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=p.id) }}" class="ps-card-img">
       {% if p.image_url %}<img src="{{ p.image_url }}" alt="{{ p.get_display_name(lang) }}" loading="lazy">
-      {% else %}<div class="ps-placeholder"><i class="fas fa-box-open"></i></div>{% endif %}
+      {% else %}<div class="ps-placeholder"><i class="fas fa-box-open" aria-hidden="true"></i></div>{% endif %}
     </a>
     <div class="ps-card-body">
       <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=p.id) }}">{{ p.get_display_name(lang) }}</a></h3>
@@ -25,7 +25,7 @@
 </div>
 {% else %}
 <div class="ps-empty">
-  <div class="ps-empty-icon"><i class="fas fa-heart"></i></div>
+  <div class="ps-empty-icon"><i class="fas fa-heart" aria-hidden="true"></i></div>
   <h3>{{ t('wishlist_empty') }}</h3>
   <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary">{{ t('continue_shopping') }}</a>
 </div>

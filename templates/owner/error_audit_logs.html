@@ -12,7 +12,7 @@
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">
-          <i class="fas fa-bug text-danger mr-2"></i>{{ t('System_Error_Log') }}<span class="badge badge-dark ml-2">Error Audit</span>
+          <i class="fas fa-bug text-danger mr-2" aria-hidden="true"></i>{{ t('System_Error_Log') }}<span class="badge badge-dark ml-2">Error Audit</span>
         </h1>
         </div>
       <div class="col-sm-6 d-flex justify-content-end align-items-center">
@@ -21,10 +21,10 @@
           <li class="breadcrumb-item active">{{ t('Error_Log') }}</li>
         </ol>
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary mr-2">
-          <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+          <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
         </a>
         <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearAllErrorsModal" title="{{ t('Clear_All_Errors') }}" aria-label="{{ t('Clear_All_Errors') }}">
-          <i class="fas fa-trash-alt mr-1"></i> {{ t('Clear_All') }}
+          <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i> {{ t('Clear_All') }}
         </button>
       </div>
     </div>
@@ -37,7 +37,7 @@
             <h3>{{ stats.total|default(0) }}</h3>
             <p>{{ t('Total_Recorded_Errors') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-list"></i></div>
+          <div class="icon"><i class="fas fa-list" aria-hidden="true"></i></div>
         </div>
       </div>
       <div class="col-md-3">
@@ -46,7 +46,7 @@
             <h3>{{ stats.unresolved|default(0) }}</h3>
             <p>{{ t('Unresolved_Errors') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></div>
         </div>
       </div>
       <div class="col-md-3">
@@ -55,7 +55,7 @@
             <h3>{{ stats.critical|default(0) }}</h3>
             <p>{{ t('Critical_Errors') }}</p>
           </div>
-          <div class="icon"><i class="fas fa-skull-crossbones"></i></div>
+          <div class="icon"><i class="fas fa-skull-crossbones" aria-hidden="true"></i></div>
         </div>
       </div>
     </div>
@@ -116,16 +116,16 @@
             </div>
             <div class="form-group col-md-8 mb-2 d-flex align-items-end">
               <button type="submit" class="btn btn-primary mr-2">
-                <i class="fas fa-filter"></i> {{ t('Filter') }}
+                <i class="fas fa-filter" aria-hidden="true"></i> {{ t('Filter') }}
               </button>
               <a href="{{ url_for('owner.error_audit_logs') }}" class="btn btn-outline-secondary mr-2">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
               <a href="{{ url_for('owner.export_error_audit_logs', format='json', category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}" class="btn btn-success mr-2">
-                <i class="fas fa-file-code"></i> {{ t('Export_JSON') }}
+                <i class="fas fa-file-code" aria-hidden="true"></i> {{ t('Export_JSON') }}
               </a>
               <a href="{{ url_for('owner.export_error_audit_logs', format='txt', category=selected_category|default(''), level=selected_level|default(''), resolved=selected_resolved|default(''), source=selected_source|default(''), from_date=from_date|default(''), to_date=to_date|default(''), search=search|default('')) }}" class="btn btn-outline-success">
-                <i class="fas fa-file-alt"></i> {{ t('Export_TXT') }}
+                <i class="fas fa-file-alt" aria-hidden="true"></i> {{ t('Export_TXT') }}
               </a>
             </div>
           </div>
@@ -139,7 +139,7 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-dark">
-        <h3 class="card-title"><i class="fas fa-table mr-2"></i> {{ t('Errors') }}</h3>
+        <h3 class="card-title"><i class="fas fa-table mr-2" aria-hidden="true"></i> {{ t('Errors') }}</h3>
       </div>
       <div class="card-body p-0 table-responsive">
         <table class="table table-sm table-striped table-hover mb-0">
@@ -179,7 +179,7 @@
                 <div class="text-muted ic-8">{{ log.exception_type }}</div>
                 {% endif %}
                 {% if log.url %}
-                <div class="text-muted ic-8"><i class="fas fa-link"></i> {{ log.url[:80] }}</div>
+                <div class="text-muted ic-8"><i class="fas fa-link" aria-hidden="true"></i> {{ log.url[:80] }}</div>
                 {% endif %}
               </td>
               <td class="small text-center">
@@ -202,9 +202,9 @@
               <td class="small text-muted">{{ log.last_seen_at.strftime('%Y-%m-%d %H:%M') if log.last_seen_at else '-' }}</td>
               <td>
                 {% if log.is_resolved %}
-                <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('Resolved') }}</span>
+                <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i> {{ t('Resolved') }}</span>
                 {% else %}
-                <span class="badge badge-danger"><i class="fas fa-times"></i> {{ t('Unresolved') }}</span>
+                <span class="badge badge-danger"><i class="fas fa-times" aria-hidden="true"></i> {{ t('Unresolved') }}</span>
                 {% endif %}
               </td>
               <td>
@@ -213,19 +213,19 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="note" value="" aria-label="note">
                   <button type="submit" class="btn btn-success btn-sm" title="{{ t('Mark_As_Resolved') }}" aria-label="{{ t('Mark_As_Resolved') }}">
-                    <i class="fas fa-check"></i>
+                    <i class="fas fa-check" aria-hidden="true"></i>
                   </button>
                 </form>
                 {% endif %}
                 <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#errorDetailModal" data-error-id="{{ log.id }}" title="{{ t('Details') }}" aria-label="{{ t('Details') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </button>
               </td>
             </tr>
             {% else %}
             <tr>
               <td colspan="10" class="text-center text-muted py-4">
-                <i class="fas fa-check-circle fa-2x text-success mb-2"></i><br>
+                <i class="fas fa-check-circle fa-2x text-success mb-2" aria-hidden="true"></i><br>
                 {{ t('No_Matching_Errors') }}
               </td>
             </tr>
@@ -281,14 +281,14 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header bg-danger">
-        <h5 class="modal-title" id="clearAllErrorsTitle"><i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Confirm_Clear_All') }}</h5>
+        <h5 class="modal-title" id="clearAllErrorsTitle"><i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>{{ t('Confirm_Clear_All') }}</h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
         <div class="alert alert-danger">
-          <i class="fas fa-trash-alt fa-2x float-left ml-3"></i>
+          <i class="fas fa-trash-alt fa-2x float-left ml-3" aria-hidden="true"></i>
           <h5>{{ t('Warning_Delete_All_Errors') }}</h5>
           <p class="mb-0">{{ t('This_Action_Cannot_Be_Undone') }}</p>
         </div>
@@ -299,7 +299,7 @@
         <form method="post" action="{{ url_for('owner.clear_error_audit_logs') }}" class="d-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-danger" aria-label="{{ t('Confirm_Delete_All') }}">
-            <i class="fas fa-trash mr-1"></i> {{ t('Yes_Delete_All') }}
+            <i class="fas fa-trash mr-1" aria-hidden="true"></i> {{ t('Yes_Delete_All') }}
           </button>
         </form>
       </div>

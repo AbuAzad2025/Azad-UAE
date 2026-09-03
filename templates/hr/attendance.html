@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('الحضور') }} {{ t('والانصراف') }}{% endblock %}
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-clock mr-2"></i>{{ t('الحضور والانصراف') }}</h1>
+<h1 class="mb-0"><i class="fas fa-clock mr-2" aria-hidden="true"></i>{{ t('الحضور والانصراف') }}</h1>
 {% endblock %}
 {% block content %}
 <div class="container-fluid">
@@ -16,11 +16,11 @@
         <div class="col">
           <form method="POST" action="{{ url_for('hr.clock_in') }}" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-success"><i class="fas fa-sign-in-alt"></i> {{ t('تسجيل') }} {{ t('Sign In') }}</button>
+            <button type="submit" class="btn btn-success"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> {{ t('تسجيل') }} {{ t('Sign In') }}</button>
           </form>
           <form method="POST" action="{{ url_for('hr.clock_out') }}" style="display:inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-danger"><i class="fas fa-sign-out-alt"></i> {{ t('تسجيل') }} {{ t('خروج') }}</button>
+            <button type="submit" class="btn btn-danger"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> {{ t('تسجيل') }} {{ t('خروج') }}</button>
           </form>
         </div>
       </div>
@@ -36,7 +36,7 @@
         <input name="date_from" id="attendance_date_from" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_from }}">
         <label for="attendance_date_to" class="sr-only">{{ t('History') }} {{ t('End_2') }}</label>
         <input name="date_to" id="attendance_date_to" type="date" class="form-control form-control-sm ml-2" value="{{ request.args.date_to }}">
-        <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-search"></i></button>
+        <button type="submit" class="btn btn-sm btn-primary" title="{{ t('Search') }}"><i class="fas fa-search" aria-hidden="true"></i></button>
       </form>
       <div class="table-responsive">
         <table class="table table-bordered" id="attendanceTable">
@@ -59,7 +59,7 @@
       </div>
     </div>
     <div class="tab-pane {% if tab == 'departments' %}active{% endif %}" id="departments">
-      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#deptModal"><i class="fas fa-plus"></i> {{ t('قسم') }}</button>
+      <button class="btn btn-success btn-sm mb-3" data-toggle="modal" data-target="#deptModal"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('قسم') }}</button>
       <div class="table-responsive">
         <table class="table table-bordered">
           <thead><tr><th>{{ t('Name') }}</th><th>{{ t('المدير') }}</th><th>{{ t('اللون') }}</th></tr></thead>

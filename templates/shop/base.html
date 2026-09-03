@@ -38,17 +38,17 @@
   {# Top premium thin bar: location + language + currency #}
   <div class="ps-topbar">
     <div class="ps-topbar-inner">
-      <span class="ps-topbar-loc"><i class="fas fa-location-dot"></i> {{ (tenant.address_ar if is_rtl else (tenant.address_en or tenant.address_ar)) | e }}</span>
+      <span class="ps-topbar-loc"><i class="fas fa-location-dot" aria-hidden="true"></i> {{ (tenant.address_ar if is_rtl else (tenant.address_en or tenant.address_ar)) | e }}</span>
       <span class="ps-topbar-spacer"></span>
       <a href="{{ url_for('shop.set_lang', slug=store.store_slug, lang_code=('en' if lang == 'ar' else 'ar')) }}" class="ps-topbar-link">
-        <i class="fas fa-globe"></i> {{ t('lang_en') if lang == 'ar' else t('lang_ar') }}
+        <i class="fas fa-globe" aria-hidden="true"></i> {{ t('lang_en') if lang == 'ar' else t('lang_ar') }}
       </a>
-      <span class="ps-topbar-cur"><i class="fas fa-tag"></i> {{ tenant.default_currency or tenant_currency_symbol }}</span>
+      <span class="ps-topbar-cur"><i class="fas fa-tag" aria-hidden="true"></i> {{ tenant.default_currency or tenant_currency_symbol }}</span>
     </div>
   </div>
 
   {% if not is_shop_logged_in %}
-  <div class="ps-guest-banner"><i class="fas fa-eye"></i> {{ t('guest_browse') }}</div>
+  <div class="ps-guest-banner"><i class="fas fa-eye" aria-hidden="true"></i> {{ t('guest_browse') }}</div>
   {% endif %}
   <div id="ps-install-banner" class="ps-install-banner" style="display:none">
     <span>{{ t('install_app') }}</span>
@@ -72,21 +72,21 @@
       </a>
 
       <button type="button" class="ps-nav-toggle" aria-label="{{ t('menu') }}" aria-expanded="false" title="{{ t('menu') }}">
-        <i class="fas fa-bars"></i>
+        <i class="fas fa-bars" aria-hidden="true"></i>
       </button>
 
       <nav class="ps-nav">
-        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-store"></i> {{ t('shop') }}</a>
-        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}#categories"><i class="fas fa-layer-group"></i> {{ t('categories') }}</a>
+        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}"><i class="fas fa-store" aria-hidden="true"></i> {{ t('shop') }}</a>
+        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}#categories"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ t('categories') }}</a>
         <a href="{{ url_for('shop.cart_view', slug=store.store_slug) }}" class="ps-cart-link">
-          <i class="fas fa-shopping-basket"></i> {{ t('cart') }}
+          <i class="fas fa-shopping-basket" aria-hidden="true"></i> {{ t('cart') }}
           {% if cart_count %}<span class="ps-cart-badge">{{ cart_count|int }}</span>{% endif %}
         </a>
         {% if is_shop_logged_in %}
-        <span class="ps-nav-user"><i class="fas fa-user-check"></i> {{ shop_account.name.split()[0] }}</span>
-        <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt"></i> {{ t('my_orders') }}</a>
-        <a href="{{ url_for('shop.wishlist_view', slug=store.store_slug) }}"><i class="fas fa-heart"></i> {{ t('wishlist') }}</a>
-        <a href="{{ url_for('shop.saved_payments', slug=store.store_slug) }}"><i class="fas fa-credit-card"></i> {{ t('saved_payments') }}</a>
+        <span class="ps-nav-user"><i class="fas fa-user-check" aria-hidden="true"></i> {{ shop_account.name.split()[0] }}</span>
+        <a href="{{ url_for('shop.account_orders', slug=store.store_slug) }}"><i class="fas fa-receipt" aria-hidden="true"></i> {{ t('my_orders') }}</a>
+        <a href="{{ url_for('shop.wishlist_view', slug=store.store_slug) }}"><i class="fas fa-heart" aria-hidden="true"></i> {{ t('wishlist') }}</a>
+        <a href="{{ url_for('shop.saved_payments', slug=store.store_slug) }}"><i class="fas fa-credit-card" aria-hidden="true"></i> {{ t('saved_payments') }}</a>
         <form class="needs-validation ic-1" method="post" action="{{ url_for('shop.account_logout', slug=store.store_slug) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="ps-btn ps-btn-outline">{{ t('logout') }}</button>
@@ -126,9 +126,9 @@
         </div>
         {% if store.tagline %}<p class="ps-footer-tagline">{{ store.tagline }}</p>{% endif %}
         <ul class="ps-footer-contact">
-          {% if store.phone %}<li><i class="fas fa-phone"></i> {{ store.phone | e }}</li>{% endif %}
-          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ store.whatsapp | e }}</a></li>{% endif %}
-          {% if store.email %}<li><i class="fas fa-envelope"></i> {{ store.email | e }}</li>{% endif %}
+          {% if store.phone %}<li><i class="fas fa-phone" aria-hidden="true"></i> {{ store.phone | e }}</li>{% endif %}
+          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ store.whatsapp | e }}</a></li>{% endif %}
+          {% if store.email %}<li><i class="fas fa-envelope" aria-hidden="true"></i> {{ store.email | e }}</li>{% endif %}
         </ul>
       </div>
 
@@ -155,10 +155,10 @@
       <div class="ps-footer-col">
         <h4>{{ t('customer_service') }}</h4>
         <ul class="ps-footer-links">
-          {% if store.delivery_note %}<li><i class="fas fa-truck"></i> {{ store.delivery_note }}</li>{% endif %}
-          {% if store.return_policy(lang) %}<li><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}"><i class="fas fa-rotate-left"></i> {{ t('return_policy') }}</a></li>{% endif %}
-          {% if store.min_order_amount %}<li><i class="fas fa-coins"></i> {{ t('free_from') }}: {{ '%.2f'|format(store.min_order_amount) }} {{ tenant.default_currency or tenant_currency_symbol }}</li>{% endif %}
-          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ t('contact_us') }}</a></li>{% endif %}
+          {% if store.delivery_note %}<li><i class="fas fa-truck" aria-hidden="true"></i> {{ store.delivery_note }}</li>{% endif %}
+          {% if store.return_policy(lang) %}<li><a href="{{ url_for('shop.return_policy', slug=store.store_slug) }}"><i class="fas fa-rotate-left" aria-hidden="true"></i> {{ t('return_policy') }}</a></li>{% endif %}
+          {% if store.min_order_amount %}<li><i class="fas fa-coins" aria-hidden="true"></i> {{ t('free_from') }}: {{ '%.2f'|format(store.min_order_amount) }} {{ tenant.default_currency or tenant_currency_symbol }}</li>{% endif %}
+          {% if store.whatsapp %}<li><a href="https://wa.me/{{ store.whatsapp|replace('+','')|replace(' ','') }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('contact_us') }}</a></li>{% endif %}
         </ul>
       </div>
 
@@ -173,11 +173,11 @@
         <h4 class="ps-azad-name">{{ t('azad_company') }}</h4>
         <p class="ps-azad-en">AZAD Smart Systems</p>
         <p class="ps-azad-manager">{{ t('azad_managed_by') }}</p>
-        <p class="ps-powered-by-azad"><i class="fas fa-bolt"></i> {{ t('azad_powered_by') }}</p>
+        <p class="ps-powered-by-azad"><i class="fas fa-bolt" aria-hidden="true"></i> {{ t('azad_powered_by') }}</p>
         <ul class="ps-footer-contact ps-azad-contact">
-          <li><i class="fas fa-globe"></i> <a href="{{ config.DEVELOPER_WEBSITE }}" target="_blank" rel="noopener">{{ config.DEVELOPER_WEBSITE | replace('https://', '') | replace('http://', '') }}</a></li>
-          {% if config.DEVELOPER_EMAIL %}<li><i class="fas fa-envelope"></i> {{ config.DEVELOPER_EMAIL }}</li>{% endif %}
-          {% if config.DEVELOPER_PHONE %}<li><i class="fas fa-phone"></i> {{ config.DEVELOPER_PHONE }}</li>{% endif %}
+          <li><i class="fas fa-globe" aria-hidden="true"></i> <a href="{{ config.DEVELOPER_WEBSITE }}" target="_blank" rel="noopener">{{ config.DEVELOPER_WEBSITE | replace('https://', '') | replace('http://', '') }}</a></li>
+          {% if config.DEVELOPER_EMAIL %}<li><i class="fas fa-envelope" aria-hidden="true"></i> {{ config.DEVELOPER_EMAIL }}</li>{% endif %}
+          {% if config.DEVELOPER_PHONE %}<li><i class="fas fa-phone" aria-hidden="true"></i> {{ config.DEVELOPER_PHONE }}</li>{% endif %}
         </ul>
       </div>
     </div>

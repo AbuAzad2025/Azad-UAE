@@ -24,21 +24,21 @@
   {% if cat_reports %}
   <div class="row mb-4">
     <div class="col-12">
-      <h5 class="category-header"><i class="fas {{ cat.icon }} ml-2"></i>{{ cat.name_ar }}</h5>
+      <h5 class="category-header"><i class="fas {{ cat.icon }} ml-2" aria-hidden="true"></i>{{ cat.name_ar }}</h5>
     </div>
     {% for r in cat_reports %}
     <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
       <a href="{{ url_for(r.endpoint) }}" class="text-decoration-none">
         <div class="card report-card h-100 border-{{ r.color }} shadow-sm">
           <div class="card-body text-center">
-            <i class="fas {{ r.icon }} fa-2x text-{{ r.color }} mb-2"></i>
+            <i class="fas {{ r.icon }} fa-2x text-{{ r.color }} mb-2" aria-hidden="true"></i>
             <h6 class="card-title mb-1">{{ r.name_ar }}</h6>
             <small class="text-muted">{{ r.description }}</small>
           </div>
           {% if r.has_export %}
           <div class="card-footer text-center py-1">
             <small class="export-link text-{{ r.color }}">
-              <i class="fas fa-download ml-1"></i>{{ t('Export') }}
+              <i class="fas fa-download ml-1" aria-hidden="true"></i>{{ t('Export') }}
             </small>
           </div>
           {% endif %}
@@ -54,7 +54,7 @@
   <div class="row">
     <div class="col-12">
       <div class="alert alert-info">
-        <i class="fas fa-info-circle ml-2"></i>{{ t('No_reports_permission') }}.
+        <i class="fas fa-info-circle ml-2" aria-hidden="true"></i>{{ t('No_reports_permission') }}.
       </div>
     </div>
   </div>

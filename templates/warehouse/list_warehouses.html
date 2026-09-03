@@ -62,7 +62,7 @@
   <div class="container-fluid">
     <div class="row mb-2">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-warehouse"></i> {{ t('list_warehouses_title') }}</h1>
+        <h1 class="m-0"><i class="fas fa-warehouse" aria-hidden="true"></i> {{ t('list_warehouses_title') }}</h1>
       </div>
       <div class="col-sm-6">
         <ol class="breadcrumb float-sm-left">
@@ -80,12 +80,12 @@
       <div class="col-12 d-flex flex-wrap align-items-center erp-gap-1">
         {% if current_user.is_admin() %}
         <a href="{{ url_for('warehouse.create_warehouse') }}" class="btn btn-primary mb-2">
-          <i class="fas fa-plus"></i> {{ t('add_new_warehouse') }}
+          <i class="fas fa-plus" aria-hidden="true"></i> {{ t('add_new_warehouse') }}
         </a>
         {% endif %}
         {% if current_user.has_permission('manage_products') %}
         <a href="{{ url_for('products.create') }}" class="btn btn-success mb-2">
-          <i class="fas fa-plus-circle"></i> {{ t('add_new_product') }}
+          <i class="fas fa-plus-circle" aria-hidden="true"></i> {{ t('add_new_product') }}
         </a>
         {% endif %}
       </div>
@@ -93,20 +93,20 @@
 
     <div class="warehouses-summary mb-3 d-flex flex-wrap erp-gap-1">
       <span class="badge badge-primary">
-        <i class="fas fa-warehouse"></i> {{ t('total_warehouses') }}: {{ warehouses|length }}
+        <i class="fas fa-warehouse" aria-hidden="true"></i> {{ t('total_warehouses') }}: {{ warehouses|length }}
       </span>
       <span class="badge badge-warning">
-        <i class="fas fa-star"></i> {{ t('main_warehouses') }}: {{ warehouses|selectattr('is_main')|list|length }}
+        <i class="fas fa-star" aria-hidden="true"></i> {{ t('main_warehouses') }}: {{ warehouses|selectattr('is_main')|list|length }}
       </span>
       <span class="badge badge-success">
-        <i class="fas fa-sitemap"></i> {{ t('sub_warehouses_count') }}: {{ warehouses|selectattr('parent_id')|list|length }}
+        <i class="fas fa-sitemap" aria-hidden="true"></i> {{ t('sub_warehouses_count') }}: {{ warehouses|selectattr('parent_id')|list|length }}
       </span>
     </div>
 
     {% if warehouses %}
     <div class="card">
       <div class="card-header bg-gradient-primary text-white">
-        <h3 class="card-title mb-0"><i class="fas fa-list mr-2"></i>{{ t('list_warehouses_title') }}</h3>
+        <h3 class="card-title mb-0"><i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('list_warehouses_title') }}</h3>
       </div>
       <div class="card-body p-0">
         <div class="table-responsive">
@@ -131,11 +131,11 @@
                 <td>
                   <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="font-weight-bold text-primary">
                     {% if warehouse.is_main %}
-                    <i class="fas fa-star text-warning"></i>
+                    <i class="fas fa-star text-warning" aria-hidden="true"></i>
                     {% elif warehouse.parent_id %}
-                    <i class="fas fa-level-down-alt text-success"></i>
+                    <i class="fas fa-level-down-alt text-success" aria-hidden="true"></i>
                     {% else %}
-                    <i class="fas fa-warehouse text-secondary"></i>
+                    <i class="fas fa-warehouse text-secondary" aria-hidden="true"></i>
                     {% endif %}
                     {{ warehouse.name_ar or warehouse.name }}
                   </a>
@@ -154,7 +154,7 @@
                 <td>{{ warehouse.manager.username if warehouse.manager else '-' }}</td>
                 <td>
                   {% if warehouse.is_online %}
-                  <span class="badge badge-info"><i class="fas fa-globe"></i> {{ t('online') }}</span>
+                  <span class="badge badge-info"><i class="fas fa-globe" aria-hidden="true"></i> {{ t('online') }}</span>
                   {% else %}
                   <span class="badge badge-secondary">{{ t('physical') }}</span>
                   {% endif %}
@@ -173,37 +173,37 @@
                 </td>
                 <td>
                   {% if warehouse.is_main %}
-                  <span class="badge badge-primary mb-1"><i class="fas fa-star"></i> {{ t('main_warehouses') }}</span>
+                  <span class="badge badge-primary mb-1"><i class="fas fa-star" aria-hidden="true"></i> {{ t('main_warehouses') }}</span>
                   {% endif %}
                   {% if warehouse.parent_id %}
-                  <span class="badge badge-success mb-1"><i class="fas fa-sitemap"></i> {{ t('sub_warehouses_count') }}</span>
+                  <span class="badge badge-success mb-1"><i class="fas fa-sitemap" aria-hidden="true"></i> {{ t('sub_warehouses_count') }}</span>
                   {% endif %}
                   {% if warehouse.is_active %}
-                  <span class="badge badge-success mb-1"><i class="fas fa-check"></i> {{ t('Active') }}</span>
+                  <span class="badge badge-success mb-1"><i class="fas fa-check" aria-hidden="true"></i> {{ t('Active') }}</span>
                   {% else %}
-                  <span class="badge badge-danger mb-1"><i class="fas fa-times"></i> {{ t('not_allowed') }}</span>
+                  <span class="badge badge-danger mb-1"><i class="fas fa-times" aria-hidden="true"></i> {{ t('not_allowed') }}</span>
                   {% endif %}
                 </td>
                 <td class="text-center actions-cell">
                   <div class="btn-group flex-wrap btn-group-sm" role="group">
                     <a href="{{ url_for('warehouse.view_warehouse', id=warehouse.id) }}" class="btn btn-primary" title="{{ t('View') }}" aria-label="{{ t('View') }}">
-                      <i class="fas fa-eye"></i>
+                      <i class="fas fa-eye" aria-hidden="true"></i>
                     </a>
                     {% if current_user.is_admin() %}
                     <a href="{{ url_for('warehouse.edit_warehouse', id=warehouse.id) }}" class="btn btn-warning" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
-                      <i class="fas fa-edit"></i>
+                      <i class="fas fa-edit" aria-hidden="true"></i>
                     </a>
                     {% endif %}
                     {% if current_user.has_permission('manage_products') %}
                     <a href="{{ url_for('products.create', warehouse_id=warehouse.id) }}" class="btn btn-success" title="{{ t('add_new_product') }}" aria-label="{{ t('add_new_product') }}">
-                      <i class="fas fa-plus-circle"></i>
+                      <i class="fas fa-plus-circle" aria-hidden="true"></i>
                     </a>
                     {% endif %}
                     <a href="{{ url_for('warehouse.movements', warehouse=warehouse.id) }}" class="btn btn-outline-secondary" title="{{ t('Movements') }}" aria-label="{{ t('Movements') }}">
-                      <i class="fas fa-exchange-alt"></i>
+                      <i class="fas fa-exchange-alt" aria-hidden="true"></i>
                     </a>
                     <button type="button" class="btn btn-outline-danger" data-delete-item="{{warehouse.id}}" data-item-type="warehouses" data-item-name="{{(warehouse.name_ar or warehouse.name)|e}}" title="{{ t('Delete') }}" aria-label="{{ t('Delete') }}">
-                      <i class="fas fa-trash"></i>
+                      <i class="fas fa-trash" aria-hidden="true"></i>
                     </button>
                   </div>
                 </td>
@@ -218,7 +218,7 @@
 
     {% if not warehouses %}
     <div class="alert alert-info text-center">
-      <i class="fas fa-info-circle"></i>
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
       {{ t('no_warehouses_registered') }}
     </div>
     {% endif %}

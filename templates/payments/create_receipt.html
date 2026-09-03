@@ -150,7 +150,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ _('معلومات الفاتورة') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ _('معلومات الفاتورة') }}</h3>
 
       </div>
 
@@ -215,7 +215,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-invoice"></i> {{ _('معلومات فاتورة الشراء') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ _('معلومات فاتورة الشراء') }}</h3>
 
       </div>
 
@@ -301,7 +301,7 @@
 
             <label for="customer_id">
 
-              <i class="fas fa-user text-primary"></i> {{ _('العميل') }}
+              <i class="fas fa-user text-primary" aria-hidden="true"></i> {{ _('العميل') }}
 
               <span class="text-danger">*</span>
 
@@ -337,7 +337,7 @@
 
             <label for="supplier_display">
 
-              <i class="fas fa-truck text-danger"></i> {{ _('المورد') }}
+              <i class="fas fa-truck text-danger" aria-hidden="true"></i> {{ _('المورد') }}
 
             </label>
 
@@ -359,7 +359,7 @@
 
             <label for="amount">
 
-              <i class="fas fa-money-bill-wave text-success"></i> {{ _('المبلغ') }}
+              <i class="fas fa-money-bill-wave text-success" aria-hidden="true"></i> {{ _('المبلغ') }}
 
               <span class="text-danger">*</span>
 
@@ -377,7 +377,7 @@
 
             <small class="form-text text-info">
 
-              <i class="fas fa-info-circle"></i> {{ _('المبلغ المقترح حسب ديون العميل') }}
+              <i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('المبلغ المقترح حسب ديون العميل') }}
 
             </small>
 
@@ -397,7 +397,7 @@
 
             <label for="currency">
 
-              <i class="fas fa-dollar-sign text-warning"></i> {{ _('العملة') }}
+              <i class="fas fa-dollar-sign text-warning" aria-hidden="true"></i> {{ _('العملة') }}
 
             </label>
 
@@ -441,7 +441,7 @@
 
             <label for="exchange_rate">
 
-              <i class="fas fa-exchange-alt text-primary"></i> {{ _('سعر الصرف مقابل') }} {{ tenant_currency_name_ar or tenant_currency_symbol }}
+              <i class="fas fa-exchange-alt text-primary" aria-hidden="true"></i> {{ _('سعر الصرف مقابل') }} {{ tenant_currency_name_ar or tenant_currency_symbol }}
 
             </label>
 
@@ -449,7 +449,7 @@
 
             <small class="form-text text-muted">
 
-              <i class="fas fa-info-circle"></i> {{ _('سعر الصرف من الفاتورة (ثابت)') }}
+              <i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('سعر الصرف من الفاتورة (ثابت)') }}
 
             </small>
 
@@ -471,7 +471,7 @@
 
             <label for="payment_method">
 
-              <i class="fas fa-credit-card text-info"></i> {{ _('طريقة الدفع') }}
+              <i class="fas fa-credit-card text-info" aria-hidden="true"></i> {{ _('طريقة الدفع') }}
 
             </label>
 
@@ -503,7 +503,7 @@
 
             <label for="reference_number">
 
-              <i class="fas fa-hashtag text-secondary"></i> {{ _('رقم المرجع') }}
+              <i class="fas fa-hashtag text-secondary" aria-hidden="true"></i> {{ _('رقم المرجع') }}
 
             </label>
 
@@ -527,7 +527,7 @@
 
           <div class="form-group">
 
-            <label for="cheque_number"><i class="fas fa-hashtag"></i> {{ _('رقم الشيك') }} <span class="text-danger">*</span></label>
+            <label for="cheque_number"><i class="fas fa-hashtag" aria-hidden="true"></i> {{ _('رقم الشيك') }} <span class="text-danger">*</span></label>
 
             <input type="text" name="cheque_number" id="cheque_number" class="form-control" placeholder="{{ _('رقم الشيك') }}">
 
@@ -539,7 +539,7 @@
 
           <div class="form-group">
 
-            <label for="cheque_date"><i class="fas fa-calendar"></i> {{ _('تاريخ استحقاق الشيك') }} <span class="text-danger">*</span></label>
+            <label for="cheque_date"><i class="fas fa-calendar" aria-hidden="true"></i> {{ _('تاريخ استحقاق الشيك') }} <span class="text-danger">*</span></label>
 
             <input type="date" name="cheque_date" id="cheque_date" class="form-control" aria-label="cheque date">
 
@@ -551,7 +551,7 @@
 
           <div class="form-group">
 
-            <label for="cheque_bank_name"><i class="fas fa-university"></i> {{ _('اسم البنك') }} <span class="text-danger">*</span></label>
+            <label for="cheque_bank_name"><i class="fas fa-university" aria-hidden="true"></i> {{ _('اسم البنك') }} <span class="text-danger">*</span></label>
 
             <input type="text" name="bank_name" id="cheque_bank_name" class="form-control" placeholder="{{ _('اسم البنك') }}" minlength="2" maxlength="100">
 
@@ -571,7 +571,7 @@
 
           <div class="form-group">
 
-            <label for="card_last4"><i class="fas fa-credit-card"></i> {{ _('آخر 4 أرقام من البطاقة') }}</label>
+            <label for="card_last4"><i class="fas fa-credit-card" aria-hidden="true"></i> {{ _('آخر 4 أرقام من البطاقة') }}</label>
 
             <input type="text" name="card_last4" id="card_last4" class="form-control" placeholder="1234" maxlength="4">
 
@@ -583,7 +583,7 @@
 
           <div class="form-group">
 
-            <label for="reference_number_card"><i class="fas fa-hashtag"></i> {{ _('رقم التفويض') }}</label>
+            <label for="reference_number_card"><i class="fas fa-hashtag" aria-hidden="true"></i> {{ _('رقم التفويض') }}</label>
 
             <input type="text" name="reference_number_card" id="reference_number_card" class="form-control" placeholder="{{ _('رقم التفويض') }}">
 
@@ -603,7 +603,7 @@
 
           <div class="form-group">
 
-            <label for="bank_name_transfer"><i class="fas fa-university"></i> {{ _('اسم البنك') }}</label>
+            <label for="bank_name_transfer"><i class="fas fa-university" aria-hidden="true"></i> {{ _('اسم البنك') }}</label>
 
             <input type="text" name="bank_name_transfer" id="bank_name_transfer" class="form-control" placeholder="{{ _('اسم البنك') }}" minlength="2" maxlength="100">
 
@@ -615,7 +615,7 @@
 
           <div class="form-group">
 
-            <label for="reference_number_transfer"><i class="fas fa-hashtag"></i> {{ _('رقم الحوالة') }}</label>
+            <label for="reference_number_transfer"><i class="fas fa-hashtag" aria-hidden="true"></i> {{ _('رقم الحوالة') }}</label>
 
             <input type="text" name="reference_number_transfer" id="reference_number_transfer" class="form-control" placeholder="{{ _('رقم الحوالة') }}">
 
@@ -635,7 +635,7 @@
 
           <div class="form-group">
 
-            <label for="ewallet_name"><i class="fas fa-wallet"></i> {{ _('اسم المحفظة') }}</label>
+            <label for="ewallet_name"><i class="fas fa-wallet" aria-hidden="true"></i> {{ _('اسم المحفظة') }}</label>
 
             <select name="ewallet_name" id="ewallet_name" class="form-control" aria-label="ewallet name">
 
@@ -661,7 +661,7 @@
 
           <div class="form-group">
 
-            <label for="reference_number_ewallet"><i class="fas fa-hashtag"></i> {{ _('رقم العملية') }}</label>
+            <label for="reference_number_ewallet"><i class="fas fa-hashtag" aria-hidden="true"></i> {{ _('رقم العملية') }}</label>
 
             <input type="text" name="reference_number_ewallet" id="reference_number_ewallet" class="form-control" placeholder="{{ _('رقم العملية') }}">
 
@@ -683,7 +683,7 @@
 
             <label for="notes">
 
-              <i class="fas fa-sticky-note text-muted"></i> {{ _('ملاحظات') }}
+              <i class="fas fa-sticky-note text-muted" aria-hidden="true"></i> {{ _('ملاحظات') }}
 
             </label>
 
@@ -707,7 +707,7 @@
 
           <div class="alert alert-info">
 
-            <h6><i class="fas fa-info-circle"></i> {{ _('معلومات العميل') }}</h6>
+            <h6><i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('معلومات العميل') }}</h6>
 
             <div class="row">
 
@@ -745,7 +745,7 @@
 
           <a href="{{ url_for('payments.receipts') }}" class="btn btn-secondary">
 
-            <i class="fas fa-times"></i> {{ _('إلغاء') }}
+            <i class="fas fa-times" aria-hidden="true"></i> {{ _('إلغاء') }}
 
           </a>
 
@@ -755,7 +755,7 @@
 
           <button type="submit" class="btn btn-success">
 
-            <i class="fas fa-save"></i> {% if is_payment %}{{ _('حفظ سند الصرف') }}{% else %}{{ _('حفظ سند القبض') }}{% endif %}
+            <i class="fas fa-save" aria-hidden="true"></i> {% if is_payment %}{{ _('حفظ سند الصرف') }}{% else %}{{ _('حفظ سند القبض') }}{% endif %}
 
           </button>
 
@@ -989,7 +989,7 @@ function loadCustomerBalance() {
 
     } else {
 
-      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check"></i> {{ _('لا توجد فواتير معلقة') }}</small>');
+      $('#unpaidSales').html('<small class="text-success"><i class="fas fa-check" aria-hidden="true"></i> {{ _('لا توجد فواتير معلقة') }}</small>');
 
     }
 

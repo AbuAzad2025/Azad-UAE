@@ -6,7 +6,7 @@
 
 {% block page_title %}
 
-<h1 class="mb-0"><i class="fas fa-cog mr-2"></i>{{ t('settings') }} {{ t('Store') }}</h1>
+<h1 class="mb-0"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('settings') }} {{ t('Store') }}</h1>
 
 {% endblock %}
 
@@ -30,7 +30,7 @@
 
           {% if store.platform_disabled %}
           <div class="alert alert-danger d-flex align-items-center">
-            <i class="fas fa-lock mr-2"></i>
+            <i class="fas fa-lock mr-2" aria-hidden="true"></i>
             <span>{{ t('store_disabled_by_platform_owner') }}</span>
           </div>
           {% endif %}
@@ -285,7 +285,7 @@
 
         <div class="card-footer">
 
-          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1"></i>{{ t('Save') }}</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save') }}</button>
 
           <a href="{{ url_for('store.admin_index') }}" class="btn btn-secondary">{{ t('Back') }}</a>
 

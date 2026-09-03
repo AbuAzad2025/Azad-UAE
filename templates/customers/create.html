@@ -3,14 +3,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-user-plus mr-2"></i>{{ t('Add New Customer') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-user-plus mr-2" aria-hidden="true"></i>{{ t('Add New Customer') }}</h1>
   </div>
   <div>
     <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('Back to Customers') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('Back to Customers') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Back to Dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Back to Dashboard') }}
     </a>
   </div>
 </div>
@@ -77,7 +77,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-6">
           <div class="form-group">
             <label for="customer_name">
-              <i class="fas fa-user text-primary"></i> {{ t('Name') }}
+              <i class="fas fa-user text-primary" aria-hidden="true"></i> {{ t('Name') }}
               <span class="text-danger">*</span>
             </label>
             {{ form.name(class="form-control", id="customer_name", placeholder=_('اسم الزبون'), required=true, minlength=2, maxlength=100) }}
@@ -86,7 +86,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-3">
           <div class="form-group">
             <label for="customer_type">
-              <i class="fas fa-tag text-primary"></i> {{ t('نوع') }} {{ t('Customer_2') }}
+              <i class="fas fa-tag text-primary" aria-hidden="true"></i> {{ t('نوع') }} {{ t('Customer_2') }}
               <span class="text-danger">*</span>
             </label>
             {{ form.customer_type(class="form-control", id="customer_type", required=true) }}
@@ -97,7 +97,7 @@ a.btn.btn-outline-secondary span {
             <div class="custom-control custom-switch">
               {{ form.is_active(class="custom-control-input", id="is_active") }}
               <label class="custom-control-label" for="is_active">
-                <i class="fas fa-toggle-on text-success"></i> {{ t('Active') }}
+                <i class="fas fa-toggle-on text-success" aria-hidden="true"></i> {{ t('Active') }}
               </label>
             </div>
           </div>
@@ -108,7 +108,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-4">
           <div class="form-group">
             <label for="customer_phone">
-              <i class="fas fa-phone text-primary"></i> {{ t('Phone') }}
+              <i class="fas fa-phone text-primary" aria-hidden="true"></i> {{ t('Phone') }}
               <span class="text-danger">*</span>
             </label>
             {{ form.phone(class="form-control", id="customer_phone", placeholder="+971-5x-xxx-xxxx", required=true, pattern="^\\+?[0-9\\s\\-]{8,20}$") }}
@@ -117,7 +117,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-4">
           <div class="form-group">
             <label for="customer_email">
-              <i class="fas fa-envelope text-info"></i> {{ t('Email') }}
+              <i class="fas fa-envelope text-info" aria-hidden="true"></i> {{ t('Email') }}
             </label>
             {{ form.email(class="form-control", id="customer_email", placeholder="email@example.com", maxlength=255) }}
           </div>
@@ -125,7 +125,7 @@ a.btn.btn-outline-secondary span {
         <div class="col-md-4">
           <div class="form-group">
             <label for="preferred_currency">
-              <i class="fas fa-dollar-sign text-success"></i> {{ t('Currency') }} {{ t('الافتراضية') }}
+              <i class="fas fa-dollar-sign text-success" aria-hidden="true"></i> {{ t('Currency') }} {{ t('الافتراضية') }}
             </label>
             {{ form.preferred_currency(class="form-control", id="preferred_currency") }}
           </div>
@@ -134,14 +134,14 @@ a.btn.btn-outline-secondary span {
 
       <div class="form-group">
         <label for="customer_address">
-          <i class="fas fa-map-marker-alt text-warning"></i> {{ t('Address') }}
+          <i class="fas fa-map-marker-alt text-warning" aria-hidden="true"></i> {{ t('Address') }}
         </label>
         {{ form.address(class="form-control", id="customer_address", rows=2, placeholder=_('العنوان الكامل...'), maxlength=255) }}
       </div>
 
       <div class="form-group">
         <label for="customer_notes">
-          <i class="fas fa-sticky-note text-secondary"></i> {{ t('Notes') }}
+          <i class="fas fa-sticky-note text-secondary" aria-hidden="true"></i> {{ t('Notes') }}
         </label>
         {{ form.notes(class="form-control", id="customer_notes", rows=3, placeholder=_('أي ملاحظات عن العميل...'), maxlength=500) }}
       </div>
@@ -149,10 +149,10 @@ a.btn.btn-outline-secondary span {
 
     <div class="card-footer">
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-save mr-2"></i>{{ t('Save') }}
+        <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save') }}
       </button>
       <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
-        <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}
+        <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}
       </a>
     </div>
   </form>

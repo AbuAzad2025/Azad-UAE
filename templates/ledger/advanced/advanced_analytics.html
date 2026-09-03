@@ -7,7 +7,7 @@
     <div class="col-12">
       <div class="card bg-gradient-primary text-white">
         <div class="card-body">
-          <h2><i class="fas fa-chart-area mr-2"></i>{{ t('System_2') }} {{ t('التحليل') }} {{ t('المالي') }} {{ t('المتقدم') }}</h2>
+          <h2><i class="fas fa-chart-area mr-2" aria-hidden="true"></i>{{ t('System_2') }} {{ t('التحليل') }} {{ t('المالي') }} {{ t('المتقدم') }}</h2>
           <p>{{ t('تحليلات') }} {{ t('شاملة') }} {{ t('ونسب') }} {{ t('مالية') }} {{ t('ومؤشرات') }} {{ t('أداء') }} {{ t('وتوقعات') }} {{ t('مستقبلية') }}</p>
         </div>
       </div>
@@ -19,7 +19,7 @@
     <div class="col-md-12">
       <div class="card">
         <div class="card-header bg-info text-white">
-          <h4><i class="fas fa-percent mr-2"></i>{{ t('النسب') }} {{ t('Finance') }} {{ t('Main_2') }}</h4>
+          <h4><i class="fas fa-percent mr-2" aria-hidden="true"></i>{{ t('النسب') }} {{ t('Finance') }} {{ t('Main_2') }}</h4>
         </div>
         <div class="card-body">
           <div class="row">
@@ -109,7 +109,7 @@
     <div class="col-md-6">
       <div class="card">
         <div class="card-header bg-danger text-white">
-          <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Expenses') }}</h4>
+          <h4><i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('توزيع') }} {{ t('Expenses') }}</h4>
         </div>
         <div class="card-body">
           {% if expense_breakdown["items"] %}
@@ -137,7 +137,7 @@
           </div>
           {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted py-4">
-            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+            <i class="fas fa-inbox fa-2x mb-2" aria-hidden="true"></i><br>
             {{ t('No_items_found') }} {{ t('Expenses_2') }}
           </div>
           {% endif %}
@@ -148,7 +148,7 @@
     <div class="col-md-6">
       <div class="card">
         <div class="card-header bg-success text-white">
-          <h4><i class="fas fa-chart-pie mr-2"></i>{{ t('توزيع') }} {{ t('Revenue') }}</h4>
+          <h4><i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('توزيع') }} {{ t('Revenue') }}</h4>
         </div>
         <div class="card-body">
           {% if revenue_breakdown["items"] %}
@@ -176,7 +176,7 @@
           </div>
           {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted py-4">
-            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+            <i class="fas fa-inbox fa-2x mb-2" aria-hidden="true"></i><br>
             {{ t('No_items_found') }} {{ t('Revenue') }}
           </div>
           {% endif %}
@@ -190,14 +190,14 @@
     <div class="col-md-12">
       <div class="card">
         <div class="card-header bg-warning text-dark">
-          <h4><i class="fas fa-crystal-ball mr-2"></i>{{ t('Forecasts') }} {{ t('Finance') }}</h4>
+          <h4><i class="fas fa-crystal-ball mr-2" aria-hidden="true"></i>{{ t('Forecasts') }} {{ t('Finance') }}</h4>
         </div>
         <div class="card-body">
           {% if forecast %}
           <canvas id="forecastChart" height="100"></canvas>
           {% else %}
           <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted py-4">
-            <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+            <i class="fas fa-chart-line fa-2x mb-2" aria-hidden="true"></i><br>
             {{ t('No_items_found') }} {{ t('Forecasts') }}
           </div>
           {% endif %}

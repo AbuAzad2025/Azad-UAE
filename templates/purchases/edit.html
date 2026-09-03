@@ -7,14 +7,14 @@
   <div class="row">
     <div class="col-12">
       <div class="alert alert-info">
-        <i class="fas fa-info-circle"></i>
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
         <strong>{{ t('Note') }}:</strong> {{ t('Edit_Notes_Only_Warning') }}
       </div>
 
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> {{ t('Edit') }} {{ t('Invoice') }} {{ t('Purchase') }} #{{ purchase.purchase_number }}
+            <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit') }} {{ t('Invoice') }} {{ t('Purchase') }} #{{ purchase.purchase_number }}
           </h3>
         </div>
         <div class="card-body">
@@ -29,7 +29,7 @@
                 <p><strong>{{ t('Date') }}:</strong> {{ format_date(purchase.purchase_date) }}</p>
                 <p><strong>{{ t('Supplier') }}:</strong> {{ purchase.supplier_name }}</p>
                 {% if purchase.warehouse %}
-                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('Warehouse') }}:</strong> {{ purchase.warehouse.name_ar or purchase.warehouse.name }}</p>
+                <p><strong><i class="fas fa-warehouse text-info" aria-hidden="true"></i> {{ t('Warehouse') }}:</strong> {{ purchase.warehouse.name_ar or purchase.warehouse.name }}</p>
                 {% endif %}
               </div>
               <div class="col-md-6">
@@ -78,10 +78,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success btn-lg">
-                <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Save') }} {{ t('Changes') }}
+                <i class="fas fa-save {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Save') }} {{ t('Changes') }}
               </button>
               <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-secondary btn-lg">
-                <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}"></i> {{ t('Cancel') }}
+                <i class="fas fa-times {% if is_rtl %}ml-2{% else %}mr-2{% endif %}" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
             </div>
           </form>

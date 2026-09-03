@@ -5,12 +5,12 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-dollar-sign text-success"></i> {{ t('Currency_Settings') }}</h1>
+        <h1 class="m-0"><i class="fas fa-dollar-sign text-success" aria-hidden="true"></i> {{ t('Currency_Settings') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -23,13 +23,13 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-success">
-            <i class="fas fa-dollar-sign"></i> {{ t('Currencies') }}
+            <i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ t('Currencies') }}
           </a>
           <a href="{{ url_for('owner.exchange_rates') }}" class="btn btn-outline-info">
-            <i class="fas fa-exchange-alt"></i> {{ t('Exchange_Rates') }}
+            <i class="fas fa-exchange-alt" aria-hidden="true"></i> {{ t('Exchange_Rates') }}
           </a>
           <a href="{{ url_for('owner.tax_settings') }}" class="btn btn-outline-success">
-            <i class="fas fa-percent"></i> {{ t('Tax') }}
+            <i class="fas fa-percent" aria-hidden="true"></i> {{ t('Tax') }}
           </a>
         </div>
       </div>
@@ -41,7 +41,7 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-success text-white">
-        <h3 class="card-title"><i class="fas fa-coins mr-2"></i> {{ t('Default_Currency_Settings') }}</h3>
+        <h3 class="card-title"><i class="fas fa-coins mr-2" aria-hidden="true"></i> {{ t('Default_Currency_Settings') }}</h3>
       </div>
       <div class="card-body">
         <form class="needs-validation currency-settings-form mb-4" method="POST" action="{{ url_for('owner.currency_settings') }}">
@@ -75,11 +75,11 @@
           </div>
 
           <button type="submit" class="btn btn-success">
-            <i class="fas fa-save mr-1"></i> {{ t('Save_Settings') }}
+            <i class="fas fa-save mr-1" aria-hidden="true"></i> {{ t('Save_Settings') }}
           </button>
         </form>
 
-        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success"></i> {{ t('Exchange_Rates') }}</h5>
+        <h5 class="mt-4 mb-3"><i class="fas fa-chart-line text-success" aria-hidden="true"></i> {{ t('Exchange_Rates') }}</h5>
         <div class="table-responsive">
           <table class="table table-bordered table-hover">
             <thead class="thead-light">
@@ -94,7 +94,7 @@
                 <td>
                   <strong>{{ currency }}</strong>
                   {% if currency == base_currency %}
-                  <span class="badge badge-success ml-2"><i class="fas fa-star mr-1"></i>{{ t('Base_Currency') }}</span>
+                  <span class="badge badge-success ml-2"><i class="fas fa-star mr-1" aria-hidden="true"></i>{{ t('Base_Currency') }}</span>
                   {% endif %}
                 </td>
                 <td>{{ rate }}</td>

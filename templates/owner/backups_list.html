@@ -4,18 +4,18 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-database mr-2"></i>{{ t('Backup_Management') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-database mr-2" aria-hidden="true"></i>{{ t('Backup_Management') }}</h1>
     </div>
   <div>
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ t('Owner_Dashboard') }}">
-        <i class="fas fa-arrow-right mr-2"></i>{{ t('Owner_Dashboard') }}</a>
+        <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Owner_Dashboard') }}</a>
     {% else %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary" aria-label="{{ t('Dashboard') }}">
-        <i class="fas fa-arrow-right mr-2"></i>{{ t('Dashboard') }}</a>
+        <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Dashboard') }}</a>
     {% endif %}
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary" aria-label="{{ t('Home') }}">
-      <i class="fas fa-home mr-2"></i>{{ t('Home') }}</a>
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Home') }}</a>
   </div>
 </div>
 {% endblock %}
@@ -28,16 +28,16 @@
   <div class="col-md-12">
     <div class="card">
       <div class="card-header">
-        <h5 class="card-title mb-0"><i class="fas fa-shield-alt mr-2"></i>{{ t('Backup_Status') }}</h5>
+        <h5 class="card-title mb-0"><i class="fas fa-shield-alt mr-2" aria-hidden="true"></i>{{ t('Backup_Status') }}</h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-folder-open mr-1"></i>{{ t('Storage_Path_Colon') }}</strong></div>
+            <div><strong><i class="fas fa-folder-open mr-1" aria-hidden="true"></i>{{ t('Storage_Path_Colon') }}</strong></div>
             <div class="text-muted ic-1">{{ backup_dir }}</div>
           </div>
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-clock mr-1"></i>{{ t('Schedule_Colon') }}</strong></div>
+            <div><strong><i class="fas fa-clock mr-1" aria-hidden="true"></i>{{ t('Schedule_Colon') }}</strong></div>
             <div class="text-muted">
               {% if schedule_settings and schedule_settings.enabled %}
                 {{ t('Enabled') }} ({{ schedule_settings.frequency }} @ {{ schedule_settings.backup_time }}) | {{ t('Retention') }}: {{ schedule_settings.keep_count }}
@@ -47,7 +47,7 @@
             </div>
           </div>
           <div class="col-md-4 mb-2">
-            <div><strong><i class="fas fa-history mr-1"></i>{{ t('Last_Run_Colon') }}</strong></div>
+            <div><strong><i class="fas fa-history mr-1" aria-hidden="true"></i>{{ t('Last_Run_Colon') }}</strong></div>
             <div class="text-muted">
               {% if schedule_state and schedule_state.last_run_at %}
                 {{ schedule_state.last_run_at }}
@@ -60,7 +60,7 @@
 
         {% if schedule_state and schedule_state.last_error %}
           <div class="alert alert-danger mt-3 mb-0">
-            <div><strong><i class="fas fa-exclamation-triangle mr-1"></i>{{ t('Last_Error_Colon') }}</strong></div>
+            <div><strong><i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ t('Last_Error_Colon') }}</strong></div>
             <div class="ic-2">{{ schedule_state.last_error }}</div>
             <div class="mt-2 text-muted">
               {% if schedule_state.last_action %}<span>{{ t('Operation') }}: {{ schedule_state.last_action }}</span>{% endif %}
@@ -69,7 +69,7 @@
           </div>
         {% elif schedule_state and schedule_state.last_success_at %}
           <div class="alert alert-success mt-3 mb-0">
-            <strong><i class="fas fa-check-circle mr-1"></i>{{ t('Last_Success_Colon') }}</strong> {{ schedule_state.last_success_at }}
+            <strong><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('Last_Success_Colon') }}</strong> {{ schedule_state.last_success_at }}
             {% if schedule_state.last_filename %}| <span class="text-muted">{{ schedule_state.last_filename }}</span>{% endif %}
           </div>
         {% endif %}
@@ -86,7 +86,7 @@
         <p>{{ t('Total_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-archive" aria-label="{{ t('Total_Backups') }}"></i>
+        <i class="fas fa-archive" aria-label="{{ t('Total_Backups') }}" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -98,7 +98,7 @@
         <p>{{ t('Manual_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-hand-pointer" aria-label="{{ t('Manual_Backups') }}"></i>
+        <i class="fas fa-hand-pointer" aria-label="{{ t('Manual_Backups') }}" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -110,7 +110,7 @@
         <p>{{ t('Auto_Backups') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-robot" aria-label="{{ t('Auto_Backups') }}"></i>
+        <i class="fas fa-robot" aria-label="{{ t('Auto_Backups') }}" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -122,7 +122,7 @@
         <p>{{ t('Total_Size_MB') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-hdd" aria-label="{{ t('Total_Size_MB') }}"></i>
+        <i class="fas fa-hdd" aria-label="{{ t('Total_Size_MB') }}" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -131,9 +131,9 @@
 <div class="row mb-3">
   <div class="col-md-12">
     <div class="alert alert-info d-flex align-items-start ic-3">
-      <i class="fas fa-lightbulb mr-3 ic-4"></i>
+      <i class="fas fa-lightbulb mr-3 ic-4" aria-hidden="true"></i>
       <div>
-        <h5 class="mb-2"><i class="fas fa-question-circle mr-2"></i>{{ t('How_Backups_Work') }}</h5>
+        <h5 class="mb-2"><i class="fas fa-question-circle mr-2" aria-hidden="true"></i>{{ t('How_Backups_Work') }}</h5>
         <ul class="mb-0 ic-5">
           <li><strong>{{ t('Backup_Levels_Colon') }}</strong> System · Tenant · Branch · Store</li>
           <li><strong>System:</strong> <code>azad_backup_system_*.tar.gz</code> — <code>pg_dump -Fc</code> {{ t('Plus_All_Uploads') }}</li>
@@ -158,7 +158,7 @@
     <div class="card shadow">
       <div class="card-header bg-primary">
         <h5 class="card-title mb-0">
-          <i class="fas fa-tools mr-2"></i>{{ t('Backup_Actions') }}
+          <i class="fas fa-tools mr-2" aria-hidden="true"></i>{{ t('Backup_Actions') }}
         </h5>
       </div>
       <div class="card-body">
@@ -168,7 +168,7 @@
             <form class="needs-validation" method="POST" action="{{ url_for('owner.backup_now') }}">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <label for="system_backup_desc" class="font-weight-bold mb-2">
-                <i class="fas fa-server text-danger mr-1"></i>
+                <i class="fas fa-server text-danger mr-1" aria-hidden="true"></i>
                 {{ t('Full_System_Backup') }}
               </label>
               <label class="sr-only" for="system_backup_desc">{{ t('Description') }}</label>
@@ -176,7 +176,7 @@
                 <input type="text" name="description" id="system_backup_desc" placeholder="{{ t('Description_Optional') }}" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-danger" aria-label="{{ t('Create_Full_System_Backup') }}">
-                    <i class="fas fa-database mr-1"></i> System backup
+                    <i class="fas fa-database mr-1" aria-hidden="true"></i> System backup
                   </button>
                 </div>
               </div>
@@ -188,7 +188,7 @@
             <form method="POST" action="{{ url_for('owner.create_scoped_backup') }}" id="scopedBackupForm">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
               <label for="backupScopeSelect" class="font-weight-bold mb-2">
-                <i class="fas fa-layer-group text-success mr-1"></i>
+                <i class="fas fa-layer-group text-success mr-1" aria-hidden="true"></i>
                 {{ t('Scoped_Backup') }}
               </label>
               <select name="scope" id="backupScopeSelect" class="form-control mb-2" required aria-label="scope">
@@ -224,7 +224,7 @@
                 <input type="text" name="description" id="scoped_backup_desc" placeholder="{{ t('Description_Optional') }}" class="form-control" maxlength="500">
                 <div class="input-group-append">
                   <button type="submit" class="btn btn-success" aria-label="{{ t('Create_Scoped_Backup') }}">
-                    <i class="fas fa-download mr-1"></i> {{ t('Create') }}
+                    <i class="fas fa-download mr-1" aria-hidden="true"></i> {{ t('Create') }}
                   </button>
                 </div>
               </div>
@@ -235,12 +235,12 @@
           
           <div class="col-md-6">
             <label class="font-weight-bold mb-2">
-              <i class="fas fa-clock text-primary mr-1"></i>
+              <i class="fas fa-clock text-primary mr-1" aria-hidden="true"></i>
               {{ t('Auto_Scheduled_Backup') }}
             </label>
             <div>
               <a href="{{ url_for('owner.scheduled_backups') }}" class="btn btn-primary btn-block" aria-label="{{ t('Scheduled_Backup_Settings') }}">
-                <i class="fas fa-cog mr-1"></i> {{ t('Schedule_Settings') }}
+                <i class="fas fa-cog mr-1" aria-hidden="true"></i> {{ t('Schedule_Settings') }}
               </a>
             </div>
             </div>
@@ -251,10 +251,10 @@
         
         <div class="text-center">
           <button class="btn btn-info" data-action="reload-page">
-            <i class="fas fa-sync mr-1"></i> {{ t('Refresh_List') }}
+            <i class="fas fa-sync mr-1" aria-hidden="true"></i> {{ t('Refresh_List') }}
           </button>
           <small class="d-block text-muted mt-2">
-            <i class="fas fa-clock mr-1"></i>
+            <i class="fas fa-clock mr-1" aria-hidden="true"></i>
             {{ t('Last_Updated_Colon') }} {{ now.strftime('%Y-%m-%d %H:%M:%S') if now else '-' }}
           </small>
         </div>
@@ -271,47 +271,47 @@
         <div class="card-header">
           <h5 class="card-title mb-0">
             {% if backup.get('manual') %}
-            <i class="fas fa-hand-pointer text-success"></i> {{ t('Manual') }}
+            <i class="fas fa-hand-pointer text-success" aria-hidden="true"></i> {{ t('Manual') }}
             {% else %}
-            <i class="fas fa-robot text-info"></i> {{ t('Automatic') }}
+            <i class="fas fa-robot text-info" aria-hidden="true"></i> {{ t('Automatic') }}
             {% endif %}
           </h5>
         </div>
         <div class="card-body">
           
           <p class="mb-2">
-            <i class="far fa-calendar-alt text-primary"></i>
+            <i class="far fa-calendar-alt text-primary" aria-hidden="true"></i>
             <strong>{{ t('Date') }}</strong> 
             {% set ts = backup.get('timestamp', '') %}{{ ts[:4] }}-{{ ts[4:6] }}-{{ ts[6:8] }}
           </p>
           
           <p class="mb-2">
-            <i class="far fa-clock text-info"></i>
+            <i class="far fa-clock text-info" aria-hidden="true"></i>
             <strong>{{ t('Time') }}</strong> 
             {% set ts2 = backup.get('timestamp', '') %}{{ ts2[9:11] }}:{{ ts2[11:13] }}:{{ ts2[13:15] }}
           </p>
 
           
           <p class="mb-2">
-            <i class="fas fa-hdd text-warning"></i>
+            <i class="fas fa-hdd text-warning" aria-hidden="true"></i>
             <strong>{{ t('Size_Colon') }}</strong> 
             <span class="badge badge-warning">{{ backup.get('size_mb', 0) }} MB</span>
           </p>
 
           
           <p class="mb-2">
-            <i class="fas fa-info-circle text-secondary"></i>
+            <i class="fas fa-info-circle text-secondary" aria-hidden="true"></i>
             {% if backup.get('compressed') %}
-            <span class="badge badge-info"><i class="fas fa-compress"></i> {{ t('Compressed') }}</span>
+            <span class="badge badge-info"><i class="fas fa-compress" aria-hidden="true"></i> {{ t('Compressed') }}</span>
             {% endif %}
             {% if backup.get('encrypted') %}
-            <span class="badge badge-success"><i class="fas fa-lock"></i> {{ t('Encrypted') }}</span>
+            <span class="badge badge-success"><i class="fas fa-lock" aria-hidden="true"></i> {{ t('Encrypted') }}</span>
             {% endif %}
           </p>
 
           {% if backup.get('description') %}
           <p class="mb-2 text-muted">
-            <i class="fas fa-comment-dots"></i>
+            <i class="fas fa-comment-dots" aria-hidden="true"></i>
             <small>{{ backup.get('description') }}</small>
           </p>
           {% endif %}
@@ -319,7 +319,7 @@
           {% if backup.get('checksum') %}
           <p class="mb-2">
             <small class="text-muted">
-              <i class="fas fa-fingerprint"></i> Checksum:<br>
+              <i class="fas fa-fingerprint" aria-hidden="true"></i> Checksum:<br>
               <code class="checksum-badge">{{ backup.get('checksum')[:16] }}...</code>
             </small>
           </p>
@@ -335,7 +335,7 @@
           </p>
           <p class="mb-0">
             <small class="text-muted">
-              <i class="fas fa-file"></i> {{ backup.get('filename') }}
+              <i class="fas fa-file" aria-hidden="true"></i> {{ backup.get('filename') }}
             </small>
           </p>
         </div>
@@ -343,13 +343,13 @@
         <div class="card-footer">
           <a href="{{ url_for('owner.prepare_restore_backup', filename=backup.get('filename')) }}"
              class="btn btn-warning" title="{{ t('Safe_Restore_Instructions') }}" aria-label="{{ t('Backup_Restore_Instructions') }}">
-            <i class="fas fa-book mr-1"></i> {{ t('Restore_Instructions') }}
+            <i class="fas fa-book mr-1" aria-hidden="true"></i> {{ t('Restore_Instructions') }}
           </a>
           {% if is_platform_owner and (backup.get('backup_scope') == 'system' or backup.get('filename').startswith('azad_backup_system_') or 'system' in backup.get('filename')) %}
           <button type="button" class="btn btn-outline-warning"
                   data-action="open-target-restore" data-filename="{{ backup.get('filename') }}"
                   title="{{ t('Restore_To_New_DB_Only') }}" aria-label="{{ t('Restore_To_New_Database') }}">
-            <i class="fas fa-database mr-1"></i> {{ t('Restore_To_New_DB') }}
+            <i class="fas fa-database mr-1" aria-hidden="true"></i> {{ t('Restore_To_New_DB') }}
           </button>
           {% endif %}
           
@@ -357,7 +357,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <input type="hidden" name="filename" value="{{ backup.get('filename') }}" aria-label="filename" minlength="2" maxlength="100">
             <button type="submit" class="btn btn-danger" title="{{ t('Delete_Backup_Permanently') }}" aria-label="{{ t('Delete_Backup') }}">
-              <i class="fas fa-trash mr-1"></i> {{ t('Delete') }}
+              <i class="fas fa-trash mr-1" aria-hidden="true"></i> {{ t('Delete') }}
             </button>
           </form>
 
@@ -368,14 +368,14 @@
              title="{{ t('Download_Backup') }}"
              download
              aria-label="{{ t('Download_Backup') }}">
-            <i class="fas fa-download mr-1"></i> {{ t('Download') }}
+            <i class="fas fa-download mr-1" aria-hidden="true"></i> {{ t('Download') }}
           </a>
           
           <button type="button" class="btn btn-info"
                   data-action="verify-backup" data-filename="{{ backup.get('filename') }}"
                   title="{{ t('Verify_Backup_Integrity') }}"
                   aria-label="{{ t('Verify_Backup_Integrity') }}">
-            <i class="fas fa-check-circle mr-1"></i> {{ t('Verify') }}
+            <i class="fas fa-check-circle mr-1" aria-hidden="true"></i> {{ t('Verify') }}
           </button>
         </div>
       </div>
@@ -386,13 +386,13 @@
   <div class="col-md-12">
     <div class="card">
       <div class="card-body text-center py-5">
-        <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+        <i class="fas fa-inbox fa-5x text-muted mb-3" aria-hidden="true"></i>
         <h4>{{ t('No_Backups_Found') }}</h4>
         <p class="text-muted">{{ t('Create_First_Backup') }}</p>
         <form method="POST" action="{{ url_for('owner.backup_now') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
           <button type="submit" class="btn btn-success btn-lg">
-            <i class="fas fa-plus-circle"></i> {{ t('Create_Backup') }}
+            <i class="fas fa-plus-circle" aria-hidden="true"></i> {{ t('Create_Backup') }}
           </button>
         </form>
       </div>
@@ -406,7 +406,7 @@
   <div class="col-md-12">
     <div class="card card-outline card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-star"></i> {{ t('Latest_Backup') }}</h3>
+        <h3 class="card-title"><i class="fas fa-star" aria-hidden="true"></i> {{ t('Latest_Backup') }}</h3>
       </div>
       <div class="card-body">
         <div class="row">
@@ -425,7 +425,7 @@
           <div class="col-md-3">
             <strong>{{ t('Status') }}</strong><br>
             <span class="badge badge-success">
-              <i class="fas fa-check-circle"></i> {{ t('Ready') }}
+              <i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('Ready') }}
             </span>
           </div>
         </div>
@@ -439,7 +439,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header bg-warning">
-        <h5 class="modal-title"><i class="fas fa-database"></i> {{ t('Restore_To_New_Database') }}</h5>
+        <h5 class="modal-title"><i class="fas fa-database" aria-hidden="true"></i> {{ t('Restore_To_New_Database') }}</h5>
         <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
       </div>
       <form method="POST" id="targetRestoreForm" action="">

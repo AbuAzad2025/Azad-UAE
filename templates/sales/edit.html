@@ -7,14 +7,14 @@
   <div class="row">
     <div class="col-12">
       <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle"></i>
+        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
         <strong>{{ t('accounting_alert') }}:</strong> {{ t('edit_notes_and_discount_only') }}
       </div>
 
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-edit"></i> {{ t('edit_invoice_number', number=sale.sale_number) }}
+            <i class="fas fa-edit" aria-hidden="true"></i> {{ t('edit_invoice_number', number=sale.sale_number) }}
           </h3>
         </div>
         <div class="card-body">
@@ -30,7 +30,7 @@
                 <p><strong>{{ t('customer') }}:</strong> {{ sale.customer.name | e }}</p>
                 <p><strong>{{ t('seller') }}:</strong> {{ sale.seller.full_name | e }}</p>
                 {% if sale.warehouse %}
-                <p><strong><i class="fas fa-warehouse text-info"></i> {{ t('warehouse') }}:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
+                <p><strong><i class="fas fa-warehouse text-info" aria-hidden="true"></i> {{ t('warehouse') }}:</strong> {{ sale.warehouse.name_ar or sale.warehouse.name }}</p>
                 {% endif %}
               </div>
               <div class="col-md-6">
@@ -89,10 +89,10 @@
 
             <div class="form-group">
               <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> {{ t('save_changes') }}
+                <i class="fas fa-save" aria-hidden="true"></i> {{ t('save_changes') }}
               </button>
               <a href="{{ url_for('sales.view', id=sale.id) }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> {{ t('cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('cancel') }}
               </a>
             </div>
           </form>

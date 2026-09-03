@@ -4,7 +4,7 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>{{ t('Fixed Assets') }}</h2>
-    <a href="{{ url_for('assets.create') }}" class="btn btn-primary"><i class="fas fa-plus"></i> {{ t('Add Asset') }}</a>
+    <a href="{{ url_for('assets.create') }}" class="btn btn-primary"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Asset') }}</a>
   </div>
   <div class="row mb-4">
     <div class="col-md-3"><div class="card p-3 text-center"><h6>{{ t('Total Assets') }}</h6><h3>{{ summary.total }}</h3></div></div>

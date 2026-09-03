@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('customers') }} {{ t('Store') }} {{ t('registered') }}{% endblock %}
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-user-friends mr-2"></i>{{ t('customers') }} {{ t('Store') }} ({{ t('accounts') }} {{ t('online') }})</h1>
+<h1 class="mb-0"><i class="fas fa-user-friends mr-2" aria-hidden="true"></i>{{ t('customers') }} {{ t('Store') }} ({{ t('accounts') }} {{ t('online') }})</h1>
 {% endblock %}
 {% block content %}
-<div class="alert alert-info"><i class="fas fa-info-circle mr-1"></i> {{ t('guests_browse_only') }}</div>
+<div class="alert alert-info"><i class="fas fa-info-circle mr-1" aria-hidden="true"></i> {{ t('guests_browse_only') }}</div>
 <div class="card">
   <div class="card-body table-responsive p-0">
     <table class="table table-hover mb-0">

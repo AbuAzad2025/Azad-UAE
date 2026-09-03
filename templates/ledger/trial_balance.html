@@ -53,7 +53,7 @@
           {% for item in trial_balance %}
           <tr class="{% if item.type == 'header' %}fin-section-header{% elif item.type == 'total' %}fin-total-row{% endif %}">
             <td class="{% if item.type == 'header' %}font-weight-bold{% endif %}">
-              {% if item.type == 'header' %}<i class="fas fa-folder text-warning ml-1"></i>{% endif %}
+              {% if item.type == 'header' %}<i class="fas fa-folder text-warning ml-1" aria-hidden="true"></i>{% endif %}
               <span class="tb-level-{{ item.level|default(0) }}">{{ item.code }}</span>
             </td>
             <td>{{ item.name }}</td>

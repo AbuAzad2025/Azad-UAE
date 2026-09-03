@@ -5,11 +5,11 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-shopping-bag text-primary"></i> {{ _('Purchases_2') }} {{ _('System') }}</h1>
+        <h1 class="mb-0"><i class="fas fa-shopping-bag text-primary" aria-hidden="true"></i> {{ _('Purchases_2') }} {{ _('System') }}</h1>
         <p class="text-muted mb-0">{{ _('متابعة') }} {{ _('جميع') }} {{ _('عمليات') }} {{ _('Purchase') }} {{ _('الباقات') }} {{ _('وتفعيلها') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ _('العودة') }} {{ _('للوحة') }} {{ _('Control') }}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ _('العودة') }} {{ _('للوحة') }} {{ _('Control') }}
     </a>
 </div>
 {% endblock %}
@@ -82,7 +82,7 @@
 {% block content %}
 
 <div class="alert alert-warning">
-                <i class="fas fa-shield-alt"></i>
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
                 <strong>{{ _('Alert_2') }} {{ _('أمني') }}:</strong> {{ _('هذه') }} {{ _('الصفحة') }} {{ _('محمية') }} {{ _('بكلمة') }} {{ _('مرور') }} {{ _('الخزينة') }}. {{ _('جميع') }} {{ _('العمليات') }} {{ _('مسجلة') }} {{ _('ومراقبة') }}.
             </div>
 
@@ -109,9 +109,9 @@
 
 <div class="purchase-table">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3><i class="fas fa-list"></i> {{ _('List') }} {{ _('Purchases') }}</h3>
+                    <h3><i class="fas fa-list" aria-hidden="true"></i> {{ _('List') }} {{ _('Purchases') }}</h3>
                     <a href="{{ url_for('payment_vault.dashboard') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> {{ _('العودة') }} {{ _('للوحة') }} {{ _('Control') }}
+                        <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('العودة') }} {{ _('للوحة') }} {{ _('Control') }}
                     </a>
                 </div>
 
@@ -146,19 +146,19 @@
                                         {{ purchase.customer_name }}<br>
                                         <small class="text-muted">{{ purchase.customer_email }}</small>
                                         {% if purchase.company_name %}
-                                        <br><small><i class="fas fa-building"></i> {{ purchase.company_name }}</small>
+                                        <br><small><i class="fas fa-building" aria-hidden="true"></i> {{ purchase.company_name }}</small>
                                         {% endif %}
                                     </td>
                                     <td><strong>{{ format_currency(purchase.amount_paid, currency or 'AED') }}</strong></td>
                                     <td>
                                         {% if purchase.payment_method == 'crypto' %}
-                                            <i class="fab fa-bitcoin"></i> {{ _('عملات') }} {{ _('رقمية') }}
+                                            <i class="fab fa-bitcoin" aria-hidden="true"></i> {{ _('عملات') }} {{ _('رقمية') }}
                                         {% elif purchase.payment_method == 'card' %}
-                                            <i class="fas fa-credit-card"></i> {{ _('Card') }}
+                                            <i class="fas fa-credit-card" aria-hidden="true"></i> {{ _('Card') }}
                                         {% elif purchase.payment_method == 'paypal' %}
-                                            <i class="fab fa-paypal"></i> PayPal
+                                            <i class="fab fa-paypal" aria-hidden="true"></i> PayPal
                                         {% elif purchase.payment_method == 'bank' %}
-                                            <i class="fas fa-university"></i> {{ _('Transfer') }} {{ _('Bank_3') }}
+                                            <i class="fas fa-university" aria-hidden="true"></i> {{ _('Transfer') }} {{ _('Bank_3') }}
                                         {% else %}
                                             {{ purchase.payment_method }}
                                         {% endif %}
@@ -166,13 +166,13 @@
                                     <td>
                                         <span class="status-badge status-{{ purchase.payment_status }}">
                                             {% if purchase.payment_status == 'completed' %}
-                                                <i class="fas fa-check"></i> {{ _('Completed_2') }}
+                                                <i class="fas fa-check" aria-hidden="true"></i> {{ _('Completed_2') }}
                                             {% elif purchase.payment_status == 'pending' %}
-                                                <i class="fas fa-hourglass-half"></i> {{ _('قيد') }} {{ _('Waiting') }}
+                                                <i class="fas fa-hourglass-half" aria-hidden="true"></i> {{ _('قيد') }} {{ _('Waiting') }}
                                             {% elif purchase.payment_status == 'failed' %}
-                                                <i class="fas fa-times"></i> {{ _('فشلت') }}
+                                                <i class="fas fa-times" aria-hidden="true"></i> {{ _('فشلت') }}
                                             {% elif purchase.payment_status == 'refunded' %}
-                                                <i class="fas fa-undo"></i> {{ _('مسترجعة') }}
+                                                <i class="fas fa-undo" aria-hidden="true"></i> {{ _('مسترجعة') }}
                                             {% else %}
                                                 {{ purchase.payment_status }}
                                             {% endif %}
@@ -180,13 +180,13 @@
                                     </td>
                                     <td>
                                         <a href="{{ url_for('payment_vault.purchase_detail', id=purchase.id) }}" class="btn btn-info" title="{{ _('View') }}">
-                                            <i class="fas fa-eye"></i>
+                                            <i class="fas fa-eye" aria-hidden="true"></i>
                                         </a>
                                         {% if purchase.payment_status == 'pending' and purchase.activation_status != 'activated' %}
                                         <form class="needs-validation inline-form" method="POST" action="{{ url_for('payment_vault.activate_purchase', id=purchase.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                             <button type="submit" class="btn btn-success" data-action="confirm-submit" data-confirm-message="{{ _('هل') }} {{ _('تريد') }} {{ _('تفعيل') }} {{ _('هذه') }} {{ _('Plan_3') }}" title="{{ _('Confirm') }}">
-                                                <i class="fas fa-check"></i>
+                                                <i class="fas fa-check" aria-hidden="true"></i>
                                             </button>
                                         </form>
                                         {% endif %}
@@ -196,7 +196,7 @@
                             {% else %}
                                 <tr>
                                     <td colspan="8" class="text-center text-muted">
-                                        <i class="fas fa-inbox fa-3x mb-3 inline-form"></i>
+                                        <i class="fas fa-inbox fa-3x mb-3 inline-form" aria-hidden="true"></i>
                                         {{ _('لا') }} {{ _('توجد') }} {{ _('Purchases_2') }} حتى {{ _('الآن_2') }}
                                     </td>
                                 </tr>

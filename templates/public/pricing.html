@@ -170,7 +170,7 @@
 {% set plans = [
     {
         'id': 'starter',
-        'icon': '<i class="fas fa-rocket"></i>',
+        'icon': '<i class="fas fa-rocket" aria-hidden="true"></i>',
         'name_ar': 'Starter',
         'name_en': 'Starter',
         'price': 29,
@@ -186,8 +186,8 @@
             'فواتير إلكترونية (حتى 200/شهر)',
             'تقارير أساسية',
             'دعم واتساب',
-            '<i class="fas fa-times"></i> لا يشمل المتجر الإلكتروني',
-            '<i class="fas fa-times"></i> لا يشمل نقاط البيع (POS)',
+            '<i class="fas fa-times" aria-hidden="true"></i> لا يشمل المتجر الإلكتروني',
+            '<i class="fas fa-times" aria-hidden="true"></i> لا يشمل نقاط البيع (POS)',
         ],
         'features_en': [
             'Up to 3 users',
@@ -195,13 +195,13 @@
             'E-invoices (up to 200/month)',
             'Basic reports',
             'WhatsApp support',
-            '<i class="fas fa-times"></i> No online store',
-            '<i class="fas fa-times"></i> No POS',
+            '<i class="fas fa-times" aria-hidden="true"></i> No online store',
+            '<i class="fas fa-times" aria-hidden="true"></i> No POS',
         ],
     },
     {
         'id': 'pro',
-        'icon': '<i class="fas fa-chart-line"></i>',
+        'icon': '<i class="fas fa-chart-line" aria-hidden="true"></i>',
         'name_ar': 'Pro',
         'name_en': 'Pro',
         'price': 79,
@@ -234,7 +234,7 @@
     },
     {
         'id': 'enterprise',
-        'icon': '<i class="fas fa-building"></i>',
+        'icon': '<i class="fas fa-building" aria-hidden="true"></i>',
         'name_ar': 'Enterprise',
         'name_en': 'Enterprise',
         'price': 249,
@@ -296,10 +296,10 @@
         </div>
 
         <div class="azad-nav-actions">
-            <a class="nav-lang-btn" href="{{ _lang_url }}"><i class="fas fa-globe"></i> {{ _lang_btn }}</a>
-            <a class="btn-nav-ghost" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt"></i> {{ _login }}</a>
-            <a class="btn-nav-cta" href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ _free_trial }}</a>
-            <button class="nav-hamburger" id="hamburgerBtn" aria-label="{{ _menu }}"><i class="fas fa-bars"></i></button>
+            <a class="nav-lang-btn" href="{{ _lang_url }}"><i class="fas fa-globe" aria-hidden="true"></i> {{ _lang_btn }}</a>
+            <a class="btn-nav-ghost" href="{{ url_for('auth.login') }}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> {{ _login }}</a>
+            <a class="btn-nav-cta" href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _free_trial }}</a>
+            <button class="nav-hamburger" id="hamburgerBtn" aria-label="{{ _menu }}"><i class="fas fa-bars" aria-hidden="true"></i></button>
         </div>
     </div>
 </nav>
@@ -308,7 +308,7 @@
 {# HERO                                             #}
 {# ──────────────────────────────────────────────── #}
 <section class="pricing-hero">
-    <div class="pricing-hero-badge"><i class="fas fa-tags"></i> <span>{{ 'أسعار شفافة - تجربة 30 يوم مجانية' if not is_en else 'Transparent pricing - 30-day free trial' }}</span></div>
+    <div class="pricing-hero-badge"><i class="fas fa-tags" aria-hidden="true"></i> <span>{{ 'أسعار شفافة - تجربة 30 يوم مجانية' if not is_en else 'Transparent pricing - 30-day free trial' }}</span></div>
     <h1>{{ 'اختر الباقة المناسبة لأعمالك' if not is_en else 'Choose the right plan for your business' }}</h1>
     <p>{{ 'باقات مرنة تبدأ من $29/شهر. كل الباقات تشمل التحديثات والدعم الفني. بدون عقود طويلة.' if not is_en else 'Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts.' }}</p>
 
@@ -349,10 +349,10 @@
 
         {% set wa_msg_plan = 'مرحباً، أرغب في الاشتراك في باقة ' ~ p.name_ar ~ ' - ' if not is_en else 'Hello, I would like to subscribe to the ' ~ p.name_en ~ ' plan - ' %}
         <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ (wa_msg_plan ~ _monthly_label) | urlencode }}" class="azad-tier-btn-wa wa-subscribe" data-wa-monthly="{{ (wa_msg_plan ~ _monthly_label) | urlencode }}" data-wa-yearly="{{ (wa_msg_plan ~ _yearly_label) | urlencode }}">
-            <i class="fab fa-whatsapp"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}
+            <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}
         </a>
         <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-outline" target="_blank" rel="noopener">
-            <i class="fas fa-question-circle"></i> {{ 'تواصل معنا' if not is_en else 'Contact Us' }}
+            <i class="fas fa-question-circle" aria-hidden="true"></i> {{ 'تواصل معنا' if not is_en else 'Contact Us' }}
         </a>
     </div>
     {% endfor %}
@@ -367,7 +367,7 @@
     <div class="addons-grid">
         {% for a in addons %}
         <div class="addon-item">
-            <i class="fas {{ a.icon }}"></i>
+            <i class="fas {{ a.icon }}" aria-hidden="true"></i>
             <h4>{{ a.name_ar if not is_en else a.name_en }}</h4>
             <div class="addon-price">{{ a.price }}/{{ 'شهر' if not is_en else 'mo' }}</div>
             <div class="addon-desc">{{ a.desc_ar if not is_en else a.desc_en }}</div>
@@ -383,8 +383,8 @@
     <h2>{{ '🧭 لا تجد الباقة المناسبة؟' if not is_en else '🧭 Can\'t find the right plan?' }}</h2>
     <p>{{ 'نقدم حلولاً مخصصة حسب احتياجاتك. تحدث معنا لوضع خطة خاصة بك.' if not is_en else 'We offer custom solutions tailored to your needs. Talk to us for a custom plan.' }}</p>
     <div class="cta-buttons">
-        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp"></i> {{ 'تحدث مع المبيعات' if not is_en else 'Talk to Sales' }}</a>
-        <a href="tel:{{ developer_whatsapp_link or config.DEVELOPER_PHONE }}" class="azad-tier-btn-outline" style="display:inline-flex;"><i class="fas fa-phone"></i> {{ 'اتصل بنا' if not is_en else 'Call Us' }}</a>
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'تحدث مع المبيعات' if not is_en else 'Talk to Sales' }}</a>
+        <a href="tel:{{ developer_whatsapp_link or config.DEVELOPER_PHONE }}" class="azad-tier-btn-outline" style="display:inline-flex;"><i class="fas fa-phone" aria-hidden="true"></i> {{ 'اتصل بنا' if not is_en else 'Call Us' }}</a>
     </div>
 </section>
 
@@ -414,15 +414,15 @@
         <div class="azad-footer-col">
             <h4>{{ 'قانوني' if not is_en else 'Legal' }}</h4>
             <ul class="azad-footer-links">
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-shield-alt"></i> {{ 'سياسة الخصوصية' if not is_en else 'Privacy Policy' }}</span></li>
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-file-contract"></i> {{ 'شروط الاستخدام' if not is_en else 'Terms of Service' }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ 'سياسة الخصوصية' if not is_en else 'Privacy Policy' }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-file-contract" aria-hidden="true"></i> {{ 'شروط الاستخدام' if not is_en else 'Terms of Service' }}</span></li>
             </ul>
         </div>
         <div class="azad-footer-col">
             <h4>{{ developer_credit if developer_credit else _company_name }}</h4>
             <ul class="azad-footer-links">
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch"></i> v{{ config.APP_VERSION }}</span></li>
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
+                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
             </ul>
         </div>
     </div>

@@ -67,7 +67,7 @@
           </div>
         </div>
         {% endif %}
-        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> {{ t('Save') }}</button>
+        <button type="submit" class="btn btn-success"><i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}</button>
         <a href="{{ url_for('projects.list_projects') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
       </form>
     </div>

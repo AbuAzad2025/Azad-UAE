@@ -4,21 +4,21 @@
 <div class="container-fluid">
   <div class="mb-3">
     <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+      <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
     </a>
     <a href="{{ url_for('owner.currency_settings') }}" class="btn btn-info">
-      <i class="fas fa-dollar-sign"></i> {{ t('Currencies') }}
+      <i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ t('Currencies') }}
     </a>
   </div>
 
   <div class="alert alert-info">
-    <i class="fas fa-info-circle"></i>
+    <i class="fas fa-info-circle" aria-hidden="true"></i>
     {{ t('Tax_Settings') }} <strong>{{ t('Per_Company') }}</strong>{{ t('If_Company_Does_Not_Use_Tax') }}
   </div>
 
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-percent"></i> {{ t('Tax_Settings') }} — {{ tenant.name_ar|default('') or tenant.name|default('') }}</h3>
+      <h3><i class="fas fa-percent" aria-hidden="true"></i> {{ t('Tax_Settings') }} — {{ tenant.name_ar|default('') or tenant.name|default('') }}</h3>
     </div>
     <div class="card-body">
       <form class="needs-validation" method="post" action="">
@@ -79,7 +79,7 @@
         </div>
 
         <button type="submit" class="btn btn-success btn-lg">
-          <i class="fas fa-save"></i> {{ t('Save') }}
+          <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}
         </button>
       </form>
     </div>

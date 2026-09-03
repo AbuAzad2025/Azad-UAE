@@ -52,18 +52,18 @@ table.statement-table thead th {
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2"></i>{{ t('supplier_statement') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('supplier_statement') }}</h1>
     <p class="text-muted mb-0">{{ supplier.name }}</p>
   </div>
   <div>
     <button data-action="window-print" class="btn btn-primary">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
-      <i class="fas fa-truck mr-2"></i>{{ t('supplier_details') }}
+      <i class="fas fa-truck mr-2" aria-hidden="true"></i>{{ t('supplier_details') }}
     </a>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_list') }}
     </a>
   </div>
 </div>
@@ -75,7 +75,7 @@ table.statement-table thead th {
     <div class="row">
       <div class="col-md-6">
         <h2 class="mb-3">
-          <i class="fas fa-truck mr-2"></i>{{ supplier.name | e }}
+          <i class="fas fa-truck mr-2" aria-hidden="true"></i>{{ supplier.name | e }}
           {% if supplier.is_verified %}
             <span class="badge badge-success">✓ {{ t('verified') }}</span>
           {% endif %}
@@ -84,18 +84,18 @@ table.statement-table thead th {
           <p class="mb-1"><strong>{{ supplier.company_name | e }}</strong></p>
         {% endif %}
         {% if supplier.phone %}
-          <p class="mb-1"><i class="fas fa-phone mr-2"></i>{{ supplier.phone | e }}</p>
+          <p class="mb-1"><i class="fas fa-phone mr-2" aria-hidden="true"></i>{{ supplier.phone | e }}</p>
         {% endif %}
         {% if supplier.email %}
-          <p class="mb-1"><i class="fas fa-envelope mr-2"></i>{{ supplier.email | e }}</p>
+          <p class="mb-1"><i class="fas fa-envelope mr-2" aria-hidden="true"></i>{{ supplier.email | e }}</p>
         {% endif %}
       </div>
       <div class="col-md-6 text-left">
         <h4 class="mb-3">{{ t('supplier_statement') }}</h4>
-        <p class="mb-1"><i class="fas fa-calendar mr-2"></i>{{ t('Date') }}: {{ now().strftime('%Y-%m-%d') }}</p>
-        <p class="mb-1"><i class="fas fa-hashtag mr-2"></i>{{ t('supplier_number') }}: #{{ supplier.id }}</p>
+        <p class="mb-1"><i class="fas fa-calendar mr-2" aria-hidden="true"></i>{{ t('Date') }}: {{ now().strftime('%Y-%m-%d') }}</p>
+        <p class="mb-1"><i class="fas fa-hashtag mr-2" aria-hidden="true"></i>{{ t('supplier_number') }}: #{{ supplier.id }}</p>
         {% if supplier.tax_number %}
-          <p class="mb-1"><i class="fas fa-receipt mr-2"></i>{{ t('tax_number') }}: {{ supplier.tax_number | e }}</p>
+          <p class="mb-1"><i class="fas fa-receipt mr-2" aria-hidden="true"></i>{{ t('tax_number') }}: {{ supplier.tax_number | e }}</p>
         {% endif %}
       </div>
     </div>
@@ -196,7 +196,7 @@ table.statement-table thead th {
     {% set purchases_list = transactions|selectattr('type', 'equalto', 'purchase')|list %}
     {% if purchases_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2"></i>{{ t('purchases_details') }}</h5>
+      <h5 class="mb-3"><i class="fas fa-shopping-cart mr-2" aria-hidden="true"></i>{{ t('purchases_details') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-1">
@@ -248,7 +248,7 @@ table.statement-table thead th {
     {% set payments_list = transactions|selectattr('type', 'equalto', 'payment')|list %}
     {% if payments_list %}
     <div class="mt-4">
-      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2"></i>{{ t('payments_details') }}</h5>
+      <h5 class="mb-3"><i class="fas fa-money-check-alt mr-2" aria-hidden="true"></i>{{ t('payments_details') }}</h5>
       <div class="table-responsive">
         <table class="table table-bordered table-striped">
           <thead class="ic-3">
@@ -272,9 +272,9 @@ table.statement-table thead th {
               <td>{{ p.payment_date.strftime('%Y-%m-%d') if p.payment_date else '-' }}</td>
               <td>{{ p.payment_method }}</td>
               <td>{% if p.payment_confirmed %}
-                <span class="badge badge-success">{{ t('confirmed') }} <i class="fas fa-check"></i></span>
+                <span class="badge badge-success">{{ t('confirmed') }} <i class="fas fa-check" aria-hidden="true"></i></span>
               {% else %}
-                <span class="badge badge-warning">{{ t('pending') }} <i class="fas fa-clock"></i></span>
+                <span class="badge badge-warning">{{ t('pending') }} <i class="fas fa-clock" aria-hidden="true"></i></span>
               {% endif %}</td>
               <td>
                 {% if is_cheque and p.cheque_due_date %}
@@ -302,13 +302,13 @@ table.statement-table thead th {
       <div class="row">
         <div class="col-md-6">
           <small class="text-muted">
-            <i class="fas fa-info-circle mr-1"></i>
+            <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
             {{ t('statement_generated_by') }}
           </small>
         </div>
         <div class="col-md-6 text-left">
           <small class="text-muted">
-            <i class="fas fa-calendar mr-1"></i>
+            <i class="fas fa-calendar mr-1" aria-hidden="true"></i>
             {{ t('print_date') }}: {{ now().strftime('%Y-%m-%d %H:%M') }}
           </small>
         </div>
@@ -319,10 +319,10 @@ table.statement-table thead th {
 
 <div class="text-center mt-3 no-print">
   <button data-action="window-print" class="btn btn-lg btn-primary">
-    <i class="fas fa-print mr-2"></i>{{ t('print_statement') }}
+    <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('print_statement') }}
   </button>
   <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-lg btn-secondary">
-    <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_supplier') }}
+    <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_supplier') }}
   </a>
 </div>
 {% endblock %}

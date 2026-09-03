@@ -14,7 +14,7 @@
             <p class="mb-0">{{ t('Total_2') }} {{ t('Accounts') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-chart-line fa-2x"></i>
+            <i class="fas fa-chart-line fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -30,7 +30,7 @@
             <p class="mb-0">{{ t('Accounts') }} {{ t('Active_2') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-check-circle fa-2x"></i>
+            <i class="fas fa-check-circle fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -46,7 +46,7 @@
             <p class="mb-0">{{ t('Total_2') }} {{ t('القيود') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-book fa-2x"></i>
+            <i class="fas fa-book fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -62,7 +62,7 @@
             <p class="mb-0">{{ t('القيود') }} {{ t('المرحلة') }}</p>
           </div>
           <div class="align-self-center">
-            <i class="fas fa-clipboard-check fa-2x"></i>
+            <i class="fas fa-clipboard-check fa-2x" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -76,7 +76,7 @@
     <div class="card">
       <div class="card-header bg-gradient-success">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-coins mr-2"></i>{{ t('السيولة') }} {{ t('Cash') }}
+          <i class="fas fa-coins mr-2" aria-hidden="true"></i>{{ t('السيولة') }} {{ t('Cash') }}
         </h5>
       </div>
       <div class="card-body">
@@ -90,7 +90,7 @@
     <div class="card">
       <div class="card-header bg-gradient-info">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-file-invoice mr-2"></i>{{ t('Cheques') }}
+          <i class="fas fa-file-invoice mr-2" aria-hidden="true"></i>{{ t('Cheques') }}
         </h5>
       </div>
       <div class="card-body">
@@ -116,7 +116,7 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-vault mr-2"></i>{{ t('المحافظ') }}
+          <i class="fas fa-vault mr-2" aria-hidden="true"></i>{{ t('المحافظ') }}
         </h5>
       </div>
       <div class="card-body">
@@ -141,7 +141,7 @@
     <div class="card">
       <div class="card-header bg-gradient-primary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-history mr-2"></i>{{ t('Last') }} {{ t('القيود') }} {{ t('Accounting') }}
+          <i class="fas fa-history mr-2" aria-hidden="true"></i>{{ t('Last') }} {{ t('القيود') }} {{ t('Accounting') }}
         </h5>
       </div>
       <div class="card-body p-0">
@@ -186,7 +186,7 @@
               {% else %}
               <tr>
                 <td colspan="6" class="text-center text-muted py-4">
-                  <i class="fas fa-book-open fa-2x mb-2"></i>
+                  <i class="fas fa-book-open fa-2x mb-2" aria-hidden="true"></i>
                   <p>{{ _('لا توجد قيود حديثة.') }}</p>
                 </td>
               </tr>
@@ -203,7 +203,7 @@
     <div class="card">
       <div class="card-header bg-gradient-warning">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-chart-bar mr-2"></i>{{ t('أرصدة') }} {{ t('عالية') }}
+          <i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>{{ t('أرصدة') }} {{ t('عالية') }}
         </h5>
       </div>
       <div class="card-body p-0">
@@ -226,7 +226,7 @@
           {% endfor %}
           {% else %}
           <div class="list-group-item text-center text-muted py-4">
-            <i class="fas fa-chart-bar fa-2x mb-2"></i>
+            <i class="fas fa-chart-bar fa-2x mb-2" aria-hidden="true"></i>
             <p>{{ _('لا توجد أرصدة عالية.') }}</p>
           </div>
           {% endif %}
@@ -242,29 +242,29 @@
     <div class="card">
       <div class="card-header bg-gradient-secondary">
         <h5 class="card-title text-white mb-0">
-          <i class="fas fa-tools mr-2"></i>{{ t('Management_2') }} {{ t('Quick_2') }}
+          <i class="fas fa-tools mr-2" aria-hidden="true"></i>{{ t('Management_2') }} {{ t('Quick_2') }}
         </h5>
       </div>
       <div class="card-body">
         <div class="row">
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.accounts_management') }}" class="btn btn-outline-primary btn-block">
-              <i class="fas fa-chart-line mr-2"></i>{{ t('Management') }} {{ t('Accounts') }}
+              <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('Management') }} {{ t('Accounts') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.journals_management') }}" class="btn btn-outline-info btn-block">
-              <i class="fas fa-book mr-2"></i>{{ t('Management') }} {{ t('القيود') }}
+              <i class="fas fa-book mr-2" aria-hidden="true"></i>{{ t('Management') }} {{ t('القيود') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.vaults_management') }}" class="btn btn-outline-success btn-block">
-              <i class="fas fa-vault mr-2"></i>{{ t('Management') }} {{ t('المحافظ') }}
+              <i class="fas fa-vault mr-2" aria-hidden="true"></i>{{ t('Management') }} {{ t('المحافظ') }}
             </a>
           </div>
           <div class="col-md-3 mb-3">
             <a href="{{ url_for('admin_ledger.reports') }}" class="btn btn-outline-warning btn-block">
-              <i class="fas fa-chart-pie mr-2"></i>{{ t('Reports') }} {{ t('Finance') }}
+              <i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('Reports') }} {{ t('Finance') }}
             </a>
           </div>
         </div>

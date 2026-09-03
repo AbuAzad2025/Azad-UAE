@@ -4,12 +4,12 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-exchange-alt mr-3"></i>{{ t('stock_movements') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-exchange-alt mr-3" aria-hidden="true"></i>{{ t('stock_movements') }}</h1>
     <p class="text-muted">{{ t('full_stock_movements_log') }}</p>
   </div>
   <div>
     <a href="{{ url_for('warehouse.index') }}" class="btn btn-info">
-      <i class="fas fa-warehouse mr-2"></i>{{ t('dashboard') }}
+      <i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ t('dashboard') }}
     </a>
   </div>
 </div>
@@ -58,11 +58,11 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap ic-mov-gap">
       <div>
         <h3 class="card-title mb-0">
-          <i class="fas fa-history mr-2"></i>{{ t('inventory_movements_log') }}
+          <i class="fas fa-history mr-2" aria-hidden="true"></i>{{ t('inventory_movements_log') }}
         </h3>
         {% if current_warehouse %}
         <small class="text-muted d-block mt-1">
-          <i class="fas fa-warehouse mr-1"></i>{{ t('current_warehouse_label', name=current_warehouse.name_ar or current_warehouse.name) }}
+          <i class="fas fa-warehouse mr-1" aria-hidden="true"></i>{{ t('current_warehouse_label', name=current_warehouse.name_ar or current_warehouse.name) }}
         </small>
         {% endif %}
       </div>
@@ -77,26 +77,26 @@
           {% endfor %}
         </select>
         <button type="submit" class="btn btn-outline-primary">
-          <i class="fas fa-filter mr-1"></i>{{ t('filter_all') }}
+          <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('filter_all') }}
         </button>
         {% if current_warehouse %}
         <a href="{{ url_for('warehouse.movements') }}" class="btn btn-outline-secondary">
-          <i class="fas fa-times mr-1"></i>{{ t('clear_filter') }}
+          <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ t('clear_filter') }}
         </a>
         {% endif %}
       </form>
       <div class="btn-group">
         <button type="button" class="btn btn-outline-primary active" id="filterAll">
-          <i class="fas fa-list mr-1"></i>{{ t('filter_all') }}
+          <i class="fas fa-list mr-1" aria-hidden="true"></i>{{ t('filter_all') }}
         </button>
         <button type="button" class="btn btn-outline-success" id="filterIn">
-          <i class="fas fa-arrow-down mr-1"></i>{{ t('movement_type_in') }}
+          <i class="fas fa-arrow-down mr-1" aria-hidden="true"></i>{{ t('movement_type_in') }}
         </button>
         <button type="button" class="btn btn-outline-danger" id="filterOut">
-          <i class="fas fa-arrow-up mr-1"></i>{{ t('movement_type_out') }}
+          <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>{{ t('movement_type_out') }}
         </button>
         <button type="button" class="btn btn-outline-warning" id="filterAdjust">
-          <i class="fas fa-edit mr-1"></i>{{ t('movement_type_adjustment') }}
+          <i class="fas fa-edit mr-1" aria-hidden="true"></i>{{ t('movement_type_adjustment') }}
         </button>
       </div>
     </div>
@@ -106,14 +106,14 @@
       <table id="movementsTable" class="table table-hover">
         <thead class="ic-mov-header">
           <tr>
-            <th><i class="far fa-calendar mr-2"></i>{{ t('Date') }}</th>
-            <th><i class="fas fa-box mr-2"></i>{{ t('Product') }}</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('Movement') }}</th>
-            <th><i class="fas fa-sort-numeric-down mr-2"></i>{{ t('Quantity') }}</th>
-            <th><i class="fas fa-layer-group mr-2"></i>{{ t('before') }}</th>
-            <th><i class="fas fa-layer-group mr-2"></i>{{ t('after') }}</th>
-            <th><i class="fas fa-link mr-2"></i>{{ t('reference_label') }}</th>
-            <th><i class="fas fa-sticky-note mr-2"></i>{{ t('Notes') }}</th>
+            <th><i class="far fa-calendar mr-2" aria-hidden="true"></i>{{ t('Date') }}</th>
+            <th><i class="fas fa-box mr-2" aria-hidden="true"></i>{{ t('Product') }}</th>
+            <th><i class="fas fa-tag mr-2" aria-hidden="true"></i>{{ t('Movement') }}</th>
+            <th><i class="fas fa-sort-numeric-down mr-2" aria-hidden="true"></i>{{ t('Quantity') }}</th>
+            <th><i class="fas fa-layer-group mr-2" aria-hidden="true"></i>{{ t('before') }}</th>
+            <th><i class="fas fa-layer-group mr-2" aria-hidden="true"></i>{{ t('after') }}</th>
+            <th><i class="fas fa-link mr-2" aria-hidden="true"></i>{{ t('reference_label') }}</th>
+            <th><i class="fas fa-sticky-note mr-2" aria-hidden="true"></i>{{ t('Notes') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -129,7 +129,7 @@
                      {% if movement.movement_type == 'in' %}badge-in
                      {% elif movement.movement_type == 'out' %}badge-out
                      {% else %}badge-adjust{% endif %}">
-                  <i class="fas fa-{% if movement.movement_type == 'in' %}arrow-down{% elif movement.movement_type == 'out' %}arrow-up{% else %}edit{% endif %}"></i>
+                  <i class="fas fa-{% if movement.movement_type == 'in' %}arrow-down{% elif movement.movement_type == 'out' %}arrow-up{% else %}edit{% endif %}" aria-hidden="true"></i>
                 </div>
                 <div>
                   <span>{{ movement.created_at.strftime('%Y-%m-%d') }}</span>
@@ -147,15 +147,15 @@
               <span data-type="{{ movement.movement_type }}">
               {% if movement.movement_type == 'in' %}
                 <span class="badge badge-success px-3">
-                  <i class="fas fa-arrow-down mr-1"></i>{{ t('movement_type_in') }}
+                  <i class="fas fa-arrow-down mr-1" aria-hidden="true"></i>{{ t('movement_type_in') }}
                 </span>
               {% elif movement.movement_type == 'out' %}
                 <span class="badge badge-danger px-3">
-                  <i class="fas fa-arrow-up mr-1"></i>{{ t('movement_type_out') }}
+                  <i class="fas fa-arrow-up mr-1" aria-hidden="true"></i>{{ t('movement_type_out') }}
                 </span>
               {% elif movement.movement_type == 'adjustment' %}
                 <span class="badge badge-warning px-3">
-                  <i class="fas fa-edit mr-1"></i>{{ t('movement_type_adjustment') }}
+                  <i class="fas fa-edit mr-1" aria-hidden="true"></i>{{ t('movement_type_adjustment') }}
                 </span>
               {% else %}
                 <span class="badge badge-secondary px-3">{{ movement.movement_type }}</span>
@@ -234,9 +234,9 @@ $(document).ready(() => {
     responsive: true,
     dom: 'Bfrtip',
     buttons: [
-      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1"></i> Excel', className: 'btn-success'},
-      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1"></i> PDF', className: 'btn-danger'},
-      {extend: 'print', text: '<i class="fas fa-print mr-1"></i> {{ t('Print') }}', className: 'btn-info'}
+      {extend: 'excel', text: '<i class="fas fa-file-excel mr-1" aria-hidden="true"></i> Excel', className: 'btn-success'},
+      {extend: 'pdf', text: '<i class="fas fa-file-pdf mr-1" aria-hidden="true"></i> PDF', className: 'btn-danger'},
+      {extend: 'print', text: '<i class="fas fa-print mr-1" aria-hidden="true"></i> {{ t('Print') }}', className: 'btn-info'}
     ]
   });
 

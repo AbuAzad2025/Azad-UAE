@@ -8,7 +8,7 @@
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">
-          <i class="fas fa-shield-alt text-primary mr-2"></i>
+          <i class="fas fa-shield-alt text-primary mr-2" aria-hidden="true"></i>
           {{ t('Audit_And_Monitoring_Log') }}
           <span class="badge badge-info ml-2">Audit Trail</span>
         </h1>
@@ -16,7 +16,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -29,12 +29,12 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-primary" aria-label="{{ t('Audit_Log') }}">
-            <i class="fas fa-shield-alt"></i>{{ t('Audit_Log') }}</a>
+            <i class="fas fa-shield-alt" aria-hidden="true"></i>{{ t('Audit_Log') }}</a>
           <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-outline-danger" aria-label="{{ t('Data_Cleanup') }}">
-            <i class="fas fa-trash"></i> {{ t('Data_Cleanup') }}
+            <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Data_Cleanup') }}
           </a>
           <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success" aria-label="{{ t('Verify_Backups') }}">
-            <i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}
+            <i class="fas fa-check-double" aria-hidden="true"></i> {{ t('Verify_Backups') }}
           </a>
         </div>
       </div>
@@ -53,7 +53,7 @@
             <p>{{ t('Operations_On_This_Page') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-list"></i>
+            <i class="fas fa-list" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -65,7 +65,7 @@
             <p>{{ t('New_Additions') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-plus-circle"></i>
+            <i class="fas fa-plus-circle" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -77,7 +77,7 @@
             <p>{{ t('Modifications') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-edit"></i>
+            <i class="fas fa-edit" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -89,7 +89,7 @@
             <p>{{ t('Delete') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-trash-alt"></i>
+            <i class="fas fa-trash-alt" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -99,11 +99,11 @@
     <div class="card shadow-sm mb-3">
       <div class="card-header bg-primary">
         <h3 class="card-title">
-          <i class="fas fa-filter mr-2"></i>{{ t('Filter_Records') }}
+          <i class="fas fa-filter mr-2" aria-hidden="true"></i>{{ t('Filter_Records') }}
         </h3>
         <div class="card-tools">
           <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ t('Collapse_Expand') }}" aria-label="{{ t('Collapse_Expand') }}">
-            <i class="fas fa-minus"></i>
+            <i class="fas fa-minus" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -112,7 +112,7 @@
           <div class="form-row">
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-tasks text-primary mr-1"></i> {{ t('Operation') }}
+                <i class="fas fa-tasks text-primary mr-1" aria-hidden="true"></i> {{ t('Operation') }}
               </label>
               <select name="action" class="form-control" aria-label="action">
                 <option value="">{{ t('None') }}</option>
@@ -128,7 +128,7 @@
 
             <div class="form-group col-md-4">
               <label>
-                <i class="fas fa-user text-success mr-1"></i> {{ t('User') }}
+                <i class="fas fa-user text-success mr-1" aria-hidden="true"></i> {{ t('User') }}
               </label>
               {% set unique_users = [] %}
               <select name="user" class="form-control" aria-label="user">
@@ -146,9 +146,9 @@
 
             <div class="form-group col-md-4 d-flex align-items-end">
               <button type="submit" class="btn btn-primary mr-2" aria-label="{{ t('Apply_Filter') }}">
-                <i class="fas fa-search mr-1"></i>{{ t('Apply') }}</button>
+                <i class="fas fa-search mr-1" aria-hidden="true"></i>{{ t('Apply') }}</button>
               <a href="{{ url_for('owner.audit_logs') }}" class="btn btn-secondary" aria-label="{{ t('Reset_Filter') }}">
-                <i class="fas fa-redo mr-1"></i>{{ t('Reset') }}
+                <i class="fas fa-redo mr-1" aria-hidden="true"></i>{{ t('Reset') }}
               </a>
             </div>
           </div>
@@ -160,11 +160,11 @@
     <div class="card shadow">
       <div class="card-header bg-dark">
         <h3 class="card-title">
-          <i class="fas fa-history mr-2"></i>{{ t('Detailed_Operations_Log') }}
+          <i class="fas fa-history mr-2" aria-hidden="true"></i>{{ t('Detailed_Operations_Log') }}
         </h3>
         <div class="card-tools">
           <button type="button" class="btn btn-success" data-action="export-logs" aria-label="{{ t('Export_Records') }}">
-            <i class="fas fa-download mr-1"></i>{{ t('Export') }}</button>
+            <i class="fas fa-download mr-1" aria-hidden="true"></i>{{ t('Export') }}</button>
         </div>
       </div>
       <div class="card-body p-0">
@@ -172,27 +172,27 @@
           <table class="table table-hover table-striped mb-0" id="auditTable">
                             <thead class="thead-dark">
                                 <tr>
-                                    <th style="width: 5%"><i class="fas fa-hashtag"></i></th>
+                                    <th style="width: 5%"><i class="fas fa-hashtag" aria-hidden="true"></i></th>
                                     <th style="width: 15%">
-                                        <i class="fas fa-clock text-info"></i> {{ t('Date_And_Time') }}
+                                        <i class="fas fa-clock text-info" aria-hidden="true"></i> {{ t('Date_And_Time') }}
                                     </th>
                                     <th style="width: 12%">
-                                        <i class="fas fa-user text-success"></i> {{ t('User') }}
+                                        <i class="fas fa-user text-success" aria-hidden="true"></i> {{ t('User') }}
                                     </th>
                                     <th style="width: 10%">
-                                        <i class="fas fa-cog text-warning"></i> {{ t('Operation') }}
+                                        <i class="fas fa-cog text-warning" aria-hidden="true"></i> {{ t('Operation') }}
                                     </th>
                                     <th style="width: 12%">
-                                        <i class="fas fa-cube text-primary"></i> {{ t('Type') }}
+                                        <i class="fas fa-cube text-primary" aria-hidden="true"></i> {{ t('Type') }}
                                     </th>
                                     <th style="width: 8%">
-                                        <i class="fas fa-tag"></i> {{ t('Identifier') }}
+                                        <i class="fas fa-tag" aria-hidden="true"></i> {{ t('Identifier') }}
                                     </th>
                                     <th style="width: 25%">
-                                        <i class="fas fa-info-circle text-info"></i> {{ t('Details') }}
+                                        <i class="fas fa-info-circle text-info" aria-hidden="true"></i> {{ t('Details') }}
                                     </th>
                                     <th style="width: 8%">
-                                        <i class="fas fa-network-wired"></i> IP
+                                        <i class="fas fa-network-wired" aria-hidden="true"></i> IP
                                     </th>
                                         </tr>
                                     </thead>
@@ -203,18 +203,18 @@
                                         <span class="badge badge-secondary">{{ loop.index }}</span>
                                     </td>
                                     <td>
-                                        <i class="far fa-calendar mr-1"></i>
+                                        <i class="far fa-calendar mr-1" aria-hidden="true"></i>
                                         {{ log.created_at.strftime('%Y-%m-%d') if log.created_at }}
                                         <br>
                                         <small class="text-muted">
-                                            <i class="far fa-clock mr-1"></i>
+                                            <i class="far fa-clock mr-1" aria-hidden="true"></i>
                                             {{ log.created_at.strftime('%H:%M:%S') if log.created_at }}
                                         </small>
                                     </td>
                                     <td>
                                         {% if log.user %}
                                         <div class="d-flex align-items-center">
-                                            <i class="fas fa-user-circle fa-2x text-primary mr-2"></i>
+                                            <i class="fas fa-user-circle fa-2x text-primary mr-2" aria-hidden="true"></i>
                                             <div>
                                                 <strong>{{ log.user.username }}</strong>
                                                 <br>
@@ -231,35 +231,35 @@
                                         </div>
                                         {% else %}
                                         <span class="text-muted">
-                                            <i class="fas fa-user-slash mr-1"></i>{{ t('Not_Specified') }}
+                                            <i class="fas fa-user-slash mr-1" aria-hidden="true"></i>{{ t('Not_Specified') }}
                                         </span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         {% if log.action == 'create' %}
                                         <span class="badge badge-success badge-lg">
-                                            <i class="fas fa-plus-circle mr-1"></i>{{ t('Create') }}</span>
+                                            <i class="fas fa-plus-circle mr-1" aria-hidden="true"></i>{{ t('Create') }}</span>
                                         {% elif log.action == 'update' %}
                                         <span class="badge badge-warning badge-lg">
-                                            <i class="fas fa-edit mr-1"></i>{{ t('Edit') }}</span>
+                                            <i class="fas fa-edit mr-1" aria-hidden="true"></i>{{ t('Edit') }}</span>
                                         {% elif log.action == 'delete' %}
                                         <span class="badge badge-danger badge-lg">
-                                            <i class="fas fa-trash-alt mr-1"></i>{{ t('Delete') }}</span>
+                                            <i class="fas fa-trash-alt mr-1" aria-hidden="true"></i>{{ t('Delete') }}</span>
                                         {% elif log.action == 'archive' %}
                                         <span class="badge badge-secondary badge-lg">
-                                            <i class="fas fa-archive mr-1"></i>{{ t('Archive') }}</span>
+                                            <i class="fas fa-archive mr-1" aria-hidden="true"></i>{{ t('Archive') }}</span>
                                         {% elif log.action == 'restore' %}
                                         <span class="badge badge-info badge-lg">
-                                            <i class="fas fa-undo mr-1"></i>{{ t('Restore') }}</span>
+                                            <i class="fas fa-undo mr-1" aria-hidden="true"></i>{{ t('Restore') }}</span>
                                         {% elif log.action == 'login' %}
                                         <span class="badge badge-primary badge-lg">
-                                            <i class="fas fa-sign-in-alt mr-1"></i>{{ t('Sign In') }}</span>
+                                            <i class="fas fa-sign-in-alt mr-1" aria-hidden="true"></i>{{ t('Sign In') }}</span>
                                         {% elif log.action == 'logout' %}
                                         <span class="badge badge-dark badge-lg">
-                                            <i class="fas fa-sign-out-alt mr-1"></i>{{ t('Logout') }}</span>
+                                            <i class="fas fa-sign-out-alt mr-1" aria-hidden="true"></i>{{ t('Logout') }}</span>
                                         {% else %}
                                         <span class="badge badge-light badge-lg">
-                                            <i class="fas fa-question mr-1"></i>{{ log.action }}
+                                            <i class="fas fa-question mr-1" aria-hidden="true"></i>{{ log.action }}
                                         </span>
                                         {% endif %}
                                     </td>
@@ -277,14 +277,14 @@
                                     </td>
                                     <td>
                                         <small class="text-muted">
-                                            <i class="fas fa-file-alt mr-1"></i>
+                                            <i class="fas fa-file-alt mr-1" aria-hidden="true"></i>
                                             {{ log.changes if log.changes else '-' }}
                                         </small>
                                     </td>
                                     <td>
                                         {% if log.ip_address %}
                                         <small class="text-monospace">
-                                            <i class="fas fa-globe mr-1"></i>
+                                            <i class="fas fa-globe mr-1" aria-hidden="true"></i>
                                             {{ log.ip_address }}
                                         </small>
                                         {% else %}
@@ -295,7 +295,7 @@
                                 {% else %}
                                 <tr>
                                     <td colspan="8" class="text-center py-5">
-                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3" aria-hidden="true"></i>
                                         <h5 class="text-muted">{{ t('No_Records') }}</h5>
                                         <p class="text-muted">{{ t('No_Matching_Operations') }}</p>
                                     </td>

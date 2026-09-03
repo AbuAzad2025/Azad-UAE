@@ -6,11 +6,11 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-credit-card mr-2"></i>{{ t('Ecommerce_Store_Payment_Methods') }}</h1>
+        <h1 class="m-0"><i class="fas fa-credit-card mr-2" aria-hidden="true"></i>{{ t('Ecommerce_Store_Payment_Methods') }}</h1>
         <p class="text-muted small mb-0">{{ t('Applies_To_All_Tenant_Stores') }}</p>
       </div>
       <div class="col-sm-6 text-left">
-        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1"></i>{{ t('Add_Method') }}</a>
+        <a href="{{ url_for('owner.store_payment_method_create') }}" class="btn btn-success"><i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Add_Method') }}</a>
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary">{{ t('Back') }}</a>
       </div>
     </div>
@@ -20,7 +20,7 @@
 <div class="content">
   <div class="container-fluid">
     <div class="alert alert-info">
-      <i class="fas fa-info-circle mr-1"></i>
+      <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
       {{ t('Customer_Sees_Only_Active') }} <strong>{{ t('Enabled') }}</strong> {{ t('Basic_Methods_Cannot_Be_Deleted') }}
     </div>
 
@@ -52,16 +52,16 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                   <input type="hidden" name="is_enabled" value="{{ '0' if m.is_enabled|default(false) else '1' }}" aria-label="is enabled">
                   <button type="submit" class="btn btn-{{ 'success' if m.is_enabled|default(false) else 'outline-secondary' }}">
-                    {% if m.is_enabled|default(false) %}<i class="fas fa-check-circle"></i> {{ t('Enabled') }}{% else %}<i class="fas fa-pause-circle"></i> {{ t('Stopped') }}{% endif %}
+                    {% if m.is_enabled|default(false) %}<i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('Enabled') }}{% else %}<i class="fas fa-pause-circle" aria-hidden="true"></i> {{ t('Stopped') }}{% endif %}
                   </button>
                 </form>
               </td>
               <td class="text-left">
-                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id|default(0)) }}" class="btn btn-outline-primary" title="{{ t('Edit') }}"><i class="fas fa-edit"></i></a>
+                <a href="{{ url_for('owner.store_payment_method_edit', method_id=m.id|default(0)) }}" class="btn btn-outline-primary" title="{{ t('Edit') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
                 {% if not m.is_builtin|default(false) %}
                 <form method="post" action="{{ url_for('owner.store_payment_method_delete', method_id=m.id|default(0)) }}" class="d-inline" data-action="confirm-submit" data-confirm-message="{{ t('Delete_Payment_Method_Confirm') }}">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-                  <button type="submit" class="btn btn-outline-danger" title="{{ t('Delete') }}"><i class="fas fa-trash"></i></button>
+                  <button type="submit" class="btn btn-outline-danger" title="{{ t('Delete') }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
                 </form>
                 {% endif %}
               </td>

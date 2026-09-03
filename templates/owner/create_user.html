@@ -12,7 +12,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -28,13 +28,13 @@
 <div class="container-fluid mb-3">
   <div class="btn-group quick-nav" role="group">
     <a href="{{ url_for('owner.users_list') }}" class="btn btn-primary" aria-label="{{ t('Users_List') }}">
-      <i class="fas fa-users"></i> {{ t('Users_List') }}
+      <i class="fas fa-users" aria-hidden="true"></i> {{ t('Users_List') }}
     </a>
     <a href="{{ url_for('owner.create_user') }}" class="btn btn-outline-primary active" aria-label="{{ t('Add_New_User') }}">
-      <i class="fas fa-user-plus"></i> {{ t('Add_User') }}
+      <i class="fas fa-user-plus" aria-hidden="true"></i> {{ t('Add_User') }}
     </a>
     <a href="{{ url_for('owner.roles_permissions') }}" class="btn btn-outline-secondary" aria-label="{{ t('Roles_And_Permissions') }}">
-      <i class="fas fa-user-shield"></i> {{ t('Roles_And_Permissions') }}
+      <i class="fas fa-user-shield" aria-hidden="true"></i> {{ t('Roles_And_Permissions') }}
     </a>
   </div>
 </div>
@@ -50,7 +50,7 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-primary">
-              <h3 class="card-title text-white"><i class="fas fa-info-circle"></i> {{ t('Basic_Information') }}</h3>
+              <h3 class="card-title text-white"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('Basic_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
@@ -85,11 +85,11 @@
                   <small id="password-strength-text" class="text-muted"></small>
                 </div>
                 <div id="password-requirements" class="mt-2 ic-4">
-                  <div><i class="fas fa-circle text-muted" id="req-length"></i> <span id="req-length-text">{{ t('Min_10_Characters') }}</span></div>
-                  <div><i class="fas fa-circle text-muted" id="req-upper"></i> {{ t('Uppercase_Letter') }}</div>
-                  <div><i class="fas fa-circle text-muted" id="req-lower"></i> {{ t('Lowercase_Letter') }}</div>
-                  <div><i class="fas fa-circle text-muted" id="req-digit"></i> {{ t('Digit_0_9') }}</div>
-                  <div><i class="fas fa-circle text-muted" id="req-special"></i> {{ t('Special_Character') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-length" aria-hidden="true"></i> <span id="req-length-text">{{ t('Min_10_Characters') }}</span></div>
+                  <div><i class="fas fa-circle text-muted" id="req-upper" aria-hidden="true"></i> {{ t('Uppercase_Letter') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-lower" aria-hidden="true"></i> {{ t('Lowercase_Letter') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-digit" aria-hidden="true"></i> {{ t('Digit_0_9') }}</div>
+                  <div><i class="fas fa-circle text-muted" id="req-special" aria-hidden="true"></i> {{ t('Special_Character') }}</div>
                 </div>
               </div>
               
@@ -107,7 +107,7 @@
         <div class="col-md-6">
           <div class="card">
             <div class="card-header bg-success">
-              <h3 class="card-title text-white"><i class="fas fa-shield-alt"></i> {{ t('Role_And_Permissions') }}</h3>
+              <h3 class="card-title text-white"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ t('Role_And_Permissions') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
@@ -152,7 +152,7 @@
               </div>
               
               <div class="alert alert-info" id="role-description">
-                <i class="fas fa-info-circle"></i>
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
                 <strong>{{ t('Select_Role_To_View_Permissions') }}</strong>
               </div>
               
@@ -161,7 +161,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_owner" name="is_owner"
                          {% if form_data.get('is_owner') == 'on' %}checked{% endif %} aria-label="is owner">
                   <label class="custom-control-label" for="is_owner">
-                    <i class="fas fa-crown text-warning"></i> <strong>{{ t('System_Owner') }}</strong>
+                    <i class="fas fa-crown text-warning" aria-hidden="true"></i> <strong>{{ t('System_Owner') }}</strong>
                     <br><small class="text-danger">{{ t('Full_Permissions_Warning') }}</small>
                   </label>
                 </div>
@@ -172,7 +172,7 @@
                   <input type="checkbox" class="custom-control-input" id="is_active" name="is_active"
                          {% if form_data.get('is_active', 'on') == 'on' %}checked{% endif %} aria-label="is active">
                   <label class="custom-control-label" for="is_active">
-                    <i class="fas fa-check-circle text-success"></i> {{ t('Activate_Account') }}
+                    <i class="fas fa-check-circle text-success" aria-hidden="true"></i> {{ t('Activate_Account') }}
                   </label>
                 </div>
               </div>
@@ -182,7 +182,7 @@
           
           <div class="card">
             <div class="card-header bg-warning">
-              <h3 class="card-title ic-5"><i class="fas fa-lightbulb"></i> {{ t('Tips') }}</h3>
+              <h3 class="card-title ic-5"><i class="fas fa-lightbulb" aria-hidden="true"></i> {{ t('Tips') }}</h3>
             </div>
             <div class="card-body">
               <ul class="mb-0 ic-5">
@@ -200,10 +200,10 @@
       <div class="row">
         <div class="col-12">
           <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ t('Save_User') }}">
-            <i class="fas fa-save mr-2"></i>{{ t('Save_User') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save_User') }}
           </button>
           <a href="{{ url_for('owner.users_list') }}" class="btn btn-secondary btn-lg" aria-label="{{ t('Cancel_And_Return') }}">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
+            <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>
@@ -338,10 +338,10 @@ $(document).ready(() => {
     if (confirm.length > 0) {
       if (password === confirm) {
         $(this).removeClass('is-invalid').addClass('is-valid');
-        matchText.html('<i class="fas fa-check-circle text-success"></i> ' + i18n.passwords_match).removeClass().addClass('text-success');
+        matchText.html('<i class="fas fa-check-circle text-success" aria-hidden="true"></i> ' + i18n.passwords_match).removeClass().addClass('text-success');
       } else {
         $(this).removeClass('is-valid').addClass('is-invalid');
-        matchText.html('<i class="fas fa-times-circle text-danger"></i> ' + i18n.passwords_mismatch).removeClass().addClass('text-danger');
+        matchText.html('<i class="fas fa-times-circle text-danger" aria-hidden="true"></i> ' + i18n.passwords_mismatch).removeClass().addClass('text-danger');
       }
     } else {
       $(this).removeClass('is-valid is-invalid');
@@ -392,7 +392,7 @@ $(document).ready(() => {
     
     if (roleId && roleDescriptions[roleId]) {
       const role = roleDescriptions[roleId];
-      let html = '<i class="fas fa-shield-alt"></i> <strong>' + role.title + '</strong><hr>';
+      let html = '<i class="fas fa-shield-alt" aria-hidden="true"></i> <strong>' + role.title + '</strong><hr>';
       html += '<ul class="mb-0">';
       role.permissions.forEach(perm => {
         html += '<li>' + perm + '</li>';
@@ -400,7 +400,7 @@ $(document).ready(() => {
       html += '</ul>';
       descDiv.html(html).removeClass().addClass('alert alert-' + role.color);
     } else {
-      descDiv.html('<i class="fas fa-info-circle"></i> <strong>' + i18n.role_select_prompt + '</strong>')
+      descDiv.html('<i class="fas fa-info-circle" aria-hidden="true"></i> <strong>' + i18n.role_select_prompt + '</strong>')
              .removeClass().addClass('alert alert-info');
     }
   });

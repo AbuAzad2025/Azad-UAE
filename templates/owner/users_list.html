@@ -33,7 +33,7 @@
             <p>{{ t('Total_Users') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-users"></i>
+            <i class="fas fa-users" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -45,7 +45,7 @@
             <p>{{ t('Active_Users') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-user-check"></i>
+            <i class="fas fa-user-check" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@
             <p class="ic-1">{{ t('Managers_Admins') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-user-tie"></i>
+            <i class="fas fa-user-tie" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -69,7 +69,7 @@
             <p>{{ t('Sellers') }}</p>
           </div>
           <div class="icon">
-            <i class="fas fa-user-tag"></i>
+            <i class="fas fa-user-tag" aria-hidden="true"></i>
           </div>
         </div>
       </div>
@@ -78,17 +78,17 @@
     <div class="row mb-3">
       <div class="col-12">
         <a href="{{ url_for('owner.create_user') }}" class="btn btn-primary btn-lg" aria-label="{{ t('Add_New_User') }}">
-          <i class="fas fa-user-plus mr-2"></i>{{ t('Add_New_User') }}
+          <i class="fas fa-user-plus mr-2" aria-hidden="true"></i>{{ t('Add_New_User') }}
         </a>
         <button type="button" class="btn btn-info btn-lg" data-action="reset-table-search" aria-label="{{ t('Refresh_List') }}">
-          <i class="fas fa-sync mr-2"></i>{{ t('Update') }}</button>
+          <i class="fas fa-sync mr-2" aria-hidden="true"></i>{{ t('Update') }}</button>
       </div>
     </div>
 
     <div class="card">
       <div class="card-header bg-primary">
         <h3 class="card-title text-white">
-          <i class="fas fa-users mr-2"></i>{{ t('Users_List') }}
+          <i class="fas fa-users mr-2" aria-hidden="true"></i>{{ t('Users_List') }}
         </h3>
       </div>
       <div class="card-body">
@@ -115,19 +115,19 @@
                 <div class="user-avatar">
                   {% if user.is_owner %}
                     <span class="badge badge-danger badge-lg ic-2">
-                      <i class="fas fa-crown"></i>
+                      <i class="fas fa-crown" aria-hidden="true"></i>
                     </span>
                   {% elif user.role and user.role.name == 'Super Admin' %}
                     <span class="badge badge-primary badge-lg ic-2">
-                      <i class="fas fa-user-shield"></i>
+                      <i class="fas fa-user-shield" aria-hidden="true"></i>
                     </span>
                   {% elif user.role and user.role.name == 'Manager' %}
                     <span class="badge badge-info badge-lg ic-2">
-                      <i class="fas fa-user-tie"></i>
+                      <i class="fas fa-user-tie" aria-hidden="true"></i>
                     </span>
                   {% else %}
                     <span class="badge badge-secondary badge-lg ic-2">
-                      <i class="fas fa-user"></i>
+                      <i class="fas fa-user" aria-hidden="true"></i>
                     </span>
                   {% endif %}
                 </div>
@@ -166,11 +166,11 @@
               <td>
                 {% if user.is_active %}
                   <span class="badge badge-success">
-                    <i class="fas fa-check"></i> {{ t('Active') }}
+                    <i class="fas fa-check" aria-hidden="true"></i> {{ t('Active') }}
                   </span>
                 {% else %}
                   <span class="badge badge-danger">
-                    <i class="fas fa-times"></i> {{ t('Disabled') }}
+                    <i class="fas fa-times" aria-hidden="true"></i> {{ t('Disabled') }}
                   </span>
                 {% endif %}
               </td>
@@ -184,16 +184,16 @@
               <td>
                 <div class="btn-group btn-group-sm">
                   <a href="{{ url_for('owner.user_profile', user_id=user.id) }}" class="btn btn-info" title="{{ t('Profile') }}" aria-label="{{ t('Profile') }}">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-eye" aria-hidden="true"></i>
                   </a>
                   <a href="{{ url_for('owner.edit_user', user_id=user.id) }}" class="btn btn-primary" title="{{ t('Edit') }}" aria-label="{{ t('Edit') }}">
-                    <i class="fas fa-edit"></i>
+                    <i class="fas fa-edit" aria-hidden="true"></i>
                   </a>
                   {% if not user.is_owner and user.id != current_user.id %}
                   <form class="needs-validation ic-3" method="POST" action="{{ url_for('owner.delete_user', user_id=user.id) }}" data-action="confirm-submit" data-confirm-message="{{ t('Confirm_Disable_User') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <button type="submit" class="btn btn-danger" title="{{ t('Disable') }}" aria-label="{{ t('Disable_User') }}">
-                      <i class="fas fa-ban"></i>
+                      <i class="fas fa-ban" aria-hidden="true"></i>
                     </button>
                   </form>
                   {% endif %}

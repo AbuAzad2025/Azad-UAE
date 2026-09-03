@@ -5,12 +5,12 @@
   <div class="container-fluid">
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
-        <h1 class="m-0"><i class="fas fa-trash-alt text-danger"></i> {{ t('Delete_Old_Data') }}</h1>
+        <h1 class="m-0"><i class="fas fa-trash-alt text-danger" aria-hidden="true"></i> {{ t('Delete_Old_Data') }}</h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -23,10 +23,10 @@
       <div class="col-12">
         <div class="btn-group quick-nav" role="group">
           <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-            <i class="fas fa-trash"></i> {{ t('Data_Cleanup') }}
+            <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Data_Cleanup') }}
           </a>
           <a href="{{ url_for('owner.verify_backups') }}" class="btn btn-outline-success">
-            <i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}
+            <i class="fas fa-check-double" aria-hidden="true"></i> {{ t('Verify_Backups') }}
           </a>
         </div>
       </div>
@@ -38,11 +38,11 @@
   <div class="container-fluid">
     <div class="card">
       <div class="card-header bg-danger text-white">
-        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2"></i> {{ t('Danger_Zone_Data_Removal') }}</h3>
+        <h3 class="card-title"><i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i> {{ t('Danger_Zone_Data_Removal') }}</h3>
       </div>
       <div class="card-body">
         <div class="alert alert-danger">
-          <i class="fas fa-exclamation-circle"></i>
+          <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
           <strong>{{ t('Warning') }}</strong> {{ t('Cleanup_Action_Irreversible') }}
         </div>
 
@@ -50,7 +50,7 @@
           <div class="col-md-6">
             <div class="info-box bg-warning-light">
               <span class="info-box-icon bg-warning elevation-1">
-                <i class="fas fa-file-alt"></i>
+                <i class="fas fa-file-alt" aria-hidden="true"></i>
               </span>
               <div class="info-box-content">
                 <span class="info-box-text">{{ t('Old_Logs_90_Days') }}</span>
@@ -61,7 +61,7 @@
           <div class="col-md-6">
             <div class="info-box bg-secondary-light">
               <span class="info-box-icon bg-secondary elevation-1">
-                <i class="fas fa-archive"></i>
+                <i class="fas fa-archive" aria-hidden="true"></i>
               </span>
               <div class="info-box-content">
                 <span class="info-box-text">{{ t('Old_Archives_180_Days') }}</span>
@@ -94,7 +94,7 @@
                   class="btn btn-danger btn-lg"
                   data-action="confirm-submit"
                   data-confirm-message="{{ t('Confirm_Data_Cleanup') }}">
-            <i class="fas fa-trash mr-1"></i> {{ t('Delete_Now') }}
+            <i class="fas fa-trash mr-1" aria-hidden="true"></i> {{ t('Delete_Now') }}
           </button>
         </form>
       </div>

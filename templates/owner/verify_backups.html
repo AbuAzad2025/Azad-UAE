@@ -5,23 +5,23 @@
   <div class="mb-3">
     {% if current_user.is_owner or (current_user.role and current_user.role.slug == 'developer') %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ t('Back_To_Owner_Dashboard') }}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
       </a>
     {% else %}
       <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ t('Back_To_Dashboard') }}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ t('Back_To_Dashboard') }}
       </a>
     {% endif %}
     <a href="{{ url_for('owner.list_backups') }}" class="btn btn-info">
-      <i class="fas fa-archive"></i> {{ t('Backups') }}
+      <i class="fas fa-archive" aria-hidden="true"></i> {{ t('Backups') }}
     </a>
     <a href="{{ url_for('owner.data_cleanup') }}" class="btn btn-danger">
-      <i class="fas fa-trash"></i> {{ t('Cleanup') }}
+      <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Cleanup') }}
     </a>
   </div>
   <div class="card">
     <div class="card-header">
-      <h3><i class="fas fa-check-double"></i> {{ t('Verify_Backups') }}</h3>
+      <h3><i class="fas fa-check-double" aria-hidden="true"></i> {{ t('Verify_Backups') }}</h3>
     </div>
     <div class="card-body">
       <div class="table-responsive"><table class="table table-bordered table-hover">
@@ -43,11 +43,11 @@
               <td>
                 {% if backup.valid|default(false) %}
                 <span class="badge badge-success">
-                  <i class="fas fa-check"></i> {{ t('Valid') }}
+                  <i class="fas fa-check" aria-hidden="true"></i> {{ t('Valid') }}
                 </span>
                 {% else %}
                 <span class="badge badge-danger">
-                  <i class="fas fa-times"></i> {{ t('Corrupted') }}
+                  <i class="fas fa-times" aria-hidden="true"></i> {{ t('Corrupted') }}
                 </span>
                 {% endif %}
               </td>
@@ -56,7 +56,7 @@
           {% else %}
             <tr>
               <td colspan="4" class="text-center text-muted">
-                <i class="fas fa-info-circle"></i> {{ t('No_Backups') }}
+                <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('No_Backups') }}
               </td>
             </tr>
           {% endif %}

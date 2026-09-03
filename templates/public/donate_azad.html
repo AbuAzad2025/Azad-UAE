@@ -11,7 +11,7 @@
   <div class="az-donate-bg">
     <div class="az-tatreez-top"></div>
     <div class="az-wrap">
-      <div class="az-emblem"><i class="fas fa-hand-holding-heart"></i></div>
+      <div class="az-emblem"><i class="fas fa-hand-holding-heart" aria-hidden="true"></i></div>
       <h1 class="az-title">{{ vault.donation_title_ar if not is_en else vault.donation_title_en }}</h1>
       <p class="az-intro">{{ vault.donation_intro_ar if not is_en else vault.donation_intro_en }}</p>
 
@@ -28,13 +28,13 @@
             <label>{{ t('Payment_Method') }}</label>
             <div class="az-methods">
               {% if vault.bitcoin_address or vault.nowpayments_api_key %}
-              <label class="az-method"><input type="radio" name="payment_method" value="crypto" checked aria-label="payment method"> <i class="fab fa-bitcoin"></i> Crypto</label>
+              <label class="az-method"><input type="radio" name="payment_method" value="crypto" checked aria-label="payment method"> <i class="fab fa-bitcoin" aria-hidden="true"></i> Crypto</label>
               {% endif %}
               {% if vault.bank_iban or vault.bank_account_number %}
-              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method"> <i class="fas fa-university"></i> {{ t('Bank_Transfer') }}</label>
+              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method"> <i class="fas fa-university" aria-hidden="true"></i> {{ t('Bank_Transfer') }}</label>
               {% endif %}
               {% if vault.paypal_business_email %}
-              <label class="az-method"><input type="radio" name="payment_method" value="paypal" aria-label="payment method"> <i class="fab fa-paypal"></i> PayPal</label>
+              <label class="az-method"><input type="radio" name="payment_method" value="paypal" aria-label="payment method"> <i class="fab fa-paypal" aria-hidden="true"></i> PayPal</label>
               {% endif %}
             </div>
           </div>
@@ -61,7 +61,7 @@
           </div>
 
           <button type="submit" class="az-btn">
-            <i class="fas fa-seedling"></i> {{ t('Support_Azad') }}
+            <i class="fas fa-seedling" aria-hidden="true"></i> {{ t('Support_Azad') }}
           </button>
         </form>
       </div>

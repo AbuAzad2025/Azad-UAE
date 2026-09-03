@@ -23,14 +23,14 @@
 <div class="row mb-3 no-print">
   <div class="col-12">
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back') }}
     </a>
     <button class="btn btn-primary" data-action="window-print">
-      <i class="fas fa-print mr-2"></i>{{ t('Print') }}
+      <i class="fas fa-print mr-2" aria-hidden="true"></i>{{ t('Print') }}
     </button>
     <a href="{{ url_for('ledger.aging_analysis') }}?type={{ 'payables' if analysis_type == 'receivables' else 'receivables' }}&as_of_date={{ as_of_date }}" 
        class="btn btn-info">
-      <i class="fas fa-exchange-alt mr-2"></i>
+      <i class="fas fa-exchange-alt mr-2" aria-hidden="true"></i>
       {{ t('Payable Accounts') if analysis_type == 'receivables' else t('Receivable Accounts') }}
     </a>
   </div>
@@ -44,7 +44,7 @@
       <label class="ml-2 mr-2" for="input_as_of_date">{{ t('As_of_Date') }}</label>
       <input type="date" name="as_of_date" class="form-control mr-3" value="{{ as_of_date }}" required id="input_as_of_date" aria-label="as of date">
       <button type="submit" class="btn btn-primary">
-        <i class="fas fa-filter mr-2"></i>{{ t('View') }}
+        <i class="fas fa-filter mr-2" aria-hidden="true"></i>{{ t('View') }}
       </button>
     </form>
   </div>
@@ -62,7 +62,7 @@
   <div class="row mb-3">
     <div class="col-md-2">
       <div class="info-box bg-success">
-        <span class="info-box-icon"><i class="fas fa-calendar-check"></i></span>
+        <span class="info-box-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">0-30 {{ t('يوم') }}</span>
           <span class="info-box-number">
@@ -73,7 +73,7 @@
     </div>
     <div class="col-md-2">
       <div class="info-box bg-info">
-        <span class="info-box-icon"><i class="fas fa-calendar-alt"></i></span>
+        <span class="info-box-icon"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">31-60 {{ t('يوم') }}</span>
           <span class="info-box-number">
@@ -84,7 +84,7 @@
     </div>
     <div class="col-md-2">
       <div class="info-box bg-warning">
-        <span class="info-box-icon"><i class="fas fa-calendar-times"></i></span>
+        <span class="info-box-icon"><i class="fas fa-calendar-times" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">61-90 {{ t('يوم') }}</span>
           <span class="info-box-number">
@@ -95,7 +95,7 @@
     </div>
     <div class="col-md-2">
       <div class="info-box bg-orange">
-        <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+        <span class="info-box-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">91-120 {{ t('يوم') }}</span>
           <span class="info-box-number">
@@ -106,7 +106,7 @@
     </div>
     <div class="col-md-2">
       <div class="info-box bg-danger">
-        <span class="info-box-icon"><i class="fas fa-ban"></i></span>
+        <span class="info-box-icon"><i class="fas fa-ban" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">+120 {{ t('يوم') }}</span>
           <span class="info-box-number">
@@ -117,7 +117,7 @@
     </div>
     <div class="col-md-2">
       <div class="info-box bg-dark">
-        <span class="info-box-icon"><i class="fas fa-calculator"></i></span>
+        <span class="info-box-icon"><i class="fas fa-calculator" aria-hidden="true"></i></span>
         <div class="info-box-content">
           <span class="info-box-text">{{ t('Total_3') }}</span>
           <span class="info-box-number">
@@ -214,7 +214,7 @@
 <div class="card mt-4 no-print">
   <div class="card-header">
     <h5 class="mb-0">
-      <i class="fas fa-chart-pie mr-2"></i>{{ t('التوزيع') }} {{ t('حسب') }} {{ t('الفترات') }}
+      <i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('التوزيع') }} {{ t('حسب') }} {{ t('الفترات') }}
     </h5>
   </div>
   <div class="card-body">
@@ -224,7 +224,7 @@
 
 {% if (analysis_type == 'receivables' and not report.customers) or (analysis_type == 'payables' and not report.suppliers) %}
 <div class="alert alert-info text-center mt-3">
-  <i class="fas fa-info-circle mr-2"></i>
+  <i class="fas fa-info-circle mr-2" aria-hidden="true"></i>
   {{ t('No') }} {{ t('receivable') if analysis_type == 'receivables' else t('payable') }} {{ t('accounts currently') }}
 </div>
 {% endif %}

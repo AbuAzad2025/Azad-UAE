@@ -3,14 +3,14 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-box mr-2"></i>{{ t('Details') }} {{ t('Product') }}: {{ product.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-box mr-2" aria-hidden="true"></i>{{ t('Details') }} {{ t('Product') }}: {{ product.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('products.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back_To_List') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back_To_List') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('Dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('Dashboard') }}
     </a>
   </div>
 </div>
@@ -49,11 +49,11 @@
         </ul>
         
         <a href="{{ url_for('products.edit', id=product.id) }}" class="btn btn-warning btn-block mb-2">
-          <i class="fas fa-edit"></i> {{ t('Edit') }}
+          <i class="fas fa-edit" aria-hidden="true"></i> {{ t('Edit') }}
         </a>
         <button type="button" class="btn btn-danger btn-block" 
                 data-delete-item="{{product.id}}" data-item-type="products" data-item-name="{{product.name|tojson}}">
-          <i class="fas fa-trash"></i> {{ t('Delete') }}
+          <i class="fas fa-trash" aria-hidden="true"></i> {{ t('Delete') }}
         </button>
       </div>
     </div>
@@ -83,7 +83,7 @@
           <dd class="col-sm-8">
             <ul class="list-unstyled mb-0">
               {% for share in product.partner_shares %}
-              <li><i class="fas fa-user-tag text-info"></i> {{ share.partner_customer.name }} ({{ share.percentage }}%)</li>
+              <li><i class="fas fa-user-tag text-info" aria-hidden="true"></i> {{ share.partner_customer.name }} ({{ share.percentage }}%)</li>
               {% endfor %}
             </ul>
           </dd>

@@ -5,11 +5,11 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-heart text-danger"></i> {{ _('Details') }} {{ _('التبرع') }} #{{ donation.id }}</h1>
+        <h1 class="mb-0"><i class="fas fa-heart text-danger" aria-hidden="true"></i> {{ _('Details') }} {{ _('التبرع') }} #{{ donation.id }}</h1>
         <p class="text-muted mb-0">{{ _('مراجعة') }} {{ _('Data_2') }} {{ _('المتبرع') }} {{ _('وحالة') }} {{ _('المعاملة') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i> {{ _('العودة') }} {{ _('للتبرعات') }}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i> {{ _('العودة') }} {{ _('للتبرعات') }}
     </a>
 </div>
 {% endblock %}
@@ -72,7 +72,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h2 class="mb-0">
-                                <i class="fas fa-heart"></i> {{ _('Details') }} {{ _('التبرع') }} #{{ donation.id }}
+                                <i class="fas fa-heart" aria-hidden="true"></i> {{ _('Details') }} {{ _('التبرع') }} #{{ donation.id }}
                             </h2>
                             <p class="mb-0 mt-2 inline-form">
                                 {{ donation.created_at.strftime('%Y-%m-%d %H:%M') if donation.created_at else _('N/A') }}
@@ -80,11 +80,11 @@
                         </div>
                         <div>
                             {% if donation.status == 'completed' %}
-                                <span class="badge badge-success status-badge"><i class="fas fa-check"></i> {{ _('Completed') }}</span>
+                                <span class="badge badge-success status-badge"><i class="fas fa-check" aria-hidden="true"></i> {{ _('Completed') }}</span>
                             {% elif donation.status == 'pending' %}
-                                <span class="badge badge-warning status-badge"><i class="fas fa-hourglass-half"></i> {{ _('قيد') }} {{ _('Waiting') }}</span>
+                                <span class="badge badge-warning status-badge"><i class="fas fa-hourglass-half" aria-hidden="true"></i> {{ _('قيد') }} {{ _('Waiting') }}</span>
                             {% elif donation.status == 'failed' %}
-                                <span class="badge badge-danger status-badge"><i class="fas fa-times"></i> {{ _('فاشل') }}</span>
+                                <span class="badge badge-danger status-badge"><i class="fas fa-times" aria-hidden="true"></i> {{ _('فاشل') }}</span>
                             {% else %}
                                 <span class="badge badge-secondary status-badge">{{ donation.status }}</span>
                             {% endif %}
@@ -95,7 +95,7 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-user text-primary"></i> {{ _('Info_2') }} {{ _('المتبرع') }}
+                        <i class="fas fa-user text-primary" aria-hidden="true"></i> {{ _('Info_2') }} {{ _('المتبرع') }}
                     </h4>
                     
                     <div class="info-row">
@@ -113,7 +113,7 @@
                         <div class="info-label">{{ _('الرسالة') }}:</div>
                         <div class="info-value">
                             <div class="alert alert-info">
-                                <i class="fas fa-comment"></i> {{ donation.donor_message }}
+                                <i class="fas fa-comment" aria-hidden="true"></i> {{ donation.donor_message }}
                             </div>
                         </div>
                     </div>
@@ -123,7 +123,7 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-dollar-sign text-success"></i> {{ _('Info_2') }} {{ _('Payment_2') }}
+                        <i class="fas fa-dollar-sign text-success" aria-hidden="true"></i> {{ _('Info_2') }} {{ _('Payment_2') }}
                     </h4>
                     
                     <div class="info-row">
@@ -137,13 +137,13 @@
                         <div class="info-label">{{ _('طريقة') }} {{ _('Payment_2') }}:</div>
                         <div class="info-value">
                             {% if donation.payment_method == 'crypto' %}
-                                <i class="fab fa-bitcoin text-warning"></i> {{ _('Currency_2') }} {{ _('رقمية') }}
+                                <i class="fab fa-bitcoin text-warning" aria-hidden="true"></i> {{ _('Currency_2') }} {{ _('رقمية') }}
                             {% elif donation.payment_method == 'card' %}
-                                <i class="fas fa-credit-card text-primary"></i> {{ _('Card') }}
+                                <i class="fas fa-credit-card text-primary" aria-hidden="true"></i> {{ _('Card') }}
                             {% elif donation.payment_method == 'paypal' %}
-                                <i class="fab fa-paypal text-info"></i> PayPal
+                                <i class="fab fa-paypal text-info" aria-hidden="true"></i> PayPal
                             {% elif donation.payment_method == 'bank' %}
-                                <i class="fas fa-university text-secondary"></i> {{ _('Transfer') }} {{ _('Bank_3') }}
+                                <i class="fas fa-university text-secondary" aria-hidden="true"></i> {{ _('Transfer') }} {{ _('Bank_3') }}
                             {% else %}
                                 {{ donation.payment_method }}
                             {% endif %}
@@ -190,7 +190,7 @@
                 
                 <div class="detail-card">
                     <h4 class="mb-4">
-                        <i class="fas fa-info-circle text-info"></i> {{ _('Info_2') }} {{ _('تقنية') }}
+                        <i class="fas fa-info-circle text-info" aria-hidden="true"></i> {{ _('Info_2') }} {{ _('تقنية') }}
                     </h4>
                     
                     <div class="info-row">
@@ -223,7 +223,7 @@
                             <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.approve_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <button type="submit" class="btn btn-success btn-block btn-lg" data-action="confirm-submit" data-confirm-message="{{ _('قبول') }} {{ _('هذا') }} {{ _('التبرع_2') }}">
-                                    <i class="fas fa-check-circle"></i> {{ _('قبول') }} {{ _('التبرع') }}
+                                    <i class="fas fa-check-circle" aria-hidden="true"></i> {{ _('قبول') }} {{ _('التبرع') }}
                                 </button>
                             </form>
                         </div>
@@ -231,7 +231,7 @@
                             <form method="POST" action="{{ url_for('payment_vault.reject_donation', donation_id=donation.id) }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                                 <button type="submit" class="btn btn-danger btn-block btn-lg" data-action="confirm-submit" data-confirm-message="{{ _('رفض') }} {{ _('هذا') }} {{ _('التبرع_2') }}">
-                                    <i class="fas fa-times-circle"></i> {{ _('رفض') }} {{ _('التبرع') }}
+                                    <i class="fas fa-times-circle" aria-hidden="true"></i> {{ _('رفض') }} {{ _('التبرع') }}
                                 </button>
                             </form>
                         </div>
@@ -240,14 +240,14 @@
                         {% if donation.donor_email %}
                         <div class="col-md-6 mt-3">
                             <button class="btn btn-primary btn-block btn-lg" data-action="send-thank-you" data-donation-id="{{ donation.id }}" data-email="{{ donation.donor_email }}" data-name="{{ donation.donor_name or _('متبرع') }}" data-amount="{{ donation.amount_usd }}">
-                                <i class="fas fa-envelope"></i> {{ _('Submit') }} {{ _('شكر') }}
+                                <i class="fas fa-envelope" aria-hidden="true"></i> {{ _('Submit') }} {{ _('شكر') }}
                             </button>
                         </div>
                         {% endif %}
                         
                         <div class="col-md-{% if donation.donor_email and donation.status == 'pending' %}6{% elif donation.donor_email %}12{% else %}12{% endif %} mt-3">
                             <a href="{{ url_for('payment_vault.donations') }}" class="btn btn-secondary btn-block btn-lg">
-                                <i class="fas fa-arrow-left"></i> {{ _('العودة') }} {{ _('للتبرعات') }}
+                                <i class="fas fa-arrow-left" aria-hidden="true"></i> {{ _('العودة') }} {{ _('للتبرعات') }}
                             </a>
                         </div>
                     </div>

@@ -4,7 +4,7 @@
 
 {% block page_title %}
 <div class="d-flex align-items-center">
-    <i class="fas fa-chart-line text-primary mr-3 erp-icon-xl icon-lg"></i>
+    <i class="fas fa-chart-line text-primary mr-3 erp-icon-xl icon-lg" aria-hidden="true"></i>
     <div>
         <h1 class="mb-0">{{ t('Reports_Statistics') }}</h1>
         <p class="text-muted mb-0">{{ t('Comprehensive_System_Performance_Overview') }}</p>
@@ -23,7 +23,7 @@
                         <p class="mb-0">{{ t('Total_Companies') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-building fa-2x"></i>
+                        <i class="fas fa-building fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -39,7 +39,7 @@
                         <p class="mb-0">{{ t('Active_Companies') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-check-circle fa-2x"></i>
+                        <i class="fas fa-check-circle fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -55,7 +55,7 @@
                         <p class="mb-0">MRR (AED)</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-coins fa-2x"></i>
+                        <i class="fas fa-coins fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -71,7 +71,7 @@
                         <p class="mb-0">{{ t('New_Subscriptions_Month') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-user-plus fa-2x"></i>
+                        <i class="fas fa-user-plus fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -89,7 +89,7 @@
                         <p class="mb-0">{{ t('Suspended_Companies') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-pause-circle fa-2x"></i>
+                        <i class="fas fa-pause-circle fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                         <p class="mb-0">{{ t('Trial_Subscriptions') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-flask fa-2x"></i>
+                        <i class="fas fa-flask fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -121,7 +121,7 @@
                         <p class="mb-0">{{ t('Expired_Subscriptions') }}</p>
                     </div>
                     <div class="align-self-center">
-                        <i class="fas fa-calendar-times fa-2x"></i>
+                        <i class="fas fa-calendar-times fa-2x" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -134,7 +134,7 @@
         <div class="card">
             <div class="card-header bg-warning text-dark">
                 <h5 class="mb-0">
-                    <i class="fas fa-vault mr-2"></i>{{ t('Secret_Vault_Status') }}
+                    <i class="fas fa-vault mr-2" aria-hidden="true"></i>{{ t('Secret_Vault_Status') }}
                 </h5>
             </div>
             <div class="card-body">
@@ -159,7 +159,7 @@
         <div class="card">
             <div class="card-header bg-info text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-pie mr-2"></i>{{ t('Tenant_Growth') }}
+                    <i class="fas fa-chart-pie mr-2" aria-hidden="true"></i>{{ t('Tenant_Growth') }}
                 </h5>
             </div>
             <div class="card-body">
@@ -183,14 +183,14 @@
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
-                    <i class="fas fa-chart-bar mr-2"></i>{{ t('Plan_Distribution') }}
+                    <i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>{{ t('Plan_Distribution') }}
                 </h5>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3">
                         <div class="info-box">
-                            <span class="info-box-icon bg-primary"><i class="fas fa-layer-group"></i></span>
+                            <span class="info-box-icon bg-primary"><i class="fas fa-layer-group" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">{{ t('Active_Companies') }}</span>
                                 <span class="info-box-number">{{ stats.active_tenant_count|default(0) }}</span>
@@ -199,7 +199,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="info-box">
-                            <span class="info-box-icon bg-success"><i class="fas fa-hourglass-half"></i></span>
+                            <span class="info-box-icon bg-success"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">{{ t('Expiring_Soon_7_Days') }}</span>
                                 <span class="info-box-number">{{ stats.expiring_soon_count|default(0) }}</span>
@@ -208,7 +208,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="info-box">
-                            <span class="info-box-icon bg-info"><i class="fas fa-sitemap"></i></span>
+                            <span class="info-box-icon bg-info"><i class="fas fa-sitemap" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">{{ t('Active_Branches') }}</span>
                                 <span class="info-box-number">{{ stats.total_branches|default(0) }}</span>
@@ -217,7 +217,7 @@
                     </div>
                     <div class="col-md-3">
                         <div class="info-box">
-                            <span class="info-box-icon bg-warning"><i class="fas fa-users"></i></span>
+                            <span class="info-box-icon bg-warning"><i class="fas fa-users" aria-hidden="true"></i></span>
                             <div class="info-box-content">
                                 <span class="info-box-text">{{ t('Users_Non_Owner') }}</span>
                                 <span class="info-box-number">{{ stats.total_users|default(0) }}</span>
@@ -233,7 +233,7 @@
 <div class="row mt-4">
     <div class="col-12 text-center">
         <a href="{{ url_for('owner.dashboard') }}" class="btn btn-primary btn-lg">
-            <i class="fas fa-arrow-right mr-2"></i>
+            <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>
             {{ t('Back_To_Owner_Dashboard') }}
         </a>
     </div>

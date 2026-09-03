@@ -10,13 +10,13 @@
 
     <h1 class="mb-0">
 
-      <i class="fas fa-truck mr-2"></i>{{ supplier.name }}
+      <i class="fas fa-truck mr-2" aria-hidden="true"></i>{{ supplier.name }}
 
       {% if supplier.is_verified %}
 
         <span class="badge badge-success ml-2">
 
-          <i class="fas fa-check-circle"></i> {{ t('verified') }}
+          <i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('verified') }}
 
         </span>
 
@@ -38,14 +38,14 @@
 
     <a href="{{ url_for('suppliers.edit', id=supplier.id) }}" class="btn btn-warning">
 
-      <i class="fas fa-edit mr-1"></i>{{ t('Edit') }}
+      <i class="fas fa-edit mr-1" aria-hidden="true"></i>{{ t('Edit') }}
 
     </a>
 
     {% if current_user.is_admin() %}
     <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" class="btn btn-success">
 
-      <i class="fas fa-file-invoice mr-1"></i>{{ t('supplier_statement') }}
+      <i class="fas fa-file-invoice mr-1" aria-hidden="true"></i>{{ t('supplier_statement') }}
 
     </a>
     {% endif %}
@@ -54,19 +54,19 @@
 
             data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{ supplier.name | e }}" data-redirect-url="{{url_for('suppliers.index')|tojson}}">
 
-      <i class="fas fa-trash mr-1"></i>{{ t('Delete') }}
+      <i class="fas fa-trash mr-1" aria-hidden="true"></i>{{ t('Delete') }}
 
     </button>
 
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
 
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_list') }}
 
     </a>
 
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
 
-      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('main_dashboard') }}
 
     </a>
 
@@ -98,7 +98,7 @@
 
       <div class="icon">
 
-        <i class="fas fa-shopping-cart"></i>
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
 
       </div>
 
@@ -122,7 +122,7 @@
 
       <div class="icon">
 
-        <i class="fas fa-dollar-sign"></i>
+        <i class="fas fa-dollar-sign" aria-hidden="true"></i>
 
       </div>
 
@@ -146,7 +146,7 @@
 
       <div class="icon">
 
-        <i class="fas fa-wallet"></i>
+        <i class="fas fa-wallet" aria-hidden="true"></i>
 
       </div>
 
@@ -170,7 +170,7 @@
 
       <div class="icon">
 
-        <i class="fas fa-chart-line"></i>
+        <i class="fas fa-chart-line" aria-hidden="true"></i>
 
       </div>
 
@@ -192,7 +192,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-info-circle mr-2"></i>{{ t('supplier_info') }}</h3>
+        <h3 class="card-title"><i class="fas fa-info-circle mr-2" aria-hidden="true"></i>{{ t('supplier_info') }}</h3>
 
       </div>
 
@@ -203,7 +203,7 @@
 
           <tr>
 
-            <th style="width: 40%"><i class="fas fa-building text-muted mr-2"></i>{{ t('Company') }}:</th>
+            <th style="width: 40%"><i class="fas fa-building text-muted mr-2" aria-hidden="true"></i>{{ t('Company') }}:</th>
 
             <td>{{ supplier.company_name | e or t('not_specified') }}</td>
 
@@ -211,7 +211,7 @@
 
           <tr>
 
-            <th><i class="fas fa-tag text-muted mr-2"></i>{{ t('type') }}:</th>
+            <th><i class="fas fa-tag text-muted mr-2" aria-hidden="true"></i>{{ t('type') }}:</th>
 
             <td><span class="badge badge-info">{{ supplier.get_type_display() }}</span></td>
 
@@ -219,7 +219,7 @@
 
           <tr>
 
-            <th><i class="fas fa-star text-warning mr-2"></i>{{ t('rating') }}:</th>
+            <th><i class="fas fa-star text-warning mr-2" aria-hidden="true"></i>{{ t('rating') }}:</th>
 
             <td>{{ supplier.get_rating_stars() }}</td>
 
@@ -227,7 +227,7 @@
 
           <tr>
 
-            <th><i class="fas fa-phone text-muted mr-2"></i>{{ t('Phone') }} 1:</th>
+            <th><i class="fas fa-phone text-muted mr-2" aria-hidden="true"></i>{{ t('Phone') }} 1:</th>
 
             <td>{{ supplier.phone | e or t('not_available') }}</td>
 
@@ -235,7 +235,7 @@
 
           <tr>
 
-            <th><i class="fas fa-phone text-muted mr-2"></i>{{ t('Phone') }} 2:</th>
+            <th><i class="fas fa-phone text-muted mr-2" aria-hidden="true"></i>{{ t('Phone') }} 2:</th>
 
             <td>{{ supplier.phone2 | e or t('not_available') }}</td>
 
@@ -243,7 +243,7 @@
 
           <tr>
 
-            <th><i class="fas fa-envelope text-muted mr-2"></i>{{ t('email') }}:</th>
+            <th><i class="fas fa-envelope text-muted mr-2" aria-hidden="true"></i>{{ t('email') }}:</th>
 
             <td>{{ supplier.email | e or t('not_available') }}</td>
 
@@ -251,7 +251,7 @@
 
           <tr>
 
-            <th><i class="fas fa-globe text-muted mr-2"></i>{{ t('Website') }}:</th>
+            <th><i class="fas fa-globe text-muted mr-2" aria-hidden="true"></i>{{ t('Website') }}:</th>
 
             <td>
 
@@ -271,7 +271,7 @@
 
           <tr>
 
-            <th><i class="fas fa-map-marker-alt text-muted mr-2"></i>{{ t('location') }}:</th>
+            <th><i class="fas fa-map-marker-alt text-muted mr-2" aria-hidden="true"></i>{{ t('location') }}:</th>
 
             <td>
 
@@ -283,7 +283,7 @@
 
           <tr>
 
-            <th><i class="fas fa-map text-muted mr-2"></i>{{ t('Address') }}:</th>
+            <th><i class="fas fa-map text-muted mr-2" aria-hidden="true"></i>{{ t('Address') }}:</th>
 
             <td>{{ supplier.address | e or t('not_specified') }}</td>
 
@@ -308,7 +308,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-file-contract mr-2"></i>{{ t('legal_and_financial_info') }}</h3>
+        <h3 class="card-title"><i class="fas fa-file-contract mr-2" aria-hidden="true"></i>{{ t('legal_and_financial_info') }}</h3>
 
       </div>
 
@@ -319,7 +319,7 @@
 
           <tr>
 
-            <th style="width: 40%"><i class="fas fa-receipt text-muted mr-2"></i>{{ t('Tax Number') }}:</th>
+            <th style="width: 40%"><i class="fas fa-receipt text-muted mr-2" aria-hidden="true"></i>{{ t('Tax Number') }}:</th>
 
             <td>{{ supplier.tax_number | e or t('not_specified') }}</td>
 
@@ -327,7 +327,7 @@
 
           <tr>
 
-            <th><i class="fas fa-file-alt text-muted mr-2"></i>{{ t('commercial_registration') }}:</th>
+            <th><i class="fas fa-file-alt text-muted mr-2" aria-hidden="true"></i>{{ t('commercial_registration') }}:</th>
 
             <td>{{ supplier.commercial_registration | e or t('not_specified') }}</td>
 
@@ -335,7 +335,7 @@
 
           <tr>
 
-            <th><i class="fas fa-coins text-muted mr-2"></i>{{ t('credit_limit') }}:</th>
+            <th><i class="fas fa-coins text-muted mr-2" aria-hidden="true"></i>{{ t('credit_limit') }}:</th>
 
             <td><strong>{{ format_currency(supplier.credit_limit or 0) }}</strong></td>
 
@@ -343,7 +343,7 @@
 
           <tr>
 
-            <th><i class="fas fa-calendar text-muted mr-2"></i>{{ t('payment_terms') }}:</th>
+            <th><i class="fas fa-calendar text-muted mr-2" aria-hidden="true"></i>{{ t('payment_terms') }}:</th>
 
             <td>{{ supplier.payment_terms_days or 30 }} {{ t('days') }}</td>
 
@@ -351,7 +351,7 @@
 
           <tr>
 
-            <th><i class="fas fa-dollar-sign text-muted mr-2"></i>{{ t('preferred_currency') }}:</th>
+            <th><i class="fas fa-dollar-sign text-muted mr-2" aria-hidden="true"></i>{{ t('preferred_currency') }}:</th>
 
             <td><span class="badge badge-primary">{{ supplier.preferred_currency }}</span></td>
 
@@ -359,7 +359,7 @@
 
           <tr>
 
-            <th><i class="fas fa-shopping-cart text-muted mr-2"></i>{{ t('total_purchases') }}:</th>
+            <th><i class="fas fa-shopping-cart text-muted mr-2" aria-hidden="true"></i>{{ t('total_purchases') }}:</th>
 
             <td class="text-success"><strong>{{ format_currency(supplier.total_purchases_base or 0) }}</strong></td>
 
@@ -367,7 +367,7 @@
 
           <tr>
 
-            <th><i class="fas fa-hand-holding-usd text-muted mr-2"></i>{{ t('Paid') }}:</th>
+            <th><i class="fas fa-hand-holding-usd text-muted mr-2" aria-hidden="true"></i>{{ t('Paid') }}:</th>
 
             <td class="text-primary"><strong>{{ format_currency(supplier.total_paid_base or 0) }}</strong></td>
 
@@ -375,7 +375,7 @@
 
           <tr>
 
-            <th><i class="fas fa-calendar-check text-muted mr-2"></i>{{ t('last_purchase') }}:</th>
+            <th><i class="fas fa-calendar-check text-muted mr-2" aria-hidden="true"></i>{{ t('last_purchase') }}:</th>
 
             <td>
 
@@ -418,7 +418,7 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-sticky-note mr-2"></i>{{ t('additional_information') }}</h3>
+        <h3 class="card-title"><i class="fas fa-sticky-note mr-2" aria-hidden="true"></i>{{ t('additional_information') }}</h3>
 
       </div>
 
@@ -428,7 +428,7 @@
 
         <div class="mb-3">
 
-          <strong><i class="fas fa-tags mr-2"></i>{{ t('tags') }}:</strong><br>
+          <strong><i class="fas fa-tags mr-2" aria-hidden="true"></i>{{ t('tags') }}:</strong><br>
 
           {% for tag in supplier.tags.split(',') %}
 
@@ -446,7 +446,7 @@
 
         <div>
 
-          <strong><i class="fas fa-comment mr-2"></i>{{ t('Notes') }}:</strong><br>
+          <strong><i class="fas fa-comment mr-2" aria-hidden="true"></i>{{ t('Notes') }}:</strong><br>
 
           <p class="text-muted mb-0">{{ supplier.notes | e }}</p>
 
@@ -476,13 +476,13 @@
 
       <div class="card-header">
 
-        <h3 class="card-title"><i class="fas fa-shopping-cart mr-2"></i>{{ t('Last') }} {{ t('Purchases') }}</h3>
+        <h3 class="card-title"><i class="fas fa-shopping-cart mr-2" aria-hidden="true"></i>{{ t('Last') }} {{ t('Purchases') }}</h3>
 
         <div class="card-tools">
 
           {% if current_user.has_permission('manage_purchases') %}
           <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-1"></i>{{ t('new_purchase') }}
+            <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('new_purchase') }}
           </a>
           {% endif %}
 
@@ -540,7 +540,7 @@
 
                   <span class="badge badge-success">
 
-                    <i class="fas fa-check"></i> {{ t('confirmed') }}
+                    <i class="fas fa-check" aria-hidden="true"></i> {{ t('confirmed') }}
 
                   </span>
 
@@ -550,7 +550,7 @@
 
                   {% if current_user.has_permission('manage_purchases') %}
                   <a href="{{ url_for('purchases.view', id=purchase.id) }}" class="btn btn-info" title="{{ t('view') }}">
-                    <i class="fas fa-eye"></i>
+                    <i class="fas fa-eye" aria-hidden="true"></i>
                   </a>
                   {% endif %}
 
@@ -570,13 +570,13 @@
 
         <div class="text-center text-muted py-5">
 
-          <i class="fas fa-inbox fa-3x mb-3"></i>
+          <i class="fas fa-inbox fa-3x mb-3" aria-hidden="true"></i>
 
           <p>{{ t('no_purchases_from_supplier') }}</p>
 
           {% if current_user.has_permission('manage_purchases') %}
           <a href="{{ url_for('purchases.create') }}?supplier_id={{ supplier.id }}" class="btn btn-primary">
-            <i class="fas fa-plus mr-2"></i>{{ t('new_purchase') }}
+            <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('new_purchase') }}
           </a>
           {% endif %}
 

@@ -6,12 +6,12 @@
 {% block content %}
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fas fa-project-diagram"></i> {{ project.name_ar or project.name }}</h4>
+    <h4><i class="fas fa-project-diagram" aria-hidden="true"></i> {{ project.name_ar or project.name }}</h4>
     <div>
       {% if current_user.has_permission('project.manage') %}
-      <button class="btn btn-sm btn-outline-info" data-action="show-modal" data-target="#timesheetModal" aria-label="{{ t('Log_Time') }}"><i class="fas fa-clock"></i> {{ t('Log_Time') }}</button>
-      <button class="btn btn-sm btn-outline-secondary" data-action="show-modal" data-target="#memberModal" aria-label="{{ t('Add_Member') }}"><i class="fas fa-user-plus"></i> {{ t('Add_Member') }}</button>
-      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit_Project') }}"><i class="fas fa-edit"></i></a>
+      <button class="btn btn-sm btn-outline-info" data-action="show-modal" data-target="#timesheetModal" aria-label="{{ t('Log_Time') }}"><i class="fas fa-clock" aria-hidden="true"></i> {{ t('Log_Time') }}</button>
+      <button class="btn btn-sm btn-outline-secondary" data-action="show-modal" data-target="#memberModal" aria-label="{{ t('Add_Member') }}"><i class="fas fa-user-plus" aria-hidden="true"></i> {{ t('Add_Member') }}</button>
+      <a href="{{ url_for('projects.edit_project', project_id=project.id) }}" class="btn btn-sm btn-warning" aria-label="{{ t('Edit_Project') }}"><i class="fas fa-edit" aria-hidden="true"></i></a>
       {% endif %}
     </div>
   </div>
@@ -36,9 +36,9 @@
           <div class="card kanban-card mb-2" draggable="true" data-task-id="{{ task.id }}">
             <div class="card-body p-2">
               <h6 class="mb-1">{{ task.name }}</h6>
-              {% if task.assigned_user %}<small><i class="fas fa-user"></i> {{ task.assigned_user.name }}</small>{% endif %}
+              {% if task.assigned_user %}<small><i class="fas fa-user" aria-hidden="true"></i> {{ task.assigned_user.name }}</small>{% endif %}
               {% if task.date_deadline %}<small class="d-block text-muted">{{ format_date(task.date_deadline) }}</small>{% endif %}
-              {% if task.effective_hours %}<small class="d-block"><i class="fas fa-clock"></i> {{ task.effective_hours }}h</small>{% endif %}
+              {% if task.effective_hours %}<small class="d-block"><i class="fas fa-clock" aria-hidden="true"></i> {{ task.effective_hours }}h</small>{% endif %}
             </div>
           </div>
           {% endfor %}
@@ -48,7 +48,7 @@
     {% endfor %}
     {% if not stages %}
     <div class="col-12 text-center text-muted py-5">
-      <i class="fas fa-columns fa-3x mb-3 d-block opacity-50"></i>
+      <i class="fas fa-columns fa-3x mb-3 d-block opacity-50" aria-hidden="true"></i>
       {{ t('No_Stages') }}
     </div>
     {% endif %}

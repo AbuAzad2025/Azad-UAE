@@ -5,11 +5,11 @@
 {% block page_title %}
 <div class="d-flex align-items-center justify-content-between">
     <div>
-        <h1 class="mb-0"><i class="fas fa-edit text-primary"></i> {{ _('Edit Package') }}</h1>
+        <h1 class="mb-0"><i class="fas fa-edit text-primary" aria-hidden="true"></i> {{ _('Edit Package') }}</h1>
         <p class="text-muted">{{ _('Update package information') }}</p>
     </div>
     <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary">
-        <i class="fas fa-arrow-right"></i>         {{ _('Back') }}
+        <i class="fas fa-arrow-right" aria-hidden="true"></i>         {{ _('Back') }}
     </a>
 </div>
 {% endblock %}
@@ -19,7 +19,7 @@
     <div class="col-md-8 mx-auto">
         <div class="card">
             <div class="card-header bg-primary">
-                <h3 class="card-title"><i class="fas fa-box"></i> {{ _('Edit') }}: {{ package.name_ar }}</h3>
+                <h3 class="card-title"><i class="fas fa-box" aria-hidden="true"></i> {{ _('Edit') }}: {{ package.name_ar }}</h3>
             </div>
             <div class="card-body">
                 <form class="needs-validation" method="POST" id="editPackageForm" action="">
@@ -78,8 +78,8 @@
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-sliders-h"></i> {{ _('Core Limits') }}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter -1 for unlimited') }}</p>
+                    <h6 class="text-primary"><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ _('Core Limits') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('Enter -1 for unlimited') }}</p>
                     <div class="row">
                         {% for col, label in [
                             ('max_users', _('Count') ~ ' ' ~ _('Users')),
@@ -103,8 +103,8 @@
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-calendar-alt"></i> {{ _('Monthly Allowances') }}</h6>
-                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter -1 for unlimited') }}</p>
+                    <h6 class="text-primary"><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ _('Monthly Allowances') }}</h6>
+                    <p class="text-muted small mb-2"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('Enter -1 for unlimited') }}</p>
                     <div class="row">
                         {% for col, label in [
                             ('max_invoices_per_month', _('Invoices') ~ ' / ' ~ _('Month')),
@@ -123,7 +123,7 @@
                     </div>
 
                     <hr>
-                    <h6 class="text-primary"><i class="fas fa-key"></i> {{ _('Feature Permissions') }}</h6>
+                    <h6 class="text-primary"><i class="fas fa-key" aria-hidden="true"></i> {{ _('Feature Permissions') }}</h6>
                     <div class="row">
                         {% for col, label, icon in [
                             ('enable_payroll', _('Payroll'), 'fa-money-check-alt'),
@@ -140,7 +140,7 @@
                                 <input type="checkbox" class="custom-control-input" id="edit_{{ col }}"
                                        name="{{ col }}" {% if package[col] %}checked{% endif %} aria-label="{{ col }}">
                                 <label class="custom-control-label" for="edit_{{ col }}">
-                                    <i class="fas {{ icon }} text-secondary"></i> {{ label }}
+                                    <i class="fas {{ icon }} text-secondary" aria-hidden="true"></i> {{ label }}
                                 </label>
                             </div>
                         </div>
@@ -159,7 +159,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_active" 
                                        name="is_active" {% if package.is_active %}checked{% endif %} aria-label="is active">
                                 <label class="custom-control-label" for="is_active">
-                                    <i class="fas fa-toggle-on text-success"></i> {{ _('Active') }}
+                                    <i class="fas fa-toggle-on text-success" aria-hidden="true"></i> {{ _('Active') }}
                                 </label>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                                 <input type="checkbox" class="custom-control-input" id="is_featured" 
                                        name="is_featured" {% if package.is_featured %}checked{% endif %} aria-label="is featured">
                                 <label class="custom-control-label" for="is_featured">
-                                    <i class="fas fa-star text-warning"></i> {{ _('Featured') }}
+                                    <i class="fas fa-star text-warning" aria-hidden="true"></i> {{ _('Featured') }}
                                 </label>
                             </div>
                         </div>
@@ -178,10 +178,10 @@
                     
                     <div class="form-group mb-0">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save"></i> {{ _('Save Changes') }}
+                            <i class="fas fa-save" aria-hidden="true"></i> {{ _('Save Changes') }}
                         </button>
                         <a href="{{ url_for('payment_vault.packages_management') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times"></i> {{ _('Cancel') }}
+                            <i class="fas fa-times" aria-hidden="true"></i> {{ _('Cancel') }}
                         </a>
                     </div>
                 </form>

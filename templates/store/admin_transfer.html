@@ -2,7 +2,7 @@
 {% block title %}{{ t('inventory_transfer') }} — {{ t('store') }}{% endblock %}
 
 {% block page_title %}
-<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2"></i>{{ t('inventory_transfer_title') }}</h1>
+<h1 class="mb-0"><i class="fas fa-exchange-alt ml-2" aria-hidden="true"></i>{{ t('inventory_transfer_title') }}</h1>
 {% endblock %}
 
 {% block content %}
@@ -10,7 +10,7 @@
   <div class="col-lg-8">
     <div class="card card-outline card-success">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1"></i>{{ t('transfer_inventory') }}</h3>
+        <h3 class="card-title"><i class="fas fa-exchange-alt ml-1" aria-hidden="true"></i>{{ t('transfer_inventory') }}</h3>
       </div>
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -20,11 +20,11 @@
             <div>
               <label class="radio-inline ml-3">
                 <input type="radio" name="direction" value="to_online" checked>
-                <i class="fas fa-arrow-right text-info"></i> {{ t('to_online') }}
+                <i class="fas fa-arrow-right text-info" aria-hidden="true"></i> {{ t('to_online') }}
               </label>
               <label class="radio-inline">
                 <input type="radio" name="direction" value="from_online">
-                <i class="fas fa-arrow-left text-warning"></i> {{ t('from_online') }}
+                <i class="fas fa-arrow-left text-warning" aria-hidden="true"></i> {{ t('from_online') }}
               </label>
             </div>
           </div>
@@ -67,7 +67,7 @@
           </div>
         </div>
         <div class="card-footer">
-          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1"></i>{{ t('execute_transfer') }}</button>
+          <button type="submit" class="btn btn-success px-4"><i class="fas fa-check ml-1" aria-hidden="true"></i>{{ t('execute_transfer') }}</button>
           <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ t('back') }}</a>
         </div>
       </form>
@@ -77,14 +77,14 @@
   <div class="col-lg-4">
     <div class="card card-outline card-info">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-cloud ml-1"></i>{{ t('online_warehouse') }}</h3>
+        <h3 class="card-title"><i class="fas fa-cloud ml-1" aria-hidden="true"></i>{{ t('online_warehouse') }}</h3>
       </div>
       <div class="card-body">
         <p><strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong></p>
         <p class="text-muted small">الرمز: {{ online_warehouse.code }}</p>
         <hr>
         <p class="small text-muted mb-0">
-          <i class="fas fa-info-circle ml-1"></i>
+          <i class="fas fa-info-circle ml-1" aria-hidden="true"></i>
           {{ t('store_reads_from_warehouse') }}
         </p>
       </div>

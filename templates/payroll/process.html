@@ -18,11 +18,11 @@
 
             <div class="card-header">
 
-                <h3 class="card-title"><i class="fas fa-layer-group"></i> {{ _('توليد رواتب الفرع (دفقة واحدة)') }}</h3>
+                <h3 class="card-title"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ _('توليد رواتب الفرع (دفقة واحدة)') }}</h3>
 
                 <div class="card-tools">
 
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('إضافة') }}"><i class="fas fa-plus"></i></button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('إضافة') }}"><i class="fas fa-plus" aria-hidden="true"></i></button>
 
                 </div>
 
@@ -106,7 +106,7 @@
 
                     <div class="alert alert-warning mt-2">
 
-                        <i class="fas fa-info-circle"></i> {{ _('سيتم توليد رواتب جميع موظفي الفرع (نظام الراتب الشهري) فقط. يجب معالجة موظفي المياومة فردياً لتحديد أيام العمل.') }}
+                        <i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('سيتم توليد رواتب جميع موظفي الفرع (نظام الراتب الشهري) فقط. يجب معالجة موظفي المياومة فردياً لتحديد أيام العمل.') }}
 
                     </div>
 
@@ -130,11 +130,11 @@
 
             <div class="card-header bg-gradient-success text-white">
 
-                <h3 class="card-title"><i class="fas fa-money-bill-wave"></i> {{ _('معالجة راتب موظف (فردي)') }}</h3>
+                <h3 class="card-title"><i class="fas fa-money-bill-wave" aria-hidden="true"></i> {{ _('معالجة راتب موظف (فردي)') }}</h3>
 
                 <div class="card-tools">
 
-                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('إضافة') }}"><i class="fas fa-plus"></i></button>
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse" title="{{ _('إضافة') }}"><i class="fas fa-plus" aria-hidden="true"></i></button>
 
                 </div>
 
@@ -336,7 +336,7 @@
 
                               <td>
 
-                                  <a href="{{ url_for('payroll.salary_slip', id=txn.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" title="{{ _('طباعة') }}"><i class="fas fa-print"></i></a>
+                                  <a href="{{ url_for('payroll.salary_slip', id=txn.id) }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" title="{{ _('طباعة') }}"><i class="fas fa-print" aria-hidden="true"></i></a>
 
                               </td>
 

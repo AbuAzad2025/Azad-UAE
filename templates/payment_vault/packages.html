@@ -5,12 +5,12 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div>
-        <h1 class="mb-0"><i class="fas fa-box-open text-success"></i> {{ _('Manage Packages') }}</h1>
+        <h1 class="mb-0"><i class="fas fa-box-open text-success" aria-hidden="true"></i> {{ _('Manage Packages') }}</h1>
         <p class="text-muted mb-0">{{ _('Add, edit, and manage system packages') }}</p>
     </div>
     <div>
         <button class="btn btn-primary" type="button" data-action="scroll-top">
-            <i class="fas fa-plus"></i> {{ _('Add Package') }}
+            <i class="fas fa-plus" aria-hidden="true"></i> {{ _('Add Package') }}
         </button>
     </div>
 </div>
@@ -113,7 +113,7 @@
 {% block content %}
 <div class="package-create-card">
     <div class="card-header bg-gradient-primary text-white">
-        <h5 class="mb-0"><i class="fas fa-plus-circle"></i> {{ _('Add New Package') }}</h5>
+        <h5 class="mb-0"><i class="fas fa-plus-circle" aria-hidden="true"></i> {{ _('Add New Package') }}</h5>
     </div>
     <div class="card-body">
         <form class="needs-validation" method="POST" action="{{ url_for('payment_vault.create_package') }}">
@@ -173,8 +173,8 @@
                 </div>
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-sliders-h"></i> {{ _('Core Limits') }}</h6>
-            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
+            <h6 class="text-primary mt-2"><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ _('Core Limits') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
             <div class="row">
                 {% for col, label, default in [
                     ('max_users', _('User Count'), '1'),
@@ -196,8 +196,8 @@
                 {% endfor %}
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-calendar-alt"></i> {{ _('Monthly Quotas') }}</h6>
-            <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
+            <h6 class="text-primary mt-2"><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ _('Monthly Quotas') }}</h6>
+            <p class="text-muted small mb-2"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ _('Enter') }} <code>-1</code> = {{ _('Unlimited') }}</p>
             <div class="row">
                 {% for col, label in [
                     ('max_invoices_per_month', _('Invoices / Month')),
@@ -214,7 +214,7 @@
                 {% endfor %}
             </div>
 
-            <h6 class="text-primary mt-2"><i class="fas fa-key"></i> {{ _('Feature Permissions') }}</h6>
+            <h6 class="text-primary mt-2"><i class="fas fa-key" aria-hidden="true"></i> {{ _('Feature Permissions') }}</h6>
             <div class="row mb-2">
                 {% for col, label, icon, default_on in [
                     ('enable_payroll', _('Payroll'), 'fa-money-check-alt', false),
@@ -231,7 +231,7 @@
                         <input type="checkbox" class="custom-control-input" id="new_{{ col }}"
                                name="{{ col }}" {% if default_on %}checked{% endif %} aria-label="{{ col }}">
                         <label class="custom-control-label" for="new_{{ col }}">
-                            <i class="fas {{ icon }} text-secondary"></i> {{ label }}
+                            <i class="fas {{ icon }} text-secondary" aria-hidden="true"></i> {{ label }}
                         </label>
                     </div>
                 </div>
@@ -243,7 +243,7 @@
             </div>
             <div class="text-left">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> {{ _('Create Package') }}
+                    <i class="fas fa-save" aria-hidden="true"></i> {{ _('Create Package') }}
                 </button>
             </div>
         </form>
@@ -257,7 +257,7 @@
                 <div class="package-item {% if package.is_featured %}featured{% endif %}">
                     {% if package.is_featured and package.badge_text %}
                     <div class="featured-badge">
-                        <i class="fas fa-star"></i> {{ package.badge_text }}
+                        <i class="fas fa-star" aria-hidden="true"></i> {{ package.badge_text }}
                     </div>
                     {% endif %}
                     
@@ -268,15 +268,15 @@
                     </div>
                     
                     <ul class="package-features">{%- for feature in package.features %}
-                        <li><i class="fas fa-check"></i> {{ feature }}</li>{%- endfor %}
+                        <li><i class="fas fa-check" aria-hidden="true"></i> {{ feature }}</li>{%- endfor %}
                     </ul>
                     
                     <div class="inline-form">
-                        <div><i class="fas fa-users"></i> {{ _('Users') }}: {{ package.max_users if package.max_users is not none and package.max_users > 0 else '∞' }}</div>
-                        <div><i class="fas fa-building"></i> {{ _('Branches') }}: {{ package.max_branches if package.max_branches is not none and package.max_branches > 0 else '∞' }}</div>
-                        <div><i class="fas fa-box"></i> {{ _('Products') }}: {{ package.max_products if package.max_products is not none and package.max_products > 0 else '∞' }}</div>
-                        <div><i class="fas fa-calendar-alt"></i> {{ _('Sales') }}/{{ _('Month') }}: {{ package.max_sales_per_month if package.max_sales_per_month is not none and package.max_sales_per_month > 0 else '∞' }}</div>
-                        <div><i class="fas fa-headset"></i> {{ _('Support') }}: {{ package.support_duration_months }} {{ _('Month') }}</div>
+                        <div><i class="fas fa-users" aria-hidden="true"></i> {{ _('Users') }}: {{ package.max_users if package.max_users is not none and package.max_users > 0 else '∞' }}</div>
+                        <div><i class="fas fa-building" aria-hidden="true"></i> {{ _('Branches') }}: {{ package.max_branches if package.max_branches is not none and package.max_branches > 0 else '∞' }}</div>
+                        <div><i class="fas fa-box" aria-hidden="true"></i> {{ _('Products') }}: {{ package.max_products if package.max_products is not none and package.max_products > 0 else '∞' }}</div>
+                        <div><i class="fas fa-calendar-alt" aria-hidden="true"></i> {{ _('Sales') }}/{{ _('Month') }}: {{ package.max_sales_per_month if package.max_sales_per_month is not none and package.max_sales_per_month > 0 else '∞' }}</div>
+                        <div><i class="fas fa-headset" aria-hidden="true"></i> {{ _('Support') }}: {{ package.support_duration_months }} {{ _('Month') }}</div>
                         <div class="mt-1">
                             {% for flag, label in [
                                 ('enable_payroll', _('Payroll')),
@@ -291,20 +291,20 @@
                     
                     <div class="package-actions">
                         <button class="btn btn-primary" data-action="edit-package" data-package-id="{{ package.id }}">
-                            <i class="fas fa-edit"></i> {{ _('Edit') }}
+                            <i class="fas fa-edit" aria-hidden="true"></i> {{ _('Edit') }}
                         </button>
                         <button class="btn btn-info" data-action="view-package-stats" data-package-id="{{ package.id }}" data-package-name="{{ package.name_ar }}">
-                            <i class="fas fa-chart-bar"></i> {{ _('Statistics') }}
+                            <i class="fas fa-chart-bar" aria-hidden="true"></i> {{ _('Statistics') }}
                         </button>
                         <button class="btn {% if package.is_active %}btn-success{% else %}btn-secondary{% endif %}" data-action="toggle-package-status" data-package-id="{{ package.id }}">
-                            <i class="fas fa-power-off"></i> {{ _('Active') if package.is_active else _('Disabled') }}
+                            <i class="fas fa-power-off" aria-hidden="true"></i> {{ _('Active') if package.is_active else _('Disabled') }}
                         </button>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> {{ _('No packages found. Please add packages from the database.') }}
+                    <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ _('No packages found. Please add packages from the database.') }}
                 </div>
             {% endif %}
         </div>
@@ -313,7 +313,7 @@
         <div class="card">
             <div class="card-header bg-gradient-info">
                 <h5 class="mb-0 text-white">
-                    <i class="fas fa-chart-pie"></i> {{ _('Sales by Package') }}
+                    <i class="fas fa-chart-pie" aria-hidden="true"></i> {{ _('Sales by Package') }}
                 </h5>
             </div>
             <div class="card-body">

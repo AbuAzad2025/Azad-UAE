@@ -12,7 +12,7 @@
       <div class="card">
         <div class="card-header">
           <h3 class="card-title">
-            <i class="fas fa-boxes"></i> {{ t('Report_2') }} {{ t('Inventory') }}
+            <i class="fas fa-boxes" aria-hidden="true"></i> {{ t('Report_2') }} {{ t('Inventory') }}
           </h3>
           <div class="card-tools no-print">
             <form class="needs-validation form-inline d-inline mr-2" method="get">
@@ -61,7 +61,7 @@
               </div>
             </form>
             <button data-action="window-print" class="btn btn-primary">
-              <i class="fas fa-print"></i> {{ t('Print') }}
+              <i class="fas fa-print" aria-hidden="true"></i> {{ t('Print') }}
             </button>
           </div>
         </div>
@@ -72,7 +72,7 @@
           <div class="row mb-4">
             <div class="col-md-3">
               <div class="info-box">
-                <span class="info-box-icon bg-info"><i class="fas fa-boxes"></i></span>
+                <span class="info-box-icon bg-info"><i class="fas fa-boxes" aria-hidden="true"></i></span>
                 <div class="info-box-content">
                   <span class="info-box-text">{{ t('Total_2') }} {{ t('Products') }}</span>
                   <span class="info-box-number">{{ stats.total_products }}</span>
@@ -81,7 +81,7 @@
             </div>
             <div class="col-md-3">
               <div class="info-box">
-                <span class="info-box-icon bg-success"><i class="fas fa-check"></i></span>
+                <span class="info-box-icon bg-success"><i class="fas fa-check" aria-hidden="true"></i></span>
                 <div class="info-box-content">
                   <span class="info-box-text">{{ t('Available') }}</span>
                   <span class="info-box-number">{{ stats.in_stock }}</span>
@@ -90,7 +90,7 @@
             </div>
             <div class="col-md-3">
               <div class="info-box">
-                <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle"></i></span>
+                <span class="info-box-icon bg-warning"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
                 <div class="info-box-content">
                   <span class="info-box-text">{{ t('Low_Stock') }}</span>
                   <span class="info-box-number">{{ stats.low_stock }}</span>
@@ -99,7 +99,7 @@
             </div>
             <div class="col-md-3">
               <div class="info-box">
-                <span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span>
+                <span class="info-box-icon bg-danger"><i class="fas fa-times" aria-hidden="true"></i></span>
                 <div class="info-box-content">
                   <span class="info-box-text">{{ t('Out_of_Stock') }}</span>
                   <span class="info-box-number">{{ stats.out_of_stock }}</span>

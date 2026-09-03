@@ -10,7 +10,7 @@
 
   <div>
 
-    <h1 class="mb-0"><i class="fas fa-store mr-2"></i>{{ t('store_management') }}</h1>
+    <h1 class="mb-0"><i class="fas fa-store mr-2" aria-hidden="true"></i>{{ t('store_management') }}</h1>
 
     <p class="text-muted mb-0 small">{{ t('catalog') }} {{ t('linked') }} فقط {{ t('for Warehouse') }} {{ t('online') }} — {{ t('separate') }} عن POS {{ t('and_sales') }} {{ t('internal') }}</p>
 
@@ -18,19 +18,19 @@
 
   <div class="mt-2 mt-md-0">
 
-    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1"></i>{{ t('Settings') }}</a>
+    <a href="{{ url_for('store.admin_settings') }}" class="btn btn-primary"><i class="fas fa-cog mr-1" aria-hidden="true"></i>{{ t('Settings') }}</a>
 
-    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1"></i>{{ t('catalog') }} {{ t('Store') }}</a>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-info text-white"><i class="fas fa-boxes mr-1" aria-hidden="true"></i>{{ t('catalog') }} {{ t('Store') }}</a>
 
-    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1"></i>{{ t('Transfer') }} {{ t('Inventory_2') }}</a>
+    <a href="{{ url_for('store.admin_transfer') }}" class="btn btn-success"><i class="fas fa-exchange-alt mr-1" aria-hidden="true"></i>{{ t('Transfer') }} {{ t('Inventory_2') }}</a>
 
-    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1"></i>{{ t('orders') }} {{ t('Store') }}</a>
+    <a href="{{ url_for('store.admin_orders') }}" class="btn btn-warning"><i class="fas fa-receipt mr-1" aria-hidden="true"></i>{{ t('orders') }} {{ t('Store') }}</a>
 
-    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1"></i>{{ t('statistics') }}</a>
+    <a href="{{ url_for('store.admin_stats') }}" class="btn btn-info text-white"><i class="fas fa-chart-line mr-1" aria-hidden="true"></i>{{ t('statistics') }}</a>
 
-    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1"></i>{{ t('coupons') }}</a>
+    <a href="{{ url_for('store.admin_coupons') }}" class="btn btn-dark"><i class="fas fa-tags mr-1" aria-hidden="true"></i>{{ t('coupons') }}</a>
 
-    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1"></i>{{ t('customers') }} {{ t('registered') }}</a>
+    <a href="{{ url_for('store.admin_customers') }}" class="btn btn-secondary"><i class="fas fa-user-friends mr-1" aria-hidden="true"></i>{{ t('customers') }} {{ t('registered') }}</a>
 
   </div>
 
@@ -48,7 +48,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-{% if store.platform_disabled %}danger{% elif store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off"></i></span>
+      <span class="info-box-icon bg-{% if store.platform_disabled %}danger{% elif store.is_enabled %}success{% else %}secondary{% endif %}"><i class="fas fa-power-off" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -66,7 +66,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-info"><i class="fas fa-eye"></i></span>
+      <span class="info-box-icon bg-info"><i class="fas fa-eye" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -84,7 +84,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-warning"><i class="fas fa-cubes"></i></span>
+      <span class="info-box-icon bg-warning"><i class="fas fa-cubes" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -102,7 +102,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-primary"><i class="fas fa-warehouse"></i></span>
+      <span class="info-box-icon bg-primary"><i class="fas fa-warehouse" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -136,7 +136,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-dark"><i class="fas fa-hand-holding-usd"></i></span>
+      <span class="info-box-icon bg-dark"><i class="fas fa-hand-holding-usd" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -154,7 +154,7 @@
 
     <div class="info-box">
 
-      <span class="info-box-icon bg-secondary"><i class="fas fa-file-invoice-dollar"></i></span>
+      <span class="info-box-icon bg-secondary"><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i></span>
 
       <div class="info-box-content">
 
@@ -174,17 +174,17 @@
 
 {% if store.platform_disabled %}
 
-<div class="alert alert-danger"><i class="fas fa-lock mr-1"></i>{{ t('store_disabled_by_platform') }}</div>
+<div class="alert alert-danger"><i class="fas fa-lock mr-1" aria-hidden="true"></i>{{ t('store_disabled_by_platform') }}</div>
 
 {% endif %}
 
 {% if not platform_stores_on %}
 
-<div class="alert alert-danger"><i class="fas fa-globe mr-1"></i>{{ t('platform_stores_disabled') }}</div>
+<div class="alert alert-danger"><i class="fas fa-globe mr-1" aria-hidden="true"></i>{{ t('platform_stores_disabled') }}</div>
 
 {% else %}
 
-<div class="alert alert-light border"><i class="fas fa-credit-card mr-1"></i>{{ t('payment_methods_managed_centrally') }}</div>
+<div class="alert alert-light border"><i class="fas fa-credit-card mr-1" aria-hidden="true"></i>{{ t('payment_methods_managed_centrally') }}</div>
 
 {% endif %}
 
@@ -194,7 +194,7 @@
 
 <div class="alert alert-warning">
 
-  <i class="fas fa-bell mr-1"></i>
+  <i class="fas fa-bell mr-1" aria-hidden="true"></i>
 
   <strong>{{ pending_orders }}</strong> {{ t('pending_orders_awaiting_confirm') }} —
 
@@ -210,7 +210,7 @@
 
 <div class="alert alert-danger">
 
-  <i class="fas fa-exclamation-triangle mr-1"></i>
+  <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>
 
   {{ t('low_stock_products_in_online_warehouse', count=low_stock|length) }} —
 
@@ -226,27 +226,27 @@
 
   <div class="card-body">
 
-    <h5><i class="fas fa-link mr-2"></i>{{ t('url') }} {{ t('Store') }}</h5>
+    <h5><i class="fas fa-link mr-2" aria-hidden="true"></i>{{ t('url') }} {{ t('Store') }}</h5>
 
     <p class="mb-2">ID: <code>/s/{{ store.store_slug }}</code></p>
 
     {% if store.is_enabled and visible_count > 0 %}
 
-    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success mb-2"><i class="fas fa-external-link-alt mr-1"></i>{{ t('Preview') }} {{ t('Store') }}</a>
+    <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener" class="btn btn-success mb-2"><i class="fas fa-external-link-alt mr-1" aria-hidden="true"></i>{{ t('Preview') }} {{ t('Store') }}</a>
 
     {% endif %}
 
     {% if not store.is_enabled %}
 
-    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1"></i>{{ t('enable_store_then_transfer_inventory') }}</div>
+    <div class="alert alert-warning mb-0"><i class="fas fa-info-circle mr-1" aria-hidden="true"></i>{{ t('enable_store_then_transfer_inventory') }}</div>
 
     {% elif visible_count == 0 %}
 
-    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1"></i>{{ t('no_online_warehouse_products') }} <a href="{{ url_for('store.admin_transfer') }}">{{ t('Transfer') }} {{ t('Inventory') }}</a>.</div>
+    <div class="alert alert-info mb-0"><i class="fas fa-info-circle mr-1" aria-hidden="true"></i>{{ t('no_online_warehouse_products') }} <a href="{{ url_for('store.admin_transfer') }}">{{ t('Transfer') }} {{ t('Inventory') }}</a>.</div>
 
     {% else %}
 
-    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1"></i>{{ t('products_ready_count', count=visible_count) }} — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener noreferrer">{{ t('open') }} {{ t('Store') }}</a></div>
+    <div class="alert alert-success mb-0"><i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('products_ready_count', count=visible_count) }} — <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" target="_blank" rel="noopener noreferrer">{{ t('open') }} {{ t('Store') }}</a></div>
 
     {% endif %}
 

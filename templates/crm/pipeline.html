@@ -8,9 +8,9 @@
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list"></i> {{ t('كافة') }} {{ t('Customers_2') }}</a>
+      <a href="{{ url_for('crm.leads_list') }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-list" aria-hidden="true"></i> {{ t('كافة') }} {{ t('Customers_2') }}</a>
       {% if current_user.has_permission('crm.manage') %}
-      <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus"></i> {{ t('عميل') }} {{ t('Expected_2') }}</a>
+      <a href="{{ url_for('crm.create_lead') }}" class="btn btn-success btn-sm"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('عميل') }} {{ t('Expected_2') }}</a>
       {% endif %}
     </div>
   </div>
@@ -31,7 +31,7 @@
               <h6 class="mb-1">{{ lead.name }}</h6>
               {% if lead.company %}<small class="text-muted d-block">{{ lead.company }}</small>{% endif %}
               {% if lead.expected_revenue %}<small class="text-success">{{ lead.expected_revenue|format_currency }}</small>{% endif %}
-              {% if lead.assigned_user %}<small class="d-block text-muted"><i class="fas fa-user"></i> {{ lead.assigned_user.name }}</small>{% endif %}
+              {% if lead.assigned_user %}<small class="d-block text-muted"><i class="fas fa-user" aria-hidden="true"></i> {{ lead.assigned_user.name }}</small>{% endif %}
             </div>
           </div>
           {% endfor %}

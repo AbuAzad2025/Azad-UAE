@@ -18,7 +18,7 @@
     {% set product = line.product %}
     <div class="ps-line-item">
       <div class="ps-line-thumb">
-        {% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">{% else %}<div class="ps-placeholder ic-2"><i class="fas fa-box"></i></div>{% endif %}
+        {% if product.image_url %}<img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">{% else %}<div class="ps-placeholder ic-2"><i class="fas fa-box" aria-hidden="true"></i></div>{% endif %}
       </div>
       <div class="ic-3">
         <strong>{{ product.get_display_name(lang) }}</strong>
@@ -43,13 +43,13 @@
       <span>{{ t('total') }}</span>
       <span>{{ format_currency(totals.display_subtotal, currency=store_currency) }}</span>
     </div>
-    <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block ic-7">{{ t('checkout') }} <i class="fas fa-arrow-{{ 'left' if is_rtl else 'right' }}"></i></a>
+    <a href="{{ url_for('shop.checkout', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ps-btn-block ic-7">{{ t('checkout') }} <i class="fas fa-arrow-{{ 'left' if is_rtl else 'right' }}" aria-hidden="true"></i></a>
     <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ps-btn-block ic-8">{{ t('continue_shopping') }}</a>
   </div>
 </div>
 {% else %}
 <div class="ps-empty">
-  <div class="ps-empty-icon"><i class="fas fa-shopping-basket"></i></div>
+  <div class="ps-empty-icon"><i class="fas fa-shopping-basket" aria-hidden="true"></i></div>
   <h3>{{ t('empty_cart') }}</h3>
   <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-primary ic-6">{{ t('continue_shopping') }}</a>
 </div>

@@ -29,13 +29,13 @@
           <input type="date" name="date_to" class="form-control mr-2" value="{{ date_to or '' }}" data-action="submit-form" id="input_date_to" aria-label="To {{ t('History') }}">
           <div class="ml-auto">
             <a href="{{ url_for('reports.inventory_reconciliation_export', format='xlsx', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-success">
-              <i class="fas fa-file-excel mr-1"></i>Excel
+              <i class="fas fa-file-excel mr-1" aria-hidden="true"></i>Excel
             </a>
             <a href="{{ url_for('reports.inventory_reconciliation_export', format='csv', branch_id=selected_branch, warehouse_id=selected_warehouse, date_from=date_from, date_to=date_to) }}" class="btn btn-secondary">
-              <i class="fas fa-file-csv mr-1"></i>CSV
+              <i class="fas fa-file-csv mr-1" aria-hidden="true"></i>CSV
             </a>
             <a href="{{ url_for('reports.ar_reconciliation') }}" class="btn btn-outline-secondary">
-              <i class="fas fa-balance-scale mr-1"></i>{{ t('Reconciliation') }} {{ t('Receivables_2') }}
+              <i class="fas fa-balance-scale mr-1" aria-hidden="true"></i>{{ t('Reconciliation') }} {{ t('Receivables_2') }}
             </a>
           </div>
         </form>
@@ -59,9 +59,9 @@
       <div class="card-body text-center">
         <h4 class="mb-0">
           {% if report.summary.all_matched_qty %}
-            <i class="fas fa-check"></i> {{ t('matched') }}
+            <i class="fas fa-check" aria-hidden="true"></i> {{ t('matched') }}
           {% else %}
-            <i class="fas fa-exclamation-triangle"></i> {{ t('discrepancies') }}
+            <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('discrepancies') }}
           {% endif %}
         </h4>
         <small>{{ t('Status_2') }} {{ t('quantities') }}</small>
@@ -90,20 +90,20 @@
 <div class="card">
   <div class="card-header bg-gradient-primary d-flex justify-content-between align-items-center">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-warehouse mr-2"></i>{{ t('Reconciliation') }} {{ t('by') }} {{ t('Warehouse') }}
+      <i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ t('Reconciliation') }} {{ t('by') }} {{ t('Warehouse') }}
     </h3>
     {% if report.summary.all_matched_qty %}
-     <span class="badge badge-success"><i class="fas fa-check"></i> {{ t('quantities') }} {{ t('matched') }}</span>
+     <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i> {{ t('quantities') }} {{ t('matched') }}</span>
     {% else %}
-    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> {{ t('exists') }} {{ t('discrepancies') }} {{ t('Qty') }}</span>
+    <span class="badge badge-warning"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ t('exists') }} {{ t('discrepancies') }} {{ t('Qty') }}</span>
     {% endif %}
     {% if report.summary.all_matched_value %}
-    <span class="badge badge-success ml-2"><i class="fas fa-check"></i> {{ t('values') }} {{ t('matched') }}</span>
+    <span class="badge badge-success ml-2"><i class="fas fa-check" aria-hidden="true"></i> {{ t('values') }} {{ t('matched') }}</span>
     {% else %}
-    <span class="badge badge-info ml-2"><i class="fas fa-info-circle"></i> {{ t('review') }} GL</span>
+    <span class="badge badge-info ml-2"><i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('review') }} GL</span>
     {% endif %}
     {% if report.summary.has_unallocated_gl %}
-    <span class="badge badge-warning ml-2"><i class="fas fa-tags"></i> GL غير {{ t('allocated') }}</span>
+    <span class="badge badge-warning ml-2"><i class="fas fa-tags" aria-hidden="true"></i> GL غير {{ t('allocated') }}</span>
     {% endif %}
   </div>
   <div class="card-body p-0">
@@ -187,7 +187,7 @@
 <div class="card mt-4">
   <div class="card-header bg-gradient-secondary">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-boxes mr-2"></i>{{ t('Details') }} {{ t('by') }} {{ t('Product') }} / {{ t('Warehouse') }}
+      <i class="fas fa-boxes mr-2" aria-hidden="true"></i>{{ t('Details') }} {{ t('by') }} {{ t('Product') }} / {{ t('Warehouse') }}
     </h3>
   </div>
   <div class="card-body p-0">

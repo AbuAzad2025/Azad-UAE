@@ -8,14 +8,14 @@
     <div class="row mb-2 align-items-center">
       <div class="col-sm-6">
         <h1 class="m-0">
-          <i class="fas fa-file-invoice text-warning"></i> 
+          <i class="fas fa-file-invoice text-warning" aria-hidden="true"></i> 
           {{ t('Invoice_Settings_Headers') }}
         </h1>
       </div>
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Dashboard') }}</a></li>
@@ -40,17 +40,17 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-building"></i> {{ t('Company_Information') }}</h3>
+              <h3 class="card-title"><i class="fas fa-building" aria-hidden="true"></i> {{ t('Company_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i> <strong>{{ t('Info') }}</strong> {{ t('Desc_Invoice_Header_Info') }}
+                <i class="fas fa-info-circle" aria-hidden="true"></i> <strong>{{ t('Info') }}</strong> {{ t('Desc_Invoice_Header_Info') }}
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="company_name_ar">
-                      <i class="fas fa-building text-primary"></i> {{ t('Company_Name_Arabic') }} 
+                      <i class="fas fa-building text-primary" aria-hidden="true"></i> {{ t('Company_Name_Arabic') }} 
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" name="company_name_ar" id="company_name_ar" 
@@ -64,7 +64,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="company_name_en">
-                      <i class="fas fa-building text-primary"></i> Company Name (English) 
+                      <i class="fas fa-building text-primary" aria-hidden="true"></i> Company Name (English) 
                       <span class="text-danger">*</span>
                     </label>
                     <input type="text" class="form-control" name="company_name_en" id="company_name_en" 
@@ -81,7 +81,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="address_ar">
-                      <i class="fas fa-map-marker-alt text-success"></i> {{ t('Address_Arabic') }}
+                      <i class="fas fa-map-marker-alt text-success" aria-hidden="true"></i> {{ t('Address_Arabic') }}
                     </label>
                     <textarea class="form-control" name="address_ar" id="address_ar" rows="2" 
                               placeholder="{{ t('Example_Address_Ar') }}" maxlength="255">{{ settings.address_ar|default('') }}</textarea>
@@ -93,7 +93,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="address_en">
-                      <i class="fas fa-map-marker-alt text-success"></i> Address (English)
+                      <i class="fas fa-map-marker-alt text-success" aria-hidden="true"></i> Address (English)
                     </label>
                     <textarea class="form-control" name="address_en" id="address_en" rows="2"
                               placeholder="e.g: Abu Dhabi - UAE" maxlength="255">{{ settings.address_en|default('') }}</textarea>
@@ -107,7 +107,7 @@
               <div class="row">
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="phone_1"><i class="fas fa-phone text-info"></i> {{ t('Phone_1') }}</label>
+                    <label for="phone_1"><i class="fas fa-phone text-info" aria-hidden="true"></i> {{ t('Phone_1') }}</label>
                     <input type="text" class="form-control" name="phone_1" id="phone_1"
                            value="{{ settings.phone_1|default('') }}"
                            placeholder="+971501234567" pattern="^\+?[0-9\s\-]{8,20}$">
@@ -118,7 +118,7 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="phone_2"><i class="fas fa-phone text-info"></i> {{ t('Phone_2') }}</label>
+                    <label for="phone_2"><i class="fas fa-phone text-info" aria-hidden="true"></i> {{ t('Phone_2') }}</label>
                     <input type="text" class="form-control" name="phone_2" id="phone_2"
                            value="{{ settings.phone_2|default('') }}"
                            placeholder="+971501234568" pattern="^\+?[0-9\s\-]{8,20}$">
@@ -129,7 +129,7 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="email"><i class="fas fa-envelope text-warning"></i> {{ t('Email') }}</label>
+                    <label for="email"><i class="fas fa-envelope text-warning" aria-hidden="true"></i> {{ t('Email') }}</label>
                     <input type="email" class="form-control" name="email" id="email"
                            value="{{ settings.email|default('') }}"
                            placeholder="info@company.com">
@@ -139,7 +139,7 @@
                 </div>
                 <div class="col-md-3">
                   <div class="form-group">
-                    <label for="website"><i class="fas fa-globe text-primary"></i> {{ t('Website') }}</label>
+                    <label for="website"><i class="fas fa-globe text-primary" aria-hidden="true"></i> {{ t('Website') }}</label>
                     <input type="text" class="form-control" name="website" id="website"
                            value="{{ settings.website|default('') }}" 
                            placeholder="www.company.com">
@@ -155,17 +155,17 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-certificate"></i> {{ t('Business_Information') }}</h3>
+              <h3 class="card-title"><i class="fas fa-certificate" aria-hidden="true"></i> {{ t('Business_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle"></i> <strong>{{ t('Important') }}</strong> {{ t('Desc_Tax_Invoice_Required') }}
+                <i class="fas fa-exclamation-triangle" aria-hidden="true"></i> <strong>{{ t('Important') }}</strong> {{ t('Desc_Tax_Invoice_Required') }}
               </div>
               <div class="row">
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="tax_number">
-                      <i class="fas fa-receipt text-danger"></i> {{ t('Tax_Number_TRN') }}
+                      <i class="fas fa-receipt text-danger" aria-hidden="true"></i> {{ t('Tax_Number_TRN') }}
                     </label>
                     <input type="text" class="form-control" name="tax_number" id="tax_number"
                            value="{{ settings.tax_number|default('') }}" placeholder="TRN-123456789" maxlength="20">
@@ -177,7 +177,7 @@
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="commercial_register">
-                      <i class="fas fa-file-alt text-info"></i> {{ t('Commercial_Register') }}
+                      <i class="fas fa-file-alt text-info" aria-hidden="true"></i> {{ t('Commercial_Register') }}
                     </label>
                     <input type="text" class="form-control" name="commercial_register" id="commercial_register"
                            value="{{ settings.commercial_register|default('') }}"
@@ -190,7 +190,7 @@
                 <div class="col-md-4">
                   <div class="form-group">
                     <label for="license_number">
-                      <i class="fas fa-id-card text-success"></i> {{ t('License_Number') }}
+                      <i class="fas fa-id-card text-success" aria-hidden="true"></i> {{ t('License_Number') }}
                     </label>
                     <input type="text" class="form-control" name="license_number" id="license_number"
                            value="{{ settings.license_number|default('') }}"
@@ -207,17 +207,17 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-university"></i> {{ t('Bank_Information') }}</h3>
+              <h3 class="card-title"><i class="fas fa-university" aria-hidden="true"></i> {{ t('Bank_Information') }}</h3>
             </div>
             <div class="card-body">
               <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i> <strong>{{ t('Note') }}</strong> {{ t('Desc_Bank_Info_Footer') }}
+                <i class="fas fa-check-circle" aria-hidden="true"></i> <strong>{{ t('Note') }}</strong> {{ t('Desc_Bank_Info_Footer') }}
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bank_name">
-                      <i class="fas fa-university text-primary"></i> {{ t('Bank_Name') }}
+                      <i class="fas fa-university text-primary" aria-hidden="true"></i> {{ t('Bank_Name') }}
                     </label>
                     <input type="text" class="form-control" name="bank_name" id="bank_name"
                            value="{{ settings.bank_name|default('') }}"
@@ -230,7 +230,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="bank_account_number">
-                      <i class="fas fa-hashtag text-info"></i> {{ t('Account_Number') }}
+                      <i class="fas fa-hashtag text-info" aria-hidden="true"></i> {{ t('Account_Number') }}
                     </label>
                     <input type="text" class="form-control" name="bank_account_number" id="bank_account_number"
                            value="{{ settings.bank_account_number|default('') }}"
@@ -245,7 +245,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="iban">
-                      <i class="fas fa-credit-card text-success"></i> IBAN
+                      <i class="fas fa-credit-card text-success" aria-hidden="true"></i> IBAN
                     </label>
                     <input type="text" class="form-control" name="iban" id="iban" value="{{ settings.iban|default('') }}"
                            placeholder="AE07 0331 2345 6789 0123 456" maxlength="34">
@@ -257,7 +257,7 @@
                 <div class="col-md-6">
                   <div class="form-group">
                     <label for="swift_code">
-                      <i class="fas fa-code text-warning"></i> SWIFT Code
+                      <i class="fas fa-code text-warning" aria-hidden="true"></i> SWIFT Code
                     </label>
                     <input type="text" class="form-control" name="swift_code" id="swift_code"
                            value="{{ settings.swift_code|default('') }}"
@@ -274,12 +274,12 @@
           
           <div class="card">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-file-contract"></i> {{ t('Terms_And_Notes') }}</h3>
+              <h3 class="card-title"><i class="fas fa-file-contract" aria-hidden="true"></i> {{ t('Terms_And_Notes') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label for="payment_terms_ar">
-                  <i class="fas fa-handshake text-primary"></i> {{ t('Payment_Terms_Arabic') }}
+                  <i class="fas fa-handshake text-primary" aria-hidden="true"></i> {{ t('Payment_Terms_Arabic') }}
                 </label>
                 <textarea class="form-control" name="payment_terms_ar" id="payment_terms_ar" rows="2" 
                           placeholder="{{ t('Example_Payment_Terms') }}">{{ settings.payment_terms_ar|default('') }}</textarea>
@@ -289,7 +289,7 @@
               </div>
               <div class="form-group">
                 <label for="payment_terms_en">
-                  <i class="fas fa-handshake text-primary"></i> Payment Terms (English)
+                  <i class="fas fa-handshake text-primary" aria-hidden="true"></i> Payment Terms (English)
                 </label>
                 <textarea class="form-control" name="payment_terms_en" id="payment_terms_en" rows="2"
                           placeholder="e.g: Payment by cash or bank transfer within 7 days">{{ settings.payment_terms_en|default('') }}</textarea>
@@ -302,7 +302,7 @@
               
               <div class="form-group">
                 <label for="default_invoice_note_ar">
-                  <i class="fas fa-sticky-note text-warning"></i> {{ t('Default_Invoice_Note_Ar') }}
+                  <i class="fas fa-sticky-note text-warning" aria-hidden="true"></i> {{ t('Default_Invoice_Note_Ar') }}
                 </label>
                 <textarea class="form-control" name="default_invoice_note_ar" id="default_invoice_note_ar" rows="2"
                           placeholder="{{ t('Example_Invoice_Note') }}">{{ settings.default_invoice_note_ar|default('') }}</textarea>
@@ -312,7 +312,7 @@
               </div>
               <div class="form-group">
                 <label for="default_receipt_note_ar">
-                  <i class="fas fa-sticky-note text-success"></i> {{ t('Default_Receipt_Note_Ar') }}
+                  <i class="fas fa-sticky-note text-success" aria-hidden="true"></i> {{ t('Default_Receipt_Note_Ar') }}
                 </label>
                 <textarea class="form-control" name="default_receipt_note_ar" id="default_receipt_note_ar" rows="2"
                           placeholder="{{ t('Example_Receipt_Note') }}">{{ settings.default_receipt_note_ar|default('') }}</textarea>
@@ -331,12 +331,12 @@
           
           <div class="card card-primary">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-palette"></i> {{ t('Design_And_Appearance') }}</h3>
+              <h3 class="card-title"><i class="fas fa-palette" aria-hidden="true"></i> {{ t('Design_And_Appearance') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label>
-                  <i class="fas fa-file-invoice text-primary"></i> {{ t('Active_Template') }}
+                  <i class="fas fa-file-invoice text-primary" aria-hidden="true"></i> {{ t('Active_Template') }}
                 </label>
                 <select class="form-control" name="active_template" aria-label="active template">
                   <option value="modern" {% if settings.active_template|default('modern') == 'modern' %}selected{% endif %}>{{ t('Modern_Template_Option') }}</option>
@@ -352,7 +352,7 @@
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-paint-brush"></i> {{ t('Header_Color') }}
+                  <i class="fas fa-paint-brush" aria-hidden="true"></i> {{ t('Header_Color') }}
                 </label>
                 <input type="color" class="form-control ic-1" name="header_color" value="{{ settings.header_color|default('#667eea') }}" aria-label="header color">
                 <small class="form-text text-muted">
@@ -362,7 +362,7 @@
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-fill-drip"></i> {{ t('Accent_Color') }}
+                  <i class="fas fa-fill-drip" aria-hidden="true"></i> {{ t('Accent_Color') }}
                 </label>
                 <input type="color" class="form-control ic-1" name="accent_color" value="{{ settings.accent_color|default('#764ba2') }}" aria-label="accent color">
                 <small class="form-text text-muted">
@@ -371,13 +371,13 @@
               </div>
               
               <hr class="my-3">
-              <h6 class="text-muted"><i class="fas fa-sliders-h"></i> {{ t('Additional_Options') }}</h6>
+              <h6 class="text-muted"><i class="fas fa-sliders-h" aria-hidden="true"></i> {{ t('Additional_Options') }}</h6>
               
               <div class="custom-control custom-checkbox mb-3">
                 <input type="checkbox" class="custom-control-input" id="show_logo" name="show_logo" 
                        {% if settings.show_logo|default(false) %}checked{% endif %} aria-label="show logo">
                 <label class="custom-control-label" for="show_logo">
-                  <i class="fas fa-image text-primary"></i> {{ t('Show_Logo') }}
+                  <i class="fas fa-image text-primary" aria-hidden="true"></i> {{ t('Show_Logo') }}
                 </label>
                 <br>
                 <small class="text-muted ml-4">{{ t('Desc_Show_Logo') }}</small>
@@ -385,7 +385,7 @@
               
               <div class="form-group" id="logo-upload-group">
                 <label>
-                  <i class="fas fa-upload text-primary"></i> {{ t('Upload_Logo') }}
+                  <i class="fas fa-upload text-primary" aria-hidden="true"></i> {{ t('Upload_Logo') }}
                 </label>
                 <input type="file" class="form-control-file" name="company_logo" accept="image/png,image/jpeg,image/jpg,image/webp" aria-label="company logo">
                 <small class="form-text text-muted">
@@ -404,7 +404,7 @@
                 <input type="checkbox" class="custom-control-input" id="enable_qr_code" name="enable_qr_code" 
                        {% if settings.enable_qr_code|default(false) %}checked{% endif %} aria-label="enable qr code">
                 <label class="custom-control-label" for="enable_qr_code">
-                  <i class="fas fa-qrcode text-success"></i> {{ t('Show_QR_Code') }}
+                  <i class="fas fa-qrcode text-success" aria-hidden="true"></i> {{ t('Show_QR_Code') }}
                 </label>
                 <br>
                 <small class="text-muted ml-4">{{ t('Desc_QR_Code') }}</small>
@@ -414,7 +414,7 @@
                 <input type="checkbox" class="custom-control-input" id="show_barcode" name="show_barcode" 
                        {% if settings.show_barcode|default(false) %}checked{% endif %} aria-label="show barcode" maxlength="50">
                 <label class="custom-control-label" for="show_barcode">
-                  <i class="fas fa-barcode text-info"></i> {{ t('Show_Barcode') }}
+                  <i class="fas fa-barcode text-info" aria-hidden="true"></i> {{ t('Show_Barcode') }}
                 </label>
                 <br>
                 <small class="text-muted ml-4">{{ t('Desc_Barcode') }}</small>
@@ -424,7 +424,7 @@
                 <input type="checkbox" class="custom-control-input" id="enable_watermark" name="enable_watermark" 
                        {% if settings.enable_watermark|default(false) %}checked{% endif %} aria-label="enable watermark">
                 <label class="custom-control-label" for="enable_watermark">
-                  <i class="fas fa-stamp text-warning"></i> {{ t('Watermark') }}
+                  <i class="fas fa-stamp text-warning" aria-hidden="true"></i> {{ t('Watermark') }}
                 </label>
                 <br>
                 <small class="text-muted ml-4">{{ t('Desc_Watermark') }}</small>
@@ -432,7 +432,7 @@
               
               <div class="form-group d{% if settings.enable_watermark|default(false) %}-block{% else %}-none{% endif %}" id="watermark-text-group">
                 <label for="watermark_text">
-                  <i class="fas fa-font text-warning"></i> {{ t('Watermark_Text') }}
+                  <i class="fas fa-font text-warning" aria-hidden="true"></i> {{ t('Watermark_Text') }}
                 </label>
                 <input type="text" class="form-control" name="watermark_text" id="watermark_text"
                        value="{{ settings.watermark_text|default('') }}"
@@ -444,7 +444,7 @@
               
               <div class="form-group d{% if settings.enable_watermark|default(false) %}-block{% else %}-none{% endif %}" id="watermark-image-group">
                 <label>
-                  <i class="fas fa-image text-warning"></i> {{ t('Or_Upload_Watermark_Image') }}
+                  <i class="fas fa-image text-warning" aria-hidden="true"></i> {{ t('Or_Upload_Watermark_Image') }}
                 </label>
                 <input type="file" class="form-control-file" name="watermark_image" accept="image/png,image/jpeg,image/jpg" aria-label="watermark image">
                 <small class="form-text text-muted">
@@ -466,12 +466,12 @@
           
           <div class="card card-info">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-print"></i> {{ t('Print_Settings') }}</h3>
+              <h3 class="card-title"><i class="fas fa-print" aria-hidden="true"></i> {{ t('Print_Settings') }}</h3>
             </div>
             <div class="card-body">
               <div class="form-group">
                 <label>
-                  <i class="fas fa-file-alt text-info"></i> {{ t('Paper_Size') }}
+                  <i class="fas fa-file-alt text-info" aria-hidden="true"></i> {{ t('Paper_Size') }}
                 </label>
                 <select class="form-control" name="paper_size" aria-label="paper size">
                   <option value="A4" {% if settings.paper_size|default('A4') == 'A4' %}selected{% endif %}>{{ t('Paper_A4') }}</option>
@@ -485,7 +485,7 @@
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-arrows-alt-h text-warning"></i> {{ t('Orientation') }}
+                  <i class="fas fa-arrows-alt-h text-warning" aria-hidden="true"></i> {{ t('Orientation') }}
                 </label>
                 <select class="form-control" name="orientation" aria-label="orientation">
                   <option value="portrait" {% if settings.orientation|default('portrait') == 'portrait' %}selected{% endif %}>{{ t('Portrait_Option') }}</option>
@@ -498,7 +498,7 @@
               
               <div class="form-group">
                 <label>
-                  <i class="fas fa-language text-primary"></i> {{ t('Default_Language') }}
+                  <i class="fas fa-language text-primary" aria-hidden="true"></i> {{ t('Default_Language') }}
                 </label>
                 <select class="form-control" name="default_language" aria-label="default language">
                   <option value="ar" {% if settings.default_language|default('ar') == 'ar' %}selected{% endif %}>{{ t('Arabic_Language_Option') }}</option>
@@ -515,7 +515,7 @@
           
           <div class="card card-success">
             <div class="card-header">
-              <h3 class="card-title"><i class="fas fa-eye"></i> {{ t('Preview_Templates') }}</h3>
+              <h3 class="card-title"><i class="fas fa-eye" aria-hidden="true"></i> {{ t('Preview_Templates') }}</h3>
             </div>
             <div class="card-body">
               {% set templates_preview = [
@@ -535,14 +535,14 @@
                   <div>
                     <a href="{{ url_for('owner.preview_invoice', template=tmpl) }}" 
                        target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-xs">
-                      <i class="fas fa-file-invoice"></i> {{ t('Invoice') }}
+                      <i class="fas fa-file-invoice" aria-hidden="true"></i> {{ t('Invoice') }}
                     </a>
                     <a href="{{ url_for('owner.preview_receipt', template=tmpl) }}" 
                        target="_blank" rel="noopener noreferrer" class="btn btn-outline-success btn-xs">
-                      <i class="fas fa-receipt"></i> {{ t('Receipt') }}
+                      <i class="fas fa-receipt" aria-hidden="true"></i> {{ t('Receipt') }}
                     </a>
                     <button type="button" class="btn btn-primary btn-xs" data-action="apply-template" data-template="{{ tmpl }}">
-                      <i class="fas fa-check"></i> {{ t('Apply') }}
+                      <i class="fas fa-check" aria-hidden="true"></i> {{ t('Apply') }}
                     </button>
                   </div>
                 </div>
@@ -557,7 +557,7 @@
         <div class="col-lg-4">
           <div class="card card-widget sticky-top ic-4">
             <div class="card-header bg-primary">
-              <h3 class="card-title"><i class="fas fa-desktop"></i> {{ t('Live_Preview') }}</h3>
+              <h3 class="card-title"><i class="fas fa-desktop" aria-hidden="true"></i> {{ t('Live_Preview') }}</h3>
             </div>
             <div class="card-body text-center" id="live-preview">
               <div class="invoice-preview p-3 ic-5">
@@ -579,7 +579,7 @@
                     {{ settings.address_ar|default('') or t('Address') }}
                   </p>
                   <p class="ic-10">
-                    <i class="fas fa-phone"></i> {{ settings.phone_1|default('') or '---' }}
+                    <i class="fas fa-phone" aria-hidden="true"></i> {{ settings.phone_1|default('') or '---' }}
                   </p>
                 </div>
                 
@@ -614,7 +614,7 @@
                 
                 {% if settings.enable_qr_code|default(false) %}
                 <div class="qr-code mt-3">
-                  <i class="fas fa-qrcode fa-3x text-muted"></i>
+                  <i class="fas fa-qrcode fa-3x text-muted" aria-hidden="true"></i>
                   <p class="ic-14">QR Code</p>
                 </div>
                 {% endif %}
@@ -635,13 +635,13 @@
           <div class="card">
             <div class="card-footer">
               <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-save"></i> {{ t('Save_Settings') }}
+                <i class="fas fa-save" aria-hidden="true"></i> {{ t('Save_Settings') }}
               </button>
               <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary">
-                <i class="fas fa-times"></i> {{ t('Cancel') }}
+                <i class="fas fa-times" aria-hidden="true"></i> {{ t('Cancel') }}
               </a>
               <button type="button" class="btn btn-info float-left" data-action="reset-defaults">
-                <i class="fas fa-undo"></i> {{ t('Restore_Defaults') }}
+                <i class="fas fa-undo" aria-hidden="true"></i> {{ t('Restore_Defaults') }}
               </button>
             </div>
           </div>

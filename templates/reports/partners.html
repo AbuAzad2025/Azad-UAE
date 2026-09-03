@@ -28,11 +28,11 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4 no-print">
         <h1 class="h3 mb-0 text-gray-800">
-            <i class="fas fa-handshake fa-fw mr-2 text-primary"></i>{{ t('Report_2') }} {{ t('Partners') }} {{ t('and_merchants') }}
+            <i class="fas fa-handshake fa-fw mr-2 text-primary" aria-hidden="true"></i>{{ t('Report_2') }} {{ t('Partners') }} {{ t('and_merchants') }}
         </h1>
         <div class="d-flex gap-2">
             <button data-action="window-print" class="btn btn-outline-secondary">
-                <i class="fas fa-print mr-1"></i> {{ t('Print') }}
+                <i class="fas fa-print mr-1" aria-hidden="true"></i> {{ t('Print') }}
             </button>
         </div>
     </div>
@@ -40,7 +40,7 @@
     
     <div class="card shadow mb-4 border-bottom-primary no-print">
         <div class="card-header py-3 bg-gradient-dark text-white d-flex justify-content-between align-items-center">
-            <h6 class="m-0 font-weight-bold"><i class="fas fa-search mr-2"></i>{{ t('Search') }} {{ t('detailed') }} (Statement of Account)</h6>
+            <h6 class="m-0 font-weight-bold"><i class="fas fa-search mr-2" aria-hidden="true"></i>{{ t('Search') }} {{ t('detailed') }} (Statement of Account)</h6>
             <small class="text-white-50">{{ t('Search') }} {{ t('for') }} {{ t('Supplier') }} {{ t('Customer') }} {{ t('Partner') }} {{ t('or') }} {{ t('merchant') }}</small>
         </div>
         <div class="card-body">
@@ -57,7 +57,7 @@
                 <div class="col-md-9 position-relative">
 <label class="form-label fw-bold" for="searchInput">{{ t('Search') }} {{ t('by_name_or_phone') }}</label>
                         <div class="input-group">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text"><i class="fas fa-search" aria-hidden="true"></i></span>
                             <input type="text" class="form-control" id="searchInput" placeholder="{{ t('start_typing_to_search') }}" autocomplete="off">
                     </div>
                     <div id="searchResults" class="list-group position-absolute w-100 shadow mt-1 ic-1"></div>
@@ -87,7 +87,7 @@
                 </div>
                 <div class="col-md-4">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-filter mr-1"></i> {{ t('View') }} {{ t('النتائج') }}
+                        <i class="fas fa-filter mr-1" aria-hidden="true"></i> {{ t('View') }} {{ t('النتائج') }}
                     </button>
                 </div>
             </form>
@@ -103,17 +103,17 @@
     <ul class="nav nav-tabs mb-4 no-print" id="reportTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="partners-tab" data-toggle="tab" data-target="#partners" type="button" role="tab">
-                <i class="fas fa-users mr-2"></i>{{ t('حصص') }} {{ t('Partners') }} (Partners)
+                <i class="fas fa-users mr-2" aria-hidden="true"></i>{{ t('حصص') }} {{ t('Partners') }} (Partners)
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="merchants-tab" data-toggle="tab" data-target="#merchants" type="button" role="tab">
-                <i class="fas fa-store mr-2"></i>{{ t('Products_2') }} {{ t('التجار') }} (Merchants)
+                <i class="fas fa-store mr-2" aria-hidden="true"></i>{{ t('Products_2') }} {{ t('التجار') }} (Merchants)
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="suppliers-tab" data-toggle="tab" data-target="#suppliers" type="button" role="tab">
-                <i class="fas fa-truck mr-2"></i>{{ t('Suppliers') }} (Suppliers)
+                <i class="fas fa-truck mr-2" aria-hidden="true"></i>{{ t('Suppliers') }} (Suppliers)
             </button>
         </li>
     </ul>
@@ -125,7 +125,7 @@
             
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-info text-white">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar mr-2"></i>{{ t('Summary_2') }} {{ t('المالي') }} {{ t('Partners_2') }}</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar mr-2" aria-hidden="true"></i>{{ t('Summary_2') }} {{ t('المالي') }} {{ t('Partners_2') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -218,7 +218,7 @@
             
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-info text-white">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar mr-2"></i>{{ t('Summary_2') }} {{ t('المالي') }} {{ t('للتجار') }}</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-file-invoice-dollar mr-2" aria-hidden="true"></i>{{ t('Summary_2') }} {{ t('المالي') }} {{ t('للتجار') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -309,7 +309,7 @@
         <div class="tab-pane fade" id="suppliers" role="tabpanel">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 bg-gradient-warning text-dark">
-                    <h6 class="m-0 font-weight-bold"><i class="fas fa-truck mr-2"></i>{{ t('Summary') }} {{ t('Accounts_2') }} {{ t('Suppliers') }}</h6>
+                    <h6 class="m-0 font-weight-bold"><i class="fas fa-truck mr-2" aria-hidden="true"></i>{{ t('Summary') }} {{ t('Accounts_2') }} {{ t('Suppliers') }}</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -429,7 +429,7 @@
                                 '<h6 class="mb-1"></h6>' +
                                 '<small class="badge bg-secondary text-white"></small>' +
                                 '</div>' +
-                                '<small class="text-muted"><i class="fas fa-phone fa-xs"></i></small>';
+                                '<small class="text-muted"><i class="fas fa-phone fa-xs" aria-hidden="true"></i></small>';
                             a.querySelector('h6').textContent = item.name;
                             a.querySelector('.badge').textContent = typeLabel;
                             a.querySelector('.text-muted').childNodes[2].textContent = item.phone || '---';

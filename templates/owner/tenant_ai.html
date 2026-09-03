@@ -12,7 +12,7 @@
 <div class="card shadow-sm border-0">
   <div class="card-header bg-light">
     <h3 class="card-title mb-0">
-      <i class="fas fa-robot mr-2 text-primary"></i>{{ t('Enable_Disable_AI_Per_Tenant') }}
+      <i class="fas fa-robot mr-2 text-primary" aria-hidden="true"></i>{{ t('Enable_Disable_AI_Per_Tenant') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -65,12 +65,12 @@
                 {% if tenant.enable_ai|default(false) %}
                   <input type="hidden" name="enable_ai" value="0" aria-label="enable ai">
                   <button type="submit" class="btn btn-outline-danger">
-                    <i class="fas fa-ban mr-1"></i>{{ t('Disable_For_Tenant') }}
+                    <i class="fas fa-ban mr-1" aria-hidden="true"></i>{{ t('Disable_For_Tenant') }}
                   </button>
                 {% else %}
                   <input type="hidden" name="enable_ai" value="1" aria-label="enable ai">
                   <button type="submit" class="btn btn-outline-success">
-                    <i class="fas fa-power-off mr-1"></i>{{ t('Enable_For_Tenant') }}
+                    <i class="fas fa-power-off mr-1" aria-hidden="true"></i>{{ t('Enable_For_Tenant') }}
                   </button>
                 {% endif %}
                 <span class="d-inline-block align-middle ml-2" title="{{ t('AI_External_Sharing_Hint') }}">
@@ -81,7 +81,7 @@
                            {% if tenant.ai_external_sharing_enabled|default(true) %}checked{% endif %}
                            aria-label="{{ t('AI_External_Sharing') }}">
                     <label class="custom-control-label small" for="extShare{{ tenant.id|default(0) }}">
-                      <i class="fas fa-shield-alt mr-1 {% if tenant.ai_external_sharing_enabled|default(true) %}text-warning{% else %}text-success{% endif %}"></i>{{ t('AI_External_Sharing') }}
+                      <i class="fas fa-shield-alt mr-1 {% if tenant.ai_external_sharing_enabled|default(true) %}text-warning{% else %}text-success{% endif %}" aria-hidden="true"></i>{{ t('AI_External_Sharing') }}
                     </label>
                   </span>
                 </span>

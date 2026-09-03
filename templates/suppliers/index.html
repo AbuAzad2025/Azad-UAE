@@ -3,12 +3,12 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="text-gradient mb-0"><i class="fas fa-truck mr-3"></i>{{ t('Management') }} {{ t('Suppliers') }}</h1>
+    <h1 class="text-gradient mb-0"><i class="fas fa-truck mr-3" aria-hidden="true"></i>{{ t('Management') }} {{ t('Suppliers') }}</h1>
     <p class="text-muted">{{ t('suppliers_database_description') }}</p>
   </div>
   <div>
     <a href="{{ url_for('suppliers.create') }}" class="btn btn-success">
-      <i class="fas fa-plus-circle mr-2"></i>{{ t('add_supplier') }}
+      <i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>{{ t('add_supplier') }}
     </a>
   </div>
 </div>
@@ -103,7 +103,7 @@
         <p>{{ t('total_suppliers') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-truck"></i>
+        <i class="fas fa-truck" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -115,7 +115,7 @@
         <p>{{ t('verified_suppliers') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-check-circle"></i>
+        <i class="fas fa-check-circle" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -127,7 +127,7 @@
         <p>{{ t('parts_suppliers') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-cogs"></i>
+        <i class="fas fa-cogs" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -139,7 +139,7 @@
         <p>{{ t('equipment_suppliers') }}</p>
       </div>
       <div class="icon">
-        <i class="fas fa-tools"></i>
+        <i class="fas fa-tools" aria-hidden="true"></i>
       </div>
     </div>
   </div>
@@ -149,23 +149,23 @@
   <div class="card-header">
     <div class="d-flex justify-content-between align-items-center">
       <h3 class="card-title mb-0">
-        <i class="fas fa-list mr-2"></i>{{ t('List') }} {{ t('Suppliers') }}
+        <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('List') }} {{ t('Suppliers') }}
       </h3>
       <div class="btn-group flex-wrap">
         <button type="button" class="btn btn-outline-info" id="printSuppliersBtn">
-          <i class="fas fa-print mr-1"></i>{{ t('Print') }}
+          <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print') }}
         </button>
         <button type="button" class="btn btn-outline-primary" data-filter="all">
-          <i class="fas fa-list mr-1"></i>{{ t('All') }}
+          <i class="fas fa-list mr-1" aria-hidden="true"></i>{{ t('All') }}
         </button>
         <button type="button" class="btn btn-outline-success" data-filter="verified">
-          <i class="fas fa-check-circle mr-1"></i>{{ t('verified') }}
+          <i class="fas fa-check-circle mr-1" aria-hidden="true"></i>{{ t('verified') }}
         </button>
         <button type="button" class="btn btn-outline-warning" data-filter="parts">
-          <i class="fas fa-cogs mr-1"></i>{{ t('spare_parts') }}
+          <i class="fas fa-cogs mr-1" aria-hidden="true"></i>{{ t('spare_parts') }}
         </button>
         <button type="button" class="btn btn-outline-info" data-filter="equipment">
-          <i class="fas fa-tools mr-1"></i>{{ t('equipment') }}
+          <i class="fas fa-tools mr-1" aria-hidden="true"></i>{{ t('equipment') }}
         </button>
       </div>
     </div>
@@ -176,15 +176,15 @@
       <table id="suppliersTable" class="table table-hover">
         <thead class="ic-1">
           <tr>
-            <th><i class="fas fa-building mr-2"></i>{{ t('supplier') }}</th>
-            <th><i class="fas fa-tag mr-2"></i>{{ t('type') }}</th>
-            <th><i class="fas fa-star mr-2"></i>{{ t('rating') }}</th>
-            <th><i class="fas fa-phone mr-2"></i>{{ t('phone') }}</th>
-            <th><i class="fas fa-globe mr-2"></i>{{ t('country') }}</th>
-            <th><i class="fas fa-coins mr-2"></i>{{ t('total_purchases') }}</th>
-            <th><i class="fas fa-wallet mr-2"></i>{{ t('balance') }}</th>
-            <th><i class="fas fa-code-branch mr-2"></i>{{ t('branch') }}</th>
-            <th class="text-center"><i class="fas fa-cog mr-2"></i>{{ t('actions') }}</th>
+            <th><i class="fas fa-building mr-2" aria-hidden="true"></i>{{ t('supplier') }}</th>
+            <th><i class="fas fa-tag mr-2" aria-hidden="true"></i>{{ t('type') }}</th>
+            <th><i class="fas fa-star mr-2" aria-hidden="true"></i>{{ t('rating') }}</th>
+            <th><i class="fas fa-phone mr-2" aria-hidden="true"></i>{{ t('phone') }}</th>
+            <th><i class="fas fa-globe mr-2" aria-hidden="true"></i>{{ t('country') }}</th>
+            <th><i class="fas fa-coins mr-2" aria-hidden="true"></i>{{ t('total_purchases') }}</th>
+            <th><i class="fas fa-wallet mr-2" aria-hidden="true"></i>{{ t('balance') }}</th>
+            <th><i class="fas fa-code-branch mr-2" aria-hidden="true"></i>{{ t('branch') }}</th>
+            <th class="text-center"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -194,9 +194,9 @@
               <div class="d-flex align-items-center">
                 <div class="supplier-icon mr-2 ic-2">
                   {% if supplier.is_verified %}
-                    <i class="fas fa-check-circle text-success" title="{{ t('verified_supplier') }}"></i>
+                    <i class="fas fa-check-circle text-success" title="{{ t('verified_supplier') }}" aria-hidden="true"></i>
                   {% else %}
-                    <i class="fas fa-truck text-muted"></i>
+                    <i class="fas fa-truck text-muted" aria-hidden="true"></i>
                   {% endif %}
                 </div>
                 <div>
@@ -209,7 +209,7 @@
             </td>
             <td>
               <span class="badge badge-info">
-                <i class="fas fa-tag mr-1"></i>{{ supplier.get_type_display() }}
+                <i class="fas fa-tag mr-1" aria-hidden="true"></i>{{ supplier.get_type_display() }}
               </span>
             </td>
             <td>
@@ -218,11 +218,11 @@
               </span>
             </td>
             <td>
-              <i class="fas fa-phone text-muted mr-1"></i>
+              <i class="fas fa-phone text-muted mr-1" aria-hidden="true"></i>
               {{ supplier.phone or t('not_available') }}
             </td>
             <td>
-              <i class="fas fa-map-marker-alt text-muted mr-1"></i>
+              <i class="fas fa-map-marker-alt text-muted mr-1" aria-hidden="true"></i>
               {{ supplier.country or t('not_specified') }}
             </td>
             <td class="text-success">
@@ -247,22 +247,22 @@
               <div class="btn-group btn-group-sm">
                 <a href="{{ url_for('suppliers.view', id=supplier.id) }}" 
                    class="btn btn-info" title="{{ t('View') }}">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
                 </a>
                 <a href="{{ url_for('suppliers.edit', id=supplier.id) }}" 
                    class="btn btn-warning" title="{{ t('Edit') }}">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </a>
                 {% if current_user.is_admin() %}
                 <a href="{{ url_for('suppliers.statement', id=supplier.id) }}" 
                    class="btn btn-success" title="{{ t('supplier_statement') }}">
-                  <i class="fas fa-file-invoice"></i>
+                  <i class="fas fa-file-invoice" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 <button type="button" class="btn btn-danger" 
                         data-delete-item="{{supplier.id}}" data-item-type="suppliers" data-item-name="{{ supplier.name | e }}" 
                         title="{{ t('Delete') }}">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash" aria-hidden="true"></i>
                 </button>
               </div>
             </td>
@@ -270,7 +270,7 @@
           {% else %}
           <tr>
             <td colspan="9" class="text-center text-muted py-5">
-              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50"></i>
+              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
               {{ t('no_suppliers_found') }}
             </td>
           </tr>

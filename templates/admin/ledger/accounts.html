@@ -10,14 +10,14 @@
 <div class="row mb-3">
   <div class="col-12">
     <a href="{{ url_for('admin_ledger.dashboard') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-left mr-2"></i>{{ t('Back to Dashboard') }}
+      <i class="fas fa-arrow-left mr-2" aria-hidden="true"></i>{{ t('Back to Dashboard') }}
     </a>
     <a href="{{ url_for('admin_ledger.add_account') }}" class="btn btn-success">
-      <i class="fas fa-plus mr-2"></i>{{ t('Add') }} {{ t('Account') }} {{ t('New') }}
+      <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('Add') }} {{ t('Account') }} {{ t('New') }}
     </a>
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.accounts_tree') }}" class="btn btn-info">
-      <i class="fas fa-sitemap mr-2"></i>{{ t('Accounts Tree') }}
+      <i class="fas fa-sitemap mr-2" aria-hidden="true"></i>{{ t('Accounts Tree') }}
     </a>
     {% endif %}
   </div>
@@ -26,7 +26,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary">
     <h3 class="card-title text-white">
-      <i class="fas fa-chart-line mr-2"></i>{{ t('All Accounts') }}
+      <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('All Accounts') }}
     </h3>
   </div>
   <div class="card-body p-0">
@@ -92,15 +92,15 @@
             <td>
               <div class="btn-group btn-group-sm">
                 <a href="{{ url_for('admin_ledger.edit_account', id=account.id) }}" class="btn btn-outline-primary" title="{{ t('Edit') }}">
-                  <i class="fas fa-edit"></i>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
                 </a>
                 {% if current_user.has_permission('view_ledger') %}
                 <a href="{{ url_for('ledger.account_statement', account_id=account.id) }}" class="btn btn-outline-info" title="{{ t('كشف') }} {{ t('Account') }}">
-                  <i class="fas fa-file-alt"></i>
+                  <i class="fas fa-file-alt" aria-hidden="true"></i>
                 </a>
                 {% endif %}
                 <button type="button" class="btn btn-outline-danger delete-account-btn" data-account-id="{{ account.id }}" data-account-name="{{ account.full_name }}" title="{{ t('Delete') }}">
-                  <i class="fas fa-trash"></i>
+                  <i class="fas fa-trash" aria-hidden="true"></i>
                 </button>
               </div>
             </td>
@@ -125,7 +125,7 @@
       <div class="modal-body">
         <p>هل أنت {{ t('متأكد') }} من {{ t('Delete') }} {{ t('Account') }} <strong id="accountName"></strong>؟</p>
         <div class="alert alert-warning">
-          <i class="fas fa-exclamation-triangle mr-2"></i>
+          <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
           <strong>{{ t('Warning') }}:</strong> لا يمكن {{ t('Delete') }} {{ t('Account') }} إذا كان {{ t('مرتبطاً') }} {{ t('بقيود') }} {{ t('Accounting_2') }} أو {{ t('Accounts_2') }} {{ t('فرعية') }}.
         </div>
       </div>

@@ -5,9 +5,9 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
-        <i class="fas fa-vault text-danger mr-3 inline-form"></i>
+        <i class="fas fa-vault text-danger mr-3 inline-form" aria-hidden="true"></i>
         <div>
-            <h1 class="mb-0"><i class="fas fa-lock"></i> {{ _('Vault Dashboard') }}</h1>
+            <h1 class="mb-0"><i class="fas fa-lock" aria-hidden="true"></i> {{ _('Vault Dashboard') }}</h1>
             <p class="text-muted mb-0">{{ _('Manage purchases, donations, and packages') }}</p>
         </div>
     </div>
@@ -15,11 +15,11 @@
         <form class="needs-validation inline-form" method="POST" action="{{ url_for('payment_vault.trigger_auto_approve') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
             <button type="submit" class="btn btn-success mr-2" data-action="confirm-submit" data-confirm-message="{{ _('Trigger auto-approve for oldest operations?') }}">
-                <i class="fas fa-check-circle"></i> {{ _('Auto Approve') }}
+                <i class="fas fa-check-circle" aria-hidden="true"></i> {{ _('Auto Approve') }}
             </button>
         </form>
         <button data-action="lock-vault" class="btn btn-danger">
-            <i class="fas fa-lock"></i> {{ _('Lock Vault') }}
+            <i class="fas fa-lock" aria-hidden="true"></i> {{ _('Lock Vault') }}
         </button>
     </div>
 </div>
@@ -97,7 +97,7 @@
                 <div class="stat-card ic-3">
                     <div class="stat-number" id="live-purchases">{{ stats.total_purchases }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-shopping-bag"></i> {{ _('Total Purchases') }}
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i> {{ _('Total Purchases') }}
                     </div>
                     <small class="d-block mt-2 ic-4">{{ _('Today') }}: <span id="today-purchases">{{ stats.completed_today or 0 }}</span></small>
                 </div>
@@ -107,7 +107,7 @@
                 <div class="stat-card ic-5">
                     <div class="stat-number" id="live-donations">{{ stats.total_donations }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-heart"></i> {{ _('Total Donations') }}
+                        <i class="fas fa-heart" aria-hidden="true"></i> {{ _('Total Donations') }}
                     </div>
                     <small class="d-block mt-2 ic-4">{{ _('Today') }}: <span id="today-donations">{{ stats.today_transactions or 0 }}</span></small>
                 </div>
@@ -117,7 +117,7 @@
                 <div class="stat-card ic-6">
                     <div class="stat-number" id="live-revenue">{{ currency or 'AED' }} {{ "%.2f"|format(stats.total_revenue) }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-dollar-sign"></i> {{ _('Total Revenue') }}
+                        <i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ _('Total Revenue') }}
                     </div>
                     <small class="d-block mt-2 ic-4">{{ _('Today') }}: {{ currency or 'AED' }} <span id="today-revenue">{{ "%.2f"|format(stats.today_revenue or 0) }}</span></small>
                 </div>
@@ -127,10 +127,10 @@
                 <div class="stat-card ic-7">
                     <div class="stat-number" id="live-pending">{{ stats.pending_count }}</div>
                     <div class="stat-label">
-                        <i class="fas fa-clock"></i> {{ _('Pending') }}
+                        <i class="fas fa-clock" aria-hidden="true"></i> {{ _('Pending') }}
                     </div>
                     <div class="live-indicator mt-2">
-                        <span class="badge badge-light"><i class="fas fa-circle text-success"></i> {{ _('Live') }}</span>
+                        <span class="badge badge-light"><i class="fas fa-circle text-success" aria-hidden="true"></i> {{ _('Live') }}</span>
                     </div>
                 </div>
             </div>
@@ -141,7 +141,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-danger text-white">
-                        <h5 class="mb-0"><i class="fas fa-shield-alt"></i> {{ _('Security Status') }}</h5>
+                        <h5 class="mb-0"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ _('Security Status') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -149,11 +149,11 @@
                                 <div class="text-center mb-3">
                                     <h3 class="mb-0">
                                         {% if security_status.security_level == 'high' %}
-                                            <span class="badge badge-success ic-8"><i class="fas fa-shield-alt"></i> {{ _('High') }}</span>
+                                            <span class="badge badge-success ic-8"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ _('High') }}</span>
                                         {% elif security_status.security_level == 'medium' %}
-                                            <span class="badge badge-warning ic-8"><i class="fas fa-exclamation-triangle"></i> {{ _('Medium') }}</span>
+                                            <span class="badge badge-warning ic-8"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ _('Medium') }}</span>
                                         {% else %}
-                                            <span class="badge badge-danger ic-8"><i class="fas fa-bell"></i> {{ _('Low') }}</span>
+                                            <span class="badge badge-danger ic-8"><i class="fas fa-bell" aria-hidden="true"></i> {{ _('Low') }}</span>
                                         {% endif %}
                                     </h3>
                                     <p class="text-muted mb-0">{{ _('Security Level') }}</p>
@@ -161,9 +161,9 @@
                             </div>
                             <div class="col-md-6">
                                 <ul class="list-unstyled">
-                                    <li><i class="fas fa-ban text-danger"></i> IPs {{ _('Blocked') }}: <strong>{{ security_status.blacklisted_ips }}</strong></li>
-                                    <li><i class="fas fa-exclamation-triangle text-warning"></i> {{ _('Failed Attempts') }}: <strong>{{ security_status.failed_attempts }}</strong></li>
-                                    <li><i class="fas fa-clock text-info"></i> {{ _('Last Sign In') }}: <strong>{{ vault.last_access.strftime('%H:%M') if vault.last_access else _('N/A') }}</strong></li>
+                                    <li><i class="fas fa-ban text-danger" aria-hidden="true"></i> IPs {{ _('Blocked') }}: <strong>{{ security_status.blacklisted_ips }}</strong></li>
+                                    <li><i class="fas fa-exclamation-triangle text-warning" aria-hidden="true"></i> {{ _('Failed Attempts') }}: <strong>{{ security_status.failed_attempts }}</strong></li>
+                                    <li><i class="fas fa-clock text-info" aria-hidden="true"></i> {{ _('Last Sign In') }}: <strong>{{ vault.last_access.strftime('%H:%M') if vault.last_access else _('N/A') }}</strong></li>
                                 </ul>
                             </div>
                         </div>
@@ -174,7 +174,7 @@
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0"><i class="fas fa-users"></i> {{ _('Customer Analysis') }}</h5>
+                        <h5 class="mb-0"><i class="fas fa-users" aria-hidden="true"></i> {{ _('Customer Analysis') }}</h5>
                     </div>
                     <div class="card-body">
                         <div class="row text-center">
@@ -194,10 +194,10 @@
                         <hr>
                         <div class="row text-center">
                             <div class="col-md-6">
-                                <p class="mb-0"><i class="fas fa-shopping-cart"></i> {{ _('Avg Purchases') }}: <strong>{{ "%.1f"|format(customer_behavior.avg_purchases_per_customer) }}</strong></p>
+                                <p class="mb-0"><i class="fas fa-shopping-cart" aria-hidden="true"></i> {{ _('Avg Purchases') }}: <strong>{{ "%.1f"|format(customer_behavior.avg_purchases_per_customer) }}</strong></p>
                             </div>
                             <div class="col-md-6">
-                                <p class="mb-0"><i class="fas fa-dollar-sign"></i> {{ _('Avg Spending') }}: <strong>{{ currency or 'AED' }} {{ "%.2f"|format(customer_behavior.avg_spent_per_customer) }}</strong></p>
+                                <p class="mb-0"><i class="fas fa-dollar-sign" aria-hidden="true"></i> {{ _('Avg Spending') }}: <strong>{{ currency or 'AED' }} {{ "%.2f"|format(customer_behavior.avg_spent_per_customer) }}</strong></p>
                             </div>
                         </div>
                     </div>
@@ -208,12 +208,12 @@
         
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-bolt text-warning"></i> {{ _('Quick Actions') }}</h4>
+                <h4 class="mb-3"><i class="fas fa-bolt text-warning" aria-hidden="true"></i> {{ _('Quick Actions') }}</h4>
             </div>
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.view_purchases') }}">
-                    <i class="fas fa-shopping-cart text-primary"></i>
+                    <i class="fas fa-shopping-cart text-primary" aria-hidden="true"></i>
                     <h5>{{ _('Manage Purchases') }}</h5>
                     <p class="text-muted mb-0">{{ _('View and manage all purchases') }}</p>
                 </div>
@@ -221,7 +221,7 @@
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.donations') }}">
-                    <i class="fas fa-hand-holding-heart text-danger"></i>
+                    <i class="fas fa-hand-holding-heart text-danger" aria-hidden="true"></i>
                     <h5>{{ _('Manage Donations') }}</h5>
                     <p class="text-muted mb-0">{{ _('View and manage all donations') }}</p>
                 </div>
@@ -229,7 +229,7 @@
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.packages_management') }}">
-                    <i class="fas fa-box-open text-success"></i>
+                    <i class="fas fa-box-open text-success" aria-hidden="true"></i>
                     <h5>{{ _('Manage Packages') }}</h5>
                     <p class="text-muted mb-0">{{ _('Add and edit packages') }}</p>
                 </div>
@@ -237,7 +237,7 @@
             
             <div class="col-md-3">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.cards') }}">
-                    <i class="fas fa-credit-card text-primary"></i>
+                    <i class="fas fa-credit-card text-primary" aria-hidden="true"></i>
                     <h5>{{ _('Saved Cards') }}</h5>
                     <p class="text-muted mb-0">{{ _('View payment cards (encrypted)') }}</p>
                 </div>
@@ -247,12 +247,12 @@
         
         <div class="row mb-4">
             <div class="col-12">
-                <h4 class="mb-3"><i class="fas fa-cog text-info"></i> {{ _('Settings and Reports') }}</h4>
+                <h4 class="mb-3"><i class="fas fa-cog text-info" aria-hidden="true"></i> {{ _('Settings and Reports') }}</h4>
             </div>
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.reports') }}">
-                    <i class="fas fa-chart-line text-info"></i>
+                    <i class="fas fa-chart-line text-info" aria-hidden="true"></i>
                     <h5>{{ _('Financial Reports') }}</h5>
                     <p class="text-muted mb-0">{{ _('Detailed reports and statistics') }}</p>
                 </div>
@@ -260,7 +260,7 @@
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.settings') }}">
-                    <i class="fas fa-cog text-secondary"></i>
+                    <i class="fas fa-cog text-secondary" aria-hidden="true"></i>
                     <h5>{{ _('Settings') }}</h5>
                     <p class="text-muted mb-0">{{ _('Payment and security settings') }}</p>
                 </div>
@@ -268,7 +268,7 @@
             
             <div class="col-md-4">
                 <div class="quick-action" data-action="navigate" data-url="{{ url_for('payment_vault.change_password') }}">
-                    <i class="fas fa-key text-danger"></i>
+                    <i class="fas fa-key text-danger" aria-hidden="true"></i>
                     <h5>{{ _('Change Password') }}</h5>
                     <p class="text-muted mb-0">{{ _('Update vault password') }}</p>
                 </div>
@@ -280,7 +280,7 @@
             <div class="col-md-6">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-history text-primary"></i> {{ _('Last Purchases') }}
+                        <i class="fas fa-history text-primary" aria-hidden="true"></i> {{ _('Last Purchases') }}
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -300,18 +300,18 @@
                                         <td>{{ purchase.created_at.strftime('%Y-%m-%d') }}</td>
                                         <td>{{ purchase.customer_name or _('Unspecified') }}</td>
                                         <td>
-                                            {% if purchase.package == 'basic' %}<i class="fas fa-box"></i> {{ _('Basic') }}
-                                            {% elif purchase.package == 'professional' %}<i class="fas fa-briefcase"></i> {{ _('Professional') }}
-                                            {% elif purchase.package == 'enterprise' %}<i class="fas fa-building"></i> {{ _('Enterprise') }}
+                                            {% if purchase.package == 'basic' %}<i class="fas fa-box" aria-hidden="true"></i> {{ _('Basic') }}
+                                            {% elif purchase.package == 'professional' %}<i class="fas fa-briefcase" aria-hidden="true"></i> {{ _('Professional') }}
+                                            {% elif purchase.package == 'enterprise' %}<i class="fas fa-building" aria-hidden="true"></i> {{ _('Enterprise') }}
                                             {% else %}{{ purchase.package }}
                                             {% endif %}
                                         </td>
                                         <td><strong>{{ currency or 'AED' }} {{ purchase.amount_usd }}</strong></td>
                                         <td>
                                             {% if purchase.status == 'completed' %}
-                                                <span class="badge badge-success"><i class="fas fa-check"></i> {{ _('Completed') }}</span>
+                                                <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i> {{ _('Completed') }}</span>
                                             {% elif purchase.status == 'pending' %}
-                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i> {{ _('Pending') }}</span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half" aria-hidden="true"></i> {{ _('Pending') }}</span>
                                             {% else %}
                                                 <span class="badge badge-secondary">{{ purchase.status }}</span>
                                             {% endif %}
@@ -332,7 +332,7 @@
             <div class="col-md-6">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-heart text-danger"></i> {{ _('Last Donations') }}
+                        <i class="fas fa-heart text-danger" aria-hidden="true"></i> {{ _('Last Donations') }}
                     </h5>
                     <div class="table-responsive">
                         <table class="table table-sm">
@@ -355,9 +355,9 @@
                                         <td>{{ donation.crypto_type|upper }}</td>
                                         <td>
                                             {% if donation.status == 'completed' %}
-                                                <span class="badge badge-success"><i class="fas fa-check"></i></span>
+                                                <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i></span>
                                             {% else %}
-                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half"></i></span>
+                                                <span class="badge badge-warning"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
                                             {% endif %}
                                         </td>
                                     </tr>
@@ -379,7 +379,7 @@
             <div class="col-12">
                 <div class="chart-card">
                     <h5 class="mb-3">
-                        <i class="fas fa-chart-area text-success"></i> {{ _('Monthly Revenue') }}
+                        <i class="fas fa-chart-area text-success" aria-hidden="true"></i> {{ _('Monthly Revenue') }}
                     </h5>
                     <canvas id="revenueChart" height="80"></canvas>
                 </div>

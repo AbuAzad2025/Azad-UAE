@@ -46,12 +46,12 @@
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
       <div class="company-info">
         <div>{{ settings.address_ar or tenant_address or '' }}</div>
-        <div><i class="fas fa-phone mr-1"></i> {{ settings.phone_1 or tenant_phone or '' }} | <i class="fas fa-envelope mr-1"></i> {{ settings.email or '' }}</div>
+        <div><i class="fas fa-phone mr-1" aria-hidden="true"></i> {{ settings.phone_1 or tenant_phone or '' }} | <i class="fas fa-envelope mr-1" aria-hidden="true"></i> {{ settings.email or '' }}</div>
       </div>
     </div>
 
     <div class="doc-title">
-      <h2><i class="fas fa-box-open mr-1"></i> {{ _('Delivery_Note') }} / {{ _('Delivery Note') }}</h2>
+      <h2><i class="fas fa-box-open mr-1" aria-hidden="true"></i> {{ _('Delivery_Note') }} / {{ _('Delivery Note') }}</h2>
       <div style="font-size:9px;color:#666;margin-top:4px;">
         {{ _('Document_Number') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
         {% set display_date = delivery.date if delivery.date else (sale.sale_date if sale and sale.sale_date else none) %}
@@ -62,13 +62,13 @@
     <div class="content">
       <div class="info-grid">
         <div class="info-box">
-          <h3><i class="fas fa-user mr-1"></i> {{ _('Customer_Data') }}</h3>
+          <h3><i class="fas fa-user mr-1" aria-hidden="true"></i> {{ _('Customer_Data') }}</h3>
           <p><strong>{{ _('Name') }}:</strong> {{ sale.customer.name if sale and sale.customer else delivery.customer_name or '—' }}</p>
           <p><strong>{{ _('Phone') }}:</strong> {{ sale.customer.phone if sale and sale.customer else delivery.customer_phone or '—' }}</p>
           <p><strong>{{ _('Address') }}:</strong> {{ delivery.address or (sale.customer.address if sale and sale.customer else '—') }}</p>
         </div>
         <div class="info-box">
-          <h3><i class="fas fa-truck mr-1"></i> {{ _('Delivery_Info') }}</h3>
+          <h3><i class="fas fa-truck mr-1" aria-hidden="true"></i> {{ _('Delivery_Info') }}</h3>
           <p><strong>{{ _('Delivery_Method') }}:</strong> {{ delivery.method or delivery.shipping_method or '—' }}</p>
           <p><strong>{{ _('Delivery_Status') }}:</strong> {{ delivery.status or '—' }}</p>
           {% if delivery.tracking_number %}<p><strong>{{ _('Tracking_Number') }}:</strong> {{ delivery.tracking_number }}</p>{% endif %}
@@ -94,7 +94,7 @@
 
       {% if notes %}
       <div style="margin-top:10px;padding:8px;background:#fff8e6;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment mr-1"></i> {{ notes }}</p>
+        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment mr-1" aria-hidden="true"></i> {{ notes }}</p>
       </div>
       {% endif %}
 

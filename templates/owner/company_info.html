@@ -17,7 +17,7 @@
         <div>
           <h2 class="profile-card__name">{{ tenant.name_ar or t('Company_Name') }}</h2>
           <p class="profile-card__industry">
-            <i class="fas fa-industry"></i>
+            <i class="fas fa-industry" aria-hidden="true"></i>
             {{ tenant.business_type_label() if tenant else t('General') }}
           </p>
         </div>
@@ -46,7 +46,7 @@
         </div>
         <div class="profile-card__actions">
           <span class="badge badge-pill badge-info">
-            <i class="fas fa-sync-alt"></i>
+            <i class="fas fa-sync-alt" aria-hidden="true"></i>
             {{ t('Last_Updated_Colon') }} {{ tenant.updated_at.strftime('%Y-%m-%d') if tenant.updated_at else '---' }}
           </span>
         </div>
@@ -55,16 +55,16 @@
 
     <div class="quick-links card">
       <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-tools mr-2"></i>{{ t('Quick_Links') }}</h3>
+        <h3 class="card-title"><i class="fas fa-tools mr-2" aria-hidden="true"></i>{{ t('Quick_Links') }}</h3>
       </div>
       <div class="card-body">
         <a href="{{ url_for('owner.invoice_settings') }}" class="quick-link" aria-label="{{ t('Invoice_Settings') }}">
-          <i class="fas fa-file-invoice"></i>
+          <i class="fas fa-file-invoice" aria-hidden="true"></i>
           <span>{{ t('Invoice_Settings') }}</span>
         </a>
         {% if current_user.has_permission('manage_warehouse') %}
         <a href="{{ url_for('warehouse.index') }}" class="quick-link" aria-label="{{ t('Warehouses') }}">
-          <i class="fas fa-warehouse"></i>
+          <i class="fas fa-warehouse" aria-hidden="true"></i>
           <span>{{ t('Warehouses') }}</span>
         </a>
         {% endif %}
@@ -82,7 +82,7 @@
       <div class="col-sm-6 d-flex justify-content-end">
         <div class="d-flex align-items-center">
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-outline-secondary ml-2" aria-label="{{ t('Back_To_Owner_Dashboard') }}">
-            <i class="fas fa-arrow-right mr-1"></i> {{ t('Back_To_Owner_Dashboard') }}
+            <i class="fas fa-arrow-right mr-1" aria-hidden="true"></i> {{ t('Back_To_Owner_Dashboard') }}
           </a>
           <ol class="breadcrumb float-sm-left mb-0">
             <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
@@ -269,7 +269,7 @@
             </div>
           </div>
           <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i>
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
             <strong>{{ t('Note') }}</strong> {{ t('Logo_Change_Hint') }}
           </div>
         </div>
@@ -279,10 +279,10 @@
       <div class="row">
         <div class="col-12">
           <button type="submit" class="btn btn-primary btn-lg" aria-label="{{ t('Save_Information') }}">
-            <i class="fas fa-save mr-2"></i>{{ t('Save_Information') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save_Information') }}
           </button>
           <a href="{{ url_for('owner.dashboard') }}" class="btn btn-secondary btn-lg" aria-label="{{ t('Cancel_And_Return') }}">
-            <i class="fas fa-times mr-2"></i>{{ t('Cancel') }}</a>
+            <i class="fas fa-times mr-2" aria-hidden="true"></i>{{ t('Cancel') }}</a>
         </div>
       </div>
     </form>

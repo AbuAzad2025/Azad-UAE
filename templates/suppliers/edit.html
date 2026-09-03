@@ -3,17 +3,17 @@
 {% block page_title %}
 <div class="d-flex justify-content-between align-items-center">
   <div>
-    <h1 class="mb-0"><i class="fas fa-edit mr-2"></i>{{ t('edit_supplier_data') }}: {{ supplier.name }}</h1>
+    <h1 class="mb-0"><i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ t('edit_supplier_data') }}: {{ supplier.name }}</h1>
   </div>
   <div>
     <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-info">
-      <i class="fas fa-eye mr-2"></i>{{ t('View') }}
+      <i class="fas fa-eye mr-2" aria-hidden="true"></i>{{ t('View') }}
     </a>
     <a href="{{ url_for('suppliers.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('back_to_list') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('back_to_list') }}
     </a>
     <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
-      <i class="fas fa-home mr-2"></i>{{ t('main_dashboard') }}
+      <i class="fas fa-home mr-2" aria-hidden="true"></i>{{ t('main_dashboard') }}
     </a>
   </div>
 </div>
@@ -69,7 +69,7 @@
 {% block content %}
 <div class="card card-warning">
   <div class="card-header">
-    <h3 class="card-title"><i class="fas fa-edit mr-2"></i>{{ t('edit_supplier_data') }}</h3>
+    <h3 class="card-title"><i class="fas fa-edit mr-2" aria-hidden="true"></i>{{ t('edit_supplier_data') }}</h3>
   </div>
   
   <form class="needs-validation supplier-edit-form" method="POST" action="{{ url_for('suppliers.edit', id=supplier.id) }}">
@@ -80,7 +80,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-info-circle"></i> {{ t('basic_info') }}
+            <i class="fas fa-info-circle" aria-hidden="true"></i> {{ t('basic_info') }}
           </h5>
         </div>
       </div>
@@ -89,7 +89,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="supplier_name">
-              <i class="fas fa-truck text-warning"></i> {{ t('Name') }} 
+              <i class="fas fa-truck text-warning" aria-hidden="true"></i> {{ t('Name') }} 
               <span class="text-danger">*</span>
             </label>
             <input type="text" name="name" class="form-control" required
@@ -100,7 +100,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="supplier_name_en">
-              <i class="fas fa-font text-info"></i> {{ t('name_in_english') }}
+              <i class="fas fa-font text-info" aria-hidden="true"></i> {{ t('name_in_english') }}
             </label>
             <input type="text" name="name_en" class="form-control"
                    value="{{ supplier.name_en or '' }}" id="supplier_name_en" minlength="2" maxlength="100">
@@ -110,7 +110,7 @@
         <div class="col-md-4">
           <div class="form-group">
             <label for="supplier_company_name">
-              <i class="fas fa-building text-primary"></i> {{ t('company_name') }}
+              <i class="fas fa-building text-primary" aria-hidden="true"></i> {{ t('company_name') }}
             </label>
             <input type="text" name="company_name" class="form-control"
                    value="{{ supplier.company_name or '' }}" id="supplier_company_name" minlength="2" maxlength="100">
@@ -166,7 +166,7 @@
               <input type="checkbox" class="custom-control-input" id="is_verified" name="is_verified"
                      {% if supplier.is_verified %}checked{% endif %} aria-label="is verified">
               <label class="custom-control-label" for="is_verified">
-                <i class="fas fa-check-circle text-success"></i> {{ t('verified_supplier') }}
+                <i class="fas fa-check-circle text-success" aria-hidden="true"></i> {{ t('verified_supplier') }}
               </label>
             </div>
           </div>
@@ -178,7 +178,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-phone"></i> {{ t('contact_info') }}
+            <i class="fas fa-phone" aria-hidden="true"></i> {{ t('contact_info') }}
           </h5>
         </div>
       </div>
@@ -248,7 +248,7 @@
       <div class="row">
         <div class="col-md-12">
           <h5 class="text-warning mb-3">
-            <i class="fas fa-file-contract"></i> {{ t('legal_and_financial_info') }}
+            <i class="fas fa-file-contract" aria-hidden="true"></i> {{ t('legal_and_financial_info') }}
           </h5>
         </div>
       </div>
@@ -309,14 +309,14 @@
     
     <div class="card-footer">
       <button type="submit" class="btn btn-warning btn-lg">
-        <i class="fas fa-save mr-2"></i> {{ t('save_supplier') }}
+        <i class="fas fa-save mr-2" aria-hidden="true"></i> {{ t('save_supplier') }}
       </button>
       <a href="{{ url_for('suppliers.view', id=supplier.id) }}" class="btn btn-secondary btn-lg">
-        <i class="fas fa-times mr-2"></i> {{ t('Cancel') }}
+        <i class="fas fa-times mr-2" aria-hidden="true"></i> {{ t('Cancel') }}
       </a>
       <button type="button" class="btn btn-danger btn-lg float-left"
               data-action="delete-supplier" data-supplier-id="{{ supplier.id }}">
-        <i class="fas fa-trash mr-2"></i> {{ t('Delete') }} {{ t('Supplier') }}
+        <i class="fas fa-trash mr-2" aria-hidden="true"></i> {{ t('Delete') }} {{ t('Supplier') }}
       </button>
     </div>
   </form>

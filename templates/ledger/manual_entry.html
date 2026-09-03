@@ -8,12 +8,12 @@
   <div class="col-12">
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.index') }}" class="btn btn-secondary">
-      <i class="fas fa-arrow-right mr-2"></i>{{ t('Back') }}
+      <i class="fas fa-arrow-right mr-2" aria-hidden="true"></i>{{ t('Back') }}
     </a>
     {% endif %}
     {% if current_user.has_permission('view_ledger') %}
     <a href="{{ url_for('ledger.journal_entries') }}" class="btn btn-info">
-      <i class="fas fa-book mr-2"></i>{{ t('View Entries') }}
+      <i class="fas fa-book mr-2" aria-hidden="true"></i>{{ t('View Entries') }}
     </a>
     {% endif %}
   </div>
@@ -23,9 +23,9 @@
 <div class="card border-success mb-3 ic-1" id="quickTemplatesCard">
   <div class="card-header bg-success text-white">
     <h5 class="mb-0">
-      <i class="fas fa-magic mr-2"></i>{{ t('Quick Templates') }}
+      <i class="fas fa-magic mr-2" aria-hidden="true"></i>{{ t('Quick Templates') }}
       <button type="button" class="btn btn-light float-left ic-2" data-action="toggle-card" data-card="quickTemplates" title="Toggle">
-        <i class="fas fa-minus"></i>
+        <i class="fas fa-minus" aria-hidden="true"></i>
       </button>
     </h5>
   </div>
@@ -33,22 +33,22 @@
     <div class="row">
       <div class="col-md-3 mb-2">
         <button type="button" class="btn btn-success btn-block" data-action="load-template" data-template="cash_sale">
-          <i class="fas fa-cash-register mr-1"></i>{{ t('مبيعة') }} {{ t('Cash_4') }}
+          <i class="fas fa-cash-register mr-1" aria-hidden="true"></i>{{ t('مبيعة') }} {{ t('Cash_4') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
         <button type="button" class="btn btn-primary btn-block" data-action="load-template" data-template="credit_sale">
-          <i class="fas fa-credit-card mr-1"></i>{{ t('مبيعة') }} {{ t('Credit_2') }}
+          <i class="fas fa-credit-card mr-1" aria-hidden="true"></i>{{ t('مبيعة') }} {{ t('Credit_2') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
         <button type="button" class="btn btn-warning btn-block" data-action="load-template" data-template="expense">
-          <i class="fas fa-receipt mr-1"></i>{{ t('Expense_3') }}
+          <i class="fas fa-receipt mr-1" aria-hidden="true"></i>{{ t('Expense_3') }}
         </button>
       </div>
       <div class="col-md-3 mb-2">
         <button type="button" class="btn btn-info btn-block" data-action="load-template" data-template="adjustment">
-          <i class="fas fa-balance-scale mr-1"></i>{{ t('Reconciliation') }}
+          <i class="fas fa-balance-scale mr-1" aria-hidden="true"></i>{{ t('Reconciliation') }}
         </button>
       </div>
     </div>
@@ -58,7 +58,7 @@
 <div class="card">
   <div class="card-header bg-gradient-success">
     <h3 class="card-title text-white">
-      <i class="fas fa-plus-circle mr-2"></i>{{ t('Manual Entry') }}
+      <i class="fas fa-plus-circle mr-2" aria-hidden="true"></i>{{ t('Manual Entry') }}
     </h3>
   </div>
   <div class="card-body">
@@ -108,7 +108,7 @@
       <div class="card">
         <div class="card-header bg-light">
           <h5 class="mb-0">
-            <i class="fas fa-list mr-2"></i>{{ t('Entry Lines') }}
+            <i class="fas fa-list mr-2" aria-hidden="true"></i>{{ t('Entry Lines') }}
           </h5>
         </div>
         
@@ -121,11 +121,11 @@
                   <th style="width: 35%">{{ t('Account') }} <span class="text-danger">*</span></th>
                   <th style="width: 30%">{{ t('Description') }}</th>
                   <th style="width: 15%" class="text-center">
-                    <i class="fas fa-arrow-down text-success mr-1"></i>
+                    <i class="fas fa-arrow-down text-success mr-1" aria-hidden="true"></i>
                     <strong class="text-success">{{ t('Debit') }}</strong>
                   </th>
                   <th style="width: 15%" class="text-center">
-                    <i class="fas fa-arrow-up text-danger mr-1"></i>
+                    <i class="fas fa-arrow-up text-danger mr-1" aria-hidden="true"></i>
                     <strong class="text-danger">{{ t('Credit') }}</strong>
                   </th>
                   <th style="width: 5%"></th>
@@ -160,17 +160,17 @@
       <div class="row mt-3">
         <div class="col-12">
           <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
-            <i class="fas fa-save mr-2"></i>{{ t('Save Entry') }}
+            <i class="fas fa-save mr-2" aria-hidden="true"></i>{{ t('Save Entry') }}
           </button>
           <button type="button" class="btn btn-primary" data-action="add-line">
-            <i class="fas fa-plus mr-2"></i>{{ t('Add_Line') }}
+            <i class="fas fa-plus mr-2" aria-hidden="true"></i>{{ t('Add_Line') }}
           </button>
           <button type="button" class="btn btn-secondary" data-action="reset-form">
-            <i class="fas fa-redo mr-2"></i>{{ t('Reset_Form') }}
+            <i class="fas fa-redo mr-2" aria-hidden="true"></i>{{ t('Reset_Form') }}
           </button>
           <div class="float-left">
             <div id="balanceStatus" class="alert alert-warning d-inline-block mb-0 py-2">
-              <i class="fas fa-exclamation-triangle mr-2"></i>
+              <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
 {{ t('Entry_Unbalanced') }}
             </div>
           </div>
@@ -241,7 +241,7 @@ function addLine() {
   </td>
   <td>
     <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-line" title="{{ t('Delete_Line') }}">
-      <i class="fas fa-trash"></i>
+      <i class="fas fa-trash" aria-hidden="true"></i>
     </button>
   </td>
   `;
@@ -303,10 +303,10 @@ function calculateJournalTotals() {
   if (difference < 0.01 && totalDebit > 0 && totalCredit > 0) {
     // Balanced ✅
     differenceSpan.className = 'badge badge-success';
-    differenceSpan.innerHTML = '<i class="fas fa-check mr-1"></i> {{ t('Entry_Balanced') }}';
+    differenceSpan.innerHTML = '<i class="fas fa-check mr-1" aria-hidden="true"></i> {{ t('Entry_Balanced') }}';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-success d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2"></i>{{ t('Entry_Balanced_Save') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-check-circle mr-2" aria-hidden="true"></i>{{ t('Entry_Balanced_Save') }}';
     }
     submitBtn.disabled = false;
     submitBtn.removeAttribute('disabled');
@@ -316,7 +316,7 @@ function calculateJournalTotals() {
     differenceSpan.className = 'badge badge-danger';
     if (balanceStatus) {
       balanceStatus.className = 'alert alert-warning d-inline-block mb-0 py-2';
-      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>{{ t('Entry_Unbalanced') }}';
+      balanceStatus.innerHTML = '<i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>{{ t('Entry_Unbalanced') }}';
     }
     submitBtn.disabled = true;
     submitBtn.setAttribute('disabled', 'disabled');
