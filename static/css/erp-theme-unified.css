@@ -383,7 +383,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
 .main-header.navbar .nav-link,
 .main-header.navbar .navbar-nav .nav-link {
   color: var(--az-navbar-fg) !important;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .main-header.navbar .dropdown-menu {
@@ -399,7 +399,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: var(--az-font-size-sm);
   padding: 10px 16px;
   border-radius: var(--az-radius-sm);
@@ -417,7 +417,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
 }
 
 .dropdown-header {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--az-text-muted);
   text-align: start;
   padding: 6px 16px;
@@ -499,7 +499,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
 .erp-navbar-brand-link {
   width: auto;
   padding: 6px 12px;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 1.05rem;
   white-space: nowrap;
 }
@@ -526,7 +526,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   border-radius: var(--az-radius-sm);
   color: var(--az-navbar-fg);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.9rem;
   opacity: 0.75;
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -576,7 +576,7 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   border: none;
   background: transparent;
   color: var(--az-navbar-fg);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 0.88rem;
   opacity: 0.8;
   transition: all 0.25s ease;
@@ -606,6 +606,17 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
 .erp-navbar-user-btn:hover .erp-user-avatar {
   background: rgba(255, 255, 255, 0.25);
   transform: scale(1.1);
+}
+
+.erp-navbar-pushmenu:focus-visible,
+.erp-navbar-brand-link:focus-visible,
+.erp-nav-main-link:focus-visible,
+.erp-navbar-tool-btn:focus-visible,
+.erp-navbar-icon-btn:focus-visible,
+.erp-navbar-user-btn:focus-visible,
+.erp-theme-switcher .erp-theme-option:focus-visible {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
+  outline: none;
 }
 
 .erp-theme-switcher {
