@@ -1,9 +1,12 @@
 <aside class="main-sidebar sidebar-dark-primary elevation-4" role="complementary" aria-label="{{ _('القائمة الجانبية') }}">
     <!-- Brand Link -->
-    <a href="{{ url_for('main.dashboard') }}" class="brand-link text-center erp-sidebar-brand-link">
-      <span class="brand-text font-weight-light">
-        <i class="fas fa-cube mr-1"></i>{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}
-      </span>
+    <a href="{{ url_for('main.dashboard') }}" class="brand-link erp-sidebar-brand-link" aria-label="{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}">
+      {% if tenant_logo_url %}
+      <img src="{{ tenant_logo_url if tenant_logo_url.startswith('http') else url_for('static', filename=tenant_logo_url) }}" alt="{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}" class="erp-sidebar-brand-logo">
+      {% else %}
+      <i class="fas fa-shield-alt erp-sidebar-brand-icon" aria-hidden="true"></i>
+      {% endif %}
+      <span class="brand-text font-weight-light">{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}</span>
     </a>
 
     <!-- Sidebar Content -->
@@ -11,7 +14,7 @@
       <!-- User Panel -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <i class="fas fa-user-circle fa-2x text-white"></i>
+          <i class="fas fa-user-circle fa-2x text-white" aria-hidden="true"></i>
         </div>
         <div class="info">
           <a href="{{ url_for('main.my_profile') }}" class="d-block text-white">{{ current_user.username }}</a>
@@ -33,7 +36,7 @@
         <div class="input-group input-group-sm">
           <input type="search" id="erpSidebarSearch" class="form-control form-control-sm bg-dark text-white border-0" placeholder="{{ t('Search') }}..." aria-label="{{ t('Search') }}" autocomplete="off">
           <div class="input-group-append">
-            <span class="input-group-text bg-dark border-0 text-white-50"><i class="fas fa-search"></i></span>
+            <span class="input-group-text bg-dark border-0 text-white-50"><i class="fas fa-search" aria-hidden="true"></i></span>
           </div>
         </div>
       </div>
@@ -42,7 +45,7 @@
       {% macro _sec(label, perms) %}
         {% if perms %}
         <li class="nav-item erp-sidebar-section-label" role="separator" aria-label="{{ label }}">
-          <span class="nav-link py-1 text-white-50 small" style="font-size: 0.68rem; letter-spacing: 0.08em; opacity: 0.7;">{{ label }}</span>
+          <span class="nav-link">{{ label }}</span>
         </li>
         {% endif %}
       {% endmacro %}
@@ -354,25 +357,25 @@
             {% if _led %}
             <li class="nav-item">
               <a href="{{ url_for('ledger.index') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-sitemap nav-icon"></i>
                 <p>{{ t('Chart_Of_Accounts') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.trial_balance') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-balance-scale nav-icon"></i>
                 <p>{{ t('Trial_Balance') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.income_statement') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-chart-pie nav-icon"></i>
                 <p>{{ t('Income_Statement') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-table nav-icon"></i>
                 <p>{{ t('Balance_Sheet') }}</p>
               </a>
             </li>
@@ -425,61 +428,61 @@
             {% if _rep %}
             <li class="nav-item">
               <a href="{{ url_for('reports.sales') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-chart-line nav-icon"></i>
                 <p>{{ t('Sales_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.purchases') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-shopping-cart nav-icon"></i>
                 <p>{{ t('Purchases_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.inventory') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-boxes nav-icon"></i>
                 <p>{{ t('Inventory_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.receivables') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-hand-holding-usd nav-icon"></i>
                 <p>{{ t('Receivables_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.partners') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-handshake nav-icon"></i>
                 <p>{{ t('Partners_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-clipboard-check nav-icon"></i>
                 <p>{{ t('Inventory_Reconciliation') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-tasks nav-icon"></i>
                 <p>{{ t('Receivables_Reconciliation') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.top_selling') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-trophy nav-icon"></i>
                 <p>{{ t('Top_Selling') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('treasury.treasury') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-coins nav-icon"></i>
                 <p>{{ t('Treasury_Center') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('treasury.vat_return') }}" class="nav-link">
-                <i class="far fa-circle nav-icon"></i>
+                <i class="fas fa-percent nav-icon"></i>
                 <p>{{ t('VAT_Return') }}</p>
               </a>
             </li>

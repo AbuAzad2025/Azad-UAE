@@ -671,6 +671,11 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
 }
 
 .main-sidebar .brand-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 62px;
   background: rgba(255, 255, 255, 0.05);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   transition: all 0.25s ease;
@@ -680,12 +685,21 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   background: rgba(255, 255, 255, 0.08);
 }
 
-.erp-sidebar-brand-link { padding: 16px; }
+.erp-sidebar-brand-link { padding: 10px 14px; }
 
 .erp-sidebar-brand-logo {
-  height: 60px;
-  max-width: 100%;
+  height: 38px;
+  max-width: 130px;
   object-fit: contain;
+  border-radius: var(--az-radius-sm);
+  flex-shrink: 0;
+}
+
+.erp-sidebar-brand-icon {
+  font-size: 1.5rem;
+  color: var(--az-sidebar-fg);
+  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 .erp-navbar-logo-img {
@@ -798,6 +812,53 @@ html[dir="ltr"] .main-sidebar .nav-link.active::before { border-radius: 0 4px 4p
   transform: scale(1.1);
 }
 
+.erp-sidebar-section-label .nav-link {
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--az-sidebar-section) !important;
+  background: transparent !important;
+  margin: 10px 14px 2px;
+  padding: 4px 8px !important;
+  pointer-events: none;
+}
+
+.erp-sidebar-nav .nav-treeview .nav-link {
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 8px 14px;
+}
+
+.erp-sidebar-nav .nav-treeview .nav-link.active {
+  background: var(--az-sidebar-child-active) !important;
+}
+
+.erp-sidebar-nav .nav-treeview .nav-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  background: transparent;
+}
+
+.erp-sidebar-nav .nav-treeview .nav-link:hover .nav-icon,
+.erp-sidebar-nav .nav-treeview .nav-link.active .nav-icon {
+  background: transparent;
+  transform: none;
+}
+
+.main-sidebar .user-panel .info > a {
+  font-weight: 700;
+}
+
+.erp-sidebar-search .form-control:focus {
+  box-shadow: var(--az-focus-ring);
+  border-color: var(--az-primary);
+}
+
+.erp-sidebar-search .form-control::placeholder {
+  color: var(--az-sidebar-fg-muted);
+}
+
 .erp-section { margin-bottom: 2px; }
 
 .erp-section-header {
@@ -875,7 +936,8 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-section-header
 body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-section-body,
 body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .nav-sidebar .nav-link p,
 body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-nav-text,
-body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-nav-badge {
+body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-nav-badge,
+body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-sidebar-section-label {
   display: none !important;
   visibility: hidden !important;
   width: 0 !important;
