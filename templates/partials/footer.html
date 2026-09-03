@@ -26,36 +26,36 @@
             >
             <div class="erp-footer-brand-text">
               <div class="erp-footer-title">{{ _developer_title }}</div>
-              <div class="erp-footer-muted"><i class="fas fa-code"></i> {{ _developer_credit_text }}</div>
+              <div class="erp-footer-muted"><i class="fas fa-code" aria-hidden="true"></i> {{ _developer_credit_text }}</div>
             </div>
           </div>
 
           <div class="erp-footer-center">
             <span class="erp-footer-chip" title="{{ t('Version') }}">
-              <i class="fas fa-code-branch mr-1"></i>v{{ config.APP_VERSION }}
+              <i class="fas fa-code-branch mr-1" aria-hidden="true"></i>v{{ config.APP_VERSION }}
             </span>
           </div>
 
           <div class="erp-footer-actions">
             {% if developer_whatsapp_link %}
               <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action" title="WhatsApp">
-                <i class="fab fa-whatsapp"></i><span class="d-none d-sm-inline">{{ t('WhatsApp') }}</span>
+                <i class="fab fa-whatsapp" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('WhatsApp') }}</span>
               </a>
             {% endif %}
             {% if _footer_phone %}
               <a href="tel:{{ _footer_phone }}" class="erp-footer-action" title="{{ t('Call') }}">
-                <i class="fas fa-phone"></i><span class="d-none d-sm-inline">{{ t('Call') }}</span>
+                <i class="fas fa-phone" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('Call') }}</span>
               </a>
             {% endif %}
             {% if _footer_email %}
               <a href="mailto:{{ _footer_email }}" class="erp-footer-action" title="{{ t('Email') }}">
-                <i class="fas fa-envelope"></i><span class="d-none d-sm-inline">{{ t('Email') }}</span>
+                <i class="fas fa-envelope" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('Email') }}</span>
               </a>
             {% endif %}
           </div>
         </div>
 
-        <div class="erp-footer-copyright text-center mt-3 pt-2 border-top small text-muted">
+        <div class="erp-footer-copyright">
           &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; {{ t('All Rights Reserved') }}
           <span class="mx-2">|</span>
           <span class="az-palestine-badge" title="{{ t('Made_With_Love') }}">
