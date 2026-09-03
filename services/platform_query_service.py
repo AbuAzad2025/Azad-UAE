@@ -51,7 +51,12 @@ class PlatformQueryService:
     def find_user_by_username(username):
         from models import User
 
-        return User.query.filter(User.username.ilike(username)).first()
+        # Pre-auth credential lookup must see the platform owner (tenant_id is
+        # NULL). Tenant-ORM silently hides NULL-tenant rows in scoped queries,
+        # so run unscoped: only the login flow calls this.
+        return User.query.execution_options(skip_tenant_scope=True).filter(
+            User.username.ilike(username)
+        ).first()
 
     @staticmethod
     def get_branch_safe(raw_branch_id):

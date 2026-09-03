@@ -77,7 +77,7 @@ class Payment(db.Model):
 
     reference_number = db.Column(db.String(100))
 
-    # U.O1U,U^U.OO� OU,O'USU� (U,O_USU.Oc - U,U,O�U^OU?U,)
+    # رقم الشيك (شخصي - بنكي/شخصي)
     cheque_number = db.Column(db.String(50))
     cheque_date = db.Column(db.Date)
     bank_name = db.Column(db.String(100))
