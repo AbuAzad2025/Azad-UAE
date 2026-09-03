@@ -31,6 +31,18 @@ def _setup():
     from config import TestConfig
     from extensions import db
 
+    # Honor an explicitly provided DATABASE_URL (e.g. the CI e2e-tours job's
+    # postgres service): seeding then lands in the SAME database the gunicorn
+    # app serves, and db.create_all() gives that database a real schema.
+    # Without it we fall back to TestConfig's throwaway in-memory SQLite.
+    db_uri = (os.environ.get("DATABASE_URL") or "").strip()
+    if db_uri:
+        TestConfig = type(
+            "SeededTestConfig",
+            (TestConfig,),
+            {"SQLALCHEMY_DATABASE_URI": db_uri, "SQLALCHEMY_ENGINE_OPTIONS": {}},
+        )
+
     app = create_app(config_class=TestConfig)
     with app.app_context():
         db.create_all()
