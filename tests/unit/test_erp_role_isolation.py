@@ -110,17 +110,30 @@ def _seller_and_sibling_blocks() -> dict[str, set[str]]:
     }
 
 
-def test_seller_lacks_cost_admin_perms():
-    """The lowest retail tier must not carry cost/GL/user-admin permissions."""
+def test_seller_strict_scope_no_ledger():
+    """A seller/cashier never sees the general ledger or cost/margin data.
+    This is the STRICT boundary (no legacy product exception) per product
+    decision made during development hardening."""
     blocks = _seller_and_sibling_blocks()
     assert "seller" in blocks and blocks["seller"], "seller_codes list not found"
     seller = blocks["seller"]
-    overlap = seller & COST_OR_ADMIN_PERMS
-    # seller is allowed view_ledger per legacy product design, but must NOT get
-    # the cost-revealing / user-admin operations.
-    allowed_but_tracked = {"view_ledger"}
-    real_leak = overlap - allowed_but_tracked
-    assert not real_leak, f"seller leaked COST/admin perms: {sorted(real_leak)}"
+    for banned in COST_OR_ADMIN_PERMS | {"view_ledger"}:
+        assert banned not in seller, f"seller leaked {banned!r}"
+
+
+def test_branch_manager_distinct_from_manager():
+    """Branch Manager must be a strict subset of Manager — never company-wide
+    accounting (manage_ledger) or payroll (manage_payroll)."""
+    blocks = _seller_and_sibling_blocks()
+    bm = blocks.get("branch_manager", set())
+    mgr = blocks.get("manager", set())
+    assert bm, "branch_mgr_codes not found"
+    assert mgr, "manager_codes not found"
+    # Branch manager must lack company-accounting and payroll
+    for banned in ("manage_ledger", "manage_payroll", "manage_users"):
+        assert banned not in bm, f"branch_manager leaked {banned!r}"
+    # Branch manager is a strict subset: everything it has, manager also has
+    assert bm <= mgr, f"branch_manager has perms manager lacks: {sorted(bm - mgr)}"
 
 
 def test_accountant_scope():

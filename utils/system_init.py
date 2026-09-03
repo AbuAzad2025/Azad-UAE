@@ -220,13 +220,15 @@ def _ensure_functional_roles():
                 "manage_sales",
                 "manage_customers",
                 "view_reports",
-                "view_ledger",
                 "view_kds",
             ]
             seller_role.permissions = get_perms(*seller_codes)
 
         branch_mgr_role = Role.query.filter_by(slug="branch_manager").first()
         if branch_mgr_role:
+            # Branch Manager: single-branch operations. May view branch ledger
+            # and inventory but NOT company-wide accounting (manage_ledger) or
+            # payroll (manage_payroll) — those stay with Manager/Accountant.
             branch_mgr_codes = [
                 "manage_sales",
                 "manage_purchases",
@@ -239,8 +241,6 @@ def _ensure_functional_roles():
                 "manage_warehouse",
                 "manage_store",
                 "view_ledger",
-                "manage_ledger",
-                "manage_payroll",
                 "view_kds",
                 "override_sale_price",
                 "pos_void_line",
