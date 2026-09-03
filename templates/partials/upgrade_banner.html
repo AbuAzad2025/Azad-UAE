@@ -3,14 +3,14 @@
     <div class="alert alert-warning alert-dismissible fade show erp-flash erp-flash-warning" role="alert">
       <div class="d-flex align-items-center flex-wrap">
         <div class="erp-flash-icon">
-          <i class="fas fa-rocket"></i>
+          <i class="fas fa-rocket" aria-hidden="true"></i>
         </div>
         <div class="erp-flash-body flex-grow-1">
           <strong>{{ t('Plan_Upgrade') }}</strong>
           <span class="mx-2">&mdash;</span>
           <span>{{ t('Plan_Limit_Warning') }}</span>
           <a href="#" class="btn btn-sm btn-warning ml-3 mt-1 mt-md-0" data-action="open-upgrade-link" data-url="{{ wa_upgrade_link }}">
-            <i class="fab fa-whatsapp ml-1"></i>{{ t('Contact_Developer_For_Upgrade') }}
+            <i class="fab fa-whatsapp ml-1" aria-hidden="true"></i>{{ t('Contact_Developer_For_Upgrade') }}
           </a>
         </div>
         <button type="button" class="close" data-dismiss="alert" data-action="dismiss-alert" aria-label="{{ _('إغلاق') }}">&times;</button>

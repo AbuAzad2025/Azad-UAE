@@ -22,9 +22,9 @@
           {% if is_global_scope_user %}
           <div class="mt-1">
             {% if active_branch %}
-            <small class="text-info"><i class="fas fa-code-branch mr-1"></i>{{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}</small>
+            <small class="text-info"><i class="fas fa-code-branch mr-1" aria-hidden="true"></i>{{ active_branch.name }}{% if active_branch.code %} ({{ active_branch.code }}){% endif %}</small>
             {% else %}
-            <small class="text-success"><i class="fas fa-sitemap mr-1"></i>{{ t('All_Branches') }}</small>
+            <small class="text-success"><i class="fas fa-sitemap mr-1" aria-hidden="true"></i>{{ t('All_Branches') }}</small>
             {% endif %}
           </div>
           {% endif %}
@@ -55,7 +55,7 @@
         <li class="nav-item">
           <a href="{{ href }}" class="nav-link{% if active_if is not none and request.endpoint == active_if %} active{% endif %}" 
              {% if request.endpoint == active_if %}aria-current="page"{% endif %}>
-            <i class="nav-icon {{ icon }}"></i>
+            <i class="nav-icon {{ icon }}" aria-hidden="true"></i>
             <p>{{ label }}</p>
           </a>
         </li>
@@ -67,8 +67,8 @@
         {% set _is_open = request.endpoint and match in request.endpoint %}
         <li class="nav-item has-treeview{% if _is_open %} menu-open{% endif %}">
           <a href="#" class="nav-link{% if _is_open %} active{% endif %}" role="button" aria-haspopup="true" aria-expanded="{{ 'true' if _is_open else 'false' }}">
-            <i class="nav-icon {{ icon }}"></i>
-            <p>{{ label }}<i class="right fas fa-angle-left"></i></p>
+            <i class="nav-icon {{ icon }}" aria-hidden="true"></i>
+            <p>{{ label }}<i class="right fas fa-angle-left" aria-hidden="true"></i></p>
           </a>
           <ul class="nav nav-treeview">
         {% endif %}
@@ -101,13 +101,13 @@
             {% if _cust %}
             <li class="nav-item">
               <a href="{{ url_for('customers.create') }}" class="nav-link">
-                <i class="fas fa-user-plus nav-icon text-success"></i>
+                <i class="fas fa-user-plus nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Customer') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('customers.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Customers_List') }}</p>
               </a>
             </li>
@@ -128,13 +128,13 @@
             {% if _pur %}
             <li class="nav-item">
               <a href="{{ url_for('purchases.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('Purchase') }} {{ t('New') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('purchases.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('List') }} {{ t('Purchases') }}</p>
               </a>
             </li>
@@ -146,13 +146,13 @@
             {% if _sup %}
             <li class="nav-item">
               <a href="{{ url_for('suppliers.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Supplier') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('suppliers.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Suppliers_List') }}</p>
               </a>
             </li>
@@ -170,13 +170,13 @@
             {% if _prod %}
             <li class="nav-item">
               <a href="{{ url_for('products.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Product') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('products.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Products_List') }}</p>
               </a>
             </li>
@@ -192,7 +192,7 @@
             {% if _sale and tenant_enable_pos %}
             <li class="nav-item">
               <a href="{{ url_for('pos.index') }}" class="nav-link">
-                <i class="fas fa-cash-register nav-icon text-info"></i>
+                <i class="fas fa-cash-register nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('POS_Cashier') }}</p>
               </a>
             </li>
@@ -200,19 +200,19 @@
             {% if _sale %}
             <li class="nav-item">
               <a href="{{ url_for('sales.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Invoice') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('sales.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Invoices_List') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('returns.index') }}" class="nav-link">
-                <i class="fas fa-undo-alt nav-icon text-warning"></i>
+                <i class="fas fa-undo-alt nav-icon text-warning" aria-hidden="true"></i>
                 <p>{{ t('Sales_Returns') }}</p>
               </a>
             </li>
@@ -224,39 +224,39 @@
             {% if _wh %}
             <li class="nav-item">
               <a href="{{ url_for('warehouse.index') }}" class="nav-link">
-                <i class="fas fa-boxes nav-icon text-info"></i>
+                <i class="fas fa-boxes nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('Inventory_Management') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('warehouse.list_warehouses') }}" class="nav-link">
-                <i class="fas fa-building nav-icon text-primary"></i>
+                <i class="fas fa-building nav-icon text-primary" aria-hidden="true"></i>
                 <p>{{ t('Warehouses') }}</p>
               </a>
             </li>
             {% if current_user.is_authenticated and current_user.is_admin() %}
             <li class="nav-item">
               <a href="{{ url_for('warehouse.create_warehouse') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('Add_Warehouse') }}</p>
               </a>
             </li>
             {% endif %}
             <li class="nav-item">
               <a href="{{ url_for('warehouse.movements') }}" class="nav-link">
-                <i class="fas fa-exchange-alt nav-icon text-secondary"></i>
+                <i class="fas fa-exchange-alt nav-icon text-secondary" aria-hidden="true"></i>
                 <p>{{ t('Inventory_Movements') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('warehouse.low_stock') }}" class="nav-link">
-                <i class="fas fa-exclamation-triangle nav-icon text-warning"></i>
+                <i class="fas fa-exclamation-triangle nav-icon text-warning" aria-hidden="true"></i>
                 <p>{{ t('Low_Stock') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('warehouse.out_of_stock') }}" class="nav-link">
-                <i class="fas fa-ban nav-icon text-danger"></i>
+                <i class="fas fa-ban nav-icon text-danger" aria-hidden="true"></i>
                 <p>{{ t('Out_Of_Stock') }}</p>
               </a>
             </li>
@@ -268,25 +268,25 @@
             {% if _sto %}
             <li class="nav-item">
               <a href="{{ url_for('store.admin_index') }}" class="nav-link">
-                <i class="fas fa-tachometer-alt nav-icon text-info"></i>
+                <i class="fas fa-tachometer-alt nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('Store_Dashboard') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
-                <i class="fas fa-boxes nav-icon text-success"></i>
+                <i class="fas fa-boxes nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('Store_Products') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
-                <i class="fas fa-exchange-alt nav-icon text-warning"></i>
+                <i class="fas fa-exchange-alt nav-icon text-warning" aria-hidden="true"></i>
                 <p>{{ t('Inventory_Transfer') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
-                <i class="fas fa-cog nav-icon"></i>
+                <i class="fas fa-cog nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Store_Settings') }}</p>
               </a>
             </li>
@@ -304,13 +304,13 @@
             {% if _pay %}
             <li class="nav-item">
               <a href="{{ url_for('payments.create_voucher') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Receipt_Voucher') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('payments.receipts') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Vouchers_List') }}</p>
               </a>
             </li>
@@ -321,13 +321,13 @@
             {% if _pay %}
             <li class="nav-item">
               <a href="{{ url_for('cheques.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon text-info"></i>
+                <i class="fas fa-list nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('Cheques') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('cheques.alerts') }}" class="nav-link">
-                <i class="fas fa-bell nav-icon text-warning"></i>
+                <i class="fas fa-bell nav-icon text-warning" aria-hidden="true"></i>
                 <p>{{ t('Cheque_Alerts') }}</p>
               </a>
             </li>
@@ -339,13 +339,13 @@
             {% if _exp %}
             <li class="nav-item">
               <a href="{{ url_for('expenses.create') }}" class="nav-link">
-                <i class="fas fa-plus-circle nav-icon text-success"></i>
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_Expense') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('expenses.index') }}" class="nav-link">
-                <i class="fas fa-list nav-icon"></i>
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Expenses_List') }}</p>
               </a>
             </li>
@@ -357,32 +357,32 @@
             {% if _led %}
             <li class="nav-item">
               <a href="{{ url_for('ledger.index') }}" class="nav-link">
-                <i class="fas fa-sitemap nav-icon"></i>
+                <i class="fas fa-sitemap nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Chart_Of_Accounts') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.trial_balance') }}" class="nav-link">
-                <i class="fas fa-balance-scale nav-icon"></i>
+                <i class="fas fa-balance-scale nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Trial_Balance') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.income_statement') }}" class="nav-link">
-                <i class="fas fa-chart-pie nav-icon"></i>
+                <i class="fas fa-chart-pie nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Income_Statement') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('ledger.balance_sheet') }}" class="nav-link">
-                <i class="fas fa-table nav-icon"></i>
+                <i class="fas fa-table nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Balance_Sheet') }}</p>
               </a>
             </li>
             {% if current_user.is_authenticated and current_user.is_admin() %}
             <li class="nav-item">
               <a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link">
-                <i class="fas fa-cogs nav-icon"></i>
+                <i class="fas fa-cogs nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Admin_Dashboard') }}</p>
               </a>
             </li>
@@ -400,19 +400,19 @@
           {{ _tree('fas fa-users-cog', t('Payroll_And_HR'), 'payroll', _pr) }}
             <li class="nav-item">
               <a href="{{ url_for('payroll.employees_list') }}" class="nav-link">
-                <i class="fas fa-users nav-icon text-info"></i>
+                <i class="fas fa-users nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('Employees_List') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('payroll.advances') }}" class="nav-link">
-                <i class="fas fa-hand-holding-usd nav-icon text-warning"></i>
+                <i class="fas fa-hand-holding-usd nav-icon text-warning" aria-hidden="true"></i>
                 <p>{{ t('Salary_Advances') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('payroll.process_payroll') }}" class="nav-link">
-                <i class="fas fa-money-check-alt nav-icon text-success"></i>
+                <i class="fas fa-money-check-alt nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('Pay_Salaries') }}</p>
               </a>
             </li>
@@ -428,61 +428,61 @@
             {% if _rep %}
             <li class="nav-item">
               <a href="{{ url_for('reports.sales') }}" class="nav-link">
-                <i class="fas fa-chart-line nav-icon"></i>
+                <i class="fas fa-chart-line nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Sales_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.purchases') }}" class="nav-link">
-                <i class="fas fa-shopping-cart nav-icon"></i>
+                <i class="fas fa-shopping-cart nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Purchases_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.inventory') }}" class="nav-link">
-                <i class="fas fa-boxes nav-icon"></i>
+                <i class="fas fa-boxes nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Inventory_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.receivables') }}" class="nav-link">
-                <i class="fas fa-hand-holding-usd nav-icon"></i>
+                <i class="fas fa-hand-holding-usd nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Receivables_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.partners') }}" class="nav-link">
-                <i class="fas fa-handshake nav-icon"></i>
+                <i class="fas fa-handshake nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Partners_Report') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.inventory_reconciliation') }}" class="nav-link">
-                <i class="fas fa-clipboard-check nav-icon"></i>
+                <i class="fas fa-clipboard-check nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Inventory_Reconciliation') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.ar_reconciliation') }}" class="nav-link">
-                <i class="fas fa-tasks nav-icon"></i>
+                <i class="fas fa-tasks nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Receivables_Reconciliation') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('reports.top_selling') }}" class="nav-link">
-                <i class="fas fa-trophy nav-icon"></i>
+                <i class="fas fa-trophy nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Top_Selling') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('treasury.treasury') }}" class="nav-link">
-                <i class="fas fa-coins nav-icon"></i>
+                <i class="fas fa-coins nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Treasury_Center') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('treasury.vat_return') }}" class="nav-link">
-                <i class="fas fa-percent nav-icon"></i>
+                <i class="fas fa-percent nav-icon" aria-hidden="true"></i>
                 <p>{{ t('VAT_Return') }}</p>
               </a>
             </li>
@@ -500,13 +500,13 @@
             {% if _u %}
             <li class="nav-item">
               <a href="{{ url_for('users.create') }}" class="nav-link">
-                <i class="fas fa-user-plus nav-icon text-success"></i>
+                <i class="fas fa-user-plus nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New_User') }}</p>
               </a>
             </li>
             <li class="nav-item">
               <a href="{{ url_for('users.index') }}" class="nav-link">
-                <i class="fas fa-users nav-icon"></i>
+                <i class="fas fa-users nav-icon" aria-hidden="true"></i>
                 <p>{{ t('Users_List') }}</p>
               </a>
             </li>

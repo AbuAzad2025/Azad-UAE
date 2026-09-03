@@ -72,7 +72,7 @@
                   <div class="alert alert-{{ _cat }} alert-dismissible fade show flash-message erp-flash {{ _erp_class }} az-enter" style="animation-delay:{{ _delay }}s">
                     <div class="erp-flash-main">
                       <div class="erp-flash-icon">
-                        <i class="fas {{ _icon }}"></i>
+                        <i class="fas {{ _icon }}" aria-hidden="true"></i>
                       </div>
                       <div class="erp-flash-body">{{ message }}</div>
                       <button type="button" class="close" data-dismiss="alert" aria-label="{{ _('إغلاق') }}">&times;</button>
@@ -120,18 +120,18 @@
       {% set overflow_modules = visible_modules[4:] %}
       {% for endpoint, icon, label in primary_modules %}
         <a href="{{ url_for(endpoint) }}" class="{% if request.endpoint and endpoint.split('.')[0] in request.endpoint %}active{% endif %}">
-          <i class="{{ icon }}"></i><span>{{ label }}</span>
+          <i class="{{ icon }}" aria-hidden="true"></i><span>{{ label }}</span>
         </a>
       {% endfor %}
       {% if overflow_modules %}
       <div class="erp-mobile-more position-relative">
         <button type="button" class="erp-mobile-more-btn" data-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="{{ _('المزيد') }}">
-          <i class="fas fa-ellipsis-h"></i>
+          <i class="fas fa-ellipsis-h" aria-hidden="true"></i>
         </button>
         <div class="dropdown-menu dropdown-menu-right erp-mobile-more-menu">
           {% for endpoint, icon, label in overflow_modules %}
             <a href="{{ url_for(endpoint) }}" class="dropdown-item {% if request.endpoint and endpoint.split('.')[0] in request.endpoint %}active{% endif %}">
-              <i class="{{ icon }} mr-2"></i>{{ label }}
+              <i class="{{ icon }} mr-2" aria-hidden="true"></i>{{ label }}
             </a>
           {% endfor %}
         </div>
@@ -215,7 +215,7 @@
           btn.dataset.originalHtml = btn.innerHTML;
           const spinner = btn.querySelector('.fa-spinner');
           if (!spinner) {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>' + btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>' + btn.innerHTML;
           }
           btn.setAttribute('aria-busy', 'true');
         }, 10);

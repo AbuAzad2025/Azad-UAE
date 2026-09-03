@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-dialog-centered erp-modal-fx" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white py-2">
-          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2"></i>{{ t('Exchange_Rates_View_Only') }}</h6>
+          <h6 class="modal-title" id="fxModalLabel"><i class="fas fa-coins mr-2" aria-hidden="true"></i>{{ t('Exchange_Rates_View_Only') }}</h6>
           <span class="badge badge-light ml-2" id="fx-base-badge">{{ FX_BASE_LABEL }} ({{ FX_BASE_CURRENCY }})</span>
           <button type="button" class="close text-white" data-dismiss="modal" aria-label="{{ t('Close') }}">
             <span aria-hidden="true">&times;</span>
@@ -11,7 +11,7 @@
         </div>
         <div class="modal-body p-0">
           <div class="alert alert-info py-1 px-2 mb-0 text-center small">
-            <i class="fas fa-info-circle mr-1"></i>
+            <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
             <strong>العملة الأساسية للتينانت:</strong> {{ FX_BASE_LABEL }} ({{ FX_BASE_CURRENCY }})
             <span class="ml-2 text-muted">| جميع الأسعار مقابل 1 {{ FX_BASE_CURRENCY }}</span>
           </div>
@@ -41,7 +41,7 @@
           </div>
           <div class="p-2 bg-light border-top text-center">
             <small class="text-muted" id="fx-last-updated">
-              <i class="fas fa-sync-alt mr-1"></i>{{ t('Click_To_Refresh') }}
+              <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>{{ t('Click_To_Refresh') }}
             </small>
             <span id="fx-source-badge" class="badge badge-secondary ml-1 erp-fx-source-hidden"></span>
           </div>
@@ -55,7 +55,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2"></i>{{ t('Calculator') }}</h5>
+          <h5 class="modal-title" id="navbarCalculatorTitle"><i class="fas fa-calculator mr-2" aria-hidden="true"></i>{{ t('Calculator') }}</h5>
           <button type="button" class="close ml-0 mr-auto" data-dismiss="modal" aria-label="{{ t('Close') }}">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -82,56 +82,56 @@
             <div class="tab-pane fade" id="calc-financial" role="tabpanel" aria-labelledby="tab-financial">
               <div class="row">
                 <div class="col-md-6 mb-2">
-                  <h6 class="font-weight-bold mb-3"><i class="fas fa-hand-holding-usd text-primary mr-2"></i>{{ t('Monthly_Installment') }}</h6>
+                  <h6 class="font-weight-bold mb-3"><i class="fas fa-hand-holding-usd text-primary mr-2" aria-hidden="true"></i>{{ t('Monthly_Installment') }}</h6>
                   <div class="form-group">
                     <label for="loanPrincipal" class="sr-only">{{ t('Loan_Amount') }}</label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span></div>
+                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-money-bill-wave" aria-hidden="true"></i></span></div>
                       <input class="form-control" id="loanPrincipal" type="number" placeholder="{{ t('Loan_Amount') }}">
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="loanRate" class="sr-only">{{ t('Annual_Interest_Rate') }} %</label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-percentage"></i></span></div>
+                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-percentage" aria-hidden="true"></i></span></div>
                       <input class="form-control" id="loanRate" type="number" step="0.01" placeholder="{{ t('Annual_Interest_Rate') }} %">
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="loanMonths" class="sr-only">{{ t('Number_Of_Months') }}</label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-calendar-alt"></i></span></div>
+                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-calendar-alt" aria-hidden="true"></i></span></div>
                       <input class="form-control" id="loanMonths" type="number" placeholder="{{ t('Number_Of_Months') }}">
                     </div>
                   </div>
                   <button type="button" class="btn btn-primary btn-block" id="btnLoanCalc">
-                    <i class="fas fa-calculator mr-2"></i>{{ t('Calculate') }}
+                    <i class="fas fa-calculator mr-2" aria-hidden="true"></i>{{ t('Calculate') }}
                   </button>
                   <div class="alert alert-info mt-2 mb-0" id="loanResult">
-                    <i class="fas fa-info-circle mr-1"></i>--
+                    <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>--
                   </div>
                 </div>
                 <div class="col-md-6 mb-2">
-                  <h6 class="font-weight-bold mb-3"><i class="fas fa-chart-line text-success mr-2"></i>{{ t('Profit_And_Margin') }}</h6>
+                  <h6 class="font-weight-bold mb-3"><i class="fas fa-chart-line text-success mr-2" aria-hidden="true"></i>{{ t('Profit_And_Margin') }}</h6>
                   <div class="form-group">
                     <label for="costValue" class="sr-only">{{ t('Cost') }}</label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-tag"></i></span></div>
+                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-tag" aria-hidden="true"></i></span></div>
                       <input class="form-control" id="costValue" type="number" step="0.01" placeholder="{{ t('Cost') }}">
                     </div>
                   </div>
                   <div class="form-group">
                     <label for="sellValue" class="sr-only">{{ t('Sale_Price') }}</label>
                     <div class="input-group">
-                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-dollar-sign"></i></span></div>
+                      <div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-dollar-sign" aria-hidden="true"></i></span></div>
                       <input class="form-control" id="sellValue" type="number" step="0.01" placeholder="{{ t('Sale_Price') }}">
                     </div>
                   </div>
                   <button type="button" class="btn btn-success btn-block" id="btnMarginCalc">
-                    <i class="fas fa-calculator mr-2"></i>{{ t('Calculate') }}
+                    <i class="fas fa-calculator mr-2" aria-hidden="true"></i>{{ t('Calculate') }}
                   </button>
                   <div class="alert alert-success mt-2 mb-0" id="marginResult">
-                    <i class="fas fa-info-circle mr-1"></i>--
+                    <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>--
                   </div>
                 </div>
               </div>
