@@ -122,7 +122,7 @@ urllib3==2.7.0
 six==1.17.0
 
 # AI native tool-calling argument validation (ai_knowledge/tool_schemas.py)
-pydantic>=2.0,<3
+pydantic>=2.13.5,<3
 
 # -----------------------------------------------------------------------------
 # Deployment notes (not pip packages):
