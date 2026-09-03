@@ -647,8 +647,6 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
         "package.json",
         "package-lock.json",
         "requirements.txt",
-        "requirements-dev.txt",
-        "requirements-optional.txt",
         ".gitignore",
         ".dockerignore",
         ".editorconfig",

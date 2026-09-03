@@ -17,8 +17,8 @@ AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY / AWS_SESSION_TOKEN /
 AWS_DEFAULT_REGION (or any other credential-chain source).  This module
 never reads, stores, or logs secret values.
 
-boto3 lives in requirements-optional.txt; it is imported lazily here so the
-app runs unchanged when offsite backup is not installed/configured.
+boto3 is a production dependency (requirements.txt); it is imported lazily
+here so the app boots unchanged when offsite backup is not configured.
 
 Failure policy: upload/download helpers NEVER raise — they return a status
 dict so a broken offsite target can never crash the local backup path.
