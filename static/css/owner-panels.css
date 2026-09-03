@@ -84,3 +84,56 @@ a:focus-visible,
 .small-box.bg-warning .small-box-footer {
 	background-color: rgba(0, 0, 0, 0.1);
 }
+
+/* ── Owner panel polish ─────────────────────────────────────────────── */
+
+/* Even-height metric cards, centered, with a breathing hover lift */
+.owner-panel-card {
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.owner-panel-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Metric numbers: stronger weight, tabular alignment, subtle cue */
+.owner-panel-card .small-box h3 {
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.02em;
+}
+
+/* Tenant table: transparent surface adapts to dark/light; row affordance */
+.owner-table-tenants td,
+.owner-table-tenants th {
+	padding: 0.7rem 0.9rem;
+}
+
+.owner-table-tenants tbody tr {
+	transition: background-color 0.12s ease;
+}
+
+.owner-table-tenants tbody tr:hover {
+	background-color: rgba(14, 90, 58, 0.06); /* fallback */
+	background-color: color-mix(in srgb, var(--az-primary, #0e5a3a) 6%, transparent);
+	box-shadow: inset 3px 0 0 var(--az-primary, #0e5a3a);
+}
+
+/* Tenant logo polish */
+.owner-tenant-logo {
+	border: 1px solid rgba(108, 117, 125, 0.18); /* fallback */
+	border: 1px solid color-mix(in srgb, var(--az-text-muted, #6c757d) 18%, transparent);
+	background-color: var(--az-surface-2, #f8f9fa);
+}
+
+/* Full-width call-to-action header row for owner section headers */
+.owner-panel-section-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}

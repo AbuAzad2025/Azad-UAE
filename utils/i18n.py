@@ -4265,6 +4265,7 @@ TRANSLATIONS = {
     "SaaS_Plans": {"ar": "خطط الاشتراكات", "en": "SaaS Plans"},
     "Active_Plans": {"ar": "خطة نشطة", "en": "Active Plans"},
     "Manage_Plans": {"ar": "إدارة الخطط", "en": "Manage Plans"},
+    "New_Tenant": {"ar": "مستأجر جديد", "en": "New Tenant"},
     "New_Subscriptions_Month": {"ar": "اشتراكات جديدة (الشهر)", "en": "New Subscriptions (Month)"},
     "Suspended_Companies": {"ar": "شركات معلقة/موقوفة", "en": "Suspended Companies"},
     "Trial_Subscriptions": {"ar": "اشتراكات تجريبية", "en": "Trial Subscriptions"},
