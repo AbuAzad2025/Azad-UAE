@@ -12,6 +12,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
+
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Bold.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
+
   <link rel="stylesheet" href="{{ dist_url('css/azad-login.css') }}">
 </head>
 <body class="azad-login-page">
