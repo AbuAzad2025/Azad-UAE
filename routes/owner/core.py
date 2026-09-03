@@ -90,6 +90,7 @@ def dashboard():
     tenant_rows = []
     branding_rows = []
     health_summary = None
+    package_stats = None
     if panel_mode == "platform":
         from services.backup_service import BackupService
 
@@ -98,6 +99,13 @@ def dashboard():
         tenant_rows = build_tenant_management_rows(backups, overview=platform_overview)
         branding_rows = build_branding_overview_rows()
         health_summary = build_system_health_summary()
+        from models import Package
+
+        pkgs = Package.query.filter_by(is_active=True).all()
+        package_stats = {
+            "active_count": len(pkgs),
+            "tiers": sorted({(p.slug or "").strip() for p in pkgs if (p.slug or "").strip()}),
+        }
 
     return render_template(
         "owner/dashboard.html",
@@ -109,6 +117,7 @@ def dashboard():
         tenant_rows=tenant_rows,
         branding_rows=branding_rows,
         health_summary=health_summary,
+        package_stats=package_stats,
     )
 
 

@@ -40,7 +40,9 @@
     {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in role_enum.global_scope)) %}
 
     {% include 'partials/navbar.html' %}
+    {% if current_user.is_authenticated %}
     {% include 'partials/sidebar.html' %}
+    {% endif %}
 
     <main class="content-wrapper" id="main-content" tabindex="-1">
       <div class="content-header az-enter">
@@ -84,7 +86,9 @@
             {% endif %}
           {% endwith %}
 
+          {% if current_user.is_authenticated %}
           {% include 'partials/upgrade_banner.html' %}
+          {% endif %}
 
           <!-- Main Content Block -->
           <div class="az-enter az-enter-d1">
@@ -237,7 +241,9 @@
   </script>
 
   {% include 'partials/scripts.html' %}
+  {% if current_user.is_authenticated %}
   {% include 'partials/modals.html' %}
+  {% endif %}
   {% block extra_js %}{% endblock %}
   <script src="{{ dist_url('js/form_validation.js') }}"></script>
 </body>

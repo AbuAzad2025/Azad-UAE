@@ -12,12 +12,13 @@
 
     <!-- Main Navigation Links -->
     <div class="erp-navbar-main-zone" role="menubar">
+      {% if current_user.is_authenticated %}
       <a href="{{ url_for('main.dashboard') }}" class="erp-nav-main-link {% if request.endpoint == 'main.dashboard' %}active{% endif %}" 
          {% if request.endpoint == 'main.dashboard' %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-home"></i>
         <span class="d-none d-lg-inline">{{ t('Dashboard') }}</span>
       </a>
-      {% if current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+      {% if current_user.has_permission('manage_sales') %}
       <a href="{{ url_for('sales.index') }}" class="erp-nav-main-link {% if request.endpoint and 'sales' in request.endpoint %}active{% endif %}" 
          {% if request.endpoint and 'sales' in request.endpoint %}aria-current="page"{% endif %} role="menuitem">
         <i class="fas fa-shopping-cart"></i>
@@ -60,6 +61,7 @@
         <span class="d-none d-lg-inline">{{ t('Settings') }}</span>
       </a>
       {% endif %}
+      {% endif %}
     </div>
 
     <!-- Actions Zone -->
@@ -71,6 +73,7 @@
       </button>
 
       <!-- Tools Dropdown -->
+      {% if current_user.is_authenticated %}
       <div class="dropdown erp-navbar-tool-dropdown d-none d-md-block">
         <button class="btn btn-outline-light erp-navbar-tool-btn" type="button" data-toggle="dropdown" aria-expanded="false" 
                 title="{{ t('System_Tools') }}" aria-haspopup="true" aria-label="{{ t('System_Tools') }}">
@@ -116,6 +119,7 @@
           {% endif %}
         </div>
       </div>
+      {% endif %}
 
       <!-- Language Switcher -->
       <div class="dropdown">
@@ -155,8 +159,9 @@
       </div>
 
       <!-- User Dropdown -->
-      <div class="dropdown">
-        <button class="btn btn-outline-light erp-navbar-user-btn" type="button" data-toggle="dropdown" 
+{% if current_user.is_authenticated %}
+        <div class="dropdown">
+          <button class="btn btn-outline-light erp-navbar-icon-btn" type="button" data-toggle="dropdown"
                 title="{{ t('Personal_File') }}" aria-label="{{ t('User_Menu') }}" aria-haspopup="true">
           <span class="erp-user-avatar">
             <i class="far fa-user"></i>
@@ -183,6 +188,12 @@
           </a>
         </div>
       </div>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light erp-navbar-icon-btn">
+        <i class="fas fa-sign-in-alt"></i>
+        <span class="d-none d-lg-inline">{{ t('Login') }}</span>
+      </a>
+      {% endif %}
     </div>
   </nav>
 

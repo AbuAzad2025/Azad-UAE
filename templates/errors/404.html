@@ -18,9 +18,15 @@
             {{ t('الصفحة المطلوبة غير موجودة. تحقق من الرابط أو عد للصفحة الرئيسية.') }}
           </p>
           <div class="mt-4">
+            {% if current_user.is_authenticated %}
             <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary">
               {{ t('Back to Dashboard') }}
             </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+              {{ t('Login') }}
+            </a>
+            {% endif %}
             <button type="button" class="btn btn-secondary" data-action="history-back">
               {{ t('Back') }}
             </button>

@@ -51,6 +51,28 @@
 </div>
 {% endif %}
 
+{% if package_stats is defined %}
+<div class="card owner-panel-card mb-4">
+  <div class="card-body py-3">
+    <div class="d-flex align-items-center justify-content-between flex-wrap">
+      <div class="d-flex align-items-center">
+        <i class="fas fa-tags fa-lg text-primary mr-3"></i>
+        <div>
+          <div class="h5 mb-0">{{ t('SaaS_Plans') }}</div>
+          <span class="text-muted small">{{ package_stats.active_count|default(0) }} {{ t('Active_Plans') }}</span>
+          {% if package_stats and package_stats.tiers %}
+          <span class="text-muted small ml-2">· {{ package_stats.tiers | join(', ') }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <a href="{{ url_for('payment_vault.packages_management') }}?tab=plans" class="btn btn-sm btn-primary">
+        <i class="fas fa-cog mr-1"></i> {{ t('Manage_Plans') }}
+      </a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 <div class="card owner-panel-card mb-4">
   <div class="card-header bg-white">
     <h3 class="card-title mb-0"><i class="fas fa-building mr-2"></i> {{ t('Manage_Tenants') }}</h3>
