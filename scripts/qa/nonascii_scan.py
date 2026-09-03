@@ -11,6 +11,7 @@ Output: list of files + lines + a 50-char preview, with CLEAN categories
 (AdminLTE i18n, fonts, images, encrypted backups, ruff cache, ai_knowledge
   knowledge base, etc.) excluded.
 """
+
 import pathlib
 import re
 import sys
@@ -19,22 +20,73 @@ ROOT = pathlib.Path(r"D:\recovers\data\karaj\azad-uae")
 
 # Categories EXCLUDED entirely (legitimate / unrelated)
 EXCLUDE_PATH = [
-    ".git", ".venv", "venv", "node_modules", "dist", "build",
-    ".ruff_cache", ".mypy_cache", ".pytest_cache", "__pycache__",
-    "instance/backups", "static/adminlte/plugins/select2/js/i18n",
-    "static/fonts", "static/assets", "static/img", "static/img-dist",
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "dist",
+    "build",
+    ".ruff_cache",
+    ".mypy_cache",
+    ".pytest_cache",
+    "__pycache__",
+    "instance/backups",
+    "static/adminlte/plugins/select2/js/i18n",
+    "static/fonts",
+    "static/assets",
+    "static/img",
+    "static/img-dist",
     "ai_knowledge/knowledge_base.py",
-    "ai_knowledge/memory", "ai_knowledge/datasets",
+    "ai_knowledge/memory",
+    "ai_knowledge/datasets",
     "migrations/versions",  # generated; any noise = upstream
 ]
 
-SOURCE_SUFFIX = {".py", ".js", ".ts", ".html", ".jinja", ".jinja2", ".css",
-                  ".md", ".rst", ".txt", ".json", ".yaml", ".yml",
-                  ".csv", ".po", ".mo", ".toml", ".ini", ".cfg", ".sh"}
-SKIP_SUFFIX = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp",
-               ".woff", ".woff2", ".ttf", ".eot", ".otf", ".ico",
-               ".pdf", ".gz", ".zip", ".tar", ".enc", ".db", ".sqlite",
-               ".png.base64", ".svg"}
+SOURCE_SUFFIX = {
+    ".py",
+    ".js",
+    ".ts",
+    ".html",
+    ".jinja",
+    ".jinja2",
+    ".css",
+    ".md",
+    ".rst",
+    ".txt",
+    ".json",
+    ".yaml",
+    ".yml",
+    ".csv",
+    ".po",
+    ".mo",
+    ".toml",
+    ".ini",
+    ".cfg",
+    ".sh",
+}
+SKIP_SUFFIX = {
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".bmp",
+    ".woff",
+    ".woff2",
+    ".ttf",
+    ".eot",
+    ".otf",
+    ".ico",
+    ".pdf",
+    ".gz",
+    ".zip",
+    ".tar",
+    ".enc",
+    ".db",
+    ".sqlite",
+    ".png.base64",
+    ".svg",
+}
 
 REPLACEMENT = "\ufffd"  # U+FFFD
 EXTRA = re.compile(r"[\ufffa-\uffff]")
@@ -93,8 +145,7 @@ def main() -> int:
     for rel, lineno, snippet, marker in findings:
         by_file.setdefault(rel, []).append((lineno, snippet, marker))
 
-    lines = [f"Replacement/box-glyph findings: {len(findings)}",
-             f"Files: {len(by_file)}", ""]
+    lines = [f"Replacement/box-glyph findings: {len(findings)}", f"Files: {len(by_file)}", ""]
     for rel in sorted(by_file):
         lines.append(f"-- {rel} --")
         for lineno, snippet, marker in by_file[rel][:50]:

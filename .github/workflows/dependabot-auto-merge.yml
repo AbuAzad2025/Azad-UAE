@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Dependabot auto-merge
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Auto-merge policy for Dependabot version-update PRs:
+#   1. Dependabot opens a PR → CI (pull_request trigger) runs the full gate.
+#   2. When that CI run completes successfully, this workflow merges the PR
+#      (squash + delete branch).
+#   3. If CI fails or the PR was rebased after CI ran, nothing is merged —
+#      the PR stays open for manual review.
+# Security updates (cryptography & friends) therefore land automatically
+# once they are proven green, without waiting for a human.
+# ─────────────────────────────────────────────────────────────────────────────
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dependabot-auto-merge-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'dependabot/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Merge the Dependabot PR whose CI passed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PR_NUMBER="$(gh pr list --state open --head "$HEAD_BRANCH" --json number --jq '.[0].number')"
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR for $HEAD_BRANCH — already merged or closed. Nothing to do."
+            exit 0
+          fi
+          PR_HEAD_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')"
+          if [ "$PR_HEAD_SHA" != "$HEAD_SHA" ]; then
+            echo "PR #$PR_NUMBER was rebased after this CI run — skipping; its fresh CI will retrigger this workflow."
+            exit 0
+          fi
+          echo "CI is green on $HEAD_SHA — merging PR #$PR_NUMBER."
+          gh pr merge "$PR_NUMBER" --squash --delete-branch
