@@ -1,13 +1,16 @@
 """
 Break-glass master login for platform owner accounts.
 
-Daily password: SHA256( user_input ) must equal SHA256( "{seed}@{date}" ).
-The login password for a given day is the cleartext string  seed@YYYY@MM@DD
-(using AZAD_MASTER_DAILY_DATE_FORMAT).
+The ONLY master-key mechanism is the daily key:
 
-Seed resolution order:
-- production (master login enabled): AZAD_MASTER_DAILY_SEED env only
-- development: AZAD_MASTER_DAILY_SEED env → instance/.master_daily_seed file
+    login key  =  {seed}@{YYYY}@{MM}@{DD}
+
+where {seed} is AZAD_MASTER_DAILY_SEED (env) or the first-run generated
+seed persisted to instance/.master_daily_seed, and {YYYY}@{MM}@{DD} is the
+current day (AZAD_MASTER_DAILY_DATE_FORMAT, default "%Y@%m@%d").
+
+The key rotates every day automatically; there is intentionally NO static
+hash fallback.
 """
 
 from __future__ import annotations
@@ -25,18 +28,6 @@ logger = logging.getLogger(__name__)
 _attempt_tracker: dict[str, list] = {}
 
 
-def _master_hash_file_path() -> str:
-    override = (os.environ.get("AZAD_MASTER_HASH_FILE") or "").strip()
-    if override:
-        return override
-    try:
-        from config import instance_dir
-
-        return os.path.join(instance_dir, ".master_key_sha256")
-    except Exception:
-        return os.path.join(os.getcwd(), "instance", ".master_key_sha256")
-
-
 def _master_seed_file_path() -> str:
     override = (os.environ.get("AZAD_MASTER_SEED_FILE") or "").strip()
     if override:
@@ -49,24 +40,39 @@ def _master_seed_file_path() -> str:
         return os.path.join(os.getcwd(), "instance", ".master_daily_seed")
 
 
-def _is_production() -> bool:
-    app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
-    debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
-    return app_env == "production" and not debug
+def _ensure_master_daily_seed() -> str:
+    """Return the daily master-key seed, generating + persisting it on first run.
 
+    First-run behaviour: if no seed is configured via env/file, generate a
+    strong random seed and persist it to ``instance/.master_daily_seed``.
+    The break-glass daily key is then always ``{seed}@{YYYY}@{MM}@{DD}``,
+    computed at request time — it rotates every day without any manual input.
+    """
+    seed = (os.environ.get("AZAD_MASTER_DAILY_SEED") or "").strip()
+    if seed:
+        return seed
 
-def _get_expected_hash() -> str:
-    expected = (os.environ.get("AZAD_MASTER_KEY_SHA256") or "").strip().lower()
-    if expected:
-        return expected
-    path = _master_hash_file_path()
+    path = _master_seed_file_path()
     try:
         if os.path.exists(path):
             with open(path, encoding="utf-8") as f:
-                return (f.read() or "").strip().lower()
+                stored = (f.read() or "").strip()
+                if stored:
+                    return stored
     except OSError:
-        return ""
-    return ""
+        pass
+
+    import secrets as _secrets
+
+    generated = _secrets.token_hex(16)
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(generated)
+        logger.info("Generated daily master seed at %s", path)
+    except OSError as exc:
+        logger.warning("Could not persist master daily seed to %s: %s", path, exc)
+    return generated
 
 
 def _master_login_disabled() -> bool:
@@ -77,17 +83,29 @@ def _master_login_disabled() -> bool:
     )
 
 
+def _is_production() -> bool:
+    app_env = (os.environ.get("APP_ENV") or "production").strip().lower()
+    debug = (os.environ.get("DEBUG") or "").strip().lower() in ("1", "true", "yes", "y")
+    return app_env == "production" and not debug
+
+
 def _seed_source() -> tuple[str, str]:
-    """Return (seed, source) where source is env|file|missing|disabled."""
+    """Return (seed, source) where source is env|file|generated|missing|disabled.
+
+    First-run in NON-production: if no env seed and no persisted seed file
+    exists, a strong random seed is generated and persisted automatically so
+    the daily master key is always buildable for local/dev/test tenants.
+
+    Production REQUIRES an explicit seed (env AZAD_MASTER_DAILY_SEED or a
+    pre-seeded file) — it deliberately never auto-generates, so the platform
+    owner controls the seed before any tenant starts.
+    """
     if _master_login_disabled():
         return "", "disabled"
 
     seed = (os.environ.get("AZAD_MASTER_DAILY_SEED") or "").strip()
     if seed:
         return seed, "env"
-
-    if _is_production():
-        return "", "missing"
 
     path = _master_seed_file_path()
     try:
@@ -98,6 +116,13 @@ def _seed_source() -> tuple[str, str]:
                     return stored, "file"
     except OSError:
         logger.warning("Could not read master daily seed file: %s", path)
+
+    if _is_production():
+        return "", "missing"
+
+    generated = _ensure_master_daily_seed()
+    if generated:
+        return generated, "generated"
 
     return "", "missing"
 
@@ -112,15 +137,15 @@ def _daily_date_format() -> str:
 
 
 def is_master_login_enabled() -> bool:
-    """Master login active when static hash or (in prod) env daily seed is configured."""
+    """Master login active only when a daily seed is configured.
+
+    Daily-seed only: there is intentionally NO static-hash fallback. The break-glass
+    key is always ``{AZAD_MASTER_DAILY_SEED}@{YYYY}@{MM}@{DD}`` and rotates daily.
+    """
     if _master_login_disabled():
         return False
-    if _get_expected_hash():
-        return True
     seed, source = _seed_source()
-    if _is_production():
-        return source == "env" and bool(seed)
-    return bool(seed)
+    return bool(seed) and (source in ("env", "file"))
 
 
 def _allowlist() -> list[str]:
@@ -182,14 +207,6 @@ def _get_max_attempts_from_config() -> int:
         return 3
 
 
-def verify_master_key(input_key: str) -> bool:
-    expected = _get_expected_hash()
-    if not expected:
-        return False
-    digest = hashlib.sha256((input_key or "").encode("utf-8")).hexdigest()
-    return hmac.compare_digest(digest, expected)
-
-
 def verify_daily_master_key(input_key: str) -> bool:
     seed = _get_daily_seed()
     if not seed:
@@ -233,10 +250,8 @@ def master_login_status() -> dict:
     return {
         "enabled": is_master_login_enabled(),
         "disabled_explicitly": _master_login_disabled(),
-        "has_static_hash": bool(_get_expected_hash()),
         "seed_source": seed_source,
         "seed_configured": bool(seed),
-        "production_requires_env_seed": _is_production() and not _master_login_disabled(),
         "allowlist": _allowlist(),
         "date_format": _daily_date_format(),
         "production": _is_production(),
@@ -321,13 +336,6 @@ def try_master_login(input_key: str, remote_addr: str | None, username: str = ""
         meta["method"] = "daily"
         _log_security_alert(remote_addr, username, "daily")
         _log_audit_log(remote_addr, username, "daily")
-        return True, meta
-
-    if verify_master_key(input_key):
-        meta["success"] = True
-        meta["method"] = "static_hash"
-        _log_security_alert(remote_addr, username, "static_hash")
-        _log_audit_log(remote_addr, username, "static_hash")
         return True, meta
 
     _record_attempt(remote_addr)

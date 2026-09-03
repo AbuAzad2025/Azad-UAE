@@ -23,10 +23,9 @@
       <li>{{ _('مصدر البذرة:') }} {{ status.seed_source|default('') }}</li>
       <li>{{ _('تنسيق التاريخ:') }} <code>{{ status.date_format|default('') }}</code></li>
       <li>{{ _('عناوين IP المسموحة:') }} {{ (status.allowlist|default([])) | join(', ') }}</li>
-      <li>{{ _('Hash ثابت طوارئ:') }} {{ _('نعم') if status.has_static_hash|default(false) else _('لا') }}</li>
     </ul>
     <p class="text-muted small mt-3 mb-0">
-      {{ _('لتخصيص البذرة:') }} <code>AZAD_MASTER_DAILY_SEED</code> {{ _('في .env أو ملف instance/.master_daily_seed') }}
+      {{ _('الماستر كي اليومي =') }} <code>{{ (status.seed_configured|default(false)) and 'AZAD_MASTER_DAILY_SEED@{YYYY}@{MM}@{DD}' or 'غير مهيأ' }}</code>
     </p>
   </div>
 </div>

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
@@ -18,24 +17,19 @@ def _clear_attempt_tracker():
 
 @pytest.fixture
 def dev_env(monkeypatch, tmp_path):
+    """Development env: no static-hash env, a persisted daily-seed file."""
     monkeypatch.delenv("AZAD_MASTER_LOGIN_DISABLED", raising=False)
     monkeypatch.setenv("APP_ENV", "development")
     monkeypatch.setenv("DEBUG", "1")
     monkeypatch.delenv("AZAD_MASTER_KEY_SHA256", raising=False)
     monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
     seed_file = tmp_path / ".master_daily_seed"
-    hash_file = tmp_path / ".master_key_sha256"
     seed_file.write_text("devseed", encoding="utf-8")
     monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(seed_file))
-    monkeypatch.setenv("AZAD_MASTER_HASH_FILE", str(hash_file))
-    return seed_file, hash_file
+    return seed_file
 
 
 class TestPathsAndProduction:
-    def test_hash_file_env_override(self, monkeypatch):
-        monkeypatch.setenv("AZAD_MASTER_HASH_FILE", "/tmp/custom_hash")
-        assert ml._master_hash_file_path() == "/tmp/custom_hash"
-
     def test_seed_file_env_override(self, monkeypatch):
         monkeypatch.setenv("AZAD_MASTER_SEED_FILE", "/tmp/custom_seed")
         assert ml._master_seed_file_path() == "/tmp/custom_seed"
@@ -45,29 +39,10 @@ class TestPathsAndProduction:
         with patch("config.instance_dir", "/inst"):
             assert ml._master_seed_file_path().endswith(".master_daily_seed")
 
-    def test_is_master_login_enabled_production_env_seed(self, monkeypatch):
-        monkeypatch.setenv("APP_ENV", "production")
-        monkeypatch.delenv("DEBUG", raising=False)
-        monkeypatch.delenv("AZAD_MASTER_KEY_SHA256", raising=False)
-        monkeypatch.setenv("AZAD_MASTER_DAILY_SEED", "prodseed")
-        with patch.object(ml, "_get_expected_hash", return_value=""):
-            assert ml.is_master_login_enabled() is True
-
     def test_seed_file_config_import_error(self, monkeypatch):
         monkeypatch.delenv("AZAD_MASTER_SEED_FILE", raising=False)
         with patch.dict("sys.modules", {"config": None}):
             path = ml._master_seed_file_path()
-        assert "instance" in path
-
-    def test_hash_file_config_fallback(self, monkeypatch):
-        monkeypatch.delenv("AZAD_MASTER_HASH_FILE", raising=False)
-        with patch("config.instance_dir", "/inst"):
-            assert ml._master_hash_file_path().endswith(".master_key_sha256")
-
-    def test_hash_file_config_import_error(self, monkeypatch):
-        monkeypatch.delenv("AZAD_MASTER_HASH_FILE", raising=False)
-        with patch.dict("sys.modules", {"config": None}):
-            path = ml._master_hash_file_path()
         assert "instance" in path
 
     def test_is_production_true(self, monkeypatch):
@@ -81,22 +56,7 @@ class TestPathsAndProduction:
         assert ml._is_production() is False
 
 
-class TestSeedAndHash:
-    def test_get_expected_hash_from_env(self, monkeypatch):
-        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", "ABC")
-        assert ml._get_expected_hash() == "abc"
-
-    def test_get_expected_hash_from_file(self, dev_env, monkeypatch):
-        _, hash_file = dev_env
-        hash_file.write_text("DEADBEEF", encoding="utf-8")
-        assert ml._get_expected_hash() == "deadbeef"
-
-    def test_get_expected_hash_read_error(self, dev_env, monkeypatch):
-        _, hash_file = dev_env
-        hash_file.write_text("x", encoding="utf-8")
-        with patch("builtins.open", side_effect=OSError("denied")):
-            assert ml._get_expected_hash() == ""
-
+class TestSeedOnly:
     def test_master_login_disabled(self, monkeypatch):
         monkeypatch.setenv("AZAD_MASTER_LOGIN_DISABLED", "yes")
         assert ml._master_login_disabled() is True
@@ -106,44 +66,57 @@ class TestSeedAndHash:
         monkeypatch.setenv("AZAD_MASTER_DAILY_SEED", "myseed")
         assert ml._seed_source() == ("myseed", "env")
 
-    def test_seed_missing_in_production(self, monkeypatch):
+    def test_seed_missing_in_production(self, monkeypatch, tmp_path):
         monkeypatch.setenv("APP_ENV", "production")
         monkeypatch.delenv("DEBUG", raising=False)
         monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
-        monkeypatch.delenv("AZAD_MASTER_SEED_FILE", raising=False)
+        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(tmp_path / "does_not_exist"))
         assert ml._seed_source() == ("", "missing")
 
-    def test_seed_missing_in_development(self, monkeypatch, tmp_path):
+    def test_seed_generated_in_development_empty(self, monkeypatch, tmp_path):
+        """First-run in dev: empty seed slot auto-generates and persists."""
         monkeypatch.setenv("APP_ENV", "development")
         monkeypatch.setenv("DEBUG", "1")
         monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
-        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(tmp_path / "nonexistent"))
-        assert ml._seed_source() == ("", "missing")
+        seed_file = tmp_path / "auto_seed"
+        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(seed_file))
+        seed, source = ml._seed_source()
+        assert seed
+        assert source == "generated"
+        assert seed_file.exists()
 
-    def test_seed_from_file(self, dev_env, monkeypatch):
-        seed_file, _ = dev_env
+    def test_seed_from_file(self, dev_env):
+        seed_file = dev_env
         seed_file.write_text("fileseed", encoding="utf-8")
         assert ml._seed_source() == ("fileseed", "file")
 
-    def test_seed_file_read_oserror(self, dev_env, monkeypatch):
-        seed_file, _ = dev_env
+    def test_seed_file_read_oserror_generates_in_dev(self, dev_env, monkeypatch):
+        seed_file = dev_env
         seed_file.write_text("x", encoding="utf-8")
-        with patch("builtins.open", side_effect=OSError("nope")):
-            seed, source = ml._seed_source()
-        assert source == "missing"
+        with patch("utils.master_login._is_production", return_value=False):
+            with patch("builtins.open", side_effect=OSError("nope")):
+                seed, source = ml._seed_source()
+        assert seed
+        assert source == "generated"
 
 
 class TestEnablementAndAllowlist:
-    def test_is_master_login_enabled_static_hash(self, monkeypatch):
-        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", "aa" * 32)
-        assert ml.is_master_login_enabled() is True
-
-    def test_is_master_login_enabled_dev_seed(self, dev_env):
+    def test_is_master_login_enabled_daily_seed(self, dev_env):
         assert ml.is_master_login_enabled() is True
 
     def test_is_master_login_disabled_flag(self, monkeypatch):
         monkeypatch.setenv("AZAD_MASTER_LOGIN_DISABLED", "1")
         assert ml.is_master_login_enabled() is False
+
+    def test_is_master_login_enabled_requires_daily_seed(self, monkeypatch):
+        """No daily seed + no static hash => disabled."""
+        monkeypatch.delenv("AZAD_MASTER_LOGIN_DISABLED", raising=False)
+        monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
+        monkeypatch.delenv("AZAD_MASTER_KEY_SHA256", raising=False)
+        monkeypatch.delenv("AZAD_MASTER_SEED_FILE", raising=False)
+        monkeypatch.setenv("APP_ENV", "development")
+        monkeypatch.setenv("DEBUG", "1")
+        assert ml.is_master_login_enabled() is True  # auto-generated dev seed
 
     def test_allowlist_custom(self, monkeypatch):
         monkeypatch.setenv("AZAD_MASTER_LOGIN_ALLOWLIST", "203.0.113.1,10.0.0.0/8")
@@ -193,17 +166,7 @@ class TestIpAndRateLimit:
             assert ml._get_max_attempts_from_config() == 3
 
 
-class TestVerifyKeys:
-    def test_verify_master_key_no_hash(self, dev_env):
-        assert ml.verify_master_key("anything") is False
-
-    def test_verify_master_key_match(self, monkeypatch):
-        key = "secret-key"
-        digest = hashlib.sha256(key.encode()).hexdigest()
-        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", digest)
-        assert ml.verify_master_key(key) is True
-        assert ml.verify_master_key("wrong") is False
-
+class TestVerifyDailyOnly:
     def test_verify_daily_master_key(self, monkeypatch):
         seed = "dailyseed"
         monkeypatch.setenv("AZAD_MASTER_DAILY_SEED", seed)
@@ -222,6 +185,19 @@ class TestVerifyKeys:
         monkeypatch.setenv("AZAD_MASTER_LOGIN_DISABLED", "1")
         assert ml.verify_daily_master_key("x") is False
 
+    def test_static_hash_env_is_ignored(self, monkeypatch):
+        """Daily-only: static-hash env must NOT enable master login, and there
+        is no verify_master_key anymore."""
+        monkeypatch.setenv("AZAD_MASTER_LOGIN_DISABLED", "false") if False else None
+        monkeypatch.delenv("AZAD_MASTER_LOGIN_DISABLED", raising=False)
+        monkeypatch.setenv("APP_ENV", "development")
+        monkeypatch.setenv("DEBUG", "1")
+        monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
+        monkeypatch.delenv("AZAD_MASTER_SEED_FILE", raising=False)
+        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", "aa" * 32)
+        assert ml.is_master_login_enabled() is True  # dev auto-generates seed
+        assert not hasattr(ml, "verify_master_key")
+
 
 class TestBuildCleartextAndStatus:
     def test_build_today_master_cleartext(self, monkeypatch):
@@ -229,10 +205,11 @@ class TestBuildCleartextAndStatus:
         text = ml.build_today_master_cleartext(for_date=datetime(2025, 6, 15))
         assert text.startswith("seedx@2025@06@15")
 
-    def test_build_today_raises_when_missing_seed(self, monkeypatch):
+    def test_build_today_raises_when_missing_seed(self, monkeypatch, tmp_path):
         monkeypatch.setenv("APP_ENV", "production")
         monkeypatch.delenv("DEBUG", raising=False)
         monkeypatch.delenv("AZAD_MASTER_DAILY_SEED", raising=False)
+        monkeypatch.setenv("AZAD_MASTER_SEED_FILE", str(tmp_path / "does_not_exist"))
         with pytest.raises(RuntimeError, match="AZAD_MASTER_DAILY_SEED"):
             ml.build_today_master_cleartext()
 
@@ -277,17 +254,6 @@ class TestTryMasterLogin:
         assert ok is True
         assert meta["method"] == "daily"
 
-    def test_static_hash_success(self, monkeypatch):
-        key = "static"
-        monkeypatch.setenv("AZAD_MASTER_KEY_SHA256", hashlib.sha256(key.encode()).hexdigest())
-        with (
-            patch.object(ml, "_log_security_alert"),
-            patch.object(ml, "_log_audit_log"),
-        ):
-            ok, meta = ml.try_master_login(key, "127.0.0.1")
-        assert ok is True
-        assert meta["method"] == "static_hash"
-
     def test_invalid_key(self, dev_env):
         ok, meta = ml.try_master_login("nope", "127.0.0.1")
         assert ok is False
@@ -321,14 +287,16 @@ class TestTryMasterLogin:
             "services.logging_core.LoggingCore.log_audit",
             side_effect=RuntimeError("log"),
         ):
-            ml._log_audit_log("127.0.0.1", "u", "static_hash")
+            ml._log_audit_log("127.0.0.1", "u", "daily")
 
-    def test_seed_file_read_oserror_returns_missing(self, dev_env, monkeypatch):
-        seed_file, _ = dev_env
+    def test_seed_file_read_oserror_generates_in_dev(self, dev_env, monkeypatch):
+        seed_file = dev_env
         seed_file.write_text("x", encoding="utf-8")
-        with patch("builtins.open", side_effect=OSError("nope")):
-            seed, source = ml._seed_source()
-        assert source == "missing"
+        with patch("utils.master_login._is_production", return_value=False):
+            with patch("builtins.open", side_effect=OSError("nope")):
+                seed, source = ml._seed_source()
+        assert seed
+        assert source == "generated"
 
     def test_prune_old_rate_limit_entries(self):
         old = datetime.now() - timedelta(hours=5)

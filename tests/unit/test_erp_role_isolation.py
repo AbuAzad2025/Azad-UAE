@@ -200,7 +200,10 @@ def test_all_api_routes_require_login():
 
 
 def test_master_key_helpers_present():
-    """Master-key mechanism exposes guarded entrypoints."""
+    """Master-key mechanism exposes guarded entrypoints (DAILY-only)."""
     txt = _read(MASTER_LOGIN_SOURCE)
-    for fn in ("verify_master_key", "is_master_login_enabled", "can_use_master_login", "is_allowed_ip"):
+    # daily-only: verify_daily_master_key must exist; the removed static-hash
+    # verify_master_key must NOT be reintroduced.
+    for fn in ("verify_daily_master_key", "is_master_login_enabled", "can_use_master_login", "is_allowed_ip"):
         assert f"def {fn}" in txt, f"master_login is missing {fn}()"
+    assert "verify_master_key" not in txt, "static-hash master key was reintroduced"
