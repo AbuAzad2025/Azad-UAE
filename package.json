@@ -4,7 +4,6 @@
 		"test:watch": "vitest",
 		"test:e2e": "pytest tests/e2e --ignore=tests/e2e/tours -q",
 		"test:e2e:all": "pytest tests/e2e -q",
-		"test:e2e:tours:python": "pytest tests/e2e/tours -v --tb=short",
 		"test:tours": "npx playwright test --config=scripts/playwright.config.json --reporter=list",
 		"test:tours:ci": "npx playwright test --config=scripts/playwright.config.json --reporter=list",
 		"css:purge": "node scripts/lint/purgecss-report.js",

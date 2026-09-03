@@ -85,7 +85,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   - Static quality (ruff/mypy/jinja/biome/cspell/yamllint/actionlint) ✅
   - repo-security (gitleaks+Trivy), security-scan (bandit), verify-boot ✅
   - routes PG15/16/17, services, models, utils, core, ai_knowledge ✅
-  - integration PG15, e2e, e2e-tours (Python+Playwright), api-fuzz, lighthouse ✅
+  - integration PG15, e2e, e2e-tours (JS+Playwright), api-fuzz, lighthouse ✅
   - tenant-isolation-fuzzer, docker-infra-audit, coverage-report ✅
 - Alembic Round-Trip: `33559818099` — ✅ **success** (upgrade→downgrade→upgrade full chain)
 - Kept only the latest 2 runs per workflow (CI, Alembic Round-Trip)

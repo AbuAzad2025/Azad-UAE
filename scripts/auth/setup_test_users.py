@@ -204,7 +204,7 @@ def main():
         for u in users:
             print(f"  User: {u['slug']:20s} email={u['email']}")
         _export_state(app, users, tenant)
-    print("\nDone. Run: cp scripts/auth/*_state.json tests/e2e/tours/")
+    print("\nDone. Playwright projects load these states via scripts/playwright.config.json.")
 
 
 if __name__ == "__main__":

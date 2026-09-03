@@ -114,6 +114,7 @@ package.json
 tmp/
 *.tmp
 *.temp
+test-results/
 ~$*
 flask_err.txt
 flask_out.txt
