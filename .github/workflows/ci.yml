@@ -593,9 +593,10 @@ jobs:
           APP_ENV: testing
         run: |
           gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
-          for i in $(seq 1 20); do
+          for attempt in $(seq 1 20); do
             if curl -fsS http://localhost:5000/auth/login >/dev/null 2>&1; then
-              echo "App server is up"; exit 0
+              echo "App server is up (attempt $attempt)"
+              exit 0
             fi
             sleep 3
           done
