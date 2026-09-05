@@ -18,10 +18,20 @@
   {% include 'partials/head.html' %}
   {% block extra_css %}{% endblock %}
 
-  <!-- Critical CSS preload (inlined via preload for fastest first paint) -->
+  <!-- Critical CSS preload (inlined via preload for fastest first paint; nonce script replaces inline onload for CSP) -->
   <link rel="preload" href="{{ dist_url('css/critical.css') }}" as="style">
-  <link rel="stylesheet" href="{{ dist_url('css/critical.css') }}" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="{{ dist_url('css/critical.css') }}" media="print" id="criticalCss">
   <noscript><link rel="stylesheet" href="{{ dist_url('css/critical.css') }}"></noscript>
+  <script nonce="{{ csp_nonce() }}">
+    (function () {
+      var l = document.getElementById('criticalCss');
+      if (!l) return;
+      var activate = function () { l.media = 'all'; };
+      try {
+        if (l.sheet) { activate(); } else { l.addEventListener('load', activate); }
+      } catch (e) { activate(); }
+    })();
+  </script>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 

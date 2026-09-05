@@ -13,9 +13,7 @@
   
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
 
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-regular.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-medium.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-bold.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <!-- Tajawal served synchronously from local woff2 (no preload needed) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
 
   <link rel="stylesheet" href="{{ dist_url('css/azad-login.css') }}">

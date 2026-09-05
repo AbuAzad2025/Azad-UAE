@@ -22,6 +22,15 @@
 			}
 		}
 	});
+	document.addEventListener("change", (e) => {
+		const sel = e.target.closest('[data-action="template-switch"]');
+		if (!sel?.value) {
+			return;
+		}
+		const u = new URL(window.location.href);
+		u.searchParams.set("template", sel.value);
+		window.location.href = u.toString();
+	});
 	if (new URLSearchParams(window.location.search).get("auto_print") === "true") {
 		window.addEventListener("DOMContentLoaded", () => {
 			setTimeout(() => {

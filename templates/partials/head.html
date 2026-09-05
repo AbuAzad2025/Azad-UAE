@@ -57,9 +57,9 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="dns-prefetch" href="https://fonts.gstatic.com">
 
-  <!-- Preload Critical Fonts -->
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Bold.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <!-- Tajawal served synchronously from local woff2 (no preload: the sync
+       stylesheet exposes @font-face during head parse, making preloads
+       redundant noise) -->
 
   <!-- Preload Critical CSS -->
   {% if is_rtl %}
@@ -79,9 +79,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
 
-  <!-- Fonts (async load with fallback) -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
+  <!-- Fonts (synchronous: local woff2 files are KBs; async media=print caused
+       preload-miss warnings and late font swap — determinism beats microsavings) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
 
   <!-- FontAwesome -->
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">

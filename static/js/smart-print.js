@@ -8,17 +8,20 @@
 			.replace(/'/g, "&#39;");
 	}
 
-	const hasPrintExtension =
-		$?.fn?.dataTable?.Buttons &&
-		$.fn.dataTable.ext?.buttons?.print &&
-		typeof $.fn.dataTable.ext.buttons.print.action === "function";
+	let printSupportLogged = false;
 
-	let defaultPrintAction = null;
-
-	if (!hasPrintExtension) {
-		console.warn("SmartPrint: DataTables Buttons with print extension is required.");
-	} else {
-		defaultPrintAction = $.fn.dataTable.ext.buttons.print.action;
+	function getPrintAction() {
+		const action =
+			$?.fn?.dataTable?.Buttons &&
+			$.fn.dataTable.ext?.buttons?.print &&
+			typeof $.fn.dataTable.ext.buttons.print.action === "function"
+				? $.fn.dataTable.ext.buttons.print.action
+				: null;
+		if (!action && !printSupportLogged) {
+			printSupportLogged = true;
+			console.warn("SmartPrint: DataTables Buttons with print extension is required.");
+		}
+		return action;
 	}
 	let modalInitialized = false;
 	const triggerRegistry = new WeakMap();
@@ -428,9 +431,10 @@
 
 		$("#smartPrintModal").modal("hide");
 
-		if (defaultPrintAction) {
+		const printAction = getPrintAction();
+		if (printAction) {
 			try {
-				defaultPrintAction.call(
+				printAction.call(
 					state.buttonApi,
 					new $.Event("smart-print"),
 					state.table,

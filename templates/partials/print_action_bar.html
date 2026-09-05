@@ -16,7 +16,7 @@
   </button>
   {% if available_templates %}
   <select class="pab-btn pab-template-select"
-          onchange="const u = new URL(window.location.href); u.searchParams.set('template', this.value); window.location.href = u.toString();"
+          data-action="template-switch"
           title="{{ t('Template') }}">
     {% for tmpl in available_templates %}
     <option value="{{ tmpl }}" {% if tmpl == current_template %}selected{% endif %}>{{ tmpl|capitalize }}</option>

@@ -6,11 +6,11 @@
 <!-- Central API client with double-submit guard -->
 <script src="{{ url_for('static', filename='js/api.js') }}"></script>
 
-<!-- Deferred Utility Scripts -->
+<!-- Deferred Utility Scripts (i18n FIRST: base-helpers and others call window.t() at load) -->
+<script defer src="{{ dist_url('js/i18n.js') }}"></script>
 <script defer src="{{ dist_url('js/telemetry.js') }}"></script>
 <script defer src="{{ dist_url('js/base-helpers.js') }}"></script>
 <script defer src="{{ dist_url('js/print-handlers.js') }}"></script>
-<script defer src="{{ dist_url('js/i18n.js') }}"></script>
 <script defer src="{{ dist_url('js/ui-theme.js') }}"></script>
 
 <!-- Deferred Feature Scripts -->
