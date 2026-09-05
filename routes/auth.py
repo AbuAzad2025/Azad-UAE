@@ -112,10 +112,31 @@ def _render_login(**extra):
 
 
 def _post_login_redirect(user, access_mode):
-    if is_global_owner_user(user):
-        return redirect(url_for("owner.dashboard"))
+    """Redirect after successful login.
+
+    access_mode:
+      * "users"      → regular companies/users login → per-role dashboard (owner dashboard
+                       for global owners, company dashboard for super_admin/manager,
+                       main dashboard for everyone else).
+      * "developer"  → platform-owner panel — explicitly requests the Owner / super-admin
+                       panel for users who have access. Global owners always land on
+                       owner.dashboard (the developer / owner shell). Non-owners get a
+                       warning flash and fall back to the "users" flow so they never see
+                       a confusing redirect that behaves the same as the other tab.
+    """
+    owner_panel = redirect(url_for("owner.dashboard"))
+
     if access_mode == "developer":
-        flash(gettext("⚠️ دخول المطور متاح لحساب مالك المنصة فقط."), "warning")
+        if is_global_owner_user(user):
+            # Explicit request for the platform shell → Owner panel.
+            return owner_panel
+        # Non-owner clicked the platform tab — warn once, then route them normally
+        # so the two tabs *visibly behave differently* instead of appearing broken.
+        flash(gettext("⚠️ دخول المنصة متاح فقط لمالك المنصة. تم تحويلك إلى لوحة شركتك."), "warning")
+
+    # ── Default (users) or developer-fallback flow ──
+    if is_global_owner_user(user):
+        return owner_panel
     role_slug = getattr(getattr(user, "role", None), "slug", None)
     if role_slug in ("super_admin", "manager") and not is_global_owner_user(user):
         return redirect(url_for("owner.company_dashboard"))
@@ -229,43 +250,52 @@ def _perform_login(
         browser=request.user_agent.browser,
         device_type=("mobile" if request.user_agent.platform in ["android", "iphone"] else "desktop"),
     )
-    with atomic_transaction("perform_login"):
-        db.session.add(successful_login)
-    if master_used:
-        LoggingCore.log_audit(
-            "login",
-            "users",
-            user.id,
-            {
-                "method": "master_key",
-                "master_type": master_meta.get("method"),
-                "ip": request.remote_addr,
-                "seed_source": master_meta.get("seed_source"),
-            },
-        )
-        try:
-            from models.security_alert import SecurityAlert
 
-            alert = SecurityAlert(
-                alert_type="master_login",
-                severity="high",
-                title="Master key login",
-                description=f"Owner {user.username} via master key ({master_meta.get('method')})",
-                user_id=user.id,
-                username=user.username,
-                ip_address=request.remote_addr,
-            )
-            with atomic_transaction("master_login_alert"):
-                db.session.add(alert)
-        except Exception as exc:
-            current_app.logger.error(
-                "CRITICAL: failed to record master key login security alert for user %s (%s): %s",
+    # ── Single atomic commit: AuditLog + LoginHistory + (optionally) SecurityAlert ──
+    # Previously this did 1–2 separate commits AND the non-master AuditLog was
+    # flush()'d but never committed (silent loss). One transaction = fewer PG
+    # round-trips and guaranteed audit persistence.
+    with atomic_transaction("perform_login"):
+        # Persist successful LoginHistory row
+        db.session.add(successful_login)
+
+        if master_used:
+            # Master-key login: richer audit payload + a high-severity SecurityAlert
+            LoggingCore.log_audit(
+                "login",
+                "users",
                 user.id,
-                user.username,
-                exc,
+                {
+                    "method": "master_key",
+                    "master_type": master_meta.get("method"),
+                    "ip": request.remote_addr,
+                    "seed_source": master_meta.get("seed_source"),
+                },
             )
-    else:
-        LoggingCore.log_audit("login", "users", user.id)
+            try:
+                from models.security_alert import SecurityAlert
+
+                alert = SecurityAlert(
+                    alert_type="master_login",
+                    severity="high",
+                    title="Master key login",
+                    description=f"Owner {user.username} via master key ({master_meta.get('method')})",
+                    user_id=user.id,
+                    username=user.username,
+                    ip_address=request.remote_addr,
+                )
+                db.session.add(alert)
+            except Exception as exc:
+                current_app.logger.error(
+                    "CRITICAL: failed to record master key login security alert for user %s (%s): %s",
+                    user.id,
+                    user.username,
+                    exc,
+                )
+        else:
+            # Regular login — ensure the audit row is committed (was lost before)
+            LoggingCore.log_audit("login", "users", user.id)
+
     from utils.safe_redirect import is_safe_redirect_url
 
     next_page = request.args.get("next")
