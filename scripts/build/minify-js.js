@@ -14,6 +14,7 @@ async function main() {
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (entry.name === "dist") continue;
         files.push(...getFiles(fullPath));
       } else if (entry.name.endsWith(".js") && !entry.name.endsWith(".min.js") && !entry.name.endsWith(".d.ts")) {
         files.push(fullPath);
