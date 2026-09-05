@@ -137,7 +137,10 @@ def _calculate_monthly_payroll(args: dict) -> ActionResult:
         tid, guard = tenant_guard()
         if guard:
             return guard
-        month, year = int(args.get("month")), int(args.get("year"))
+        month_raw, year_raw = args.get("month"), args.get("year")
+        if month_raw is None or year_raw is None:
+            return ActionResult(False, "⚠️ الشهر والسنة مطلوبان (مثال: 9, 2026)")
+        month, year = int(month_raw), int(year_raw)
         branch = _resolve_branch(tid, args.get("branch_id"))
         if args.get("branch_id") and branch is None:
             return ActionResult(False, "⚠️ الفرع المحدد غير موجود في منشأتك")
@@ -191,7 +194,10 @@ def _approve_and_post_payroll(args: dict) -> ActionResult:
         user = actor()
         if user is None or getattr(user, "id", None) is None:
             return ActionResult(False, "🚫 لا يمكن اعتماد الرواتب دون مستخدم موثّق — يرجى تسجيل الدخول")
-        month, year = int(args.get("month")), int(args.get("year"))
+        month_raw, year_raw = args.get("month"), args.get("year")
+        if month_raw is None or year_raw is None:
+            return ActionResult(False, "⚠️ الشهر والسنة مطلوبان (مثال: 9, 2026)")
+        month, year = int(month_raw), int(year_raw)
         branch = _resolve_branch(tid, args.get("branch_id"))
         if args.get("branch_id") and branch is None:
             return ActionResult(False, "⚠️ الفرع المحدد غير موجود في منشأتك")

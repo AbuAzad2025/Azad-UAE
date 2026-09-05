@@ -114,9 +114,10 @@ def _update_customer(args: dict) -> ActionResult:
             if isinstance(value, str) and value.strip():
                 setattr(customer, field, value.strip())
                 changes[field] = value.strip()
-        if args.get("credit_limit") is not None:
-            customer.credit_limit = Decimal(str(args.get("credit_limit")))
-            changes["credit_limit"] = float(args.get("credit_limit"))
+        credit_limit = args.get("credit_limit")
+        if credit_limit is not None:
+            customer.credit_limit = Decimal(str(credit_limit))
+            changes["credit_limit"] = float(credit_limit)
         if not changes:
             return ActionResult(False, "⚠️ لم يتم تحديد أي حقل للتحديث (هاتف/بريد/عنوان/حد ائتمان)")
         with atomic_transaction("ai_update_customer"):
@@ -156,12 +157,14 @@ def _update_product(args: dict) -> ActionResult:
             product.name = new_name
             changes["name"] = new_name
         for field in _PRODUCT_WRITABLE:
-            if args.get(field) is not None and hasattr(product, field):
-                setattr(product, field, Decimal(str(args.get(field))))
-                changes[field] = float(args.get(field))
-        if args.get("min_stock") is not None and hasattr(product, "min_stock_alert"):
-            product.min_stock_alert = Decimal(str(args.get("min_stock")))
-            changes["min_stock_alert"] = float(args.get("min_stock"))
+            raw_value = args.get(field)
+            if raw_value is not None and hasattr(product, field):
+                setattr(product, field, Decimal(str(raw_value)))
+                changes[field] = float(raw_value)
+        min_stock = args.get("min_stock")
+        if min_stock is not None and hasattr(product, "min_stock_alert"):
+            product.min_stock_alert = Decimal(str(min_stock))
+            changes["min_stock_alert"] = float(min_stock)
         if not changes:
             return ActionResult(False, "⚠️ لم يتم تحديد أي حقل للتحديث (اسم/سعر بيع/تكلفة/حد أدنى)")
         with atomic_transaction("ai_update_product"):
@@ -198,8 +201,9 @@ def _adjust_stock(args: dict) -> ActionResult:
         if product is None:
             return ActionResult(False, f"⚠️ المنتج «{product_name}» غير موجود في منشأتك")
         warehouse = None
-        if args.get("warehouse_id"):
-            warehouse = resolve_warehouse(tid, int(args.get("warehouse_id")))
+        warehouse_id = args.get("warehouse_id")
+        if warehouse_id:
+            warehouse = resolve_warehouse(tid, int(warehouse_id))
             if warehouse is None:
                 return ActionResult(False, "⚠️ المستودع المحدد غير موجود في منشأتك")
         delta = float(args.get("quantity_delta") or 0)

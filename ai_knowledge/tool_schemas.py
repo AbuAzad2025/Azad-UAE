@@ -226,7 +226,10 @@ class CreateUserArgs(_BaseArgs):
 # ===== REGISTRY =====
 
 # action_type -> (pydantic model, Arabic description for the LLM)
-ACTION_ARG_MODELS: dict[str, tuple[type[_BaseArgs], str]] = {
+# The value type is BaseModel (not _BaseArgs): domain packs under
+# ai_knowledge/actions/ define their own equivalent base while exposing
+# the identical model_validate/model_json_schema contract.
+ACTION_ARG_MODELS: dict[str, tuple[type[BaseModel], str]] = {
     "create_customer": (CreateCustomerArgs, "إنشاء عميل جديد في النظام"),
     "list_customers": (ListCustomersArgs, "عرض قائمة العملاء مع بحث اختياري"),
     "customer_balance": (CustomerBalanceArgs, "عرض رصيد عميل محدد"),
