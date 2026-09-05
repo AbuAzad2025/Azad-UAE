@@ -116,13 +116,18 @@ body:not(.keep-theme) .content-wrapper {
 	font-weight: 600;
 }
 
-a {
+/* NOTE: scoped to class-less anchors only. The bare `a` selector with
+   !important hijacked every designed component link (landing nav, hero
+   buttons, dropdowns) and computed to BLACK because --az-* vars are
+   undefined on public pages. Classed anchors use their own design colors;
+   unclassed content anchors keep the primary color. */
+a:not([class]) {
 	color: var(--color-primary) !important;
 	text-decoration-color: rgba(11, 94, 215, 0.35);
 }
 
-a:hover,
-a:focus {
+a:not([class]):hover,
+a:not([class]):focus {
 	color: var(--color-primary-strong) !important;
 }
 
