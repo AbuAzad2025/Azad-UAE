@@ -10,41 +10,42 @@
 	);
 
 	/* Accessible palette — single source of truth is erp-theme-unified.css (--az-*).
-	   These aliases keep --color-* consumers theme-aware (light/dark/variant). */
-	--color-surface: var(--az-surface);
-	--color-surface-elevated: var(--az-surface);
-	--color-surface-strong: var(--az-surface-2);
-	--color-border: var(--az-border);
-	--color-text-strong: var(--az-text);
-	--color-text-regular: var(--az-text);
-	--color-text-muted: var(--az-text-muted);
-	--color-text-soft: var(--az-text-muted);
-	--color-primary: var(--az-primary);
-	--color-primary-strong: var(--az-primary-2);
-	--color-on-primary: var(--az-on-primary);
-	--color-secondary: var(--az-text-muted);
-	--color-secondary-strong: var(--az-text-muted);
-	--color-on-secondary: var(--az-surface);
-	--color-success: var(--az-success);
-	--color-success-strong: var(--az-success);
-	--color-on-success: var(--az-on-primary);
-	--color-danger: var(--az-danger);
-	--color-danger-strong: var(--az-danger);
-	--color-on-danger: var(--az-on-primary);
-	--color-warning: var(--az-warning);
-	--color-warning-strong: var(--az-warning);
-	--color-on-warning: var(--az-text);
-	--color-info: var(--az-info);
-	--color-info-strong: var(--az-info);
-	--color-on-info: var(--az-on-primary);
-	--color-light: var(--az-surface-2);
-	--color-light-strong: var(--az-surface-2);
-	--color-on-light: var(--az-text);
-	--color-dark: var(--az-text);
-	--color-dark-strong: var(--az-text);
-	--color-on-dark: var(--az-surface);
+	   These aliases keep --color-* consumers theme-aware (light/dark/variant).
+	   Dual fallback chain: --az-* (ERP panel) → --azad-* (public landing) → hard default. */
+	--color-surface: var(--az-surface, var(--azad-primary, #ffffff));
+	--color-surface-elevated: var(--az-surface, var(--azad-card-bg, #ffffff));
+	--color-surface-strong: var(--az-surface-2, var(--azad-primary-lighter, #f1f5f9));
+	--color-border: var(--az-border, var(--azad-card-border, #e2e8f0));
+	--color-text-strong: var(--az-text, var(--azad-text-primary, #0f172a));
+	--color-text-regular: var(--az-text, var(--azad-text, #1e293b));
+	--color-text-muted: var(--az-text-muted, var(--azad-text-muted, #64748b));
+	--color-text-soft: var(--az-text-muted, var(--azad-text-muted, #94a3b8));
+	--color-primary: var(--az-primary, var(--azad-accent, #2563eb));
+	--color-primary-strong: var(--az-primary-2, var(--azad-accent-light, #1d4ed8));
+	--color-on-primary: var(--az-on-primary, #ffffff);
+	--color-secondary: var(--az-text-muted, var(--azad-text-muted, #64748b));
+	--color-secondary-strong: var(--az-text-muted, var(--azad-text-muted, #475569));
+	--color-on-secondary: var(--az-surface, var(--azad-primary, #ffffff));
+	--color-success: var(--az-success, var(--azad-success, #10b981));
+	--color-success-strong: var(--az-success, var(--azad-success, #059669));
+	--color-on-success: var(--az-on-primary, #ffffff);
+	--color-danger: var(--az-danger, #ef4444);
+	--color-danger-strong: var(--az-danger, #dc2626);
+	--color-on-danger: var(--az-on-primary, #ffffff);
+	--color-warning: var(--az-warning, #f59e0b);
+	--color-warning-strong: var(--az-warning, #d97706);
+	--color-on-warning: var(--az-text, #111827);
+	--color-info: var(--az-info, var(--azad-cyan, #0ea5e9));
+	--color-info-strong: var(--az-info, var(--azad-cyan, #0284c7));
+	--color-on-info: var(--az-on-primary, #ffffff);
+	--color-light: var(--az-surface-2, var(--azad-card-bg, #f8fafc));
+	--color-light-strong: var(--az-surface-2, var(--azad-primary-lighter, #e2e8f0));
+	--color-on-light: var(--az-text, #0f172a);
+	--color-dark: var(--az-text, #0f172a);
+	--color-dark-strong: var(--az-text, #020617);
+	--color-on-dark: var(--az-surface, var(--azad-primary, #ffffff));
 	--color-focus-ring: rgba(37, 99, 235, 0.35);
-	--color-input-bg: var(--az-input-bg);
+	--color-input-bg: var(--az-input-bg, var(--azad-card-bg, #ffffff));
 
 	/* Map legacy variables to the accessible palette */
 	--primary-color: var(--color-primary);
@@ -119,16 +120,19 @@ body:not(.keep-theme) .content-wrapper {
 /* NOTE: scoped to class-less anchors only. The bare `a` selector with
    !important hijacked every designed component link (landing nav, hero
    buttons, dropdowns) and computed to BLACK because --az-* vars are
-   undefined on public pages. Classed anchors use their own design colors;
-   unclassed content anchors keep the primary color. */
+   undefined on public pages (no loader defines them; var() fallbacks do
+   NOT apply to guaranteed-invalid custom properties). Plain `inherit`
+   always matches surrounding text, so unclassed content links stay
+   readable everywhere by construction. */
 a:not([class]) {
-	color: var(--color-primary) !important;
+	color: inherit !important;
 	text-decoration-color: rgba(11, 94, 215, 0.35);
 }
 
 a:not([class]):hover,
 a:not([class]):focus {
-	color: var(--color-primary-strong) !important;
+	color: inherit !important;
+	text-decoration-color: currentColor;
 }
 
 /* Buttons */

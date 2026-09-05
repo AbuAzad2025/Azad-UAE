@@ -47,7 +47,7 @@
     .ic-2 { background: rgba(255,255,255,0.9); border-radius: 20px; padding: 8px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-decoration:none; color:#111827; font-weight:900; }
   </style>
 </head>
-<body>
+<body class="keep-theme">
   {% set platform_name_en = config.COMPANY_NAME if config.COMPANY_NAME != config.COMPANY_NAME_AR else 'Azad Smart Systems' %}
   {% set platform_logo = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
   {% set wa_number = developer_whatsapp_link or config.DEVELOPER_WHATSAPP or '' %}
