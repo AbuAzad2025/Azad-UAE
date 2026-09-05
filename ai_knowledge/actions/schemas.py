@@ -41,6 +41,14 @@ __all__ = [
     "UpdateCustomerArgs",
     "UpdateProductArgs",
     "AdjustStockArgs",
+    "CreatePurchaseReturnArgs",
+    "PurchaseReturnDetailsArgs",
+    "DepositChequeArgs",
+    "ClearChequeArgs",
+    "BounceChequeArgs",
+    "PayrollAdjustmentIn",
+    "CalculatePayrollArgs",
+    "ApprovePayrollArgs",
     "EXTRA_ACTION_ARG_MODELS",
     "EXTRA_FIELD_LABELS",
 ]
@@ -176,6 +184,76 @@ class AdjustStockArgs(_PackBaseArgs):
 
 # ===== REGISTRY EXTENSION =====
 
+# ===== PURCHASE RETURNS (perm: manage_purchases) =====
+
+
+class CreatePurchaseReturnArgs(_PackBaseArgs):
+    purchase_number: str = ""
+    purchase_id: int | None = Field(default=None, gt=0)
+    product_name: str = Field(min_length=1, description="اسم المنتج المرتجع للمورد")
+    quantity: float = Field(gt=0, description="الكمية المرتجعة")
+    unit_cost: float | None = Field(default=None, ge=0, description="تكلفة الوحدة (اختياري: من بند الشراء)")
+    reason: str = ""
+    notes: str = ""
+
+    @model_validator(mode="after")
+    def _one_identifier_required(self):
+        if not self.purchase_number and not self.purchase_id:
+            raise ValueError("يرجى تحديد رقم فاتورة الشراء (purchase_number) أو معرفها (purchase_id)")
+        return self
+
+
+class PurchaseReturnDetailsArgs(_PackBaseArgs):
+    return_number: str = ""
+    return_id: int | None = Field(default=None, gt=0)
+
+
+# ===== CHEQUE LIFECYCLE (perm: manage_payments) =====
+
+
+class DepositChequeArgs(_PackBaseArgs):
+    cheque_number: str = Field(min_length=1, description="رقم الشيك المراد إيداعه")
+    deposit_date: str = ""
+
+
+class ClearChequeArgs(_PackBaseArgs):
+    cheque_number: str = Field(min_length=1, description="رقم الشيك المراد تحصيله")
+    clearance_date: str = ""
+    clearance_exchange_rate: float | None = Field(default=None, gt=0)
+
+
+class BounceChequeArgs(_PackBaseArgs):
+    cheque_number: str = Field(min_length=1, description="رقم الشيك المرتد")
+    reason: str = Field(min_length=1, description="سبب الارتداد (إلزامي)")
+    bounce_fee: float | None = Field(default=None, ge=0, description="رسوم الارتداد (اختياري)")
+
+
+# ===== PAYROLL (perm: manage_payroll) =====
+
+
+class PayrollAdjustmentIn(BaseModel):
+    model_config = ConfigDict(extra="ignore", str_strip_whitespace=True, coerce_numbers_to_str=True)
+
+    employee_name: str = Field(min_length=1, description="اسم الموظف")
+    allowances: float = Field(default=0, ge=0, description="البدلات")
+    deductions: float = Field(default=0, ge=0, description="الخصومات")
+    days_worked: float | None = Field(default=None, ge=0, description="أيام الدوام (لغير الشهري)")
+
+
+class CalculatePayrollArgs(_PackBaseArgs):
+    month: int = Field(ge=1, le=12, description="الشهر (1-12)")
+    year: int = Field(ge=2000, le=2100, description="السنة")
+    branch_id: int | None = Field(default=None, gt=0)
+    employee_name: str = ""
+
+
+class ApprovePayrollArgs(_PackBaseArgs):
+    month: int = Field(ge=1, le=12, description="الشهر (1-12)")
+    year: int = Field(ge=2000, le=2100, description="السنة")
+    branch_id: int | None = Field(default=None, gt=0)
+    adjustments: list[PayrollAdjustmentIn] = Field(default_factory=list)
+
+
 EXTRA_ACTION_ARG_MODELS: dict[str, tuple[type[_PackBaseArgs], str]] = {
     "create_cheque": (CreateChequeArgs, "تسجيل شيك جديد (وارد/صادر)"),
     "list_cheques": (ListChequesArgs, "عرض الشيكات مع بحث اختياري"),
@@ -187,6 +265,13 @@ EXTRA_ACTION_ARG_MODELS: dict[str, tuple[type[_PackBaseArgs], str]] = {
     "update_customer": (UpdateCustomerArgs, "تحديث بيانات عميل (هاتف/عنوان/ائتمان)"),
     "update_product": (UpdateProductArgs, "تحديث بيانات منتج (أسعار/حد أدنى)"),
     "adjust_stock": (AdjustStockArgs, "تسوية مخزون بسبب موثق عبر حركة GL"),
+    "create_purchase_return": (CreatePurchaseReturnArgs, "إنشاء مرتجع مشتريات من فاتورة شراء"),
+    "purchase_return_details": (PurchaseReturnDetailsArgs, "عرض تفاصيل مرتجع مشتريات"),
+    "deposit_cheque": (DepositChequeArgs, "إيداع شيك في البنك"),
+    "clear_cheque": (ClearChequeArgs, "تأكيد تحصيل شيك من البنك"),
+    "bounce_cheque": (BounceChequeArgs, "معالجة شيك مرتد وإعادة الدين"),
+    "calculate_monthly_payroll": (CalculatePayrollArgs, "احتساب مسير الرواتب الشهري (قراءة فقط)"),
+    "approve_and_post_payroll": (ApprovePayrollArgs, "اعتماد وترحيل رواتب الشهر مع القيود"),
 }
 
 EXTRA_FIELD_LABELS: dict[str, str] = {
@@ -202,4 +287,19 @@ EXTRA_FIELD_LABELS: dict[str, str] = {
     "reason": "سبب التسوية",
     "new_name": "الاسم الجديد",
     "warehouse_id": "المستودع",
+    "purchase_number": "رقم فاتورة الشراء",
+    "purchase_id": "معرف فاتورة الشراء",
+    "return_number": "رقم المرتجع",
+    "return_id": "معرف المرتجع",
+    "deposit_date": "تاريخ الإيداع",
+    "clearance_date": "تاريخ التحصيل",
+    "clearance_exchange_rate": "سعر صرف التحصيل",
+    "bounce_fee": "رسوم الارتداد",
+    "month": "الشهر",
+    "year": "السنة",
+    "employee_name": "اسم الموظف",
+    "adjustments": "تعديلات الموظفين",
+    "days_worked": "أيام الدوام",
+    "allowances": "البدلات",
+    "deductions": "الخصومات",
 }

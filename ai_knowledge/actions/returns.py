@@ -56,7 +56,10 @@ PATTERNS = [
         lambda m: _parse_return_command(m.group(2)),
     ),
     (
-        re.compile(r"^(عرض|ارني|شوف|show|list)\s*(كل\s*)?(المرتجعات|مرتجعات|المرتجع|returns|rma)", re.IGNORECASE),
+        re.compile(
+            r"^(عرض|ارني|شوف|show|list)\s*(كل\s*)?(المرتجعات|مرتجعات|المرتجع|returns|rma)(?!\s*المشتريات)",
+            re.IGNORECASE,
+        ),
         _parse_list_returns,
     ),
 ]

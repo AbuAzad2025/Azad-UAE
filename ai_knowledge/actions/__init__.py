@@ -1,10 +1,14 @@
 """AI action packs — independent domain modules, one registry.
 
-Each pack (cheques / returns / quotations / catalog) owns its handlers,
-command patterns, and help lines. This package only wires them:
+Each pack (cheques / cheque_lifecycle / returns / purchase_returns /
+quotations / catalog / payroll_processing) owns its handlers, command
+patterns, and help lines. This package only wires them — with LAZY imports
+so merely importing the package never loads a pack (import-cycle safe by
+construction; packs load on first register/match/help call, when the
+dispatcher core is guaranteed complete):
 
 - :func:`register_action_packs` — called once from
-  ``ActionDispatcher._register_all``; every action still flows through the
+  ``ActionDispatcher._ensure_packs``; every action still flows through the
   dispatcher's RBAC + schema + confirmation + audit guards.
 - :func:`match_pack_command` — tried first by
   ``ActionDispatcher.parse_chat_action``; legacy patterns stay untouched.
@@ -13,22 +17,18 @@ command patterns, and help lines. This package only wires them:
 
 To add a domain: create ``ai_knowledge/actions/<domain>.py`` with
 ``PATTERNS`` / ``register()`` / ``HELP_LINES`` and append it to
-:data:`ACTION_PACKS`. No core file grows.
+:func:`_packs`. No core file grows.
 """
 
 from __future__ import annotations
 
 import logging
 
-from ai_knowledge.actions import catalog, cheques, quotations, returns
 from ai_knowledge.actions.schemas import EXTRA_ACTION_ARG_MODELS
 
 logger = logging.getLogger(__name__)
 
-ACTION_PACKS = (cheques, returns, quotations, catalog)
-
 __all__ = [
-    "ACTION_PACKS",
     "EXTRA_ACTION_ARG_MODELS",
     "register_action_packs",
     "match_pack_command",
@@ -37,9 +37,24 @@ __all__ = [
 ]
 
 
+def _packs():
+    """Import pack modules on first use (lazy — never at package import)."""
+    from ai_knowledge.actions import (
+        catalog,
+        cheque_lifecycle,
+        cheques,
+        payroll_processing,
+        purchase_returns,
+        quotations,
+        returns,
+    )
+
+    return (cheques, cheque_lifecycle, returns, purchase_returns, quotations, catalog, payroll_processing)
+
+
 def register_action_packs(register_fn) -> None:
     """Register every pack on the dispatcher registry (called once)."""
-    for pack in ACTION_PACKS:
+    for pack in _packs():
         pack.register(register_fn)
 
 
@@ -53,7 +68,7 @@ def match_pack_command(message: str):
     msg = (message or "").strip()
     if not msg:
         return None
-    for pack in ACTION_PACKS:
+    for pack in _packs():
         for pattern, builder in getattr(pack, "PATTERNS", ()):
             try:
                 match = pattern.match(msg)
@@ -74,7 +89,7 @@ def match_pack_command(message: str):
 def get_pack_help_lines() -> list[str]:
     """Help lines contributed by every pack (appended to format_help)."""
     lines: list[str] = []
-    for pack in ACTION_PACKS:
+    for pack in _packs():
         lines.extend(getattr(pack, "HELP_LINES", ()))
     return lines
 

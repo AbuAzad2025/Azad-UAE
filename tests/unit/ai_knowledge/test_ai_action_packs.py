@@ -87,7 +87,7 @@ class TestPackRegistration:
 
     def test_all_pack_actions_registered(self):
         registered = action_dispatcher.get_registered_actions()
-        assert len(registered) == 28
+        assert len(registered) == 35
         for action in self.EXPECTED:
             assert action in registered
 
