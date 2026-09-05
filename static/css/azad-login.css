@@ -397,6 +397,10 @@ html, body.azad-login-page {
   min-height: 48px;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
+  word-break: keep-all;
+  white-space: nowrap;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.15);
 }
 
 .azad-login-tab::before {
@@ -407,28 +411,67 @@ html, body.azad-login-page {
   opacity: 0;
   transition: opacity 0.25s ease;
   border-radius: inherit;
+  z-index: -1;
 }
 
 .azad-login-tab:hover {
   background: rgba(255, 255, 255, 0.05);
+  color: var(--gold-200);
 }
 
 .azad-login-tab.is-active {
-  color: var(--navy-900);
-  font-weight: 700;
+  color: #000 !important;         /* force near-black text on gold — guarantees readability */
+  font-weight: 800;
   box-shadow: var(--shadow-gold);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
 }
 
 .azad-login-tab.is-active::before {
   opacity: 1;
 }
 
-.azad-login-tab span, .azad-login-tab i {
+.azad-login-tab span,
+.azad-login-tab i,
+.azad-login-tab > * {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
-.azad-login-tab i { font-size: 0.9rem; }
+.azad-login-tab i { font-size: 0.95rem; }
+
+/* ── Tab badge + helper hint ── */
+.azad-login-tab__pill {
+  display: inline-flex;
+  align-items: center;
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  margin-inline-start: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  line-height: 1;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.azad-login-tab.is-active .azad-login-tab__pill {
+  background: rgba(0, 0, 0, 0.14);
+  color: #000;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.azad-login-tabs-hint {
+  margin: -10px 2px 18px;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--text-muted);
+  padding: 0 6px;
+}
+
+.azad-login-tabs-hint:empty { display: none; }
 
 /* ── Alerts ── */
 .azad-login-alert {
