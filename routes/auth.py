@@ -98,13 +98,17 @@ def _login_branches():
 
 
 def _render_login(**extra):
-    """Render unified AZAD login page without tenant selector."""
-    access_mode = (extra.pop("access_mode", None) or request.args.get("mode") or "users").strip().lower()
-    if access_mode not in ("users", "developer"):
-        access_mode = "users"
+    """Render unified AZAD login page without tenant selector.
+
+    The previous access-mode tabs have been removed (option B simplification):
+    access_mode is always "users" in the form. Global owners still route to
+    owner.dashboard automatically in _post_login_redirect, and bookmarked
+    query-string ?mode=developer URLs continue to work via GET pre-auth
+    redirect and POST access_mode read for backwards compatibility.
+    """
+    extra.pop("access_mode", None)
     return render_template(
         "auth/login.html",
-        access_mode=access_mode,
         username_value=extra.pop("username_value", ""),
         remember_checked=bool(extra.pop("remember_checked", False)),
         **extra,
