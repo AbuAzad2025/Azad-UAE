@@ -34,6 +34,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 from pydantic_core import ErrorDetails
 
+from ai_knowledge.actions.schemas import EXTRA_ACTION_ARG_MODELS, EXTRA_FIELD_LABELS
+
 logger = logging.getLogger(__name__)
 
 # Payment methods aligned with utils.constants.PAYMENT_METHODS (+ "credit" for آجل)
@@ -418,3 +420,10 @@ def get_missing_data_prompt(action_type: str, args: dict | None) -> str | None:
     """
     _clean, err = validate_tool_args_safe(action_type, args)
     return str(err) if err else None
+
+
+# Domain-pack extension (Master Directive): pack schemas + Arabic labels
+# merge here so native tool-calling, dispatch validation, and clarification
+# prompts cover pack actions with the same guarantees as core actions.
+ACTION_ARG_MODELS.update(EXTRA_ACTION_ARG_MODELS)
+FIELD_LABELS.update(EXTRA_FIELD_LABELS)

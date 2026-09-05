@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
 from collections.abc import Callable
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -21,6 +22,9 @@ from extensions import db
 from services.logging_core import LoggingCore
 
 logger = logging.getLogger(__name__)
+
+# Guards lazy domain-pack registration (see ActionDispatcher._ensure_packs).
+_packs_lock = threading.Lock()
 
 # ===== HELPERS =====
 
@@ -156,6 +160,7 @@ class ActionDispatcher:
 
     def __init__(self) -> None:
         self._registry: dict[str, dict] = {}
+        self._packs_registered = False
         self._register_all()
 
     def _register(
@@ -942,12 +947,32 @@ class ActionDispatcher:
         self._register("create_purchase", _create_purchase, "manage_purchases", "إنشاء أمر شراء", confirm_required=True)
         self._register("create_user", _create_user, "manage_users", "إنشاء مستخدم", confirm_required=True)
 
+    def _ensure_packs(self) -> None:
+        """Register domain packs once (lazy — keeps import time cycle-free).
+
+        The module singleton registers core actions at import; packs under
+        ``ai_knowledge/actions/`` attach here on first use so every import
+        order (dispatcher-first, tool_schemas-first, or packs-first) is
+        safe. Re-registration is idempotent (dict overwrite).
+        """
+        if self._packs_registered:
+            return
+        with _packs_lock:
+            if self._packs_registered:
+                return
+            from ai_knowledge.actions import register_action_packs
+
+            register_action_packs(self._register)
+            self._packs_registered = True
+
     def get_registered_actions(self) -> list[str]:
         """List all registered action types."""
+        self._ensure_packs()
         return list(self._registry.keys())
 
     def get_action_metadata(self, action_type: str) -> dict | None:
         """Read-only metadata for one action (used by ai_knowledge.tool_registry)."""
+        self._ensure_packs()
         entry = self._registry.get(action_type)
         return dict(entry) if entry else None
 
@@ -957,6 +982,7 @@ class ActionDispatcher:
         confirmation gate, and error handling.
         Returns ActionResult with success/failure, message, and data.
         """
+        self._ensure_packs()
         action = self._registry.get(action_type)
         if not action:
             return ActionResult(False, f"العملية '{action_type}' غير معروفة")
@@ -1021,6 +1047,17 @@ class ActionDispatcher:
         Returns None if no action matches.
         """
         msg = message.strip()
+
+        # Domain-pack commands first: explicit new commands resolve here
+        # while every legacy pattern below stays untouched.
+        try:
+            from ai_knowledge.actions import match_pack_command
+
+            pack_hit = match_pack_command(msg)
+            if pack_hit:
+                return pack_hit
+        except Exception:
+            logger.debug("Pack command match skipped", exc_info=True)
 
         # ===== CUSTOMER OPERATIONS =====
         # عميل: الاسم, الهاتف, العنوان
@@ -1198,7 +1235,10 @@ class ActionDispatcher:
     @staticmethod
     def format_help() -> str:
         """Return a list of available commands."""
-        return """**الأوامر المتاحة:**
+        from ai_knowledge.actions import get_pack_help_lines
+
+        pack_lines = "\n".join(get_pack_help_lines())
+        return f"""**الأوامر المتاحة:**
 📦 **العملاء:** `عميل: الاسم, الهاتف, العنوان` | `عرض العملاء` | `رصيد: اسم العميل`
 📋 **المنتجات:** `منتج: الاسم, السعر, الكمية` | `عرض المنتجات` | `فحص المخزون`
 💰 **المبيعات:** `فاتورة: اسم العميل, اسم المنتج, الكمية` | `عرض الفواتير`
@@ -1208,6 +1248,7 @@ class ActionDispatcher:
 👥 **الموظفين:** `موظف: الاسم, الهاتف, الراتب`
 📦 **المشتريات:** `أمر شراء: اسم المورد, اسم المنتج, الكمية`
 📈 **التقارير:** `ملخص المبيعات` | `تقرير الأرباح`
+{pack_lines}
 ❓ اسألني عن أي شيء عن النظام!
 
 **ملاحظة:** بعض العمليات تتطلب صلاحيات محددة."""
