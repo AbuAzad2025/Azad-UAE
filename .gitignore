@@ -115,6 +115,7 @@ tmp/
 *.tmp
 *.temp
 test-results/
+playwright-report/
 ~$*
 flask_err.txt
 flask_out.txt

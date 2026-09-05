@@ -23,8 +23,11 @@
 شركة أزاد للأنظمة الذكية
 """
 
+import hashlib
+import json
 import logging
 import os
+import threading
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -36,6 +39,34 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
+
+# ====================================================================
+# Model cache contract (Master Directive — Phase 1: latency reduction)
+# ====================================================================
+# Trained sklearn artifacts are cached on disk with a JSON sidecar
+# (``{model}.meta.json``) carrying the cache schema version, the training
+# sample volume, and a version hash. A model is retrained only when its
+# dataset volume drifts by more than ``NEURAL_RETRAIN_VOLUME_THRESHOLD``
+# (default 10%) or when no usable cache exists — never synchronously on
+# every HTTP request. ``train_all_models`` honours the cache unless
+# ``force=True``; background refresh runs in a daemon thread.
+NEURAL_CACHE_SCHEMA_VERSION = 1
+NEURAL_RETRAIN_VOLUME_THRESHOLD = 0.10
+
+# Model name -> bound training method name (used by background retraining).
+NEURAL_TRAIN_METHODS: dict[str, str] = {
+    "price_optimizer": "train_price_optimizer",
+    "sales_forecaster": "train_sales_forecaster",
+    "customer_classifier": "train_customer_classifier",
+    "fraud_detector": "train_fraud_detector",
+    "inventory_optimizer": "train_inventory_optimizer",
+    "demand_predictor": "train_demand_predictor",
+    "financial_planner": "train_financial_planning",
+    "maintenance_predictor": "train_maintenance_prediction",
+    "accounting_classifier": "train_accounting_assistant",
+    "profit_optimizer": "train_profit_optimizer",
+    "churn_predictor": "train_churn_predictor",
+}
 
 
 class AzadNeuralEngine:
@@ -67,6 +98,16 @@ class AzadNeuralEngine:
 
         # إحصائيات الأداء
         self.performance_metrics = {}
+
+        # ---- Phase 1: process-wide model cache state ----
+        # _loaded_models: names already materialised in this process.
+        # _model_metadata: {model_name: meta dict} from *.meta.json sidecars.
+        # _retrain_inflight: models with a background retrain running.
+        self._cache_lock = threading.RLock()
+        self._loaded_models: set[str] = set()
+        self._model_metadata: dict[str, dict[str, Any]] = {}
+        self._retrain_inflight: set[str] = set()
+        self._load_metadata_cache()
 
         # تهيئة جميع النماذج
         self._initialize_all_models()
@@ -2151,8 +2192,261 @@ class AzadNeuralEngine:
     # Utilities - أدوات مساعدة
     # ====================================================================
 
+    def _meta_path(self, model_name: str) -> str:
+        """Filesystem path of the JSON cache sidecar for a model."""
+        return os.path.join(self.models_dir, f"{model_name}.meta.json")
+
+    def _load_metadata_cache(self) -> None:
+        """Best-effort load of every ``*.meta.json`` sidecar into memory."""
+        try:
+            if not os.path.isdir(self.models_dir):
+                return
+            for fname in os.listdir(self.models_dir):
+                if not fname.endswith(".meta.json"):
+                    continue
+                try:
+                    with open(os.path.join(self.models_dir, fname), encoding="utf-8") as fh:
+                        meta = json.load(fh)
+                    if isinstance(meta, dict) and meta.get("model"):
+                        with self._cache_lock:
+                            self._model_metadata[meta["model"]] = meta
+                except (OSError, ValueError) as exc:
+                    logger.debug("Skipping unreadable model metadata %s: %s", fname, exc)
+        except OSError as exc:
+            logger.debug("Model metadata scan failed: %s", exc)
+
+    @staticmethod
+    def _version_hash(model_name: str, samples: int | None) -> str:
+        """Short stable hash identifying one cached training generation."""
+        payload = f"{model_name}:{NEURAL_CACHE_SCHEMA_VERSION}:{samples if samples is not None else -1}"
+        return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+
+    def _persist_metadata(self, model_name: str, samples: int | None) -> None:
+        """Write the ``*.meta.json`` sidecar for a freshly trained model."""
+        meta = {
+            "model": model_name,
+            "schema_version": NEURAL_CACHE_SCHEMA_VERSION,
+            "samples": samples,
+            "trained_at": datetime.now(UTC).isoformat(),
+            "model_version_hash": self._version_hash(model_name, samples),
+        }
+        try:
+            with open(self._meta_path(model_name), "w", encoding="utf-8") as fh:
+                json.dump(meta, fh, ensure_ascii=False, indent=2)
+        except OSError as exc:
+            logger.warning("Model metadata persist failed for %s: %s", model_name, exc)
+            return
+        with self._cache_lock:
+            self._model_metadata[model_name] = meta
+
+    def _dataset_volume(self, model_name: str) -> int | None:
+        """Lightweight row-count fingerprint for a model's training dataset.
+
+        Returns ``None`` when no Flask app context is active or the count
+        cannot be determined — callers must treat ``None`` as "unknown",
+        never as zero.
+        """
+        try:
+            from flask import has_app_context
+
+            if not has_app_context():
+                return None
+        except Exception:
+            logger.debug("App-context probe unavailable for %s", model_name, exc_info=True)
+            return None
+        try:
+            from sqlalchemy import func as _func
+
+            from extensions import db
+            from models import Customer, GLJournalEntry, Product, Sale, SaleLine
+
+            targets = {
+                "price_optimizer": (SaleLine, None),
+                "sales_forecaster": (Sale, None),
+                "customer_classifier": (Customer, None),
+                "fraud_detector": (Sale, None),
+                "inventory_optimizer": (Product, None),
+                "demand_predictor": (SaleLine, None),
+                "profit_optimizer": (Sale, None),
+                "churn_predictor": (Customer, None),
+                "maintenance_predictor": (Product, None),
+                "financial_planner": (Sale, None),
+                "accounting_classifier": (GLJournalEntry, None),
+            }
+            entry = targets.get(model_name)
+            if entry is None:
+                return None
+            model_cls, _ = entry
+            count = db.session.query(_func.count()).select_from(model_cls).scalar()
+            return int(count) if count is not None else 0
+        except Exception as exc:
+            logger.debug("Dataset volume probe failed for %s: %s", model_name, exc)
+            return None
+
+    def should_retrain(self, model_name: str, current_samples: int | None = None) -> bool:
+        """True when no usable cache exists or the dataset drifted >10%.
+
+        A missing model file always requires training. When the current
+        volume is unknown (no app context) the cache is kept — retraining
+        must never be triggered blindly from a request path.
+        """
+        model_path = os.path.join(self.models_dir, f"{model_name}.pkl")
+        if not os.path.exists(model_path):
+            return True
+        if current_samples is None:
+            current_samples = self._dataset_volume(model_name)
+        if current_samples is None:
+            return False
+        with self._cache_lock:
+            meta = self._model_metadata.get(model_name) or {}
+        old_samples = meta.get("samples")
+        if not isinstance(old_samples, int) or old_samples <= 0:
+            return True
+        if current_samples <= 0:
+            return False
+        drift = abs(current_samples - old_samples) / old_samples
+        return drift > NEURAL_RETRAIN_VOLUME_THRESHOLD
+
+    def ensure_model_loaded(self, model_name: str) -> bool:
+        """Load a cached model once per process; True when usable in memory."""
+        with self._cache_lock:
+            if model_name in self._loaded_models:
+                return True
+        if self._load_model(model_name):
+            with self._cache_lock:
+                self._loaded_models.add(model_name)
+            return True
+        return False
+
+    def get_cached_model_status(self, model_name: str) -> dict[str, Any]:
+        """Cache-focused status for one model (file, metadata, staleness)."""
+        model_path = os.path.join(self.models_dir, f"{model_name}.pkl")
+        cached = os.path.exists(model_path)
+        with self._cache_lock:
+            meta = dict(self._model_metadata.get(model_name) or {})
+            loaded = model_name in self._loaded_models
+        current = self._dataset_volume(model_name)
+        return {
+            "model": model_name,
+            "cached": cached,
+            "loaded": loaded,
+            "samples": meta.get("samples"),
+            "trained_at": meta.get("trained_at"),
+            "model_version_hash": meta.get("model_version_hash"),
+            "schema_version": meta.get("schema_version", NEURAL_CACHE_SCHEMA_VERSION),
+            "current_volume": current,
+            "stale": self.should_retrain(model_name, current_samples=current) if cached else True,
+        }
+
+    def schedule_background_retrain(self, model_name: str, from_app_context=None) -> bool:
+        """Refresh one model in a daemon thread; never blocks the caller.
+
+        Returns True when a worker was scheduled, False when a retrain is
+        already in flight or the model name is unknown.
+        """
+        train_attr = NEURAL_TRAIN_METHODS.get(model_name)
+        if train_attr is None:
+            return False
+        with self._cache_lock:
+            if model_name in self._retrain_inflight:
+                return False
+            self._retrain_inflight.add(model_name)
+        try:
+            app_obj = None
+            try:
+                from flask import current_app
+
+                app_obj = current_app._get_current_object()  # type: ignore[attr-defined]
+            except Exception:
+                app_obj = None
+            worker = threading.Thread(
+                target=self._background_retrain_worker,
+                args=(model_name, train_attr, from_app_context, app_obj),
+                name=f"neural-retrain-{model_name}",
+                daemon=True,
+            )
+            worker.start()
+            return True
+        except Exception as exc:
+            logger.warning("Background retrain scheduling failed for %s: %s", model_name, exc)
+            with self._cache_lock:
+                self._retrain_inflight.discard(model_name)
+            return False
+
+    def _background_retrain_worker(self, model_name, train_attr, from_app_context, app_obj) -> None:
+        """Daemon worker: train with an app context, then release the guard."""
+        try:
+            train_fn = getattr(self, train_attr)
+            if app_obj is not None:
+                try:
+                    with app_obj.app_context():
+                        train_fn(from_app_context)
+                except Exception as exc:
+                    logger.warning("Background retrain failed for %s: %s", model_name, exc)
+            elif from_app_context is not None:
+                try:
+                    with from_app_context():
+                        train_fn(from_app_context)
+                except Exception as exc:
+                    logger.warning("Background retrain failed for %s: %s", model_name, exc)
+            else:
+                try:
+                    train_fn(None)
+                except Exception as exc:
+                    logger.warning("Background retrain failed for %s: %s", model_name, exc)
+        finally:
+            with self._cache_lock:
+                self._retrain_inflight.discard(model_name)
+
+    def maybe_schedule_retrain(self, model_name: str, from_app_context=None) -> bool:
+        """Schedule a background refresh only when volume drift exceeds 10%.
+
+        Cheap by design: a single COUNT query; unknown volumes never trigger.
+        """
+        try:
+            current = self._dataset_volume(model_name)
+            if current is None:
+                return False
+            if self.should_retrain(model_name, current_samples=current):
+                return self.schedule_background_retrain(model_name, from_app_context)
+            return False
+        except Exception as exc:
+            logger.debug("Retrain check failed for %s: %s", model_name, exc)
+            return False
+
+    def predict_next_week_sales(self, days_ahead: int = 7, from_app_context=None) -> dict[str, Any]:
+        """Weekly sales outlook in the shape the assistant pipeline expects.
+
+        The intelligent assistant calls this method directly; it delegates to
+        :meth:`forecast_sales` and normalises the payload to
+        ``{success, predicted_amount, forecast, trend, confidence}`` so the
+        ``success`` gate in the analysis stage can actually trigger.
+        """
+        try:
+            forecast = self.forecast_sales(days_ahead, from_app_context=from_app_context)
+            if not forecast or not forecast.get("forecast"):
+                return {"success": False, "error": forecast.get("error", "empty") if forecast else "empty"}
+            return {
+                "success": True,
+                "predicted_amount": float(forecast.get("total_expected", 0) or 0),
+                "forecast": forecast.get("forecast", []),
+                "trend": forecast.get("trend", "stable"),
+                "confidence": float(forecast.get("confidence", 0) or 0),
+            }
+        except Exception as exc:
+            logger.debug("Next-week sales prediction failed: %s", exc)
+            return {"success": False, "error": str(exc)[:200]}
+
+    def warm_cache(self) -> list[str]:
+        """Load every cached model into memory (startup / first-demand path)."""
+        try:
+            return self.load_all_models()
+        except Exception as exc:
+            logger.debug("Neural cache warm-up failed: %s", exc)
+            return []
+
     def _save_model(self, model_name):
-        """حفظ النموذج والـ scaler"""
+        """حفظ النموذج والـ scaler مع sidecar لبيانات التخزين المؤقت."""
         try:
             model_path = os.path.join(self.models_dir, f"{model_name}.pkl")
             scaler_path = os.path.join(self.models_dir, f"{model_name}_scaler.pkl")
@@ -2165,11 +2459,22 @@ class AzadNeuralEngine:
                 joblib.dump(self.encoders[model_name], encoder_path)
 
             logger.info(f"💾 Model saved: {model_name}")
-            return True
-
+            with self._cache_lock:
+                self._loaded_models.add(model_name)
         except Exception as e:
             logger.error(f"Failed to save model {model_name}: {e}")
             return False
+
+        # Metadata sidecar is advisory: a failure here must never fail the
+        # save itself (test_save_load_failures contract: only dump failures
+        # return False).
+        try:
+            samples = self.training_status.get(model_name, {}).get("samples")
+            samples_int = int(samples) if isinstance(samples, (int, float)) else None
+            self._persist_metadata(model_name, samples_int)
+        except Exception as exc:
+            logger.debug("Model metadata persist skipped for %s: %s", model_name, exc)
+        return True
 
     def _load_model(self, model_name):
         """تحميل النموذج المحفوظ"""
@@ -2187,6 +2492,8 @@ class AzadNeuralEngine:
             if os.path.exists(encoder_path):
                 self.encoders[model_name] = joblib.load(encoder_path)
 
+            with self._cache_lock:
+                self._loaded_models.add(model_name)
             return True
 
         except Exception as e:
@@ -2212,11 +2519,15 @@ class AzadNeuralEngine:
         logger.info(f"📂 Loaded {len(loaded)} trained models: {', '.join(loaded)}")
         return loaded
 
-    def train_all_models(self, from_app_context):
+    def train_all_models(self, from_app_context=None, *, force=False, use_cache=True):
         """
-        تدريب جميع النماذج
+        تدريب جميع النماذج — مع احترام التخزين المؤقت.
 
-        يجب استدعاؤه مع app context
+        Models whose cache is fresh (dataset drift ≤ 10%) are skipped unless
+        ``force=True``; skipped entries carry ``{"success": True,
+        "skipped": True}``. ``from_app_context`` is optional so background
+        schedulers (Celery ``train_neural_models``, ``AutoRetraining``) can
+        call without arguments inside their own app context.
         """
         results = {}
 
@@ -2237,8 +2548,27 @@ class AzadNeuralEngine:
         ]
 
         for model_name, train_func in models_to_train:
+            if use_cache and not force:
+                try:
+                    if not self.should_retrain(model_name):
+                        logger.info(f"⏭️ {model_name}: cache fresh — skipping retrain")
+                        results[model_name] = {
+                            "success": True,
+                            "skipped": True,
+                            "reason": "cache-fresh",
+                            "model": model_name,
+                        }
+                        continue
+                except Exception as exc:
+                    logger.debug("Cache check failed for %s, training anyway: %s", model_name, exc)
             try:
-                result = train_func(from_app_context)
+                if from_app_context is not None:
+                    result = train_func(from_app_context)
+                else:
+                    try:
+                        result = train_func()
+                    except TypeError:
+                        result = train_func(None)
                 results[model_name] = result
 
                 if result.get("success"):
@@ -2251,20 +2581,22 @@ class AzadNeuralEngine:
                 results[model_name] = {"success": False, "error": str(e)}
 
         # ملخص
-        successful = sum(1 for r in results.values() if r.get("success"))
+        successful = sum(1 for r in results.values() if r.get("success") and not r.get("skipped"))
+        skipped = sum(1 for r in results.values() if r.get("skipped"))
         total = len(results)
 
-        logger.info(f"🎊 Neural training complete: {successful}/{total} models trained successfully")
+        logger.info(f"🎊 Neural training complete: {successful}/{total} trained, {skipped} cache-fresh")
 
         return {
-            "success": successful > 0,
+            "success": (successful + skipped) > 0,
             "trained_models": successful,
+            "skipped_models": skipped,
             "total_models": total,
             "results": results,
         }
 
     def get_status(self):
-        """الحصول على حالة جميع النماذج"""
+        """الحصول على حالة جميع النماذج (تشمل حالة التخزين المؤقت)."""
         status: dict[str, Any] = {"models": {}, "total_models": len(self.models), "trained_models": 0}
 
         for model_name in self.models:
@@ -2276,12 +2608,17 @@ class AzadNeuralEngine:
 
                 # الحصول على معلومات التدريب
                 training_info = self.training_status.get(model_name, {})
+                with self._cache_lock:
+                    meta = dict(self._model_metadata.get(model_name) or {})
+                    loaded = model_name in self._loaded_models
 
                 status["models"][model_name] = {
                     "trained": True,
                     "accuracy": training_info.get("accuracy") or training_info.get("r2_score"),
-                    "samples": training_info.get("samples"),
-                    "trained_at": training_info.get("trained_at"),
+                    "samples": training_info.get("samples", meta.get("samples")),
+                    "trained_at": training_info.get("trained_at", meta.get("trained_at")),
+                    "model_version_hash": meta.get("model_version_hash"),
+                    "loaded": loaded,
                 }
             else:
                 status["models"][model_name] = {"trained": False}
@@ -2376,8 +2713,12 @@ _neural_engine_instance = None
 
 
 def get_neural_engine():
-    """الحصول على instance واحد من NeuralEngine"""
+    """الحصول على instance واحد من NeuralEngine (مع تحميل التخزين المؤقت)."""
     global _neural_engine_instance
     if _neural_engine_instance is None:
         _neural_engine_instance = AzadNeuralEngine()
+        try:
+            _neural_engine_instance.warm_cache()
+        except Exception as exc:
+            logger.debug("Neural cache warm-up skipped: %s", exc)
     return _neural_engine_instance

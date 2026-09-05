@@ -339,6 +339,12 @@ def _stream_ai_response(message, context, ai_mode):
     try:
         from models.ai import AiInteraction
 
+        telemetry = context.get("ai_telemetry") or {}
+        try:
+            confidence_value = telemetry.get("confidence")
+            confidence_value = float(confidence_value) if confidence_value is not None else None
+        except (TypeError, ValueError):
+            confidence_value = None
         log = AiInteraction(
             tenant_id=getattr(current_user, "tenant_id", None),
             user_id=current_user.id,
@@ -347,6 +353,9 @@ def _stream_ai_response(message, context, ai_mode):
             intent=context.get("intent"),
             was_successful=True,
             response_time_ms=elapsed_ms,
+            tool_names=(str(telemetry.get("tool_names") or "")[:2000] or None),
+            fallback_path=(str(telemetry.get("fallback_path") or "streamed")[:50]),
+            confidence=confidence_value,
         )
         with atomic_transaction("ai_interaction_log"):
             db.session.add(log)

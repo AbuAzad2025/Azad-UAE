@@ -70,6 +70,13 @@ class AiInteraction(db.Model):
     intent = db.Column(db.String(100), nullable=True)
     was_successful = db.Column(db.Boolean, nullable=True)
     response_time_ms = db.Column(db.Integer, nullable=True)
+    # Phase 4 observability (Master Directive): which native tools executed
+    # (comma-separated action names), which fallback path produced the answer
+    # (native_tools / legacy_action / local / streamed_*), and the model
+    # confidence when known. All nullable for backward compatibility.
+    tool_names = db.Column(db.Text, nullable=True)
+    fallback_path = db.Column(db.String(50), nullable=True)
+    confidence = db.Column(db.Numeric(3, 2), nullable=True)
     is_training_sample = db.Column(db.Boolean, nullable=False, default=False, index=True)
     created_at = db.Column(
         db.DateTime(timezone=True),
@@ -91,6 +98,9 @@ class AiInteraction(db.Model):
             "intent": self.intent,
             "was_successful": self.was_successful,
             "response_time_ms": self.response_time_ms,
+            "tool_names": self.tool_names,
+            "fallback_path": self.fallback_path,
+            "confidence": float(self.confidence) if self.confidence is not None else None,
             "is_training_sample": self.is_training_sample,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }

@@ -892,6 +892,99 @@ class AIService:
             ),
         }
 
+    # Structured colon-command prefixes (mirrors the deterministic arms of
+    # ActionDispatcher.parse_chat_action). Messages matching these execute
+    # immediately and deterministically; natural-language requests go through
+    # LLM native function-calling first (Phase 2, Master Directive).
+    _STRUCTURED_COMMAND_RE = (
+        r"^\s*(عميل|زبون|customer|منتج|product|فاتورة|sale|invoice|بيع"
+        r"|استلام|قبض|payment|receive|مصروف|expense|مورد|supplier|موظف|employee"
+        r"|أمر\s*شراء|شراء|purchase|order|رصيد|balance)\s*[:：=]"
+    )
+
+    @staticmethod
+    def _is_structured_command(message: str) -> bool:
+        """True for explicit ``keyword: args`` commands (deterministic path)."""
+        try:
+            return re.match(AIService._STRUCTURED_COMMAND_RE, message or "", re.IGNORECASE) is not None
+        except Exception:
+            logger.debug("Structured-command check failed", exc_info=True)
+            return False
+
+    @staticmethod
+    def _record_telemetry(
+        pipe: dict | None,
+        *,
+        tool_names: list | None = None,
+        fallback_path: str | None = None,
+        confidence: float | None = None,
+    ) -> dict:
+        """Attach Phase-4 telemetry to the pipe and the request context.
+
+        The chat route / SSE helper reads ``context["ai_telemetry"]`` when
+        persisting ``AiInteraction`` rows. Never raises.
+        """
+        telemetry: dict[str, Any] = {}
+        try:
+            if tool_names:
+                telemetry["tool_names"] = ",".join(str(t) for t in tool_names if t)
+            if fallback_path:
+                telemetry["fallback_path"] = fallback_path
+            if confidence is not None:
+                telemetry["confidence"] = float(confidence)
+            if not telemetry:
+                return telemetry
+            if isinstance(pipe, dict):
+                existing = pipe.get("telemetry")
+                if isinstance(existing, dict):
+                    existing.update(telemetry)
+                else:
+                    pipe["telemetry"] = dict(telemetry)
+                ctx = pipe.get("context")
+                if isinstance(ctx, dict):
+                    current = ctx.get("ai_telemetry")
+                    if isinstance(current, dict):
+                        current.update(telemetry)
+                    else:
+                        ctx["ai_telemetry"] = dict(telemetry)
+        except Exception:
+            logger.debug("Telemetry record skipped", exc_info=True)
+        return telemetry
+
+    @staticmethod
+    def _get_recent_history(user_id: int | None, tenant_id: int | None, limit: int = 6) -> list[dict[str, str]]:
+        """Last N conversation turns for multi-turn context (Phase 3).
+
+        Reads persisted ``AiInteraction`` rows so follow-up questions keep
+        working across worker restarts. Returns oldest-first
+        ``[{q, r}]``; ``[]`` on any failure or missing identity.
+        """
+        if not user_id or not tenant_id or limit <= 0:
+            return []
+        try:
+            from models.ai import AiInteraction
+
+            rows = (
+                db.session.query(AiInteraction)
+                .filter(
+                    AiInteraction.user_id == int(user_id),
+                    AiInteraction.tenant_id == int(tenant_id),
+                )
+                .order_by(AiInteraction.created_at.desc(), AiInteraction.id.desc())
+                .limit(int(limit))
+                .all()
+            )
+            turns = []
+            for row in reversed(rows):
+                q = (row.query or "")[:500]
+                r = (row.response or "")[:500]
+                if q or r:
+                    turns.append({"q": q, "r": r})
+            return turns
+        except Exception:
+            logger.debug("Recent-history lookup failed", exc_info=True)
+            return []
+
     @staticmethod
     def _chat_stage1_to_3(message, context=None):
         """المراحل 1–3 من معالجة المحادثة: حارس الطلبات الحساسة، المعالجة
@@ -919,7 +1012,7 @@ class AIService:
         local_response = local_result.get("response", "")
 
         force_local = ctx.get("force_local", False)
-        knowledge_context = "" if force_local else AIService._gather_relevant_knowledge(message, local_result)
+        knowledge_context = "" if force_local else AIService._gather_intent_knowledge(message, local_result)
 
         system_context = ""
         try:
@@ -934,16 +1027,32 @@ class AIService:
         except Exception:
             logger.debug("Failed to build system context for AI chat", exc_info=True)
 
-        # ========== المرحلة 2: مسار التنفيذ المباشر (للأوامر الواضحة) ==========
+        # ========== المرحلة 2: مسار التنفيذ (أصلي أولاً، regex احتياطي) ==========
+        # Phase 2 (Master Directive): LLM native function-calling is the
+        # primary execution path for natural-language requests. Immediate
+        # regex dispatch happens only for: greetings/help (conversational),
+        # explicit structured ``keyword: args`` commands (deterministic), or
+        # when no LLM provider is reachable (offline fallback). Anything else
+        # is stashed as ``parsed_hint`` so the model executes it natively,
+        # with dispatcher fallback for unusable LLM output.
+        parsed_hint: dict[str, Any] | None = None
+        llm_reachable = bool(AIService.get_api_key()) and not force_local
         try:
             from ai_knowledge.action_dispatcher import action_dispatcher
 
             parsed = action_dispatcher.parse_chat_action(message)
             if parsed:
                 action_type, args = parsed
-                result = action_dispatcher.dispatch(action_type, args)
-                if result.success:
-                    return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>", None
+                if (
+                    action_type in ("greeting", "help")
+                    or not llm_reachable
+                    or AIService._is_structured_command(message)
+                ):
+                    result = action_dispatcher.dispatch(action_type, args)
+                    if result.success:
+                        return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>", None
+                else:
+                    parsed_hint = {"action_type": action_type, "args": args}
         except Exception:
             logger.debug("Action dispatcher failed for chat message", exc_info=True)
 
@@ -962,10 +1071,13 @@ class AIService:
             "context": ctx,
             "current_user": current_user,
             "user_id": user_id,
+            "tenant_id": getattr(current_user, "tenant_id", None),
             "local_response": local_response,
             "knowledge_context": knowledge_context,
             "system_context": system_context,
             "force_local": force_local,
+            "parsed_hint": parsed_hint,
+            "history": AIService._get_recent_history(user_id, getattr(current_user, "tenant_id", None)),
         }
 
     @staticmethod
@@ -983,8 +1095,41 @@ class AIService:
                     return final
             except Exception as e:
                 AIService._log_llm_failure(e)
+            # LLM yielded nothing usable — regex-hint fallback (RBAC-guarded).
+            hint_final = AIService._dispatch_parsed_hint(pipe)
+            if hint_final is not None:
+                return hint_final
 
+        AIService._record_telemetry(pipe, fallback_path="local", confidence=0.5)
         return f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>"
+
+    @staticmethod
+    def _dispatch_parsed_hint(pipe: dict | None) -> str | None:
+        """Execute the stashed regex parse via the dispatcher (fallback only).
+
+        Runs exclusively through ``ActionDispatcher.dispatch`` so RBAC,
+        Pydantic validation, the confirmation gate, and auditing apply
+        exactly as on the deterministic path. Returns the user-facing
+        message, or ``None`` when there is no hint.
+        """
+        hint = (pipe or {}).get("parsed_hint")
+        if not isinstance(hint, dict) or not hint.get("action_type"):
+            return None
+        try:
+            from ai_knowledge.action_dispatcher import ActionDispatcher
+
+            result = ActionDispatcher().dispatch(hint.get("action_type", ""), hint.get("args") or {})
+            if result.needs_confirmation:
+                return f"⚠️ {result.message}\n\n<sub>🤖 أزاد — يرجى التأكيد قبل التنفيذ</sub>"
+            if result.needs_permission:
+                return f"🚫 {result.message}\n\n<sub>🤖 أزاد — صلاحية مرفوضة</sub>"
+            if result.success:
+                AIService._record_telemetry(pipe, fallback_path="legacy_action", confidence=0.85)
+                return f"{result.message}\n\n<sub>🤖 المصدر: محرك التنفيذ الذكي</sub>"
+            return f"⚠️ {result.message}\n\n<sub>🤖 أزاد</sub>"
+        except Exception:
+            logger.debug("Parsed-hint dispatch failed", exc_info=True)
+            return None
 
     @staticmethod
     def _log_llm_failure(exc):
@@ -1021,6 +1166,20 @@ class AIService:
         provider = AIService.get_provider()
         is_gemini = provider == "gemini"
 
+        # Layer 1 (Pre-LLM RBAC): build the tools payload dynamically from
+        # the user's permissions via the central tool registry — unpermitted
+        # tools never reach the model context. When the user has no actionable
+        # tools the model runs in conversational mode. Shared by the OpenAI
+        # and Gemini branches (Gemini uses functionDeclarations).
+        current_user = pipe.get("current_user")
+        try:
+            from ai_knowledge.tool_registry import get_tools_for_user
+
+            _tools = get_tools_for_user(current_user)
+        except Exception:
+            logger.debug("Tool registry unavailable", exc_info=True)
+            _tools = None
+
         if provider == "groq":
             url = "https://api.groq.com/openai/v1/chat/completions"
             model = AIService.ACTIVE_MODELS["groq"]
@@ -1035,7 +1194,6 @@ class AIService:
             model = AIService.ACTIVE_MODELS["openai"]
 
         # بناء البرومبت مع معرفة النظام الشاملة
-        current_user = pipe.get("current_user")
         message = pipe["message"]
         knowledge_context = pipe["knowledge_context"]
         system_context = pipe["system_context"]
@@ -1093,24 +1251,66 @@ class AIService:
 
 ⚠️ مهم: إذا سأل عن بيانات - استخدم الأرقام الموجودة. إذا سأل عن واجهة النظام أو جداوله - أخبره بناءً على المعلومات أعلاه. إذا طلب شيئاً خارج قدراتك - أخبره أنك لا تستطيع."""
 
+        # Phase 3: multi-turn history (persisted AiInteraction turns) so
+        # follow-up questions resolve against prior context.
+        history_block = ""
+        try:
+            turns = pipe.get("history") or []
+            if turns:
+                rendered = []
+                for turn in turns[-6:]:
+                    q = str(turn.get("q", ""))[:300]
+                    r = str(turn.get("r", ""))[:300]
+                    if q or r:
+                        rendered.append(f"• سؤال سابق: {q}\n  رد سابق: {r}")
+                if rendered:
+                    history_block = "\n📜 سياق المحادثة الأخيرة:\n" + "\n".join(rendered)
+        except Exception:
+            logger.debug("History block build skipped", exc_info=True)
+        if history_block:
+            expert_prompt += history_block
+
+        # Phase 2: parsed-hint guidance — the message matched an explicit
+        # action pattern; prefer executing it through the matching native
+        # tool instead of answering conversationally.
+        try:
+            hint = pipe.get("parsed_hint")
+            if isinstance(hint, dict) and hint.get("action_type"):
+                import json as _hint_json
+
+                hint_block = (
+                    "\n⚙️ أمر صريح مطابق: نفّذ العملية «"
+                    + str(hint.get("action_type"))
+                    + "» عبر الأداة المطابقة بالمعطيات التالية بدل الرد النصي:\n"
+                    + _hint_json.dumps(hint.get("args") or {}, ensure_ascii=False)[:1000]
+                )
+                expert_prompt += hint_block
+        except Exception:
+            logger.debug("Hint block build skipped", exc_info=True)
+
         if is_gemini:
             headers = {"Content-Type": "application/json"}
             payload: dict[str, Any] = {
                 "contents": [{"parts": [{"text": expert_prompt}]}],
                 "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},
             }
+            if _tools:
+                # Gemini native function calling: OpenAI-style tool defs
+                # convert 1:1 into functionDeclarations.
+                declarations = []
+                for tool in _tools:
+                    fn = (tool or {}).get("function") or {}
+                    if fn.get("name"):
+                        declarations.append(
+                            {
+                                "name": fn["name"],
+                                "description": fn.get("description") or fn["name"],
+                                "parameters": fn.get("parameters") or {"type": "object", "properties": {}},
+                            }
+                        )
+                if declarations:
+                    payload["tools"] = [{"functionDeclarations": declarations}]
         else:
-            # Layer 1 (Pre-LLM RBAC): build the tools payload dynamically from
-            # the user's permissions via the central tool registry —
-            # unpermitted tools never reach the model context. When the user
-            # has no actionable tools the model runs in conversational mode.
-            try:
-                from ai_knowledge.tool_registry import get_tools_for_user
-
-                _tools = get_tools_for_user(current_user)
-            except Exception:
-                logger.debug("Tool registry unavailable", exc_info=True)
-                _tools = None
             headers = {
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
@@ -1167,18 +1367,54 @@ class AIService:
         result = response.json()
         handled_natively = False
         if plan["is_gemini"]:
+            import json as _gemini_json
+
             candidates = result.get("candidates") or []
-            groq_response = (
-                (candidates[0].get("content", {}).get("parts") or [{}])[0].get("text", "") if candidates else ""
-            )
-            if not groq_response:
-                raise ValueError("Empty Gemini response")
+            parts = (candidates[0].get("content", {}).get("parts") or []) if candidates else []
+            texts = [p.get("text", "") for p in parts if isinstance(p, dict) and p.get("text")]
+            gemini_calls: list[dict[str, Any]] = []
+            for part in parts:
+                fn = (part or {}).get("functionCall") or {}
+                if fn.get("name"):
+                    gemini_calls.append(
+                        {
+                            "function": {
+                                "name": fn["name"],
+                                "arguments": _gemini_json.dumps(fn.get("args") or {}, ensure_ascii=False),
+                            }
+                        }
+                    )
+            if gemini_calls:
+                # Gemini native function calls — validated + dispatched.
+                groq_response = AIService._execute_native_tool_calls(gemini_calls, pipe["user_id"])
+                AIService._record_telemetry(
+                    pipe,
+                    tool_names=[(c.get("function") or {}).get("name") for c in gemini_calls],
+                    fallback_path="native_tools",
+                    confidence=0.9,
+                )
+                handled_natively = True
+            else:
+                groq_response = "".join(texts)
+                if not groq_response:
+                    # No text and no tools — let the regex-hint fallback try
+                    # before giving up (chat_response handles it).
+                    hint_final = AIService._dispatch_parsed_hint(pipe)
+                    if hint_final is not None:
+                        return hint_final
+                    raise ValueError("Empty Gemini response")
         else:
             message_obj = result["choices"][0]["message"]
             tool_calls = message_obj.get("tool_calls") or []
             if tool_calls:
                 # P3-1: native tool calls — validated + dispatched
                 groq_response = AIService._execute_native_tool_calls(tool_calls, pipe["user_id"])
+                AIService._record_telemetry(
+                    pipe,
+                    tool_names=[(c.get("function") or {}).get("name") for c in tool_calls],
+                    fallback_path="native_tools",
+                    confidence=0.9,
+                )
                 handled_natively = True
             else:
                 groq_response = message_obj.get("content") or ""
@@ -1189,6 +1425,9 @@ class AIService:
             action_result = AIService._execute_ai_action(groq_response, pipe["user_id"])
             if action_result:
                 groq_response = action_result
+                AIService._record_telemetry(pipe, fallback_path="legacy_action", confidence=0.8)
+            else:
+                AIService._record_telemetry(pipe, fallback_path="conversational", confidence=0.7)
 
         return AIService._finalize_llm_response(groq_response, plan, pipe)
 
@@ -1207,9 +1446,13 @@ class AIService:
             return
 
         plan = AIService._build_llm_plan(pipe)
-        if plan is None or plan["is_gemini"]:
-            # لا بث رمزي متاح عبر Gemini REST أو الوضع المحلي — تنفيذ كامل
+        if plan is None:
+            # الوضع المحلي — تنفيذ كامل بلا بث رمزي
             yield ("final", AIService.chat_response(message, context))
+            return
+        if plan["is_gemini"]:
+            # Phase 4: unified SSE — Gemini streams via streamGenerateContent.
+            yield from AIService._stream_gemini_response(plan, pipe)
             return
 
         try:
@@ -1266,15 +1509,108 @@ class AIService:
                     {"function": {"name": b["name"], "arguments": b["arguments"]}} for _, b in sorted(tool_buf.items())
                 ]
                 final_text = AIService._execute_native_tool_calls(tool_calls, pipe["user_id"])
+                AIService._record_telemetry(
+                    pipe,
+                    tool_names=[(c.get("function") or {}).get("name") for c in tool_calls],
+                    fallback_path="native_tools",
+                    confidence=0.9,
+                )
             else:
                 final_text = "".join(chunks)
                 action_result = AIService._execute_ai_action(final_text, pipe["user_id"])
                 if action_result:
                     final_text = action_result
+                    AIService._record_telemetry(pipe, fallback_path="legacy_action", confidence=0.8)
+                else:
+                    hint_final = AIService._dispatch_parsed_hint(pipe)
+                    if hint_final is not None:
+                        final_text = hint_final
+                    else:
+                        AIService._record_telemetry(pipe, fallback_path="conversational", confidence=0.7)
 
             yield ("final", AIService._finalize_llm_response(final_text, plan, pipe))
         except Exception as e:
             AIService._log_llm_failure(e)
+            AIService._record_telemetry(pipe, fallback_path="local", confidence=0.5)
+            yield ("final", f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>")
+
+    @staticmethod
+    def _stream_gemini_response(plan, pipe):
+        """Phase 4: unified token streaming for Gemini (streamGenerateContent).
+
+        Streams text deltas as ``("delta", piece)``, buffers ``functionCall``
+        parts, executes them natively at completion, then yields
+        ``("final", ...)``. Falls back to the local answer on any failure.
+        """
+        import json as _json
+
+        import requests
+
+        stream_url = plan["url"].replace(":generateContent", ":streamGenerateContent")
+        try:
+            response = requests.post(
+                stream_url,
+                headers=plan["headers"],
+                json=plan["payload"],
+                timeout=30,
+                stream=True,
+            )
+            if response.status_code != 200:
+                raise ValueError(f"Gemini stream HTTP {response.status_code}")
+
+            chunks: list[str] = []
+            fn_name = ""
+            fn_args = ""
+            sse_stream: Any = response.iter_lines(decode_unicode=True)
+            for raw_line in sse_stream:
+                if not raw_line or not raw_line.startswith("data:"):
+                    continue
+                data = raw_line[len("data:") :].strip()
+                if data == "[DONE]":
+                    break
+                try:
+                    chunk = _json.loads(data)
+                except Exception:
+                    logger.debug("Skipping unparseable Gemini SSE chunk", exc_info=True)
+                    continue
+                for cand in chunk.get("candidates") or []:
+                    for part in (cand.get("content") or {}).get("parts") or []:
+                        if not isinstance(part, dict):
+                            continue
+                        text = part.get("text")
+                        if text:
+                            chunks.append(text)
+                            yield ("delta", text)
+                        fn = part.get("functionCall") or {}
+                        if fn.get("name"):
+                            fn_name += str(fn["name"])
+                        args = fn.get("args")
+                        if isinstance(args, dict):
+                            fn_args += _json.dumps(args, ensure_ascii=False)
+                        elif isinstance(args, str):
+                            fn_args += args
+
+            if fn_name:
+                tool_calls = [{"function": {"name": fn_name, "arguments": fn_args or "{}"}}]
+                final_text = AIService._execute_native_tool_calls(tool_calls, pipe["user_id"])
+                AIService._record_telemetry(pipe, tool_names=[fn_name], fallback_path="native_tools", confidence=0.9)
+            else:
+                final_text = "".join(chunks)
+                action_result = AIService._execute_ai_action(final_text, pipe["user_id"])
+                if action_result:
+                    final_text = action_result
+                    AIService._record_telemetry(pipe, fallback_path="legacy_action", confidence=0.8)
+                else:
+                    hint_final = AIService._dispatch_parsed_hint(pipe)
+                    if hint_final is not None:
+                        final_text = hint_final
+                    else:
+                        AIService._record_telemetry(pipe, fallback_path="conversational", confidence=0.7)
+
+            yield ("final", AIService._finalize_llm_response(final_text, plan, pipe))
+        except Exception as e:
+            AIService._log_llm_failure(e)
+            AIService._record_telemetry(pipe, fallback_path="local", confidence=0.5)
             yield ("final", f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>")
 
     @staticmethod
@@ -1419,6 +1755,147 @@ class AIService:
         except Exception:
             logger.debug("AI external sharing flag lookup failed", exc_info=True)
             return True
+
+    # Intent routing for scoped RAG (Phase 3): only the tables relevant to
+    # the detected intent are queried — never the full 30-day dump.
+    _RAG_INTENT_KEYWORDS: dict[str, tuple[str, ...]] = {
+        "sales": ("فاتورة", "مبيعات", "بيع", "sale", "invoice", "bill"),
+        "inventory": ("مخزون", "منتج", "مستودع", "stock", "product", "inventory", "warehouse"),
+        "customer": ("عميل", "زبون", "رصيد", "ذمم", "customer", "balance"),
+        "finance": ("مصروف", "دفعة", "ربح", "تقرير", "ملخص", "expense", "payment", "profit", "summary", "report"),
+    }
+
+    @staticmethod
+    def _detect_rag_intent(message: str) -> str:
+        """Route a message to one scoped RAG domain (default: overview)."""
+        try:
+            lowered = (message or "").lower()
+            for intent, keywords in AIService._RAG_INTENT_KEYWORDS.items():
+                if any(kw in lowered for kw in keywords):
+                    return intent
+        except Exception:
+            logger.debug("RAG intent detection failed", exc_info=True)
+        return "overview"
+
+    @staticmethod
+    def _gather_intent_knowledge(message, local_result):
+        """Phase 3: intent-scoped RAG — a trimmed subset of tenant data.
+
+        Runs only the COUNT/SUM queries relevant to the detected intent
+        (sales / inventory / customer / finance / overview) instead of the
+        full-statistics dump. Tenant-scoped, privacy-aware, and explicit on
+        failure — never silent.
+        """
+        try:
+            from datetime import datetime, timedelta
+
+            from flask import current_app
+            from flask_login import current_user as flask_current_user
+            from sqlalchemy import func
+
+            from extensions import db
+            from models import (
+                Cheque,
+                Customer,
+                Expense,
+                Payment,
+                Product,
+                Purchase,
+                Sale,
+                Supplier,
+            )
+            from utils.tenanting import scoped_user_query
+
+            ctx_user = None
+            if local_result.get("context"):
+                ctx_user = local_result.get("context", {}).get("current_user")
+            if ctx_user is None and flask_current_user.is_authenticated:
+                ctx_user = flask_current_user
+
+            missing_user_msg = gettext("تعذّر تحديد هوية المستخدم الحالي.")
+            if ctx_user is None:
+                return str(missing_user_msg)
+            tid = ctx_user.tenant_id
+
+            if not AIService._is_ai_external_sharing_enabled(ctx_user):
+                return gettext(
+                    "🔒 **الخصوصية:** مشاركة البيانات التفصيلية مع مزودي الذكاء "
+                    "الخارجيين معطلة لهذه المنشأة. تتم الإجابة عبر المحرك المحلي فقط."
+                )
+
+            intent = AIService._detect_rag_intent(message)
+            cutoff = datetime.now() - timedelta(days=30)
+            data_parts = [f"🎯 **نطاق البيانات:** {intent}"]
+
+            def _sum(query):
+                return query.scalar() or 0
+
+            if intent in ("sales", "overview"):
+                sales_30d = db.session.query(Sale).filter(Sale.sale_date >= cutoff, Sale.tenant_id == tid).count()
+                total_sales = _sum(
+                    db.session.query(func.sum(Sale.total_amount)).filter(
+                        Sale.sale_date >= cutoff, Sale.tenant_id == tid
+                    )
+                )
+                data_parts.append(f"💰 المبيعات (30 يوم): {sales_30d} فاتورة (إجمالي: {total_sales:.2f} درهم)")
+
+            if intent in ("inventory", "overview"):
+                products_count = db.session.query(Product).filter_by(is_active=True, tenant_id=tid).count()
+                out_count = (
+                    db.session.query(Product)
+                    .filter(Product.is_active, Product.tenant_id == tid, Product.current_stock <= 0)
+                    .count()
+                )
+                data_parts.append(f"📦 المنتجات النشطة: {products_count} (نافذة: {out_count})")
+
+            if intent in ("customer", "overview"):
+                customers_count = db.session.query(Customer).filter_by(is_active=True, tenant_id=tid).count()
+                data_parts.append(f"👥 العملاء النشطون: {customers_count}")
+
+            if intent in ("finance", "overview"):
+                expenses_30d = (
+                    db.session.query(Expense).filter(Expense.expense_date >= cutoff, Expense.tenant_id == tid).count()
+                )
+                total_expenses = _sum(
+                    db.session.query(func.sum(Expense.amount_aed)).filter(
+                        Expense.expense_date >= cutoff, Expense.tenant_id == tid
+                    )
+                )
+                payments_30d = (
+                    db.session.query(Payment).filter(Payment.payment_date >= cutoff, Payment.tenant_id == tid).count()
+                )
+                data_parts.append(
+                    f"💵 المصروفات (30 يوم): {expenses_30d} (إجمالي: {total_expenses:.2f} درهم) | الدفعات: {payments_30d}"
+                )
+
+            if intent == "overview":
+                users_count = scoped_user_query(ctx_user, exclude_owners=True).count()
+                suppliers_count = db.session.query(Supplier).filter_by(is_active=True, tenant_id=tid).count()
+                purchases_30d = (
+                    db.session.query(Purchase)
+                    .filter(Purchase.purchase_date >= cutoff, Purchase.tenant_id == tid)
+                    .count()
+                )
+                cheques_count = db.session.query(Cheque).filter_by(tenant_id=tid).count()
+                data_parts.append(
+                    f"🏢 المستخدمون: {users_count} | الموردون: {suppliers_count} "
+                    f"| المشتريات (30 يوم): {purchases_30d} | الشيكات: {cheques_count}"
+                )
+
+            config = current_app.config
+            data_parts.append(f"📞 **بيانات الشركة:** {config.get('COMPANY_NAME_AR')} — {config.get('COMPANY_PHONE')}")
+
+            current_user = local_result.get("context", {}).get("current_user")
+            if current_user:
+                data_parts.append(
+                    f"👤 **المستخدم الحالي:** {current_user.username} "
+                    f"({current_user.role.name_ar if current_user.role else 'غير محدد'})"
+                )
+
+            return "\n".join(data_parts)
+
+        except Exception as e:
+            return gettext(f"خطأ في جمع البيانات: {str(e)}")
 
     @staticmethod
     def _gather_relevant_knowledge(message, local_result):

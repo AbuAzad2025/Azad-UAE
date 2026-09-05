@@ -443,6 +443,17 @@ class IntelligentAssistant:
             # بناء الرد بناءً على البيانات الحقيقية
             response_parts = []
 
+            # Explicit tenant-context notice (Master Directive, non-silent
+            # fail-closed): the data layer returns {} when no tenant
+            # resolves — say so plainly for data intents instead of
+            # reasoning from nothing. Conversational intents are unaffected.
+            if not data and intent in ("sales_analysis", "customer_balance", "inventory_check"):
+                response_parts.append(
+                    "⚠️ **لا يوجد سياق منشأة نشط** — أعرض الأسئلة العامة فقط. "
+                    "سجّل الدخول إلى شركتك لعرض البيانات والتحليلات."
+                )
+                response_parts.append("")
+
             # المقدمة الديناميكية
             if intent == "greeting":
                 import secrets
