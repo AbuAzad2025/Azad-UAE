@@ -2217,9 +2217,13 @@ class AzadNeuralEngine:
 
     @staticmethod
     def _version_hash(model_name: str, samples: int | None) -> str:
-        """Short stable hash identifying one cached training generation."""
+        """Short stable hash identifying one cached training generation.
+
+        SHA-256 (truncated): the digest is a cache fingerprint, but SHA-1
+        trips the security gate (bandit B324), so SHA-256 is used outright.
+        """
         payload = f"{model_name}:{NEURAL_CACHE_SCHEMA_VERSION}:{samples if samples is not None else -1}"
-        return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:12]
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
     def _persist_metadata(self, model_name: str, samples: int | None) -> None:
         """Write the ``*.meta.json`` sidecar for a freshly trained model."""
