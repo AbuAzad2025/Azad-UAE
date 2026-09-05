@@ -194,11 +194,20 @@ def upload_excel():
 
 def _process_excel_intelligently(file, warehouse_id, user):
     """معالج Excel ذكي خارق - أفضل من البشر"""
+    # P2: byte caps alone don't bound row counts — a 16MB sheet can hold
+    # ~1M rows and stall a worker inside one giant transaction.
+    MAX_AI_EXCEL_ROWS = 2000
+    MAX_AI_EXCEL_ERRORS = 50
     try:
         from models import Product
 
         tid = get_active_tenant_id(user)
-        df = pd.read_excel(file, engine="openpyxl")
+        df = pd.read_excel(file, engine="openpyxl", nrows=MAX_AI_EXCEL_ROWS + 1)
+        if len(df) > MAX_AI_EXCEL_ROWS:
+            return {
+                "success": False,
+                "error": gettext(f"الملف يتجاوز الحد الأقصى ({MAX_AI_EXCEL_ROWS} سطر). قسّمه إلى ملفات أصغر."),
+            }
 
         column_mapping = _intelligent_column_detector(df)
 
@@ -266,7 +275,10 @@ def _process_excel_intelligently(file, warehouse_id, user):
                         products_created += 1
 
                 except Exception as e:
-                    errors.append(gettext(f"السطر {cast(int, index) + 2}: {str(e)}"))
+                    if len(errors) < MAX_AI_EXCEL_ERRORS:
+                        errors.append(gettext(f"السطر {cast(int, index) + 2}: {str(e)}"))
+                    elif len(errors) == MAX_AI_EXCEL_ERRORS:
+                        errors.append(gettext("… تم إخفاء بقية الأخطاء (الحد الأقصى للعرض)"))
 
         _train_ai_from_excel(df, products_created, products_updated, user.id)
 

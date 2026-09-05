@@ -111,19 +111,39 @@ def intelligent_response(message: str, user_id: int | None = None, context: dict
 # ============================================================================
 
 _llm_available = None
+_llm_available_mtime = object()
+
+
+def _env_mtime():
+    """mtime of the loaded .env (None when absent/unreadable)."""
+    try:
+        from dotenv import find_dotenv
+
+        env_path = find_dotenv(usecwd=True) or ".env"
+        if os.path.exists(env_path):
+            return os.path.getmtime(env_path)
+    except Exception as exc:
+        logger.debug("dotenv mtime probe skipped: %s", exc)
+    return None
 
 
 def _check_llm_availability() -> bool:
-    """Check if any LLM provider (Groq/Gemini/OpenAI) is configured."""
-    global _llm_available
-    if _llm_available is not None:
+    """Check if any LLM provider (Groq/Gemini/OpenAI) is configured.
+
+    P2: the result was cached permanently, so keys added at runtime via
+    /ai/config never took effect for the fast path until a restart.
+    Recompute whenever the .env mtime changes.
+    """
+    global _llm_available, _llm_available_mtime
+    mtime = _env_mtime()
+    if _llm_available is not None and mtime == _llm_available_mtime:
         return _llm_available
-    import os
 
     load_env_cached()
     _llm_available = bool(
         os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY")
     )
+    _llm_available_mtime = mtime
     return _llm_available
 
 
@@ -165,8 +185,11 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
         try:
             import requests
 
+            # Aligned with AIService.ACTIVE_MODELS (gemini-2.0-flash); the
+            # old gemini-2.0-flash-exp endpoint is retired.
             resp = requests.post(
-                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key={gemini_key}",
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+                f"?key={gemini_key}",
                 json={"contents": [{"parts": [{"text": system_prompt + "\n\n" + user_message}]}]},
                 timeout=15,
             )

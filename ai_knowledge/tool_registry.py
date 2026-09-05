@@ -19,10 +19,31 @@ place), and additional standalone tools may be exposed via the
 from __future__ import annotations
 
 import logging
+import threading
 from collections.abc import Callable
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+# P1: model_json_schema() × 35 tools cost ~2.5s per chat request. Schemas
+# are static per action — build once, filter per user. Cached dicts are
+# READ-ONLY shared references (callers must never mutate them).
+_SCHEMA_CACHE: dict[str, dict[str, Any]] = {}
+_SCHEMA_CACHE_LOCK = threading.Lock()
+
+
+def _cached_tool_params(name: str, schema) -> dict[str, Any]:
+    """JSON-schema params for one tool, built once per process."""
+    params = _SCHEMA_CACHE.get(name)
+    if params is None:
+        with _SCHEMA_CACHE_LOCK:
+            params = _SCHEMA_CACHE.get(name)
+            if params is None:
+                params = schema.model_json_schema()
+                params.pop("title", None)
+                _SCHEMA_CACHE[name] = params
+    return params
+
 
 # Standalone decorator-registered tools (name -> metadata)
 _STANDALONE_TOOLS: dict[str, dict[str, Any]] = {}
@@ -128,8 +149,7 @@ def get_tools_for_user(user) -> list[dict[str, Any]]:
             continue
         if not user_can_use_tool(user, meta):
             continue
-        params = schema.model_json_schema()
-        params.pop("title", None)
+        params = _cached_tool_params(name, schema)
         tools.append(
             {
                 "type": "function",

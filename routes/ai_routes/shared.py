@@ -41,29 +41,35 @@ def _conversation_clear(user_id: int, tenant_id: int | None = None):
     _clear_conversation_context(user_id, tenant_id)
 
 
-def smart_listener(message, context):
-    """مستمع ذكي يفهم نية المستخدم"""
-    msg_lower = message.lower().strip()
+def _message_tokens(message: str) -> set[str]:
+    """Word tokens for intent keywords (P2: substring matching hijacked
+    wizard flows — 'سلام'/'كلام' contain 'لا', 'note' contains 'no').
+    Arabic has no ``\\b`` word boundaries, so tokenize explicitly. The class
+    covers Arabic letters only (no Arabic punctuation such as U+060C '،'),
+    so trailing punctuation never glues itself to a keyword."""
+    return set(re.findall(r"[A-Za-z0-9\u0621-\u064A\u0660-\u0669]+", (message or "").lower()))
 
-    if any(
-        word in msg_lower
-        for word in [
-            gettext("عودة"),
-            gettext("رجوع"),
-            gettext("إلغاء"),
-            gettext("خروج"),
-            gettext("إيقاف"),
-        ]
-    ):
+
+def smart_listener(message, context):
+    """مستمع ذكي يفهم نية المستخدم (مطابقة كلمات كاملة فقط)"""
+    tokens = _message_tokens(message)
+
+    if tokens & {
+        gettext("عودة"),
+        gettext("رجوع"),
+        gettext("إلغاء"),
+        gettext("خروج"),
+        gettext("إيقاف"),
+    }:
         return "back"
 
-    if any(word in msg_lower for word in [gettext("مساعدة"), "help", gettext("ساعدني")]):
+    if tokens & {gettext("مساعدة"), "help", gettext("ساعدني")}:
         return "help"
 
-    if any(word in msg_lower for word in [gettext("نعم"), "yes", gettext("تأكيد"), gettext("موافق"), "ok"]):
+    if tokens & {gettext("نعم"), "yes", gettext("تأكيد"), gettext("موافق"), "ok"}:
         return "confirm"
 
-    if any(word in msg_lower for word in [gettext("لا"), "no", gettext("إلغاء")]):
+    if tokens & {gettext("لا"), "no", gettext("إلغاء")}:
         return "cancel"
 
     return "continue"
@@ -191,7 +197,9 @@ _PROMPT_INJECTION_PATTERNS = [
     r"sudo\s+(command|mode|access)",
     r"DAN\s*:?|do\s+anything\s+now",
     r"jailbreak|jail.?break",
-    r"act\s+as\s+(if\s+)?you\s+are",
+    # P2: bare "act as (an accountant...)" is a legitimate assistance
+    # pattern — only flag roleplay that claims a privileged identity.
+    r"act\s+as\s+(?:if\s+you\s+are\s+)?(?:a\s+|an\s+|the\s+)?(?:system|root|admin(?:istrator)?|developer|owner|jailbroken|unrestricted|dan)\b",
     # ===== Arabic adversarial injection vectors =====
     r"تجاهل\s+(كل|جميع)?\s*(التعليمات|الأوامر|الاوامر|التوجيهات)(\s+السابقة)?",  # i18n-ignore
     r"تجاهل\s+كل\s+ما\s+(سبق|قيل)",  # i18n-ignore

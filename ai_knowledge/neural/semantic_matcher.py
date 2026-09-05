@@ -10,6 +10,7 @@
 
 import math
 import re
+import threading
 from collections import Counter
 
 
@@ -19,6 +20,12 @@ class SemanticMatcher:
     def __init__(self):
         """تهيئة النظام مع قاعدة النوايا"""
         self.intents_db = self._build_intents_database()
+        # Single-pass tokenization: tokenize every example once and reuse
+        # the sets for vocabulary + IDF (was: re-tokenize per stage).
+        self._tokenized: dict[str, list[set[str]]] = {
+            intent: [set(self._tokenize(example)) for example in examples]
+            for intent, examples in self.intents_db.items()
+        }
         self.vocabulary = self._build_vocabulary()
         self.idf_scores = self._calculate_idf()
 
@@ -559,12 +566,11 @@ class SemanticMatcher:
         }
 
     def _build_vocabulary(self) -> set:
-        """بناء قاموس الكلمات"""
-        vocab = set()
-        for _intent, examples in self.intents_db.items():
-            for example in examples:
-                words = self._tokenize(example)
-                vocab.update(words)
+        """بناء قاموس الكلمات (من الترميز المحفوظ — بلا إعادة تقسيم)"""
+        vocab: set[str] = set()
+        for word_sets in self._tokenized.values():
+            for word_set in word_sets:
+                vocab.update(word_set)
         return vocab
 
     @staticmethod
@@ -588,16 +594,15 @@ class SemanticMatcher:
         return {word: count / total_words for word, count in word_count.items()}
 
     def _calculate_idf(self) -> dict[str, float]:
-        """حساب Inverse Document Frequency"""
+        """حساب Inverse Document Frequency (من الترميز المحفوظ)"""
         # عدد الوثائق (الأمثلة) الكلي
-        total_docs = sum(len(examples) for examples in self.intents_db.values())
+        total_docs = sum(len(word_sets) for word_sets in self._tokenized.values())
 
         # حساب عدد الوثائق التي تحتوي على كل كلمة
         word_doc_count: Counter[str] = Counter()
-        for _intent, examples in self.intents_db.items():
-            for example in examples:
-                words = set(self._tokenize(example))
-                word_doc_count.update(words)
+        for word_sets in self._tokenized.values():
+            for word_set in word_sets:
+                word_doc_count.update(word_set)
 
         # حساب IDF
         idf = {}
@@ -836,8 +841,28 @@ class SemanticMatcher:
         return names.get(intent, intent)
 
 
-# إنشاء instance عام
-semantic_matcher = SemanticMatcher()
+# إنشاء كسول للمفردة العامة (P1: البناء عند الاستيراد كان يكلف ~12 ثانية
+# في كل إقلاع worker — الآن يُبنى عند أول استخدام فقط، مع قفل للخيوط).
+_matcher_instance = None
+_matcher_lock = threading.Lock()
+
+
+def _get_matcher() -> "SemanticMatcher":
+    """Process-wide lazy singleton (thread-safe double-checked locking)."""
+    global _matcher_instance
+    if _matcher_instance is None:
+        with _matcher_lock:
+            if _matcher_instance is None:
+                _matcher_instance = SemanticMatcher()
+    return _matcher_instance
+
+
+def __getattr__(name: str):
+    # Backward compatibility: `from ... import semantic_matcher` keeps
+    # working while construction stays lazy.
+    if name == "semantic_matcher":
+        return _get_matcher()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 # ===== دوال مساعدة سريعة =====
@@ -845,16 +870,16 @@ semantic_matcher = SemanticMatcher()
 
 def understand_message(message: str) -> dict:
     """فهم رسالة المستخدم بذكاء"""
-    return semantic_matcher.smart_match(message)
+    return _get_matcher().smart_match(message)
 
 
 def get_intent(message: str) -> str:
     """الحصول على النية فقط"""
-    result = semantic_matcher.smart_match(message)
+    result = _get_matcher().smart_match(message)
     return result["intent"]
 
 
 def get_confidence(message: str) -> float:
     """الحصول على مستوى الثقة"""
-    result = semantic_matcher.smart_match(message)
+    result = _get_matcher().smart_match(message)
     return result["confidence"]

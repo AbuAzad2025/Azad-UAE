@@ -319,29 +319,43 @@ class AIService:
         """
         message_lower = message.lower()
 
+        # Self-service exemption (P2): asking about one's OWN permissions or
+        # role is informational, never a credential inquiry.
+        if re.search(r"(صلاحياتي|صلاحيتي|دوري|my\s+(permissions?|role|access))", message_lower):
+            return False, False, None
+
         # إزالة "ال" التعريف للمقارنة الذكية
         message_normalized = re.sub(r"\bال(\w+)", r"\1", message_lower)
 
-        # الكلمات الجذرية للمعلومات السرية (بدون ال التعريف)
+        # P2: ASCII keywords match whole tokens only — substring matching
+        # blocked legitimate words ('accessories' contains 'access',
+        # 'bypass' contains 'pass').
+        ascii_tokens = set(re.findall(r"[A-Za-z0-9]+", message_lower))
 
-        # تحليل ذكي: هل الرسالة تحتوي على مجموعة من الكلمات السرية؟
-        password_keywords = [
+        # الكلمات الجذرية للمعلومات السرية (بدون ال التعريف)
+        password_keywords_ar = [
             gettext("كلمة"),
             gettext("كلمات"),
             gettext("مرور"),
             gettext("سر"),
-            "password",
-            "pass",
-            "pwd",
             gettext("باسورد"),
         ]
-        user_keywords = [gettext("مستخدم"), gettext("مستخدمين"), "user", "users", gettext("معلومات"), gettext("بيانات")]
-        security_keywords = [gettext("صلاحيات"), gettext("صلاحية"), "permission", "access", "role"]
+        password_keywords_en = {"password", "passwords", "pass", "pwd"}
+        user_keywords_ar = [gettext("مستخدم"), gettext("مستخدمين"), gettext("معلومات"), gettext("بيانات")]
+        user_keywords_en = {"user", "users"}
+        security_keywords_ar = [gettext("صلاحيات"), gettext("صلاحية")]
+        security_keywords_en = {"permission", "permissions", "access", "role", "roles"}
 
         # فحص ذكي
-        is_about_password = any(kw in message_normalized for kw in password_keywords)
-        is_about_users = any(kw in message_normalized for kw in user_keywords)
-        is_about_security = any(kw in message_normalized for kw in security_keywords)
+        is_about_password = any(kw in message_normalized for kw in password_keywords_ar) or bool(
+            ascii_tokens & password_keywords_en
+        )
+        is_about_users = any(kw in message_normalized for kw in user_keywords_ar) or bool(
+            ascii_tokens & user_keywords_en
+        )
+        is_about_security = any(kw in message_normalized for kw in security_keywords_ar) or bool(
+            ascii_tokens & security_keywords_en
+        )
 
         # إذا كانت الرسالة عن كلمات المرور أو المستخدمين أو الصلاحيات
         is_sensitive = (
@@ -1633,22 +1647,104 @@ class AIService:
             yield ("final", f"{pipe['local_response']}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>")
 
     @staticmethod
+    def _iter_action_spans(text: str):
+        """Yield ``(start, end)`` brace spans enclosing each ``"action"`` marker.
+
+        Expansion is balance-counted and string-aware, so prose or example
+        blocks surrounding a real action no longer corrupt extraction.
+        """
+        for marker in re.finditer(r'"action"\s*:', text or ""):
+            # Expand left to the enclosing opening brace.
+            depth = 0
+            start = None
+            for i in range(marker.start() - 1, -1, -1):
+                ch = text[i]
+                if ch == "}":
+                    depth += 1
+                elif ch == "{":
+                    if depth == 0:
+                        start = i
+                        break
+                    depth -= 1
+            if start is None:
+                continue
+            # Expand right with balance counting (string-aware).
+            depth = 0
+            in_str = False
+            esc = False
+            end = None
+            for i in range(start, len(text)):
+                ch = text[i]
+                if in_str:
+                    if esc:
+                        esc = False
+                    elif ch == "\\":
+                        esc = True
+                    elif ch == '"':
+                        in_str = False
+                elif ch == '"':
+                    in_str = True
+                elif ch == "{":
+                    depth += 1
+                elif ch == "}":
+                    depth -= 1
+                    if depth == 0:
+                        end = i + 1
+                        break
+            if end is None:
+                continue
+            yield start, end
+
+    @staticmethod
+    def _extract_action_payloads(text: str) -> list[tuple[str, dict]]:
+        """Balanced-brace JSON candidates containing an ``"action"`` key, in order.
+
+        Replaces the legacy greedy ``\\{[\\s\\S]*"action"[\\s\\S]*\\}`` match,
+        which swallowed multi-block responses whole: a valid action block
+        surrounded by prose or examples failed ``json.loads`` so the action
+        never executed and the whole answer was replaced by an error string.
+        """
+        import json
+
+        found: list[tuple[str, dict]] = []
+        for start, end in AIService._iter_action_spans(text):
+            try:
+                payload = json.loads(text[start:end])
+            except Exception as exc:
+                logger.debug("Skipping unparseable action candidate: %s", exc)
+                continue
+            if isinstance(payload, dict) and payload.get("action"):
+                data = payload.get("data")
+                found.append((payload["action"], data if isinstance(data, dict) else {}))
+        return found
+
+    @staticmethod
     def _execute_ai_action(groq_response, user_id):
         """تنفيذ الأوامر التي يطلبها Groq — يمر عبر ActionDispatcher لضمان RBAC و confirmation gate."""
         try:
             import json
-            import re
 
-            json_match = re.search(r'\{[\s\S]*"action"[\s\S]*\}', groq_response)
-            if not json_match:
+            candidates = AIService._extract_action_payloads(groq_response)
+            if not candidates:
+                spans = list(AIService._iter_action_spans(groq_response))
+                if spans:
+                    for start, end in spans:
+                        try:
+                            payload = json.loads(groq_response[start:end])
+                        except Exception as exc:
+                            logger.debug("Skipping unparseable action span: %s", exc)
+                            continue
+                        # Explicit-but-empty action key (legacy contract).
+                        if isinstance(payload, dict) and "action" in payload:
+                            return None
+                    # A single malformed action block is an intended command
+                    # with a syntax error (legacy contract) — anything else
+                    # was conversational, so let the answer flow through.
+                    if len(spans) == 1:
+                        return f"⚠️ حدث خطأ أثناء تنفيذ العملية: {groq_response[spans[0][0] : spans[0][1]][:100]}"
                 return None
 
-            action_data = json.loads(json_match.group(0))
-            action_type = action_data.get("action", "")
-            data = action_data.get("data", {})
-
-            if not action_type:
-                return None
+            action_type, data = candidates[0]
 
             # Route through ActionDispatcher for unified RBAC + confirmation + audit
             from ai_knowledge.action_dispatcher import ActionDispatcher

@@ -16,6 +16,31 @@ def _active_tid():
     return None
 
 
+def _session_tid():
+    """Authenticated session tenant — the ONLY source for write scoping.
+
+    Never falls back to client payloads (P0: a request-supplied tenant_id
+    must not authorize a cross-tenant write). Returns None outside an
+    authenticated session.
+    """
+    try:
+        from flask_login import current_user
+
+        if not getattr(current_user, "is_authenticated", False):
+            return None
+        from utils.tenanting import get_active_tenant_id
+
+        tid = get_active_tenant_id(current_user)
+        return int(tid) if tid is not None else None
+    except Exception:
+        return None
+
+
+def _escape_like(term: str) -> str:
+    """Escape SQL LIKE wildcards in user-provided search terms."""
+    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _maybe_tenant_query(model):
     q = model.query
     tid = _active_tid()
@@ -40,7 +65,8 @@ class SystemIntegrator:
             if customer_name_or_id.isdigit():
                 customer = Customer.query.get(int(customer_name_or_id))
             else:
-                q = Customer.query.filter(Customer.name.ilike(f"%{customer_name_or_id}%"))
+                safe = _escape_like(customer_name_or_id)
+                q = Customer.query.filter(Customer.name.ilike(f"%{safe}%", escape="\\"))
                 if tid is not None:
                     q = q.filter(Customer.tenant_id == tid)
                 customer = q.first()
@@ -85,7 +111,8 @@ class SystemIntegrator:
             if str(supplier_name_or_id).isdigit():
                 supplier = Supplier.query.get(int(supplier_name_or_id))
             else:
-                q = Supplier.query.filter(Supplier.name.ilike(f"%{supplier_name_or_id}%"))
+                safe = _escape_like(str(supplier_name_or_id))
+                q = Supplier.query.filter(Supplier.name.ilike(f"%{safe}%", escape="\\"))
                 if tid is not None:
                     q = q.filter(Supplier.tenant_id == tid)
                 supplier = q.first()
@@ -188,11 +215,19 @@ class SystemIntegrator:
                 if field not in customer_data or not customer_data[field]:
                     return {"success": False, "error": f'المجال "{field}" مطلوب'}
 
-            # تحديد التينانت
-            from models.tenant import Tenant
+            # تحديد التينانت — من الجلسة الموثقة أولاً (P0: تجاهل أي
+            # tenant_id قادم من العميل لمنع الكتابة عبر المنشآت)، ثم سياق
+            # get_current() القديم للمنادين غير-HTTP. لا يوجد أي مسار
+            # يقرأ tenant_id من الحمولة.
+            tenant_id = _session_tid()
+            if not tenant_id:
+                try:
+                    from models.tenant import Tenant
 
-            tenant = Tenant.get_current()
-            tenant_id = tenant.id if tenant else customer_data.get("tenant_id")
+                    legacy = Tenant.get_current()
+                    tenant_id = getattr(legacy, "id", None)
+                except Exception:
+                    tenant_id = None
             if not tenant_id:
                 return {
                     "success": False,
@@ -235,8 +270,9 @@ class SystemIntegrator:
             from models import Product
 
             tid = _active_tid()
+            safe = _escape_like(str(product_name_or_sku))
             q = Product.query.filter(
-                (Product.name.ilike(f"%{product_name_or_sku}%")) | (Product.sku.ilike(f"%{product_name_or_sku}%"))
+                (Product.name.ilike(f"%{safe}%", escape="\\")) | (Product.sku.ilike(f"%{safe}%", escape="\\"))
             )
             if tid is not None:
                 q = q.filter(Product.tenant_id == tid)
@@ -387,7 +423,8 @@ class SystemIntegrator:
             base_pr = _maybe_tenant_query(Product)
 
             if data_type in ["all", "customers"]:
-                customers = base_c.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
+                safe = _escape_like(query)
+                customers = base_c.filter(Customer.name.ilike(f"%{safe}%", escape="\\")).limit(10).all()
 
                 results["customers"] = [
                     {
@@ -401,8 +438,11 @@ class SystemIntegrator:
                 ]
 
             if data_type in ["all", "products"]:
+                safe = _escape_like(query)
                 products = (
-                    base_pr.filter((Product.name.ilike(f"%{query}%")) | (Product.sku.ilike(f"%{query}%")))
+                    base_pr.filter(
+                        (Product.name.ilike(f"%{safe}%", escape="\\")) | (Product.sku.ilike(f"%{safe}%", escape="\\"))
+                    )
                     .limit(10)
                     .all()
                 )
@@ -423,7 +463,7 @@ class SystemIntegrator:
                 base_s_q = Sale.query.join(Customer)
                 if tid is not None:
                     base_s_q = base_s_q.filter(Sale.tenant_id == tid)
-                sales = base_s_q.filter(Customer.name.ilike(f"%{query}%")).limit(10).all()
+                sales = base_s_q.filter(Customer.name.ilike(f"%{_escape_like(query)}%", escape="\\")).limit(10).all()
 
                 results["sales"] = [
                     {
