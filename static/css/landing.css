@@ -10,7 +10,7 @@
 	--azad-cyan-glow: rgba(14, 165, 233, 0.3);
 	--azad-success: #10b981;
 	--azad-text: #ffffff;
-	--azad-text-secondary: #e2e8f0;
+	--azad-text-secondary: #F5F6FA;
 	--azad-text-muted: #cbd5e1;
 	--azad-card-bg: rgba(15, 23, 42, 0.75);
 	--azad-card-border: rgba(255, 255, 255, 0.15);
@@ -53,7 +53,7 @@ body.en-lang {
 
 /* purgecss start ignore */
 .text-accent {
-	color: var(--azad-accent) !important;
+	color: #FFFFFF !important;
 }
 
 .text-cyan {
@@ -147,13 +147,13 @@ body.en-lang {
 }
 
 .azad-brand-text {
-	font-size: 1.2rem;
-	font-weight: 800;
-	background: linear-gradient(135deg, var(--azad-accent-light), #fbbf24);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
-	line-height: 1.2;
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #FFFFFF 20%, #F0B429 80%, #FFFFFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.2;
 }
 
 .azad-brand-tagline {
@@ -180,8 +180,8 @@ body.en-lang {
 }
 
 .azad-nav-links a {
-	color: var(--azad-text-secondary);
-	text-decoration: none;
+  color: #FFFFFF;
+  text-decoration: none;
 	padding: 8px 12px;
 	font-size: 0.85rem;
 	font-weight: 600;
@@ -228,8 +228,9 @@ body.en-lang {
 		var(--azad-accent-light)
 	);
 	border: none;
-	color: #0f1724;
-	padding: 8px 22px;
+  color: #FFFFFF;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  padding: 8px 22px;
 	border-radius: var(--azad-radius-full);
 	font-size: 0.82rem;
 	font-weight: 700;
@@ -280,7 +281,7 @@ body.en-lang {
 }
 
 .azad-dropdown-trigger {
-	color: var(--azad-text-secondary);
+  color: #FFFFFF;
 	text-decoration: none;
 	padding: 8px 12px;
 	font-size: 0.85rem;
@@ -339,20 +340,20 @@ body.en-lang {
 }
 
 .azad-dropdown-menu a {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 10px 14px;
-	color: var(--azad-text-secondary);
-	text-decoration: none;
-	font-size: 0.82rem;
-	border-radius: 10px;
-	transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 0.82rem;
+  border-radius: 10px;
+  transition: all 0.2s;
 }
 
 .azad-dropdown-menu a:hover {
-	background: rgba(212, 160, 23, 0.06);
-	color: var(--azad-accent-light);
+  background: rgba(212, 160, 23, 0.15);
+  color: #F0B429;
 }
 
 .azad-dropdown-menu a i {
@@ -454,11 +455,12 @@ body.en-lang {
 }
 
 .azad-drawer-link {
+  /* readability: white text on deep dark drawer bg */
 	display: flex;
 	align-items: center;
 	gap: 12px;
 	padding: 14px 16px;
-	color: var(--azad-text-secondary);
+	color: #FFFFFF;
 	text-decoration: none;
 	font-size: 0.92rem;
 	font-weight: 600;
@@ -611,15 +613,10 @@ body.en-lang {
 }
 
 .azad-hero-title .highlight {
-	background: linear-gradient(
-		135deg,
-		var(--azad-accent-light),
-		#fbbf24,
-		var(--azad-accent)
-	);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
+  background: linear-gradient(135deg, #FFFFFF, #F5F6FA 50%, #F0B429 85%, #FFFFFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .azad-hero-sub {
@@ -643,9 +640,10 @@ body.en-lang {
 		var(--azad-accent),
 		var(--azad-accent-light)
 	);
-	border: none;
-	color: #0f1724;
-	padding: 14px 34px;
+  border: none;
+  color: #FFFFFF;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  padding: 14px 34px;
 	border-radius: var(--azad-radius-full);
 	font-size: 1.05rem;
 	font-weight: 700;
@@ -663,10 +661,10 @@ body.en-lang {
 }
 
 .btn-hero-secondary {
-	background: transparent;
-	border: 2px solid rgba(212, 160, 23, 0.35);
-	color: var(--azad-accent-light);
-	padding: 12px 30px;
+  background: transparent;
+  border: 2px solid rgba(212, 160, 23, 0.35);
+  color: #FFFFFF;
+  padding: 12px 30px;
 	border-radius: var(--azad-radius-full);
 	font-size: 1rem;
 	font-weight: 600;
@@ -1010,7 +1008,7 @@ body.en-lang {
 }
 
 .azad-pillar-card p {
-	color: var(--azad-text-secondary);
+  color: #F5F6FA;
 	font-size: 0.88rem;
 	line-height: 1.7;
 }
