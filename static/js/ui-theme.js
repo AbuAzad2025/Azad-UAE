@@ -185,9 +185,19 @@
 		// Flash messages auto-dismiss with animation
 		const flashes = document.querySelectorAll(".flash-message");
 		flashes.forEach((el) => {
+			// Guard: base-helpers.js already scheduled a dismiss — avoid stacking duplicate timers
+			if (el.dataset.flashDismissScheduled) return;
+			el.dataset.flashDismissScheduled = "1";
+
 			const bar = el.querySelector(".flash-timer");
+			const isDanger = el.classList.contains("alert-danger");
+			const isWarning = el.classList.contains("alert-warning");
+			const isSuccess = el.classList.contains("alert-success");
+			const duration = isDanger ? 9000 : isWarning ? 7000 : isSuccess ? 3500 : 5000;
+
 			if (bar) {
 				requestAnimationFrame(() => {
+					bar.style.transition = `width ${Math.max(150, duration - 350)}ms linear`;
 					bar.style.width = "0%";
 				});
 			}
@@ -196,13 +206,13 @@
 					if (window.jQuery?.fn?.alert) {
 						window.jQuery(el).alert("close");
 					} else {
-						el.style.transition = "all 0.5s ease";
+						el.style.transition = "all 0.45s ease";
 						el.style.opacity = "0";
 						el.style.transform = "translateX(100%)";
 						setTimeout(() => el.remove(), 500);
 					}
 				} catch (_e) {}
-			}, 20000);
+			}, duration);
 		});
 
 		// Listen for system dark mode changes

@@ -173,18 +173,73 @@ document
 
 // ── 4. Flash Message Auto-Dismiss ──
 document.querySelectorAll(".flash-message").forEach((alert) => {
-	if (!alert.classList.contains("alert-permanent") && !alert.classList.contains("alert-danger")) {
-		const progressBar = alert.querySelector(".flash-timer");
+	if (alert.dataset.flashDismissScheduled) return;
+	alert.dataset.flashDismissScheduled = "1";
+
+	const isPermanent = alert.classList.contains("alert-permanent");
+	const isDanger = alert.classList.contains("alert-danger");
+	const isWarning = alert.classList.contains("alert-warning");
+	const isSuccess = alert.classList.contains("alert-success");
+
+	// Tiered durations (ms): success fast, warning medium, info/info-default mild, danger/permanent sticky
+	let duration;
+	if (isPermanent) {
+		duration = null;
+	} else if (isDanger) {
+		duration = 9000;
+	} else if (isWarning) {
+		duration = 7000;
+	} else if (isSuccess) {
+		duration = 3500;
+	} else {
+		duration = 5000;
+	}
+
+	const progressBar = alert.querySelector(".flash-timer");
+	if (progressBar && duration !== null) {
+		requestAnimationFrame(() => {
+			progressBar.style.transition = `width ${Math.max(150, duration - 350)}ms linear`;
+			progressBar.style.width = "0%";
+		});
+	}
+
+	if (duration !== null) {
 		setTimeout(() => {
-			if (progressBar) progressBar.style.width = "0%";
-		}, 100);
-		setTimeout(() => {
-			alert.style.transition = "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+			alert.style.transition = "all 0.45s cubic-bezier(0.4, 0, 0.2, 1)";
 			alert.style.transform = "translateX(100%)";
 			alert.style.opacity = "0";
 			setTimeout(() => alert.remove(), 500);
-		}, 40000);
+		}, duration);
 	}
+});
+
+// ── 4b. Landing / Public pages Flash Auto-Dismiss (.azad-flash-item) ──
+document.querySelectorAll(".azad-flash-item").forEach((el) => {
+	if (el.dataset.azadFlashDismiss) return;
+	el.dataset.azadFlashDismiss = "1";
+
+	// Reuse tiered durations
+	const isDanger = el.classList.contains("azad-flash-item--danger");
+	const isWarning = el.classList.contains("azad-flash-item--warning");
+	const duration = isDanger ? 9000 : isWarning ? 7000 : 3500;
+
+	// Smooth progress + dismiss
+	el.style.position = "relative";
+	el.style.overflow = "hidden";
+	const bar = document.createElement("span");
+	bar.style.cssText =
+		"position:absolute; inset:auto 0 0 0; height:3px; background:currentColor; opacity:0.35; transform-origin:left center; transform:scaleX(1); transition:transform " +
+		Math.max(150, duration - 300) +
+		"ms linear;";
+	requestAnimationFrame(() => (bar.style.transform = "scaleX(0.01)"));
+	el.appendChild(bar);
+
+	setTimeout(() => {
+		el.style.transition = "opacity 0.35s ease, transform 0.35s ease";
+		el.style.opacity = "0";
+		el.style.transform = "translateY(-6px)";
+		setTimeout(() => el.remove(), 400);
+	}, duration);
 });
 
 // ── 5. FX Rates ──
