@@ -13,6 +13,8 @@
         {% endif %}
         {% set _footer_phone = (developer_phone or '')|trim %}
         {% set _footer_email = (developer_email or '')|trim %}
+        {% set _made_label = t('Made_With_Love') if 'Made_With_Love' in t('Made_With_Love') else 'Made with love in' %}
+        {% set _developer_name_span = (developer_name_ar or developer_name or _developer_title) %}
 
         <div class="erp-footer-row">
           <div class="erp-footer-brand">
@@ -25,14 +27,17 @@
               data-fallback-img
             >
             <div class="erp-footer-brand-text">
-              <div class="erp-footer-title">{{ _developer_title }}</div>
+              <div class="erp-footer-title footer-gradient-text">{{ _developer_title }}</div>
               <div class="erp-footer-muted"><i class="fas fa-code" aria-hidden="true"></i> {{ _developer_credit_text }}</div>
             </div>
           </div>
 
           <div class="erp-footer-center">
             <span class="erp-footer-chip" title="{{ t('Version') }}">
-              <i class="fas fa-code-branch mr-1" aria-hidden="true"></i>v{{ config.APP_VERSION }}
+              <i class="fas fa-code-branch" aria-hidden="true"></i>v{{ config.APP_VERSION }}
+            </span>
+            <span class="erp-footer-chip" title="{{ t('AI Powered') if 'AI Powered' in t('AI Powered') else 'مدعوم بالذكاء الاصطناعي' }}">
+              <i class="fas fa-robot" aria-hidden="true"></i> AI
             </span>
           </div>
 
@@ -57,12 +62,11 @@
 
         <div class="erp-footer-copyright">
           &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; {{ t('All Rights Reserved') }}
-          <span class="mx-2">|</span>
-          <span class="az-palestine-badge" title="{{ t('Made_With_Love') }}">
-            <span class="az-flag-strip az-flag-black"></span>
-            <span class="az-flag-strip az-flag-white"></span>
-            <span class="az-flag-strip az-flag-green"></span>
-            <span class="az-flag-triangle"></span>
+          <span class="erp-footer-sep">|</span>
+          <span class="erp-footer-made-in" title="{{ _made_label }} {{ _developer_name_span }}">
+            <span class="made-label">{{ _made_label }}</span>
+            <i class="fas fa-heart footer-heart" aria-label="{{ t('Love') }}"></i>
+            <span class="palestine-name">{{ _developer_name_span }}</span>
           </span>
         </div>
       </div>

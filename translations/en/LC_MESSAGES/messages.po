@@ -19739,3 +19739,6 @@ msgstr "يُنصح"
 msgid "— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات"
 msgstr "— Supervisor authorization can be requested for these actions"
 
+
+msgid "أدخل بيانات حسابك للدخول إلى لوحة التحكم الخاصة بك"
+msgstr "Enter your account credentials to access your dashboard."

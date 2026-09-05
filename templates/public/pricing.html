@@ -15,6 +15,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ dist_url('css/accessibility.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/landing.css') }}">
     <style nonce="{{ csp_nonce() }}">
         :root {
             --azad-bg: #070b14;
@@ -391,43 +392,94 @@
 {# ──────────────────────────────────────────────── #}
 {# FOOTER                                           #}
 {# ──────────────────────────────────────────────── #}
+{% set _footer_phone = (developer_phone or config.DEVELOPER_PHONE or '') %}
+{% set _footer_whatsapp = (developer_whatsapp_link or config.DEVELOPER_WHATSAPP or '') %}
+{% set _footer_email = (developer_email or config.DEVELOPER_EMAIL or '') %}
+{% set _footer_website = (developer_website or config.DEVELOPER_WEBSITE or '') %}
+{% set _footer_address = ((config.COMPANY_ADDRESS_AR if not is_en else config.COMPANY_ADDRESS_EN) or '') %}
+{% set _made_with_label = ('صُنع بحُب في' if not is_en else 'Made with love by') %}
+{% set _made_by_label = (developer_credit or (developer_name_ar or developer_name or _company_name)) %}
 <footer class="azad-footer">
-    <div class="azad-footer-inner">
-        <div class="azad-footer-col">
-            <h4>{{ 'أزاد' if not is_en else 'Azad' }}</h4>
-            <ul class="azad-footer-links">
-                <li><a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a></li>
-                <li><a href="{{ url_for('public.landing') }}#features">{{ _features }}</a></li>
-                <li><a href="{{ url_for('public.landing') }}#pricing">{{ _pricing_label }}</a></li>
-                <li><a href="{{ url_for('public.landing') }}#about">{{ _about }}</a></li>
-                <li><a href="{{ url_for('public.user_guide') }}">{{ 'دليل المستخدم' if not is_en else 'User Guide' }}</a></li>
-            </ul>
+    <div class="azad-section-inner">
+        {% if _footer_whatsapp or _footer_phone or _footer_email or _footer_website or _footer_address %}
+        <div class="azad-footer-topbar" aria-label="{{ 'اتصال سريع' if not is_en else 'Quick contact' }}">
+            {% if _footer_whatsapp %}
+            <a class="azad-footer-topbar-item" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">
+                <span class="azad-footer-topbar-icon icon-wa"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
+                <span>
+                    <div class="azad-footer-topbar-label">{{ 'واتساب' if not is_en else 'WhatsApp' }}</div>
+                    <div class="azad-footer-topbar-value">{{ _footer_whatsapp }}</div>
+                </span>
+            </a>
+            {% endif %}
+            {% if _footer_email %}
+            <a class="azad-footer-topbar-item" href="mailto:{{ _footer_email }}" aria-label="Email">
+                <span class="azad-footer-topbar-icon icon-mail"><i class="fas fa-envelope" aria-hidden="true"></i></span>
+                <span>
+                    <div class="azad-footer-topbar-label">{{ 'البريد الإلكتروني' if not is_en else 'Email' }}</div>
+                    <div class="azad-footer-topbar-value">{{ _footer_email }}</div>
+                </span>
+            </a>
+            {% endif %}
+            {% if _footer_phone %}
+            <a class="azad-footer-topbar-item" href="tel:{{ _footer_phone }}" aria-label="Phone">
+                <span class="azad-footer-topbar-icon icon-call"><i class="fas fa-phone-volume" aria-hidden="true"></i></span>
+                <span>
+                    <div class="azad-footer-topbar-label">{{ 'اتصال' if not is_en else 'Phone' }}</div>
+                    <div class="azad-footer-topbar-value">{{ _footer_phone }}</div>
+                </span>
+            </a>
+            {% endif %}
         </div>
-        <div class="azad-footer-col">
-            <h4>{{ 'الدعم' if not is_en else 'Support' }}</h4>
-            <ul class="azad-footer-links">
-                <li><a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a></li>
-                <li><a href="{{ url_for('public.landing') }}#contact">{{ _contact }}</a></li>
-                <li><a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}" target="_blank" rel="noopener">WhatsApp</a></li>
-            </ul>
+        {% endif %}
+
+        <div class="azad-footer-grid">
+            <div class="azad-footer-brand">
+                <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
+                <h4 class="footer-gradient-text" style="font-size:1.08rem;margin:0 0 10px;">{{ _company_name }}</h4>
+                <p>{{ 'اختر باقتك من باقات أزاد: Starter، Pro، Enterprise. منصة ERP سحابية كاملة لمؤسسات الإمارات.' if not is_en else 'Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses.' }}</p>
+                <div class="azad-footer-social">
+                    {% if _footer_whatsapp %}<a class="whatsapp-bg" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
+                    {% if _footer_phone %}<a class="phone-bg" href="tel:{{ _footer_phone }}" aria-label="{{ 'اتصال' if not is_en else 'Phone' }}"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
+                    {% if _footer_email %}<a class="email-bg" href="mailto:{{ _footer_email }}" aria-label="Email"><i class="fas fa-envelope" aria-hidden="true"></i></a>{% endif %}
+                </div>
+            </div>
+            <div class="azad-footer-col">
+                <h4 class="footer-gradient-text">{{ 'أزاد' if not is_en else 'Azad' }}</h4>
+                <ul class="azad-footer-links">
+                    <li><a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a></li>
+                    <li><a href="{{ url_for('public.landing') }}#features">{{ _features }}</a></li>
+                    <li><a href="{{ url_for('public.landing') }}#pricing">{{ _pricing_label }}</a></li>
+                    <li><a href="{{ url_for('public.landing') }}#about">{{ _about }}</a></li>
+                    <li><a href="{{ url_for('public.user_guide') }}">{{ 'دليل المستخدم' if not is_en else 'User Guide' }}</a></li>
+                </ul>
+            </div>
+            <div class="azad-footer-col">
+                <h4 class="footer-gradient-text">{{ 'الدعم' if not is_en else 'Support' }}</h4>
+                <ul class="azad-footer-links">
+                    <li><a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a></li>
+                    <li><a href="{{ url_for('public.landing') }}#contact">{{ _contact }}</a></li>
+                    <li><a href="{{ url_for('public.contact') }}">{{ 'صفحة الاتصال' if not is_en else 'Contact page' }}</a></li>
+                    {% if _footer_website %}<li><a href="{{ _footer_website }}" target="_blank" rel="noopener noreferrer">{{ 'الموقع الرسمي' if not is_en else 'Official site' }}</a></li>{% endif %}
+                </ul>
+            </div>
+            <div class="azad-footer-col">
+                <h4 class="footer-gradient-text">{{ developer_credit if developer_credit else _company_name }}</h4>
+                <ul class="azad-footer-links">
+                    <li><span class="info-line"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
+                    <li><span class="info-line"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
+                    {% if _footer_address %}<li><span class="info-line"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ _footer_address }}</span></li>{% endif %}
+                </ul>
+            </div>
         </div>
-        <div class="azad-footer-col">
-            <h4>{{ 'قانوني' if not is_en else 'Legal' }}</h4>
-            <ul class="azad-footer-links">
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ 'سياسة الخصوصية' if not is_en else 'Privacy Policy' }}</span></li>
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-file-contract" aria-hidden="true"></i> {{ 'شروط الاستخدام' if not is_en else 'Terms of Service' }}</span></li>
-            </ul>
+        <div class="azad-footer-bottom">
+            <div>&copy; {{ current_year if current_year else '2025' }} {{ _company_name }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}</div>
+            <div class="azad-footer-made-in">
+                <span class="made-label">{{ _made_with_label }}</span>
+                <i class="fas fa-heart footer-heart" aria-hidden="true"></i>
+                <span class="palestine-name">{{ _made_by_label }}</span>
+            </div>
         </div>
-        <div class="azad-footer-col">
-            <h4>{{ developer_credit if developer_credit else _company_name }}</h4>
-            <ul class="azad-footer-links">
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
-                <li><span style="font-size:0.8rem;color:var(--azad-text-muted);"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
-            </ul>
-        </div>
-    </div>
-    <div class="azad-footer-bottom">
-        &copy; {{ current_year }} {{ _company_name }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}
     </div>
 </footer>
 

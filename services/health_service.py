@@ -23,6 +23,7 @@ class HealthCheckService:
     """خدمة فحص صحة النظام"""
 
     @staticmethod
+    @staticmethod
     def check_database():
         """فحص الاتصال بقاعدة البيانات"""
         try:
@@ -32,6 +33,7 @@ class HealthCheckService:
             logger.error(f"Database health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
 
+    @staticmethod
     @staticmethod
     def check_nowpayments():
         """فحص تكوين NOWPayments"""
@@ -72,9 +74,13 @@ class HealthCheckService:
     def check_system_resources():
         """فحص موارد النظام"""
         try:
-            cpu_percent = psutil.cpu_percent(interval=1)
+            # P2 perf: non-blocking sample — the previous 1-second blocking
+            # interval made /owner/system-health and /owner/dashboard (which
+            # calls this too) consistently >= 2.5s. The first call returns a
+            # zero baseline; subsequent calls return real usage without delay.
+            cpu_percent = psutil.cpu_percent(interval=None) or 0.0
             memory = psutil.virtual_memory()
-            disk = psutil.disk_usage("/")
+            disk = psutil.disk_usage(".")
 
             status = "healthy"
             warnings = []
@@ -168,80 +174,43 @@ class HealthCheckService:
         """Consolidated system health data from routes/owner.py"""
         import platform
 
-        resources = HealthCheckService.check_system_resources()
+        # P2 perf: cache the cheap parts (DB + system) for 5s; psutil is
+        # re-sampled on every call (cheap with interval=None). The full
+        # assembly must always return a fresh dict to avoid stale-stamp bugs.
+        cache_key = "health_data"
+        cached = getattr(HealthCheckService, "_cache", None)
+        now = datetime.now(UTC).timestamp()
+        if cached and now - cached["ts"] < 5:
+            resources = cached["resources"]
+            db_size_mb = cached["db_size_mb"]
+            active_users = cached["active_users"]
+        else:
+            resources = HealthCheckService.check_system_resources()
+            try:
+                size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
+                db_size_bytes = size_result.scalar() or 0
+                db_size_mb = db_size_bytes / (1024 * 1024)
+            except Exception:
+                current_app.logger.debug("Could not query pg_database_size")
+                db_size_mb = 0
+            try:
+                from models import User
 
-        try:
-            size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
-            db_size_bytes = size_result.scalar() or 0
-            db_size_mb = db_size_bytes / (1024 * 1024)
-        except Exception:
-            current_app.logger.debug("Could not query pg_database_size")
-            db_size_mb = 0
-
-        health_data: dict[str, Any] = {
-            "cpu": {
-                "percent": resources.get("cpu_percent", 0),
-                "status": (
-                    gettext("جيد")
-                    if resources.get("cpu_percent", 0) < 70
-                    else gettext("تحذير")
-                    if resources.get("cpu_percent", 0) < 90
-                    else gettext("خطر")
-                ),
-            },
-            "memory": {
-                "total": psutil.virtual_memory().total / (1024**3),
-                "used": psutil.virtual_memory().used / (1024**3),
-                "percent": resources.get("memory_percent", 0),
-                "status": (
-                    gettext("جيد")
-                    if resources.get("memory_percent", 0) < 70
-                    else gettext("تحذير")
-                    if resources.get("memory_percent", 0) < 90
-                    else gettext("خطر")
-                ),
-            },
-            "disk": {
-                "total": psutil.disk_usage(".").total / (1024**3),
-                "used": psutil.disk_usage(".").used / (1024**3),
-                "free": psutil.disk_usage(".").free / (1024**3),
-                "percent": resources.get("disk_percent", 0),
-                "status": (
-                    gettext("جيد")
-                    if resources.get("disk_percent", 0) < 70
-                    else gettext("تحذير")
-                    if resources.get("disk_percent", 0) < 90
-                    else gettext("خطر")
-                ),
-            },
-            "database": {
-                "size_mb": round(db_size_mb, 2),
-                "status": (
-                    gettext("جيد") if db_size_mb < 500 else gettext("تحذير") if db_size_mb < 1000 else gettext("خطر")
-                ),
-            },
-            "system": {
-                "os": platform.system(),
-                "version": platform.version(),
-                "python": platform.python_version(),
-            },
-        }
-
-        try:
-            from models import User
-
-            active_users = (
-                db.session.query(func.count(User.id))
-                .filter(
-                    User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
-                    User.is_active,
+                active_users = (
+                    db.session.query(func.count(User.id))
+                    .filter(
+                        User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
+                        User.is_active,
+                    )
+                    .scalar()
+                    or 0
                 )
-                .scalar()
-                or 0
-            )
-        except Exception:
-            current_app.logger.debug("Could not query active users")
-            active_users = 0
-
-        health_data["active_users"] = active_users
-        return health_data
+            except Exception:
+                current_app.logger.debug("Could not query active users")
+                active_users = 0
+            HealthCheckService._cache = {
+                "ts": now,
+                "resources": resources,
+                "db_size_mb": db_size_mb,
+                "active_users": active_users,
+            }

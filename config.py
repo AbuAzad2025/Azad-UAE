@@ -285,6 +285,10 @@ class Config:
     APP_VERSION = os.environ.get("APP_VERSION", "2.0.0")
     BABEL_DEFAULT_TIMEZONE = os.environ.get("BABEL_DEFAULT_TIMEZONE", FALLBACK_TIMEZONE)
     BABEL_DEFAULT_LOCALE = os.environ.get("BABEL_DEFAULT_LOCALE", "ar")
+    BABEL_TRANSLATION_DIRECTORIES = os.environ.get(
+        "BABEL_TRANSLATION_DIRECTORIES",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "translations")),
+    )
     LANGUAGES = {"ar": "العربية", "en": "English"}
 
     OWNER_USERNAME = os.environ.get("OWNER_USERNAME", "owner")
