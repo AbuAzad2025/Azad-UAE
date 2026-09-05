@@ -13,10 +13,21 @@
   
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
 
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Regular.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/Tajawal-Bold.woff2') }}" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" onload="this.media='all'">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-regular.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-medium.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ url_for('static', filename='fonts/tajawal/tajawal-bold.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}" media="print" id="tajawalCss">
   <noscript><link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}"></noscript>
+  <script nonce="{{ csp_nonce() }}">
+    (function () {
+      var l = document.getElementById('tajawalCss');
+      if (!l) return;
+      var activate = function () { l.media = 'all'; };
+      try {
+        if (l.sheet) { activate(); } else { l.addEventListener('load', activate); }
+      } catch (e) { activate(); }
+    })();
+  </script>
 
   <link rel="stylesheet" href="{{ dist_url('css/azad-login.css') }}">
 </head>
@@ -63,13 +74,18 @@
         <p class="azad-login-card__sub" id="loginModeHint" aria-live="polite">{{ _('دخول مستخدمي الشركات') }}</p>
 
         <div class="azad-login-tabs" role="tablist" aria-label="{{ _('نوع الدخول') }}">
-          <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true" aria-controls="azadLoginForm">
-            <i class="fas fa-user" aria-hidden="true"></i> {{ _('دخول الشركات') }}
+          <button type="button" class="azad-login-tab is-active" data-access-mode="users" role="tab" aria-selected="true" aria-controls="azadLoginForm" title="{{ _('دخول المستخدمين والمدراء ومالك الشركة داخل المنظمة') }}">
+            <i class="fas fa-building-user" aria-hidden="true"></i>
+            <span>{{ _('دخول الشركات والمستخدمين') }}</span>
           </button>
-          <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false" aria-controls="azadLoginForm">
-            <i class="fas fa-code" aria-hidden="true"></i> {{ _('المنصة') }}
+          <button type="button" class="azad-login-tab" data-access-mode="developer" role="tab" aria-selected="false" aria-controls="azadLoginForm" title="{{ _('لوحة إدارة المنصة الكاملة — مخصصة فقط لمالك النظام') }}">
+            <i class="fas fa-sliders" aria-hidden="true"></i>
+            <span>{{ _('إدارة المنصة') }} <em class="azad-login-tab__pill">{{ _('مالك النظام فقط') }}</em></span>
           </button>
         </div>
+        <p class="azad-login-tabs-hint" aria-hidden="false">
+          {{ _('اختر نوع الدخول: للمستخدمين داخل شركتك من اليسار، ولوحة إدارة المنصة الكاملة (المتاحة فقط لمالك النظام) من اليمين.') }}
+        </p>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
@@ -147,8 +163,8 @@
         modeInput.value = mode;
         if (modeHint) {
           modeHint.textContent = mode === 'developer'
-            ? {{ _('دخول المنصة (مالك/مطور)') | tojson }}
-            : {{ _('دخول مستخدمي الشركات') | tojson }};
+            ? {{ _('إدارة المنصة الكاملة — مخصصة لمالك النظام فقط') | tojson }}
+            : {{ _('دخول المستخدمين والمدراء وفرق الشركات') | tojson }};
         }
         tabs.forEach((tab) => {
           const active = tab.getAttribute('data-access-mode') === mode;
