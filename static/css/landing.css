@@ -245,10 +245,10 @@ body.en-lang {
 }
 
 .nav-lang-btn {
-	background: rgba(212, 160, 23, 0.08);
-	border: 1px solid var(--azad-accent-border);
-	color: var(--azad-accent-light);
-	padding: 6px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  padding: 6px 14px;
 	border-radius: 10px;
 	font-size: 0.78rem;
 	font-weight: 600;
@@ -257,7 +257,9 @@ body.en-lang {
 }
 
 .nav-lang-btn:hover {
-	background: rgba(212, 160, 23, 0.15);
+	background: rgba(255, 255, 255, 0.15);
+	border-color: rgba(255, 255, 255, 0.3);
+	color: #FFFFFF;
 }
 
 .nav-hamburger {
@@ -661,8 +663,8 @@ body.en-lang {
 }
 
 .btn-hero-secondary {
-  background: transparent;
-  border: 2px solid rgba(212, 160, 23, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
   padding: 12px 30px;
 	border-radius: var(--azad-radius-full);
@@ -677,9 +679,9 @@ body.en-lang {
 
 /* purgecss start ignore */
 .btn-hero-secondary:hover {
-	background: rgba(212, 160, 23, 0.08);
-	border-color: var(--azad-accent);
-	color: var(--azad-accent-light);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #FFFFFF;
 }
 
 .btn-hero-success {
