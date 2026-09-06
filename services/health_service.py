@@ -23,7 +23,6 @@ class HealthCheckService:
     """خدمة فحص صحة النظام"""
 
     @staticmethod
-    @staticmethod
     def check_database():
         """فحص الاتصال بقاعدة البيانات"""
         try:
@@ -33,7 +32,6 @@ class HealthCheckService:
             logger.error(f"Database health check failed: {str(e)}")
             return {"status": "unhealthy", "message": f"Database error: {str(e)}"}
 
-    @staticmethod
     @staticmethod
     def check_nowpayments():
         """فحص تكوين NOWPayments"""
@@ -214,3 +212,55 @@ class HealthCheckService:
                 "db_size_mb": db_size_mb,
                 "active_users": active_users,
             }
+
+        health_data: dict[str, Any] = {
+            "cpu": {
+                "percent": resources.get("cpu_percent", 0),
+                "status": (
+                    gettext("جيد")
+                    if resources.get("cpu_percent", 0) < 70
+                    else gettext("تحذير")
+                    if resources.get("cpu_percent", 0) < 90
+                    else gettext("خطر")
+                ),
+            },
+            "memory": {
+                "total": psutil.virtual_memory().total / (1024**3),
+                "used": psutil.virtual_memory().used / (1024**3),
+                "percent": resources.get("memory_percent", 0),
+                "status": (
+                    gettext("جيد")
+                    if resources.get("memory_percent", 0) < 70
+                    else gettext("تحذير")
+                    if resources.get("memory_percent", 0) < 90
+                    else gettext("خطر")
+                ),
+            },
+            "disk": {
+                "total": psutil.disk_usage(".").total / (1024**3),
+                "used": psutil.disk_usage(".").used / (1024**3),
+                "free": psutil.disk_usage(".").free / (1024**3),
+                "percent": resources.get("disk_percent", 0),
+                "status": (
+                    gettext("جيد")
+                    if resources.get("disk_percent", 0) < 70
+                    else gettext("تحذير")
+                    if resources.get("disk_percent", 0) < 90
+                    else gettext("خطر")
+                ),
+            },
+            "database": {
+                "size_mb": round(db_size_mb, 2),
+                "status": (
+                    gettext("جيد") if db_size_mb < 500 else gettext("تحذير") if db_size_mb < 1000 else gettext("خطر")
+                ),
+            },
+            "system": {
+                "os": platform.system(),
+                "version": platform.version(),
+                "python": platform.python_version(),
+            },
+        }
+
+        health_data["active_users"] = active_users
+        return health_data

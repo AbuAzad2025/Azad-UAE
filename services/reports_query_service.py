@@ -43,6 +43,25 @@ class ReportsQueryService:
         return Decimal(str(q.scalar() or 0))
 
     @staticmethod
+    def get_confirmed_sale_paid_map(sale_ids, tenant_id=None, branch_id=None):
+        """Bulk paid totals for many sales in one round-trip (fix N+1)."""
+        if not sale_ids:
+            return {}
+        from models import Payment
+
+        q = db.session.query(Payment.sale_id, func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
+            Payment.sale_id.in_(sale_ids),
+            payment_affects_balance(Payment),
+            Payment.direction == "incoming",
+        )
+        if tenant_id is not None:
+            q = q.filter(Payment.tenant_id == tenant_id)
+        if branch_id is not None:
+            q = q.filter(Payment.branch_id == branch_id)
+        q = q.group_by(Payment.sale_id)
+        return {sale_id: Decimal(str(total or 0)) for sale_id, total in q.all()}
+
+    @staticmethod
     @cached_query(timeout=60, key_prefix="supplier_paid")
     def get_confirmed_supplier_paid_aed(supplier_id, purchase_id=None, tenant_id=None, branch_id=None):
         from models import Payment
@@ -542,9 +561,15 @@ class ReportsQueryService:
     def fetch_sales_report(
         tenant_id, scoped_branch_id, date_from, date_to, customer_id, seller_id, seller_user_id=None
     ):
+        from sqlalchemy.orm import joinedload
+
         from models import Sale
 
-        query = tenant_query(Sale).filter_by(status="confirmed")
+        query = tenant_query(Sale).filter_by(status="confirmed").options(
+            joinedload(Sale.customer),
+            joinedload(Sale.branch),
+            joinedload(Sale.seller),
+        )
         if tenant_id is not None:
             query = query.filter(Sale.tenant_id == tenant_id)
         if scoped_branch_id is not None:

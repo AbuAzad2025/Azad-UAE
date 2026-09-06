@@ -92,8 +92,11 @@ def sales():
     total_paid = Decimal("0")
     total_due = Decimal("0")
 
+    # Bulk fetch paid totals in 1 query instead of N (fix SLOW QUERY N+1)
+    sale_ids = [s.id for s in sales_list]
+    paid_map = ReportsQueryService.get_confirmed_sale_paid_map(sale_ids, tenant_id, scoped_branch_id)
     for sale in sales_list:
-        confirmed_paid = ReportsQueryService.get_confirmed_sale_paid_aed(sale.id, tenant_id, scoped_branch_id)
+        confirmed_paid = paid_map.get(sale.id, Decimal("0"))
         sale._confirmed_paid = confirmed_paid
         total_sales += sale.amount_aed or Decimal("0")
         total_paid += confirmed_paid
@@ -176,9 +179,11 @@ def sales_export():
     ]
 
     data = []
+    sale_ids_export = [s.id for s in sales_list]
+    paid_map_export = ReportsQueryService.get_confirmed_sale_paid_map(sale_ids_export, tenant_id, scoped_branch_id)
     for s in sales_list:
         total_aed = Decimal(str(s.amount_aed or 0))
-        paid_aed = Decimal(str(ReportsQueryService.get_confirmed_sale_paid_aed(s.id, tenant_id, scoped_branch_id) or 0))
+        paid_aed = Decimal(str(paid_map_export.get(s.id, 0) or 0))
         due_aed = total_aed - paid_aed
         data.append(
             [
