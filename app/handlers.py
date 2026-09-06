@@ -65,7 +65,7 @@ def register_error_handlers(app):
 
     @app.errorhandler(404)
     def handle_404(exc):
-        skip_paths = ["/@vite/", "/node_modules/", "/@react-refresh"]
+        skip_paths = ["/@vite/", "/node_modules/", "/@react-refresh", ".map"]
         skip_log = False
         for path in skip_paths:
             if path in request.path:

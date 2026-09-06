@@ -3,8 +3,8 @@
  * تحسينات خاصة بالمبيعات
  */
 
-/* salesLineIndex scoped per file to avoid cross-page collision with purchases */
-let salesLineIndex = 0;
+/* salesLineIndex scoped per file to avoid cross-page collision with purchases - idempotent for double-load safety */
+var salesLineIndex = typeof salesLineIndex !== "undefined" ? salesLineIndex : 0;
 
 let _isSubmitting = false;
 
@@ -112,7 +112,7 @@ function addLine() {
 	// استخدام الفلتر الذكي الموحد
 	if (window.SmartSelectors) {
 		window.SmartSelectors.initProducts(newSelect[0]);
-	} else {
+	} else if (typeof $.fn.select2 === "function") {
 		// Fallback: استخدام API موحد
 		newSelect.select2({
 			ajax: {

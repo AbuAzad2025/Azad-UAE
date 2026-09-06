@@ -351,9 +351,7 @@
   window._COMPANY_INFO = {{ company_info | tojson if company_info else '{}' }};
   window._COMPANY_PHONE = {{ (current_user.phone or '') | e | tojson }};
 </script>
-<script src="{{ dist_url('js/sales-enhanced.js') }}"></script>
 <script src="{{ dist_url('js/ai-sales.js') }}"></script>
-<script src="{{ dist_url('js/sales-create.js') }}"></script>
 <script src="{{ dist_url('js/draft-autosave.js') }}"></script>
 <script nonce="{{ csp_nonce() }}">
   document.addEventListener('DOMContentLoaded', () => {

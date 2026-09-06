@@ -1,7 +1,7 @@
 /* global jQuery */
 (() => {
-	const qs = (s, el = document) => el.querySelector(s);
-	const qsa = (s, el = document) => Array.from(el.querySelectorAll(s));
+	const qs = (s, el = document) => (el || document).querySelector(s);
+	const qsa = (s, el = document) => Array.from((el || document).querySelectorAll(s));
 	const on = (el, ev, cb) => el?.addEventListener(ev, cb, { passive: false });
 	const toNum = (v) => {
 		const n = parseFloat((v ?? "").toString().replace(/[^\d.-]/g, ""));
