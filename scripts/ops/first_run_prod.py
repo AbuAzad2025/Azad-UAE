@@ -86,10 +86,7 @@ def _ensure_assets_build(env: dict) -> None:
         return
 
     dist_populated = (
-        css_dist.is_dir()
-        and any(css_dist.glob("*.css"))
-        and js_dist.is_dir()
-        and any(js_dist.rglob("*.js"))
+        css_dist.is_dir() and any(css_dist.glob("*.css")) and js_dist.is_dir() and any(js_dist.rglob("*.js"))
     )
 
     npm_cmd = _which("npm")

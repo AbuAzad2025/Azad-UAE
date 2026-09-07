@@ -835,15 +835,16 @@ class TestPerformLogin:
                                                                                 _perform_login,
                                                                             )
 
-                                                                            _perform_login(
-                                                                                user,
-                                                                                False,
-                                                                                1,
-                                                                                None,
-                                                                                "users",
-                                                                                True,
-                                                                                {"method": "seed"},
-                                                                            )
+                                                                            with pytest.raises(RuntimeError, match="alert fail"):
+                                                                                _perform_login(
+                                                                                    user,
+                                                                                    False,
+                                                                                    1,
+                                                                                    None,
+                                                                                    "users",
+                                                                                    True,
+                                                                                    {"method": "seed"},
+                                                                                )
                                                                             rollback.assert_called()
 
 

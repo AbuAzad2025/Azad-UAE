@@ -565,10 +565,14 @@ class ReportsQueryService:
 
         from models import Sale
 
-        query = tenant_query(Sale).filter_by(status="confirmed").options(
-            joinedload(Sale.customer),
-            joinedload(Sale.branch),
-            joinedload(Sale.seller),
+        query = (
+            tenant_query(Sale)
+            .filter_by(status="confirmed")
+            .options(
+                joinedload(Sale.customer),
+                joinedload(Sale.branch),
+                joinedload(Sale.seller),
+            )
         )
         if tenant_id is not None:
             query = query.filter(Sale.tenant_id == tenant_id)
