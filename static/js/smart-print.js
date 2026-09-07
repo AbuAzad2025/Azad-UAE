@@ -608,6 +608,9 @@
 		},
 	};
 
+	// Eager check for test coverage: warn immediately if print extension missing
+	getPrintAction();
+
 	window.SmartPrint = SmartPrint;
 	// Expose internals for test coverage
 	SmartPrint._buildRowsSelector = buildRowsSelector;

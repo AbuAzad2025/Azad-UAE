@@ -113,37 +113,41 @@ function addLine() {
 	// استخدام الفلتر الذكي الموحد
 	if (window.SmartSelectors) {
 		window.SmartSelectors.initProducts(newSelect[0]);
-	} else if (typeof $.fn.select2 === "function") {
+	} else {
 		// Fallback: استخدام API موحد
-		newSelect.select2({
-			ajax: {
-				url: "/api/search",
-				dataType: "json",
-				delay: 250,
-				data: (params) => ({
-					q: params.term || "",
-					type: "products",
-					page: params.page || 1,
-				}),
-				processResults: (data) => ({
-					results: (data.results || []).map((p) => ({
-						id: p.id,
-						text: p.name || p.text,
-						price: p.default_price || p.regular_price || p.unit_price || 0,
-						stock: p.current_stock || 0,
-						cost: p.cost_price || 0,
-						unit: p.unit || "قطعة",
-						sku: p.sku,
-					})),
-					pagination: { more: data.has_more || false },
-				}),
-			},
-			language: "ar",
-			dir: "rtl",
-			placeholder: "ابحث عن منتج...",
-			minimumInputLength: 0,
-			width: "100%",
-		});
+		try {
+			newSelect.select2({
+				ajax: {
+					url: "/api/search",
+					dataType: "json",
+					delay: 250,
+					data: (params) => ({
+						q: params.term || "",
+						type: "products",
+						page: params.page || 1,
+					}),
+					processResults: (data) => ({
+						results: (data.results || []).map((p) => ({
+							id: p.id,
+							text: p.name || p.text,
+							price: p.default_price || p.regular_price || p.unit_price || 0,
+							stock: p.current_stock || 0,
+							cost: p.cost_price || 0,
+							unit: p.unit || "قطعة",
+							sku: p.sku,
+						})),
+						pagination: { more: data.has_more || false },
+					}),
+				},
+				language: "ar",
+				dir: "rtl",
+				placeholder: "ابحث عن منتج...",
+				minimumInputLength: 0,
+				width: "100%",
+			});
+		} catch (_e) {
+			/* select2 not available - fallback already attempted */
+		}
 	}
 
 	newSelect.on("select2:select", function (e) {
