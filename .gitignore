@@ -81,6 +81,9 @@ instance/secret_key
 # Cache
 .cache/
 *.cache
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
 
 # Redis
 dump.rdb
