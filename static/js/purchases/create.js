@@ -2,9 +2,12 @@
 
 /* global SmartSelectors */
 
-var TENANT_BASE_CURRENCY = typeof TENANT_BASE_CURRENCY !== "undefined" ? TENANT_BASE_CURRENCY : window._FX_FALLBACK_BASE || "ILS";
-var TENANT_CURRENCY_SYMBOL = typeof TENANT_CURRENCY_SYMBOL !== "undefined" ? TENANT_CURRENCY_SYMBOL : window._CURRENCY_SYMBOL || "₪";
-var PURCHASE_LABELS = typeof PURCHASE_LABELS !== "undefined" ? PURCHASE_LABELS : window._PURCHASE_LABELS || {};
+var TENANT_BASE_CURRENCY = window.TENANT_BASE_CURRENCY || window._FX_FALLBACK_BASE || "ILS";
+window.TENANT_BASE_CURRENCY = TENANT_BASE_CURRENCY;
+var TENANT_CURRENCY_SYMBOL = window.TENANT_CURRENCY_SYMBOL || window._CURRENCY_SYMBOL || "₪";
+window.TENANT_CURRENCY_SYMBOL = TENANT_CURRENCY_SYMBOL;
+var PURCHASE_LABELS = window.PURCHASE_LABELS || window._PURCHASE_LABELS || {};
+window.PURCHASE_LABELS = PURCHASE_LABELS;
 
 // Toastr is not bundled in this project — fall back to a blocking alert.
 function notify(kind, message) {
@@ -27,7 +30,8 @@ function azadEsc(v) {
 		.replace(/'/g, "&#39;");
 }
 
-var purchaseLineIndex = typeof purchaseLineIndex !== "undefined" ? purchaseLineIndex : 0;
+var purchaseLineIndex = window.purchaseLineIndex || 0;
+window.purchaseLineIndex = purchaseLineIndex;
 
 // =====================================
 

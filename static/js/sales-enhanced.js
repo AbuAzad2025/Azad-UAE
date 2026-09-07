@@ -4,7 +4,8 @@
  */
 
 /* salesLineIndex scoped per file to avoid cross-page collision with purchases - idempotent for double-load safety */
-var salesLineIndex = typeof salesLineIndex !== "undefined" ? salesLineIndex : 0;
+var salesLineIndex = window.salesLineIndex || 0;
+window.salesLineIndex = salesLineIndex;
 
 let _isSubmitting = false;
 
