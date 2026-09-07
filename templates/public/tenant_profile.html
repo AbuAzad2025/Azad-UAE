@@ -92,10 +92,10 @@
           </div>
         </div>
         <div class="col">
-          <h1 class="fw-bold mb-1">{{ tenant.name_ar or tenant.name }}</h1>
-          <p class="mb-0 opacity-75">{{ tenant.name_en or '' }}</p>
+          <h1 class="fw-bold mb-1 text-white">{{ tenant.name_ar or tenant.name }}</h1>
+          <p class="mb-0 opacity-75 text-slate-100">{{ tenant.name_en or '' }}</p>
           {% if tenant.business_type %}
-          <span class="badge bg-white text-dark mt-2">{{ tenant.business_type }}</span>
+          <span class="badge bg-white text-slate-900 mt-2">{{ tenant.business_type }}</span>
           {% endif %}
         </div>
         {% if is_owner_viewer %}
