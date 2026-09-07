@@ -110,6 +110,7 @@ def _ensure_assets_build(env: dict) -> None:
     node_modules_dir = PROJECT_ROOT / "node_modules"
     if not node_modules_dir.is_dir() or not (node_modules_dir / ".package-lock.json").is_file():
         lock_exists = pkg_lock.is_file()
+        assert npm_cmd is not None
         install_args = [npm_cmd, "ci" if lock_exists else "install", "--no-audit", "--no-fund"]
         print(f"assets: installing node deps ({'npm ci' if lock_exists else 'npm install'})…")
         try:
@@ -120,6 +121,7 @@ def _ensure_assets_build(env: dict) -> None:
 
     print("assets: running npm run build:assets …")
     try:
+        assert npm_cmd is not None
         _run([npm_cmd, "run", "build:assets"], env=env)
     except Exception as exc:  # pragma: no cover - operator feedback
         print(f"WARN: build:assets failed ({exc}); continuing with unminified assets", file=sys.stderr)
