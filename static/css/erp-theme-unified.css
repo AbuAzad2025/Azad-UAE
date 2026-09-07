@@ -69,7 +69,7 @@
 /* ─────────────────────────── 1. THEME TOKENS ─────────────────────────── */
 
 :root {
-  --az-font: "Tajawal", system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+  --az-font: "Tajawal", "Noto Sans Arabic", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   --az-font-size-xs: 0.75rem;
   --az-font-size-sm: 0.82rem;
   --az-font-size-base: 0.95rem;
