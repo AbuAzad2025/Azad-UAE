@@ -608,8 +608,8 @@ body.pos-layout .erp-mobile-nav {
 	flex-direction: column;
 	position: sticky;
 	top: 16px;
-	max-height: calc(100vh - 32px);
-	overflow: hidden;
+	max-height: calc(100vh - 140px);
+	overflow-y: auto;
 }
 
 .pos-side-head {
@@ -1300,6 +1300,19 @@ body:has(.pos-app) {
 
 /* purgecss end ignore */
 
+.pos-footer {
+	flex-shrink: 0;
+	background: var(--pos-surface-2);
+	border-top: 1px solid var(--pos-border);
+	padding: 8px 14px;
+	font-size: 13px;
+	color: var(--pos-muted);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
 /* full-viewport POS register on wide desktop screens */
 @media (min-width: 1400px) {
 	html:has(.pos-app),
@@ -1311,7 +1324,7 @@ body:has(.pos-app) {
 	.pos-app {
 		height: 100vh;
 		min-height: 0;
-		overflow: hidden !important;
+		overflow-y: auto !important;
 		padding: 14px;
 		gap: 12px;
 	}

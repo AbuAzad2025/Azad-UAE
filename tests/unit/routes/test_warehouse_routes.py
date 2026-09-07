@@ -291,6 +291,46 @@ class TestWarehouseCreate:
         mock_session.add.assert_called_once()
         mock_session.flush.assert_called_once()
 
+    def test_create_post_persists_inside_atomic_transaction(self, warehouse_admin_client, warehouse_mocks):
+        wh_query = warehouse_mocks["warehouse_query"]
+        wh_query.filter_by.return_value.first.return_value = None
+
+        order = []
+
+        class RecordingSession:
+            def add(self, *args, **kwargs):
+                order.append("add")
+
+            def flush(self, *args, **kwargs):
+                order.append("flush")
+
+            def remove(self):
+                pass
+
+            def rollback(self):
+                pass
+
+        class RecordingCM:
+            def __enter__(self):
+                order.append("enter")
+                return None
+
+            def __exit__(self, exc_type, exc, tb):
+                order.append("exit")
+                return False
+
+        with (
+            patch("routes.warehouse.db.session", RecordingSession()),
+            patch("routes.warehouse.atomic_transaction", return_value=RecordingCM()),
+        ):
+            resp = warehouse_admin_client.post(
+                "/warehouse/create",
+                data={"name": "New WH", "location": "Dubai"},
+            )
+
+        assert resp.status_code in (302, 303)
+        assert order == ["enter", "add", "flush", "exit"]
+
     def test_create_post_without_tenant_redirects(self, warehouse_admin_client):
         with (
             patch("routes.warehouse.get_active_tenant_id", return_value=None),

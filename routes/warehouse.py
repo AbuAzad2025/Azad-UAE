@@ -299,8 +299,6 @@ def edit_warehouse(**kwargs):
 @login_required
 @admin_required
 def create_warehouse():
-    pass
-
     tid = get_active_tenant_id(current_user)
     parent_warehouses = StockService.list_parent_warehouses(tid)
     users = scoped_user_query(active_only=True, exclude_owners=True).all()
@@ -409,16 +407,15 @@ def create_warehouse():
                     warehouse_type=warehouse_type,
                     is_active=True,
                 )
+                db.session.add(warehouse)
+                db.session.flush()
 
-            db.session.add(warehouse)
-            db.session.flush()
+                if warehouse_type == Warehouse.TYPE_ONLINE and tenant_id:
+                    from services.store_service import StoreService
 
-            if warehouse_type == Warehouse.TYPE_ONLINE and tenant_id:
-                from services.store_service import StoreService
-
-                store = StoreService.get_tenant_store(tenant_id, create=True)
-                if store and store.warehouse_id != warehouse.id:
-                    store.warehouse_id = warehouse.id
+                    store = StoreService.get_tenant_store(tenant_id, create=True)
+                    if store and store.warehouse_id != warehouse.id:
+                        store.warehouse_id = warehouse.id
 
             type_label = (
                 gettext("أونلاين")
