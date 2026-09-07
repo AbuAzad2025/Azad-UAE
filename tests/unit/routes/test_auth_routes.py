@@ -835,7 +835,9 @@ class TestPerformLogin:
                                                                                 _perform_login,
                                                                             )
 
-                                                                            with pytest.raises(RuntimeError, match="alert fail"):
+                                                                            with pytest.raises(
+                                                                                RuntimeError, match="alert fail"
+                                                                            ):
                                                                                 _perform_login(
                                                                                     user,
                                                                                     False,
