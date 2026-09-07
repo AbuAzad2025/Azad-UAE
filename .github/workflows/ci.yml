@@ -352,6 +352,24 @@ jobs:
           docker run --rm -v "$PWD:/repo" -w /repo \
             docker.io/rhysd/actionlint:latest .github/workflows/*.yml
 
+  # ── Frontend asset audit (Jinja/static) — Adaptive Frontend Asset Audit directive ──
+  frontend-asset-quality:
+    name: Frontend asset audit (Jinja/static)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run frontend asset audit (pytest)
+        run: pytest tests/unit/test_js_reachability.py -v --tb=short
+
   # ── Git & repository scanning ──
   repo-security:
     runs-on: ubuntu-latest
