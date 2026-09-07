@@ -27,7 +27,7 @@ _DIST_URL_RE = re.compile(r"dist_url\(['\"]([^'\"]+)['\"]")
 _LINK_RE = re.compile(r'<link[^>]+href=["\']([^"\']+)["\']', re.IGNORECASE)
 _SCRIPT_RE = re.compile(r'<script[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 _EXTENDS_RE = re.compile(r'{%\s*extends\s+["\']([^"\']+)["\']')
-_BLOCK_RE = re.compile(r'{%\s*block\s+(\w+)\s*%}(.*?){%\s*endblock', re.DOTALL)
+_BLOCK_RE = re.compile(r"{%\s*block\s+(\w+)\s*%}(.*?){%\s*endblock", re.DOTALL)
 
 
 def _collect_template_assets(template_path: Path) -> tuple[list[str], list[str]]:
@@ -221,7 +221,9 @@ def test_no_orphaned_static_files():
         if rel.replace("js/", "") in all_text or rel.replace("css/", "") in all_text:
             continue
         orphaned.append(rel)
-    assert orphaned == [], "Orphaned first-party static files (not referenced in any template/route):\n" + "\n".join(orphaned[:20])
+    assert orphaned == [], "Orphaned first-party static files (not referenced in any template/route):\n" + "\n".join(
+        orphaned[:20]
+    )
 
 
 def test_jinja_block_asset_integrity():

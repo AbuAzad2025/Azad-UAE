@@ -357,6 +357,20 @@ jobs:
     name: Frontend asset audit (Jinja/static)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: azad_test
+          POSTGRES_PASSWORD: azad_test
+          POSTGRES_DB: azad_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -368,6 +382,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run frontend asset audit (pytest)
+        env:
+          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+          SECRET_KEY: test-secret-key-not-for-production
+          OWNER_PASSWORD: TestOwner@1234567890123456!
+          APP_ENV: testing
+          DEBUG: "true"
         run: pytest tests/unit/test_js_reachability.py -v --tb=short
 
   # ── Git & repository scanning ──
