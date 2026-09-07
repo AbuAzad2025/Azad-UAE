@@ -811,10 +811,7 @@ class TestPerformLogin:
                                         with patch("routes.auth.db.session.add"):
                                             with patch(
                                                 "routes.auth.db.session.commit",
-                                                side_effect=[
-                                                    None,
-                                                    RuntimeError("alert fail"),
-                                                ],
+                                                side_effect=RuntimeError("alert fail"),
                                             ):
                                                 with patch("routes.auth.db.session.rollback") as rollback:
                                                     with patch("routes.auth.LoggingCore.log_audit"):

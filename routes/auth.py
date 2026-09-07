@@ -106,9 +106,15 @@ def _render_login(**extra):
     query-string ?mode=developer URLs continue to work via GET pre-auth
     redirect and POST access_mode read for backwards compatibility.
     """
-    extra.pop("access_mode", None)
+    access_mode = extra.pop("access_mode", None)
+    if access_mode is None:
+        access_mode = request.args.get("mode") or "users"
+    access_mode = str(access_mode).strip().lower()
+    if access_mode not in ("users", "developer"):
+        access_mode = "users"
     return render_template(
         "auth/login.html",
+        access_mode=access_mode,
         username_value=extra.pop("username_value", ""),
         remember_checked=bool(extra.pop("remember_checked", False)),
         **extra,

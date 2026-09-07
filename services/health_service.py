@@ -172,46 +172,29 @@ class HealthCheckService:
         """Consolidated system health data from routes/owner.py"""
         import platform
 
-        # P2 perf: cache the cheap parts (DB + system) for 5s; psutil is
-        # re-sampled on every call (cheap with interval=None). The full
-        # assembly must always return a fresh dict to avoid stale-stamp bugs.
-        cache_key = "health_data"
-        cached = getattr(HealthCheckService, "_cache", None)
-        now = datetime.now(UTC).timestamp()
-        if cached and now - cached["ts"] < 5:
-            resources = cached["resources"]
-            db_size_mb = cached["db_size_mb"]
-            active_users = cached["active_users"]
-        else:
-            resources = HealthCheckService.check_system_resources()
-            try:
-                size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
-                db_size_bytes = size_result.scalar() or 0
-                db_size_mb = db_size_bytes / (1024 * 1024)
-            except Exception:
-                current_app.logger.debug("Could not query pg_database_size")
-                db_size_mb = 0
-            try:
-                from models import User
+        resources = HealthCheckService.check_system_resources()
+        try:
+            size_result = db.session.execute(db.text("SELECT pg_database_size(current_database())"))
+            db_size_bytes = size_result.scalar() or 0
+            db_size_mb = db_size_bytes / (1024 * 1024)
+        except Exception:
+            current_app.logger.debug("Could not query pg_database_size")
+            db_size_mb = 0
+        try:
+            from models import User
 
-                active_users = (
-                    db.session.query(func.count(User.id))
-                    .filter(
-                        User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
-                        User.is_active,
-                    )
-                    .scalar()
-                    or 0
+            active_users = (
+                db.session.query(func.count(User.id))
+                .filter(
+                    User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
+                    User.is_active,
                 )
-            except Exception:
-                current_app.logger.debug("Could not query active users")
-                active_users = 0
-            HealthCheckService._cache = {
-                "ts": now,
-                "resources": resources,
-                "db_size_mb": db_size_mb,
-                "active_users": active_users,
-            }
+                .scalar()
+                or 0
+            )
+        except Exception:
+            current_app.logger.debug("Could not query active users")
+            active_users = 0
 
         health_data: dict[str, Any] = {
             "cpu": {
