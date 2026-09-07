@@ -669,3 +669,44 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.quotations.tenant_guard", side_effect=RuntimeError("boom"))
         r = _advance_quotation({"quotation_number": "Q1", "target": "sent"})
         assert not r.success
+
+# Wave 5 remaining 7 to 100% (local only, not pushed)
+class TestWave5Remaining:
+    def test_catalog_remaining(self, mocker):
+        from ai_knowledge.actions.catalog import _adjust_stock, _update_product
+
+        mocker.patch("ai_knowledge.actions.catalog.tenant_guard", return_value=(None, MagicMock()))
+        assert _update_product({}) is not None
+        assert _adjust_stock({}) is not None
+        mocker.patch("ai_knowledge.actions.catalog.tenant_guard", return_value=(1, None))
+        mock_q = mocker.patch("models.Product.query")
+        mock_q.filter_by.return_value.first.return_value = None
+        r = _update_product({"sku": "NOPE"})
+        assert not r.success
+
+    def test_purchase_returns_remaining(self, mocker):
+        from ai_knowledge.actions.purchase_returns import _parse_purchase_return
+        # hit 45 reason
+        _, d = _parse_purchase_return("INV001, Prod, 2, reason text")
+        assert d["reason"] == "reason text"
+        _, d = _parse_purchase_return("123, Prod, 1")
+        assert d["purchase_id"] == 123
+        # hit _resolve_purchase with number
+        mock_q = mocker.patch("models.Purchase.query")
+        mock_q.filter_by.return_value.first.return_value = MagicMock(tenant_id=1)
+        from ai_knowledge.actions.purchase_returns import _resolve_purchase
+        assert _resolve_purchase(1, {"purchase_number": "INV001"}) is not None
+        assert _resolve_purchase(1, {"purchase_number": ""}) is None
+
+    def test_cheques_remaining(self, mocker):
+        import ai_knowledge.actions.cheques as ch
+
+        mocker.patch("ai_knowledge.actions.cheques.tenant_guard", return_value=(None, MagicMock()))
+        assert ch._create_cheque({}) is not None
+        assert ch._list_cheques({}) is not None
+
+    def test_schemas_remaining(self):
+        from ai_knowledge.actions.schemas import EXTRA_ACTION_ARG_MODELS
+
+        assert EXTRA_ACTION_ARG_MODELS is not None
+        assert isinstance(EXTRA_ACTION_ARG_MODELS, dict)

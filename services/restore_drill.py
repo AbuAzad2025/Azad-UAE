@@ -172,7 +172,9 @@ class RestoreDrillService:
         from sqlalchemy.exc import OperationalError
 
         out: dict[str, Any] = {"ok": True, "errors": [], "counts": {}}
-        for attempt in (1, 2):
+        attempt = 0
+        while True:
+            attempt += 1
             out["errors"] = []
             out["counts"] = {}
             engine = create_engine(scratch_url, pool_pre_ping=True)
@@ -184,7 +186,7 @@ class RestoreDrillService:
                                 out["counts"][table] = cls._count_table(conn, table)
                             except Exception as exc:
                                 out["errors"].append(f"{table}: count failed ({type(exc).__name__})")
-                    break
+                        break
                 except OperationalError as exc:
                     if _TRANSIENT_MARKER in str(exc) and attempt == 1:
                         logger.warning("Transient PostgreSQL disconnect during drill counts; retrying once")
