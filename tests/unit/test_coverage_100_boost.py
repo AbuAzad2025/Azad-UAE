@@ -174,10 +174,19 @@ class TestBase100:
 
 class TestCatalog100:
     def test_parsers(self):
-        from ai_knowledge.actions.catalog import _parse_update_customer, _parse_update_product
+        from ai_knowledge.actions.catalog import _parse_adjust_stock, _parse_update_customer, _parse_update_product
 
-        assert _parse_update_customer("x, y") is not None or True
-        assert _parse_update_product("x, y") is not None or True
+        # hit all branches: 44->46 etc.
+        assert _parse_update_customer("x") is not None
+        assert _parse_update_customer("x, y") is not None
+        assert _parse_update_customer("x, y, addr, 100") is not None
+        assert _parse_update_customer("x, , ,") is not None
+        assert _parse_update_product("Prod") is not None
+        assert _parse_update_product("Prod, 10") is not None
+        assert _parse_update_product("Prod, 10, 5") is not None
+        assert _parse_adjust_stock("Prod, 5") is not None
+        assert _parse_adjust_stock("Prod, -3") is not None
+        assert _parse_adjust_stock("Prod") is not None
 
     def test_handlers(self, mocker):
         from ai_knowledge.actions.catalog import _adjust_stock, _update_customer, _update_product
@@ -190,8 +199,20 @@ class TestCatalog100:
     def test_update_customer_success(self, mocker):
         from ai_knowledge.actions.catalog import _update_customer
 
-        cust = MagicMock(id=1, name="Cust", credit_limit=100)
+        # 100-101 name empty
+        r = _update_customer({"customer_name": ""})
+        assert not r.success
+        # 107 guard
+        mocker.patch("ai_knowledge.actions.catalog.tenant_guard", return_value=(None, MagicMock()))
+        r = _update_customer({"customer_name": "x"})
+        assert r is not None
+        # 110 customer not found
         mocker.patch("ai_knowledge.actions.catalog.tenant_guard", return_value=(1, None))
+        mocker.patch("ai_knowledge.actions.catalog.resolve_customer", return_value=None)
+        r = _update_customer({"customer_name": "Nope"})
+        assert not r.success
+        # 119-120 credit_limit, 122 no changes
+        cust = MagicMock(id=1, name="Cust", credit_limit=100)
         mocker.patch("ai_knowledge.actions.catalog.resolve_customer", return_value=cust)
         mocker.patch("extensions.db.session.flush")
         mocker.patch("ai_knowledge.actions.catalog.audit")
@@ -201,7 +222,11 @@ class TestCatalog100:
             r = _update_customer({"customer_name": "Cust", "credit_limit": "500"})
             assert r is not None
             r = _update_customer({"customer_name": "Cust"})
-            assert r is not None
+            assert not r.success
+            # 134-135 exception
+            mocker.patch("ai_knowledge.actions.catalog.resolve_customer", side_effect=RuntimeError("boom"))
+            r = _update_customer({"customer_name": "Cust", "phone": "123"})
+            assert not r.success
 
     def test_update_product_success(self, mocker):
         from ai_knowledge.actions.catalog import _update_product
