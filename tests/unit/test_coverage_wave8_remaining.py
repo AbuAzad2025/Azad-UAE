@@ -32,9 +32,7 @@ class TestCatalogDeep:
         mock_q.filter_by.return_value.first.return_value = prod
         mocker.patch("ai_knowledge.actions.catalog.resolve_product", return_value=prod)
         with patch("ai_knowledge.actions.catalog.atomic_transaction"), patch("ai_knowledge.actions.catalog.audit"):
-            r = _update_product(
-                {"sku": "SKU1", "selling_price": "12", "cost_price": "6", "min_stock": "4"}
-            )
+            r = _update_product({"sku": "SKU1", "selling_price": "12", "cost_price": "6", "min_stock": "4"})
             assert r.success
         # product not found
         mocker.patch("ai_knowledge.actions.catalog.resolve_product", return_value=None)
@@ -75,9 +73,7 @@ class TestChequesDeep:
         mocker.patch("ai_knowledge.actions.cheques.resolve_supplier", return_value=None)
         mock_cheque = MagicMock(id=5)
         with patch("ai_knowledge.actions.cheques.atomic_transaction"), patch("ai_knowledge.actions.cheques.audit"):
-            mocker.patch(
-                "services.cheque_service.ChequeService.create_cheque", return_value=mock_cheque
-            )
+            mocker.patch("services.cheque_service.ChequeService.create_cheque", return_value=mock_cheque)
             r = ch._create_cheque(
                 {
                     "cheque_number": "CH001",
@@ -101,7 +97,15 @@ class TestChequesDeep:
         import ai_knowledge.actions.cheques as ch
 
         mocker.patch("ai_knowledge.actions.cheques.tenant_guard", return_value=(1, None))
-        mock_r = MagicMock(id=1, cheque_number="CH001", cheque_type="incoming", amount=100, bank_name="ENBD", status="pending", due_date=None)
+        mock_r = MagicMock(
+            id=1,
+            cheque_number="CH001",
+            cheque_type="incoming",
+            amount=100,
+            bank_name="ENBD",
+            status="pending",
+            due_date=None,
+        )
         base_query = MagicMock()
         base_query.filter.return_value = base_query
         base_query.order_by.return_value = base_query
@@ -141,8 +145,9 @@ class TestChequeLifecycleDeep:
         mocker.patch("ai_knowledge.actions.cheque_lifecycle.tenant_guard", return_value=(1, None))
         cheque = MagicMock(id=1, cheque_number="CH001", currency_gain_loss=1.5)
         mocker.patch("ai_knowledge.actions.cheque_lifecycle._resolve_cheque", return_value=cheque)
-        with patch("ai_knowledge.actions.cheque_lifecycle.atomic_transaction"), patch(
-            "ai_knowledge.actions.cheque_lifecycle.audit"
+        with (
+            patch("ai_knowledge.actions.cheque_lifecycle.atomic_transaction"),
+            patch("ai_knowledge.actions.cheque_lifecycle.audit"),
         ):
             mocker.patch("services.cheque_service.process_cheque_deposit")
             assert cl._deposit_cheque({"cheque_number": "CH001"}).success
@@ -204,7 +209,10 @@ class TestPayrollDeep:
         emp = MagicMock(id=1, name="Ali", basic_salary=1000, employment_type="salary", iban="x", bank_code="y")
         mocker.patch("services.payroll_service.PayrollService.list_active_employees", return_value=[emp])
         mocker.patch("ai_knowledge.actions.payroll_processing._already_posted", return_value=False)
-        mocker.patch("ai_knowledge.actions.payroll_processing._preview_employee", return_value={"name": "Ali", "net": 900, "wps_eligible": True})
+        mocker.patch(
+            "ai_knowledge.actions.payroll_processing._preview_employee",
+            return_value={"name": "Ali", "net": 900, "wps_eligible": True},
+        )
         r = _calculate_monthly_payroll({"month": 1, "year": 2024})
         assert r.success
         # missing month -> error
@@ -241,8 +249,9 @@ class TestPayrollDeep:
         txn = MagicMock(net_salary=900)
         mocker.patch("services.payroll_service.PayrollService.process_payroll", return_value=txn)
         mocker.patch("services.payroll_service.PayrollService.get_wps_rows", return_value=[1])
-        with patch("ai_knowledge.actions.payroll_processing.atomic_transaction"), patch(
-            "ai_knowledge.actions.payroll_processing.audit"
+        with (
+            patch("ai_knowledge.actions.payroll_processing.atomic_transaction"),
+            patch("ai_knowledge.actions.payroll_processing.audit"),
         ):
             r = _approve_and_post_payroll({"month": 1, "year": 2024})
             assert r.success
@@ -296,8 +305,9 @@ class TestPurchaseReturnsDeep:
         mocker.patch("ai_knowledge.actions.purchase_returns._resolve_purchase", return_value=purchase)
         pr = MagicMock(id=1, return_number="PR001", total_amount=100)
         mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", return_value=pr)
-        with patch("ai_knowledge.actions.purchase_returns.atomic_transaction"), patch(
-            "ai_knowledge.actions.purchase_returns.audit"
+        with (
+            patch("ai_knowledge.actions.purchase_returns.atomic_transaction"),
+            patch("ai_knowledge.actions.purchase_returns.audit"),
         ):
             r = _create_purchase_return({"product_name": "Prod", "purchase_number": "P001", "quantity": 3})
             assert r.success
@@ -409,9 +419,7 @@ class TestReturnsDeep:
         r = _create_sale_return({"product_name": "Prod", "sale_number": "S001", "quantity": 1})
         assert not r.success
         # service raises ValueError
-        mocker.patch(
-            "services.return_service.ReturnService.create_return", side_effect=ValueError("bad")
-        )
+        mocker.patch("services.return_service.ReturnService.create_return", side_effect=ValueError("bad"))
         r = _create_sale_return({"product_name": "Prod", "sale_number": "S001", "quantity": 1})
         assert not r.success
 
@@ -578,7 +586,9 @@ class TestRestoreDrillDeep:
         art, err = S.acquire_artifact(source="local", filename="f.bak")
         assert art and art["origin"] == "local"
         # auto -> offsite fails -> fallback local backups
-        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[{"filename": "b.bak", "path": str(p)}])
+        mocker.patch(
+            "services.backup_service.BackupService.list_backups", return_value=[{"filename": "b.bak", "path": str(p)}]
+        )
         mocker.patch(
             "utils.offsite_backup.download_latest_offsite_artifact",
             return_value={"ok": False, "error": "net"},
@@ -623,11 +633,15 @@ class TestRestoreDrillDeep:
 
         monkeypatch.setattr("services.restore_drill.DRILL_LOG_PATH", str(tmp_path / "r.log"))
         # resolve fails
-        mocker.patch("services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=(None, "no db"))
+        mocker.patch(
+            "services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=(None, "no db")
+        )
         r = S.run_drill()
         assert not r["ok"]
         # acquire fails
-        mocker.patch("services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=("url", ""))
+        mocker.patch(
+            "services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=("url", "")
+        )
         mocker.patch("services.restore_drill.RestoreDrillService.acquire_artifact", return_value=(None, "no artifact"))
         r = S.run_drill()
         assert not r["ok"]
@@ -637,7 +651,10 @@ class TestRestoreDrillDeep:
             return_value=({"path": str(tmp_path / "a.bak"), "origin": "local", "filename": "a.bak"}, ""),
         )
         mocker.patch("services.restore_drill.RestoreDrillService.restore_into_scratch", return_value={"ok": True})
-        mocker.patch("services.restore_drill.RestoreDrillService.row_count_sanity", return_value={"counts": {"users": 5}, "errors": []})
+        mocker.patch(
+            "services.restore_drill.RestoreDrillService.row_count_sanity",
+            return_value={"counts": {"users": 5}, "errors": []},
+        )
         r = S.run_drill()
         assert r["ok"]
         # restore crashes

@@ -1,4 +1,4 @@
-﻿"""Wave 9 — precise line closure for all remaining action packs (separate file)."""
+"""Wave 9 — precise line closure for all remaining action packs (separate file)."""
 
 from __future__ import annotations
 
@@ -123,7 +123,9 @@ class TestChequesClosure:
         import ai_knowledge.actions.cheques as ch
 
         mocker.patch("ai_knowledge.actions.cheques.tenant_guard", return_value=(1, None))
-        mock_r = MagicMock(id=1, cheque_number="CH1", cheque_type="incoming", amount=10, bank_name="B", status="pending", due_date=None)
+        mock_r = MagicMock(
+            id=1, cheque_number="CH1", cheque_type="incoming", amount=10, bank_name="B", status="pending", due_date=None
+        )
         base_query = MagicMock()
         base_query.filter.return_value = base_query
         base_query.order_by.return_value = base_query
@@ -195,7 +197,9 @@ class TestChequeLifecycleClosure:
     def test_guard_and_generic_excepts(self, mocker):
         import ai_knowledge.actions.cheque_lifecycle as cl
 
-        mocker.patch("ai_knowledge.actions.cheque_lifecycle.tenant_guard", return_value=(None, SimpleNamespace(success=False)))
+        mocker.patch(
+            "ai_knowledge.actions.cheque_lifecycle.tenant_guard", return_value=(None, SimpleNamespace(success=False))
+        )
         assert not cl._bounce_cheque({"cheque_number": "CH1", "reason": "NSF"}).success
         mocker.patch("ai_knowledge.actions.cheque_lifecycle.tenant_guard", side_effect=RuntimeError("boom"))
         with patch("ai_knowledge.actions.cheque_lifecycle.atomic_transaction"):
@@ -273,8 +277,9 @@ class TestPayrollClosure:
         mocker.patch("ai_knowledge.actions.payroll_processing._match_adjustment", return_value={"days_worked": 20})
         mocker.patch("services.payroll_service.PayrollService.process_payroll", return_value=txn)
         mocker.patch("services.payroll_service.PayrollService.get_wps_rows", return_value=[])
-        with patch("ai_knowledge.actions.payroll_processing.atomic_transaction"), patch(
-            "ai_knowledge.actions.payroll_processing.audit"
+        with (
+            patch("ai_knowledge.actions.payroll_processing.atomic_transaction"),
+            patch("ai_knowledge.actions.payroll_processing.audit"),
         ):
             r = _approve_and_post_payroll({"month": 1, "year": 2024})
             assert r.success
@@ -287,8 +292,9 @@ class TestPayrollClosure:
             side_effect=ValueError("dup"),
         )
         mocker.patch("services.payroll_service.PayrollService.get_wps_rows", return_value=[])
-        with patch("ai_knowledge.actions.payroll_processing.atomic_transaction"), patch(
-            "ai_knowledge.actions.payroll_processing.audit"
+        with (
+            patch("ai_knowledge.actions.payroll_processing.atomic_transaction"),
+            patch("ai_knowledge.actions.payroll_processing.audit"),
         ):
             r = _approve_and_post_payroll({"month": 1, "year": 2024})
             assert r.success
@@ -319,8 +325,9 @@ class TestPurchaseReturnsClosure:
         mocker.patch("ai_knowledge.actions.purchase_returns._resolve_purchase", return_value=purchase)
         pr = MagicMock(id=1, return_number="PR001", total_amount=60)
         mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", return_value=pr)
-        with patch("ai_knowledge.actions.purchase_returns.atomic_transaction"), patch(
-            "ai_knowledge.actions.purchase_returns.audit"
+        with (
+            patch("ai_knowledge.actions.purchase_returns.atomic_transaction"),
+            patch("ai_knowledge.actions.purchase_returns.audit"),
         ):
             r = _create_purchase_return({"product_name": "Prod", "purchase_number": "P001", "quantity": 2})
             assert r.success
@@ -438,7 +445,9 @@ class TestRestoreDrillClosure:
             "utils.offsite_backup.download_latest_offsite_artifact",
             side_effect=RuntimeError("net down"),
         )
-        mocker.patch("services.backup_service.BackupService.list_backups", return_value=[{"filename": "f.bak", "path": str(p)}])
+        mocker.patch(
+            "services.backup_service.BackupService.list_backups", return_value=[{"filename": "f.bak", "path": str(p)}]
+        )
         art, err = S.acquire_artifact(source="auto")
         assert art and art["origin"] == "local"
 
@@ -508,7 +517,9 @@ class TestRestoreDrillClosure:
         monkeypatch.setattr("services.restore_drill.DRILL_LOG_PATH", str(tmp_path / "r.log"))
         workdir = tmp_path / "wd"
         workdir.mkdir(exist_ok=True)
-        mocker.patch("services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=("url", ""))
+        mocker.patch(
+            "services.restore_drill.RestoreDrillService.resolve_scratch_database_url", return_value=("url", "")
+        )
         mocker.patch(
             "services.restore_drill.RestoreDrillService.acquire_artifact",
             return_value=({"path": str(tmp_path / "a.bak"), "origin": "local", "workdir": str(workdir)}, ""),

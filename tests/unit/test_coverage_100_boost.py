@@ -470,17 +470,28 @@ class TestRestoreDrill100:
         # cover restore_into_scratch and run_drill success
         fake_file = tmp_path / "backup.bak"
         fake_file.write_text("data")
-        mocker.patch("services.backup_service.BackupService.verify_backup", return_value={"valid": True, "manifest": {"backup_scope": "system"}})
+        mocker.patch(
+            "services.backup_service.BackupService.verify_backup",
+            return_value={"valid": True, "manifest": {"backup_scope": "system"}},
+        )
         mocker.patch("services.backup_service.BackupService.restore_backup_to_target_db", return_value={"ok": True})
         out = RestoreDrillService.restore_into_scratch(str(fake_file), "postgresql://x/scratch")
         assert out.get("ok")
         # run_drill with mocked artifact and restore
         monkeypatch.setenv("RESTORE_DRILL_DB", "scratch_test")
         monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/live_db")
-        mocker.patch.object(RestoreDrillService, "resolve_scratch_database_url", return_value=("postgresql://x/scratch", ""))
-        mocker.patch.object(RestoreDrillService, "acquire_artifact", return_value=({"path": str(fake_file), "origin": "local", "filename": "backup.bak"}, ""))
+        mocker.patch.object(
+            RestoreDrillService, "resolve_scratch_database_url", return_value=("postgresql://x/scratch", "")
+        )
+        mocker.patch.object(
+            RestoreDrillService,
+            "acquire_artifact",
+            return_value=({"path": str(fake_file), "origin": "local", "filename": "backup.bak"}, ""),
+        )
         mocker.patch.object(RestoreDrillService, "restore_into_scratch", return_value={"ok": True})
-        mocker.patch.object(RestoreDrillService, "row_count_sanity", return_value={"ok": True, "counts": {"users": 5}, "errors": []})
+        mocker.patch.object(
+            RestoreDrillService, "row_count_sanity", return_value={"ok": True, "counts": {"users": 5}, "errors": []}
+        )
         monkeypatch.setattr("services.restore_drill.DRILL_LOG_PATH", str(tmp_path / "drill2.log"))
         r = RestoreDrillService.run_drill(source="auto")
         assert r["ok"] or r["restore_ok"]
@@ -521,6 +532,7 @@ class TestInit100:
         mock_pack3.__name__ = "mock_pack3"
         mocker.patch("ai_knowledge.actions._packs", return_value=(mock_pack3,))
         assert match_pack_command("test") is None
+
         # register and help - mock pack that calls register_fn
         def fake_register(fn):
             fn("test_action", MagicMock(), "perm", "desc")
@@ -568,7 +580,9 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1))
         mocker.patch("ai_knowledge.actions.quotations._TARGET_LABELS", {"sent": "إرسال"})
         with patch("ai_knowledge.actions.quotations.atomic_transaction"):
-            mocker.patch("services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid"))
+            mocker.patch(
+                "services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid")
+            )
             r = _advance_quotation({"quotation_number": "Q1", "target": "sent"})
             assert not r.success
 
@@ -611,7 +625,10 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.purchase_returns.escape_like", return_value="prod")
         pr = MagicMock(id=1, return_number="PR001", total_amount=10)
         mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", return_value=pr)
-        with patch("ai_knowledge.actions.purchase_returns.atomic_transaction"), patch("ai_knowledge.actions.purchase_returns.audit"):
+        with (
+            patch("ai_knowledge.actions.purchase_returns.atomic_transaction"),
+            patch("ai_knowledge.actions.purchase_returns.audit"),
+        ):
             r = _create_purchase_return({"product_name": "Prod", "quantity": 1, "purchase_number": "P001"})
             assert r is not None
 
@@ -670,6 +687,7 @@ class TestQuotationsWave2:
         r = _advance_quotation({"quotation_number": "Q1", "target": "sent"})
         assert not r.success
 
+
 # Wave 5 remaining 7 to 100% (local only, not pushed)
 class TestWave5Remaining:
     def test_catalog_remaining(self, mocker):
@@ -686,6 +704,7 @@ class TestWave5Remaining:
 
     def test_purchase_returns_remaining(self, mocker):
         from ai_knowledge.actions.purchase_returns import _parse_purchase_return
+
         # hit 45 reason
         _, d = _parse_purchase_return("INV001, Prod, 2, reason text")
         assert d["reason"] == "reason text"
@@ -695,6 +714,7 @@ class TestWave5Remaining:
         mock_q = mocker.patch("models.Purchase.query")
         mock_q.filter_by.return_value.first.return_value = MagicMock(tenant_id=1)
         from ai_knowledge.actions.purchase_returns import _resolve_purchase
+
         assert _resolve_purchase(1, {"purchase_number": "INV001"}) is not None
         assert _resolve_purchase(1, {"purchase_number": ""}) is None
 
