@@ -106,11 +106,9 @@ def pricing():
 
 @public_bp.route("/features")
 def features():
-    """صفحة المميزات"""
+    """صفحة المميزات — قالب موحد i18n عبر t() و current_language"""
     lang = session.get("language", "ar")
-    if lang == "en":
-        return render_template("public/features_en.html")
-    return render_template("public/features.html")
+    return render_template("public/features.html", is_en=lang == "en")
 
 
 @public_bp.route("/user-guide")

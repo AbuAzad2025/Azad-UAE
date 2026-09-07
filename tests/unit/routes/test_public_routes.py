@@ -98,7 +98,7 @@ class TestPublicFeatures:
         with patch("routes.public.render_template", return_value="features") as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/features.html")
+        render.assert_called_once_with("public/features.html", is_en=False)
 
     def test_features_english_session(self, public_client):
         with public_client.session_transaction() as sess:
@@ -106,7 +106,7 @@ class TestPublicFeatures:
         with patch("routes.public.render_template", return_value="features-en") as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/features_en.html")
+        render.assert_called_once_with("public/features.html", is_en=True)
 
 
 class TestPublicUserGuide:
