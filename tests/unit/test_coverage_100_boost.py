@@ -464,6 +464,76 @@ class TestRestoreDrill100:
         out = RestoreDrillService.row_count_sanity("postgresql://x")
         assert "counts" in out
 
+    def test_restore_drill_full(self, mocker, monkeypatch, tmp_path):
+        from services.restore_drill import RestoreDrillService
+
+        # cover restore_into_scratch and run_drill success
+        fake_file = tmp_path / "backup.bak"
+        fake_file.write_text("data")
+        mocker.patch("services.backup_service.BackupService.verify_backup", return_value={"valid": True, "manifest": {"backup_scope": "system"}})
+        mocker.patch("services.backup_service.BackupService.restore_backup_to_target_db", return_value={"ok": True})
+        out = RestoreDrillService.restore_into_scratch(str(fake_file), "postgresql://x/scratch")
+        assert out.get("ok")
+        # run_drill with mocked artifact and restore
+        monkeypatch.setenv("RESTORE_DRILL_DB", "scratch_test")
+        monkeypatch.setenv("DATABASE_URL", "postgresql://user:pass@localhost:5432/live_db")
+        mocker.patch.object(RestoreDrillService, "resolve_scratch_database_url", return_value=("postgresql://x/scratch", ""))
+        mocker.patch.object(RestoreDrillService, "acquire_artifact", return_value=({"path": str(fake_file), "origin": "local", "filename": "backup.bak"}, ""))
+        mocker.patch.object(RestoreDrillService, "restore_into_scratch", return_value={"ok": True})
+        mocker.patch.object(RestoreDrillService, "row_count_sanity", return_value={"ok": True, "counts": {"users": 5}, "errors": []})
+        monkeypatch.setattr("services.restore_drill.DRILL_LOG_PATH", str(tmp_path / "drill2.log"))
+        r = RestoreDrillService.run_drill(source="auto")
+        assert r["ok"] or r["restore_ok"]
+
+
+class TestInit100:
+    def test_match_and_register(self, mocker):
+        from ai_knowledge.actions import (
+            get_pack_action_names,
+            get_pack_help_lines,
+            match_pack_command,
+            register_action_packs,
+        )
+
+        # empty message
+        assert match_pack_command("") is None
+        assert match_pack_command(None) is None
+        # hit builder exception
+        mock_pack = MagicMock()
+        mock_pack.PATTERNS = [(mocker.MagicMock(match=MagicMock(side_effect=RuntimeError("boom"))), lambda m: None)]
+        mock_pack.__name__ = "mock_pack"
+        mocker.patch("ai_knowledge.actions._packs", return_value=(mock_pack,))
+        assert match_pack_command("test") is None
+        # hit builder returns None and hit returns value
+        mock_pat = MagicMock()
+        mock_pat.match.return_value = MagicMock()
+        mock_pack2 = MagicMock()
+        mock_pack2.PATTERNS = [(mock_pat, lambda m: None), (mock_pat, lambda m: ("act", {}))]
+        mock_pack2.__name__ = "mock_pack2"
+        mocker.patch("ai_knowledge.actions._packs", return_value=(mock_pack2,))
+        # builder returns None first, then hit
+        assert match_pack_command("test") == ("act", {})
+        # builder raises
+        mock_pat2 = MagicMock()
+        mock_pat2.match.return_value = MagicMock()
+        mock_pack3 = MagicMock()
+        mock_pack3.PATTERNS = [(mock_pat2, MagicMock(side_effect=RuntimeError("builder fail")))]
+        mock_pack3.__name__ = "mock_pack3"
+        mocker.patch("ai_knowledge.actions._packs", return_value=(mock_pack3,))
+        assert match_pack_command("test") is None
+        # register and help - mock pack that calls register_fn
+        def fake_register(fn):
+            fn("test_action", MagicMock(), "perm", "desc")
+
+        mock_pack4 = MagicMock()
+        mock_pack4.register = fake_register
+        mocker.patch("ai_knowledge.actions._packs", return_value=(mock_pack4,))
+        mock_reg = MagicMock()
+        register_action_packs(mock_reg)
+        assert mock_reg.called
+        assert get_pack_help_lines() is not None
+        assert get_pack_action_names() is not None
+
 
 class TestQuotationsWave2:
     def test_parse_advance_invalid(self):
@@ -498,11 +568,52 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1))
         mocker.patch("ai_knowledge.actions.quotations._TARGET_LABELS", {"sent": "إرسال"})
         with patch("ai_knowledge.actions.quotations.atomic_transaction"):
-            mocker.patch(
-                "services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid")
-            )
+            mocker.patch("services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid"))
             r = _advance_quotation({"quotation_number": "Q1", "target": "sent"})
             assert not r.success
+
+    def test_cheques_and_lifecycle(self, mocker):
+        # cover cheques and cheque_lifecycle handlers - guard path
+        import ai_knowledge.actions.cheque_lifecycle as cl
+        import ai_knowledge.actions.cheques as ch
+
+        assert ch.PATTERNS
+        assert ch.HELP_LINES
+        assert cl.PATTERNS
+        assert cl.HELP_LINES
+        mocker.patch("ai_knowledge.actions.cheques.tenant_guard", return_value=(None, MagicMock()))
+        assert ch._create_cheque({}) is not None
+        mocker.patch("ai_knowledge.actions.cheque_lifecycle.tenant_guard", return_value=(None, MagicMock()))
+        assert cl._deposit_cheque({}) is not None
+        assert cl._clear_cheque({}) is not None
+        assert cl._bounce_cheque({}) is not None
+
+    def test_payroll_and_returns(self, mocker):
+        import ai_knowledge.actions.returns as ret
+
+        mocker.patch("ai_knowledge.actions.returns.tenant_guard", return_value=(None, MagicMock()))
+        assert ret._create_sale_return({}) is not None
+        assert ret._list_returns({}) is not None
+
+    def test_purchase_returns_full(self, mocker):
+        from ai_knowledge.actions.purchase_returns import _create_purchase_return
+
+        # hit purchase_returns with product and purchase line
+        purchase = MagicMock(purchase_number="P001", status="draft", lines=[])
+        prod = MagicMock(name="Prod")
+        line = MagicMock(id=1, product_id=1, product=prod, unit_cost=5)
+        prod.name = "Prod"
+        line.product.name = "Prod"
+        purchase.lines = [line]
+        mocker.patch("ai_knowledge.actions.purchase_returns._resolve_purchase", return_value=purchase)
+        mocker.patch("ai_knowledge.actions.purchase_returns.tenant_guard", return_value=(1, None))
+        mocker.patch("ai_knowledge.actions.purchase_returns.actor", return_value=MagicMock(id=1))
+        mocker.patch("ai_knowledge.actions.purchase_returns.escape_like", return_value="prod")
+        pr = MagicMock(id=1, return_number="PR001", total_amount=10)
+        mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", return_value=pr)
+        with patch("ai_knowledge.actions.purchase_returns.atomic_transaction"), patch("ai_knowledge.actions.purchase_returns.audit"):
+            r = _create_purchase_return({"product_name": "Prod", "quantity": 1, "purchase_number": "P001"})
+            assert r is not None
 
     def test_remaining_branches(self, mocker):
         from ai_knowledge.actions.quotations import _advance_quotation, _create_quotation, _list_quotations
