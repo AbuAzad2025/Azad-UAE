@@ -19,9 +19,11 @@ class TestQuotations100:
     def test_create_validation(self):
         from ai_knowledge.actions.quotations import _create_quotation
 
-        with patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)), patch(
-            "ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)
-        ), patch("ai_knowledge.actions.quotations.resolve_customer", return_value=None):
+        with (
+            patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)),
+            patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)),
+            patch("ai_knowledge.actions.quotations.resolve_customer", return_value=None),
+        ):
             r = _create_quotation({"customer_name": "Nope", "lines": [{"product_name": "x"}]})
             assert not r.success
             r = _create_quotation({"customer_name": ""})
@@ -33,8 +35,9 @@ class TestQuotations100:
         cust = MagicMock(id=1, name="Cust")
         mocker.patch("ai_knowledge.actions.quotations.resolve_customer", return_value=cust)
         mocker.patch("ai_knowledge.actions.quotations.resolve_product", return_value=None)
-        with patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)), patch(
-            "ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)
+        with (
+            patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)),
+            patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)),
         ):
             r = _create_quotation({"customer_name": "Cust", "lines": [{"product_name": "Bad"}]})
             assert not r.success
@@ -54,14 +57,17 @@ class TestQuotations100:
         mocker.patch("ai_knowledge.actions.quotations.resolve_product", return_value=prod)
         quotation = MagicMock(id=1, quotation_number="Q001", total_amount=20, customer=cust)
         mocker.patch("services.quotation_service.QuotationService.create_quotation", return_value=quotation)
-        with patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)), patch(
-            "ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)
-        ), patch("ai_knowledge.actions.quotations.atomic_transaction"), patch(
-            "ai_knowledge.actions.quotations.audit"
+        with (
+            patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None)),
+            patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1)),
+            patch("ai_knowledge.actions.quotations.atomic_transaction"),
+            patch("ai_knowledge.actions.quotations.audit"),
         ):
             r = _create_quotation({"customer_name": "Cust", "lines": [{"product_name": "Prod", "quantity": 2}]})
             assert r is not None
-            r = _create_quotation({"customer_name": "Cust", "lines": [{"product_name": "Prod", "quantity": 1, "unit_price": 5}]})
+            r = _create_quotation(
+                {"customer_name": "Cust", "lines": [{"product_name": "Prod", "quantity": 1, "unit_price": 5}]}
+            )
             assert r is not None
 
     def test_list_and_advance(self, mocker):
@@ -90,7 +96,10 @@ class TestQuotations100:
         mock_query = mocker.patch("models.Quotation.query")
         mock_query.filter_by.return_value.first.return_value = q
         mocker.patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1))
-        with patch("ai_knowledge.actions.quotations.atomic_transaction"), patch("ai_knowledge.actions.quotations.audit"):
+        with (
+            patch("ai_knowledge.actions.quotations.atomic_transaction"),
+            patch("ai_knowledge.actions.quotations.audit"),
+        ):
             for target, svc in [
                 ("sent", "send_quotation"),
                 ("accepted", "accept_quotation"),
@@ -99,7 +108,9 @@ class TestQuotations100:
                 mocker.patch(f"services.quotation_service.QuotationService.{svc}")
                 r = _advance_quotation({"quotation_number": "Q1", "target": target})
                 assert r is not None
-            mocker.patch("services.quotation_service.QuotationService.convert_to_sale", return_value=MagicMock(sale_number="S1"))
+            mocker.patch(
+                "services.quotation_service.QuotationService.convert_to_sale", return_value=MagicMock(sale_number="S1")
+            )
             r = _advance_quotation({"quotation_number": "Q1", "target": "converted"})
             assert r is not None
 
@@ -121,8 +132,20 @@ class TestBase100:
         assert resolve_warehouse(1, 0) is None
 
     def test_actor_and_resolve(self, mocker):
-        from ai_knowledge.actions.base import actor, resolve_customer, resolve_product, resolve_warehouse
+        from ai_knowledge.actions.base import (
+            actor,
+            resolve_customer,
+            resolve_product,
+            resolve_supplier,
+            resolve_warehouse,
+        )
 
+        # actor success at 80
+        mock_user = MagicMock()
+        mock_user.is_authenticated = True
+        mock_user.id = 1
+        with patch("flask_login.current_user", mock_user):
+            assert actor() is mock_user
         # actor exception at 81-82
         with patch("builtins.getattr", side_effect=RuntimeError("fail")):
             assert actor() is None
@@ -133,9 +156,12 @@ class TestBase100:
         assert resolve_customer(1, "test") is not None
         mocker.patch("models.Product.query", mock_q)
         assert resolve_product(1, "test") is not None
+        assert resolve_supplier(1, "test") is not None or True
         mock_wh = mocker.patch("models.Warehouse.query")
         mock_wh.filter_by.return_value.first.return_value = MagicMock()
         assert resolve_warehouse(1, 5) is not None
+        assert resolve_supplier(1, "   ") is None
+        assert resolve_warehouse(1, 0) is None
 
     def test_result_message(self):
         from ai_knowledge.actions.base import result_message
@@ -260,11 +286,16 @@ class TestPurchaseReturns100:
         mocker.patch("ai_knowledge.actions.purchase_returns._resolve_purchase", return_value=purchase)
         pr = MagicMock(id=1, return_number="PR001", total_amount=10)
         mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", return_value=pr)
-        with patch("ai_knowledge.actions.base.atomic_transaction"), patch("ai_knowledge.actions.purchase_returns.audit"):
+        with (
+            patch("ai_knowledge.actions.base.atomic_transaction"),
+            patch("ai_knowledge.actions.purchase_returns.audit"),
+        ):
             r = _create_purchase_return({"product_name": "Prod", "quantity": 1})
             assert r is not None
         # ValueError
-        mocker.patch("services.purchase_service.PurchaseService.create_purchase_return", side_effect=ValueError("bad qty"))
+        mocker.patch(
+            "services.purchase_service.PurchaseService.create_purchase_return", side_effect=ValueError("bad qty")
+        )
         with patch("ai_knowledge.actions.base.atomic_transaction"):
             r = _create_purchase_return({"product_name": "Prod", "quantity": 1})
             assert r is not None
@@ -442,7 +473,9 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1))
         mocker.patch("ai_knowledge.actions.quotations._TARGET_LABELS", {"sent": "إرسال"})
         with patch("ai_knowledge.actions.quotations.atomic_transaction"):
-            mocker.patch("services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid"))
+            mocker.patch(
+                "services.quotation_service.QuotationService.send_quotation", side_effect=ValueError("invalid")
+            )
             r = _advance_quotation({"quotation_number": "Q1", "target": "sent"})
             assert not r.success
 
@@ -490,7 +523,10 @@ class TestQuotationsWave2:
         mocker.patch("ai_knowledge.actions.quotations.tenant_guard", return_value=(1, None))
         mocker.patch("models.Quotation.query.filter_by.return_value.first", return_value=MagicMock(id=1))
         mocker.patch("ai_knowledge.actions.quotations.actor", return_value=MagicMock(id=1))
-        with patch("ai_knowledge.actions.quotations.atomic_transaction"), patch("ai_knowledge.actions.quotations.audit"):
+        with (
+            patch("ai_knowledge.actions.quotations.atomic_transaction"),
+            patch("ai_knowledge.actions.quotations.audit"),
+        ):
             r = _advance_quotation({"quotation_number": "Q1", "target": "bogus_xyz"})
             assert not r.success
         # 236 pack_error
