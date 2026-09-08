@@ -86,17 +86,10 @@ body.pos-layout .erp-mobile-nav {
 }
 
 .pos-app {
-	font-family: 'Tajawal', 'Noto Sans Arabic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+	font-family: Tajawal, "Noto Sans Arabic", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 	background: var(--pos-bg);
 	color: var(--pos-text);
 	font-size: 16px;
-	font-family:
-
-		system-ui,
-		-apple-system,
-		"Segoe UI",
-		Roboto,
-		sans-serif;
 	min-height: 100vh;
 	padding: 16px;
 	box-sizing: border-box;
