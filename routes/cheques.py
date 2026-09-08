@@ -621,6 +621,7 @@ def bounce_cheque(**kwargs):
 @cheques_bp.route("/<int:id>/cancel", methods=["POST"])
 @login_required
 @admin_required
+@permission_required("manage_payments")
 def cancel(**kwargs):
     """إلغاء الشيك"""
     record_id = kwargs.pop("id")
@@ -653,6 +654,7 @@ def cancel(**kwargs):
 @cheques_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
+@permission_required("manage_payments")
 def delete(**kwargs):
     """حذف (أرشفة) الشيك"""
     record_id = kwargs.pop("id")
@@ -718,6 +720,7 @@ def delete(**kwargs):
 @cheques_bp.route("/<int:id>/restore", methods=["POST"])
 @login_required
 @admin_required
+@permission_required("manage_payments")
 def restore(**kwargs):
     """استعادة شيك من الأرشيف"""
     record_id = kwargs.pop("id")
@@ -767,6 +770,7 @@ def alerts():
 @cheques_bp.route("/archived")
 @login_required
 @admin_required
+@permission_required("manage_payments")
 def archived():
     """الشيكات المؤرشفة"""
     page = request.args.get("page", 1, type=int)

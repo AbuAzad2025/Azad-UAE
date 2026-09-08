@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 from extensions import limiter
 from services.graphql_service import build_schema
 from utils.api_response import error_response, success_response
+from utils.decorators import admin_required, permission_required
 
 graphql_bp = Blueprint("graphql", __name__, url_prefix="/graphql")
 
@@ -60,6 +61,7 @@ def _is_introspection_query(query: str) -> bool:
 @graphql_bp.route("", methods=["POST"])
 @login_required
 @limiter.limit("60 per minute")
+@permission_required("view_reports")
 def graphql_query():
     data = request.get_json(silent=True) or {}
 
@@ -116,6 +118,8 @@ def graphql_query():
 
 @graphql_bp.route("/playground", methods=["GET"])
 @login_required
+@admin_required
+@permission_required("admin")
 def graphql_playground():
     if not _mutations_allowed():
         abort(404)

@@ -27,7 +27,7 @@ from utils.branching import (
 )
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
-from utils.decorators import enforce_resource_limit, permission_required
+from utils.decorators import enforce_resource_limit, owner_required, permission_required
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
@@ -590,6 +590,7 @@ def archived():
 @sales_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @permission_required("manage_sales")
+@owner_required
 def delete(**kwargs):
     """حذف (أرشفة) فاتورة مبيعات — يُسمح فقط للحذف المادي للفواتير غير المُرحلة (draft/pending)"""
     record_id = kwargs.pop("id")

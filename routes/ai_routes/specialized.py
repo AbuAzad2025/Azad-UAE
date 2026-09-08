@@ -114,6 +114,7 @@ def ask_genius():
 @ai_bp.route("/quick-calc", methods=["POST"])
 @login_required
 @limiter.limit("30 per minute")
+@permission_required("view_reports")
 def quick_calc():
     """⚡ API: حسابات سريعة — whitelist formulas only; no DB, files, or external calls."""
     try:
@@ -144,6 +145,7 @@ def quick_calc():
 @ai_bp.route("/transformers-understand", methods=["POST"])
 @login_required
 @limiter.limit("30 per minute")
+@permission_required("view_reports")
 def transformers_understand():
     """🤖 API: فهم بالـ Transformers — local in-memory only; no DB, files, or ERP actions."""
     try:

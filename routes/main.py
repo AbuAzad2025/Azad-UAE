@@ -19,7 +19,7 @@ from services.stock_service import StockService
 from utils.api_response import success_response
 from utils.branching import get_visible_products_query
 from utils.db_safety import atomic_transaction
-from utils.decorators import branch_scope_id
+from utils.decorators import branch_scope_id, permission_required
 from utils.gl_tenant import get_gl_account_by_code
 from utils.tenanting import get_active_tenant_id
 
@@ -174,6 +174,7 @@ def api_dashboard_sales_trend():
 
 @main_bp.route("/dashboard/api/charts/cash-position")
 @login_required
+@permission_required("view_reports")
 def api_dashboard_cash_position():
     """Cash vs bank GL liquidity balances (cost-visible users only)."""
     data = {}
@@ -191,6 +192,7 @@ def api_dashboard_cash_position():
 
 @main_bp.route("/dashboard/api/charts/top-customers")
 @login_required
+@permission_required("manage_customers")
 def api_dashboard_top_customers():
     """Top customers by revenue over the last N days (default 30)."""
     days = request.args.get("days", 30, type=int)
@@ -210,6 +212,7 @@ def api_dashboard_top_customers():
 
 @main_bp.route("/dashboard/api/charts/stock-alerts")
 @login_required
+@permission_required("manage_warehouse")
 def api_dashboard_stock_alerts():
     """Low/out-of-stock product summary for the alerts widget."""
     limit = min(max(request.args.get("limit", 10, type=int), 1), 25)

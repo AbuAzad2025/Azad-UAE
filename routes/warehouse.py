@@ -25,7 +25,11 @@ from utils.branching import (
     should_show_all_branch_columns,
 )
 from utils.db_safety import atomic_transaction
-from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.decorators import (
+    admin_required,
+    branch_scope_id,
+    permission_required,
+)
 from utils.error_messages import ErrorMessages
 from utils.structured_logging import log_mutation
 from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_get_or_404
@@ -229,6 +233,7 @@ def view_warehouse(**kwargs):
 @warehouse_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @admin_required
+@permission_required("manage_warehouse")
 def edit_warehouse(**kwargs):
     record_id = kwargs.pop("id")
     warehouse = tenant_get_or_404(Warehouse, record_id)
@@ -298,6 +303,7 @@ def edit_warehouse(**kwargs):
 @warehouse_bp.route("/create-warehouse", methods=["GET", "POST"])
 @login_required
 @admin_required
+@permission_required("manage_warehouse")
 def create_warehouse():
     tid = get_active_tenant_id(current_user)
     parent_warehouses = StockService.list_parent_warehouses(tid)
@@ -470,6 +476,7 @@ def list_warehouses():
 @warehouse_bp.route("/<int:id>/delete", methods=["POST"])
 @login_required
 @admin_required
+@permission_required("manage_warehouse")
 def delete_warehouse(**kwargs):
     """حذف مستودع"""
     record_id = kwargs.pop("id")

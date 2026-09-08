@@ -275,6 +275,7 @@ def payment_fields(payment_method):
 
 @api_bp.route("/currency-rate/<from_currency>/<to_currency>")
 @login_required
+@permission_required("view_reports")
 def currency_rate(from_currency, to_currency):
     from services.currency_service import CurrencyService
 
@@ -835,6 +836,7 @@ def _query_products(warehouse_id=None):
 
 @api_bp.route("/warehouses")
 @login_required
+@permission_required("view_reports")
 def api_warehouses():
     return success_response(data={"results": _query_accessible_warehouses()})
 
@@ -849,12 +851,14 @@ def api_products():
 
 @api_bp.route("/search_warehouses")
 @login_required
+@permission_required("view_reports")
 def api_search_warehouses():
     return success_response(data={"results": _query_accessible_warehouses()})
 
 
 @api_bp.route("/warehouses/<int:wid>/products")
 @login_required
+@permission_required("view_reports")
 def api_warehouse_products(wid):
     """منتجات مستودع محدد (Select2)"""
     return success_response(data={"results": _query_products(wid)})
@@ -862,6 +866,7 @@ def api_warehouse_products(wid):
 
 @api_bp.route("/products/<int:pid>/info")
 @login_required
+@permission_required("view_reports")
 def api_product_info(pid):
     """معلومات منتج (سعر، مخزون)"""
     product = PlatformQueryService.product_for_info(pid, current_user)
@@ -901,6 +906,7 @@ def api_product_info(pid):
 
 @api_bp.route("/products/barcode/<code>")
 @login_required
+@permission_required("view_reports")
 def api_product_by_barcode(code):
     """البحث عن منتج بواسطة الباركود"""
     product = PlatformQueryService.find_product_by_barcode(code, current_user)
@@ -921,6 +927,7 @@ def api_product_by_barcode(code):
 
 @api_bp.route("/barcode/validate")
 @login_required
+@permission_required("view_reports")
 def api_barcode_validate():
     """التحقق من صلاحية الباركود"""
     code = request.args.get("code", "").strip()

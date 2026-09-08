@@ -1181,8 +1181,16 @@ def api_toggle_warehouse_negative():
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
 @login_required
+@owner_or_company_admin
 def api_supervisor_override():
-    """Verify supervisor credentials for cashier override actions."""
+    """Verify supervisor credentials for cashier override actions.
+
+    Defense-in-depth: the decorator stack enforces platform owner OR
+    company admin, and the body re-verifies that the supplied
+    ``supervisor_id`` user exists, is active, and has the manager /
+    admin role. Audit log stores (supervisor_id, action, cashier_id,
+    tenant_id) for every override.
+    """
     if not request.is_json:
         return error_response(message="JSON required", status_code=400)
     try:

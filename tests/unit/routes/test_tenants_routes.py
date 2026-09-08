@@ -10,9 +10,12 @@ from tests.unit.routes.conftest import (
 
 
 @pytest.fixture
-def tenants_client(app_factory, bypass_admin_auth):
+def tenants_client(app_factory, bypass_owner_auth):
     from routes.tenants import tenants_bp
 
+    # Tenant context switch is platform-owner only after the RBAC audit
+    # fix; ``bypass_owner_auth`` patches ``is_global_owner_user`` so the
+    # new ``@owner_required`` decorator lets the request reach the body.
     app = app_factory(tenants_bp)
     return app.test_client()
 
