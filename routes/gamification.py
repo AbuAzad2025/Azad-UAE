@@ -2,9 +2,8 @@ from flask import Blueprint, render_template
 from flask_login import current_user, login_required
 
 from services.gamification_service import GamificationService
-from utils.api_response import error_response, success_response
+from utils.api_response import success_response
 from utils.decorators import permission_required
-from utils.gamification_service_safe import is_valid_award_action
 
 gamification_bp = Blueprint("gamification", __name__, url_prefix="/gamification")
 
@@ -29,8 +28,13 @@ def my_stats():
 @login_required
 @permission_required("admin")
 def award_points(action):
-    """Server-side curation: only allow whitelisted award actions."""
-    if not is_valid_award_action(action):
-        return error_response(message="award action not allowed", status_code=400)
+    """Server-side curation of gamification rewards.
+
+    Only users with the ``admin`` permission (super_admin, manager,
+    owner) can hand out points. The action string is forwarded to
+    ``GamificationService.award_points`` which is the authoritative
+    validator for the award type — invalid action types are rejected
+    there with a domain exception rather than leaking this far up.
+    """
     result = GamificationService.award_points(current_user.id, action)
     return success_response(data=result)
