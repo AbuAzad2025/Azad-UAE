@@ -689,7 +689,7 @@ def _session_is_polluted(session_obj):
 
 
 def _resync_service_db_bindings():
-    """Rebind services.*.db (and extensions.db) to the pristine instance.
+    """Rebind services.*.db, routes.*.db (and extensions.db) to the pristine instance.
 
     Never ``importlib.reload(extensions)``: reloading fabricates a second
     SQLAlchemy instance that is registered with no Flask app, and rebinding
@@ -697,7 +697,7 @@ def _resync_service_db_bindings():
     the DB ("current Flask app is not registered with this 'SQLAlchemy'
     instance" — seen as suite-wide auth 500s under full-directory runs).
 
-    Two recovery cases handled here:
+    Three recovery cases handled here:
     * ``extensions.db`` reads as a mock — either a patch started in fixture
       setup is still active during autouse teardown (its own patcher will
       also restore, harmlessly), or a nested-patch interleave wrote back a
@@ -707,6 +707,10 @@ def _resync_service_db_bindings():
       ``extensions.db is db`` at every test boundary.
     * a ``services.*`` module's ``db`` drifted from the pristine instance
       (e.g. bound under a mock or a stale reload) — rebind it.
+    * a ``routes.*`` module's ``db`` drifted the same way (e.g.
+      ``routes.owner.tenants.db`` left as a MagicMock by an interleaved
+      ``mocker.patch`` in owner-route fixtures, which silently turns later
+      ``db.session.commit`` failure-path tests into false 200s) — rebind it.
     """
     import sys
     from unittest.mock import MagicMock, NonCallableMock
@@ -721,7 +725,7 @@ def _resync_service_db_bindings():
         ext_mod.db = real_db
 
     for mod_name, mod in list(sys.modules.items()):
-        if not mod_name.startswith("services."):
+        if not (mod_name.startswith("services.") or mod_name.startswith("routes.")):
             continue
         if mod is None or not hasattr(mod, "db"):
             continue
