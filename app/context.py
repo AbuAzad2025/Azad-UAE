@@ -69,6 +69,25 @@ def register_context_processors(app):
 
     app.jinja_env.filters.setdefault("sanitize", _sanitize_rich)
 
+    # "PlanLimit" filter: render a tenant max_* value as the human symbol.
+    #   -1 or "unlimited" -> "∞"
+    #   None or 0         -> "—" (no limit set / not applicable)
+    #   positive int      -> the value itself
+    def _plan_limit(value):
+        if value is None:
+            return "—"
+        try:
+            v = int(value)
+        except (TypeError, ValueError):
+            return "—"
+        if v == -1:
+            return "∞"
+        if v <= 0:
+            return "—"
+        return str(v)
+
+    app.jinja_env.filters.setdefault("plan_limit", _plan_limit)
+
     @app.context_processor
     def inject_has_endpoint():
         return {"has_endpoint": lambda endpoint: endpoint in current_app.view_functions}

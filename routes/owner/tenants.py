@@ -150,7 +150,13 @@ def tenant_store_platform_toggle(store_id):
 def tenants_list():
     from services.tenant_service import TenantService
 
-    context = TenantService.get_tenants_list_context()
+    sort = (request.args.get("sort") or "created_at").lower()
+    order = (request.args.get("order") or "desc").lower()
+    q = (request.args.get("q") or "").strip()
+
+    context = TenantService.get_tenants_list_context(
+        sort=sort, order=order, search=q
+    )
     return render_template(
         "owner/tenants_list.html",
         tenants=context["tenants"],
@@ -291,10 +297,9 @@ def tenant_suspend(tenant_id):
     tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
     reason = request.form.get("reason", "").strip()
 
-    # Protect default tenant (id==1) from suspension
-    if tenant.id == 1:
-        flash(gettext("⚠️ لا يمكن تعليق التينانت الرئيسي."), "danger")
-        return redirect(url_for("owner.tenants_list"))
+    # Owner can suspend any tenant — the numeric id=1 block was a stale
+    # "default tenant" guard that ended up blocking the operator from
+    # touching the first row inserted, regardless of what it is.
 
     try:
         with atomic_transaction("tenant_suspend"):
@@ -427,10 +432,9 @@ def tenant_delete(tenant_id):
     """Soft-delete a tenant (mark as inactive, do not purge)."""
     tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
 
-    # Protect default tenant (id==1) from deletion
-    if tenant.id == 1:
-        flash(gettext("⚠️ لا يمكن حذف التينانت الرئيسي."), "danger")
-        return redirect(url_for("owner.tenants_list"))
+    # Owner has full control over tenants; the historical "id==1 is sacred"
+    # guard only made sense when the platform kept an Azad-default tenant
+    # at that id, which we no longer do (the platform vault is tenant-less).
 
     # Check for active users
     active_users = OwnerOpsService.count_tenant_active_users(tenant_id)
@@ -466,11 +470,6 @@ def api_tenant_toggle_status(tenant_id):
         tenant = OwnerOpsService.get_tenant(tenant_id)
         if not tenant:
             return error_response(message="Tenant not found", status_code=404)
-        if tenant.id == 1:
-            return error_response(
-                message=gettext("لا يمكن تعطيل التينانت الرئيسي"),
-                status_code=400,
-            )
         with atomic_transaction("api_tenant_toggle_status"):
             tenant.is_active = not tenant.is_active
             tenant.is_suspended = not tenant.is_active
