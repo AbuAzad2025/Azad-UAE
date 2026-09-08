@@ -235,6 +235,9 @@
                   <a href="{{ url_for('owner.tenant_edit', tenant_id=tenant.id) }}" class="btn btn-outline-primary">
                     <i class="bi bi-pencil"></i> {{ t('Edit') }}
                   </a>
+                  <a href="{{ url_for('tenants.switch', tenant_id=tenant.id, next=url_for('branches.create')) }}" class="btn btn-outline-info" title="{{ t('Add_Branch') }}">
+                    <i class="bi bi-diagram-3"></i> {{ t('Branch') }}+
+                  </a>
 
                   {% if tenant.is_active and not tenant.is_suspended %}
                   <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#suspendModal{{ tenant.id }}">

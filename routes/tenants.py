@@ -6,7 +6,7 @@ from extensions import db
 from models.tenant import Tenant
 from utils.branching import clear_active_branch
 from utils.decorators import owner_required
-from utils.safe_redirect import safe_redirect_target
+from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
 from utils.tenanting import is_global_tenant_user, set_active_tenant
 
 tenants_bp = Blueprint("tenants", __name__, url_prefix="/tenants")
@@ -54,4 +54,7 @@ def switch(tenant_id):
         gettext(f"تم التبديل إلى: {target_tenant.name_ar or target_tenant.name}"),
         "success",
     )
+    next_url = request.args.get("next") or request.form.get("next")
+    if next_url and is_safe_redirect_url(next_url):
+        return redirect(next_url)
     return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
