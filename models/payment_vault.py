@@ -238,7 +238,7 @@ class PaymentLog(db.Model):
     tenant_id = db.Column(
         db.Integer,
         db.ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 

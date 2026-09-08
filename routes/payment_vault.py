@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlparse
 
-from flask import Blueprint, flash, g, redirect, render_template, request, url_for
+from flask import Blueprint, flash, g, jsonify, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user
 
@@ -883,6 +883,13 @@ def reports():
 def lock_vault():
     """قفل الخزينة"""
     vault = _get_vault_for_current_tenant()
+
+    wants_json = (
+        request.is_json
+        or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        or request.headers.get("Accept", "").lower().startswith("application/json")
+    )
+
     if vault:
         vault.lock_vault()
 
@@ -897,7 +904,20 @@ def lock_vault():
 
         flash(gettext("✅ تم قفل الخزينة السرية بنجاح!"), "success")
 
-    return redirect(url_for("payment_vault.index"))
+        if wants_json:
+            return jsonify(
+                {
+                    "success": True,
+                    "vault_locked": True,
+                    "redirect": url_for("payment_vault.unlock_vault"),
+                }
+            ), 200
+    else:
+        if wants_json:
+            return jsonify({"success": False, "error": "no vault"}), 404
+        flash(gettext("❌ لا توجد خزينة لإغلاقها"), "warning")
+
+    return redirect(url_for("payment_vault.unlock_vault"))
 
 
 @payment_vault_bp.route("/cards")

@@ -413,14 +413,14 @@
                 'X-CSRFToken': '{{ csrf_token() }}',
                 'Content-Type': 'application/json'
             }
-        }).then(r => r.json()).then(data => {
-            if (data.success) {
-                location.reload();
+        }).then(r => r.json().catch(() => ({}))).then(data => {
+            if (data && data.success) {
+                window.location.href = data.redirect || '{{ url_for("payment_vault.unlock_vault") }}';
             } else {
-                Swal.fire('{{ _("Error") }}', data.error || '{{ _("Failed to lock vault") }}', 'error');
+                window.location.href = '{{ url_for("payment_vault.unlock_vault") }}';
             }
         }).catch(() => {
-            Swal.fire('{{ _("Error") }}', '{{ _("Network error") }}', 'error');
+            window.location.href = '{{ url_for("payment_vault.unlock_vault") }}';
         });
     }
     
