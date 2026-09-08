@@ -398,3 +398,16 @@ class TestLandlordDashboardContext:
         assert OwnerOpsService.get_tenant(999999999) is None
         assert OwnerOpsService.get_package(pkg.id).id == pkg.id
         assert OwnerOpsService.get_package(999999999) is None
+
+    # ── cover missing branches in login_history / users / card stats (82->84, 111->113, 184->187, 195->197) ──
+    def test_login_history_with_none_filters(self, db_session, sample_tenant, sample_user):
+        from models.login_history import LoginHistory
+        mine = LoginHistory(user_id=sample_user.id, username=sample_user.username, success=True)
+        db_session.add(mine)
+        db_session.flush()
+        # user_filter=None + tid=None branch (line 84->86 / 98->100)
+        page_none = OwnerOpsService.login_history_pagination(1, None, None, None)
+        assert isinstance(page_none.items, list)
+        # user_filter="true" branch (line 111->113 join/filter)
+        page_true = OwnerOpsService.login_history_pagination(1, sample_tenant.id, sample_user.id, "true")
+        assert mine in page_true.items
