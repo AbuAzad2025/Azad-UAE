@@ -4,7 +4,6 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models.tenant import Tenant
-from utils.auth_helpers import is_global_owner_user
 from utils.branching import clear_active_branch
 from utils.decorators import owner_required
 from utils.safe_redirect import safe_redirect_target
