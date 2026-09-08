@@ -805,6 +805,25 @@ def auto_cleanup_isolation(app):
         except Exception:
             pass
 
+    def _scrub_flask_g():
+        """Clear flask.g (the app-context global proxy) between tests.
+
+        The session-scoped ``app`` fixture keeps a single app context alive
+        across the whole pytest run, so attributes set on ``flask.g`` by one
+        test (e.g. ``g.active_tenant_id = 5``) leak into every subsequent
+        test. Reach the current app context via the underlying ContextVar so
+        we wipe the OUTER context's globals dict rather than a freshly
+        pushed nested one.
+        """
+        try:
+            import flask as _flask
+
+            _ctx = _flask.globals._cv_app.get(None)
+            if _ctx is not None:
+                _ctx.g.__dict__.clear()
+        except Exception:
+            pass
+
     def _restore_app_logger():
         import logging
 
@@ -814,6 +833,7 @@ def auto_cleanup_isolation(app):
                 app.logger = logging.getLogger(app.import_name)
 
     _scrub_db()
+    _scrub_flask_g()
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
     _resync_service_db_bindings()
@@ -821,6 +841,7 @@ def auto_cleanup_isolation(app):
     yield
     _scrub_db()
     _scrub_flask_session()
+    _scrub_flask_g()
     _restore_app_logger()
     _restore_polluted_model_queries()
     _resync_service_model_bindings()
