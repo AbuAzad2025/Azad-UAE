@@ -330,6 +330,8 @@ def unlock_vault():
 
         vault = _get_vault_for_current_tenant()
         if not vault:
+            from utils.tenanting import without_tenant_scope
+
             vault = PaymentVault()
             vault.tenant_id = None
             vault.set_vault_password(password)
@@ -337,7 +339,9 @@ def unlock_vault():
             vault.nowpayments_ipn_secret = ""
             vault.bitcoin_address = ""
             vault.is_locked = False
-            with atomic_transaction("vault_creation"):
+            # The platform vault is tenant-less: bypass the ORM auto-stamp
+            # or the row would inherit the session's active tenant.
+            with without_tenant_scope(), atomic_transaction("vault_creation"):
                 db.session.add(vault)
 
             PaymentLog.log_action(
@@ -414,6 +418,29 @@ def dashboard():
     daily_stats = AnalyticsService.get_daily_stats()
     stats.update(daily_stats)
 
+    # Platform treasury split: accounting-accrued vs owner-confirmed collected.
+    from decimal import Decimal as _D
+
+    from models import AzadPlatformFee
+    from utils.tenanting import without_tenant_scope
+
+    with without_tenant_scope():
+        _fees = AzadPlatformFee.query.all()
+    _accrued = [_D(str(f.fee_amount_aed or 0)) for f in _fees if f.status == "accrued"]
+    _collected = [_D(str(f.fee_amount_aed or 0)) for f in _fees if f.status == "paid"]
+    _don_completed = [d for d in donation_list if d.status == "completed"]
+    _don_pending = [d for d in donation_list if d.status in ("pending", "confirmed")]
+    vault_money = {
+        "fees_accrued_count": len(_accrued),
+        "fees_accrued_total": float(sum(_accrued, _D("0"))),
+        "fees_collected_count": len(_collected),
+        "fees_collected_total": float(sum(_collected, _D("0"))),
+        "donations_pending_count": len(_don_pending),
+        "donations_pending_total": sum(float(d.amount_usd or 0) for d in _don_pending),
+        "donations_collected_count": len(_don_completed),
+        "donations_collected_total": sum(float(d.amount_usd or 0) for d in _don_completed),
+    }
+
     security_status = SecurityService.get_security_status()
 
     recent_purchases = VaultQueryService.recent_platform_records(tid=tid, transaction_type="purchase", limit=5)
@@ -454,6 +481,7 @@ def dashboard():
         "payment_vault/dashboard.html",
         vault=vault,
         stats=stats,
+        vault_money=vault_money,
         security_status=security_status,
         recent_purchases=recent_purchases,
         recent_donations=recent_donations,
@@ -1602,6 +1630,9 @@ def approve_donation(donation_id):
         from services.donation_gl_service import DonationGLService
 
         DonationGLService.post_completed_donation(donation)
+        # Platform (tenant-less) donations belong to the Azad treasury:
+        # owner approval confirms receipt, so write vault evidence.
+        DonationGLService.record_platform_receipt(donation)
         with atomic_transaction("donation_approve"):
             LoggingCore.log_audit(
                 action=f"donation_approved: ${donation.amount_usd}",
@@ -1639,6 +1670,64 @@ def reject_donation(donation_id):
         flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
+
+
+@payment_vault_bp.route("/platform-fees/confirm", methods=["POST"])
+@owner_only
+def confirm_platform_fees():
+    """تأكيد المالك استلام عمولات المنصة (المقبوض فعلياً).
+
+    Accepts fee_ids as JSON list or form fields. Accounting already accrued
+    these fees at sale time; this step records the owner's confirmation of
+    real-world receipt into the platform vault ledger (status paid +
+    collected_at/confirmed_by + vault PaymentTransaction).
+    """
+    vault = _get_vault_for_current_tenant()
+    if not vault or vault.is_locked:
+        flash(gettext("❌ يجب فتح الخزينة أولاً"), "warning")
+        return redirect(url_for("payment_vault.unlock_vault"))
+
+    if request.is_json:
+        payload = request.get_json(silent=True) or {}
+        raw_ids = payload.get("fee_ids", [])
+    else:
+        raw_ids = request.form.getlist("fee_ids") or ([request.form.get("fee_id")] if request.form.get("fee_id") else [])
+    try:
+        fee_ids = [int(v) for v in raw_ids if str(v).strip().isdigit()]
+    except (TypeError, ValueError):
+        fee_ids = []
+    if not fee_ids:
+        flash(gettext("❌ لم يتم اختيار أي عمولة."), "warning")
+        return redirect(url_for("payment_vault.dashboard"))
+
+    wants_json = request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest"
+    try:
+        from services.azad_platform_fee_service import AzadPlatformFeeService
+
+        result = AzadPlatformFeeService.confirm_settlement_paid(
+            fee_ids, confirmed_by=getattr(current_user, "id", None)
+        )
+        PaymentLog.log_action(
+            vault_id=vault.id,
+            action="platform_fees_collected",
+            description=gettext(f"تأكيد استلام {result['count']} عمولة ({result['total_aed']} AED)"),
+            level="info",
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get("User-Agent"),
+        )
+        flash(
+            gettext(f"✅ تم تأكيد استلام {result['count']} عمولة ({result['total_aed']} AED)"),
+            "success",
+        )
+        if wants_json:
+            return jsonify({"success": True, **{k: str(v) for k, v in result.items()}}), 200
+    except Exception as e:
+        logger.exception("Platform fee collection confirm failed")
+        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        if wants_json:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    return redirect(url_for("payment_vault.dashboard"))
 
 
 @payment_vault_bp.route("/donation/<int:donation_id>/send-thank-you", methods=["POST"])

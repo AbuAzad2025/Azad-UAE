@@ -344,7 +344,10 @@ class AnalyticsService:
         tid = tenant_id or get_active_tenant_id()
 
         query = _db_session().query(models.Package).filter_by(is_active=True)
-        if tid:
+        # Package plans are platform-global (no tenant_id column); only the
+        # purchases carry a tenant scope. Guard with hasattr so an active
+        # tenant session cannot crash the vault dashboard.
+        if tid and hasattr(models.Package, "tenant_id"):
             query = query.filter_by(tenant_id=tid)
         packages = query.all()
 

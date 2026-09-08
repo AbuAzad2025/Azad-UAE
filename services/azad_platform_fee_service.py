@@ -274,18 +274,23 @@ class AzadPlatformFeeService:
         return results
 
     @staticmethod
-    def confirm_settlement_paid(fee_ids):
+    def confirm_settlement_paid(fee_ids, confirmed_by=None):
         """Mark settled platform fees as paid and record platform-side vault evidence.
 
-        Creates PaymentTransaction records in the platform vault as evidence
-        of real-world receipt.  Sets fee.status = 'paid' for each fee.
+        Creates one PaymentTransaction in the platform vault (tenant-less) as
+        evidence of real-world receipt and stamps each fee with the collector.
+        Idempotent per fee: fees already marked paid are skipped by the
+        settled-only filter above.
 
         Args:
             fee_ids: single fee ID or list of fee IDs.
+            confirmed_by: platform-owner user id confirming receipt (optional).
 
         Returns:
             dict with transaction_id, count, total_aed.
         """
+        from datetime import datetime
+
         from utils.helpers import generate_number
 
         if isinstance(fee_ids, int):
@@ -304,6 +309,7 @@ class AzadPlatformFeeService:
             raise ValueError("Total payout amount is zero.")
         txn_id = f"PLATFORM-SETTLE-{generate_number('SETT', PaymentTransaction, 'transaction_id')}"
         txn = PaymentTransaction(
+            tenant_id=None,
             transaction_id=txn_id,
             amount_usd=total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
             amount_crypto=0,
@@ -312,10 +318,17 @@ class AzadPlatformFeeService:
             payment_method="bank",
             customer_name="Azad Platform Settlements",
         )
+        from utils.tenanting import without_tenant_scope
+
         vault.transactions.append(txn)
+        collected_at = datetime.now(UTC)
         for fee in fees:
             fee.status = "paid"
-        with atomic_transaction("confirm_settlement_paid"):
+            fee.collected_at = collected_at
+            fee.confirmed_by = confirmed_by
+        # The vault receipt is tenant-less: bypass the ORM auto-stamp or
+        # the row would inherit the session's active tenant.
+        with without_tenant_scope(), atomic_transaction("confirm_settlement_paid"):
             db.session.flush()
         current_app.logger.info(
             "Platform settlement paid: txn=%s fees=%d total=%s",

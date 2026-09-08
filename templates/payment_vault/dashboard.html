@@ -206,6 +206,39 @@
         </div>
         
         
+        {% if vault_money is defined %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h5 class="mb-0"><i class="fas fa-vault" aria-hidden="true"></i> {{ _('Platform Treasury — Accrued vs Collected') }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h4 class="text-warning mb-0">AED {{ "%.3f"|format(vault_money.fees_accrued_total or 0) }}</h4>
+                                <small class="text-muted">{{ _('Store Commissions — Accounting Only') }} ({{ vault_money.fees_accrued_count or 0 }})</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-success mb-0">AED {{ "%.3f"|format(vault_money.fees_collected_total or 0) }}</h4>
+                                <small class="text-muted">{{ _('Store Commissions — Owner Confirmed') }} ({{ vault_money.fees_collected_count or 0 }})</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-warning mb-0">$ {{ "%.2f"|format(vault_money.donations_pending_total or 0) }}</h4>
+                                <small class="text-muted">{{ _('Donations — Awaiting Confirmation') }} ({{ vault_money.donations_pending_count or 0 }})</small>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-success mb-0">$ {{ "%.2f"|format(vault_money.donations_collected_total or 0) }}</h4>
+                                <small class="text-muted">{{ _('Donations — Collected in Vault') }} ({{ vault_money.donations_collected_count or 0 }})</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+
         <div class="row mb-4">
             <div class="col-12">
                 <h4 class="mb-3"><i class="fas fa-bolt text-warning" aria-hidden="true"></i> {{ _('Quick Actions') }}</h4>

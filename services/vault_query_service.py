@@ -7,6 +7,18 @@ Uses flush-free reads only — callers own all transactions.
 """
 
 
+def _unscoped():
+    """Context bypassing ORM tenant auto-filters.
+
+    Platform-ledger queries always carry an explicit tenant_id filter, so
+    dropping the automatic one is safe — and required when tid is NULL,
+    which the auto-filter (tenant_id == <active>) would otherwise hide.
+    """
+    from utils.tenanting import without_tenant_scope
+
+    return without_tenant_scope()
+
+
 class VaultQueryService:
     @staticmethod
     def find_active_api_key(raw_key):
@@ -20,27 +32,30 @@ class VaultQueryService:
     def list_platform_records(tid=None, transaction_type=None):
         from models import Donation
 
-        query = Donation.query.filter_by(tenant_id=tid)
-        if transaction_type is not None:
-            query = query.filter_by(transaction_type=transaction_type)
-        return query.all()
+        with _unscoped():
+            query = Donation.query.filter_by(tenant_id=tid)
+            if transaction_type is not None:
+                query = query.filter_by(transaction_type=transaction_type)
+            return query.all()
 
     @staticmethod
     def list_platform_records_desc(tid=None):
         from models import Donation
 
-        return Donation.query.filter_by(tenant_id=tid).order_by(Donation.created_at.desc()).all()
+        with _unscoped():
+            return Donation.query.filter_by(tenant_id=tid).order_by(Donation.created_at.desc()).all()
 
     @staticmethod
     def recent_platform_records(tid=None, transaction_type=None, limit=5):
         from models import Donation
 
-        return (
-            Donation.query.filter_by(tenant_id=tid, transaction_type=transaction_type)
-            .order_by(Donation.created_at.desc())
-            .limit(limit)
-            .all()
-        )
+        with _unscoped():
+            return (
+                Donation.query.filter_by(tenant_id=tid, transaction_type=transaction_type)
+                .order_by(Donation.created_at.desc())
+                .limit(limit)
+                .all()
+            )
 
     @staticmethod
     def donations_overview(tid, status_filter, crypto_filter, search_query, page, per_page):
@@ -48,23 +63,28 @@ class VaultQueryService:
         from extensions import db
         from models import Donation
 
-        query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-        if status_filter:
-            query = query.filter_by(status=status_filter)
-        if crypto_filter:
-            query = query.filter_by(crypto_type=crypto_filter)
-        if search_query:
-            query = query.filter(
-                db.or_(
-                    Donation.donor_name.ilike(f"%{search_query}%"),
-                    Donation.donor_email.ilike(f"%{search_query}%"),
+        with _unscoped():
+            query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
+            if status_filter:
+                query = query.filter_by(status=status_filter)
+            if crypto_filter:
+                query = query.filter_by(crypto_type=crypto_filter)
+            if search_query:
+                query = query.filter(
+                    db.or_(
+                        Donation.donor_name.ilike(f"%{search_query}%"),
+                        Donation.donor_email.ilike(f"%{search_query}%"),
+                    )
                 )
+            pagination = query.order_by(Donation.created_at.desc()).paginate(
+                page=page, per_page=per_page, error_out=False
             )
-        pagination = query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
-        completed_count = query.filter(Donation.status == "completed").count()
-        pending_count = query.filter(Donation.status == "pending").count()
-        total_amount = float(query.with_entities(db.func.coalesce(db.func.sum(Donation.amount_usd), 0)).scalar() or 0)
-        return pagination, completed_count, pending_count, total_amount
+            completed_count = query.filter(Donation.status == "completed").count()
+            pending_count = query.filter(Donation.status == "pending").count()
+            total_amount = float(
+                query.with_entities(db.func.coalesce(db.func.sum(Donation.amount_usd), 0)).scalar() or 0
+            )
+            return pagination, completed_count, pending_count, total_amount
 
     @staticmethod
     def donation_monthly_aggregates(tid, start_of_window):
@@ -76,26 +96,29 @@ class VaultQueryService:
 
         year_col = extract("year", Donation.created_at)
         month_col = extract("month", Donation.created_at)
-        return (
-            db.session.query(
-                year_col.label("y"),
-                month_col.label("m"),
-                Donation.transaction_type,
-                func.sum(Donation.amount_usd).label("total"),
+        with _unscoped():
+            return (
+                db.session.query(
+                    year_col.label("y"),
+                    month_col.label("m"),
+                    Donation.transaction_type,
+                    func.sum(Donation.amount_usd).label("total"),
+                )
+                .filter(Donation.tenant_id == tid, Donation.created_at >= start_of_window)
+                .group_by(year_col, month_col, Donation.transaction_type)
+                .all()
             )
-            .filter(Donation.tenant_id == tid, Donation.created_at >= start_of_window)
-            .group_by(year_col, month_col, Donation.transaction_type)
-            .all()
-        )
 
     @staticmethod
     def platform_package_purchase_counts(tid, slugs):
         """Per-slug purchase counts, preserving input order."""
         from models import Donation
 
-        return [
-            Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package=slug).count() for slug in slugs
-        ]
+        with _unscoped():
+            return [
+                Donation.query.filter_by(tenant_id=tid, transaction_type="purchase", package=slug).count()
+                for slug in slugs
+            ]
 
     @staticmethod
     def find_donation_by_transaction_hash(transaction_hash):
@@ -107,17 +130,19 @@ class VaultQueryService:
     def find_purchase_donation_by_email(customer_email, tid=None):
         from models import Donation
 
-        return Donation.query.filter_by(
-            tenant_id=tid,
-            customer_email=customer_email,
-            transaction_type="purchase",
-        ).first()
+        with _unscoped():
+            return Donation.query.filter_by(
+                tenant_id=tid,
+                customer_email=customer_email,
+                transaction_type="purchase",
+            ).first()
 
     @staticmethod
     def get_platform_donation_or_404(donation_id, tid=None):
         from models import Donation
 
-        return Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
+        with _unscoped():
+            return Donation.query.filter_by(id=donation_id, tenant_id=tid).first_or_404()
 
     @staticmethod
     def get_any_donation_or_404(donation_id):
@@ -129,7 +154,8 @@ class VaultQueryService:
     def pending_platform_donations_count(tid=None):
         from models import Donation
 
-        return Donation.query.filter_by(tenant_id=tid, status="pending").count()
+        with _unscoped():
+            return Donation.query.filter_by(tenant_id=tid, status="pending").count()
 
     # ── Packages ──
 
@@ -229,17 +255,18 @@ class VaultQueryService:
         from extensions import db
         from models import Donation
 
-        query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
-        if status:
-            query = query.filter_by(status=status)
-        if search:
-            query = query.filter(
-                db.or_(
-                    Donation.donor_name.ilike(f"%{search}%"),
-                    Donation.donor_email.ilike(f"%{search}%"),
+        with _unscoped():
+            query = Donation.query.filter_by(tenant_id=tid, transaction_type="donation")
+            if status:
+                query = query.filter_by(status=status)
+            if search:
+                query = query.filter(
+                    db.or_(
+                        Donation.donor_name.ilike(f"%{search}%"),
+                        Donation.donor_email.ilike(f"%{search}%"),
+                    )
                 )
-            )
-        return query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+            return query.order_by(Donation.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
     # ── Cards ──
 

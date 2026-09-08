@@ -98,8 +98,17 @@ class PaymentVault(db.Model):
 
     @classmethod
     def get_platform_vault(cls):
-        """Return the Azad/platform vault."""
-        return cls.query.filter(cls.tenant_id.is_(None)).order_by(cls.id.asc()).first()
+        """Return the Azad/platform vault.
+
+        The platform vault is tenant-less by design, so the lookup must
+        bypass automatic ORM tenant scoping: with an active tenant in the
+        session the auto-filter (tenant_id == <active>) would otherwise
+        hide the NULL row and callers would create duplicate vaults.
+        """
+        from utils.tenanting import without_tenant_scope
+
+        with without_tenant_scope():
+            return cls.query.filter(cls.tenant_id.is_(None)).order_by(cls.id.asc()).first()
 
     @classmethod
     def get_tenant_vault(cls, tenant_id):
@@ -176,7 +185,7 @@ class PaymentTransaction(db.Model):
     tenant_id = db.Column(
         db.Integer,
         db.ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
