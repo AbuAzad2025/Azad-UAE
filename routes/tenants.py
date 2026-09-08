@@ -35,11 +35,7 @@ def switch(tenant_id):
     if target_tenant is not None:
         current_tenant_id = getattr(current_user, "tenant_id", None)
         is_owner = bool(getattr(current_user, "is_owner", False))
-        if (
-            current_tenant_id is not None
-            and current_tenant_id != target_tenant.id
-            and not is_owner
-        ):
+        if current_tenant_id is not None and current_tenant_id != target_tenant.id and not is_owner:
             abort(403)
 
     if tenant_id == 0:
@@ -48,11 +44,7 @@ def switch(tenant_id):
         flash(gettext("تم إلغاء تحديد الشركة الحالية."), "success")
         return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
 
-    if (
-        not target_tenant
-        or not target_tenant.is_active
-        or getattr(target_tenant, "is_suspended", False)
-    ):
+    if not target_tenant or not target_tenant.is_active or getattr(target_tenant, "is_suspended", False):
         flash(gettext("الشركة غير موجودة أو غير مفعلة أو معلقة."), "danger")
         return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
 

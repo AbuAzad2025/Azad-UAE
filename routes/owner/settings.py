@@ -1181,15 +1181,27 @@ def api_toggle_warehouse_negative():
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
 @login_required
-@owner_or_company_admin
 def api_supervisor_override():
     """Verify supervisor credentials for cashier override actions.
 
-    Defense-in-depth: the decorator stack enforces platform owner OR
-    company admin, and the body re-verifies that the supplied
-    ``supervisor_id`` user exists, is active, and has the manager /
-    admin role. Audit log stores (supervisor_id, action, cashier_id,
-    tenant_id) for every override.
+    This endpoint lives under ``/owner/api/`` URL-wise but is intentionally
+    *not* gated by ``@owner_required`` / ``@owner_or_company_admin``:
+    the legitimate caller is a logged-in **cashier** who is asking their
+    supervisor to authorize a single risky POS action (discount override,
+    void line, pay-in/out, drawer open, etc.). Defense-in-depth is
+    applied inside the body, not on the decorator stack:
+
+    * ``action`` must be one of the curated ``utils.pos_security``
+      surface actions (validated by the calling services).
+    * ``supervisor_id`` must resolve to a real, active user.
+    * The supervisor must hold the ``manager`` or ``admin`` role
+      (``supervisor.is_manager() / supervisor.is_admin()``).
+    * The supervisor's plaintext ``password`` (validated via
+      ``supervisor.check_password``) confirms physical presence of the
+      supervisor at the terminal — this is the actual authorization
+      gate.
+    * Every override is logged to ``LoggingCore.log_audit`` with
+      ``(supervisor_id, action, cashier_id)`` for forensic tracing.
     """
     if not request.is_json:
         return error_response(message="JSON required", status_code=400)
