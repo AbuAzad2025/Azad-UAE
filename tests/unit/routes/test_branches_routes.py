@@ -30,6 +30,7 @@ def _mock_branch(branch_id=1, code="BR01", name="Main Branch"):
     branch.users = []
     branch.warehouses = []
     branch.sales = []
+    branch.budgets = []
     return branch
 
 
@@ -81,7 +82,9 @@ class TestBranchesCreate:
         with patch("routes.branches.render_template", return_value="create") as render:
             resp = branches_client.get("/branches/create")
         assert resp.status_code == 200
-        render.assert_called_once_with("branches/create.html")
+        render.assert_called_once()
+        assert render.call_args[0][0] == "branches/create.html"
+        assert "tenant" in render.call_args[1]
 
     def test_create_post_success(self, branches_client):
         patches = _base_patches(first=None)

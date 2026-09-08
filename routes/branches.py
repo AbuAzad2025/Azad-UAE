@@ -127,14 +127,27 @@ def delete(**kwargs):
 
     # Check for related data before deletion
     # This is a basic check. In a real system, you might want to soft-delete or strict check.
-    if branch.users or branch.warehouses or branch.sales:
+    if branch.users or branch.warehouses or branch.sales or branch.budgets:
         flash(
             gettext("لا يمكن حذف الفرع لوجود بيانات مرتبطة به (مستخدمين، مستودعات، أو مبيعات)"),
             "danger",
         )
         return redirect(url_for("branches.index"))
 
-    with atomic_transaction("branch_delete"):
-        db.session.delete(branch)
+    # Dozens of tables reference branches with ondelete=RESTRICT
+    # (gl_accounts via auto-synced chart, payments, cheques, ...).
+    # Catch the FK violation and explain instead of returning 500.
+    from sqlalchemy.exc import IntegrityError
+
+    try:
+        with atomic_transaction("branch_delete"):
+            db.session.delete(branch)
+    except IntegrityError:
+        db.session.rollback()
+        flash(
+            gettext("لا يمكن حذف الفرع لوجود قيود محاسبية مرتبطة به (حسابات GL أو حركات). عطّله بدل الحذف."),
+            "danger",
+        )
+        return redirect(url_for("branches.index"))
     flash(gettext("تم حذف الفرع بنجاح"), "success")
     return redirect(url_for("branches.index"))

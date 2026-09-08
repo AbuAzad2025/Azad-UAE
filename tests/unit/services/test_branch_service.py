@@ -25,14 +25,10 @@ class TestBranchServiceCreate:
         assert branch.city == "Dubai"
 
     def test_create_branch_without_tenant_id(self, db_session):
-        branch = BranchService.create_branch(name="No Tenant", code="NO-T")
-        # tenant_id is None — model requires NOT NULL, so flush should raise IntegrityError
-        assert branch.name == "No Tenant"
-        assert branch.tenant_id is None
-        from sqlalchemy.exc import IntegrityError
-
-        with pytest.raises(IntegrityError):
-            db_session.flush()
+        # Service rejects a missing tenant_id up front instead of
+        # letting the INSERT fail on the NOT NULL constraint.
+        with pytest.raises(ValueError, match="tenant_id is required"):
+            BranchService.create_branch(name="No Tenant", code="NO-T")
         db_session.rollback()
 
     def test_create_branch_is_main_flag(self, db_session, sample_tenant):
