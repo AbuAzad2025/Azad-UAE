@@ -14,7 +14,6 @@ class TestGetLocaleOutOfContext:
         assert get_locale() == "ar"
 
 
-
 class TestTenantAwareCacheDirect:
     def test_tenant_key_plain(self):
         cache = TenantAwareCache(MagicMock())
