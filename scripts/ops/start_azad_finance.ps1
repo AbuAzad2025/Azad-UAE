@@ -26,13 +26,11 @@ if ($Py -and $Py -like "*WindowsApps*") {
 if (-not $Py) { Write-Host "[!] no real python found"; exit 1 }
 Write-Host "python: $Py  ($(& $Py --version 2>&1))"
 
-# Free port 5000 by killing the listener (best-effort) and all python procs.
+# Free port 5000 by killing ONLY its listener.
+# NEVER blanket-kill python: another system runs on port 8000 and must stay up.
 Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object {
     Write-Host "Killing PID $($_.OwningProcess) on port 5000"
     Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
-}
-Get-Process python -ErrorAction SilentlyContinue | ForEach-Object {
-    Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
 }
 for ($i = 0; $i -lt 20; $i++) {
     Start-Sleep -Seconds 1

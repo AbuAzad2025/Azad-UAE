@@ -25,8 +25,16 @@ class BranchService:
         """Create a new branch. Returns the created branch (not yet committed)."""
         from models import Branch
 
-        branch = Branch(name=name, code=code, city=city, address=address, phone=phone, is_main=is_main)
-        if tenant_id is not None:
-            branch.tenant_id = tenant_id
+        if tenant_id is None:
+            raise ValueError("tenant_id is required to create a branch")
+        branch = Branch(
+            name=name,
+            code=code,
+            city=city,
+            address=address,
+            phone=phone,
+            is_main=is_main,
+            tenant_id=int(tenant_id),
+        )
         db.session.add(branch)
         return branch

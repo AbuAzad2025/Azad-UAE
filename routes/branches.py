@@ -21,7 +21,10 @@ def _sync_branch_financial_accounts(tenant_id):
 @login_required
 @admin_required
 def index():
-    get_active_tenant_id(current_user)
+    tid = get_active_tenant_id(current_user)
+    if tid is None:
+        flash(gettext("اختر الشركة أولاً من قائمة التينانتس."), "warning")
+        return redirect(url_for("owner.tenants_list"))
     q = tenant_query(Branch)
     branches = q.order_by(Branch.is_main.desc(), Branch.code, Branch.name).all()
     return render_template("branches/index.html", branches=branches)
@@ -31,6 +34,13 @@ def index():
 @login_required
 @admin_required
 def create():
+    from models import Tenant
+
+    tid = get_active_tenant_id(current_user)
+    if tid is None:
+        flash(gettext("اختر الشركة أولاً من قائمة التينانتس قبل إنشاء فرع."), "warning")
+        return redirect(url_for("owner.tenants_list"))
+    tenant = db.session.get(Tenant, int(tid))
     if request.method == "POST":
         name = request.form.get("name")
         code = request.form.get("code")
@@ -67,7 +77,7 @@ def create():
             address=address or "",
             phone=phone,
             is_main=is_main,
-            tenant_id=get_active_tenant_id(current_user),
+            tenant_id=int(tid),
         )
 
         with atomic_transaction("branch_create"):
@@ -77,7 +87,7 @@ def create():
         flash(gettext("تم إضافة الفرع بنجاح"), "success")
         return redirect(url_for("branches.index"))
 
-    return render_template("branches/create.html")
+    return render_template("branches/create.html", tenant=tenant)
 
 
 @branches_bp.route("/edit/<int:id>", methods=["GET", "POST"])
