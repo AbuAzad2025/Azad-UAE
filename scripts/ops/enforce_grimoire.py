@@ -653,6 +653,7 @@ ALLOWED_ROOT_FILES: frozenset[str] = frozenset(
         ".env",
         ".flake8",
         ".coveragerc",
+        ".cspell.json",
         ".python-version",
         ".browserslistrc",
         ".bandit.yml",
