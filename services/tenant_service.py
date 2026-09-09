@@ -50,24 +50,36 @@ class TenantService:
         tenants = query.order_by(*ordering).all()
         tenant_ids = [t.id for t in tenants]
 
-        user_counts = dict(
-            db.session.query(User.tenant_id, func.count(User.id))
-            .filter(User.tenant_id.in_(tenant_ids))
-            .group_by(User.tenant_id)
-            .all()
-        ) if tenant_ids else {}
-        branch_counts = dict(
-            db.session.query(Branch.tenant_id, func.count(Branch.id))
-            .filter(Branch.tenant_id.in_(tenant_ids))
-            .group_by(Branch.tenant_id)
-            .all()
-        ) if tenant_ids else {}
-        store_counts = dict(
-            db.session.query(TenantStore.tenant_id, func.count(TenantStore.id))
-            .filter(TenantStore.tenant_id.in_(tenant_ids))
-            .group_by(TenantStore.tenant_id)
-            .all()
-        ) if tenant_ids else {}
+        user_counts = (
+            dict(
+                db.session.query(User.tenant_id, func.count(User.id))
+                .filter(User.tenant_id.in_(tenant_ids))
+                .group_by(User.tenant_id)
+                .all()
+            )
+            if tenant_ids
+            else {}
+        )
+        branch_counts = (
+            dict(
+                db.session.query(Branch.tenant_id, func.count(Branch.id))
+                .filter(Branch.tenant_id.in_(tenant_ids))
+                .group_by(Branch.tenant_id)
+                .all()
+            )
+            if tenant_ids
+            else {}
+        )
+        store_counts = (
+            dict(
+                db.session.query(TenantStore.tenant_id, func.count(TenantStore.id))
+                .filter(TenantStore.tenant_id.in_(tenant_ids))
+                .group_by(TenantStore.tenant_id)
+                .all()
+            )
+            if tenant_ids
+            else {}
+        )
 
         return {
             "tenants": tenants,

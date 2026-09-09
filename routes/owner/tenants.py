@@ -154,9 +154,7 @@ def tenants_list():
     order = (request.args.get("order") or "desc").lower()
     q = (request.args.get("q") or "").strip()
 
-    context = TenantService.get_tenants_list_context(
-        sort=sort, order=order, search=q
-    )
+    context = TenantService.get_tenants_list_context(sort=sort, order=order, search=q)
     return render_template(
         "owner/tenants_list.html",
         tenants=context["tenants"],

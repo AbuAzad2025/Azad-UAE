@@ -1691,7 +1691,9 @@ def confirm_platform_fees():
         payload = request.get_json(silent=True) or {}
         raw_ids = payload.get("fee_ids", [])
     else:
-        raw_ids = request.form.getlist("fee_ids") or ([request.form.get("fee_id")] if request.form.get("fee_id") else [])
+        raw_ids = request.form.getlist("fee_ids") or (
+            [request.form.get("fee_id")] if request.form.get("fee_id") else []
+        )
     try:
         fee_ids = [int(v) for v in raw_ids if str(v).strip().isdigit()]
     except (TypeError, ValueError):
@@ -1704,9 +1706,7 @@ def confirm_platform_fees():
     try:
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        result = AzadPlatformFeeService.confirm_settlement_paid(
-            fee_ids, confirmed_by=getattr(current_user, "id", None)
-        )
+        result = AzadPlatformFeeService.confirm_settlement_paid(fee_ids, confirmed_by=getattr(current_user, "id", None))
         PaymentLog.log_action(
             vault_id=vault.id,
             action="platform_fees_collected",

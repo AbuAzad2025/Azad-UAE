@@ -10,6 +10,7 @@ Revises: 7f4c5e2a9011
 Create Date: 2026-09-08 22:55:00.000000
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 
