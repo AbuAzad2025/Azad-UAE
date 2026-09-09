@@ -297,41 +297,44 @@ def _ensure_functional_roles():
 
 
 def _ensure_platform_reference_data():
-    """Platform-wide reference data only — no tenant, branch, or warehouse."""
-    with atomic_transaction("ensure_platform_reference_data"):
-        from decimal import Decimal
+    """Platform-wide reference data only — no tenant, branch, or warehouse.
 
-        from models import Currency, ExchangeRate, SystemSettings
+    Base currency is ILS (matches utils.regional_defaults.FALLBACK_CURRENCY
+    and Tenant.base_currency). Exchange rates are deliberately NOT seeded:
+    transaction rates resolve from user input → manager's
+    exchange_rate_records → online API → last record → input modal, so the
+    general manager / tenant owns them (manually or online). The legacy
+    ExchangeRate rows were dead data (written here, read by nothing).
+    """
+    with atomic_transaction("ensure_platform_reference_data"):
+        from models import Currency, SystemSettings
 
         settings = SystemSettings.get_current()
         if settings.system_name in ("Azad Garage System", "Garage Management System"):
             settings.system_name = "Azad ERP System"
-            settings.currency_symbol = "AED"
-            settings.default_currency = "AED"
+            settings.currency_symbol = "₪"
+            settings.default_currency = "ILS"
 
         currencies = [
+            {
+                "code": "ILS",
+                "name": "Israeli Shekel",
+                "name_ar": "شيقل إسرائيلي",
+                "symbol": "₪",
+                "is_base": True,
+            },
             {
                 "code": "AED",
                 "name": "UAE Dirham",
                 "name_ar": "درهم إماراتي",
                 "symbol": "د.إ",
-                "rate": 1.0,
-                "is_base": True,
+                "is_base": False,
             },
             {
                 "code": "USD",
                 "name": "US Dollar",
                 "name_ar": "دولار أمريكي",
                 "symbol": "$",
-                "rate": 0.272,
-                "is_base": False,
-            },
-            {
-                "code": "ILS",
-                "name": "Israeli Shekel",
-                "name_ar": "شيقل إسرائيلي",
-                "symbol": "₪",
-                "rate": 1.02,
                 "is_base": False,
             },
         ]
@@ -348,17 +351,13 @@ def _ensure_platform_reference_data():
                 )
                 db.session.add(curr)
                 db.session.flush()
-                if not c_data["is_base"]:
-                    db.session.add(
-                        ExchangeRate(
-                            currency_id=curr.id,
-                            from_currency=c_data["code"],
-                            to_currency="AED",
-                            rate=Decimal(str(c_data["rate"])),
-                            source="System Init",
-                            is_manual=True,
-                        )
-                    )
+        # One-time legacy repair: installs seeded when AED was base move the
+        # base flag to ILS. A manager-chosen non-AED base is left untouched.
+        ils = Currency.query.filter_by(code="ILS").first()
+        aed = Currency.query.filter_by(code="AED").first()
+        if ils and not ils.is_base and aed and aed.is_base:
+            aed.is_base = False
+            ils.is_base = True
 
 
 def _ensure_core_data():
