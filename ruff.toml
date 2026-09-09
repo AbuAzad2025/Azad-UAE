@@ -23,7 +23,6 @@ select = [
 
 [lint.per-file-ignores]
 "tests/unit/test_grimoire_compliance.py" = ["E402"]
-"scripts/visual_audit_render.py" = ["E402"]
 "tests/**" = ["E501", "SIM117", "SIM102", "B904", "E402", "S110", "SIM115", "B007", "B023", "SIM112", "SIM113", "SIM108", "SIM103", "S112", "B017", "C408", "C416"]
 "ai_knowledge/**" = ["E501"]
 "utils/i18n.py" = ["E501"]
