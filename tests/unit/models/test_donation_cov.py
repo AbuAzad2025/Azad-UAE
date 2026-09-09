@@ -52,9 +52,11 @@ class TestDonationRecentUnfiltered:
     def test_get_recent_donations_without_tenant(self, db_session, sample_tenant):
         """Arc 148->150: tenant_id is None skips the tenant filter."""
         _seed(db_session, sample_tenant.id)
-        recent = Donation.get_recent_donations(limit=10)
-        assert len(recent) >= 2
-        assert {r.payment_method for r in recent} >= {"card", "crypto"}
+        # Unfiltered window may include other tests' rows (shared CI DB),
+        # so scope the assertion to this test's own tenant rows.
+        recent = Donation.get_recent_donations(limit=1000)
+        mine = {r.payment_method for r in recent if r.tenant_id == sample_tenant.id}
+        assert mine >= {"card", "crypto"}
 
     def test_get_recent_donations_filtered_orders_by_completed_at(self, db_session, sample_tenant):
         _seed(db_session, sample_tenant.id)
