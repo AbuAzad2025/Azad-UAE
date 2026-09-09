@@ -67,7 +67,7 @@ class TestPlatformDonationReceipt:
     def _donation(self, **kwargs):
         d = MagicMock()
         d.id = kwargs.get("id", 11)
-        d.tenant_id = kwargs.get("tenant_id", None)
+        d.tenant_id = kwargs.get("tenant_id")
         d.status = kwargs.get("status", "completed")
         d.amount_usd = kwargs.get("amount_usd", Decimal("50"))
         d.amount_crypto = Decimal("0.001")

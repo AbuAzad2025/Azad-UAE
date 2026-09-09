@@ -3355,12 +3355,15 @@ class TestOwnerGapClosure:
             resp = owner_client.post("/owner/api/tenant/99/toggle-status", json={})
         assert resp.status_code == 404
         default_tenant = _mock_tenant(id=1)
-        with patch(
-            "services.owner_ops_service.OwnerOpsService.get_tenant",
-            return_value=default_tenant,
+        with (
+            patch(
+                "services.owner_ops_service.OwnerOpsService.get_tenant",
+                return_value=default_tenant,
+            ),
+            patch("routes.owner.tenants.db.session"),
         ):
             resp2 = owner_client.post("/owner/api/tenant/1/toggle-status", json={})
-        assert resp2.status_code == 400
+        assert resp2.status_code == 200
         with patch(
             "services.owner_ops_service.OwnerOpsService.get_tenant",
             side_effect=RuntimeError("toggle fail"),
@@ -4381,16 +4384,20 @@ class TestOwnerLastMile:
                 resp = api_toggle_warehouse_negative()
         assert _status_code(resp) == 400
 
-    def test_api_tenant_toggle_default_protected(self, app_factory, bypass_owner_auth):
+    def test_api_tenant_toggle_default_allowed(self, app_factory, bypass_owner_auth):
+        # Owner has full control: tenant id=1 toggles like any other tenant.
         from routes.owner import api_tenant_toggle_status, owner_bp
 
         tenant = _mock_tenant(id=1)
         app = app_factory(owner_bp)
-        with _owner_route_patches(), patch("routes.owner.db") as mock_db:
-            mock_db.session.get.return_value = tenant
+        with (
+            _owner_route_patches(),
+            patch("services.owner_ops_service.OwnerOpsService.get_tenant", return_value=tenant),
+            patch("routes.owner.tenants.db.session"),
+        ):
             with app.test_request_context("/owner/api/tenant/1/toggle-status", method="POST", json={"noop": True}):
                 resp = api_tenant_toggle_status(1)
-        assert _status_code(resp) == 400
+        assert _status_code(resp) == 200
 
     def test_mask_db_uri_edge_cases(self):
         from routes.owner import _mask_db_uri

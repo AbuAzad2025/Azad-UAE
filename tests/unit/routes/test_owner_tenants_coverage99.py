@@ -474,8 +474,12 @@ class TestToggleApi:
     def test_missing_and_main(self, to_client):
         with patch("services.owner_ops_service.OwnerOpsService.get_tenant", return_value=None):
             assert to_client.post("/owner/api/tenant/9/toggle-status", json={}).status_code == 404
-        with patch("services.owner_ops_service.OwnerOpsService.get_tenant", return_value=_tenant(1)):
-            assert to_client.post("/owner/api/tenant/1/toggle-status", json={}).status_code == 400
+        # Owner has full control: tenant id=1 is toggleable like any other.
+        with (
+            patch("services.owner_ops_service.OwnerOpsService.get_tenant", return_value=_tenant(1)),
+            patch("routes.owner.tenants.db.session"),
+        ):
+            assert to_client.post("/owner/api/tenant/1/toggle-status", json={}).status_code == 200
 
     def test_toggle_off_on_and_error(self, to_client):
         with (

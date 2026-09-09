@@ -250,23 +250,29 @@ class TestApiTenantToggleStatus:
         assert resp.status_code == 404
         assert resp.json["message"] == "Tenant not found"
 
-    def test_master_tenant_cannot_be_toggled(
+    def test_master_tenant_can_be_toggled(
         self,
         owner_client,
         mocker,
         mock_tenants_db,
     ):
+        # Owner has full control over every tenant including id=1.
         mocker.patch("routes.owner.tenants.Tenant")
         inst = MagicMock()
         inst.id = 1
+        inst.is_active = True
+        inst.name_ar = "شركة اختبار"
+        inst.name = "Test Co"
         mock_tenants_db.session.get.return_value = inst
+        mocker.patch("routes.owner.tenants._invalidate_owner_changes")
+        mocker.patch("routes.owner.tenants._audit_owner_db_action")
 
         resp = owner_client.post(
             "/owner/api/tenant/1/toggle-status",
             json={},
         )
-        assert resp.status_code == 400
-        assert "لا يمكن تعطيل" in resp.json["message"]
+        assert resp.status_code == 200
+        assert resp.json["success"] is True
 
     def test_success_toggle_active_to_inactive(
         self,

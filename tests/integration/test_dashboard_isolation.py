@@ -702,13 +702,15 @@ class TestSuperAdminEndpoints:
             db_session.refresh(t2)
             assert t2.is_active is False
 
-    def test_tenant_toggle_default_protected(self, db_session, app):
-        """Tenant id=1 (default) should not be toggleable."""
+    def test_tenant_toggle_default_allowed(self, db_session, app):
+        """Tenant id=1 toggles like any other tenant (owner has full control)."""
         from models import Tenant
 
         owner = self._make_global_owner(db_session)
         db_session.commit()
-        if db_session.get(Tenant, 1):
+        tenant = db_session.get(Tenant, 1)
+        if tenant:
+            was_active = bool(tenant.is_active)
             with app.test_client() as client:
                 client.post(
                     "/auth/login",
@@ -716,7 +718,14 @@ class TestSuperAdminEndpoints:
                     follow_redirects=True,
                 )
                 resp = client.post("/owner/api/tenant/1/toggle-status", json={})
-                assert resp.status_code == 400
+                assert resp.status_code == 200
+                db_session.refresh(tenant)
+                assert tenant.is_active is not was_active
+                # restore original state for other tests
+                resp2 = client.post("/owner/api/tenant/1/toggle-status", json={})
+                assert resp2.status_code == 200
+                db_session.refresh(tenant)
+                assert tenant.is_active is was_active
 
     def test_update_package_limits(self, db_session, app):
         t = _make_tenant(db_session, "PkgUp", "pkg-up")

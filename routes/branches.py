@@ -143,7 +143,7 @@ def delete(**kwargs):
         with atomic_transaction("branch_delete"):
             db.session.delete(branch)
     except IntegrityError:
-        db.session.rollback()
+        # atomic_transaction already rolled back; just explain.
         flash(
             gettext("لا يمكن حذف الفرع لوجود قيود محاسبية مرتبطة به (حسابات GL أو حركات). عطّله بدل الحذف."),
             "danger",
