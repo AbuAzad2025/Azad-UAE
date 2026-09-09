@@ -7,7 +7,6 @@ and seeds only the data required for a usable dev environment.
 
 Usage:
     python scripts/ops/first_run_dev.py              # uses .env or defaults
-    python scripts/ops/first_run_dev.py --with-demo  # also seeds demo tenant + 12 products
 
 Idempotent: safe to re-run. Existing DB is dropped and recreated.
 Works for both PostgreSQL (postgres:123@localhost) and SQLite.
@@ -131,10 +130,7 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="First-run for development")
-    parser.add_argument("--with-demo", action="store_true", help="also seed demo tenant (12 products, 3 sales, etc.)")
-    parser.add_argument("--no-demo", dest="with_demo", action="store_false", help="skip demo data (default)")
-    parser.set_defaults(with_demo=False)
-    args = parser.parse_args()
+    parser.parse_args()
 
     env = os.environ.copy()
     env.setdefault("APP_ENV", "development")
@@ -166,14 +162,7 @@ def main() -> None:
     # essentials remain (permissions, roles, owner user, currencies, industry
     # fields, GL base) — all created idempotently by system_init app boot.
 
-    # 5. Optional demo data
-    if args.with_demo:
-        _run([sys.executable, "-m", "flask", "seed-demo", "--force"], env=env)
-        print("\nDemo tenant: slug=demo  user=demo_admin  pass=Demo@2026")
-    else:
-        print("\nSkipped demo data (use --with-demo to include)")
-
-    # 6. Verify
+    # 5. Verify
     _run([sys.executable, "-m", "flask", "db", "current"], env=env)
     print("\n[OK] Dev first-run complete - clean DB ready at", env["DATABASE_URL"])
     print("   Owner: username=owner  password from OWNER_PASSWORD env or auto-generated (see instance/secret_key)")
