@@ -76,7 +76,7 @@ scikit-learn==1.9.0
 joblib==1.6.0
 
 # Reporting & Documents (PDF via WeasyPrint; Excel via openpyxl)
-weasyprint==69.0
+weasyprint==70.0
 openpyxl==3.1.5
 Pillow==12.3.0
 qrcode[pil]>=8.2
