@@ -150,6 +150,8 @@ def test_receive_idempotent_and_issue_expense_skip(
         category_id=cat.id,
         description="Test expense",
         amount=Decimal("10"),
+        amount_aed=Decimal("10"),
+        payment_method="cash",
         user_id=sample_user.id,
     )
     db_session.add(exp)

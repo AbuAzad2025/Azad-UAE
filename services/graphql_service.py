@@ -164,6 +164,7 @@ class CreateSale(graphene.Mutation):
             customer_id=customer.id,
             seller_id=seller_id,
             total_amount=total_amount,
+            amount=total_amount,
             amount_aed=total_amount,
             status="pending",
         )

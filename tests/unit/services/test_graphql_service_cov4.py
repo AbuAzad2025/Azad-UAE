@@ -102,10 +102,10 @@ def test_mutate_success_and_flush_error(monkeypatch, db_session, sample_customer
     monkeypatch.setattr(g, "assign_tenant_id", lambda sale: setattr(sale, "tenant_id", sample_tenant.id))
     with patch.object(g, "tenant_query", return_value=fq):
         with patch.object(g.db.session, "flush", side_effect=[None, RuntimeError("flush boom")]):
-            out = g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25)
+            out = g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25, amount=25)
             assert out.success is True
             with pytest.raises(RuntimeError):
-                g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25)
+                g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25, amount=25)
 
 
 def test_build_schema_branches():

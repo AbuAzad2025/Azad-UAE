@@ -49,7 +49,7 @@ def test_sum_sales_with_filters(
     assert FinancialService.sum_sales(sample_tenant.id, status=None) != 0
 
 
-def test_sum_purchases_receipts_filters(db_session, sample_tenant, sample_branch):
+def test_sum_purchases_receipts_filters(db_session, sample_tenant, sample_branch, sample_user):
     from datetime import datetime
 
     from models import Purchase
@@ -64,6 +64,7 @@ def test_sum_purchases_receipts_filters(db_session, sample_tenant, sample_branch
         total_amount=Decimal("50"),
         amount=Decimal("50"),
         amount_aed=Decimal("50"),
+        user_id=sample_user.id,
     )
     db_session.add(po)
     db_session.flush()
