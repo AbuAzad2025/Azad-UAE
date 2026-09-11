@@ -607,6 +607,7 @@ class TestDeletePurchase:
             mock_db.session.delete = MagicMock()
             PurchaseService.delete_purchase(purchase)
         supplier.apply_payment.assert_called_once_with(Decimal("-60"))
+
     def test_without_supplier_skips_reversal(self):
         from models import PurchaseLine as PLModel
         from services.purchase_service import PurchaseService
