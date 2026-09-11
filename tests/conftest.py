@@ -109,11 +109,8 @@ def _ensure_postgres_database(url: str) -> None:
                 {"name": db_name},
             ).scalar()
             if not exists:
-                try:
+                with contextlib.suppress(IntegrityError):
                     conn.execute(sa_text(f'CREATE DATABASE "{db_name}"'))
-                except IntegrityError:
-                    # Database was created concurrently by another process
-                    pass
     finally:
         admin_engine.dispose()
 

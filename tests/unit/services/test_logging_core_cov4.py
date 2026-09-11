@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 
 from services.logging_core import (
@@ -64,10 +65,8 @@ class TestRequestHelpers:
     def test_request_context_no_request(self, app):
         from flask.globals import request_ctx
 
-        try:
+        with contextlib.suppress(LookupError, RuntimeError):
             request_ctx._get_current_object().pop()
-        except (LookupError, RuntimeError):
-            pass  # Already popped or no context
         with app.app_context():
             ctx = _get_request_context()
             assert ctx["url"] is None
