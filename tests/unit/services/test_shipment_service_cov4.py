@@ -9,7 +9,7 @@ from services.shipment_service import ShipmentService
 
 
 def test_create_sale_and_purchase_return_sources(db_session, sample_tenant, sample_customer, sample_user):
-    from models import Sale, Purchase, Supplier, PurchaseReturn
+    from models import Purchase, PurchaseReturn, Sale, Supplier
 
     # Create a Sale for the sale shipment
     sale = Sale(

@@ -43,8 +43,9 @@ def test_get_category_none_and_missing():
 
 def test_get_expense_cheque_hit_and_miss(db_session, sample_tenant, incoming_cheque,
                                            sample_user, sample_expense_category):
-    from models import Expense
     from decimal import Decimal
+
+    from models import Expense
 
     exp = Expense(tenant_id=sample_tenant.id, expense_number="EXP-COV4",
                    category_id=sample_expense_category.id, description="x",

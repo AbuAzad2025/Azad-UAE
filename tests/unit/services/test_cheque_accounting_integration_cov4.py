@@ -63,8 +63,9 @@ def test_clear_same_currency_skips_fx(db_session, incoming_cheque):
 
 
 def test_clear_flush_failure_reraises(db_session, sample_tenant):
-    from models.cheque import Cheque
     from datetime import date
+
+    from models.cheque import Cheque
 
     # Create a cheque with pending status (valid for clearing)
     incoming_cheque = Cheque(
@@ -112,8 +113,9 @@ def test_summary_with_entries_and_impact(db_session, incoming_cheque, sample_ten
 
 
 def test_summary_with_dates_returns_correct_format(db_session, sample_tenant):
-    from models.cheque import Cheque
     from datetime import date
+
+    from models.cheque import Cheque
 
     incoming_cheque = Cheque(
         tenant_id=sample_tenant.id,

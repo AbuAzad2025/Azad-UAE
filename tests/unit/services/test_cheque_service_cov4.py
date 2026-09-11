@@ -109,8 +109,8 @@ def test_receive_issue_type_guards(outgoing_cheque, incoming_cheque):
 def test_receive_idempotent_and_issue_expense_skip(db_session, incoming_cheque,
                                                     outgoing_cheque, sample_tenant, sample_user):
     from models.expense import Expense, ExpenseCategory
-    from utils.gl_reference_types import GLRef
     from models.gl import GLJournalEntry
+    from utils.gl_reference_types import GLRef
 
     e = GLJournalEntry(tenant_id=sample_tenant.id, entry_number="JE-POSTED",
                        reference_type=GLRef.CHEQUE_RECEIVE, reference_id=incoming_cheque.id,

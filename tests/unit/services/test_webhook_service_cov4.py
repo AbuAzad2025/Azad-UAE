@@ -37,7 +37,7 @@ def test_process_nowpayments_routing_and_errors():
 
 
 def test_purchase_webhook_finished_failed_idempotent(db_session, sample_tenant):
-    from models import PackagePurchase, Package
+    from models import Package, PackagePurchase
 
     pkg = Package(
         name_ar="Test Package",

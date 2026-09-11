@@ -49,7 +49,6 @@ def _make_donation(db_session, sample_tenant, **kw):
 
 
 def test_post_success_with_rate_fallback(db_session, sample_tenant):
-    from services.gl_service import GLService
 
     d = _make_donation(db_session, sample_tenant)
     with patch(
@@ -65,7 +64,6 @@ def test_post_success_with_rate_fallback(db_session, sample_tenant):
 
 
 def test_post_success_with_live_rate(db_session, sample_tenant):
-    from services.gl_service import GLService
 
     d = _make_donation(db_session, sample_tenant, amount_usd=Decimal("5"),
                        donor_name=None, customer_name="C1", payment_method="cash")
@@ -80,7 +78,6 @@ def test_post_success_with_live_rate(db_session, sample_tenant):
 
 
 def test_post_failure_reraises(db_session, sample_tenant):
-    from services.gl_service import GLService
 
     d = _make_donation(db_session, sample_tenant, amount_usd=Decimal("5"))
     with patch(
@@ -145,7 +142,7 @@ def test_record_platform_receipt_no_vault(app):
 
 
 def test_record_platform_receipt_zero_amount(app):
-    from models.payment_vault import PaymentVault, PaymentTransaction
+    from models.payment_vault import PaymentVault
 
     vault = MagicMock(spec=PaymentVault)
     vault.transactions = []
@@ -159,7 +156,6 @@ def test_record_platform_receipt_zero_amount(app):
 
 
 def test_record_platform_receipt_field_fallbacks(app):
-    from models.payment_vault import PaymentVault, PaymentTransaction
 
     class MockVault:
         def __init__(self):
