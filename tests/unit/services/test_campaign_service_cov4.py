@@ -37,15 +37,10 @@ def test_get_active_campaigns_branches(db_session, sample_tenant):
 
     now = datetime.now(UTC)
     camp = Campaign(
-        tenant_id=sample_tenant.id,
-        name="cov4",
-        campaign_type="percentage",
-        discount_value=Decimal("10"),
-        start_date=now - timedelta(days=1),
-        end_date=now + timedelta(days=1),
-        is_active=True,
-        applicable_products=[7],
-        applicable_categories=[9],
+        tenant_id=sample_tenant.id, name="cov4", campaign_type="percentage",
+        discount_value=Decimal("10"), start_date=now - timedelta(days=1),
+        end_date=now + timedelta(days=1), is_active=True,
+        applicable_products=[7], applicable_categories=[9],
     )
     db_session.add(camp)
     db_session.flush()
@@ -58,60 +53,31 @@ def test_get_active_campaigns_branches(db_session, sample_tenant):
     assert camp not in CampaignService.get_active_campaigns(sample_tenant.id, category_ids=[10])
 
 
-def test_apply_campaigns_skips_limits_and_caps(
-    db_session, sample_tenant, sample_customer, sample_user, sample_warehouse
-):
+def test_apply_campaigns_skips_limits_and_caps(db_session, sample_tenant, sample_customer,
+                                               sample_user, sample_warehouse):
     from datetime import datetime as dt
 
     from models import Sale
     from models.campaign import Campaign
 
     now = dt.now(UTC)
-    sale = Sale(
-        tenant_id=sample_tenant.id,
-        sale_number="CAMP-COV4",
-        customer_id=sample_customer.id,
-        seller_id=sample_user.id,
-        warehouse_id=sample_warehouse.id,
-        sale_date=now,
-        subtotal=Decimal("1000"),
-        total_amount=Decimal("1000"),
-        amount=Decimal("1000"),
-        amount_aed=Decimal("1000"),
-        status="pending",
-    )
+    sale = Sale(tenant_id=sample_tenant.id, sale_number="CAMP-COV4", customer_id=sample_customer.id,
+                seller_id=sample_user.id, warehouse_id=sample_warehouse.id, sale_date=now,
+                subtotal=Decimal("1000"), total_amount=Decimal("1000"), amount=Decimal("1000"),
+                amount_aed=Decimal("1000"), status="pending")
     db_session.add(sale)
     db_session.flush()
-    limited = Campaign(
-        tenant_id=sample_tenant.id,
-        name="lim",
-        campaign_type="fixed",
-        discount_value=Decimal("5"),
-        start_date=now - timedelta(days=1),
-        end_date=now + timedelta(days=1),
-        is_active=True,
-        usage_limit=1,
-        usage_count=5,
-    )
-    pct = Campaign(
-        tenant_id=sample_tenant.id,
-        name="pct",
-        campaign_type="percentage",
-        discount_value=Decimal("10"),
-        max_discount_amount=Decimal("20"),
-        start_date=now - timedelta(days=1),
-        end_date=now + timedelta(days=1),
-        is_active=True,
-    )
-    bundle = Campaign(
-        tenant_id=sample_tenant.id,
-        name="bnd",
-        campaign_type="bundle",
-        discount_value=Decimal("7"),
-        start_date=now - timedelta(days=1),
-        end_date=now + timedelta(days=1),
-        is_active=True,
-    )
+    limited = Campaign(tenant_id=sample_tenant.id, name="lim", campaign_type="fixed",
+                       discount_value=Decimal("5"), start_date=now - timedelta(days=1),
+                       end_date=now + timedelta(days=1), is_active=True,
+                       usage_limit=1, usage_count=5)
+    pct = Campaign(tenant_id=sample_tenant.id, name="pct", campaign_type="percentage",
+                   discount_value=Decimal("10"), max_discount_amount=Decimal("20"),
+                   start_date=now - timedelta(days=1), end_date=now + timedelta(days=1),
+                   is_active=True)
+    bundle = Campaign(tenant_id=sample_tenant.id, name="bnd", campaign_type="bundle",
+                      discount_value=Decimal("7"), start_date=now - timedelta(days=1),
+                      end_date=now + timedelta(days=1), is_active=True)
     db_session.add_all([limited, pct, bundle])
     db_session.flush()
     total = CampaignService.apply_campaigns(sale, [limited, pct, bundle])
@@ -124,16 +90,10 @@ def test_validate_coupon_and_list(db_session, sample_tenant):
     from models.campaign import Campaign
 
     now = dt.now(UTC)
-    camp = Campaign(
-        tenant_id=sample_tenant.id,
-        name="cpn",
-        campaign_type="fixed",
-        discount_value=Decimal("3"),
-        coupon_code="COV4CODE",
-        start_date=now - timedelta(days=1),
-        end_date=now + timedelta(days=1),
-        is_active=True,
-    )
+    camp = Campaign(tenant_id=sample_tenant.id, name="cpn", campaign_type="fixed",
+                    discount_value=Decimal("3"), coupon_code="COV4CODE",
+                    start_date=now - timedelta(days=1), end_date=now + timedelta(days=1),
+                    is_active=True)
     db_session.add(camp)
     db_session.flush()
     assert CampaignService.validate_coupon("COV4CODE", sample_tenant.id).id == camp.id

@@ -67,7 +67,9 @@ def test_get_price_for_sale_line_no_customer_no_rep(sample_product):
 def test_get_price_for_sale_line_rep_without_rate(sample_product, sample_customer):
     from types import SimpleNamespace
 
-    out = PricingService.get_price_for_sale_line(sample_product, 1, sample_customer, sales_rep=SimpleNamespace())
+    out = PricingService.get_price_for_sale_line(
+        sample_product, 1, sample_customer, sales_rep=SimpleNamespace()
+    )
     assert out["commission_rate"] == Decimal("0")
 
 

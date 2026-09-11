@@ -39,8 +39,7 @@ class TestProvisionTenant:
 
     def test_provision_exception_captured(self, db_session, sample_tenant, mocker):
         mocker.patch.object(
-            GLProvisioningService,
-            "_provision_base_accounts",
+            GLProvisioningService, "_provision_base_accounts",
             side_effect=RuntimeError("disk gone"),
         )
         out = GLProvisioningService.provision_tenant(sample_tenant.id)
@@ -130,22 +129,19 @@ class TestModuleMappings:
         assert result.skipped_mappings >= before
         assert result.created_mappings >= 0
 
-    def test_non_mapping_resolution_mode_skip(self, db_session, sample_tenant, sample_gl_accounts, mocker):
+    def test_non_mapping_resolution_mode_skip(self, db_session, sample_tenant,
+                                              sample_gl_accounts, mocker):
         from models import _constants as consts
 
         target = next(
-            (
-                code
-                for code, meta in consts.GL_CONCEPT_REGISTRY.items()
-                if meta.get("resolution_mode", "mapping") != "mapping"
-            ),
+            (code for code, meta in consts.GL_CONCEPT_REGISTRY.items()
+             if meta.get("resolution_mode", "mapping") != "mapping"),
             None,
         )
         if target is None:
             pytest.skip("no non-mapping concepts registered")
         mocker.patch.dict(
-            consts.GL_CONCEPT_REGISTRY,
-            {target: {"resolution_mode": "legacy"}},
+            consts.GL_CONCEPT_REGISTRY, {target: {"resolution_mode": "legacy"}},
         )
         result = ProvisionResult(tenant_id=sample_tenant.id)
         GLProvisioningService._provision_module_mappings(sample_tenant, result)

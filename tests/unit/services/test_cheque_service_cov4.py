@@ -23,16 +23,9 @@ from services.cheque_service import (
 
 def test_create_cheque_computes_aed(db_session, sample_tenant):
     ch = ChequeService.create_cheque(
-        "CN-COV4",
-        "BN-COV4",
-        "incoming",
-        "Bank",
-        amount=Decimal("100"),
-        currency="AED",
-        issue_date=date.today(),
-        due_date=date.today(),
-        tenant_id=sample_tenant.id,
-    )
+        "CN-COV4", "BN-COV4", "incoming", "Bank", amount=Decimal("100"),
+        currency="AED", issue_date=date.today(), due_date=date.today(),
+        tenant_id=sample_tenant.id)
     assert ch.amount_aed is not None
     assert ch.status in ("pending", "under_collection", "overdue")
 
@@ -54,27 +47,17 @@ def test_has_gl_references_false_and_true(db_session, incoming_cheque, sample_te
     from models.gl import GLJournalEntry
 
     assert ChequeService.has_gl_references(incoming_cheque, ["X", "Y"]) is False
-    e = GLJournalEntry(
-        tenant_id=sample_tenant.id,
-        entry_number="JE-CHQ-REF",
-        reference_type="CHEQUE_RECEIVE",
-        reference_id=incoming_cheque.id,
-    )
+    e = GLJournalEntry(tenant_id=sample_tenant.id, entry_number="JE-CHQ-REF",
+                       reference_type="CHEQUE_RECEIVE", reference_id=incoming_cheque.id)
     db_session.add(e)
     db_session.flush()
     assert ChequeService.has_gl_references(incoming_cheque, ["CHEQUE_RECEIVE"]) is True
 
 
 def test_validate_cheque_all_branches():
-    base = {
-        "cheque_number": "N",
-        "cheque_bank_number": "BN",
-        "bank_name": "B",
-        "amount": Decimal("10"),
-        "issue_date": date.today(),
-        "due_date": date.today(),
-        "cheque_type": "incoming",
-    }
+    base = {"cheque_number": "N", "cheque_bank_number": "BN", "bank_name": "B",
+            "amount": Decimal("10"), "issue_date": date.today(), "due_date": date.today(),
+            "cheque_type": "incoming"}
     validate_cheque(SimpleNamespace(**base))
     for field in ["cheque_number", "cheque_bank_number", "bank_name"]:
         bad = dict(base)
@@ -92,9 +75,8 @@ def test_validate_cheque_all_branches():
 
 
 def test_calculate_amount_aed(sample_tenant):
-    ch = SimpleNamespace(
-        amount=Decimal("100"), currency="AED", exchange_rate=None, tenant_id=sample_tenant.id, amount_aed=None
-    )
+    ch = SimpleNamespace(amount=Decimal("100"), currency="AED", exchange_rate=None,
+                         tenant_id=sample_tenant.id, amount_aed=None)
     calculate_amount_aed(ch)
     assert ch.amount_aed is not None
 
@@ -124,21 +106,28 @@ def test_receive_issue_type_guards(outgoing_cheque, incoming_cheque):
     assert process_cheque_issue(incoming_cheque) is None
 
 
-def test_receive_idempotent_and_issue_expense_skip(db_session, incoming_cheque, outgoing_cheque, sample_tenant):
-    from models.gl import GLJournalEntry
+def test_receive_idempotent_and_issue_expense_skip(db_session, incoming_cheque,
+                                                    outgoing_cheque, sample_tenant, sample_user):
+    from models.expense import Expense, ExpenseCategory
     from utils.gl_reference_types import GLRef
+    from models.gl import GLJournalEntry
 
-    e = GLJournalEntry(
-        tenant_id=sample_tenant.id,
-        entry_number="JE-POSTED",
-        reference_type=GLRef.CHEQUE_RECEIVE,
-        reference_id=incoming_cheque.id,
-        status="posted",
-    )
+    e = GLJournalEntry(tenant_id=sample_tenant.id, entry_number="JE-POSTED",
+                       reference_type=GLRef.CHEQUE_RECEIVE, reference_id=incoming_cheque.id,
+                       status="posted")
     db_session.add(e)
     db_session.flush()
     assert process_cheque_receive(incoming_cheque).id == e.id
-    outgoing_cheque.expense_id = 123
+    cat = ExpenseCategory(tenant_id=sample_tenant.id, name="Test Expense",
+                           gl_account_code="6010")
+    db_session.add(cat)
+    db_session.flush()
+    exp = Expense(tenant_id=sample_tenant.id, expense_number="EXP-COV4",
+                   category_id=cat.id, description="Test expense",
+                   amount=Decimal("10"), user_id=sample_user.id)
+    db_session.add(exp)
+    db_session.flush()
+    outgoing_cheque.expense_id = exp.id
     db_session.flush()
     assert process_cheque_issue(outgoing_cheque) is None
 
@@ -148,13 +137,14 @@ def test_listeners_and_auto_handlers(db_session, incoming_cheque):
 
     register_cheque_event_listeners()
     register_cheque_event_listeners()  # idempotent re-register arc
-    from services.cheque_service import _auto_log_status_change, _auto_update_status
 
-    m = SimpleNamespace()
-    c = SimpleNamespace()
-    t = SimpleNamespace(status="pending")
-    _auto_update_status(m, c, t)  # no-op branches
-    _auto_log_status_change(m, c, t)
+    # Exercise before_update no-op branch (pending + not overdue)
+    incoming_cheque.status = "pending"
+    db_session.flush()
+
+    # Exercise after_update logging branch (cleared status)
+    incoming_cheque.status = "cleared"
+    db_session.flush()
 
 
 def test_clear_bounce_cancel_guards(db_session, incoming_cheque):
@@ -169,11 +159,15 @@ def test_clear_bounce_cancel_guards(db_session, incoming_cheque):
         process_cheque_clear(incoming_cheque)
     with pytest.raises(ValueError):
         process_cheque_bounce(incoming_cheque, "r")
-    incoming_cheque.status = "pending"
+    incoming_cheque.status = "deposited"
     db_session.flush()
-    with patch("services.cheque_service._create_bounce_journal_entry", side_effect=RuntimeError("gl down")):
+    with patch("services.cheque_service._create_bounce_journal_entry",
+               side_effect=RuntimeError("gl down")):
         with pytest.raises(RuntimeError):
             process_cheque_bounce(incoming_cheque, "r", bounce_fee=Decimal("5"))
-    with patch("services.cheque_service._create_cancel_journal_entry", side_effect=RuntimeError("gl down")):
+    incoming_cheque.status = "deposited"
+    db_session.flush()
+    with patch("services.cheque_service._create_cancel_journal_entry",
+               side_effect=RuntimeError("gl down")):
         with pytest.raises(RuntimeError):
             process_cheque_cancel(incoming_cheque, "void")

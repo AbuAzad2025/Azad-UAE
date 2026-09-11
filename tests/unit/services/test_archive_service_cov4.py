@@ -11,7 +11,8 @@ from services.archive_service import ArchiveService
 
 
 def test_archive_record_with_to_dict(db_session, sample_tenant):
-    rec = SimpleNamespace(id=5, tenant_id=sample_tenant.id, to_dict=lambda: {"id": 5, "x": 1})
+    rec = SimpleNamespace(id=5, tenant_id=sample_tenant.id,
+                          to_dict=lambda: {"id": 5, "x": 1})
     out = ArchiveService.archive_record("sales", rec, reason="cov4")
     assert out.table_name == "sales"
     assert out.data == {"id": 5, "x": 1}
@@ -37,7 +38,8 @@ def test_soft_delete(db_session, sample_customer):
 def test_hard_delete_with_and_without_archive(db_session, sample_customer, sample_tenant):
     from models import ArchivedRecord
 
-    with patch.object(ArchiveService, "archive_record", return_value=SimpleNamespace(id=1)) as ar:
+    with patch.object(ArchiveService, "archive_record",
+                      return_value=SimpleNamespace(id=1)) as ar:
         ArchiveService.hard_delete("customers", sample_customer, archive_first=True)
         ar.assert_called_once()
     before = ArchivedRecord.query.count()
@@ -46,7 +48,8 @@ def test_hard_delete_with_and_without_archive(db_session, sample_customer, sampl
 
 
 def test_hard_delete_failure_reraises():
-    with patch.object(ArchiveService, "archive_record", side_effect=RuntimeError("x")), pytest.raises(RuntimeError):
+    with patch.object(ArchiveService, "archive_record", side_effect=RuntimeError("x")), \
+         pytest.raises(RuntimeError):
         ArchiveService.hard_delete("t", SimpleNamespace(id=1, tenant_id=1))
 
 
@@ -65,9 +68,24 @@ def test_restore_unknown_table_raises(db_session, sample_tenant):
 
 
 def test_restore_tenant_mismatch_raises(db_session, sample_tenant):
-    from models import ArchivedRecord
+    from models import ArchivedRecord, Tenant
 
-    rec = ArchivedRecord(tenant_id=-12345, table_name="sales", record_id=1, data={})
+    # Create a different tenant for the archived record
+    other_tenant = Tenant(
+        name="Other Tenant",
+        name_ar="مستأجر آخر",
+        slug="other-tenant",
+        email="other@example.com",
+        phone_1="0500000000",
+        country="AE",
+        subscription_plan="basic",
+        default_currency="AED",
+        base_currency="AED",
+    )
+    db_session.add(other_tenant)
+    db_session.flush()
+
+    rec = ArchivedRecord(tenant_id=other_tenant.id, table_name="sales", record_id=1, data={})
     db_session.add(rec)
     db_session.flush()
     with patch("utils.tenanting.get_active_tenant_id", return_value=sample_tenant.id):
@@ -80,15 +98,12 @@ def test_restore_existing_reactivates(db_session, sample_customer):
 
     sample_customer.is_active = False
     db_session.flush()
-    rec = ArchivedRecord(
-        tenant_id=sample_customer.tenant_id, table_name="customers", record_id=sample_customer.id, data={}
-    )
+    rec = ArchivedRecord(tenant_id=sample_customer.tenant_id, table_name="customers",
+                         record_id=sample_customer.id, data={})
     db_session.add(rec)
     db_session.flush()
-    with (
-        patch.dict(ArchiveService.ARCHIVE_MODEL_MAP, {"customers": type(sample_customer)}),
-        patch("utils.tenanting.get_active_tenant_id", return_value=None),
-    ):
+    with patch.dict(ArchiveService.ARCHIVE_MODEL_MAP, {"customers": type(sample_customer)}), \
+         patch("utils.tenanting.get_active_tenant_id", return_value=None):
         out = ArchiveService.restore_record(rec)
         assert out.is_active is True
 
@@ -96,13 +111,12 @@ def test_restore_existing_reactivates(db_session, sample_customer):
 def test_restore_missing_record_raises(db_session, sample_tenant):
     from models import ArchivedRecord, Customer
 
-    rec = ArchivedRecord(tenant_id=sample_tenant.id, table_name="customers", record_id=999999999, data={})
+    rec = ArchivedRecord(tenant_id=sample_tenant.id, table_name="customers",
+                         record_id=999999999, data={})
     db_session.add(rec)
     db_session.flush()
-    with (
-        patch.dict(ArchiveService.ARCHIVE_MODEL_MAP, {"customers": Customer}),
-        patch("utils.tenanting.get_active_tenant_id", return_value=None),
-    ):
+    with patch.dict(ArchiveService.ARCHIVE_MODEL_MAP, {"customers": Customer}), \
+         patch("utils.tenanting.get_active_tenant_id", return_value=None):
         with pytest.raises(ValueError, match="not found in database"):
             ArchiveService.restore_record(rec)
 
@@ -110,7 +124,8 @@ def test_restore_missing_record_raises(db_session, sample_tenant):
 def test_queries_and_cleanup(db_session, sample_tenant):
     from models import ArchivedRecord
 
-    rec = ArchivedRecord(tenant_id=sample_tenant.id, table_name="sales", record_id=1, data={}, can_restore=False)
+    rec = ArchivedRecord(tenant_id=sample_tenant.id, table_name="sales", record_id=1, data={},
+                         can_restore=False)
     db_session.add(rec)
     db_session.flush()
     assert ArchiveService.get_archived_records_query("sales").count() >= 1

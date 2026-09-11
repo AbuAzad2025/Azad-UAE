@@ -10,17 +10,17 @@ import pytest
 from services.ai_executor import AIExecutor, AIExecutorError, get_ai_executor
 
 
-def _executor(tid, user=None):
-    user = user or SimpleNamespace(id=7, tenant_id=tid, branch_id=None)
+def _executor(tid, user=None, sample_user=None):
+    user = user or SimpleNamespace(id=sample_user.id if sample_user else 7, tenant_id=tid, branch_id=None)
     with patch("services.ai_executor.get_active_tenant_id", return_value=tid):
         return AIExecutor(user=user)
 
 
-def test_init_and_guards(sample_tenant):
-    ex = _executor(sample_tenant.id)
+def test_init_and_guards(sample_tenant, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     assert ex._require_tenant() == sample_tenant.id
-    assert ex._current_user_id() == 7
-    assert ex._require_user_id() == 7
+    assert ex._current_user_id() == sample_user.id
+    assert ex._require_user_id() == sample_user.id
     assert ex._current_branch_id() is None
     with patch("services.ai_executor.get_active_tenant_id", return_value=None):
         ex2 = AIExecutor(user=SimpleNamespace(id=1))
@@ -31,8 +31,8 @@ def test_init_and_guards(sample_tenant):
         ex3._require_user_id()
 
 
-def test_customer_crud(db_session, sample_tenant):
-    ex = _executor(sample_tenant.id)
+def test_customer_crud(db_session, sample_tenant, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.create_customer("")
     out = ex.create_customer("Cov4 Customer", phone="0501", email="c@x.y")
@@ -48,15 +48,14 @@ def test_customer_crud(db_session, sample_tenant):
         ex.get_customer_balance("Ghost Customer")
 
 
-def test_product_crud_and_stock(db_session, sample_tenant):
-    ex = _executor(sample_tenant.id)
+def test_product_crud_and_stock(db_session, sample_tenant, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.create_product("")
     with pytest.raises(AIExecutorError):
         ex.create_product("P", regular_price=0)
-    out = ex.create_product(
-        "Cov4 Widget", sku="COV4-W", regular_price=50, cost_price=20, current_stock=3, min_stock_alert=10
-    )
+    out = ex.create_product("Cov4 Widget", sku="COV4-W", regular_price=50,
+                            cost_price=20, current_stock=3, min_stock_alert=10)
     assert out["success"] is True
     assert ex.list_products(search="Cov4 Widget")["count"] >= 1
     stock = ex.check_stock()
@@ -64,16 +63,16 @@ def test_product_crud_and_stock(db_session, sample_tenant):
     assert any(r["name"] == "Cov4 Widget" for r in stock["low_stock"])
 
 
-def test_create_sale_validation_branches(db_session, sample_tenant, sample_customer):
-    ex = _executor(sample_tenant.id)
+def test_create_sale_validation_branches(db_session, sample_tenant, sample_customer, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.create_sale("Ghost", [{"name": "X", "quantity": 1}])
     with pytest.raises(AIExecutorError):
         ex.create_sale(sample_customer.name, [{"name": "Ghost Product", "quantity": 1}])
 
 
-def test_receive_payment_branches(db_session, sample_tenant, sample_customer):
-    ex = _executor(sample_tenant.id)
+def test_receive_payment_branches(db_session, sample_tenant, sample_customer, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.receive_payment("Ghost", 10)
     with pytest.raises(AIExecutorError):
@@ -83,8 +82,8 @@ def test_receive_payment_branches(db_session, sample_tenant, sample_customer):
     assert out["payment_number"].startswith("PAY")
 
 
-def test_expense_supplier_employee_branches(db_session, sample_tenant):
-    ex = _executor(sample_tenant.id)
+def test_expense_supplier_employee_branches(db_session, sample_tenant, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.add_expense("", 10)
     with pytest.raises(AIExecutorError):
@@ -106,10 +105,10 @@ def test_expense_supplier_employee_branches(db_session, sample_tenant):
     assert ex.create_employee("Cov4 Emp", basic_salary=1000)["success"] is True
 
 
-def test_purchase_branches(db_session, sample_tenant):
+def test_purchase_branches(db_session, sample_tenant, sample_user):
     from models import Supplier
 
-    ex = _executor(sample_tenant.id)
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     with pytest.raises(AIExecutorError):
         ex.create_purchase("Ghost Supplier", [])
     sup = Supplier(tenant_id=sample_tenant.id, name="Cov4 PS", is_active=True)
@@ -121,8 +120,8 @@ def test_purchase_branches(db_session, sample_tenant):
         ex.create_purchase("Cov4 PS", [{"name": "Ghost P"}])
 
 
-def test_summaries_and_numbers_and_factory(db_session, sample_tenant):
-    ex = _executor(sample_tenant.id)
+def test_summaries_and_numbers_and_factory(db_session, sample_tenant, sample_user):
+    ex = _executor(sample_tenant.id, sample_user=sample_user)
     s = ex.sales_summary()
     assert s["success"] is True and s["count"] >= 0
     p = ex.profit_summary()

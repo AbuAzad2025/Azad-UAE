@@ -111,8 +111,7 @@ class TestEnvRedacted:
 
     def test_backup_stats_counts(self, monkeypatch):
         monkeypatch.setattr(
-            BackupService,
-            "list_backups",
+            BackupService, "list_backups",
             lambda *a, **k: [
                 {"size": 100, "format": "azad_tar_v1", "manual": True},
                 {"size": 200, "format": "legacy", "manual": False},

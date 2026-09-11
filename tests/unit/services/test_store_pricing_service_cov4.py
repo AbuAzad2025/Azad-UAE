@@ -51,29 +51,23 @@ def test_resolve_rate_live_rates_dict():
 
 
 def test_resolve_rate_falls_to_stored():
-    with (
-        patch(
-            "services.currency_service.CurrencyService.get_exchange_rate_details",
-            side_effect=RuntimeError("live down"),
-        ),
-        patch(
-            "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
-            return_value=Decimal("3.5"),
-        ),
+    with patch(
+        "services.currency_service.CurrencyService.get_exchange_rate_details",
+        side_effect=RuntimeError("live down"),
+    ), patch(
+        "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
+        return_value=Decimal("3.5"),
     ):
         assert StorePricingService._resolve_rate("USD", "AED") == Decimal("3.5")
 
 
 def test_resolve_rate_none_when_unresolvable():
-    with (
-        patch(
-            "services.currency_service.CurrencyService.get_exchange_rate_details",
-            return_value={"rate": "0"},
-        ),
-        patch(
-            "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
-            side_effect=RuntimeError("stored down"),
-        ),
+    with patch(
+        "services.currency_service.CurrencyService.get_exchange_rate_details",
+        return_value={"rate": "0"},
+    ), patch(
+        "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
+        side_effect=RuntimeError("stored down"),
     ):
         assert StorePricingService._resolve_rate("USD", "XXX") is None
 

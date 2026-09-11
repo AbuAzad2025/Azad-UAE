@@ -100,6 +100,7 @@ def _ensure_postgres_database(url: str) -> None:
     if not db_name:
         raise RuntimeError(f"Invalid database URL (no database name): {url}")
 
+    from sqlalchemy.exc import IntegrityError
     admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:
@@ -108,7 +109,11 @@ def _ensure_postgres_database(url: str) -> None:
                 {"name": db_name},
             ).scalar()
             if not exists:
-                conn.execute(sa_text(f'CREATE DATABASE "{db_name}"'))
+                try:
+                    conn.execute(sa_text(f'CREATE DATABASE "{db_name}"'))
+                except IntegrityError:
+                    # Database was created concurrently by another process
+                    pass
     finally:
         admin_engine.dispose()
 

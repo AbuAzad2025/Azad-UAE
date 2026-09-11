@@ -55,7 +55,9 @@ class TestDiscountAndCommission:
         assert SaleService._commission_base_aed(Decimal("-2"), Decimal("1")) == Decimal("0")
 
     def test_commission_converts(self):
-        out = SaleService._commission_base_aed(Decimal("100"), Decimal("1"), currency="AED", tenant_id=1)
+        out = SaleService._commission_base_aed(
+            Decimal("100"), Decimal("1"), currency="AED", tenant_id=1
+        )
         assert out == Decimal("100.000")
 
     def test_commission_fallback_on_error(self, mocker):
@@ -63,7 +65,9 @@ class TestDiscountAndCommission:
             "services.sale_service.convert_and_quantize_aed",
             side_effect=RuntimeError("fx down"),
         )
-        out = SaleService._commission_base_aed(Decimal("50"), Decimal("1"), currency="AED", tenant_id=1)
+        out = SaleService._commission_base_aed(
+            Decimal("50"), Decimal("1"), currency="AED", tenant_id=1
+        )
         assert out == Decimal("50")
 
 
@@ -71,41 +75,37 @@ class TestCreateSaleGuards:
     def test_inactive_customer_raises(self):
         with pytest.raises(ValueError, match="العميل"):
             SaleService.create_sale(
-                customer=_inactive_customer(),
-                seller=_active_party(),
+                customer=_inactive_customer(), seller=_active_party(),
                 lines_data=[{"product_id": 1, "quantity": 1}],
             )
 
     def test_inactive_seller_raises(self):
         with pytest.raises(ValueError, match="البائع"):
             SaleService.create_sale(
-                customer=_active_party(),
-                seller=_inactive_customer(),
+                customer=_active_party(), seller=_inactive_customer(),
                 lines_data=[{"product_id": 1, "quantity": 1}],
             )
 
     def test_empty_lines_raises(self):
         with pytest.raises(ValueError, match="منتج"):
-            SaleService.create_sale(customer=_active_party(), seller=_active_party(), lines_data=[])
+            SaleService.create_sale(
+                customer=_active_party(), seller=_active_party(), lines_data=[]
+            )
 
     def test_negative_discount_raises(self):
         with pytest.raises(ValueError, match="الخصم"):
             SaleService.create_sale(
-                customer=_active_party(),
-                seller=_active_party(),
+                customer=_active_party(), seller=_active_party(),
                 lines_data=[{"product_id": 1, "quantity": 1}],
-                currency="AED",
-                discount_amount=-5,
+                currency="AED", discount_amount=-5,
             )
 
     def test_negative_shipping_raises(self):
         with pytest.raises(ValueError, match="الشحن"):
             SaleService.create_sale(
-                customer=_active_party(),
-                seller=_active_party(),
+                customer=_active_party(), seller=_active_party(),
                 lines_data=[{"product_id": 1, "quantity": 1}],
-                currency="AED",
-                shipping_cost=-1,
+                currency="AED", shipping_cost=-1,
             )
 
     def test_currency_resolution_fallback(self, mocker):
@@ -114,7 +114,9 @@ class TestCreateSaleGuards:
                 raise RuntimeError("no ctx")
             return 1
 
-        mocker.patch("services.sale_service.get_active_tenant_id", side_effect=_tenant_id)
+        mocker.patch(
+            "services.sale_service.get_active_tenant_id", side_effect=_tenant_id
+        )
         mocker.patch(
             "services.sale_service.resolve_default_currency",
             side_effect=RuntimeError("no tenant"),
@@ -123,8 +125,7 @@ class TestCreateSaleGuards:
             # Falls back to system default currency (warning arc lines 94-96),
             # then fails deterministically on the negative-discount guard.
             SaleService.create_sale(
-                customer=_active_party(),
-                seller=_active_party(),
+                customer=_active_party(), seller=_active_party(),
                 lines_data=[{"product_id": 1, "quantity": 1}],
                 discount_amount=-5,
             )
@@ -141,32 +142,30 @@ class TestSplitPayments:
 
     def test_non_positive_amount_raises(self):
         with pytest.raises(ValueError, match="أكبر من صفر"):
-            SaleService.prepare_split_payments([{"amount": "0", "payment_method": "cash", "currency": "AED"}])
+            SaleService.prepare_split_payments(
+                [{"amount": "0", "payment_method": "cash", "currency": "AED"}]
+            )
 
     def test_bad_rate_raises(self):
         with pytest.raises(ValueError, match="الصرف"):
             SaleService.prepare_split_payments(
-                [{"amount": "10", "payment_method": "cash", "currency": "AED", "exchange_rate": "0"}]
+                [{"amount": "10", "payment_method": "cash", "currency": "AED",
+                  "exchange_rate": "0"}]
             )
 
     def test_happy_path(self):
         out = SaleService.prepare_split_payments(
-            [
-                {
-                    "amount": "10",
-                    "payment_method": "cash",
-                    "currency": "AED",
-                    "exchange_rate": "1",
-                    "reference_number": "R1",
-                }
-            ],
+            [{"amount": "10", "payment_method": "cash", "currency": "AED",
+              "exchange_rate": "1", "reference_number": "R1"}],
             tenant_id=1,
         )
         assert out[0]["amount_aed"] == Decimal("10.000")
         assert out[0]["reference_number"] == "R1"
 
     def test_method_alias_key(self):
-        out = SaleService.prepare_split_payments([{"amount": "5", "method": "cash", "currency": "AED"}])
+        out = SaleService.prepare_split_payments(
+            [{"amount": "5", "method": "cash", "currency": "AED"}]
+        )
         assert out[0]["payment_method"] == "cash"
 
 
@@ -179,14 +178,11 @@ class TestCancelAndHelpers:
         from models import Payment
 
         pay = Payment(
-            tenant_id=sample_sale.tenant_id,
-            sale_id=sample_sale.id,
-            payment_number=f"COV4-{sample_sale.id}",
-            payment_type="customer_payment",
+            tenant_id=sample_sale.tenant_id, sale_id=sample_sale.id,
+            payment_number=f"COV4-{sample_sale.id}", payment_type="customer_payment",
             payment_method="cash",
             amount=Decimal("10"),
-            amount_aed=Decimal("10"),
-            payment_confirmed=True,
+            amount_aed=Decimal("10"), payment_confirmed=True,
         )
         db_session.add(pay)
         db_session.flush()

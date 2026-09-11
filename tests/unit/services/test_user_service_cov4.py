@@ -66,10 +66,7 @@ class TestSimpleLookups:
         from models import User
 
         user = User(
-            username="cov4_2fa_user",
-            full_name="Cov4",
-            email="c4@example.com",
-            phone="",
+            username="cov4_2fa_user", full_name="Cov4", email="c4@example.com", phone="",
             role_id=sample_role.id,
         )
         user.set_password("x")
@@ -129,10 +126,7 @@ class TestBranchAndTenantHelpers:
         from models import User
 
         user = User(
-            username="cov4_prof_user",
-            full_name="Prof",
-            email="p@example.com",
-            phone="",
+            username="cov4_prof_user", full_name="Prof", email="p@example.com", phone="",
             role_id=sample_role.id,
         )
         user.set_password("x")

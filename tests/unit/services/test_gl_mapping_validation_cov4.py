@@ -79,47 +79,31 @@ class TestPureHelpers:
         assert d["concept_code"] == "CASH"
 
     def test_row_explicit_overrides(self, db_session, sample_tenant):
-        row = _row(sample_tenant, "CASH", "missing", "gone", severity="warning", recommended_fix="fix it")
+        row = _row(sample_tenant, "CASH", "missing", "gone",
+                   severity="warning", recommended_fix="fix it")
         assert row.severity == "warning"
         assert row.recommended_fix == "fix it"
 
     def test_seed_and_discovery_rows_to_dict(self):
         seed = GLMappingSeedPreviewRow(
-            tenant_id=1,
-            tenant_name="T",
-            concept_code="CASH",
-            expected_legacy_code="1111",
-            proposed_gl_account_id=2,
-            proposed_gl_account_code="1111",
-            proposed_gl_account_name="Cash",
-            status="ready",
-            issue="",
-            severity="critical",
+            tenant_id=1, tenant_name="T", concept_code="CASH",
+            expected_legacy_code="1111", proposed_gl_account_id=2,
+            proposed_gl_account_code="1111", proposed_gl_account_name="Cash",
+            status="ready", issue="", severity="critical",
             recommended_fix="No action required.",
         )
         assert seed.to_dict()["proposed_gl_account_code"] == "1111"
         disc = GLMappingCandidateDiscoveryRow(
-            tenant_id=1,
-            tenant_name="T",
-            concept_code="CASH",
-            candidate_gl_account_id=2,
-            candidate_gl_account_code="1111",
-            candidate_gl_account_name="Cash",
-            candidate_reason="name match",
-            confidence="high",
-            status="suggested",
-            recommended_fix="use it",
+            tenant_id=1, tenant_name="T", concept_code="CASH",
+            candidate_gl_account_id=2, candidate_gl_account_code="1111",
+            candidate_gl_account_name="Cash", candidate_reason="name match",
+            confidence="high", status="suggested", recommended_fix="use it",
         )
         assert disc.to_dict()["confidence"] == "high"
         base = GLMappingValidationRow(
-            tenant_id=1,
-            tenant_name="T",
-            concept_code="CASH",
-            expected_legacy_code="1111",
-            status="ready",
-            issue="ok",
-            severity="critical",
-            recommended_fix="No action required.",
+            tenant_id=1, tenant_name="T", concept_code="CASH",
+            expected_legacy_code="1111", status="ready", issue="ok",
+            severity="critical", recommended_fix="No action required.",
         )
         assert base.to_dict()["status"] == "ready"
 

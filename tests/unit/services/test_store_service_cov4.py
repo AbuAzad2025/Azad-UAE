@@ -47,11 +47,15 @@ class TestLocks:
     def test_effective_enabled_matrix(self):
         assert StoreService.effective_enabled(None) is False
         assert StoreService.effective_enabled(SimpleNamespace(is_enabled=False, platform_disabled=False)) is False
-        assert StoreService.effective_enabled(SimpleNamespace(is_enabled=True, platform_disabled=True)) is False
+        assert (
+            StoreService.effective_enabled(SimpleNamespace(is_enabled=True, platform_disabled=True)) is False
+        )
         assert StoreService.effective_enabled(SimpleNamespace(is_enabled=True, platform_disabled=False)) is True
 
     def test_stores_globally_enabled_exception(self, mocker):
-        mocker.patch("services.store_service.SystemSettings.get_current", side_effect=RuntimeError("db down"))
+        mocker.patch(
+            "services.store_service.SystemSettings.get_current", side_effect=RuntimeError("db down")
+        )
         assert StoreService.stores_globally_enabled() is False
 
     def test_stores_globally_enabled_true_false(self, mocker):

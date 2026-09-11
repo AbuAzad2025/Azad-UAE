@@ -123,7 +123,9 @@ class TestPostOrFailArcs:
 
     def test_invalid_rate_non_base_currency_raises(self, mocker):
         mocker.patch("services.gl_posting.assert_period_open")
-        mocker.patch("services.gl_posting.resolve_tenant_base_currency", return_value="AED")
+        mocker.patch(
+            "services.gl_posting.resolve_tenant_base_currency", return_value="AED"
+        )
         with pytest.raises(GlPostingError, match="صرف"):
             post_or_fail(
                 self._balanced(),
@@ -135,9 +137,13 @@ class TestPostOrFailArcs:
 
     def test_invalid_rate_base_currency_resets(self, mocker):
         mocker.patch("services.gl_posting.assert_period_open")
-        mocker.patch("services.gl_posting.resolve_tenant_base_currency", return_value="AED")
+        mocker.patch(
+            "services.gl_posting.resolve_tenant_base_currency", return_value="AED"
+        )
         mock_entry = MagicMock(id=11)
-        mocker.patch("services.gl_posting.GLService.create_journal_entry", return_value=mock_entry)
+        mocker.patch(
+            "services.gl_posting.GLService.create_journal_entry", return_value=mock_entry
+        )
         mocker.patch(
             "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
             return_value=MagicMock(status="validated"),
@@ -159,9 +165,13 @@ class TestPostOrFailArcs:
 
     def test_validation_error_status_raises_wrapped(self, mocker):
         mocker.patch("services.gl_posting.assert_period_open")
-        mocker.patch("services.gl_posting.resolve_tenant_base_currency", return_value="AED")
+        mocker.patch(
+            "services.gl_posting.resolve_tenant_base_currency", return_value="AED"
+        )
         mock_entry = MagicMock(id=12)
-        mocker.patch("services.gl_posting.GLService.create_journal_entry", return_value=mock_entry)
+        mocker.patch(
+            "services.gl_posting.GLService.create_journal_entry", return_value=mock_entry
+        )
         mocker.patch(
             "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
             return_value=MagicMock(status="error", validation_errors="bad header"),
@@ -176,9 +186,13 @@ class TestPostOrFailArcs:
 
     def test_wraps_post_errors(self, mocker):
         mocker.patch("services.gl_posting.assert_period_open")
-        mocker.patch("services.gl_posting.resolve_tenant_base_currency", return_value="AED")
+        mocker.patch(
+            "services.gl_posting.resolve_tenant_base_currency", return_value="AED"
+        )
         mock_entry = MagicMock(id=13)
-        mocker.patch("services.gl_posting.GLService.create_journal_entry", return_value=mock_entry)
+        mocker.patch(
+            "services.gl_posting.GLService.create_journal_entry", return_value=mock_entry
+        )
         mocker.patch(
             "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
             return_value=MagicMock(status="validated"),
@@ -198,9 +212,13 @@ class TestPostOrFailArcs:
 
     def test_none_exchange_rate_defaults_to_one(self, mocker):
         mocker.patch("services.gl_posting.assert_period_open")
-        mocker.patch("services.gl_posting.resolve_tenant_base_currency", return_value="AED")
+        mocker.patch(
+            "services.gl_posting.resolve_tenant_base_currency", return_value="AED"
+        )
         mock_entry = MagicMock(id=14)
-        mocker.patch("services.gl_posting.GLService.create_journal_entry", return_value=mock_entry)
+        mocker.patch(
+            "services.gl_posting.GLService.create_journal_entry", return_value=mock_entry
+        )
         mocker.patch(
             "services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry",
             return_value=MagicMock(status="validated"),

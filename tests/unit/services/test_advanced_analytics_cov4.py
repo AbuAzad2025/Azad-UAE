@@ -20,20 +20,11 @@ def test_ratios_all_zero_branch(sample_tenant):
 def test_ratios_nonzero_math():
     from decimal import Decimal
 
-    vals = {
-        "11": Decimal("200"),
-        "1": Decimal("1000"),
-        "21": Decimal("100"),
-        "2": Decimal("400"),
-        "3": Decimal("600"),
-        "4": Decimal("500"),
-        "multi": Decimal("300"),
-    }
-    with patch.object(
-        AFA,
-        "_calculate_balance_by_prefix",
-        side_effect=lambda *a, **k: vals.get(a[0] if isinstance(a[0], str) else "multi", Decimal("0")),
-    ):
+    vals = {"11": Decimal("200"), "1": Decimal("1000"), "21": Decimal("100"),
+            "2": Decimal("400"), "3": Decimal("600"), "4": Decimal("500"),
+            "multi": Decimal("300")}
+    with patch.object(AFA, "_calculate_balance_by_prefix", side_effect=lambda *a, **k: vals.get(
+            a[0] if isinstance(a[0], str) else "multi", Decimal("0"))):
         ratios = AFA.get_financial_ratios(tenant_id=1)
     assert ratios["liquidity"]["current_ratio"] == 2.0
     assert ratios["profitability"]["net_profit_margin"] == 40.0
@@ -48,7 +39,8 @@ def test_balance_by_prefix_branches(db_session, sample_tenant, sample_gl_account
 
     acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1111").first()
     assert acc is not None
-    out = AFA._calculate_balance_by_prefix("111", date(2026, 1, 1), date(2026, 12, 31), tenant_id=sample_tenant.id)
+    out = AFA._calculate_balance_by_prefix("111", date(2026, 1, 1), date(2026, 12, 31),
+                                           tenant_id=sample_tenant.id)
     assert out == Decimal("0")
     out2 = AFA._calculate_balance_by_prefix(["11", "12"], tenant_id=sample_tenant.id)
     assert isinstance(out2, Decimal)
@@ -60,12 +52,16 @@ def test_account_type_balance_else_branch(db_session, sample_tenant, sample_gl_a
 
 
 def test_trend_and_change_math():
-    with patch.object(AFA, "_calculate_account_type_balance", side_effect=[100, 60, 200, 50, 0, 0]):
+    with patch.object(AFA, "_calculate_account_type_balance",
+                      side_effect=[100, 60, 200, 50, 0, 0]):
         trends = AFA.get_trend_analysis(months=3)
     assert len(trends) == 3
     assert trends[0]["change"] == 0
-    assert trends[1]["change"] == 150.0
-    assert trends[2]["change"] == 0  # prev profit 0 branch... (150->-50?) check below
+    # Month 1: profit = 100-60 = 40
+    # Month 2: profit = 200-50 = 150, change from 40 = ((150-40)/40)*100 = 275.0
+    # Month 3: profit = 0-0 = 0, change from 150 = ((0-150)/150)*100 = -100.0
+    assert trends[1]["change"] == 275.0
+    assert trends[2]["change"] == -100.0
 
 
 def test_comparative_unknown_period_skipped():
@@ -91,18 +87,17 @@ def test_forecast_short_history_and_normal():
         fc = AFA.get_forecasting_data(months_ahead=2)
         assert len(fc) == 2
         assert fc[0]["is_forecast"] is True
-    with patch.object(AFA, "get_trend_analysis", return_value=[{"revenue": 0.0}] * 12):
+    with patch.object(AFA, "get_trend_analysis", return_value=[{"revenue": 0.0, "expenses": 0.0}] * 12):
         fc = AFA.get_forecasting_data(months_ahead=1)
         assert fc[0]["margin"] == 0  # zero-revenue margin branch
 
 
 def test_dashboard_summary_keys():
-    with (
-        patch.object(AFA, "get_financial_ratios", return_value={"r": 1}),
-        patch.object(AFA, "get_trend_analysis", return_value=[]),
-        patch.object(AFA, "get_expense_breakdown", return_value={}),
-        patch.object(AFA, "get_revenue_breakdown", return_value={}),
-        patch.object(AFA, "get_forecasting_data", return_value=[]),
-    ):
+    with patch.object(AFA, "get_financial_ratios", return_value={"r": 1}), \
+         patch.object(AFA, "get_trend_analysis", return_value=[]), \
+         patch.object(AFA, "get_expense_breakdown", return_value={}), \
+         patch.object(AFA, "get_revenue_breakdown", return_value={}), \
+         patch.object(AFA, "get_forecasting_data", return_value=[]):
         dash = AFA.get_dashboard_summary()
-        assert set(dash) == {"ratios", "trends", "expense_breakdown", "revenue_breakdown", "forecast", "generated_at"}
+        assert set(dash) == {"ratios", "trends", "expense_breakdown",
+                             "revenue_breakdown", "forecast", "generated_at"}

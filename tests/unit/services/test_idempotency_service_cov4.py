@@ -25,10 +25,7 @@ def test_is_expired_branches(db_session, sample_tenant):
     from models import IdempotencyKey
 
     rec = IdempotencyKey(
-        tenant_id=sample_tenant.id,
-        endpoint="e",
-        key="k1",
-        request_hash="h",
+        tenant_id=sample_tenant.id, endpoint="e", key="k1", request_hash="h",
         status=IdempotencyKey.STATUS_IN_PROGRESS,
     )
     rec.created_at = None
@@ -47,22 +44,16 @@ def _h(payload):
 
 
 def test_replay_none_when_fresh(db_session, sample_tenant):
-    assert (
-        IdempotencyService.replay_if_completed(
-            tenant_id=sample_tenant.id, endpoint="cov4-ep", key="fresh-key", request_hash=_h({})
-        )
-        is None
-    )
+    assert IdempotencyService.replay_if_completed(
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="fresh-key", request_hash=_h({})
+    ) is None
 
 
 def test_begin_then_complete_then_replay(db_session, sample_tenant):
     h = _h({"a": 1})
     record, stored = IdempotencyService.begin(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-replay",
-        user_id=None,
-        request_hash=h,
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-replay",
+        user_id=None, request_hash=h,
     )
     assert stored is None
     assert record is not None
@@ -79,11 +70,8 @@ def test_begin_then_complete_then_replay(db_session, sample_tenant):
     assert status == 201
     # begin on completed returns stored pair
     rec2, stored2 = IdempotencyService.begin(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-replay",
-        user_id=None,
-        request_hash=h,
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-replay",
+        user_id=None, request_hash=h,
     )
     assert rec2 is None
     assert stored2 == ({"ok": True}, 201)
@@ -93,19 +81,13 @@ def test_hash_mismatch_and_inflight(db_session, sample_tenant):
     h1 = _h({"a": 1})
     h2 = _h({"a": 2})
     IdempotencyService.begin(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-mm",
-        user_id=None,
-        request_hash=h1,
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-mm",
+        user_id=None, request_hash=h1,
     )
     with pytest.raises(IdempotencyHashMismatchError):
         IdempotencyService.begin(
-            tenant_id=sample_tenant.id,
-            endpoint="cov4-ep",
-            key="k-mm",
-            user_id=None,
-            request_hash=h2,
+            tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-mm",
+            user_id=None, request_hash=h2,
         )
     with pytest.raises(IdempotencyHashMismatchError):
         IdempotencyService.replay_if_completed(
@@ -113,11 +95,8 @@ def test_hash_mismatch_and_inflight(db_session, sample_tenant):
         )
     with pytest.raises(IdempotencyInFlightError):
         IdempotencyService.begin(
-            tenant_id=sample_tenant.id,
-            endpoint="cov4-ep",
-            key="k-mm",
-            user_id=None,
-            request_hash=h1,
+            tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-mm",
+            user_id=None, request_hash=h1,
         )
 
 
@@ -125,27 +104,17 @@ def test_completed_without_body_replays_none(db_session, sample_tenant):
     from models import IdempotencyKey
 
     rec = IdempotencyKey(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-nobody",
-        request_hash=_h({}),
-        status=IdempotencyKey.STATUS_COMPLETED,
-        response_body=None,
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-nobody",
+        request_hash=_h({}), status=IdempotencyKey.STATUS_COMPLETED, response_body=None,
     )
     db_session.add(rec)
     db_session.flush()
-    assert (
-        IdempotencyService.replay_if_completed(
-            tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-nobody", request_hash=_h({})
-        )
-        is None
-    )
+    assert IdempotencyService.replay_if_completed(
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-nobody", request_hash=_h({})
+    ) is None
     _, stored = IdempotencyService.begin(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-nobody",
-        user_id=None,
-        request_hash=_h({}),
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-nobody",
+        user_id=None, request_hash=_h({}),
     )
     assert stored is None
 
@@ -154,29 +123,19 @@ def test_expired_row_replaced_and_replay_none(db_session, sample_tenant):
     from models import IdempotencyKey
 
     rec = IdempotencyKey(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-old",
-        request_hash=_h({}),
-        status=IdempotencyKey.STATUS_COMPLETED,
-        response_body='{"a":1}',
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-old",
+        request_hash=_h({}), status=IdempotencyKey.STATUS_COMPLETED, response_body='{"a":1}',
     )
     db_session.add(rec)
     db_session.flush()
     rec.created_at = datetime.now(UTC) - timedelta(hours=30)
     db_session.flush()
-    assert (
-        IdempotencyService.replay_if_completed(
-            tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-old", request_hash=_h({})
-        )
-        is None
-    )
+    assert IdempotencyService.replay_if_completed(
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-old", request_hash=_h({})
+    ) is None
     record, stored = IdempotencyService.begin(
-        tenant_id=sample_tenant.id,
-        endpoint="cov4-ep",
-        key="k-old",
-        user_id=None,
-        request_hash=_h({}),
+        tenant_id=sample_tenant.id, endpoint="cov4-ep", key="k-old",
+        user_id=None, request_hash=_h({}),
     )
     assert stored is None
     assert record is not None

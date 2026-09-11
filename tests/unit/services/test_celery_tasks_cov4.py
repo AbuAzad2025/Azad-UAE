@@ -38,7 +38,7 @@ def test_generate_monthly_report_noop():
 
 def test_cleanup_old_cache_success_and_failure():
     assert cleanup_old_cache() == {"success": True, "message": "Cache cleared"}
-    with patch("services.celery_tasks.cache.clear", side_effect=RuntimeError("redis down")):
+    with patch("extensions.cache.clear", side_effect=RuntimeError("redis down")):
         out = cleanup_old_cache()
         assert out == {"success": False, "error": "redis down"}
 
@@ -62,7 +62,7 @@ def test_abandoned_cart_first_reminder_skips_storeless(db_session, sample_tenant
     db_session.add(cart)
     db_session.flush()
     # store lookup: tenant has no store email configured path -> continue branch
-    with patch("services.celery_tasks.StoreService.get_tenant_store", return_value=None):
+    with patch("services.store_service.StoreService.get_tenant_store", return_value=None):
         assert send_abandoned_cart_reminders() is None
     db_session.refresh(cart)
     assert cart.reminder_sent_at is None
@@ -85,10 +85,11 @@ def test_abandoned_cart_second_reminder_and_exception(db_session, sample_tenant)
     from types import SimpleNamespace
 
     store = SimpleNamespace(email="store@example.com")
-    with patch("services.celery_tasks.StoreService.get_tenant_store", return_value=store):
+    with patch("services.store_service.StoreService.get_tenant_store", return_value=store):
         assert send_abandoned_cart_reminders() is None
     db_session.refresh(cart)
     assert cart.reminder_count == 2
     # exception path: store lookup blows up -> logged, loop continues
-    with patch("services.celery_tasks.StoreService.get_tenant_store", side_effect=RuntimeError("boom")):
+    with patch("services.store_service.StoreService.get_tenant_store",
+               side_effect=RuntimeError("boom")):
         assert send_abandoned_cart_reminders() is None

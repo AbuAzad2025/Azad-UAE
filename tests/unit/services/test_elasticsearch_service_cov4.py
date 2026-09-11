@@ -120,9 +120,7 @@ def test_search_sales_enabled_no_filters(monkeypatch):
     assert out["total"] == 0
 
 
-def test_fallback_search_with_filters_and_query(
-    db_session, sample_tenant, sample_user, sample_warehouse, sample_customer
-):
+def test_fallback_search_with_filters_and_query(db_session, sample_tenant, sample_user, sample_warehouse, sample_customer):
     from datetime import datetime
     from decimal import Decimal
 

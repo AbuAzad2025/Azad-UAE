@@ -42,9 +42,13 @@ def test_sum_sales_with_filters(
     assert float(FinancialService.sum_sales(sample_tenant.id, branch_id=sample_branch.id)) == 100.0
     assert FinancialService.sum_sales(sample_tenant.id, branch_id=999999) == 0
     assert float(FinancialService.sum_sales(sample_tenant.id, seller_id=sample_user.id)) == 100.0
-    assert float(FinancialService.sum_sales(sample_tenant.id, date_from=date.today() - timedelta(days=1))) == 100.0
+    assert float(
+        FinancialService.sum_sales(sample_tenant.id, date_from=date.today() - timedelta(days=1))
+    ) == 100.0
     assert FinancialService.sum_sales(sample_tenant.id, date_from=date.today() + timedelta(days=1)) == 0
-    assert float(FinancialService.sum_sales(sample_tenant.id, date_to=date.today() + timedelta(days=1))) == 100.0
+    assert float(
+        FinancialService.sum_sales(sample_tenant.id, date_to=date.today() + timedelta(days=1))
+    ) == 100.0
     assert FinancialService.sum_sales(sample_tenant.id, status="draft") == 0
     assert FinancialService.sum_sales(sample_tenant.id, status=None) != 0
 
@@ -81,7 +85,9 @@ def test_dashboard_context_structure(sample_tenant):
 
 
 def test_dashboard_context_with_branch_and_december_path(sample_tenant, sample_branch):
-    ctx = FinancialService.get_financial_dashboard_advanced_context(sample_tenant.id, branch_id=sample_branch.id)
+    ctx = FinancialService.get_financial_dashboard_advanced_context(
+        sample_tenant.id, branch_id=sample_branch.id
+    )
     assert len(ctx["months_data"]) == 12
 
 

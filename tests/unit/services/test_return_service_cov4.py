@@ -32,7 +32,8 @@ def _anon():
 
 
 def _user(**kwargs):
-    base = {"is_authenticated": True, "id": 5, "tenant_id": 1, "branch_id": 1, "seller_id": 5}
+    base = {"is_authenticated": True, "id": 5, "tenant_id": 1,
+            "branch_id": 1, "seller_id": 5}
     base.update(kwargs)
     return SimpleNamespace(**base)
 

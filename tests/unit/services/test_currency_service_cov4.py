@@ -51,7 +51,8 @@ def test_fetch_open_er_branches():
     resp.json.return_value = {"result": "error", "rates": {}}
     with patch.object(cs, "REQUESTS_AVAILABLE", True), patch.object(cs, "requests", fake_requests):
         assert CurrencyService._fetch_open_er_api_rates("AED") == {}
-    resp.json.return_value = {"result": "success", "rates": {"USD": 0.27, "BAD!": object()}}
+    resp.json.return_value = {"result": "success",
+                              "rates": {"USD": 0.27, "BAD!": object()}}
     with patch.object(cs, "REQUESTS_AVAILABLE", True), patch.object(cs, "requests", fake_requests):
         out = CurrencyService._fetch_open_er_api_rates("aed")
         assert out["USD"] == Decimal("0.27")
@@ -66,10 +67,8 @@ def test_get_all_rates_cache_and_fallback():
     CurrencyService._rates_cache["AED"] = {"timestamp": time.time(), "rates": {"USD": Decimal("0.5")}}
     assert CurrencyService.get_all_rates("AED") == {"USD": Decimal("0.5")}
     _clear()
-    with (
-        patch.object(cs, "FOREX_AVAILABLE", False),
-        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
-    ):
+    with patch.object(cs, "FOREX_AVAILABLE", False), patch.object(
+        CurrencyService, "_fetch_open_er_api_rates", return_value={}):
         rates = CurrencyService.get_all_rates("USD")
         assert rates["USD"] == Decimal("1.00")
         assert rates["AED"] > 0
@@ -85,13 +84,9 @@ def test_get_all_rates_forex_and_http():
         assert rates["USD"] == Decimal("1.00")
     _clear()
     fake_cls.return_value.get_rates.side_effect = RuntimeError("forex down")
-    with (
-        patch.object(cs, "FOREX_AVAILABLE", True),
-        patch.object(cs, "CurrencyRates", fake_cls),
-        patch.object(
-            CurrencyService, "_fetch_open_er_api_rates", return_value={"USD": Decimal("1"), "EUR": Decimal("0.9")}
-        ),
-    ):
+    with patch.object(cs, "FOREX_AVAILABLE", True), patch.object(cs, "CurrencyRates", fake_cls), \
+         patch.object(CurrencyService, "_fetch_open_er_api_rates",
+                      return_value={"USD": Decimal("1"), "EUR": Decimal("0.9")}):
         rates = CurrencyService.get_all_rates("USD")
         assert rates["EUR"] == Decimal("0.9")
 
@@ -105,26 +100,25 @@ def test_details_user_parity_cache_http_forex_fallback():
     out = CurrencyService.get_exchange_rate_details("USD", "AED", user_rate="-5")
     assert out["source"] != "user_input"
     assert CurrencyService.get_exchange_rate_details("AED", "AED")["source"] == "parity"
-    CurrencyService._rates_cache["USD"] = {"timestamp": time.time(), "rates": {"AED": Decimal("3.6725")}}
+    CurrencyService._rates_cache["USD"] = {"timestamp": time.time(),
+                                           "rates": {"AED": Decimal("3.6725")}}
     out = CurrencyService.get_exchange_rate_details("USD", "AED")
     assert out["source"] == "cache" and out["cached"] is True
     _clear()
-    with patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={"AED": Decimal("3.67")}):
+    with patch.object(CurrencyService, "_fetch_open_er_api_rates",
+                      return_value={"AED": Decimal("3.67")}):
         out = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert out["source"] == "open_er_api"
     _clear()
-    with (
-        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
-        patch.object(cs, "FOREX_AVAILABLE", True),
-        patch.object(cs, "CurrencyRates", return_value=MagicMock(get_rate=MagicMock(return_value=3.6))),
-    ):
+    with patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}), \
+         patch.object(cs, "FOREX_AVAILABLE", True), patch.object(
+             cs, "CurrencyRates",
+             return_value=MagicMock(get_rate=MagicMock(return_value=3.6))):
         out = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert out["source"] == "forex_python"
     _clear()
-    with (
-        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
-        patch.object(cs, "FOREX_AVAILABLE", False),
-    ):
+    with patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}), \
+         patch.object(cs, "FOREX_AVAILABLE", False):
         out = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert out["source"] == "fallback_static"
         assert out["rate"] > 0
@@ -136,11 +130,10 @@ def test_details_defaults_and_stale_cache(app):
     _clear()
     out = CurrencyService.get_exchange_rate_details(None, None)
     assert out["source"] == "parity"
-    CurrencyService._rates_cache["USD"] = {"timestamp": time.time() - 9999, "rates": {"AED": Decimal("3.6")}}
-    with (
-        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
-        patch.object(cs, "FOREX_AVAILABLE", False),
-    ):
+    CurrencyService._rates_cache["USD"] = {"timestamp": time.time() - 9999,
+                                           "rates": {"AED": Decimal("3.6")}}
+    with patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}), \
+         patch.object(cs, "FOREX_AVAILABLE", False):
         out = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert out["source"] == "fallback_static"
     _clear()

@@ -56,10 +56,7 @@ class TestPostingLineConcepts:
         assert GLService.get_payment_credit_concept("") is None
 
     def test_customer_concept_variants(self):
-        assert (
-            GLService.get_customer_credit_concept(SimpleNamespace(customer_type="merchant"))
-            == "MERCHANT_CURRENT_ACCOUNT"
-        )
+        assert GLService.get_customer_credit_concept(SimpleNamespace(customer_type="merchant")) == "MERCHANT_CURRENT_ACCOUNT"
         assert GLService.get_customer_credit_concept(SimpleNamespace(customer_type=None)) == "AR"
         assert GLService.get_customer_credit_concept(SimpleNamespace()) == "AR"
 
@@ -161,11 +158,13 @@ class TestFiscalYear:
         db_session.rollback()
 
     def test_close_no_lines_raises(self, db_session, sample_tenant, mocker):
-        mocker.patch.object(FiscalYearService, "validate_periods_closed", return_value=[])
         mocker.patch.object(
-            FiscalYearService,
-            "calculate_pl_balance",
-            return_value={"lines": [], "net_income": Decimal("0"), "end_date": None},
+            FiscalYearService, "validate_periods_closed", return_value=[]
+        )
+        mocker.patch.object(
+            FiscalYearService, "calculate_pl_balance",
+            return_value={"lines": [], "net_income": Decimal("0"),
+                          "end_date": None},
         )
         with pytest.raises(ValueError, match="لإغلاقها"):
             FiscalYearService.close_fiscal_year(sample_tenant.id, 2026)
@@ -173,17 +172,18 @@ class TestFiscalYear:
     def test_close_missing_retained_raises(self, db_session, sample_tenant, mocker):
         from models.gl import GLAccount
 
-        GLAccount.query.filter_by(tenant_id=sample_tenant.id, code=FiscalYearService.RETAINED_EARNINGS_CODE).delete()
+        GLAccount.query.filter_by(
+            tenant_id=sample_tenant.id, code=FiscalYearService.RETAINED_EARNINGS_CODE
+        ).delete()
         db_session.flush()
-        mocker.patch.object(FiscalYearService, "validate_periods_closed", return_value=[])
         mocker.patch.object(
-            FiscalYearService,
-            "calculate_pl_balance",
-            return_value={
-                "lines": [{"account_id": 1, "balance": Decimal("5"), "account_type": "revenue"}],
-                "net_income": Decimal("5"),
-                "end_date": None,
-            },
+            FiscalYearService, "validate_periods_closed", return_value=[]
+        )
+        mocker.patch.object(
+            FiscalYearService, "calculate_pl_balance",
+            return_value={"lines": [{"account_id": 1, "balance": Decimal("5"),
+                                     "account_type": "revenue"}],
+                          "net_income": Decimal("5"), "end_date": None},
         )
         with pytest.raises(ValueError, match="مرحلة"):
             FiscalYearService.close_fiscal_year(sample_tenant.id, 2026)
@@ -192,11 +192,15 @@ class TestFiscalYear:
 
 class TestReportsSmoke:
     def test_trial_balance_smoke(self, db_session, sample_tenant, sample_gl_accounts):
-        out = GLService.get_trial_balance(tenant_id=sample_tenant.id, date_from=None, date_to=None)
+        out = GLService.get_trial_balance(
+            tenant_id=sample_tenant.id, date_from=None, date_to=None
+        )
         assert out is not None
 
     def test_income_statement_smoke(self, db_session, sample_tenant, sample_gl_accounts):
-        out = GLService.build_income_statement(sample_tenant.id, date_from=None, date_to=None, branch_id=None)
+        out = GLService.build_income_statement(
+            sample_tenant.id, date_from=None, date_to=None, branch_id=None
+        )
         assert out is not None
 
     def test_accounts_tree_smoke(self, db_session, sample_tenant, sample_gl_accounts):
@@ -208,5 +212,7 @@ class TestReportsSmoke:
         assert out is not None
 
     def test_balance_sheet_smoke(self, db_session, sample_tenant, sample_gl_accounts):
-        out = GLService.build_balance_sheet(sample_tenant.id, None, date(2026, 12, 31))
+        out = GLService.build_balance_sheet(
+            sample_tenant.id, None, date(2026, 12, 31)
+        )
         assert out is not None

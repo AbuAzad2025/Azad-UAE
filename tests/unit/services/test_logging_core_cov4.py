@@ -62,6 +62,12 @@ class TestRequestHelpers:
             assert _get_request_id() == "fixed-id"
 
     def test_request_context_no_request(self, app):
+        from flask.globals import request_ctx
+
+        try:
+            request_ctx._get_current_object().pop()
+        except (LookupError, RuntimeError):
+            pass  # Already popped or no context
         with app.app_context():
             ctx = _get_request_context()
             assert ctx["url"] is None

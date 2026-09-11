@@ -58,7 +58,9 @@ class TestJsonlRoundtrip:
 class TestRemapRow:
     def test_pk_and_tenant_and_fk(self):
         id_maps = {"tenants": {1: 9}, "branches": {2: 8}}
-        out = _remap_row({"id": 5, "tenant_id": 1}, "tenants", {**id_maps, "tenants": {5: 50}}, force_tenant_id=9)
+        out = _remap_row(
+            {"id": 5, "tenant_id": 1}, "tenants", {**id_maps, "tenants": {5: 50}}, force_tenant_id=9
+        )
         assert out["id"] == 50
         assert out["tenant_id"] == 9
 
@@ -91,8 +93,7 @@ class TestExportScopeOrdering:
         import services.backup_scoped_engine as eng
 
         mocker.patch.object(
-            eng,
-            "export_scoped_database",
+            eng, "export_scoped_database",
             return_value=({"sales": [{"id": 1}], "zzz_custom": [{"id": 2}]}, {"sales": 1}, ["sales"], [], []),
         )
         out = export_scope(MagicMock(), "tenant", tenant_id=1)
@@ -109,12 +110,8 @@ class TestWriteDataBundle:
 
         exp = ExportResult(
             tables={"sales": [{"id": 1}], "empty_t": []},
-            row_counts={},
-            included=["sales"],
-            skipped=[],
-            dependency_order=["sales", "empty_t"],
-            scope="tenant",
-            tenant_id=1,
+            row_counts={}, included=["sales"], skipped=[], dependency_order=["sales", "empty_t"],
+            scope="tenant", tenant_id=1,
         )
         with patch.object(eng, "table_exists", return_value=False):
             meta = write_data_bundle(str(tmp_path), exp, conn)
