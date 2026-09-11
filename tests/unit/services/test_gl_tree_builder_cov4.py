@@ -36,15 +36,26 @@ from services.gl_tree_builder import (
 class TestTemplateHelpers:
     def test_template_contra_default_false(self):
         tmpl = SimpleNamespace(
-            code="9990", name_ar="ح", name="X", type="asset",
-            parent_code=None, is_header=False, level=1,
+            code="9990",
+            name_ar="ح",
+            name="X",
+            type="asset",
+            parent_code=None,
+            is_header=False,
+            level=1,
         )
         assert _template_to_tuple(tmpl)[-1] is False
 
     def test_template_contra_true(self):
         tmpl = SimpleNamespace(
-            code="9990", name_ar="ح", name="X", type="asset",
-            parent_code=None, is_header=False, level=1, is_contra=True,
+            code="9990",
+            name_ar="ح",
+            name="X",
+            type="asset",
+            parent_code=None,
+            is_header=False,
+            level=1,
+            is_contra=True,
         )
         assert _template_to_tuple(tmpl)[-1] is True
 
@@ -62,9 +73,7 @@ class TestTemplateHelpers:
 
 
 class TestBuildArcs:
-    def test_build_idempotent_and_exposes_accounts(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_build_idempotent_and_exposes_accounts(self, db_session, sample_tenant, sample_gl_accounts):
         first = GLTreeBuilder.build(sample_tenant.id, commit=False)
         assert "accounts" in first
         assert first["tenant_id"] == sample_tenant.id
@@ -75,28 +84,23 @@ class TestBuildArcs:
         report = GLTreeBuilder.build(sample_tenant.id, commit=True)
         assert report["tenant_id"] == sample_tenant.id
 
-    def test_build_industry_exception_fallback(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_build_industry_exception_fallback(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_tree_builder.db.session.get", side_effect=RuntimeError("boom"))
         report = GLTreeBuilder.build(sample_tenant.id, commit=False)
         assert report["tenant_id"] == sample_tenant.id
 
-    def test_build_captures_account_errors(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
-        mocker.patch.object(
-            GLTreeBuilder, "_process_account", side_effect=RuntimeError("bad row")
-        )
+    def test_build_captures_account_errors(self, db_session, sample_tenant, sample_gl_accounts, mocker):
+        mocker.patch.object(GLTreeBuilder, "_process_account", side_effect=RuntimeError("bad row"))
         report = GLTreeBuilder.build(sample_tenant.id, commit=False)
         assert len(report["errors"]) > 0
 
-    def test_cleanup_extra_deactivates_non_core(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_cleanup_extra_deactivates_non_core(self, db_session, sample_tenant, sample_gl_accounts):
         extra = GLAccount(
-            tenant_id=sample_tenant.id, code="COV4-EXTRA-1", name="Extra",
-            type="asset", is_active=True,
+            tenant_id=sample_tenant.id,
+            code="COV4-EXTRA-1",
+            name="Extra",
+            type="asset",
+            is_active=True,
         )
         db_session.add(extra)
         db_session.flush()
@@ -104,9 +108,7 @@ class TestBuildArcs:
         assert any(d["code"] == "COV4-EXTRA-1" for d in report["deactivated"])
         assert extra.is_active is False
 
-    def test_cleanup_extra_skips_core_and_liquidity(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_cleanup_extra_skips_core_and_liquidity(self, db_session, sample_tenant, sample_gl_accounts):
         core_code = next(iter(CORE_ACCOUNT_CODES))
         report = GLTreeBuilder.build(sample_tenant.id, cleanup_extra=True, commit=False)
         assert all(d["code"] != core_code for d in report["deactivated"])
@@ -115,8 +117,13 @@ class TestBuildArcs:
 class TestProcessAccountArcs:
     def _existing(self, db_session, sample_tenant, **kwargs):
         base = {
-            "tenant_id": sample_tenant.id, "code": "COV4-P1", "name": "EN",
-            "name_ar": "AR", "type": "asset", "is_header": False, "level": 2,
+            "tenant_id": sample_tenant.id,
+            "code": "COV4-P1",
+            "name": "EN",
+            "name_ar": "AR",
+            "type": "asset",
+            "is_header": False,
+            "level": 2,
             "is_active": True,
         }
         base.update(kwargs)
@@ -125,17 +132,30 @@ class TestProcessAccountArcs:
         db_session.flush()
         return acc
 
-    def test_reactivate_and_rename_and_retype(
-        self, db_session, sample_tenant, sample_gl_accounts
-    ):
+    def test_reactivate_and_rename_and_retype(self, db_session, sample_tenant, sample_gl_accounts):
         acc = self._existing(
-            db_session, sample_tenant, is_active=False, name="OLD", name_ar="قديم",
-            type="liability", level=9, is_contra=True,
+            db_session,
+            sample_tenant,
+            is_active=False,
+            name="OLD",
+            name_ar="قديم",
+            type="liability",
+            level=9,
+            is_contra=True,
         )
         existing = {acc.code: acc}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, acc.code, "AR", "EN", "asset", None,
-            False, 2, existing, {}, is_contra=False,
+            sample_tenant.id,
+            acc.code,
+            "AR",
+            "EN",
+            "asset",
+            None,
+            False,
+            2,
+            existing,
+            {},
+            is_contra=False,
         )
         assert out["action"] == "updated"
         assert acc.is_active is True
@@ -145,8 +165,17 @@ class TestProcessAccountArcs:
         acc = self._existing(db_session, sample_tenant, code="COV4-P2", is_header=False)
         existing = {acc.code: acc}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, acc.code, "AR", "EN", "asset", None,
-            True, 2, existing, {}, is_contra=False,
+            sample_tenant.id,
+            acc.code,
+            "AR",
+            "EN",
+            "asset",
+            None,
+            True,
+            2,
+            existing,
+            {},
+            is_contra=False,
         )
         assert out["action"] == "converted"
 
@@ -154,8 +183,17 @@ class TestProcessAccountArcs:
         acc = self._existing(db_session, sample_tenant, code="COV4-P3", level=2)
         existing = {acc.code: acc}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, acc.code, "AR", "EN", "asset", None,
-            False, 2, existing, {}, is_contra=False,
+            sample_tenant.id,
+            acc.code,
+            "AR",
+            "EN",
+            "asset",
+            None,
+            False,
+            2,
+            existing,
+            {},
+            is_contra=False,
         )
         assert out["action"] == "none"
 
@@ -163,8 +201,17 @@ class TestProcessAccountArcs:
         acc = self._existing(db_session, sample_tenant, code="COV4-P4")
         existing = {acc.code: acc}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, acc.code, "AR", "EN", "asset", None,
-            False, 2, existing, {}, is_contra="yes",
+            sample_tenant.id,
+            acc.code,
+            "AR",
+            "EN",
+            "asset",
+            None,
+            False,
+            2,
+            existing,
+            {},
+            is_contra="yes",
         )
         assert out["action"] in ("none", "updated")
 
@@ -174,8 +221,17 @@ class TestProcessAccountArcs:
         existing = {parent.code: parent, child.code: child}
         processed = {parent.code: parent}
         GLTreeBuilder._process_account(
-            sample_tenant.id, child.code, "AR", "EN", "asset", parent.code,
-            False, 2, existing, processed, is_contra=False,
+            sample_tenant.id,
+            child.code,
+            "AR",
+            "EN",
+            "asset",
+            parent.code,
+            False,
+            2,
+            existing,
+            processed,
+            is_contra=False,
         )
         assert child.parent_id == parent.id
 
@@ -183,8 +239,17 @@ class TestProcessAccountArcs:
         parent = self._existing(db_session, sample_tenant, code="COV4-NEWPAR")
         existing = {parent.code: parent}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, "COV4-NEWCH", "AR-new", "EN-new", "asset", parent.code,
-            False, 3, existing, {}, is_contra=False,
+            sample_tenant.id,
+            "COV4-NEWCH",
+            "AR-new",
+            "EN-new",
+            "asset",
+            parent.code,
+            False,
+            3,
+            existing,
+            {},
+            is_contra=False,
         )
         assert out["action"] == "created"
         assert existing["COV4-NEWCH"].parent_id == parent.id
@@ -192,24 +257,38 @@ class TestProcessAccountArcs:
     def test_create_without_parent(self, db_session, sample_tenant):
         existing = {}
         out = GLTreeBuilder._process_account(
-            sample_tenant.id, "COV4-ROOT", "AR-r", "EN-r", "asset", None,
-            True, 1, existing, {}, is_contra=False,
+            sample_tenant.id,
+            "COV4-ROOT",
+            "AR-r",
+            "EN-r",
+            "asset",
+            None,
+            True,
+            1,
+            existing,
+            {},
+            is_contra=False,
         )
         assert out["action"] == "created"
         db_session.rollback()
 
 
 class TestLiquidityAndValidate:
-    def test_liquidity_update_path(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_liquidity_update_path(self, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         # sample_gl_accounts already ensured the branch liquidity account;
         # stale it, then exercise the update path (lines 325-363).
         GLTreeBuilder.build(sample_tenant.id, commit=False)
-        existing, processed, report = {}, {}, {
-            "created": [], "updated": [], "converted": [],
-            "deactivated": [], "errors": [],
-        }
+        existing, processed, report = (
+            {},
+            {},
+            {
+                "created": [],
+                "updated": [],
+                "converted": [],
+                "deactivated": [],
+                "errors": [],
+            },
+        )
         code = GLTreeBuilder._branch_account_code("1110", sample_branch.id)
         acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code=code).first()
         assert acc is not None
@@ -222,10 +301,16 @@ class TestLiquidityAndValidate:
         db_session.flush()
         existing[code] = acc
         GLTreeBuilder._ensure_liquidity_account(
-            tenant_id=sample_tenant.id, code=code, name_ar="صندوق X",
-            name_en="Cashbox - X", parent_code="1110", branch_id=sample_branch.id,
-            liquidity_kind="cash", existing_accounts=existing,
-            processed=processed, audit_report=report,
+            tenant_id=sample_tenant.id,
+            code=code,
+            name_ar="صندوق X",
+            name_en="Cashbox - X",
+            parent_code="1110",
+            branch_id=sample_branch.id,
+            liquidity_kind="cash",
+            existing_accounts=existing,
+            processed=processed,
+            audit_report=report,
         )
         assert report["updated"]
         assert acc.type == "asset"
@@ -236,8 +321,7 @@ class TestLiquidityAndValidate:
         assert ok["total_accounts"] > 0
 
         missing_code = next(iter(CORE_ACCOUNT_CODES))
-        doomed = GLAccount.query.filter_by(
-            tenant_id=sample_tenant.id, code=missing_code).first()
+        doomed = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code=missing_code).first()
         if doomed is not None:
             doomed.is_active = False
             db_session.flush()
@@ -252,21 +336,32 @@ class TestLiquidityAndValidate:
 
         unique = uuid.uuid4().hex[:8]
         other_tenant = Tenant(
-            name=f"Foreign {unique}", name_ar=f"أجنبي {unique}",
-            slug=f"foreign-{unique}", email=f"foreign-{unique}@test.com",
-            country="AE", is_active=True,
+            name=f"Foreign {unique}",
+            name_ar=f"أجنبي {unique}",
+            slug=f"foreign-{unique}",
+            email=f"foreign-{unique}@test.com",
+            country="AE",
+            is_active=True,
         )
         db_session.add(other_tenant)
         db_session.flush()
         orphan_parent = GLAccount(
-            tenant_id=other_tenant.id, code="COV4-FOREIGN-PAR", name="Foreign",
-            type="asset", is_active=True,
+            tenant_id=other_tenant.id,
+            code="COV4-FOREIGN-PAR",
+            name="Foreign",
+            type="asset",
+            is_active=True,
         )
         db_session.add(orphan_parent)
         db_session.flush()
         orphan = GLAccount(
-            tenant_id=sample_tenant.id, code="COV4-ORPH", name="Orphan",
-            type="asset", parent_id=orphan_parent.id, level=5, is_active=True,
+            tenant_id=sample_tenant.id,
+            code="COV4-ORPH",
+            name="Orphan",
+            type="asset",
+            parent_id=orphan_parent.id,
+            level=5,
+            is_active=True,
         )
         db_session.add(orphan)
         db_session.flush()
@@ -274,7 +369,6 @@ class TestLiquidityAndValidate:
         assert flagged["valid"] is False
         assert any(a["code"] == "COV4-ORPH" for a in flagged["extra_accounts"])
         assert any(
-            "غير صالح" in str(i.get("issue", "")) or "يتطابق" in str(i.get("issue", ""))
-            for i in flagged["issues"]
+            "غير صالح" in str(i.get("issue", "")) or "يتطابق" in str(i.get("issue", "")) for i in flagged["issues"]
         )
         db_session.rollback()

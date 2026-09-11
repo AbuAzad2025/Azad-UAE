@@ -100,16 +100,20 @@ def test_display_flow_cache_primary_and_static():
     out2 = ExchangeRateService.get_online_rates_for_display("USD", ("ILS",))
     assert out2["source"] in ("online", "stale_cache")
     ExchangeRateService._display_cache.clear()
-    with patch.object(ExchangeRateService, "_fetch_primary", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_frankfurter", return_value={"ILS": 3.6}), \
-         patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None):
+    with (
+        patch.object(ExchangeRateService, "_fetch_primary", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_frankfurter", return_value={"ILS": 3.6}),
+        patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None),
+    ):
         out = ExchangeRateService.get_online_rates_for_display("USD", ("ILS", "XXX"))
         assert out["provider"] == "frankfurter"
         assert out["rates"]["XXX"] == 1.0  # unknown-symbol normalization branch
     ExchangeRateService._display_cache.clear()
-    with patch.object(ExchangeRateService, "_fetch_primary", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None):
+    with (
+        patch.object(ExchangeRateService, "_fetch_primary", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_frankfurter", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_fallbacks", return_value=None),
+    ):
         out = ExchangeRateService.get_online_rates_for_display("USD", ("ILS",))
         assert out["provider"] == "fallback_static" and out["ok"] is False
 
@@ -125,9 +129,11 @@ def test_resolve_fixed_user_parity_needs_input(sample_tenant):
     assert out["source"] == "parity"
     out = ExchangeRateService.resolve_exchange_rate_for_transaction(None, "AED")
     assert out["source"] == "parity"
-    with patch.object(ExchangeRateService, "_get_admin_rate", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None), \
-         patch.object(ExchangeRateService, "_get_last_known_rate", return_value=None):
+    with (
+        patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None),
+        patch.object(ExchangeRateService, "_get_last_known_rate", return_value=None),
+    ):
         out = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "ILS")
         assert out["rate_mode"] == "needs_input" and out["ok"] is False
 
@@ -136,13 +142,17 @@ def test_resolve_admin_online_last(sample_tenant):
     with patch.object(ExchangeRateService, "_get_admin_rate", return_value="3.672500"):
         out = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "AED")
         assert out["source"] == "admin_manual"
-    with patch.object(ExchangeRateService, "_get_admin_rate", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value="3.66"):
+    with (
+        patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value="3.66"),
+    ):
         out = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "AED")
         assert out["source"] == "online_api"
-    with patch.object(ExchangeRateService, "_get_admin_rate", return_value=None), \
-         patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None), \
-         patch.object(ExchangeRateService, "_get_last_known_rate", return_value="3.65"):
+    with (
+        patch.object(ExchangeRateService, "_get_admin_rate", return_value=None),
+        patch.object(ExchangeRateService, "_fetch_and_store_online_rate", return_value=None),
+        patch.object(ExchangeRateService, "_get_last_known_rate", return_value="3.65"),
+    ):
         out = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "AED")
         assert out["source"] == "last_record"
 
@@ -153,9 +163,14 @@ def test_admin_rate_and_latest_and_save(db_session, sample_tenant):
     from models import ExchangeRateRecord
 
     assert ExchangeRateService._get_admin_rate("USD", "ILS", sample_tenant.id) is None
-    rec = ExchangeRateRecord(tenant_id=sample_tenant.id, from_currency="USD",
-                             to_currency="ILS", rate=Decimal("3.65"),
-                             source="manual", effective_date=date.today().isoformat())
+    rec = ExchangeRateRecord(
+        tenant_id=sample_tenant.id,
+        from_currency="USD",
+        to_currency="ILS",
+        rate=Decimal("3.65"),
+        source="manual",
+        effective_date=date.today().isoformat(),
+    )
     db_session.add(rec)
     db_session.flush()
     assert ExchangeRateService._get_admin_rate("USD", "ILS", sample_tenant.id) == "3.650000"
@@ -164,19 +179,19 @@ def test_admin_rate_and_latest_and_save(db_session, sample_tenant):
     out = ExchangeRateService.save_manual_rate("USD", "ILS", 3.7, tenant_id=sample_tenant.id)
     assert out == {"ok": True, "message": "Rate saved successfully"}
     ExchangeRateService._save_rate_record("USD", "ILS", "3.71", "manual", sample_tenant.id)
-    with patch("services.exchange_rate_service.atomic_transaction",
-               side_effect=RuntimeError("tx down")):
+    with patch("services.exchange_rate_service.atomic_transaction", side_effect=RuntimeError("tx down")):
         ExchangeRateService._save_rate_record("USD", "ILS", "3.7", "manual", sample_tenant.id)
         assert ExchangeRateService.save_manual_rate("USD", "ILS", 3.7)["ok"] is True
 
 
 def test_online_rate_guardrails_and_manual_wrapper():
-    with patch("services.currency_service.CurrencyService.get_exchange_rate_details",
-               return_value={"rate": Decimal("1.05"), "source": "fallback_static"}):
+    with patch(
+        "services.currency_service.CurrencyService.get_exchange_rate_details",
+        return_value={"rate": Decimal("1.05"), "source": "fallback_static"},
+    ):
         assert ExchangeRateService.get_online_rate("AED", "ILS") is None  # non-AED guardrail
         assert ExchangeRateService.get_online_rate("USD", "AED") == "1.050000"
-    with patch("services.currency_service.CurrencyService.get_exchange_rate_details",
-               side_effect=RuntimeError("down")):
+    with patch("services.currency_service.CurrencyService.get_exchange_rate_details", side_effect=RuntimeError("down")):
         assert ExchangeRateService.get_online_rate("USD", "AED") is None
     out = ExchangeRateService.get_manual_rate_for_calculation("AED", "AED")
     assert out["source"] == "parity"

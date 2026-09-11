@@ -25,7 +25,9 @@ def test_sanitize(app):
 def test_branch_code_helpers():
     assert hh._resolve_branch_code(branch_code="br-7") == "BR7"  # 47-49
     assert hh._resolve_branch_code() is None  # 51-52
-    assert hh._resolve_branch_code(branch_id=3) == "BR03"  # 65 fallback
+    with patch("utils.helpers.db") as mdb0:
+        mdb0.session.get.return_value = None
+        assert hh._resolve_branch_code(branch_id=3) == "BR03"  # 65 fallback
     with patch("utils.helpers.db") as mdb:
         mdb.session.get.return_value = SimpleNamespace(code="m-01")
         assert hh._resolve_branch_code(branch_id=8) == "M01"  # 54-61

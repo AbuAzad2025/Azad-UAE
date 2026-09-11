@@ -12,9 +12,18 @@ from services.donation_gl_service import DonationGLService
 
 
 def _donation(**kw):
-    base = {"id": 1, "gl_posted": False, "status": "completed", "amount_usd": Decimal("10"),
-            "tenant_id": None, "payment_method": "card", "donor_name": "Ali",
-            "customer_name": None, "amount_crypto": Decimal("0"), "crypto_type": None}
+    base = {
+        "id": 1,
+        "gl_posted": False,
+        "status": "completed",
+        "amount_usd": Decimal("10"),
+        "tenant_id": None,
+        "payment_method": "card",
+        "donor_name": "Ali",
+        "customer_name": None,
+        "amount_crypto": Decimal("0"),
+        "crypto_type": None,
+    }
     base.update(kw)
     return SimpleNamespace(**base)
 
@@ -39,8 +48,13 @@ def test_post_no_tenant_returns_false():
 def _make_donation(db_session, sample_tenant, **kw):
     from models.donation import Donation
 
-    params = {"tenant_id": sample_tenant.id, "amount_usd": Decimal("25"),
-              "status": "completed", "payment_method": "card", "donor_name": "Sara"}
+    params = {
+        "tenant_id": sample_tenant.id,
+        "amount_usd": Decimal("25"),
+        "status": "completed",
+        "payment_method": "card",
+        "donor_name": "Sara",
+    }
     params.update(kw)
     d = Donation(**params)
     db_session.add(d)
@@ -50,31 +64,41 @@ def _make_donation(db_session, sample_tenant, **kw):
 
 def test_post_success_with_rate_fallback(db_session, sample_tenant):
     d = _make_donation(db_session, sample_tenant)
-    with patch(
-        "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
-        side_effect=RuntimeError("no rate"),
-    ), patch("services.donation_gl_service.post_or_fail", return_value=None) as p:
+    with (
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
+            side_effect=RuntimeError("no rate"),
+        ),
+        patch("services.donation_gl_service.post_or_fail", return_value=None) as p,
+    ):
         assert DonationGLService.post_completed_donation(d) is True
         assert d.gl_posted is True
         p.assert_called_once()
 
 
 def test_post_success_with_live_rate(db_session, sample_tenant):
-    d = _make_donation(db_session, sample_tenant, amount_usd=Decimal("5"),
-                       donor_name=None, customer_name="C1", payment_method="cash")
-    with patch(
-        "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
-        return_value={"rate": "3.67"},
-    ), patch("services.donation_gl_service.post_or_fail", return_value=None):
+    d = _make_donation(
+        db_session, sample_tenant, amount_usd=Decimal("5"), donor_name=None, customer_name="C1", payment_method="cash"
+    )
+    with (
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
+            return_value={"rate": "3.67"},
+        ),
+        patch("services.donation_gl_service.post_or_fail", return_value=None),
+    ):
         assert DonationGLService.post_completed_donation(d) is True
 
 
 def test_post_failure_reraises(db_session, sample_tenant):
     d = _make_donation(db_session, sample_tenant, amount_usd=Decimal("5"))
-    with patch(
-        "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
-        return_value={"rate": "3.67"},
-    ), patch("services.donation_gl_service.post_or_fail", side_effect=RuntimeError("gl down")):
+    with (
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
+            return_value={"rate": "3.67"},
+        ),
+        patch("services.donation_gl_service.post_or_fail", side_effect=RuntimeError("gl down")),
+    ):
         with pytest.raises(RuntimeError, match="gl down"):
             DonationGLService.post_completed_donation(d)
 
@@ -118,9 +142,7 @@ def test_record_platform_receipt_guards():
 
 
 def test_record_platform_receipt_no_vault(app):
-    with app.app_context(), patch(
-        "services.donation_gl_service.PaymentVault.get_platform_vault", return_value=None
-    ):
+    with app.app_context(), patch("services.donation_gl_service.PaymentVault.get_platform_vault", return_value=None):
         with pytest.raises(ValueError, match="Platform vault"):
             DonationGLService.record_platform_receipt(_donation())
 
@@ -128,11 +150,13 @@ def test_record_platform_receipt_no_vault(app):
 def test_record_platform_receipt_zero_amount(app):
     vault = MagicMock()
     vault.transactions = []
-    with app.app_context(), patch(
-        "services.donation_gl_service.PaymentVault.get_platform_vault", return_value=vault
-    ), patch(
-        "services.donation_gl_service.PaymentTransaction.query.filter_by",
-        return_value=MagicMock(first=MagicMock(return_value=None)),
+    with (
+        app.app_context(),
+        patch("services.donation_gl_service.PaymentVault.get_platform_vault", return_value=vault),
+        patch(
+            "services.donation_gl_service.PaymentTransaction.query.filter_by",
+            return_value=MagicMock(first=MagicMock(return_value=None)),
+        ),
     ):
         assert DonationGLService.record_platform_receipt(_donation(amount_usd=Decimal("0"))) is False
 
@@ -140,20 +164,22 @@ def test_record_platform_receipt_zero_amount(app):
 def test_record_platform_receipt_field_fallbacks(app):
     vault = MagicMock()
     vault.transactions = []
-    donation = _donation(payment_method=None, donor_name=None, crypto_type=None,
-                         amount_crypto=None, id=77)
+    donation = _donation(payment_method=None, donor_name=None, crypto_type=None, amount_crypto=None, id=77)
     donation.donor_email = None
     donation.customer_email = None
     donation.final_wallet_address = None
     donation.wallet_address = None
     donation.ip_address = None
     donation.user_agent = None
-    with app.app_context(), patch(
-        "services.donation_gl_service.PaymentVault.get_platform_vault", return_value=vault
-    ), patch(
-        "services.donation_gl_service.PaymentTransaction.query.filter_by",
-        return_value=MagicMock(first=MagicMock(return_value=None)),
-    ), patch("services.donation_gl_service.db.session"):
+    with (
+        app.app_context(),
+        patch("services.donation_gl_service.PaymentVault.get_platform_vault", return_value=vault),
+        patch(
+            "services.donation_gl_service.PaymentTransaction.query.filter_by",
+            return_value=MagicMock(first=MagicMock(return_value=None)),
+        ),
+        patch("services.donation_gl_service.db.session"),
+    ):
         assert DonationGLService.record_platform_receipt(donation) is True
     txn = vault.transactions[0]
     assert txn.transaction_id == "DONATION-77"

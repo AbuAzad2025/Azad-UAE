@@ -60,13 +60,9 @@ def test_broadcast_emits_when_socketio_present(monkeypatch):
     ws.broadcast_payment_received({"id": 2})
     fake.emit.assert_any_call("payment_received", {"id": 2})
     ws.notify_user(7, "hello", "warning")
-    fake.emit.assert_any_call(
-        "notification", {"message": "hello", "type": "warning"}, room="user_7"
-    )
+    fake.emit.assert_any_call("notification", {"message": "hello", "type": "warning"}, room="user_7")
     ws.notify_user(8, "hello2")
-    fake.emit.assert_any_call(
-        "notification", {"message": "hello2", "type": "info"}, room="user_8"
-    )
+    fake.emit.assert_any_call("notification", {"message": "hello2", "type": "info"}, room="user_8")
     ws.broadcast_stock_alert({"sku": "x"})
     fake.emit.assert_any_call("stock_alert", {"sku": "x"})
 

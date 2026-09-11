@@ -8,8 +8,7 @@ from services.expense_service import ExpenseService
 
 
 def test_create_expense_with_and_without_tenant(db_session, sample_tenant, sample_user):
-    e = ExpenseService.create_expense(100, "cov4 expense", tenant_id=sample_tenant.id,
-                                      user_id=sample_user.id)
+    e = ExpenseService.create_expense(100, "cov4 expense", tenant_id=sample_tenant.id, user_id=sample_user.id)
     assert e.tenant_id == sample_tenant.id
     e2 = ExpenseService.create_expense(50, "no tenant")
     assert e2.id is None or e2.tenant_id is not None

@@ -9,13 +9,12 @@ def test_create_sale_and_purchase_return_sources(db_session, sample_tenant):
     s = ShipmentService.create_shipment("sale", 11, "Aramex", "TRK-1", tenant_id=sample_tenant.id)
     assert s.sale_id == 11 and s.purchase_return_id is None
     db_session.flush()
-    pr = ShipmentService.create_shipment("purchase_return", 22, "DHL", "TRK-2",
-                                         tenant_id=sample_tenant.id, shipping_cost=5,
-                                         status="shipped")
+    pr = ShipmentService.create_shipment(
+        "purchase_return", 22, "DHL", "TRK-2", tenant_id=sample_tenant.id, shipping_cost=5, status="shipped"
+    )
     assert pr.purchase_return_id == 22 and pr.sale_id is None
     assert float(pr.shipping_cost) == 5.0
-    other = ShipmentService.create_shipment("purchase", 33, "FedEx", "TRK-3",
-                                            tenant_id=sample_tenant.id)
+    other = ShipmentService.create_shipment("purchase", 33, "FedEx", "TRK-3", tenant_id=sample_tenant.id)
     assert other.sale_id is None and other.purchase_return_id is None
     db_session.flush()
 

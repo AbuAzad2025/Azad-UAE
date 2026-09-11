@@ -54,8 +54,9 @@ def test_product_crud_and_stock(db_session, sample_tenant):
         ex.create_product("")
     with pytest.raises(AIExecutorError):
         ex.create_product("P", regular_price=0)
-    out = ex.create_product("Cov4 Widget", sku="COV4-W", regular_price=50,
-                            cost_price=20, current_stock=3, min_stock_alert=10)
+    out = ex.create_product(
+        "Cov4 Widget", sku="COV4-W", regular_price=50, cost_price=20, current_stock=3, min_stock_alert=10
+    )
     assert out["success"] is True
     assert ex.list_products(search="Cov4 Widget")["count"] >= 1
     stock = ex.check_stock()

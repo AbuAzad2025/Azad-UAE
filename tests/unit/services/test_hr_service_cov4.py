@@ -164,9 +164,7 @@ class TestLeaveAndOvertime:
     def test_unpaid_leave_no_match(self, mocker):
         from models.payroll import EmployeeLeave
 
-        leave = SimpleNamespace(
-            start_date=date(2025, 1, 1), end_date=date(2025, 1, 2), days_taken=2
-        )
+        leave = SimpleNamespace(start_date=date(2025, 1, 1), end_date=date(2025, 1, 2), days_taken=2)
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
         mock_q.all.return_value = [leave]

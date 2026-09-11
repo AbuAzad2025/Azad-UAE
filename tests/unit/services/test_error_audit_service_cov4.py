@@ -43,8 +43,7 @@ def test_log_exception_and_frontend_truncation(db_session):
         assert row_id is not None
     row_id = ErrorAuditService.log("", category="EMPTYC")
     assert row_id is not None
-    row_id = ErrorAuditService.log_frontend("ui broke", stack="x" * 5000,
-                                            extra={"password": "secret", "ok": 1})
+    row_id = ErrorAuditService.log_frontend("ui broke", stack="x" * 5000, extra={"password": "secret", "ok": 1})
     assert row_id is not None
 
 
@@ -72,14 +71,13 @@ def test_persist_and_helpers_failure_branches():
     assert ErrorAuditService._bump_duplicate(999999999, "m", "t") is True or True
     assert ErrorAuditService._sanitize_dict("not-a-dict") == {}
     clean = ErrorAuditService._sanitize_dict(
-        {"password": "x", "nested": {"api_key": "y", "v": 1},
-         "items": [{"token": "z"}, 5, "s"], "plain": "ok"})
+        {"password": "x", "nested": {"api_key": "y", "v": 1}, "items": [{"token": "z"}, 5, "s"], "plain": "ok"}
+    )
     assert clean["password"] == "***REDACTED***"
     assert clean["nested"]["api_key"] == "***REDACTED***"
     assert clean["items"][0]["token"] == "***REDACTED***"
     assert clean["plain"] == "ok"
-    with patch("services.error_audit_service.db.engine.connect",
-               side_effect=RuntimeError("db down")):
+    with patch("services.error_audit_service.db.engine.connect", side_effect=RuntimeError("db down")):
         assert ErrorAuditService._find_duplicate("fp") is None
         assert ErrorAuditService._bump_duplicate(1, "m", None) is False
         assert ErrorAuditService.mark_resolved(1, 1) is False

@@ -67,9 +67,7 @@ class TestResolveGlAccount:
         from services.gl_account_resolver import GLMappingError
 
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
-        mocker.patch(
-            "services.gl_account_resolver.resolve_gl_account", side_effect=RuntimeError("boom")
-        )
+        mocker.patch("services.gl_account_resolver.resolve_gl_account", side_effect=RuntimeError("boom"))
         with pytest.raises(GLMappingError):
             _resolve_gl_concept_account("C", "9999", tenant_id=1)
 

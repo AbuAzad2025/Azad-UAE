@@ -46,8 +46,12 @@ def test_lookup_by_token_doc_gone(monkeypatch):
     from models.document_verification import DocumentVerification
 
     rec = SimpleNamespace(
-        document_type="sale", document_id=123, tenant_id=1,
-        document_hash="h", public_token="tok", created_at=None,
+        document_type="sale",
+        document_id=123,
+        tenant_id=1,
+        document_hash="h",
+        public_token="tok",
+        created_at=None,
     )
     q = MagicMock()
     q.filter_by.return_value.first.return_value = rec
@@ -60,15 +64,17 @@ def test_lookup_by_token_success(monkeypatch):
     from models.document_verification import DocumentVerification
 
     rec = SimpleNamespace(
-        document_type="sale", document_id=7, tenant_id=2,
-        document_hash="h", public_token="tok", created_at="now",
+        document_type="sale",
+        document_id=7,
+        tenant_id=2,
+        document_hash="h",
+        public_token="tok",
+        created_at="now",
     )
     q = MagicMock()
     q.filter_by.return_value.first.return_value = rec
     monkeypatch.setattr(DocumentVerification, "query", q)
-    monkeypatch.setattr(
-        DocumentVerificationService, "_resolve_document", staticmethod(lambda *a: {"id": 7})
-    )
+    monkeypatch.setattr(DocumentVerificationService, "_resolve_document", staticmethod(lambda *a: {"id": 7}))
     out = DocumentVerificationService.lookup_by_token("  tok ")
     assert out["document"] == {"id": 7}
     assert out["tenant_id"] == 2

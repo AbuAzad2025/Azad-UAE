@@ -107,9 +107,14 @@ class TestDistributions:
         from models import Partner, PartnerProfitDistribution
 
         p = SimpleNamespace(
-            id=2, share_percentage=Decimal("10"), expense_share_percentage=Decimal("0"),
-            loss_share_percentage=Decimal("0"), fixed_monthly_amount=Decimal("0"),
-            min_profit_threshold=Decimal("0"), scope_type="company", scope_id=None,
+            id=2,
+            share_percentage=Decimal("10"),
+            expense_share_percentage=Decimal("0"),
+            loss_share_percentage=Decimal("0"),
+            fixed_monthly_amount=Decimal("0"),
+            min_profit_threshold=Decimal("0"),
+            scope_type="company",
+            scope_id=None,
         )
         mq = MagicMock()
         mq.filter_by.return_value = mq
@@ -120,7 +125,8 @@ class TestDistributions:
         dq.first.return_value = None
         mocker.patch.object(PartnerProfitDistribution, "query", new_callable=mocker.PropertyMock, return_value=dq)
         mocker.patch.object(
-            PartnerService, "calculate_scope_profit",
+            PartnerService,
+            "calculate_scope_profit",
             return_value={"revenue": 0.0, "cogs": 0.0, "expenses": 0.0, "net_profit": -100.0},
         )
         with pytest.raises(ValueError, match="خسارة"):
