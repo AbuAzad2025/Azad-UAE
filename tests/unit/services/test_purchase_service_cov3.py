@@ -609,7 +609,6 @@ class TestDeletePurchase:
         supplier.apply_payment.assert_called_once_with(Decimal("-60"))
     def test_without_supplier_skips_reversal(self):
         from models import PurchaseLine as PLModel
-
         from services.purchase_service import PurchaseService
 
         purchase = SimpleNamespace(id=1, supplier_id=None, tenant_id=1)
@@ -625,7 +624,6 @@ class TestDeletePurchase:
         # 782->784: supplier-scoped lookup finds nothing
         from models import PurchaseLine as PLModel
         from models import Supplier as SupplierModel
-
         from services.purchase_service import PurchaseService
 
         purchase = SimpleNamespace(id=1, supplier_id=4, tenant_id=1, amount_aed=Decimal("60"))
