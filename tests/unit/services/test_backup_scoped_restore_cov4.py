@@ -49,41 +49,58 @@ class TestApplyRowRemap:
         id_maps = {"customers": {4: 40}}
         row = {"id": 1, "tenant_id": 2, "customer_id": 4, "branch_id": 3}
         out = _apply_row_remap(
-            row, "sales", id_maps, new_tenant_id=9, old_tenant_id=2,
-            scope="tenant", remap=False,
+            row,
+            "sales",
+            id_maps,
+            new_tenant_id=9,
+            old_tenant_id=2,
+            scope="tenant",
+            remap=False,
         )
         assert out["tenant_id"] == 9
         assert out["customer_id"] == 40
 
     def test_no_old_tenant_skips_rewrite(self):
-        out = _apply_row_remap(
-            {"tenant_id": 2}, "sales", {}, new_tenant_id=9, old_tenant_id=None, scope="tenant"
-        )
+        out = _apply_row_remap({"tenant_id": 2}, "sales", {}, new_tenant_id=9, old_tenant_id=None, scope="tenant")
         assert out["tenant_id"] == 2
 
     def test_branch_scope_forces_branch(self):
         out = _apply_row_remap(
-            {"branch_id": 3}, "sales", {}, new_tenant_id=9, old_tenant_id=9,
-            scope="branch", new_branch_id=77,
+            {"branch_id": 3},
+            "sales",
+            {},
+            new_tenant_id=9,
+            old_tenant_id=9,
+            scope="branch",
+            new_branch_id=77,
         )
         assert out["branch_id"] == 77
 
     def test_remap_slug_suffixes(self):
         out = _apply_row_remap(
-            {"slug": "acme"}, "tenants", {}, new_tenant_id=9, old_tenant_id=1,
-            scope="tenant", remap=True,
+            {"slug": "acme"},
+            "tenants",
+            {},
+            new_tenant_id=9,
+            old_tenant_id=1,
+            scope="tenant",
+            remap=True,
         )
         assert out["slug"] == "acme_r9"
         out2 = _apply_row_remap(
-            {"store_slug": "shop"}, "tenant_stores", {}, new_tenant_id=9, old_tenant_id=1,
-            scope="store", remap=True, new_store_id=5,
+            {"store_slug": "shop"},
+            "tenant_stores",
+            {},
+            new_tenant_id=9,
+            old_tenant_id=1,
+            scope="store",
+            remap=True,
+            new_store_id=5,
         )
         assert out2["store_slug"] == "shop_r5"
 
     def test_none_fk_skipped(self):
-        out = _apply_row_remap(
-            {"customer_id": None}, "sales", {}, new_tenant_id=9, old_tenant_id=9, scope="tenant"
-        )
+        out = _apply_row_remap({"customer_id": None}, "sales", {}, new_tenant_id=9, old_tenant_id=9, scope="tenant")
         assert out["customer_id"] is None
 
 

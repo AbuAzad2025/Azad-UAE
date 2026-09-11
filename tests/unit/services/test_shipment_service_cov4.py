@@ -64,8 +64,7 @@ def test_create_sale_and_purchase_return_sources(db_session, sample_tenant, samp
     db_session.flush()
 
     pr = ShipmentService.create_shipment(
-        "purchase_return", pr_model.id, "DHL", "TRK-2",
-        tenant_id=sample_tenant.id, shipping_cost=5, status="shipped"
+        "purchase_return", pr_model.id, "DHL", "TRK-2", tenant_id=sample_tenant.id, shipping_cost=5, status="shipped"
     )
     assert pr.purchase_return_id == pr_model.id and pr.sale_id is None
     assert float(pr.shipping_cost) == 5.0

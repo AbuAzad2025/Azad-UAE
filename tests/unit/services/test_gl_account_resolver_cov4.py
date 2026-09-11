@@ -40,8 +40,12 @@ from services.gl_account_resolver import (
 
 def _account(db_session, tenant, code, active=True, header=False, a_type="asset"):
     acc = GLAccount(
-        tenant_id=tenant.id, code=code, name=f"AC {code}",
-        type=a_type, is_active=active, is_header=header,
+        tenant_id=tenant.id,
+        code=code,
+        name=f"AC {code}",
+        type=a_type,
+        is_active=active,
+        is_header=header,
     )
     db_session.add(acc)
     db_session.flush()
@@ -50,8 +54,11 @@ def _account(db_session, tenant, code, active=True, header=False, a_type="asset"
 
 def _mapping(db_session, tenant, concept, account, branch_id=None, active=True):
     m = GLAccountMapping(
-        tenant_id=tenant.id, concept_code=concept, gl_account_id=account.id,
-        branch_id=branch_id, is_active=active,
+        tenant_id=tenant.id,
+        concept_code=concept,
+        gl_account_id=account.id,
+        branch_id=branch_id,
+        is_active=active,
     )
     db_session.add(m)
     db_session.flush()
@@ -108,9 +115,7 @@ class TestNormalizeAndOneOrError:
 
 
 class TestFindActiveMappingDb:
-    def test_none_branch_id_queries_default_only(
-        self, db_session, sample_tenant, sample_gl_accounts, mocker
-    ):
+    def test_none_branch_id_queries_default_only(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         real = mocker.patch(
             "services.gl_account_resolver._one_or_error",
             wraps=_one_or_error,
@@ -119,21 +124,13 @@ class TestFindActiveMappingDb:
         assert real.call_count == 1
         assert out is None or hasattr(out, "id")
 
-    def test_dynamic_resolve_missing_mapping_raises(
-        self, db_session, sample_tenant, sample_gl_accounts, app
-    ):
-        GLAccountMapping.query.filter_by(
-            tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH
-        ).delete()
+    def test_dynamic_resolve_missing_mapping_raises(self, db_session, sample_tenant, sample_gl_accounts, app):
+        GLAccountMapping.query.filter_by(tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH).delete()
         db_session.flush()
         with pytest.raises(GLMappingError, match="No active GL account mapping"):
-            _resolve_dynamic_gl_account(
-                tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH
-            )
+            _resolve_dynamic_gl_account(tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH)
 
-    def test_dynamic_resolve_success(
-        self, db_session, sample_tenant, sample_gl_accounts, app
-    ):
+    def test_dynamic_resolve_success(self, db_session, sample_tenant, sample_gl_accounts, app):
         from models._constants import GL_CONCEPT_CASH as CASH
 
         existing = GLAccountMapping.query.filter_by(
@@ -142,22 +139,18 @@ class TestFindActiveMappingDb:
         if existing is None:
             acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id).first()
             _mapping(db_session, sample_tenant, CASH, acc)
-        out = _resolve_dynamic_gl_account(
-            tenant_id=sample_tenant.id, concept_code=CASH
-        )
+        out = _resolve_dynamic_gl_account(tenant_id=sample_tenant.id, concept_code=CASH)
         assert out.tenant_id == sample_tenant.id
 
 
 class TestRaiseMissingBranches:
-    def test_branch_inactive_message(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_branch_inactive_message(self, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id).first()
-        _mapping(db_session, sample_tenant, GL_CONCEPT_CASH, acc,
-                 branch_id=sample_branch.id, active=False)
+        _mapping(db_session, sample_tenant, GL_CONCEPT_CASH, acc, branch_id=sample_branch.id, active=False)
         with pytest.raises(GLMappingError, match="Branch override mapping exists but is inactive"):
             _raise_missing_or_inactive_mapping(
-                tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH,
+                tenant_id=sample_tenant.id,
+                concept_code=GL_CONCEPT_CASH,
                 branch_id=sample_branch.id,
             )
 
@@ -171,15 +164,11 @@ class TestRaiseMissingBranches:
         db_session.flush()
         _mapping(db_session, sample_tenant, GL_CONCEPT_CASH, acc, branch_id=None, active=False)
         with pytest.raises(GLMappingError, match="Tenant-level mapping exists but is inactive"):
-            _raise_missing_or_inactive_mapping(
-                tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH, branch_id=None
-            )
+            _raise_missing_or_inactive_mapping(tenant_id=sample_tenant.id, concept_code=GL_CONCEPT_CASH, branch_id=None)
 
     def test_no_mapping_message(self, db_session, sample_tenant):
         with pytest.raises(GLMappingError, match="No active GL account mapping"):
-            _raise_missing_or_inactive_mapping(
-                tenant_id=sample_tenant.id, concept_code="BANK", branch_id=None
-            )
+            _raise_missing_or_inactive_mapping(tenant_id=sample_tenant.id, concept_code="BANK", branch_id=None)
 
 
 class TestValidatedAccountDb:
@@ -189,14 +178,10 @@ class TestValidatedAccountDb:
         with pytest.raises(GLMappingError, match="missing branch"):
             _validated_account(fake_mapping, sample_tenant.id, GL_CONCEPT_CASH, 424242)
 
-    def test_branch_cross_tenant_raises(
-        self, db_session, sample_tenant, sample_branch, sample_gl_accounts
-    ):
+    def test_branch_cross_tenant_raises(self, db_session, sample_tenant, sample_branch, sample_gl_accounts):
         acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id).first()
         other_branch = SimpleNamespace(tenant_id=sample_tenant.id + 9999)
-        fake_mapping = SimpleNamespace(
-            branch_id=sample_branch.id, branch=other_branch, gl_account=acc
-        )
+        fake_mapping = SimpleNamespace(branch_id=sample_branch.id, branch=other_branch, gl_account=acc)
         with pytest.raises(GLMappingError, match="different tenant"):
             _validated_account(fake_mapping, sample_tenant.id, GL_CONCEPT_CASH, sample_branch.id)
 

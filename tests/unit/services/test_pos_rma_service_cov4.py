@@ -34,9 +34,7 @@ class TestMoneyAndPromo:
     def test_promo_residual_goes_to_largest_line(self):
         l1 = SimpleNamespace(id=1, line_total=Decimal("33.33"))
         l2 = SimpleNamespace(id=2, line_total=Decimal("66.67"))
-        sale = SimpleNamespace(
-            promotion_discount_amount=Decimal("10"), subtotal=Decimal("100"), lines=[l1, l2]
-        )
+        sale = SimpleNamespace(promotion_discount_amount=Decimal("10"), subtotal=Decimal("100"), lines=[l1, l2])
         shares = _promo_allocations(sale)
         assert sum(shares.values(), Decimal("0")) == Decimal("10.000")
 
@@ -90,16 +88,33 @@ class TestLookupReceipt:
         from datetime import datetime
 
         line = SimpleNamespace(
-            id=11, product_id=5, quantity=Decimal("2"), unit_price=Decimal("10"),
-            discount_percent=Decimal("0"), line_total=Decimal("20"),
+            id=11,
+            product_id=5,
+            quantity=Decimal("2"),
+            unit_price=Decimal("10"),
+            discount_percent=Decimal("0"),
+            line_total=Decimal("20"),
             product=SimpleNamespace(name="P", sku="S", barcode="B"),
         )
         sale = SimpleNamespace(
-            id=1, tenant_id=9, sale_number="R-9", sale_date=datetime.now(), status="confirmed",
-            payment_status="paid", customer_id=None, customer=None, currency="AED",
-            exchange_rate=Decimal("1"), subtotal=Decimal("20"), discount_amount=Decimal("0"),
-            shipping_cost=Decimal("0"), tax_rate=Decimal("0"), tax_amount=Decimal("0"),
-            total_amount=Decimal("20"), lines=[line], promotion_discount_amount=None,
+            id=1,
+            tenant_id=9,
+            sale_number="R-9",
+            sale_date=datetime.now(),
+            status="confirmed",
+            payment_status="paid",
+            customer_id=None,
+            customer=None,
+            currency="AED",
+            exchange_rate=Decimal("1"),
+            subtotal=Decimal("20"),
+            discount_amount=Decimal("0"),
+            shipping_cost=Decimal("0"),
+            tax_rate=Decimal("0"),
+            tax_amount=Decimal("0"),
+            total_amount=Decimal("20"),
+            lines=[line],
+            promotion_discount_amount=None,
         )
         mock_q = MagicMock()
         mock_q.filter.return_value = mock_q
@@ -132,8 +147,12 @@ class TestStockBreakdownAndGuards:
     def test_create_pos_return_bad_method(self):
         with pytest.raises(ValueError):
             PosRmaService.create_pos_return(
-                user=MagicMock(), session=MagicMock(), shift=None,
-                sale_id=1, return_lines=[], refund_method="bitcoin",
+                user=MagicMock(),
+                session=MagicMock(),
+                shift=None,
+                sale_id=1,
+                return_lines=[],
+                refund_method="bitcoin",
             )
 
     def test_permission_checks(self):

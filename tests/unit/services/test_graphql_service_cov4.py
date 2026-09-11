@@ -16,8 +16,7 @@ def _anon():
 
 
 def _owner():
-    u = SimpleNamespace(is_authenticated=True, is_owner=True, id=1,
-                        has_permission=lambda c: True)
+    u = SimpleNamespace(is_authenticated=True, is_owner=True, id=1, has_permission=lambda c: True)
     return u
 
 
@@ -33,22 +32,23 @@ def test_require_permission_owner_bypass(monkeypatch):
 
 
 def test_require_permission_missing(monkeypatch):
-    u = SimpleNamespace(is_authenticated=True, is_owner=False,
-                        has_permission=lambda c: False)
+    u = SimpleNamespace(is_authenticated=True, is_owner=False, has_permission=lambda c: False)
     monkeypatch.setattr(g, "current_user", u)
     with pytest.raises(PermissionError, match="Missing permission"):
         g._require_permission("manage_sales")
 
 
 def test_converters_handle_nones():
-    s = SimpleNamespace(id=1, sale_number="S", customer_id=2, total_amount=None,
-                        amount_aed=None, status="pending", created_at=None)
+    s = SimpleNamespace(
+        id=1, sale_number="S", customer_id=2, total_amount=None, amount_aed=None, status="pending", created_at=None
+    )
     t = g.Query._convert_sale_to_type(s)
     assert t.total_amount == 0
     c = SimpleNamespace(id=1, name="n", phone=None, email=None, address=None, balance=None)
     assert g.Query._convert_customer_to_type(c).balance == 0
-    p = SimpleNamespace(id=1, name="p", part_number=None, regular_price=None,
-                        cost_price=None, current_stock=0, is_active=True)
+    p = SimpleNamespace(
+        id=1, name="p", part_number=None, regular_price=None, cost_price=None, current_stock=0, is_active=True
+    )
     assert g.Query._convert_product_to_type(p).regular_price == 0
 
 
@@ -69,8 +69,9 @@ def test_resolvers_call_tenant_query(monkeypatch, sample_tenant):
 
 def test_resolvers_return_rows(monkeypatch):
     monkeypatch.setattr(g, "current_user", _owner())
-    sale = SimpleNamespace(id=1, sale_number="S1", customer_id=1, total_amount=10,
-                           amount_aed=10, status="confirmed", created_at=None)
+    sale = SimpleNamespace(
+        id=1, sale_number="S1", customer_id=1, total_amount=10, amount_aed=10, status="confirmed", created_at=None
+    )
     fq = MagicMock()
     fq.filter_by.return_value.first.return_value = sale
     with patch.object(g, "tenant_query", return_value=fq):
@@ -98,9 +99,7 @@ def test_mutate_success_and_flush_error(monkeypatch, db_session, sample_customer
     monkeypatch.setattr(g, "current_user", _owner())
     fq = MagicMock()
     fq.filter_by.return_value.first.return_value = sample_customer
-    monkeypatch.setattr(
-        g, "assign_tenant_id", lambda sale: setattr(sale, "tenant_id", sample_tenant.id)
-    )
+    monkeypatch.setattr(g, "assign_tenant_id", lambda sale: setattr(sale, "tenant_id", sample_tenant.id))
     with patch.object(g, "tenant_query", return_value=fq):
         with patch.object(g.db.session, "flush", side_effect=[None, RuntimeError("flush boom")]):
             out = g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25)

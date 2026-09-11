@@ -29,18 +29,20 @@ def test_create_same_warehouse_raises(sample_user, sample_warehouse):
         )
 
 
-def test_create_and_lifecycle(db_session, sample_tenant, sample_user, sample_warehouse,
-                              sample_product, sample_branch):
+def test_create_and_lifecycle(db_session, sample_tenant, sample_user, sample_warehouse, sample_product, sample_branch):
     from models import Warehouse
 
-    w2 = Warehouse(tenant_id=sample_tenant.id, branch_id=sample_branch.id, name="W2",
-                   code="W2-COV4", is_active=True)
+    w2 = Warehouse(tenant_id=sample_tenant.id, branch_id=sample_branch.id, name="W2", code="W2-COV4", is_active=True)
     db_session.add(w2)
     db_session.flush()
     t = TransferService.create_transfer(
-        {"from_warehouse_id": sample_warehouse.id, "to_warehouse_id": w2.id,
-         "branch_id": sample_branch.id, "notes": "n",
-         "lines": [{"product_id": sample_product.id, "quantity": "2", "sort_order": 1}]},
+        {
+            "from_warehouse_id": sample_warehouse.id,
+            "to_warehouse_id": w2.id,
+            "branch_id": sample_branch.id,
+            "notes": "n",
+            "lines": [{"product_id": sample_product.id, "quantity": "2", "sort_order": 1}],
+        },
         sample_user,
     )
     assert t.status == "draft"
@@ -88,9 +90,12 @@ def test_list_transfers_filters(sample_tenant):
     all_t = TransferService.list_transfers(sample_tenant.id)
     assert isinstance(all_t, list)
     assert TransferService.list_transfers(sample_tenant.id, {"status": "draft"}) is not None
-    assert TransferService.list_transfers(
-        sample_tenant.id, {"status": "draft", "from_warehouse_id": 1, "to_warehouse_id": 2}
-    ) is not None
+    assert (
+        TransferService.list_transfers(
+            sample_tenant.id, {"status": "draft", "from_warehouse_id": 1, "to_warehouse_id": 2}
+        )
+        is not None
+    )
 
 
 def test_complete_transfer_moves_stock(
@@ -100,13 +105,15 @@ def test_complete_transfer_moves_stock(
 
     from models import Warehouse
 
-    w2 = Warehouse(tenant_id=sample_tenant.id, branch_id=sample_branch.id, name="W3",
-                   code="W3-COV4", is_active=True)
+    w2 = Warehouse(tenant_id=sample_tenant.id, branch_id=sample_branch.id, name="W3", code="W3-COV4", is_active=True)
     db_session.add(w2)
     db_session.flush()
     t = TransferService.create_transfer(
-        {"from_warehouse_id": sample_warehouse.id, "to_warehouse_id": w2.id,
-         "lines": [{"product_id": sample_product.id, "quantity": "4"}]},
+        {
+            "from_warehouse_id": sample_warehouse.id,
+            "to_warehouse_id": w2.id,
+            "lines": [{"product_id": sample_product.id, "quantity": "4"}],
+        },
         sample_user,
     )
     TransferService.approve_transfer(t, sample_user)

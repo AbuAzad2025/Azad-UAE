@@ -101,6 +101,7 @@ def _ensure_postgres_database(url: str) -> None:
         raise RuntimeError(f"Invalid database URL (no database name): {url}")
 
     from sqlalchemy.exc import IntegrityError
+
     admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:

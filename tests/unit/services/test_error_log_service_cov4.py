@@ -11,9 +11,7 @@ def _write_log(path, content):
 
 
 def test_missing_file_returns_empty(tmp_path):
-    paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(
-        error_file=str(tmp_path / "nope.log")
-    )
+    paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(error_file=str(tmp_path / "nope.log"))
     assert paginated == []
     assert total_pages == 1
     assert total == 0
@@ -65,16 +63,12 @@ def test_search_and_level_filter_and_pagination(tmp_path):
     assert total == 1
     assert paginated[0]["level"] == "WARNING"
     # pagination branch
-    paginated, total_pages, total, _ = ErrorLogService.get_parsed_errors(
-        page=2, per_page=1, error_file=str(p)
-    )
+    paginated, total_pages, total, _ = ErrorLogService.get_parsed_errors(page=2, per_page=1, error_file=str(p))
     assert total == 2
     assert total_pages == 2
     assert len(paginated) == 1
     # combined filter yielding nothing still keeps total_pages==1
-    paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(
-        search="zzz-no-match", error_file=str(p)
-    )
+    paginated, total_pages, total, stats = ErrorLogService.get_parsed_errors(search="zzz-no-match", error_file=str(p))
     assert total == 0
     assert stats == {}
 

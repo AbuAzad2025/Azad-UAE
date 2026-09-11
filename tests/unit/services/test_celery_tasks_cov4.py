@@ -90,6 +90,5 @@ def test_abandoned_cart_second_reminder_and_exception(db_session, sample_tenant)
     db_session.refresh(cart)
     assert cart.reminder_count == 2
     # exception path: store lookup blows up -> logged, loop continues
-    with patch("services.store_service.StoreService.get_tenant_store",
-               side_effect=RuntimeError("boom")):
+    with patch("services.store_service.StoreService.get_tenant_store", side_effect=RuntimeError("boom")):
         assert send_abandoned_cart_reminders() is None

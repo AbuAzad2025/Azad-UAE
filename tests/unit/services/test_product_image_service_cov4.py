@@ -20,8 +20,7 @@ class _File:
 def test_upload_image(app, db_session, sample_product):
     f = _File()
     with app.app_context():
-        img = ProductImageService.upload_image(sample_product, f, "main",
-                                               caption_ar="ع", caption_en="en")
+        img = ProductImageService.upload_image(sample_product, f, "main", caption_ar="ع", caption_en="en")
         assert img.image_url.startswith("/static/uploads/products/")
         assert img.image_url.endswith(".jpg")
         assert f.saved_to is not None

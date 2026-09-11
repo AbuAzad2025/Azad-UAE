@@ -39,7 +39,10 @@ def bank_account(db_session, sample_tenant, sample_gl_accounts):
     acct = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="1120").first()
     if acct is None:
         acct = GLAccount(
-            tenant_id=sample_tenant.id, code="1120", name="Bank", type="asset",
+            tenant_id=sample_tenant.id,
+            code="1120",
+            name="Bank",
+            type="asset",
             is_active=True,
         )
         db_session.add(acct)
@@ -93,7 +96,8 @@ class TestCompleteArcs:
 
     def test_unbalanced_raises(self, db_session, draft_rec, mocker):
         mocker.patch.object(
-            BankReconciliation, "calculate_reconciliation",
+            BankReconciliation,
+            "calculate_reconciliation",
             return_value={"is_balanced": False, "difference": "9.99"},
         )
         with pytest.raises(ValueError, match="غير متوازنة"):
@@ -101,7 +105,8 @@ class TestCompleteArcs:
 
     def test_no_lines_completes_without_post(self, db_session, draft_rec, mocker):
         mocker.patch.object(
-            BankReconciliation, "calculate_reconciliation",
+            BankReconciliation,
+            "calculate_reconciliation",
             return_value={"is_balanced": True, "difference": "0"},
         )
         posted = mocker.patch("services.gl_posting.post_or_fail")
@@ -114,7 +119,8 @@ class TestCompleteArcs:
         draft_rec.bank_interest = Decimal("4")
         db_session.flush()
         mocker.patch.object(
-            BankReconciliation, "calculate_reconciliation",
+            BankReconciliation,
+            "calculate_reconciliation",
             return_value={"is_balanced": True, "difference": "0"},
         )
         posted = mocker.patch("services.gl_posting.post_or_fail")
@@ -125,8 +131,9 @@ class TestCompleteArcs:
 
 
 class TestSummaryAndMatching:
-    def test_summary_shape(self, db_session, sample_tenant, sample_user, bank_account,
-                           incoming_cheque, outgoing_cheque, mocker):
+    def test_summary_shape(
+        self, db_session, sample_tenant, sample_user, bank_account, incoming_cheque, outgoing_cheque, mocker
+    ):
         mocker.patch(
             "services.gl_service.GLService.get_account_statement",
             return_value={"closing_balance": "4000", "opening_balance": "1000"},
@@ -141,8 +148,10 @@ class TestSummaryAndMatching:
 
     def test_auto_match_empty(self, db_session, sample_tenant, bank_account):
         out = BankReconciliationService.auto_match_gl_lines(
-            sample_tenant.id, bank_account.id + 999999,
-            date(2026, 1, 1), date(2026, 1, 31),
+            sample_tenant.id,
+            bank_account.id + 999999,
+            date(2026, 1, 1),
+            date(2026, 1, 31),
         )
         assert out == []
 
@@ -157,29 +166,26 @@ class TestSummaryAndMatching:
         assert count == 2
 
     def test_match_guards_return_none(self, db_session, sample_tenant, bank_account):
-        assert BankReconciliationService.match_transaction(
-            sample_tenant.id, bank_account.id, 999999999) is None
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_account.id, 999999999) is None
         line = _stmt(db_session, sample_tenant.id, bank_account.id, "50")
-        assert BankReconciliationService.match_transaction(
-            sample_tenant.id + 1, bank_account.id, line.id) is None
-        assert BankReconciliationService.match_transaction(
-            sample_tenant.id, bank_account.id + 1, line.id) is None
+        assert BankReconciliationService.match_transaction(sample_tenant.id + 1, bank_account.id, line.id) is None
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_account.id + 1, line.id) is None
         line.status = "matched"
         db_session.flush()
-        assert BankReconciliationService.match_transaction(
-            sample_tenant.id, bank_account.id, line.id) is None
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_account.id, line.id) is None
 
     def test_match_no_candidates_none(self, db_session, sample_tenant, bank_account):
         line = _stmt(db_session, sample_tenant.id, bank_account.id, "7777.77")
-        assert BankReconciliationService.match_transaction(
-            sample_tenant.id, bank_account.id, line.id) is None
+        assert BankReconciliationService.match_transaction(sample_tenant.id, bank_account.id, line.id) is None
 
 
 class TestOrphansAndApply:
     def test_orphans_empty(self, db_session, sample_tenant, bank_account):
         out = BankReconciliationService.route_orphans_to_suspense(
-            sample_tenant.id, bank_account.id + 888888,
-            date(2026, 1, 1), date(2026, 1, 31),
+            sample_tenant.id,
+            bank_account.id + 888888,
+            date(2026, 1, 1),
+            date(2026, 1, 31),
         )
         assert out == []
 
@@ -190,9 +196,7 @@ class TestOrphansAndApply:
         )
         assert isinstance(out, list)
 
-    def test_orphan_post_failure_ignored(
-        self, db_session, sample_tenant, bank_account, mocker
-    ):
+    def test_orphan_post_failure_ignored(self, db_session, sample_tenant, bank_account, mocker):
         _stmt(db_session, sample_tenant.id, bank_account.id, "123.45")
         mocker.patch("services.gl_posting.post_or_fail", side_effect=ValueError("gl down"))
         out = BankReconciliationService.route_orphans_to_suspense(
@@ -221,26 +225,26 @@ class TestOrphansAndApply:
 
     def test_apply_skips_missing_rows(self, db_session, draft_rec, mocker):
         mocker.patch.object(
-            BankReconciliation, "calculate_reconciliation",
+            BankReconciliation,
+            "calculate_reconciliation",
             return_value={"is_balanced": True, "difference": "0"},
         )
         out = BankReconciliationService.apply_matches(
             draft_rec.id,
-            [{"statement_line_id": 999999999, "journal_line_id": 888888888,
-              "match_type": "exact"}],
+            [{"statement_line_id": 999999999, "journal_line_id": 888888888, "match_type": "exact"}],
         )
         assert out.id == draft_rec.id
 
-    def test_auto_match_date_window_branch(
-        self, db_session, sample_tenant, bank_account
-    ):
+    def test_auto_match_date_window_branch(self, db_session, sample_tenant, bank_account):
         # date_tolerance branch: far-apart dates must not match even with data.
-        line = _stmt(db_session, sample_tenant.id, bank_account.id, "10",
-                     when=date(2026, 6, 15))
+        line = _stmt(db_session, sample_tenant.id, bank_account.id, "10", when=date(2026, 6, 15))
         out = BankReconciliationService.auto_match_gl_lines(
-            sample_tenant.id, bank_account.id,
-            date(2026, 1, 1), date(2026, 1, 31),
-            amount_tolerance=Decimal("0.01"), date_tolerance_days=3,
+            sample_tenant.id,
+            bank_account.id,
+            date(2026, 1, 1),
+            date(2026, 1, 31),
+            amount_tolerance=Decimal("0.01"),
+            date_tolerance_days=3,
         )
         assert all(m["statement_line_id"] != line.id for m in out)
         assert isinstance(out, list)

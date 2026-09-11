@@ -25,17 +25,37 @@ def test_liquidity_gl_fallback_empty_and_with_accounts(db_session, sample_tenant
 def test_liquidity_cashbox_primary(db_session, sample_tenant, sample_branch):
     from models import CashBox
 
-    box = CashBox(tenant_id=sample_tenant.id, branch_id=sample_branch.id,
-                  code="CB-COV4", name_ar="صندوق", box_type="bank_account",
-                  current_balance=Decimal("123.5"), currency="AED", is_active=True)
+    box = CashBox(
+        tenant_id=sample_tenant.id,
+        branch_id=sample_branch.id,
+        code="CB-COV4",
+        name_ar="صندوق",
+        box_type="bank_account",
+        current_balance=Decimal("123.5"),
+        currency="AED",
+        is_active=True,
+    )
     db_session.add(box)
-    box2 = CashBox(tenant_id=sample_tenant.id, branch_id=sample_branch.id,
-                   code="CB-COV4-2", name_ar="بوابة", name_en="Gateway box", box_type="payment_gateway",
-                   current_balance=Decimal("10"), is_active=True)
+    box2 = CashBox(
+        tenant_id=sample_tenant.id,
+        branch_id=sample_branch.id,
+        code="CB-COV4-2",
+        name_ar="بوابة",
+        name_en="Gateway box",
+        box_type="payment_gateway",
+        current_balance=Decimal("10"),
+        is_active=True,
+    )
     db_session.add(box2)
-    box3 = CashBox(tenant_id=sample_tenant.id, branch_id=sample_branch.id,
-                   code="CB-COV4-3", name_ar="شيكات", box_type="cheque_under_collection",
-                   current_balance=Decimal("7"), is_active=True)
+    box3 = CashBox(
+        tenant_id=sample_tenant.id,
+        branch_id=sample_branch.id,
+        code="CB-COV4-3",
+        name_ar="شيكات",
+        box_type="cheque_under_collection",
+        current_balance=Decimal("7"),
+        is_active=True,
+    )
     db_session.add(box3)
     db_session.flush()
     out = TreasuryService.get_liquidity_position(sample_tenant.id)
@@ -48,8 +68,7 @@ def test_liquidity_cashbox_primary(db_session, sample_tenant, sample_branch):
     assert out_b["account_count"] >= 3
 
 
-def test_cheque_maturity_buckets(db_session, sample_tenant, incoming_cheque, outgoing_cheque,
-                                 sample_branch):
+def test_cheque_maturity_buckets(db_session, sample_tenant, incoming_cheque, outgoing_cheque, sample_branch):
     incoming_cheque.due_date = datetime.now(UTC).date() - timedelta(days=3)  # overdue
     incoming_cheque.status = "pending"
     incoming_cheque.is_active = True
