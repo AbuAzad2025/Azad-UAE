@@ -136,6 +136,8 @@ def _drop_postgres_database(url: str) -> None:
     parsed, db_name = _parse_database_url(url)
     if db_name in ("postgres", "template0", "template1", _DEV_DB_NAME):
         raise RuntimeError(f"Refusing to drop protected database: {db_name}")
+    if db_name.lower() == "azad-finance":
+        raise RuntimeError(f"Refusing to drop production database: {db_name}")
 
     _terminate_database_connections(url)
     admin_engine = _admin_engine(url)
