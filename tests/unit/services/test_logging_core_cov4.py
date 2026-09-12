@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import logging
 
 from services.logging_core import (
@@ -65,6 +64,7 @@ class TestRequestHelpers:
     def test_request_context_no_request(self):
         import pytest
         from flask import has_request_context
+
         # This test should run without any request context active
         # If there's a lingering context from other tests, skip the assertion
         if has_request_context():
