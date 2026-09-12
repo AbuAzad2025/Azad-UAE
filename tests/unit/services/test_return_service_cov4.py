@@ -179,8 +179,7 @@ class TestHelpersAndCreateGuards:
         assert q2 is not None
 
     def test_search_empty_query(self, db_session, sample_user):
-        # NOTE: non-digit branch references Sale.invoice_number which does not
-        # exist (production defect, reported); digit branch is the live path.
+        # NOTE: non-digit branch searches by sale_number.
         out = ReturnService.search_sales_for_return("7", 1, 10, sample_user)
         items, pagination = out
         assert items == [] or all("id" in row for row in items)

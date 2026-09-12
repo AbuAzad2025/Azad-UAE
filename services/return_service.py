@@ -610,8 +610,6 @@ class ReturnService:
     @staticmethod
     def search_sales_for_return(q, page, per_page, user):
         """Return paginated Sale candidates matching q for return creation."""
-        from sqlalchemy import or_
-
         from utils.helpers import format_currency
         from utils.tenanting import tenant_query
 
@@ -619,12 +617,7 @@ class ReturnService:
         if q.isdigit():
             query = query.filter(Sale.id == int(q))
         else:
-            query = query.filter(
-                or_(
-                    Sale.sale_number.ilike(f"%{q}%"),
-                    Sale.invoice_number.ilike(f"%{q}%"),
-                )
-            )
+            query = query.filter(Sale.sale_number.ilike(f"%{q}%"))
 
         pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
