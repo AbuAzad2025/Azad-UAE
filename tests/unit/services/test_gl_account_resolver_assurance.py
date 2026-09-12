@@ -28,9 +28,9 @@ class TestFeatureFlag:
         cfg = SimpleNamespace(ENABLE_DYNAMIC_GL_MAPPING=True)
         assert is_dynamic_gl_mapping_enabled(cfg) is True
 
-    def test_enabled_from_app_context(self, app):
+    def test_enabled_from_app_context(self, app, monkeypatch):
         with app.app_context():
-            app.config["ENABLE_DYNAMIC_GL_MAPPING"] = True
+            monkeypatch.setitem(app.config, "ENABLE_DYNAMIC_GL_MAPPING", True)
             assert is_dynamic_gl_mapping_enabled() is True
 
     def test_enabled_fallback_to_config_class(self, mocker):

@@ -180,24 +180,16 @@ class TestRegenerateDefaultBackup:
 
     def test_no_default_tenant_reports_missing(self, mocker, db_session):
         mocker.patch("services.backup_service.BackupService.initialize")
+        tenant_query = mocker.patch("models.tenant.Tenant.query")
+        tenant_query.filter_by.return_value.first.return_value = None
         assert MaintenanceService.regenerate_default_backup(dry_run=False) == ("No default tenant found")
 
     def test_default_tenant_backup_returns_filename(self, mocker, db_session):
-        import uuid as uuid_mod
+        from types import SimpleNamespace
 
-        from models.tenant import Tenant
-
-        unique = str(uuid_mod.uuid4())[:8]
-        tenant = Tenant(
-            name=f"Default Co {unique}",
-            name_ar="الافتراضية",
-            slug="default",
-            email=f"default-{unique}@example.com",
-            country="AE",
-            subscription_plan="basic",
-        )
-        db_session.add(tenant)
-        db_session.commit()
+        tenant = SimpleNamespace(id=424242)
+        tenant_query = mocker.patch("models.tenant.Tenant.query")
+        tenant_query.filter_by.return_value.first.return_value = tenant
 
         mocker.patch("services.backup_service.BackupService.initialize")
         create = mocker.patch(

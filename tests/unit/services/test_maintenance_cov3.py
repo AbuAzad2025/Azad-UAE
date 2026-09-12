@@ -126,22 +126,12 @@ class TestFixDefaultTenantMetadataBranches:
 
 class TestRegenerateBackupFallbacks:
     def test_manifest_scope_fallback(self, mocker, db_session):
-        import uuid as _uuid
+        from types import SimpleNamespace
 
-        from models.tenant import Tenant
         from services.maintenance_service import MaintenanceService
 
-        if Tenant.query.filter_by(slug="default").first() is None:
-            tenant = Tenant(
-                name=f"D {_uuid.uuid4().hex[:4]}",
-                name_ar="x",
-                slug="default",
-                email=f"d-{_uuid.uuid4().hex[:6]}@e.com",
-                country="AE",
-                subscription_plan="basic",
-            )
-            db_session.add(tenant)
-            db_session.commit()
+        tenant_query = mocker.patch("models.tenant.Tenant.query")
+        tenant_query.filter_by.return_value.first.return_value = SimpleNamespace(id=5150)
         mocker.patch("services.backup_service.BackupService.initialize")
         mocker.patch(
             "services.backup_service.BackupService.create_backup", return_value={"manifest": {"backup_scope": "tenant"}}
@@ -149,22 +139,12 @@ class TestRegenerateBackupFallbacks:
         assert MaintenanceService.regenerate_default_backup(dry_run=False) == "tenant"
 
     def test_plain_string_result(self, mocker, db_session):
-        import uuid as _uuid
+        from types import SimpleNamespace
 
-        from models.tenant import Tenant
         from services.maintenance_service import MaintenanceService
 
-        if Tenant.query.filter_by(slug="default").first() is None:
-            tenant = Tenant(
-                name=f"D {_uuid.uuid4().hex[:4]}",
-                name_ar="x",
-                slug="default",
-                email=f"d2-{_uuid.uuid4().hex[:6]}@e.com",
-                country="AE",
-                subscription_plan="basic",
-            )
-            db_session.add(tenant)
-            db_session.commit()
+        tenant_query = mocker.patch("models.tenant.Tenant.query")
+        tenant_query.filter_by.return_value.first.return_value = SimpleNamespace(id=5151)
         mocker.patch("services.backup_service.BackupService.initialize")
         mocker.patch("services.backup_service.BackupService.create_backup", return_value="/tmp/bak.sql.gz")
         assert MaintenanceService.regenerate_default_backup(dry_run=False) == "/tmp/bak.sql.gz"

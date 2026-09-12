@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from services.product_image_service import ProductImageService
 
 
@@ -13,13 +15,11 @@ class _File:
 
     def save(self, path):
         self.saved_to = path
-        with open(path, "w", encoding="utf-8") as f:
-            f.write("img")
 
 
 def test_upload_image(app, db_session, sample_product):
     f = _File()
-    with app.app_context():
+    with app.app_context(), patch("os.makedirs"):
         img = ProductImageService.upload_image(sample_product, f, "main", caption_ar="ع", caption_en="en")
         assert img.image_url.startswith("/static/uploads/products/")
         assert img.image_url.endswith(".jpg")
@@ -28,7 +28,7 @@ def test_upload_image(app, db_session, sample_product):
 
 
 def test_get_images_filter(app, db_session, sample_product):
-    with app.app_context():
+    with app.app_context(), patch("os.makedirs"):
         # Upload an image to ensure it exists
         f = _File()
         img = ProductImageService.upload_image(sample_product, f, "main", caption_ar="ع", caption_en="en")
@@ -44,7 +44,7 @@ def test_get_images_filter(app, db_session, sample_product):
 
 def test_reorder_only_matching_product(app, db_session, sample_product):
 
-    with app.app_context():
+    with app.app_context(), patch("os.makedirs"):
         f = _File()
         ProductImageService.upload_image(sample_product, f, "main", caption_ar="Test", caption_en="Test")
         db_session.flush()
@@ -62,7 +62,7 @@ def test_reorder_only_matching_product(app, db_session, sample_product):
 def test_delete_image(app, db_session, sample_product):
     from models.product_image import ProductImage
 
-    with app.app_context():
+    with app.app_context(), patch("os.makedirs"):
         f = _File()
         ProductImageService.upload_image(sample_product, f, "main", caption_ar="Test", caption_en="Test")
         db_session.flush()

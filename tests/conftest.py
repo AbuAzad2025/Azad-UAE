@@ -879,6 +879,7 @@ def _restore_session_app_config(app):
             "CLIENT_ERROR_TRUSTED_ORIGINS",
             "ENABLE_MWAC",
             "ENABLE_LANDED_COST_CAPITALIZATION",
+            "ENABLE_DYNAMIC_GL_MAPPING",
         )
     }
     yield

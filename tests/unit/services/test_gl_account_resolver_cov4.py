@@ -86,9 +86,9 @@ class TestFlagArcs:
         finally:
             Config.ENABLE_DYNAMIC_GL_MAPPING = prev
 
-    def test_resolve_delegates_when_enabled(self, app, mocker):
+    def test_resolve_delegates_when_enabled(self, app, mocker, monkeypatch):
         with app.app_context():
-            app.config["ENABLE_DYNAMIC_GL_MAPPING"] = True
+            monkeypatch.setitem(app.config, "ENABLE_DYNAMIC_GL_MAPPING", True)
             sentinel = object()
             routed = mocker.patch(
                 "services.gl_account_resolver._resolve_dynamic_gl_account",
@@ -137,7 +137,7 @@ class TestFindActiveMappingDb:
             tenant_id=sample_tenant.id, concept_code=CASH, is_active=True
         ).first()
         if existing is None:
-            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id).first()
+            acc = GLAccount.query.filter_by(tenant_id=sample_tenant.id, is_header=False).first()
             _mapping(db_session, sample_tenant, CASH, acc)
         out = _resolve_dynamic_gl_account(tenant_id=sample_tenant.id, concept_code=CASH)
         assert out.tenant_id == sample_tenant.id
