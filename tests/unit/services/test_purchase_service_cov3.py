@@ -558,22 +558,25 @@ class TestReturnFlows:
 
 
 class TestQuickPurchase:
-    def test_line_construction_rejects_unknown_total_kwarg(self):
-        """Documents a production defect: create_quick_purchase passes
-        total=... but PurchaseLine only defines line_total, so the real
-        constructor raises TypeError (lines 739-758 run before the raise)."""
+    def test_line_construction_sets_line_total(self):
+        """create_quick_purchase builds the line with line_total and a
+        generated purchase number (previous total= kwarg defect fixed)."""
+        from decimal import Decimal
+
+        from models import PurchaseLine
         from services.purchase_service import PurchaseService
 
         with (
-            patch(f"{PMOD}.db"),
+            patch(f"{PMOD}.db") as mock_db,
             patch(f"{PMOD}.StockService"),
+            patch(f"{PMOD}.generate_number", return_value="PUR-2026-0001"),
         ):
-            try:
-                PurchaseService.create_quick_purchase(4, 5, 2, "10", tenant_id=1, user_id=9)
-            except TypeError as exc:
-                assert "total" in str(exc)
-            else:
-                raise AssertionError("expected TypeError")
+            out = PurchaseService.create_quick_purchase(4, 5, 2, "10", tenant_id=1, user_id=9)
+        assert out.purchase_number == "PUR-2026-0001"
+        added = [c.args[0] for c in mock_db.session.add.call_args_list]
+        lines = [o for o in added if isinstance(o, PurchaseLine)]
+        assert len(lines) == 1
+        assert lines[0].line_total == Decimal("20")
 
     def test_without_tenant_skips_stock(self):
         from services.purchase_service import PurchaseService
@@ -581,13 +584,10 @@ class TestQuickPurchase:
         with (
             patch(f"{PMOD}.db"),
             patch(f"{PMOD}.StockService") as stock,
+            patch(f"{PMOD}.generate_number", return_value="PUR-2026-0002"),
         ):
-            try:
-                PurchaseService.create_quick_purchase(4, 5, 2, "10")
-            except TypeError as exc:
-                assert "total" in str(exc)
-            else:
-                raise AssertionError("expected TypeError")
+            out = PurchaseService.create_quick_purchase(4, 5, 2, "10")
+            assert out.purchase_number == "PUR-2026-0002"
             stock.add_stock.assert_not_called()
 
 

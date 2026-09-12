@@ -736,8 +736,13 @@ class PurchaseService:
         Returns the created purchase with stock addition."""
         from models import Purchase, PurchaseLine, Warehouse
 
+        supplier = Supplier.query.filter_by(id=supplier_id).first()
         purchase = Purchase(
             supplier_id=supplier_id,
+            purchase_number=generate_number("PUR", Purchase, "purchase_number", tenant_id=tenant_id),
+            supplier_name=supplier.name if supplier else "",
+            supplier_phone=supplier.phone if supplier else None,
+            supplier_email=supplier.email if supplier else None,
             total_amount=Decimal(str(unit_cost)) * Decimal(str(quantity)),
             amount=Decimal(str(unit_cost)) * Decimal(str(quantity)),
             amount_aed=Decimal(str(unit_cost)) * Decimal(str(quantity)),
@@ -751,11 +756,12 @@ class PurchaseService:
         db.session.flush()
 
         purchase_line = PurchaseLine(
+            tenant_id=tenant_id,
             purchase_id=purchase.id,
             product_id=product_id,
             quantity=quantity,
             unit_cost=Decimal(str(unit_cost)),
-            total=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+            line_total=Decimal(str(unit_cost)) * Decimal(str(quantity)),
         )
         db.session.add(purchase_line)
         db.session.flush()
