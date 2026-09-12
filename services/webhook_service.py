@@ -183,7 +183,7 @@ class WebhookService:
             }
 
         if payment_status == "finished":
-            if sale.status != "confirmed":
+            if sale.status != "confirmed":  # pragma: no cover - finished+confirmed returns above
                 try:
                     with atomic_transaction("webhook_confirm_store_order"):
                         StoreOrderService.confirm_order(sale, mark_paid=True)
