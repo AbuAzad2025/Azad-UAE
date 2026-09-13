@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date
 from decimal import Decimal
 
 
@@ -17,9 +17,7 @@ def test_paid_maps_empty_and_unscoped(db_session, sample_tenant):
 def test_scoped_queries_with_branch(mocker, sample_branch):
     from services.reports_query_service import ReportsQueryService as R
 
-    mocker.patch(
-        "services.reports_query_service.report_branch_scope_id", return_value=sample_branch.id
-    )
+    mocker.patch("services.reports_query_service.report_branch_scope_id", return_value=sample_branch.id)
     assert isinstance(R._scoped_customer_query().all(), list)
     assert isinstance(R._scoped_supplier_query().all(), list)
     assert R.supplier_in_branch_scope(424242) in (True, False)
@@ -53,6 +51,8 @@ def test_fetch_inventory_products_variants(db_session, sample_tenant, sample_pro
     out = R.fetch_inventory_products(sample_product.category_id, False, stock_map)
     assert isinstance(out, list)
     assert R.fetch_inventory_products(None, False, {}) == []
+    decimal_map = {sample_product.id: Decimal("5"), 424242: Decimal("0")}
+    assert isinstance(R.fetch_inventory_products(None, False, decimal_map), list)
 
 
 def test_search_entities_variants(db_session, sample_tenant, sample_supplier, sample_customer):
@@ -75,47 +75,17 @@ def test_reconciliation_warehouses_variants(db_session, sample_user, sample_bran
 def test_fetch_sales_seller_filters(db_session, sample_tenant, sample_user, sample_customer):
     from services.reports_query_service import ReportsQueryService as R
 
-    assert isinstance(
-        R.fetch_sales_report(sample_tenant.id, None, None, None, None, sample_user.id), list
-    )
-    assert isinstance(
-        R.fetch_sales_report(sample_tenant.id, None, None, None, sample_user.id, None), list
-    )
+    assert isinstance(R.fetch_sales_report(sample_tenant.id, None, None, None, None, sample_user.id), list)
+    assert isinstance(R.fetch_sales_report(sample_tenant.id, None, None, None, sample_user.id, None), list)
 
 
 def test_fetch_purchases_full_filters(db_session, sample_tenant, sample_branch, sample_supplier):
     from services.reports_query_service import ReportsQueryService as R
 
     day = date.today()
-    assert isinstance(
-        R.fetch_purchases_report(sample_tenant.id, None, day, day, sample_supplier.id), list
-    )
+    assert isinstance(R.fetch_purchases_report(sample_tenant.id, None, day, day, sample_supplier.id), list)
     by_supplier, _ = R.fetch_purchases_payments(sample_tenant.id, None, day, day, sample_supplier.id)
     assert isinstance(by_supplier, dict)
-
-
-def test_fetch_inventory_products_variants(db_session, sample_tenant, sample_product):
-    from services.reports_query_service import ReportsQueryService as R
-
-    assert isinstance(R.fetch_inventory_products(None, True, {}), list)
-    stock_map = {sample_product.id: Decimal("5"), 424242: Decimal("0")}
-    assert isinstance(R.fetch_inventory_products(None, False, stock_map), list)
-
-
-def test_search_entities_variants(db_session, sample_tenant, sample_supplier, sample_customer):
-    from services.reports_query_service import ReportsQueryService as R
-
-    assert isinstance(R.search_entities("Test", "supplier"), list)
-    assert isinstance(R.search_entities("Test", "partner"), list)
-    assert isinstance(R.search_entities("Test", "merchant"), list)
-    assert isinstance(R.search_entities("Test", "customer"), list)
-
-
-def test_reconciliation_warehouses_variants(db_session, sample_user, sample_branch):
-    from services.reports_query_service import ReportsQueryService as R
-
-    assert isinstance(R.fetch_inventory_reconciliation_warehouses(sample_branch.id, sample_user), list)
-    assert isinstance(R.fetch_inventory_reconciliation_warehouses(None, sample_user), list)
 
 
 def test_stock_maps_unscoped():
@@ -135,7 +105,9 @@ def test_fragments_unscoped(db_session, sample_supplier, sample_customer):
     R.build_customer_fragment_data(sample_customer.id, "merchant", None, None)
 
 
-def test_supplier_fragment_fifo_path(db_session, sample_tenant, sample_branch, sample_user, sample_supplier):
+def test_supplier_fragment_payment_only_no_invoices(
+    db_session, sample_tenant, sample_branch, sample_user, sample_supplier
+):
     from datetime import datetime
 
     from models import Payment
@@ -232,10 +204,7 @@ def test_paid_maps_with_branch_and_purchase(db_session, sample_tenant, sample_br
     from services.reports_query_service import ReportsQueryService as R
 
     assert R.get_confirmed_sale_paid_map([424242], tenant_id=sample_tenant.id, branch_id=sample_branch.id) == {}
-    assert (
-        R.get_confirmed_supplier_paid_aed(424242, purchase_id=424242, tenant_id=sample_tenant.id)
-        == Decimal("0")
-    )
+    assert R.get_confirmed_supplier_paid_aed(424242, purchase_id=424242, tenant_id=sample_tenant.id) == Decimal("0")
 
 
 def test_fetch_sales_full_filters(db_session, sample_tenant, sample_branch, sample_user, sample_customer):
@@ -246,18 +215,14 @@ def test_fetch_sales_full_filters(db_session, sample_tenant, sample_branch, samp
         R.fetch_sales_report(sample_tenant.id, sample_branch.id, day, day, sample_customer.id, sample_user.id),
         list,
     )
-    assert isinstance(
-        R.fetch_sales_report(sample_tenant.id, None, None, None, None, sample_user.id), list
-    )
+    assert isinstance(R.fetch_sales_report(sample_tenant.id, None, None, None, None, sample_user.id), list)
 
 
 def test_fetch_purchases_and_payments_full_filters(db_session, sample_tenant, sample_branch, sample_supplier):
     from services.reports_query_service import ReportsQueryService as R
 
     day = date.today()
-    assert isinstance(
-        R.fetch_purchases_report(sample_tenant.id, None, day, day, sample_supplier.id), list
-    )
+    assert isinstance(R.fetch_purchases_report(sample_tenant.id, None, day, day, sample_supplier.id), list)
     by_supplier, _ = R.fetch_purchases_payments(sample_tenant.id, None, None, day, None)
     assert isinstance(by_supplier, dict)
     assert isinstance(R.fetch_receivables_sales(sample_tenant.id, None, sample_supplier.id), list)
@@ -266,9 +231,7 @@ def test_fetch_purchases_and_payments_full_filters(db_session, sample_tenant, sa
 def test_reconciliation_warehouses_mocked(mocker, sample_user, sample_branch):
     from services.reports_query_service import ReportsQueryService as R
 
-    mocker.patch(
-        "utils.branching.get_accessible_warehouse_ids", return_value=[sample_branch.id]
-    )
+    mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[sample_branch.id])
     assert isinstance(R.fetch_inventory_reconciliation_warehouses(None, sample_user), list)
     mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[])
     assert isinstance(R.fetch_inventory_reconciliation_warehouses(None, sample_user), list)
@@ -277,9 +240,7 @@ def test_reconciliation_warehouses_mocked(mocker, sample_user, sample_branch):
 def test_inventory_warehouses_variants(mocker, db_session, sample_tenant, sample_user, sample_branch):
     from services.reports_query_service import ReportsQueryService as R
 
-    mocker.patch(
-        "utils.branching.get_accessible_warehouse_ids", return_value=[sample_branch.id]
-    )
+    mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[sample_branch.id])
     assert isinstance(R.fetch_inventory_warehouses(sample_tenant.id, None, sample_user), list)
     mocker.patch("utils.branching.get_accessible_warehouse_ids", return_value=[])
     assert isinstance(R.fetch_inventory_warehouses(sample_tenant.id, None, sample_user, ordered=False), list)

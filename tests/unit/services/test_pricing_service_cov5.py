@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
 from decimal import Decimal
+from types import SimpleNamespace
 
 
 def test_partner_without_partner_price_no_discount(sample_product):

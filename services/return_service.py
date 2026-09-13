@@ -614,10 +614,7 @@ class ReturnService:
         from utils.tenanting import tenant_query
 
         query = tenant_query(Sale, user=user).filter(Sale.status == "completed")
-        if q.isdigit():
-            query = query.filter(Sale.id == int(q))
-        else:
-            query = query.filter(Sale.sale_number.ilike(f"%{q}%"))
+        query = query.filter(Sale.id == int(q)) if q.isdigit() else query.filter(Sale.sale_number.ilike(f"%{q}%"))
 
         pagination = query.order_by(Sale.sale_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
