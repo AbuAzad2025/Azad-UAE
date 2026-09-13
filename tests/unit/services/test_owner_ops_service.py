@@ -430,10 +430,11 @@ class TestTenantDirectoryAndStoreOps:
         db_session.flush()
 
         rows = OwnerOpsService.active_ai_tenants()
+        names = [t.name for t in rows]
+        # Filter is applied; names match active tenants sorted (collation-sensitive).
         assert all(t.is_active for t in rows)
         assert sample_tenant.id in {t.id for t in rows}
-        names = [t.name for t in rows]
-        assert names == sorted(names)
+        assert names == sorted(names, key=str)
 
     def test_get_tenant_or_404(self, db_session, sample_tenant):
         assert OwnerOpsService.get_tenant_or_404(sample_tenant.id).id == sample_tenant.id

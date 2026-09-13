@@ -802,6 +802,9 @@ def auto_cleanup_isolation(app):
                 db.session.expire_all()
             with contextlib.suppress(Exception):
                 db.session.remove()
+            # Ensure identity map fully cleared after rollback
+            with app.app_context(), contextlib.suppress(Exception):
+                db.session.expire_all()
 
     def _scrub_flask_session():
         try:
