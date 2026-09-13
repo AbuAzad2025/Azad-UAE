@@ -96,7 +96,9 @@ def test_supplier_fragment_with_payments(
             line_total=Decimal("100"),
         )
     )
-    _mk_payment(db_session, sample_tenant, sample_user, sample_supplier.id, "D", purchase_id=po.id, branch_id=sample_branch.id)
+    _mk_payment(
+        db_session, sample_tenant, sample_user, sample_supplier.id, "D", purchase_id=po.id, branch_id=sample_branch.id
+    )
     _mk_payment(db_session, sample_tenant, sample_user, sample_supplier.id, "U", branch_id=sample_branch.id)
     db_session.flush()
     out = R.build_supplier_fragment_data(sample_supplier.id, sample_tenant.id, sample_branch.id)
@@ -104,9 +106,7 @@ def test_supplier_fragment_with_payments(
     assert out["invoices"]
 
 
-def test_customer_fragments_all_types(
-    db_session, sample_tenant, sample_branch, sample_user, sample_customer
-):
+def test_customer_fragments_all_types(db_session, sample_tenant, sample_branch, sample_user, sample_customer):
     from datetime import datetime
 
     from models import Customer, Product, Sale, SaleLine
@@ -187,3 +187,55 @@ def test_paid_maps_with_tenant(db_session, sample_tenant):
 
     assert R.get_confirmed_sale_paid_map([424242], tenant_id=sample_tenant.id) == {}
     assert R.get_confirmed_supplier_paid_aed(424242, tenant_id=sample_tenant.id) == Decimal("0")
+
+
+def test_paid_aed_scalar_filters():
+    from unittest.mock import MagicMock, patch
+
+    from services import reports_query_service as rq
+    from services.reports_query_service import ReportsQueryService as R
+
+    session = MagicMock()
+    root = MagicMock()
+    root.scalar.return_value = Decimal("10")
+    root.filter.return_value = root
+    session.query.return_value = root
+    with patch.object(rq, "db", MagicMock(session=session)):
+        assert R.get_confirmed_sale_paid_aed(1, tenant_id=2, branch_id=3) == Decimal("10")
+        assert R.get_confirmed_sale_paid_aed(7) == Decimal("10")
+        assert R.get_confirmed_supplier_paid_aed(4, purchase_id=5, tenant_id=2, branch_id=3) == Decimal("10")
+        assert R.get_confirmed_supplier_paid_aed(8) == Decimal("10")
+
+
+def test_fetch_sales_report_with_seller_user_id(db_session, sample_tenant):
+    from services.reports_query_service import ReportsQueryService as R
+
+    out = R.fetch_sales_report(sample_tenant.id, None, None, None, None, None, seller_user_id=1)
+    assert isinstance(out, list)
+
+
+def test_fetch_purchases_payments_without_tenant(db_session, sample_tenant, sample_user, sample_supplier):
+    from services.reports_query_service import ReportsQueryService as R
+
+    _mk_payment(db_session, sample_tenant, sample_user, sample_supplier.id, "NT")
+    by_supplier, _ = R.fetch_purchases_payments(None, None, None, None, None)
+    assert by_supplier[sample_supplier.id]
+
+
+def test_fetch_inventory_warehouses_non_admin():
+    from unittest.mock import MagicMock, patch
+
+    from services.reports_query_service import ReportsQueryService as R
+
+    user = MagicMock()
+    user.is_admin.return_value = False
+    with patch("utils.branching.get_accessible_warehouse_ids", return_value=[]):
+        assert isinstance(R.fetch_inventory_warehouses(None, None, user), list)
+        assert isinstance(R.fetch_inventory_reconciliation_warehouses(None, user), list)
+
+
+def test_build_stock_maps_no_date_filters(db_session, sample_tenant, sample_warehouse):
+    from services.reports_query_service import ReportsQueryService as R
+
+    out = R.build_stock_maps([sample_warehouse.id], sample_tenant.id, None, None, None, None)
+    assert len(out) == 4

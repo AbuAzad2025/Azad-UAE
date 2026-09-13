@@ -809,10 +809,17 @@ class SaleService:
         customer.apply_sale(_D(str(sale.amount_aed or 0)))
 
     @staticmethod
-    def create_quick_sale(customer_id: int, product_id: int, quantity: float, unit_price, tenant_id: int | None = None):
+    def create_quick_sale(
+        customer_id: int,
+        product_id: int,
+        quantity: float,
+        unit_price,
+        tenant_id: int | None = None,
+        seller_id: int | None = None,
+    ):
         """Create a quick sale with single product line (for AI wizard flows).
         Returns the created sale with stock deduction."""
-        from models import Customer, Product, Sale, SaleLine, Warehouse
+        from models import Customer, Product, Sale, SaleLine, User, Warehouse
 
         customer = db.session.get(Customer, customer_id) if customer_id else None
         product = db.session.get(Product, product_id) if product_id else None
@@ -822,9 +829,13 @@ class SaleService:
         if not product:
             raise ValueError(gettext("المنتج غير موجود"))
 
+        if not seller_id:
+            seller = User.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(User.id.asc()).first()
+            seller_id = seller.id if seller else 1
+
         sale = Sale(
             customer_id=customer.id,
-            seller_id=customer.id,
+            seller_id=seller_id,
             sale_number=generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
             total_amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
             checkout_payment_method="cash",

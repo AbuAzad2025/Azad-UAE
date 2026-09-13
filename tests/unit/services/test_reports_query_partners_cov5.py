@@ -101,6 +101,13 @@ def test_partners_report_entries_path(db_session, sample_tenant, sample_user, sa
     assert out["partners_data"]
     assert out["partners_data"][0]["partner_share_amount"] == Decimal("10")
 
+    out_all_none = ReportsQueryService.build_partners_report(None, None, None, None)
+    assert out_all_none["partners_data"]
+    out_branch_only = ReportsQueryService.build_partners_report(None, None, sample_tenant.id, None)
+    assert out_branch_only["partners_data"]
+    out_date_to_only = ReportsQueryService.build_partners_report(None, date.today() + timedelta(days=1), None, None)
+    assert out_date_to_only["partners_data"]
+
 
 def test_partners_report_entries_with_date_to(db_session, sample_tenant, sample_user, sample_branch):
     from models.partner_commission import PartnerCommissionEntry
@@ -138,16 +145,19 @@ def test_partners_report_entries_with_date_to(db_session, sample_tenant, sample_
 def test_partners_report_else_path_with_financials_and_suppliers(
     db_session, sample_tenant, sample_user, sample_branch, sample_supplier
 ):
+    from datetime import datetime
+
+    from models import Purchase
     from models.product import ProductPartner
     from services.reports_query_service import ReportsQueryService
 
     c1 = _mk_customer(db_session, sample_tenant, "P2", "partner")
     c2 = _mk_customer(db_session, sample_tenant, "M2", "merchant")
+    _mk_customer(db_session, sample_tenant, "PZ", "partner")
     p1 = _mk_product(db_session, sample_tenant, "S1")
     p2 = _mk_product(db_session, sample_tenant, "S2")
-    m1 = _mk_product(
-        db_session, sample_tenant, "M1", merchant_customer_id=c2.id, merchant_share=Decimal("20")
-    )
+    m1 = _mk_product(db_session, sample_tenant, "M1", merchant_customer_id=c2.id, merchant_share=Decimal("20"))
+    _mk_product(db_session, sample_tenant, "MZ", merchant_customer_id=c2.id, merchant_share=Decimal("20"))
     for prod in (p1, p2):
         db_session.add(
             ProductPartner(
@@ -161,11 +171,6 @@ def test_partners_report_else_path_with_financials_and_suppliers(
     _mk_line(db_session, s1, p1)
     s2 = _mk_sale(db_session, sample_tenant, sample_user, c2, "S2", branch_id=sample_branch.id)
     _mk_line(db_session, s2, m1, qty="1", total="50")
-    db_session.flush()
-
-    from datetime import datetime
-
-    from models import Purchase
 
     po = Purchase(
         tenant_id=sample_tenant.id,
@@ -193,3 +198,17 @@ def test_partners_report_else_path_with_financials_and_suppliers(
     assert any(r["partner_share_amount"] == Decimal("10") for r in out["partners_data"])
     assert any(r["merchant_share_amount"] == Decimal("10") for r in out["merchants_data"])
     assert out["suppliers_summary"]
+
+    out_all_none = ReportsQueryService.build_partners_report(None, None, None, None)
+    assert any(r["partner_share_amount"] == Decimal("10") for r in out_all_none["partners_data"])
+
+
+def test_partners_report_empty_suppliers(db_session, sample_tenant):
+    from unittest.mock import patch
+
+    from services.reports_query_service import ReportsQueryService
+
+    with patch.object(ReportsQueryService, "_scoped_supplier_query") as sq:
+        sq.return_value.all.return_value = []
+        out = ReportsQueryService.build_partners_report(None, None, None, None)
+    assert out["suppliers_summary"] == []

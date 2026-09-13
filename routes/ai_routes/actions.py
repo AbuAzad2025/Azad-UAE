@@ -18,6 +18,7 @@ import logging
 from datetime import UTC
 
 from flask_babel import gettext
+from flask_login import current_user
 
 from routes.ai_routes.shared import (
     _conversation_ctx,
@@ -954,6 +955,7 @@ def _process_user_action(message, user):
                             quantity=data["quantity"],
                             unit_price=data["product_price"],
                             tenant_id=tid,
+                            seller_id=current_user.id if current_user.is_authenticated else None,
                         )
 
                     train_local_ai("create_sale", data, {"success": True, "sale_id": sale.id})
@@ -2487,6 +2489,7 @@ http://localhost:5000/ai/assistant
                             quantity=quantity,
                             unit_price=product.regular_price,
                             tenant_id=tid,
+                            seller_id=current_user.id if current_user.is_authenticated else None,
                         )
 
                     return f"""✅ تم إنشاء الفاتورة بنجاح!

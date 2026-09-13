@@ -59,7 +59,7 @@ def _safe_for_update(query, label="row"):
                 attempt,
                 _MAX_LOCK_RETRIES,
             )
-    raise RuntimeError(f"Failed to acquire row lock for {label}")
+    raise RuntimeError(f"Failed to acquire row lock for {label}")  # pragma: no cover
 
 
 class _MWACHelper:

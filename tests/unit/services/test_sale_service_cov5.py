@@ -282,6 +282,30 @@ def test_quick_sale_without_warehouse_skips_stock(db_session, sample_tenant, sam
     assert sale.id is not None
 
 
+def test_quick_sale_with_explicit_seller(
+    db_session, sample_tenant, sample_user, sample_warehouse, sample_customer, sample_product
+):
+    from services.sale_service import SaleService
+    from services.stock_service import StockService
+
+    StockService.add_stock(sample_product.id, 50, warehouse_id=sample_warehouse.id)
+    sale = SaleService.create_quick_sale(
+        sample_customer.id, sample_product.id, 1, 10, tenant_id=sample_tenant.id, seller_id=sample_user.id
+    )
+    assert sale.seller_id == sample_user.id
+
+
+def test_quick_sale_tenant_user_seller(
+    db_session, sample_tenant, sample_user, sample_warehouse, sample_customer, sample_product
+):
+    from services.sale_service import SaleService
+    from services.stock_service import StockService
+
+    StockService.add_stock(sample_product.id, 50, warehouse_id=sample_warehouse.id)
+    sale = SaleService.create_quick_sale(sample_customer.id, sample_product.id, 1, 10, tenant_id=sample_tenant.id)
+    assert sale.seller_id == sample_user.id
+
+
 def test_fulfill_foreign_currency_note(app):
     from services.sale_service import SaleService
 
@@ -662,6 +686,26 @@ def test_fx_same_currency_rate_diff_no_post(app):
     ):
         out = SaleService.create_payment_for_sale(sale, 10, "cash", currency="ILS", exchange_rate=1.5)
         assert out.payment_number == "PAY-FX2"
+
+
+def test_fx_open_balance_negative_skips_posting(app):
+    from unittest.mock import MagicMock as MM
+
+    from services.sale_service import SaleService
+
+    sale = _fx_sale()
+    sale.payments = [MM(payment_confirmed=True, amount_aed=Decimal("130"))]
+    sale.returns = [MM(status="approved", amount_aed=Decimal("10"))]
+    with (
+        patch("utils.helpers.generate_number", return_value="PAY-FX3"),
+        patch("services.sale_service.post_or_fail"),
+        patch("services.sale_service.GLService"),
+        patch("services.sale_service.db.session"),
+        patch("services.sale_service.convert_and_quantize_aed", return_value=Decimal("36")),
+        patch("services.sale_service.canonical_payment_type", return_value="sale_payment"),
+    ):
+        out = SaleService.create_payment_for_sale(sale, 10, "cash", currency="USD", exchange_rate=3.6)
+        assert out.payment_number == "PAY-FX3"
 
 
 def test_cheque_payment_guards(db_session, sample_sale):
