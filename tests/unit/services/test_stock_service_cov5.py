@@ -403,9 +403,7 @@ def test_running_balances_real(db_session, sample_tenant, sample_warehouse):
     product = _make_product(db_session, sample_tenant, cost_price=Decimal("10"))
     first = _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 5)
     second = _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 3)
-    out = ss.StockService.get_movement_running_balances(
-        [second], tenant_id=sample_tenant.id
-    )
+    out = ss.StockService.get_movement_running_balances([second], tenant_id=sample_tenant.id)
     assert out[second.id] == (Decimal("5"), Decimal("8"))
     assert out.get(first.id) is None
 
@@ -490,15 +488,20 @@ def test_movements_query_filters(db_session, sample_tenant, sample_warehouse):
     _make_movement(db_session, sample_tenant, product_b, sample_warehouse.id, 3, "purchase")
     base = ss.StockService.movements_query(tenant_id=sample_tenant.id)
     assert len(base.all()) == 3
-    assert len(ss.StockService.movements_query(tenant_id=sample_tenant.id, warehouse_ids=[sample_warehouse.id]).all()) == 2
+    assert (
+        len(ss.StockService.movements_query(tenant_id=sample_tenant.id, warehouse_ids=[sample_warehouse.id]).all()) == 2
+    )
     assert len(ss.StockService.movements_query(tenant_id=sample_tenant.id, product_id=product_a.id).all()) == 2
     assert len(ss.StockService.movements_query(tenant_id=sample_tenant.id, movement_type="purchase").all()) == 2
     assert len(ss.StockService.movements_query(tenant_id=sample_tenant.id, warehouse_id=wh2.id).all()) == 1
-    assert len(
-        ss.StockService.movements_query(
-            tenant_id=sample_tenant.id, product_id=product_a.id, movement_type="purchase", warehouse_id=wh2.id
-        ).all()
-    ) == 1
+    assert (
+        len(
+            ss.StockService.movements_query(
+                tenant_id=sample_tenant.id, product_id=product_a.id, movement_type="purchase", warehouse_id=wh2.id
+            ).all()
+        )
+        == 1
+    )
 
 
 def test_list_active_warehouses():

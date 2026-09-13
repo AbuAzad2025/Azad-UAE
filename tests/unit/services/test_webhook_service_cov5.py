@@ -43,9 +43,7 @@ def test_unknown_payment_status_acks(db_session, sample_tenant, sample_customer,
         assert out == {"success": True, "message": "Store order updated to waiting"}
 
 
-def test_refund_non_pending_skips_cancel(
-    db_session, sample_tenant, sample_customer, sample_user, sample_warehouse
-):
+def test_refund_non_pending_skips_cancel(db_session, sample_tenant, sample_customer, sample_user, sample_warehouse):
     from services.webhook_service import WebhookService
 
     sale = _sale(db_session, sample_tenant, sample_customer, sample_user, sample_warehouse, "confirmed")

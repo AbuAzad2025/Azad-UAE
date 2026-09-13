@@ -61,9 +61,7 @@ def test_build_lines_missing_product_raises(mocker, sample_tenant, online_wareho
         StoreCheckoutService.build_lines_from_cart(sample_tenant.id, {"999999999": 1}, online_warehouse.id)
 
 
-def test_build_lines_unavailable_raises(
-    mocker, sample_tenant, online_warehouse, sample_product_with_stock
-):
+def test_build_lines_unavailable_raises(mocker, sample_tenant, online_warehouse, sample_product_with_stock):
     from services.store_checkout_service import StoreCheckoutService
 
     mocker.patch(

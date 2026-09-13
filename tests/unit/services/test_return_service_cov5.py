@@ -146,9 +146,9 @@ def test_serial_not_sold_raises(app, mocker):
     line = _sale_line(product=product)
     _patch_common(mocker, sale, line, product)
     mocker.patch("utils.serial_helpers.validate_serials")
-    mocker.patch(
-        "services.return_service.ProductSerial.query"
-    ).filter_by.return_value.first.return_value = MagicMock(status="available")
+    mocker.patch("services.return_service.ProductSerial.query").filter_by.return_value.first.return_value = MagicMock(
+        status="available"
+    )
     from services.return_service import ReturnService
 
     with app.app_context(), pytest.raises(ValueError, match="not sold"):

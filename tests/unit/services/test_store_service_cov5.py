@@ -57,9 +57,7 @@ def test_cart_totals_display_currency(mocker, sample_tenant, sample_product_with
         "services.store_pricing_service.StorePricingService.resolve_display_price",
         return_value=Decimal("5"),
     )
-    out = StoreService.cart_totals(
-        sample_tenant.id, {str(sample_product_with_stock.id): 2}, display_currency="USD"
-    )
+    out = StoreService.cart_totals(sample_tenant.id, {str(sample_product_with_stock.id): 2}, display_currency="USD")
     assert out["display_subtotal"] == Decimal("10.00")
     assert len(out["lines"]) == 1
 

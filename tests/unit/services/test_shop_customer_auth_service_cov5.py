@@ -18,6 +18,4 @@ def test_register_flush_failure(db_session, sample_tenant, mocker):
 
     mocker.patch.object(db.session, "flush", side_effect=[None, RuntimeError("db down")])
     with pytest.raises(RuntimeError, match="db down"):
-        ShopCustomerAuthService.register(
-            sample_tenant.id, "Cov5", "cov5reg@example.com", "0501112222", "password123"
-        )
+        ShopCustomerAuthService.register(sample_tenant.id, "Cov5", "cov5reg@example.com", "0501112222", "password123")

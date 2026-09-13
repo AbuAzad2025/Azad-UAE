@@ -5,9 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 
-def test_confirm_receive_partial_lines_skips_missing(
-    db_session, sample_tenant, sample_user, sample_product
-):
+def test_confirm_receive_partial_lines_skips_missing(db_session, sample_tenant, sample_user, sample_product):
     from services.transfer_service import TransferService
     from tests.factories import WarehouseFactory
 
