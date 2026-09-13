@@ -21,6 +21,49 @@ def test_create_project_flush_failure(mocker, db_session, sample_user, sample_te
         ProjectService.create_project({"name": "Boom"}, sample_user)
 
 
+def test_create_stages_flush_failure(mocker, db_session, sample_user, sample_tenant):
+    from extensions import db
+    from services.project_service import ProjectService
+
+    _patch_tenant(mocker, sample_tenant.id)
+    mocker.patch.object(db.session, "flush", side_effect=[None, RuntimeError("db down")])
+    with pytest.raises(RuntimeError, match="db down"):
+        ProjectService.create_project({"name": "Boom2"}, sample_user)
+
+
+def test_update_project_fields(mocker, db_session, sample_user, sample_tenant):
+    from services.project_service import ProjectService
+
+    _patch_tenant(mocker, sample_tenant.id)
+    project = ProjectService.create_project({"name": "Upd"}, sample_user)
+    out = ProjectService.update_project(
+        project.id,
+        {"name": "Upd2", "date_start": "2026-01-01T00:00:00", "date_end": "", "customer_id": ""},
+        sample_user,
+    )
+    assert out.name == "Upd2"
+    assert out.date_start is not None
+    assert out.date_end is None
+    assert out.customer_id is None
+
+
+def test_list_projects_no_tenant(mocker, sample_user):
+    from services.project_service import ProjectService
+
+    mocker.patch("services.project_service.get_active_tenant_id", return_value=None)
+    mocker.patch("services.project_service.is_global_owner_user", return_value=False)
+    mocker.patch("services.project_service.branch_scope_id_for", return_value=None)
+    assert ProjectService.list_projects(sample_user) == []
+
+
+def test_list_projects_global_owner(mocker, sample_user):
+    from services.project_service import ProjectService
+
+    mocker.patch("services.project_service.get_active_tenant_id", return_value=1)
+    mocker.patch("services.project_service.is_global_owner_user", return_value=True)
+    assert isinstance(ProjectService.list_projects(sample_user), list)
+
+
 def test_detail_queries(db_session, sample_user, sample_tenant, mocker):
     from services.project_service import ProjectService
 

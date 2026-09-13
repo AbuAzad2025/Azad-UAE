@@ -92,6 +92,9 @@ def test_counts_and_warehouse(db_session, sample_tenant, sample_product, sample_
     sales_n2, _ = ProductService.transaction_counts(sample_product.id, None)
     assert sales_n2 == 0
     assert ProductService.get_default_warehouse(sample_tenant.id) is not None
+    sample_warehouse.is_main = True
+    db_session.flush()
+    assert ProductService.get_default_warehouse(sample_tenant.id) is not None
     sample_warehouse.is_main = False
     db_session.flush()
     assert ProductService.get_default_warehouse(sample_tenant.id) is not None
