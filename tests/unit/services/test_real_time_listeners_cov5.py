@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -38,3 +39,46 @@ def test_expense_without_approval_skips_notification(capsys):
     out = capsys.readouterr().out
     assert "expense_created" in out
     assert "موافقة مطلوبة" not in out
+
+
+def test_journal_entry_updated_neither_posted_nor_reversed(capsys):
+    from services.real_time_listeners import RealTimeAccountingListeners
+
+    entry = MagicMock(
+        id=3,
+        entry_number="JE-X",
+        is_posted=False,
+        is_reversed=False,
+        updated_at=None,
+    )
+    RealTimeAccountingListeners._on_journal_entry_updated(entry)
+    assert "خطأ" not in capsys.readouterr().out
+
+
+def test_account_updated_normal_balance(capsys):
+    from services.real_time_listeners import RealTimeAccountingListeners
+
+    account = MagicMock()
+    account.id = 4
+    account.code = "1100"
+    account.full_name = "Cash"
+    account.get_balance.return_value = Decimal("50")
+    account.updated_at = None
+    RealTimeAccountingListeners._on_account_updated(account)
+    out = capsys.readouterr().out
+    assert "رصيد عالي" not in out
+
+
+def test_cheque_updated_unknown_status_skips_notification(capsys):
+    from services.real_time_listeners import RealTimeAccountingListeners
+
+    cheque = MagicMock()
+    cheque.id = 5
+    cheque.cheque_bank_number = "CHQ-COV5"
+    cheque.status = "pending"
+    cheque.status_ar = "معلق"
+    cheque.amount_aed = Decimal("500")
+    cheque.cheque_type = "incoming"
+    cheque.updated_at = datetime.now(UTC)
+    RealTimeAccountingListeners._on_cheque_updated(cheque)
+    assert "CHQ-COV5" in capsys.readouterr().out

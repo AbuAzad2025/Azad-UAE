@@ -17,3 +17,12 @@ def test_create_snapshot_empty_dict_falls_back_to_columns(db_session, sample_ten
 
     doc = SimpleNamespace(tenant_id=sample_tenant.id, to_dict=lambda: {})
     PrintService.create_snapshot(sample_tenant.id, "cheque", 999, document=doc)
+
+
+def test_render_print_without_extra_context(app, sample_tenant, mocker):
+    from services.print_service import PrintService
+
+    mocker.patch("flask.render_template", return_value="<html></html>")
+    with app.app_context():
+        out = PrintService.render_print("x.html", tenant_id=sample_tenant.id)
+    assert out == "<html></html>"
