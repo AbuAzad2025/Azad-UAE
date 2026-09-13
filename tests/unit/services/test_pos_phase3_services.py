@@ -447,6 +447,33 @@ def _open_session(db_session, sample_tenant, sample_branch, sample_user):
 
 
 class TestCashMovements:
+    def test_create_with_shift_updates_shift_and_session_totals(
+        self, db_session, sample_tenant, sample_branch, sample_user, sample_gl_accounts
+    ):
+        import uuid
+
+        from models.pos_shift import PosShift
+
+        session = _open_session(db_session, sample_tenant, sample_branch, sample_user)
+        shift = PosShift(
+            tenant_id=sample_tenant.id,
+            session_id=session.id,
+            user_id=sample_user.id,
+            shift_number=f"SHIFT-CM-{str(uuid.uuid4())[:8]}",
+        )
+        db_session.add(shift)
+        db_session.flush()
+        movement = PosCashMovementService.create_movement(
+            user=sample_user, session=session, shift=shift, movement_type="pay_in", amount=Decimal("5"), reason="float"
+        )
+        assert movement.shift_id == shift.id
+        assert Decimal(str(session.total_pay_ins)) == Decimal("5.000")
+        assert Decimal(str(shift.total_pay_ins)) == Decimal("5.000")
+
+    def test_list_movements_without_session_returns_empty(self, sample_user):
+        assert PosCashMovementService.list_movements(user=sample_user, session=None) == []
+        assert PosCashMovementService.list_movements(user=sample_user, session=None, limit=0) == []
+
     def test_pay_out_posts_balanced_gl_and_updates_totals(
         self, db_session, sample_tenant, sample_branch, sample_user, sample_gl_accounts, mocker
     ):

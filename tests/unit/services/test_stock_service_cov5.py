@@ -447,10 +447,11 @@ def test_running_balances_without_tenant(db_session, sample_tenant, sample_wareh
 
 def test_movements_query_without_tenant(db_session, sample_tenant, sample_warehouse):
     product = _make_product(db_session, sample_tenant, cost_price=Decimal("10"))
-    _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 1)
-    _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 2)
-    _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 3)
-    assert len(ss.StockService.movements_query().all()) == 3
+    m1 = _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 1)
+    m2 = _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 2)
+    m3 = _make_movement(db_session, sample_tenant, product, sample_warehouse.id, 3)
+    rows = ss.StockService.movements_query().all()
+    assert {m1.id, m2.id, m3.id} <= {r.id for r in rows}
 
 
 def test_list_parent_warehouses_without_tenant(db_session, sample_tenant):

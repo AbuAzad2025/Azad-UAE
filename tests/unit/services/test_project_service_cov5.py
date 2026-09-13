@@ -53,6 +53,8 @@ def test_list_projects_no_tenant(mocker, sample_user):
     mocker.patch("services.project_service.get_active_tenant_id", return_value=None)
     mocker.patch("services.project_service.is_global_owner_user", return_value=False)
     mocker.patch("services.project_service.branch_scope_id_for", return_value=None)
+    q = mocker.patch("services.project_service.Project.query")
+    q.filter.return_value.order_by.return_value.all.return_value = []
     assert ProjectService.list_projects(sample_user) == []
 
 

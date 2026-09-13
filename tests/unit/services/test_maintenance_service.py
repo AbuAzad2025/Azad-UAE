@@ -200,6 +200,16 @@ class TestRegenerateDefaultBackup:
         assert result == "default_tenant.sql.gz"
         create.assert_called_once_with(scope="tenant", tenant_id=tenant.id, manual=True)
 
+    def test_regenerate_backup_without_app_context(self, mocker):
+        fake_app = MagicMock(name="tmp_app")
+        fake_app.app_context.return_value.__enter__.return_value = fake_app
+        fake_app.app_context.return_value.__exit__.return_value = False
+        mocker.patch("flask.current_app", MagicMock(__bool__=lambda self: False))
+        mocker.patch("app.create_app", return_value=fake_app)
+        mocker.patch("services.backup_service.BackupService.initialize")
+        assert MaintenanceService.regenerate_default_backup(dry_run=True) == ("(skipped: --check mode)")
+        fake_app.app_context.assert_called_once_with()
+
 
 class TestApiWrappers:
     def test_fix_cost_centers_index_api_delegates(self, mocker):

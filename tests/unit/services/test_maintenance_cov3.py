@@ -72,6 +72,25 @@ class TestRebuildGlTreeBranches:
         assert result["tenants_updated"] == 0
         assert result["total_created"] == 0
 
+    def test_valid_tree_with_extra_accounts_prints(self, mocker, app, sample_tenant, capsys):
+        from services.maintenance_service import MaintenanceService
+
+        audit = {"created": [{"code": "1"}], "updated": [], "converted": [], "deactivated": [], "errors": []}
+        self._mocks(mocker, app, audit, valid=True, extra=["9999"])
+        MaintenanceService.rebuild_gl_tree(cleanup_extra=True)
+        out = capsys.readouterr().out
+        assert "Extra accounts found: 1" in out
+        assert "Validation: ✅" in out
+
+    def test_invalid_tree_without_missing_cores(self, mocker, app, sample_tenant, capsys):
+        from services.maintenance_service import MaintenanceService
+
+        audit = {"created": [], "updated": [], "converted": [], "deactivated": [], "errors": []}
+        self._mocks(mocker, app, audit, valid=False, extra=[], missing=[])
+        MaintenanceService.rebuild_gl_tree(cleanup_extra=False)
+        out = capsys.readouterr().out
+        assert "Validation: ❌" in out
+
 
 class TestDefaultForTypeExtra:
     def test_decimal_and_float(self):

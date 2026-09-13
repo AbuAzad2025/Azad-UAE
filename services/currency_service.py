@@ -36,7 +36,7 @@ try:
     from forex_python.converter import CurrencyRates
 
     FOREX_AVAILABLE = True
-except ImportError:
+except ImportError:  # pragma: no cover - forex-python installed in CI/test env
     CurrencyRates = _CurrencyRatesStub
     FOREX_AVAILABLE = False
 
@@ -44,7 +44,7 @@ try:
     import requests
 
     REQUESTS_AVAILABLE = True
-except Exception:
+except Exception:  # pragma: no cover - requests installed in CI/test env
     REQUESTS_AVAILABLE = False
 
 

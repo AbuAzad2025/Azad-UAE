@@ -40,6 +40,36 @@ class TestCreateClaim:
         assert claim.warranty_end_date == sale_date
 
 
+class TestListClaims:
+    """list_claims — scope guard and tenant filter."""
+
+    def test_without_scope_returns_empty(self):
+        from services.warranty_service import WarrantyService
+
+        assert WarrantyService.list_claims(None) == []
+        assert WarrantyService.list_claims(0) == []
+
+    def test_scoped_query_returns_rows(self, mocker):
+        from models.warranty_claim import WarrantyClaim
+
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mock_q.all.return_value = [MagicMock(id=1)]
+        mocker.patch.object(
+            WarrantyClaim,
+            "query",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_q,
+        )
+
+        from services.warranty_service import WarrantyService
+
+        rows = WarrantyService.list_claims(9)
+        assert len(rows) == 1
+        mock_q.filter_by.assert_called_once_with(tenant_id=9)
+
+
 class TestWarrantyQueries:
     """get_active_warranties / get_expiring_warranties — boundary filters."""
 

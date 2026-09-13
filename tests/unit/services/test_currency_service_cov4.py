@@ -144,3 +144,33 @@ def test_details_defaults_and_stale_cache(app):
         out = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert out["source"] == "fallback_static"
     _clear()
+
+
+def test_details_http_missing_target_non_negative_falls_through():
+    _clear()
+    with (
+        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={"EUR": Decimal("0.9")}),
+        patch.object(cs, "FOREX_AVAILABLE", False),
+    ):
+        out = CurrencyService.get_exchange_rate_details("USD", "AED")
+    assert out["source"] == "fallback_static"
+    assert out["rate"] > 0
+    _clear()
+
+
+def test_details_forex_exception_falls_back():
+    _clear()
+    with (
+        patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
+        patch.object(cs, "FOREX_AVAILABLE", True),
+        patch.object(
+            cs,
+            "CurrencyRates",
+            return_value=MagicMock(get_rate=MagicMock(side_effect=RuntimeError("forex down"))),
+        ),
+        patch.object(cs, "logger"),
+    ):
+        out = CurrencyService.get_exchange_rate_details("USD", "AED")
+    assert out["source"] == "fallback_static"
+    assert out["rate"] > 0
+    _clear()

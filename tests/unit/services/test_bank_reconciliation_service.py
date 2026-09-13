@@ -85,6 +85,36 @@ class TestCreateReconciliation:
         assert rec.outstanding_deposits >= Decimal("1000")
         assert rec.outstanding_withdrawals >= Decimal("500")
 
+    def test_create_flush_failure_logs_and_raises(
+        self, mocker, db_session, sample_tenant, bank_gl_account, sample_user
+    ):
+        mocker.patch(
+            "services.gl_service.GLService.get_account_statement",
+            return_value={"closing_balance": "4000", "opening_balance": "1000"},
+        )
+        mocker.patch("services.bank_reconciliation_service.generate_number", return_value="BR-FAIL-1")
+        real_flush = db_session.flush
+        state = {"calls": 0}
+
+        def _flaky_flush():
+            state["calls"] += 1
+            if state["calls"] > 1:
+                raise RuntimeError("flush failed")
+            return real_flush()
+
+        mocker.patch.object(db_session, "flush", side_effect=_flaky_flush)
+        mock_logger = mocker.patch("services.bank_reconciliation_service.logger")
+        with patch("flask_login.utils._get_user", return_value=sample_user):
+            with pytest.raises(RuntimeError, match="flush failed"):
+                BankReconciliationService.create_reconciliation(
+                    bank_gl_account.id,
+                    date(2026, 1, 1),
+                    date.today(),
+                    Decimal("4200"),
+                    created_by=sample_user.id,
+                )
+        mock_logger.exception.assert_called_once()
+
 
 class TestAdjustments:
     def test_add_bank_charge_draft_only(self, db_session, draft_reconciliation):

@@ -137,6 +137,40 @@ class TestRecordPayment:
         assert result.paid_amount_aed == Decimal("250.000")
         mock_post.assert_called_once()
 
+    def test_rejects_foreign_tenant(self, app, mocker):
+        fee = MagicMock(status="accrued", amount_aed=Decimal("100"), tenant_id=1)
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+
+        with app.app_context(), pytest.raises(ValueError, match="different tenant"):
+            AzadSubscriptionFeeService.record_payment(5, tenant_id=2)
+
+    def test_records_custom_paid_amount_quantized(self, app, mocker):
+        fee = MagicMock(
+            id=6,
+            status="accrued",
+            amount_aed=Decimal("250"),
+            fee_type="monthly",
+            tenant_id=1,
+        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+        mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
+            return_value=None,
+        )
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch("services.azad_subscription_fee_service.post_or_fail")
+
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+
+        with app.app_context():
+            result = AzadSubscriptionFeeService.record_payment(
+                6, paid_amount_aed=Decimal("50.5557"), payment_method="bank_transfer"
+            )
+        assert result.paid_amount_aed == Decimal("50.556")
+
 
 class TestWaiveFee:
     """waive_fee — cancellation and GL reversal."""
@@ -170,6 +204,36 @@ class TestWaiveFee:
 
         assert result.status == "cancelled"
         mock_reverse.assert_called_once()
+
+    def test_rejects_foreign_tenant(self, app, mocker):
+        fee = MagicMock(status="accrued", tenant_id=1)
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+
+        with app.app_context(), pytest.raises(ValueError, match="different tenant"):
+            AzadSubscriptionFeeService.waive_fee(7, tenant_id=2)
+
+    def test_waive_unposted_fee_skips_reversal(self, app, mocker):
+        fee = MagicMock(
+            id=8,
+            status="accrued",
+            gl_posted=False,
+            fee_type="monthly",
+            tenant_id=1,
+            notes="",
+        )
+        mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
+        mock_reverse = mocker.patch("services.azad_subscription_fee_service.GLService.reverse_entry")
+
+        from services.azad_subscription_fee_service import AzadSubscriptionFeeService
+
+        with app.app_context():
+            result = AzadSubscriptionFeeService.waive_fee(8, notes="not yet posted")
+
+        assert result.status == "cancelled"
+        assert "not yet posted" in result.notes
+        mock_reverse.assert_not_called()
 
 
 class TestSettingsAmount:
