@@ -70,16 +70,23 @@ class TestAccountLists:
         GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
         assert GLService.count_active_tenants() >= 1
 
-    def test_list_and_find(self, db_session, sample_tenant, sample_gl_accounts):
-        assert len(GLService.list_active_accounts()) > 0
-        assert len(GLService.list_all_accounts()) > 0
-        assert len(GLService.list_postable_accounts()) > 0
-        first = GLService.list_all_accounts()[0]
-        assert GLService.find_account_by_code(first.code).id == first.id
-        assert GLService.find_account_by_code("COV4-NOPE-XYZ") is None
-        assert GLService.find_account_by_id(first.id).id == first.id
-        assert GLService.find_account_by_id(999999999) is None
-        assert isinstance(GLService.list_header_accounts(), list)
+    def test_list_and_find(self, db_session, sample_tenant, sample_gl_accounts, app):
+        from flask import g
+
+        # list/find helpers scope via ambient g.active_tenant_id; pin it so the
+        # test is deterministic regardless of which tests ran before it.
+        with app.test_request_context():
+            g.active_tenant_id = sample_tenant.id
+            assert len(GLService.list_active_accounts()) > 0
+            assert len(GLService.list_all_accounts()) > 0
+            assert len(GLService.list_postable_accounts()) > 0
+            first = GLService.list_all_accounts()[0]
+            assert first.tenant_id == sample_tenant.id
+            assert GLService.find_account_by_code(first.code).id == first.id
+            assert GLService.find_account_by_code("COV4-NOPE-XYZ") is None
+            assert GLService.find_account_by_id(first.id).id == first.id
+            assert GLService.find_account_by_id(999999999) is None
+            assert isinstance(GLService.list_header_accounts(), list)
 
     def test_leaf_ordered_both_arcs(self, db_session, sample_tenant, sample_gl_accounts):
         assert isinstance(GLService.list_leaf_accounts_ordered(), list)
