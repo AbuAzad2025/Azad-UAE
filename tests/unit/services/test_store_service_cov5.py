@@ -20,6 +20,9 @@ def test_ensure_tenant_store_backfills_warehouse(mocker, sample_tenant):
     )
     out = StoreService.ensure_tenant_store(sample_tenant.id)
     assert out.warehouse_id == 4242
+    # Second call: warehouse already present → skip backfill branch
+    out2 = StoreService.ensure_tenant_store(sample_tenant.id)
+    assert out2.warehouse_id == 4242
 
 
 def test_get_store_by_host_subdomain_miss(sample_tenant):
@@ -59,6 +62,14 @@ def test_cart_totals_display_currency(mocker, sample_tenant, sample_product_with
     )
     assert out["display_subtotal"] == Decimal("10.00")
     assert len(out["lines"]) == 1
+
+
+def test_get_catalog_products_include_zero(db_session, sample_tenant, online_warehouse):
+    from services.store_service import StoreService
+
+    products, stock_map = StoreService.get_catalog_products(sample_tenant.id, include_zero=True)
+    assert isinstance(products, list)
+    assert isinstance(stock_map, dict)
 
 
 def test_find_custom_domain_clash(sample_tenant):

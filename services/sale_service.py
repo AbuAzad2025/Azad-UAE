@@ -825,6 +825,7 @@ class SaleService:
         sale = Sale(
             customer_id=customer.id,
             seller_id=customer.id,
+            sale_number=generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
             total_amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
             checkout_payment_method="cash",
             amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
@@ -838,6 +839,7 @@ class SaleService:
         db.session.flush()
 
         sale_line = SaleLine(
+            tenant_id=tenant_id,
             sale_id=sale.id,
             product_id=product.id,
             quantity=quantity,

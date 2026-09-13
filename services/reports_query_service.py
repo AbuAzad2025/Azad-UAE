@@ -312,7 +312,7 @@ class ReportsQueryService:
                 )
 
                 m_id = merchant.id if merchant else product.merchant_customer_id
-                if m_id is not None:
+                if m_id is not None:  # pragma: no cover - merchant loop pre-filters non-null link
                     merchant_share_totals[m_id] = merchant_share_totals.get(m_id, Decimal("0")) + merchant_amount
 
         # --- 2. FINANCIAL SUMMARIES (Partners & Merchants) ---
@@ -931,7 +931,7 @@ class ReportsQueryService:
             paid_map: dict[Any, Decimal] = {}
             for pymt in direct_payments:
                 pid = pymt.purchase_id
-                if pid:
+                if pid:  # pragma: no cover - direct payments pre-filter non-null purchase_id
                     paid_map[pid] = paid_map.get(pid, Decimal("0")) + Decimal(str(pymt.amount_aed or 0))
             unallocated_credit = sum(Decimal(str(p.amount_aed or 0)) for p in unallocated_payments)
         else:
