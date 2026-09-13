@@ -170,3 +170,159 @@ class TestLeaveAndOvertime:
         mock_q.all.return_value = [leave]
         mocker.patch.object(EmployeeLeave, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
         assert PayrollEngine.get_unpaid_leave_deduction(SimpleNamespace(id=1), 6, 2026) == 0
+
+
+class TestAttendanceScopingEdges:
+    def test_get_attendance_no_tenant_no_dates(self, mocker, db_session):
+        mocker.patch.object(HRService, "_tid", return_value=None)
+        rows = HRService.get_attendance(MagicMock(id=1))
+        assert isinstance(rows, list)
+
+    def test_get_attendance_with_dates(self, mocker, db_session, sample_tenant, sample_user):
+        from datetime import datetime
+
+        from models import Attendance
+
+        rec = Attendance(
+            tenant_id=sample_tenant.id,
+            user_id=sample_user.id,
+            check_in=datetime(2026, 6, 15, 9, 0),
+            check_out=datetime(2026, 6, 15, 17, 0),
+        )
+        db_session.add(rec)
+        db_session.flush()
+
+        rows = HRService.get_attendance(sample_user, date_from="2026-06-01", date_to="2026-06-30")
+        assert any(r.id == rec.id for r in rows)
+
+    def test_report_attendance_no_tid_owner(self, mocker, db_session):
+        mocker.patch.object(HRService, "_tid", return_value=None)
+        mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
+        rows = HRService.report_attendance({}, MagicMock(id=1))
+        assert isinstance(rows, list)
+
+    def test_report_attendance_no_tid_unscoped(self, mocker, db_session):
+        mocker.patch.object(HRService, "_tid", return_value=None)
+        mocker.patch("services.hr_service.is_global_owner_user", return_value=False)
+        mocker.patch("services.hr_service.branch_scope_id_for", return_value=None)
+        rows = HRService.report_attendance(
+            {"user_id": 1, "date_from": "2026-01-01", "date_to": "2026-01-31"}, MagicMock(id=1)
+        )
+        assert isinstance(rows, list)
+
+
+class TestLeaveListingEdges:
+    def test_list_leaves_no_tid_branch_scope(self, mocker, db_session):
+        mocker.patch.object(HRService, "_tid", return_value=None)
+        mocker.patch("services.hr_service.is_global_owner_user", return_value=False)
+        mocker.patch("services.hr_service.branch_scope_id_for", return_value=7)
+        rows = HRService.list_leaves({"state": "draft", "user_id": 1}, MagicMock(id=1))
+        assert isinstance(rows, list)
+
+    def test_list_leaves_owner_bypass(self, mocker, db_session):
+        mocker.patch.object(HRService, "_tid", return_value=None)
+        mocker.patch("services.hr_service.is_global_owner_user", return_value=True)
+        rows = HRService.list_leaves({}, MagicMock(id=1))
+        assert isinstance(rows, list)
+
+
+class TestLeaveBalanceRealDb:
+    def _leave_type(self, db_session, sample_tenant, days_per_year=21, max_carry_forward=10, suffix="L"):
+        from models import LeaveType
+
+        lt = LeaveType(
+            tenant_id=sample_tenant.id,
+            name=f"{suffix}-type",
+            days_per_year=days_per_year,
+            max_carry_forward=max_carry_forward,
+        )
+        db_session.add(lt)
+        db_session.flush()
+        return lt
+
+    def test_get_or_create_balance_creates_(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, days_per_year=21, max_carry_forward=10)
+        bal = LeaveBalanceService.get_or_create_balance(sample_user.id, lt.id, 2026, tenant_id=sample_tenant.id)
+        assert bal.entitled_days == 21
+        assert bal.remaining_days == 21
+        again = LeaveBalanceService.get_or_create_balance(sample_user.id, lt.id, 2026, tenant_id=sample_tenant.id)
+        assert again.id == bal.id
+
+    def test_get_or_create_balance_zero_days(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, days_per_year=0, max_carry_forward=0, suffix="Z")
+        bal = LeaveBalanceService.get_or_create_balance(sample_user.id, lt.id, 2025, tenant_id=sample_tenant.id)
+        assert bal.entitled_days == 0
+
+    def test_accrue_leave_updates_balance(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, days_per_year=21, max_carry_forward=0, suffix="A")
+        bal = LeaveBalanceService.accrue_leave(sample_user.id, lt.id, 2026, 3, tenant_id=sample_tenant.id)
+        assert bal.taken_days == 3
+        assert bal.remaining_days == 18
+
+    def test_carry_forward_leave_caps_at_max(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, days_per_year=21, max_carry_forward=10, suffix="CF")
+        LeaveBalanceService.accrue_leave(sample_user.id, lt.id, 2025, 2, tenant_id=sample_tenant.id)
+        new_bal = LeaveBalanceService.carry_forward_leave(sample_user.id, lt.id, 2025, tenant_id=sample_tenant.id)
+        assert new_bal.year == 2026
+        assert new_bal.carried_forward == 10
+
+    def test_carry_forward_leave_without_cap(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, days_per_year=21, max_carry_forward=None, suffix="NC")
+        LeaveBalanceService.accrue_leave(sample_user.id, lt.id, 2024, 2, tenant_id=sample_tenant.id)
+        new_bal = LeaveBalanceService.carry_forward_leave(sample_user.id, lt.id, 2024, tenant_id=sample_tenant.id)
+        assert new_bal.carried_forward == 19
+
+    def test_get_balance_found(self, db_session, sample_tenant, sample_user):
+        lt = self._leave_type(db_session, sample_tenant, suffix="G")
+        LeaveBalanceService.get_or_create_balance(sample_user.id, lt.id, 2026, tenant_id=sample_tenant.id)
+        found = LeaveBalanceService.get_balance(sample_user.id, lt.id, 2026, tenant_id=sample_tenant.id)
+        assert found is not None
+        assert LeaveBalanceService.list_balances(sample_user.id, 2026, tenant_id=sample_tenant.id)
+
+
+class TestOvertimeRealDb:
+    def _entry_data(self, sample_user, sample_branch, **overrides):
+        data = {
+            "user_id": sample_user.id,
+            "branch_id": sample_branch.id,
+            "overtime_date": date(2026, 3, 1),
+            "hours": "2",
+            "rate_multiplier": "1.5",
+            "overtime_type": "weekend",
+            "notes": "cov4",
+        }
+        data.update(overrides)
+        return data
+
+    def test_create_approve_reject_list(self, db_session, sample_tenant, sample_user, sample_branch):
+        from models import OvertimeEntry
+
+        entry = OvertimeService.create_entry(self._entry_data(sample_user, sample_branch), sample_user)
+        assert entry.status == "pending"
+        assert isinstance(entry, OvertimeEntry)
+
+        approved = OvertimeService.approve_entry(entry, sample_user)
+        assert approved.status == "approved"
+        assert approved.approved_by == sample_user.id
+
+        entry2 = OvertimeService.create_entry(
+            self._entry_data(sample_user, sample_branch, overtime_date=date(2026, 3, 8)), sample_user
+        )
+        rejected = OvertimeService.reject_entry(entry2, sample_user, "not needed")
+        assert rejected.status == "rejected"
+        assert rejected.rejected_reason == "not needed"
+
+        rows = OvertimeService.list_entries(sample_user, {"user_id": sample_user.id, "status": "approved"})
+        assert any(e.id == approved.id for e in rows)
+        rows_all = OvertimeService.list_entries(sample_user, {})
+        assert len(rows_all) >= 2
+        rows_dated = OvertimeService.list_entries(sample_user, {"date_from": "2026-03-01", "date_to": "2026-03-31"})
+        assert isinstance(rows_dated, list)
+        assert LeaveBalanceService._tid(sample_user) is not None
+
+    def test_create_entry_without_branch(self, db_session, sample_tenant, sample_user, sample_branch):
+        data = self._entry_data(sample_user, sample_branch)
+        data["branch_id"] = None
+        entry = OvertimeService.create_entry(data, sample_user)
+        assert entry.branch_id is None
+        assert entry.rate_multiplier == Decimal("1.5")

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from models import CRMLead, CRMStage, Role, User
+from models import CRMLead, CRMStage, CRMTeam, Role, User
 from services.crm_lead_service import CRMLeadService
 from utils.tenanting import set_active_tenant
 
@@ -534,3 +534,124 @@ class TestCoverageGaps:
         )
         with pytest.raises(RuntimeError, match="act"):
             CRMLeadService.add_activity(crm_lead.id, {"summary": "call"}, sample_user)
+
+
+class TestTenantListingHelpers:
+    def test_tenant_stages_scoped_and_unscoped(self, db_session, sample_tenant, crm_stage):
+        assert any(s.id == crm_stage.id for s in CRMLeadService.tenant_stages(sample_tenant.id))
+        assert any(s.id == crm_stage.id for s in CRMLeadService.tenant_stages(None))
+
+    def test_tenant_teams_scoped_and_unscoped(self, db_session, sample_tenant):
+        team = CRMTeam(
+            tenant_id=sample_tenant.id,
+            name=f"Sales-{uuid.uuid4().hex[:6]}",
+            is_active=True,
+        )
+        db_session.add(team)
+        db_session.flush()
+        assert any(t.id == team.id for t in CRMLeadService.tenant_teams(sample_tenant.id))
+        assert any(t.id == team.id for t in CRMLeadService.tenant_teams(None))
+
+    def test_teams_for_tenant_scoped_and_empty(self, db_session, sample_tenant):
+        team = CRMTeam(
+            tenant_id=sample_tenant.id,
+            name=f"Ops-{uuid.uuid4().hex[:6]}",
+            is_active=True,
+        )
+        db_session.add(team)
+        db_session.flush()
+        assert any(t.id == team.id for t in CRMLeadService.teams_for_tenant(sample_tenant.id))
+        assert CRMLeadService.teams_for_tenant(None) == []
+
+    def test_tenant_users_ordered(self, db_session, sample_tenant, sample_user):
+        assert any(u.id == sample_user.id for u in CRMLeadService.tenant_users_ordered(sample_tenant.id))
+
+    def test_tenant_users_scoped_and_empty(self, db_session, sample_tenant, sample_user):
+        assert any(u.id == sample_user.id for u in CRMLeadService.tenant_users(sample_tenant.id))
+        assert CRMLeadService.tenant_users(None) == []
+
+    def test_tenant_customers_scoped_and_unscoped(self, db_session, sample_tenant, sample_customer):
+        assert any(c.id == sample_customer.id for c in CRMLeadService.tenant_customers(sample_tenant.id))
+        assert any(c.id == sample_customer.id for c in CRMLeadService.tenant_customers(None))
+
+
+class TestMoreCoverageGaps:
+    def test_search_leads_without_tenant(self, mocker, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        mocker.patch("services.crm_lead_service.get_active_tenant_id", return_value=None)
+        mocker.patch("services.crm_lead_service.is_global_user", return_value=True)
+        results = CRMLeadService.search_leads({"search": "Prospect"}, sample_user)
+        assert any(r.id == crm_lead.id for r in results)
+
+    def test_search_leads_scoped_none_branch(self, mocker, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        mocker.patch("services.crm_lead_service.is_global_user", return_value=False)
+        mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=None)
+        results = CRMLeadService.search_leads({"status": "open"}, sample_user)
+        assert any(r.id == crm_lead.id for r in results)
+
+    def test_create_lead_branch_missing(self, mocker, db_session, sample_user, sample_tenant, sample_branch):
+        set_active_tenant(sample_tenant.id, user=sample_user)
+        mocker.patch("services.crm_lead_service.db.session.get", return_value=None)
+        lead = CRMLeadService.create_lead({"name": "No Branch", "branch_id": sample_branch.id}, sample_user)
+        assert lead.name == "No Branch"
+        assert lead.branch_id == sample_branch.id
+
+    def test_update_lead_neutral_stage(self, sample_user, crm_lead, crm_stage):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        updated = CRMLeadService.update_lead(crm_lead.id, {"stage_id": crm_stage.id}, sample_user)
+        assert updated.status == "open"
+
+    def test_pipeline_stats_branch_scoped(self, scoped_user, sample_tenant, crm_lead, crm_stage):
+        set_active_tenant(sample_tenant.id, user=scoped_user)
+        stats = CRMLeadService.get_pipeline_stats(scoped_user)
+        assert any(s["stage"]["id"] == crm_stage.id for s in stats)
+        row = next(s for s in stats if s["stage"]["id"] == crm_stage.id)
+        assert row["count"] >= 1
+
+    def test_pipeline_stats_scoped_no_branch(self, mocker, sample_user, sample_tenant, crm_stage):
+        set_active_tenant(sample_tenant.id, user=sample_user)
+        mocker.patch("services.crm_lead_service.is_global_user", return_value=False)
+        mocker.patch("services.crm_lead_service.branch_scope_id_for", return_value=None)
+        stats = CRMLeadService.get_pipeline_stats(sample_user)
+        assert any(s["stage"]["id"] == crm_stage.id for s in stats)
+
+    def test_convert_existing_customer_id_orphaned(self, mocker, sample_user, crm_lead, sample_customer):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        crm_lead.customer_id = sample_customer.id
+        crm_lead.email = None
+        crm_lead.phone = None
+
+        def fake_get(model, ident):
+            if model is CRMLead:
+                return crm_lead
+            return None
+
+        mocker.patch("services.crm_lead_service.db.session.get", side_effect=fake_get)
+        customer = CRMLeadService.convert_to_customer(crm_lead.id, sample_user)
+        assert customer.id is not None
+        assert customer.id != sample_customer.id
+        assert crm_lead.customer_id == customer.id
+
+    def test_convert_second_flush_failure(self, mocker, db_session, sample_user, crm_lead):
+        set_active_tenant(crm_lead.tenant_id, user=sample_user)
+        crm_lead.email = f"flush2-{crm_lead.id}@test.com"
+        crm_lead.phone = f"050{crm_lead.id:07d}"
+        calls = {"n": 0}
+        real_flush = db_session.flush
+
+        def flaky(*args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 2:
+                raise RuntimeError("boom")
+            real_flush(*args, **kwargs)
+
+        mocker.patch("services.crm_lead_service.db.session.flush", side_effect=flaky)
+        with pytest.raises(RuntimeError, match="boom"):
+            CRMLeadService.convert_to_customer(crm_lead.id, sample_user)
+
+    def test_conversion_kpi_without_tenant(self, mocker, sample_user):
+        mocker.patch("services.crm_lead_service.get_active_tenant_id", return_value=None)
+        kpi = CRMLeadService.compute_conversion_kpi(sample_user)
+        assert "conversion_rate" in kpi
+        assert kpi["total_leads"] >= 0

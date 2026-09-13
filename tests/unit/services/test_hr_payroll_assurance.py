@@ -390,6 +390,27 @@ class TestPayrollBatchGLApproval:
         assert "PAYROLL_EXPENSE" in concepts
         assert "PAYROLL_PAYABLE" in concepts
 
+    def test_approve_batch_no_deductions_skips_line(self, app, mocker):
+        from services.hr_service import PayrollBatch, PayrollService
+
+        mock_post = mocker.patch("services.gl_posting.post_or_fail", return_value=MagicMock(id=7))
+        mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            side_effect=["6100", "2100"],
+        )
+
+        tx = self._make_tx(5000, 500, 0, 5500, tx_id=9)
+        batch = PayrollBatch([tx], status="draft", tenant_id=1, branch_id=1, month=6, year=2026)
+
+        with app.app_context():
+            PayrollService.approve_batch(batch, user_id=1)
+
+        lines = mock_post.call_args[0][0]
+        deductions_lines = [line for line in lines if "deductions" in str(line["description"]).lower()]
+        assert deductions_lines == []
+        assert batch.status == "approved"
+
     def test_approve_locked_batch_raises(self, app):
         from services.hr_service import (
             ImmutableRecordError,

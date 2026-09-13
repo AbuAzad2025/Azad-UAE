@@ -409,3 +409,106 @@ class TestLandlordDashboardContext:
         assert isinstance(page_none.items, list)
         page_true = OwnerOpsService.login_history_pagination(1, sample_tenant.id, sample_user.id, "true")
         assert mine in page_true.items
+
+
+# ── tenant directory / store / packages ──────────────────────────────────────
+
+
+class TestTenantDirectoryAndStoreOps:
+    def test_tenant_stores_with_tenants_ordered(self, db_session, sample_tenant, tenant_store):
+        pairs = OwnerOpsService.tenant_stores_with_tenants()
+        store_ids = {store.id for store, _t in pairs}
+        assert tenant_store.id in store_ids
+        names = [t.name for _, t in pairs]
+        assert names == sorted(names)
+
+    def test_active_ai_tenants_filters_inactive(self, db_session, sample_tenant):
+        from models import Tenant
+
+        inactive = Tenant(name=f"X-{_uid()}", name_ar="م-غير نشط", slug=f"x-{_uid()}", is_active=False)
+        db_session.add(inactive)
+        db_session.flush()
+
+        rows = OwnerOpsService.active_ai_tenants()
+        assert all(t.is_active for t in rows)
+        assert sample_tenant.id in {t.id for t in rows}
+        names = [t.name for t in rows]
+        assert names == sorted(names)
+
+    def test_get_tenant_or_404(self, db_session, sample_tenant):
+        assert OwnerOpsService.get_tenant_or_404(sample_tenant.id).id == sample_tenant.id
+        with pytest.raises(NotFound):
+            OwnerOpsService.get_tenant_or_404(999999999)
+
+    def test_get_tenant_store(self, db_session, tenant_store):
+        assert OwnerOpsService.get_tenant_store(tenant_store.id).id == tenant_store.id
+        assert OwnerOpsService.get_tenant_store(999999999) is None
+
+    def test_active_packages_sorted_by_sort_order(self, db_session):
+        from models.package import Package
+
+        active_b = Package(
+            name_ar="باقة ب",
+            name_en=f"B {_uid()}",
+            slug=f"b-{_uid()}",
+            price=10.0,
+            is_active=True,
+            sort_order=5,
+        )
+        active_a = Package(
+            name_ar="باقة أ",
+            name_en=f"A {_uid()}",
+            slug=f"a-{_uid()}",
+            price=10.0,
+            is_active=True,
+            sort_order=1,
+        )
+        inactive = Package(
+            name_ar="باقة خاملة",
+            name_en=f"X {_uid()}",
+            slug=f"x-{_uid()}",
+            price=10.0,
+            is_active=False,
+        )
+        db_session.add_all([active_b, active_a, inactive])
+        db_session.flush()
+
+        pkgs = OwnerOpsService.active_packages_sorted()
+        ids = [p.id for p in pkgs]
+        assert active_a.id in ids and active_b.id in ids
+        assert inactive.id not in ids
+        assert ids.index(active_a.id) < ids.index(active_b.id)
+
+    def test_find_tenant_by_slug(self, db_session, sample_tenant):
+        assert OwnerOpsService.find_tenant_by_slug(sample_tenant.slug).id == sample_tenant.id
+        assert OwnerOpsService.find_tenant_by_slug("no-such-" + _uid()) is None
+
+    def test_count_tenant_active_users(self, db_session, sample_tenant, sample_role):
+        from models import User
+
+        extra = User(
+            username=f"cnt-{_uid()}",
+            email=f"cnt-{_uid()}@example.com",
+            full_name="C",
+            tenant_id=sample_tenant.id,
+            role_id=sample_role.id,
+            is_active=True,
+        )
+        extra.set_password("pw123456")
+        db_session.add(extra)
+        db_session.flush()
+
+        assert OwnerOpsService.count_tenant_active_users(sample_tenant.id) >= 1
+        assert OwnerOpsService.count_tenant_active_users(999999999) == 0
+
+    def test_login_history_no_tenant_edges(self, db_session):
+        users = OwnerOpsService.login_history_users(None)
+        assert isinstance(users, list)
+        stats = OwnerOpsService.login_history_stats(None)
+        assert set(stats) == {"total_logins", "failed_logins", "today_logins"}
+
+    def test_card_vault_context_without_tenant(self, db_session):
+        ctx = OwnerOpsService.card_vault_context(1, None, None)
+        assert set(ctx) == {"pagination", "stats"}
+        assert ctx["stats"]["total_cards"] >= 0
+        assert isinstance(ctx["stats"]["total_usage"], (int, float))
