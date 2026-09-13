@@ -99,6 +99,22 @@ class TestBranchAndTenantHelpers:
         mocker.patch.object(Branch, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
         assert UserService.available_branches(MagicMock()) == ["b"]
 
+    def test_available_branches_with_tenant_and_scope(self, mocker):
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
+        mocker.patch("utils.branching.branch_scope_id_for", return_value=9)
+        from models import Branch
+
+        mock_q = MagicMock()
+        mock_q.filter.return_value = mock_q
+        mock_q.filter_by.return_value = mock_q
+        mock_q.order_by.return_value = mock_q
+        mock_q.all.return_value = ["b1"]
+        mocker.patch.object(Branch, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
+        assert UserService.available_branches(MagicMock()) == ["b1"]
+        calls = mock_q.filter.call_args_list
+        assert calls[0].args[0].left.name == "tenant_id"
+        assert calls[1].args[0].left.name == "id"
+
     def test_count_sales_no_tenant(self, mocker):
         from models import Sale
 
@@ -108,6 +124,39 @@ class TestBranchAndTenantHelpers:
         mock_q.count.return_value = 4
         mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
         assert UserService.count_sales_for_seller(1, None) == 4
+
+    def test_count_sales_with_tenant(self, mocker):
+        from models import Sale
+
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.count.return_value = 2
+        mocker.patch.object(Sale, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
+        assert UserService.count_sales_for_seller(1, 42) == 2
+        mock_q.filter.assert_called_once()
+        assert mock_q.filter.call_args.args[0].left.name == "tenant_id"
+
+    def test_find_username_conflict(self, mocker):
+        from models import User
+
+        mock_q = MagicMock()
+        mock_q.filter.return_value.first.return_value = "found"
+        mocker.patch.object(User, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
+        assert UserService.find_username_conflict("Abc") == "found"
+        mock_q.filter.assert_called_once()
+
+    def test_get_scoped_non_owner_with_tenant(self, mocker):
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
+        from models import User
+
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value = mock_q
+        mock_q.filter.return_value = mock_q
+        mock_q.first_or_404.return_value = "u"
+        mocker.patch.object(User, "query", new_callable=mocker.PropertyMock, return_value=mock_q)
+        assert UserService.get_scoped_non_owner_or_404(3, None) == "u"
+        assert mock_q.filter.call_args.args[0].left.name == "tenant_id"
 
     def test_create_user_minimal(self):
         user = UserService.create_user("cov4_min_user", "Min User")

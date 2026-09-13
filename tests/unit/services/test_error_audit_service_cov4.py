@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from services.error_audit_service import ErrorAuditService
 
@@ -35,6 +35,15 @@ def test_export_json_and_text(db_session):
     assert "cov4-export" in blob.decode("utf-8")
 
 
+def test_export_text_includes_trace_and_request_data(db_session):
+    ErrorAuditService.log_frontend("cov4-tr", stack="some stack trace", extra={"field": 1})
+    blob, ctype, fname = ErrorAuditService.get_export_payload("FRONTEND", "", "", "txt")
+    text_blob = blob.decode("utf-8")
+    assert "Stack Trace" in text_blob
+    assert "some stack trace" in text_blob
+    assert "Request Data" in text_blob
+
+
 def test_log_exception_and_frontend_truncation(db_session):
     try:
         raise ValueError("kaboom")
@@ -65,10 +74,17 @@ def test_request_id_no_context_and_in_context(app):
         assert r1 == r2
 
 
+def test_request_id_forced_outside_request_context(mocker):
+    import services.error_audit_service as eas
+
+    with patch.object(eas, "has_request_context", return_value=False):
+        assert eas.ErrorAuditService.get_or_create_request_id()
+
+
 def test_persist_and_helpers_failure_branches():
     assert ErrorAuditService._make_fingerprint("C", "E", "S", "/p", "  hello   world  ")
     assert ErrorAuditService._find_duplicate("no-such-fingerprint") is None
-    assert ErrorAuditService._bump_duplicate(999999999, "m", "t") is True or True
+    assert ErrorAuditService._bump_duplicate(999999999, "m", "t") is True
     assert ErrorAuditService._sanitize_dict("not-a-dict") == {}
     clean = ErrorAuditService._sanitize_dict(
         {"password": "x", "nested": {"api_key": "y", "v": 1}, "items": [{"token": "z"}, 5, "s"], "plain": "ok"}
@@ -82,3 +98,100 @@ def test_persist_and_helpers_failure_branches():
         assert ErrorAuditService._bump_duplicate(1, "m", None) is False
         assert ErrorAuditService.mark_resolved(1, 1) is False
         assert ErrorAuditService.log("x", category="C") is None
+
+
+def test_sanitize_undefined_produces_none():
+    from jinja2.runtime import Undefined
+
+    clean = ErrorAuditService._sanitize_dict({"missing": Undefined(), "password": "x"})
+    assert clean["missing"] is None
+    assert clean["password"] == "***REDACTED***"
+
+
+def test_log_frontend_without_stack(db_session):
+    assert ErrorAuditService.log_frontend("cov4-no-stack", level="WARNING", source="s") is not None
+
+
+def test_logger_error_failure_is_swallowed(mocker, db_session):
+    with patch("services.error_audit_service.logger.error", side_effect=RuntimeError("logger down")):
+        row_id = ErrorAuditService.log("log-fail", category="CATLOG")
+    assert row_id is not None
+
+
+def test_request_context_url_user_and_payload(app, mocker, db_session, sample_user):
+    import json as _json
+
+    with app.test_request_context(
+        "/audit/capture",
+        data=_json.dumps({"a": 1, "password": "x"}),
+        content_type="application/json",
+        headers={"User-Agent": "cov4-agent"},
+    ):
+        mocker.patch("flask_login.utils._get_user", return_value=sample_user)
+        row_id = ErrorAuditService.log("ctx-capture", category="BACKEND", level="ERROR", source="s")
+    assert row_id is not None
+
+
+def test_authenticated_user_get_id_failure(app, mocker, db_session):
+    for ctx_path in ("/x", "/y"):
+        with app.test_request_context(ctx_path):
+            broken = MagicMock()
+            broken.is_authenticated = True
+            broken.get_id = Mock(side_effect=RuntimeError("no id"))
+            mocker.patch("flask_login.utils._get_user", return_value=broken)
+            ErrorAuditService.log(f"auth-bad-{ctx_path}", category="AUTHB")
+    mocker.stopall()
+
+
+def test_config_get_failure_branch(app, mocker, db_session):
+    mocker.patch.object(app.config, "get", side_effect=RuntimeError("cfg gone"))
+    ErrorAuditService.log("cfg-fail", category="CFGB")
+
+
+def test_dup_bump_failure_falls_through_to_insert(db_session):
+    with (
+        patch.object(ErrorAuditService, "_find_duplicate", return_value=77),
+        patch.object(ErrorAuditService, "_bump_duplicate", return_value=False),
+    ):
+        row_id = ErrorAuditService.log("rollback-insert", category="RBI", level="ERROR", source="s")
+    assert row_id is not None
+
+
+def test_stderr_write_failure_yields_none(db_session):
+    import sys
+
+    class _BrokenStream:
+        def write(self, *_):
+            raise RuntimeError("stderr down")
+
+    with (
+        patch("services.error_audit_service.logger"),
+        patch("services.error_audit_service.db.engine.connect", side_effect=RuntimeError("down")),
+        patch.object(sys, "stderr", _BrokenStream()),
+    ):
+        assert ErrorAuditService.log("stderr-fail", category="STDFAIL") is None
+
+
+def test_persist_with_explicit_request_data(app, db_session):
+    with app.test_request_context("/audit/direct"):
+        row_id = ErrorAuditService._persist(
+            message="direct-persist",
+            category="DIRECT",
+            level="ERROR",
+            source="s",
+            extra={"job_id": 5},
+        )
+    assert row_id is not None
+
+
+def test_persist_without_request_context(mocker, db_session):
+    import services.error_audit_service as eas
+
+    with patch.object(eas, "has_request_context", return_value=False):
+        row_id = eas.ErrorAuditService._persist(
+            message="no-ctx-persist",
+            category="BACKEND",
+            level="ERROR",
+            source="s",
+        )
+    assert row_id is not None

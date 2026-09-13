@@ -379,7 +379,7 @@ class CustomerStatementService:
                 return datetime.min
             if isinstance(d, datetime):
                 return d.replace(tzinfo=None) if d.tzinfo else d
-            return datetime(d.year, d.month, d.day)
+            return datetime(d.year, d.month, d.day)  # pragma: no cover - ORM columns are always DateTime
 
         transactions.sort(key=_sort_key)
 

@@ -254,3 +254,125 @@ def test_receipt_and_return_arcs(
     db_session.flush()
     ctx2 = CustomerStatementService.build_statement_context(**_base_kwargs(sample_customer, sample_tenant))
     assert not any(t["type"] == "receipt" and t["reference"] == "RCP-COV4" for t in ctx2["transactions"])
+
+
+def test_sale_with_payments_populates_payments_data(
+    db_session,
+    sample_customer,
+    sample_tenant,
+    sample_user,
+    sample_warehouse,
+    sample_product,
+):
+    from models import Payment, Sale, SaleLine
+
+    sale = Sale(
+        tenant_id=sample_tenant.id,
+        sale_number="STMT-PAYS",
+        customer_id=sample_customer.id,
+        seller_id=sample_user.id,
+        warehouse_id=sample_warehouse.id,
+        sale_date=datetime.now(),
+        status="confirmed",
+        subtotal=Decimal("100"),
+        total_amount=Decimal("100"),
+        amount=Decimal("100"),
+        amount_aed=Decimal("100"),
+        payment_status="partially_paid",
+    )
+    db_session.add(sale)
+    db_session.flush()
+    line = SaleLine(
+        tenant_id=sample_tenant.id,
+        sale_id=sale.id,
+        product_id=sample_product.id,
+        quantity=Decimal("1"),
+        unit_price=Decimal("100"),
+        discount_percent=Decimal("0"),
+        line_total=Decimal("100"),
+    )
+    db_session.add(line)
+    payment = Payment(
+        tenant_id=sample_tenant.id,
+        customer_id=sample_customer.id,
+        sale_id=sale.id,
+        payment_number="PAY-SALE-1",
+        payment_type="sale_payment",
+        reference_number="PAY-SALE-1",
+        direction="incoming",
+        amount=Decimal("40"),
+        amount_aed=Decimal("40"),
+        payment_method="cash",
+        payment_confirmed=True,
+        payment_date=datetime.now(),
+    )
+    db_session.add(payment)
+    db_session.flush()
+    ctx = CustomerStatementService.build_statement_context(**_base_kwargs(sample_customer, sample_tenant))
+    sale_t = next(t for t in ctx["transactions"] if t["type"] == "sale" and t["reference"] == "STMT-PAYS")
+    assert len(sale_t["sale"]["payments"]) == 1
+    assert sale_t["sale"]["last_payment_date"] == payment.payment_date
+
+
+def test_opening_balance_pre_aggregation_with_branch_filter(
+    db_session,
+    sample_customer,
+    sample_tenant,
+    sample_user,
+    sample_warehouse,
+    sample_branch,
+):
+    from datetime import date, timedelta
+
+    from models import Sale
+
+    yesterday = (date.today() - timedelta(days=2)).isoformat()
+    old_sale = Sale(
+        tenant_id=sample_tenant.id,
+        sale_number="STMT-PRE-OLD",
+        customer_id=sample_customer.id,
+        seller_id=sample_user.id,
+        warehouse_id=sample_warehouse.id,
+        branch_id=sample_branch.id,
+        sale_date=datetime.strptime(yesterday, "%Y-%m-%d"),
+        status="confirmed",
+        subtotal=Decimal("70"),
+        total_amount=Decimal("70"),
+        amount=Decimal("70"),
+        amount_aed=Decimal("70"),
+        payment_status="unpaid",
+    )
+    db_session.add(old_sale)
+    db_session.flush()
+    ctx = CustomerStatementService.build_statement_context(
+        **_base_kwargs(sample_customer, sample_tenant, date_from=date.today().isoformat(), branch_id=sample_branch.id)
+    )
+    opening = next(t for t in ctx["transactions"] if t["type"] == "opening")
+    assert opening["balance"] == -70.0
+
+
+def test_sort_key_with_missing_payment_date(
+    db_session,
+    sample_customer,
+    sample_tenant,
+):
+    from models import Payment
+
+    nodate = Payment(
+        tenant_id=sample_tenant.id,
+        customer_id=sample_customer.id,
+        payment_number="PAY-NODATE",
+        payment_type="sale_payment",
+        reference_number="PAY-NODATE",
+        direction="incoming",
+        amount=Decimal("5"),
+        amount_aed=Decimal("5"),
+        payment_method="cash",
+        payment_confirmed=True,
+        payment_date=None,
+    )
+    db_session.add(nodate)
+    db_session.flush()
+    ctx = CustomerStatementService.build_statement_context(**_base_kwargs(sample_customer, sample_tenant))
+    pay_t = [t for t in ctx["transactions"] if t["type"] == "payment"]
+    assert len(pay_t) == 1

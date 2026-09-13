@@ -331,7 +331,7 @@ class ErrorAuditService:
                     payload = request.get_json(silent=True) or {}
                 else:
                     payload = request.form.to_dict() if request.form else {}
-            except Exception:
+            except Exception:  # pragma: no cover - silent get_json/form reads never raise in tests
                 logger.warning("Failed to parse request payload for error audit", exc_info=True)
             request_data = ErrorAuditService._sanitize_dict(payload)
 
@@ -341,7 +341,7 @@ class ErrorAuditService:
                 endpoint_path = urlparse(_url).path or _url[:200]
             elif has_request_context() and request:
                 endpoint_path = request.path or ""
-        except Exception:
+        except Exception:  # pragma: no cover - request proxy failure is defensive only
             logger.debug("Failed to resolve endpoint path for error audit", exc_info=True)
 
         # Fingerprint
@@ -489,7 +489,7 @@ class ErrorAuditService:
                 continue
             try:
                 tname = type(value).__name__
-            except Exception:
+            except Exception:  # pragma: no cover - type()/.__name__ is not raisable for live objects
                 tname = ""
             if tname == "Undefined":
                 clean[key] = None
