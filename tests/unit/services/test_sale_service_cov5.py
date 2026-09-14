@@ -243,7 +243,7 @@ def test_defer_flush_failure(app):
             seller,
             lines,
             defer_fulfillment=True,
-            flush_side_effect=[None, None, None, None, RuntimeError("defer boom")],
+            flush_side_effect=[None, None, None, RuntimeError("defer boom")],
         )
 
 
@@ -256,7 +256,7 @@ def test_final_flush_failure(app):
             customer,
             seller,
             lines,
-            flush_side_effect=[None, None, None, None, RuntimeError("final boom")],
+            flush_side_effect=[None, None, None, RuntimeError("final boom")],
         )
 
 
