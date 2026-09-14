@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Azad-UAE 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-21 12:34+0000\n"
+"POT-Creation-Date: 2026-09-14 04:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: en\n"
 "Language: en\n"
@@ -20,11 +20,35 @@ msgstr " other"
 msgid " مرة"
 msgstr " time"
 
+msgid "\"An integrated and very convenient system. Inventory and sales management became much easier. Fast and understanding support.\""
+msgstr "\"An integrated and very convenient system. Inventory and sales management became much easier. Fast and understanding support.\""
+
+msgid "\"Financial reports and double-entry accounting helped us organize our accounts accurately. Highly recommended.\""
+msgstr "\"Financial reports and double-entry accounting helped us organize our accounts accurately. Highly recommended.\""
+
 msgid "(رئيسي)"
 msgstr "(Main)"
 
 msgid "..."
 msgstr "..."
+
+msgid "/mo"
+msgstr "/mo"
+
+msgid "/month"
+msgstr "/month"
+
+msgid "/month — for growing businesses"
+msgstr "/month — for growing businesses"
+
+msgid "/month — for large enterprises"
+msgstr "/month — for large enterprises"
+
+msgid "/month — for small businesses"
+msgstr "/month — for small businesses"
+
+msgid "/year"
+msgstr "/year"
 
 msgid "0-30 Days"
 msgstr "0-30 Days"
@@ -32,8 +56,26 @@ msgstr "0-30 Days"
 msgid "10-30 دقيقة"
 msgstr "10-30 minutes"
 
+msgid "100% Cloud"
+msgstr "100%% Cloud"
+
+msgid "125+ database tables and 25+ software modules covering every aspect of your business."
+msgstr "125+ database tables and 25+ software modules covering every aspect of your business."
+
+msgid "24/7 support + account manager"
+msgstr "24/7 support + account manager"
+
+msgid "3 price tiers"
+msgstr "3 price tiers"
+
+msgid "30-day free trial - No credit card needed"
+msgstr "30-day free trial - No credit card needed"
+
 msgid "31-60 Days"
 msgstr "31-60 Days"
+
+msgid "6 default roles"
+msgstr "6 default roles"
 
 msgid "61-90 Days"
 msgstr "61-90 Days"
@@ -46,6 +88,9 @@ msgstr "A protected payment unit with a separate password"
 
 msgid "A specific password for the vault"
 msgstr "A specific password for the vault"
+
+msgid "A4 / Thermal print"
+msgstr "A4 / Thermal print"
 
 msgid "AED_Description"
 msgstr "UAE Dirham — currency of the UAE"
@@ -61,6 +106,15 @@ msgstr "AI Assistant"
 
 msgid "AI Settings"
 msgstr "AI Settings"
+
+msgid "AI That Speaks Your Language"
+msgstr "AI That Speaks Your Language"
+
+msgid "AI-powered"
+msgstr "AI-powered"
+
+msgid "AI-powered business insights"
+msgstr "AI-powered business insights"
 
 msgid "AI_2"
 msgstr "AI_2"
@@ -97,6 +151,12 @@ msgstr "API Key For Crypto Payments"
 
 msgid "API_Key_Management"
 msgstr "API Key Management"
+
+msgid "AR"
+msgstr "AR"
+
+msgid "AR/AP analysis"
+msgstr "AR/AP analysis"
 
 msgid "About"
 msgstr "About"
@@ -182,6 +242,9 @@ msgstr "Account Name"
 msgid "Account_Number"
 msgstr "Account Number"
 
+msgid "Accountant - Trading co. - Abu Dhabi"
+msgstr "Accountant - Trading co. - Abu Dhabi"
+
 msgid "Accounting"
 msgstr "Accounting"
 
@@ -199,6 +262,9 @@ msgstr "Accounting System"
 
 msgid "Accounting Totals"
 msgstr "Accounting Totals"
+
+msgid "Accounting, inventory, sales, AI, POS, e-commerce"
+msgstr "Accounting, inventory, sales, AI, POS, e-commerce"
 
 msgid "Accounting_2"
 msgstr "Accounting_2"
@@ -287,6 +353,9 @@ msgstr "Active Companies"
 msgid "Active_Customers"
 msgstr "Active Customers"
 
+msgid "Active_Plans"
+msgstr "Active Plans"
+
 msgid "Active_Products"
 msgstr "Active Products"
 
@@ -367,6 +436,9 @@ msgstr "Add and edit packages"
 
 msgid "Add, edit, and manage system packages"
 msgstr "Add, edit, and manage system packages"
+
+msgid "Add-on Modules (Flat fee)"
+msgstr "Add-on Modules (Flat fee)"
 
 msgid "Add_2"
 msgstr "Add_2"
@@ -494,6 +566,12 @@ msgstr "Advanced Financial Reports"
 msgid "Advanced Settings"
 msgstr "Advanced Settings"
 
+msgid "Advanced Warehouses"
+msgstr "Advanced Warehouses"
+
+msgid "Advanced reports"
+msgstr "Advanced reports"
+
 msgid "Advanced_Accounting_Features"
 msgstr "Advanced Accounting Features"
 
@@ -551,6 +629,9 @@ msgstr "Aging Analysis"
 msgid "Agnesi Section Limit"
 msgstr "Agnesi Section Limit"
 
+msgid "Ahmed Al Sayed"
+msgstr "Ahmed Al Sayed"
+
 msgid "Alert"
 msgstr "Alert"
 
@@ -592,6 +673,21 @@ msgstr "All"
 
 msgid "All Rights Reserved"
 msgstr "All Rights Reserved"
+
+msgid "All Starter features"
+msgstr "All Starter features"
+
+msgid "All advanced features"
+msgstr "All advanced features"
+
+msgid "All features"
+msgstr "All features"
+
+msgid "All plans"
+msgstr "All plans"
+
+msgid "All rights reserved."
+msgstr "All rights reserved."
 
 msgid "All_Actions_Logged"
 msgstr "All actions are logged in the audit trail!"
@@ -719,6 +815,9 @@ msgstr "Approve"
 msgid "Arabic"
 msgstr "Arabic"
 
+msgid "Arabic AI Assistant"
+msgstr "Arabic AI Assistant"
+
 msgid "Arabic_2"
 msgstr "Arabic_2"
 
@@ -833,6 +932,9 @@ msgstr "Attachment"
 msgid "Attachments"
 msgstr "Attachments"
 
+msgid "Attendance (ZKTeco)"
+msgstr "Attendance (ZKTeco)"
+
 msgid "Attribute Error"
 msgstr "Attribute Error"
 
@@ -872,8 +974,17 @@ msgstr "Auto Lock"
 msgid "Auto Lock (Minutes)"
 msgstr "Auto Lock (Minutes)"
 
+msgid "Auto Parts"
+msgstr "Auto Parts"
+
+msgid "Auto backup"
+msgstr "Auto backup"
+
 msgid "Auto lock after 30 minutes"
 msgstr "Auto lock after 30 minutes"
+
+msgid "Auto parts shop owner - Dubai"
+msgstr "Auto parts shop owner - Dubai"
 
 msgid "Auto_Backup"
 msgstr "Auto Backup"
@@ -888,7 +999,7 @@ msgid "Auto_Backups"
 msgstr "Auto Backups"
 
 msgid "Auto_Compression_Saves_60"
-msgstr "Auto compression saves 60% space"
+msgstr "Auto compression saves 60%% space"
 
 msgid "Auto_Delete_Old_Backups"
 msgstr "Auto delete old backups"
@@ -913,6 +1024,9 @@ msgstr "Auto Update Exchange Rates"
 
 msgid "Auto_Update_Exchange_Rates_Help"
 msgstr "When enabled, exchange rates will be updated automatically from a trusted external provider"
+
+msgid "Automated daily cloud backups"
+msgstr "Automated daily cloud backups"
 
 msgid "Automatic"
 msgstr "Automatic"
@@ -962,8 +1076,26 @@ msgstr "Avg Spending"
 msgid "Avoid common passwords"
 msgstr "Avoid common passwords"
 
+msgid "Azad"
+msgstr "Azad"
+
+msgid "Azad - ERP with AI in UAE"
+msgstr "Azad - ERP with AI in UAE"
+
 msgid "Azad Company Donations"
 msgstr "Azad Company Donations"
+
+msgid "Azad IntelliTech - Pricing & Plans"
+msgstr "Azad IntelliTech - Pricing & Plans"
+
+msgid "Azad Smart Systems"
+msgstr "Azad Smart Systems"
+
+msgid "Azad Smart Systems - Best ERP Software in UAE 2026"
+msgstr "Azad Smart Systems - Best ERP Software in UAE 2026"
+
+msgid "Azad Smart Systems - Full ERP with AI"
+msgstr "Azad Smart Systems - Full ERP with AI"
 
 msgid "Azad Systems"
 msgstr "Azad Systems"
@@ -979,6 +1111,12 @@ msgstr "Azad Intelligent Systems"
 
 msgid "Azad_Smart_Systems"
 msgstr "Azad Smart Systems"
+
+msgid "Azadexa is a multi-tenant ERP platform built in the UAE. It includes 25+ integrated modules: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM."
+msgstr "Azadexa is a multi-tenant ERP platform built in the UAE. It includes 25+ integrated modules: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM."
+
+msgid "Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation."
+msgstr "Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation."
 
 msgid "BIN"
 msgstr "BIN"
@@ -1100,6 +1238,9 @@ msgstr "Balance Sheet"
 msgid "Balance must be zero"
 msgstr ""
 
+msgid "Balance sheet"
+msgstr "Balance sheet"
+
 msgid "Balance_2"
 msgstr "Balance_2"
 
@@ -1184,6 +1325,9 @@ msgstr "Transfer the amount to the bank account shown"
 msgid "Barcode"
 msgstr "Barcode"
 
+msgid "Barcode & QR inventory"
+msgstr "Barcode & QR inventory"
+
 msgid "Barcode_Scanner"
 msgstr "Barcode Scanner"
 
@@ -1196,6 +1340,9 @@ msgstr "Basic"
 msgid "Basic Info"
 msgstr "Basic Info"
 
+msgid "Basic reports"
+msgstr "Basic reports"
+
 msgid "Basic_Data"
 msgstr "Basic Data"
 
@@ -1204,6 +1351,9 @@ msgstr "Basic Information"
 
 msgid "Basic_Methods_Cannot_Be_Deleted"
 msgstr "Basic methods (COD, transfer, card, wallet) cannot be deleted — they can be disabled."
+
+msgid "Batch & expiry tracking"
+msgstr "Batch & expiry tracking"
 
 msgid "Beginner Mode Enabled"
 msgstr ""
@@ -1277,6 +1427,9 @@ msgstr "Required for non-owner, non-developer/super admin users"
 msgid "Branches"
 msgstr "Branches"
 
+msgid "Brand New Features"
+msgstr "Brand New Features"
+
 msgid "Brand_Colors"
 msgstr "Brand Colors"
 
@@ -1324,6 +1477,12 @@ msgstr "Build Date"
 
 msgid "Built With"
 msgstr "Built With"
+
+msgid "Built in UAE"
+msgstr "Built in UAE"
+
+msgid "Built-in Groq AI understands Arabic: creates customers, records invoices, generates reports, detects anomalies. No ChatGPT subscription needed."
+msgstr "Built-in Groq AI understands Arabic: creates customers, records invoices, generates reports, detects anomalies. No ChatGPT subscription needed."
 
 msgid "Builtin"
 msgstr "Builtin"
@@ -1373,6 +1532,9 @@ msgstr "CPU Usage"
 msgid "CR"
 msgstr "CR"
 
+msgid "CRM Integration"
+msgstr "CRM Integration"
+
 msgid "CR_Number"
 msgstr "CR Number"
 
@@ -1393,6 +1555,9 @@ msgstr "Calculator"
 
 msgid "Call"
 msgstr "Call"
+
+msgid "Call Us"
+msgstr "Call Us"
 
 msgid "Campaign"
 msgstr "Campaign"
@@ -1610,6 +1775,9 @@ msgstr "Chart Analysis"
 msgid "Chart_Of_Accounts"
 msgstr "Chart of Accounts"
 
+msgid "Chat on WhatsApp"
+msgstr "Chat on WhatsApp"
+
 msgid "Check for Updates"
 msgstr "Check for Updates"
 
@@ -1652,6 +1820,9 @@ msgstr "Cheque Returned"
 msgid "Cheque Under Review"
 msgstr "Cheque Under Review"
 
+msgid "Cheque management"
+msgstr "Cheque management"
+
 msgid "Cheque-Accounting Integration"
 msgstr "Cheque-Accounting Integration"
 
@@ -1684,6 +1855,18 @@ msgstr "Cheques_3"
 
 msgid "Choose"
 msgstr "Choose"
+
+msgid "Choose the right plan for your business"
+msgstr "Choose the right plan for your business"
+
+msgid "Choose the right plan — all include accounting, inventory, invoices, and reports."
+msgstr "Choose the right plan — all include accounting, inventory, invoices, and reports."
+
+msgid "Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial."
+msgstr "Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial."
+
+msgid "Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses."
+msgstr "Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses."
 
 msgid "Chord Length Limit"
 msgstr "Chord Length Limit"
@@ -1759,6 +1942,9 @@ msgstr "Closing Balance"
 
 msgid "Cloud"
 msgstr "Cloud"
+
+msgid "Cloud & secure"
+msgstr "Cloud & secure"
 
 msgid "Code"
 msgstr "Code"
@@ -2029,11 +2215,26 @@ msgstr "Connection failed during payment"
 msgid "Connection_Error"
 msgstr "Connection Error"
 
+msgid "Contact"
+msgstr "Contact"
+
 msgid "Contact Information"
 msgstr "Contact Information"
 
+msgid "Contact Sales"
+msgstr "Contact Sales"
+
 msgid "Contact Support"
 msgstr "Contact Support"
+
+msgid "Contact Us"
+msgstr "Contact Us"
+
+msgid "Contact page"
+msgstr "Contact page"
+
+msgid "Contact us via WhatsApp. We choose the right plan, set up the cloud, and provide free training. You start immediately. "
+msgstr "Contact us via WhatsApp. We choose the right plan, set up the cloud, and provide free training. You start immediately. "
 
 msgid "Contact via WhatsApp"
 msgstr "Contact via WhatsApp"
@@ -2095,6 +2296,9 @@ msgstr "Copyright"
 msgid "Core Limits"
 msgstr "Core Limits"
 
+msgid "Core Platform"
+msgstr "Core Platform"
+
 msgid "Corrupted"
 msgstr "Corrupted"
 
@@ -2103,6 +2307,9 @@ msgstr "Cost"
 
 msgid "Cost Price"
 msgstr "Cost Price"
+
+msgid "Cost centers"
+msgstr "Cost centers"
 
 msgid "Cost_2"
 msgstr "Cost_2"
@@ -2166,6 +2373,9 @@ msgstr "Create Package"
 
 msgid "Create a budget from the Reports or Budget Management page to compare with actual figures."
 msgstr "Create a budget from the Reports or Budget Management page to compare with actual figures."
+
+msgid "Create new customer: Ahmed Mohamed, phone 0501234567"
+msgstr "Create new customer: Ahmed Mohamed, phone 0501234567"
 
 msgid "Create_2"
 msgstr "Create_2"
@@ -2392,6 +2602,9 @@ msgstr "Customer"
 msgid "Customer (if exists)"
 msgstr "Customer (if exists)"
 
+msgid "Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?"
+msgstr "Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?"
+
 msgid "Customer Analysis"
 msgstr "Customer Analysis"
 
@@ -2551,6 +2764,9 @@ msgstr "Database Error"
 msgid "Database Version"
 msgstr "Database Version"
 
+msgid "Database tables"
+msgstr "Database tables"
+
 msgid "Database_Settings"
 msgstr "Database Settings"
 
@@ -2675,7 +2891,7 @@ msgid "Default_Sender_Email"
 msgstr "noreply@example.com"
 
 msgid "Default_Tax_Rate_Percent"
-msgstr "Default Tax Rate (%)"
+msgstr "Default Tax Rate (%%)"
 
 msgid "Default_Tenant_Maintenance"
 msgstr "Default Tenant Maintenance"
@@ -3113,7 +3329,7 @@ msgid "Discount Amount"
 msgstr "Discount Amount"
 
 msgid "Discount Percent"
-msgstr "Discount %"
+msgstr "Discount %%"
 
 msgid "Discount Total"
 msgstr "Discount Total"
@@ -3156,6 +3372,12 @@ msgstr "Document Number"
 
 msgid "Document_Type"
 msgstr "Document Type"
+
+msgid "Does it support UAE VAT?"
+msgstr "Does it support UAE VAT?"
+
+msgid "Does it support multiple branches?"
+msgstr "Does it support multiple branches?"
 
 msgid "Dollar"
 msgstr "Dollar"
@@ -3210,6 +3432,12 @@ msgstr "Done, I will pay now"
 
 msgid "Donor"
 msgstr "Donor"
+
+msgid "Double-Entry Accounting & Smart Reports"
+msgstr "Double-Entry Accounting & Smart Reports"
+
+msgid "Double-Entry GL"
+msgstr "Double-Entry GL"
 
 msgid "Downgrade"
 msgstr "Downgrade"
@@ -3277,8 +3505,17 @@ msgstr "E-Wallet"
 msgid "E-Wallet"
 msgstr "E-Wallet"
 
+msgid "E-invoice with QR"
+msgstr "E-invoice with QR"
+
+msgid "E-invoices + printing"
+msgstr "E-invoices + printing"
+
 msgid "ERP الإمارات، إدارة مستودعات دبي، برنامج محاسبة، مخزون، نقاط بيع، فواتير إلكترونية، ذكاء اصطناعي، رواتب"
 msgstr "UAE ERP, Dubai warehouse management, accounting software, inventory, POS, e-invoices, AI, payroll"
+
+msgid "ERP • AI • Cloud"
+msgstr "ERP • AI • Cloud"
 
 msgid "Ecommerce_Stop_Hint"
 msgstr "When disabled, all public storefronts will stop immediately"
@@ -3394,6 +3631,9 @@ msgstr "Email Campaigns"
 msgid "Email Settings"
 msgstr "Email Settings"
 
+msgid "Email Us"
+msgstr "Email Us"
+
 msgid "Email address"
 msgstr "Email address"
 
@@ -3432,6 +3672,9 @@ msgstr "Employee"
 
 msgid "Employee Details"
 msgstr "Employee Details"
+
+msgid "Employee profile"
+msgstr "Employee profile"
 
 msgid "Employee_2"
 msgstr "Employee_2"
@@ -3543,6 +3786,9 @@ msgstr "English Name"
 
 msgid "English_Name_Required"
 msgstr "English Name Required"
+
+msgid "Enhance your system with specialized add-ons"
+msgstr "Enhance your system with specialized add-ons"
 
 msgid "Ensure_Backup_Before_Conversion"
 msgstr "Ensure A Backup Before Conversion"
@@ -3988,6 +4234,9 @@ msgstr "Failed to Save"
 msgid "Fast Cashier Screen"
 msgstr ""
 
+msgid "Fast POS with UAE-compliant e-invoicing."
+msgstr "Fast POS with UAE-compliant e-invoicing."
+
 msgid "Feature Permissions"
 msgstr "Feature Permissions"
 
@@ -4114,6 +4363,15 @@ msgstr "Fixed"
 msgid "Fixed Issues"
 msgstr "Fixed Issues"
 
+msgid "Fixed asset depreciation"
+msgstr "Fixed asset depreciation"
+
+msgid "Flexible Plans for Your Business"
+msgstr "Flexible Plans for Your Business"
+
+msgid "Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts."
+msgstr "Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts."
+
 msgid "Folium Section Limit"
 msgstr "Folium Section Limit"
 
@@ -4183,11 +4441,17 @@ msgstr "Form Settings"
 msgid "Format Error"
 msgstr "Format Error"
 
+msgid "Four Integrated Pillars"
+msgstr "Four Integrated Pillars"
+
 msgid "Free"
 msgstr "Free"
 
 msgid "Free Trial"
 msgstr "Free Trial"
+
+msgid "Free Trial - 30 Days"
+msgstr "Free Trial - 30 Days"
 
 msgid "Free_Services"
 msgstr "Free Services"
@@ -4210,8 +4474,17 @@ msgstr "From Currency"
 msgid "From_Date"
 msgstr "From:"
 
+msgid "Full AI features"
+msgstr "Full AI features"
+
 msgid "Full Address"
 msgstr "Full Address"
+
+msgid "Full Arabic support"
+msgstr "Full Arabic support"
+
+msgid "Full ERP: accounting, inventory, AI, e-commerce"
+msgstr "Full ERP: accounting, inventory, AI, e-commerce"
 
 msgid "Full Movement Log"
 msgstr "Full Movement Log"
@@ -4221,6 +4494,21 @@ msgstr "Full Name"
 
 msgid "Full Privacy"
 msgstr "Full Privacy"
+
+msgid "Full audit log"
+msgstr "Full audit log"
+
+msgid "Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll."
+msgstr "Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll."
+
+msgid "Full customization"
+msgstr "Full customization"
+
+msgid "Full double-entry accounting cycle: from journal entries to balance sheet."
+msgstr "Full double-entry accounting cycle: from journal entries to balance sheet."
+
+msgid "Full employee management: contracts, attendance, payroll, leaves, granular permissions."
+msgstr "Full employee management: contracts, attendance, payroll, leaves, granular permissions."
 
 msgid "Full_Name"
 msgstr "Full Name"
@@ -4253,7 +4541,7 @@ msgid "GL_Entries"
 msgstr "GL Entries"
 
 msgid "GZIP_Save_60"
-msgstr "GZIP - Save 60%"
+msgstr "GZIP - Save 60%%"
 
 msgid "Gateway"
 msgstr "Gateway"
@@ -4269,6 +4557,12 @@ msgstr "General Ledger"
 
 msgid "General Settings"
 msgstr "General Settings"
+
+msgid "General ledger"
+msgstr "General ledger"
+
+msgid "General ledger (GL)"
+msgstr "General ledger (GL)"
 
 msgid "General_2"
 msgstr "General_2"
@@ -4351,6 +4645,15 @@ msgstr "Gulf"
 msgid "Gulf_Theme"
 msgstr "Gulf Theme"
 
+msgid "HR & Payroll"
+msgstr "HR & Payroll"
+
+msgid "HR & payroll"
+msgstr "HR & payroll"
+
+msgid "HR, Payroll & Permissions"
+msgstr "HR, Payroll & Permissions"
+
 msgid "HR_Section"
 msgstr "HR & Payroll"
 
@@ -4389,6 +4692,15 @@ msgstr "Helix Section Limit"
 
 msgid "Hello"
 msgstr "Hello"
+
+msgid "Hello, I want to buy the system or talk to sales"
+msgstr "Hello, I want to buy the system or talk to sales"
+
+msgid "Hello, I would like to inquire about Azad plans"
+msgstr "Hello, I would like to inquire about Azad plans"
+
+msgid "Hello, I would like to subscribe to the "
+msgstr "Hello, I would like to subscribe to the "
 
 msgid "Help"
 msgstr "Help"
@@ -4483,6 +4795,9 @@ msgstr ""
 msgid "Hours"
 msgstr "Hours"
 
+msgid "How do I get started?"
+msgstr "How do I get started?"
+
 msgid "How_Backups_Work"
 msgstr "How Backups Work"
 
@@ -4544,7 +4859,7 @@ msgid "Image"
 msgstr "Image"
 
 msgid "Image_Will_Be_5_Percent_Transparent"
-msgstr "Image will appear at 5% opacity"
+msgstr "Image will appear at 5%% opacity"
 
 msgid "Import"
 msgstr "Import"
@@ -4621,6 +4936,9 @@ msgstr "Income"
 msgid "Income Statement"
 msgstr "Income Statement"
 
+msgid "Income statement"
+msgstr "Income statement"
+
 msgid "Income statement shows financial performance during a specific period"
 msgstr "Income statement shows financial performance during a specific period"
 
@@ -4644,6 +4962,9 @@ msgstr "Index Error"
 
 msgid "Indicator"
 msgstr "Indicator"
+
+msgid "Industry sectors"
+msgstr "Industry sectors"
 
 msgid "Industry_Automotive"
 msgstr "Automotive"
@@ -4918,6 +5239,9 @@ msgstr "Invoices List"
 msgid "Irreversible"
 msgstr "Irreversible"
 
+msgid "Is there a built-in online store?"
+msgstr "Is there a built-in online store?"
+
 msgid "Is_Percentage"
 msgstr "Is Percentage"
 
@@ -5113,6 +5437,9 @@ msgstr "Leads"
 msgid "Leave"
 msgstr "Leave"
 
+msgid "Leave with approval"
+msgstr "Leave with approval"
+
 msgid "Leave_Blank_To_Keep_Current"
 msgstr "Leave blank to keep current password"
 
@@ -5233,6 +5560,9 @@ msgstr "Loading..."
 msgid "Loan_Amount"
 msgstr "Loan Amount"
 
+msgid "Loans & overtime"
+msgstr "Loans & overtime"
+
 msgid "Local"
 msgstr "Local"
 
@@ -5335,11 +5665,17 @@ msgstr "Lowercase letter (a-z)"
 msgid "Made With"
 msgstr "Made With"
 
+msgid "Made with love by"
+msgstr "Made with love by"
+
 msgid "Main"
 msgstr "Main"
 
 msgid "Main Account"
 msgstr "Main Account"
+
+msgid "Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?"
+msgstr "Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?"
 
 msgid "Main_2"
 msgstr "Main_2"
@@ -5379,6 +5715,9 @@ msgstr "Manage Branches"
 
 msgid "Manage_Payment_Methods"
 msgstr "Manage Payment Methods"
+
+msgid "Manage_Plans"
+msgstr "Manage Plans"
 
 msgid "Manage_Subscription_Duration"
 msgstr "Manage Subscription Duration"
@@ -5516,13 +5855,13 @@ msgid "Merchant_Discount"
 msgstr "Merchant Discount"
 
 msgid "Merchant_Discount_Percent"
-msgstr "Merchant Discount %"
+msgstr "Merchant Discount %%"
 
 msgid "Merchant_Rate_From_Sales"
 msgstr "Merchant Rate from Sales"
 
 msgid "Merchant_Share_Percent"
-msgstr "Merchant Share %"
+msgstr "Merchant Share %%"
 
 msgid "Message"
 msgstr "Message"
@@ -5646,6 +5985,12 @@ msgstr "Movement Type"
 
 msgid "Movements"
 msgstr "Movements"
+
+msgid "Multi-Branch"
+msgstr "Multi-Branch"
+
+msgid "Multi-Warehouse & Barcode"
+msgstr "Multi-Warehouse & Barcode"
 
 msgid "Multi_Currency"
 msgstr "Multi-Currency"
@@ -5827,6 +6172,9 @@ msgstr "New Product"
 msgid "New Supplier"
 msgstr "New Supplier"
 
+msgid "New powerful modules: Arabic AI, integrated online store, and multi-warehouse management."
+msgstr "New powerful modules: Arabic AI, integrated online store, and multi-warehouse management."
+
 msgid "New_2"
 msgstr "New_2"
 
@@ -5880,6 +6228,9 @@ msgstr "New Supplier"
 
 msgid "New_Template"
 msgstr "New Template"
+
+msgid "New_Tenant"
+msgstr "New Tenant"
 
 msgid "New_Tenant_Data"
 msgstr "New Tenant Data"
@@ -5980,8 +6331,14 @@ msgstr ""
 msgid "No active budgets"
 msgstr "No active budgets"
 
+msgid "No credit card"
+msgstr "No credit card"
+
 msgid "No donations found"
 msgstr "No donations found"
+
+msgid "No online storefront"
+msgstr "No online storefront"
 
 msgid "No packages found. Please add packages from the database."
 msgstr "No packages found. Please add packages from the database."
@@ -6214,6 +6571,9 @@ msgstr "Number"
 msgid "Number_Of_Months"
 msgstr "Number of Months"
 
+msgid "Numbers That Speak"
+msgstr "Numbers That Speak"
+
 msgid "OK"
 msgstr "OK"
 
@@ -6234,6 +6594,9 @@ msgstr "Of"
 
 msgid "Official contact with Azad"
 msgstr "Official contact with Azad"
+
+msgid "Official site"
+msgstr "Official site"
 
 msgid "Official_Logo_Path"
 msgstr "Official Logo Path"
@@ -6267,6 +6630,15 @@ msgstr "One feature per line"
 
 msgid "Online Store"
 msgstr "Online Store"
+
+msgid "Online Storefront"
+msgstr "Online Storefront"
+
+msgid "Online store + API"
+msgstr "Online store + API"
+
+msgid "Online storefront"
+msgstr "Online storefront"
 
 msgid "Online_Store"
 msgstr "Online Store"
@@ -6327,6 +6699,9 @@ msgstr "Optimize Database"
 
 msgid "Optional"
 msgstr "Optional"
+
+msgid "Optional Add-ons"
+msgstr "Optional Add-ons"
 
 msgid "Optional_Columns"
 msgstr "Optional Columns"
@@ -6465,6 +6840,9 @@ msgstr "Owner Only"
 
 msgid "Ownership_And_Partners"
 msgstr "Ownership & Partners"
+
+msgid "POS & E-Invoicing"
+msgstr "POS & E-Invoicing"
 
 msgid "POS Disabled"
 msgstr "POS Disabled"
@@ -6611,7 +6989,7 @@ msgid "Partner_Discount"
 msgstr "Partner Discount"
 
 msgid "Partner_Discount_Percent"
-msgstr "Partner Discount %"
+msgstr "Partner Discount %%"
 
 msgid "Partners"
 msgstr "Partners"
@@ -6838,6 +7216,9 @@ msgstr "Payments_2"
 msgid "Payroll"
 msgstr "Payroll"
 
+msgid "Payroll processing"
+msgstr "Payroll processing"
+
 msgid "Payroll_And_HR"
 msgstr "Payroll & HR"
 
@@ -6870,6 +7251,9 @@ msgstr "Pending_3"
 
 msgid "Per"
 msgstr "Per"
+
+msgid "Per-user permissions"
+msgstr "Per-user permissions"
 
 msgid "Per_Company"
 msgstr "Per Company"
@@ -7090,6 +7474,12 @@ msgstr "Point Of Sale"
 msgid "Point The Camera At The Barcode"
 msgstr "Point the camera at the barcode"
 
+msgid "Point of Sale"
+msgstr "Point of Sale"
+
+msgid "Point of Sale (POS)"
+msgstr "Point of Sale (POS)"
+
 msgid "Point_Of_Sale_POS"
 msgstr "Point of Sale (POS)"
 
@@ -7209,6 +7599,9 @@ msgstr "Printing_2"
 
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
+
+msgid "Pro"
+msgstr "Pro"
 
 msgid "Proceed_Anyway"
 msgstr "Proceed Anyway"
@@ -7489,11 +7882,17 @@ msgstr "Quick"
 msgid "Quick Actions"
 msgstr "Quick Actions"
 
+msgid "Quick Answers"
+msgstr "Quick Answers"
+
 msgid "Quick Cash Customer"
 msgstr "Quick cash customer"
 
 msgid "Quick Templates"
 msgstr "Quick Templates"
+
+msgid "Quick contact"
+msgstr "Quick contact"
 
 msgid "Quick_2"
 msgstr "Quick_2"
@@ -7549,11 +7948,20 @@ msgstr "Rate the merchant gets on sale"
 msgid "Re-enter new password"
 msgstr "Re-enter new password"
 
+msgid "Reach out via any channel below — we respond within hours"
+msgstr "Reach out via any channel below — we respond within hours"
+
 msgid "Ready"
 msgstr "Ready"
 
+msgid "Real operation execution"
+msgstr "Real operation execution"
+
 msgid "Real-Time Accounting Events"
 msgstr "Real-Time Accounting Events"
+
+msgid "Real-time anomaly detection"
+msgstr "Real-time anomaly detection"
 
 msgid "Real_Env_File"
 msgstr "Real .env file"
@@ -7891,6 +8299,9 @@ msgstr "Responsive"
 msgid "Responsive_Description"
 msgstr "Works efficiently on all devices"
 
+msgid "Restaurant"
+msgstr "Restaurant"
+
 msgid "Restore"
 msgstr "Restore"
 
@@ -7968,6 +8379,9 @@ msgstr "Returning Customers"
 
 msgid "Returns"
 msgstr "Returns"
+
+msgid "Returns & discounts"
+msgstr "Returns & discounts"
 
 msgid "Revenue"
 msgstr "Revenue"
@@ -8131,6 +8545,9 @@ msgstr "SSL Encrypted"
 msgid "SWIFT Code"
 msgstr "SWIFT Code"
 
+msgid "SaaS_Plans"
+msgstr "SaaS Plans"
+
 msgid "Safe_Restore_Instructions"
 msgstr "Safe Restore Instructions"
 
@@ -8152,6 +8569,9 @@ msgstr "Sale Price"
 msgid "Sales"
 msgstr "Sales"
 
+msgid "Sales & purchase invoices"
+msgstr "Sales & purchase invoices"
+
 msgid "Sales / Month"
 msgstr "Sales / Month"
 
@@ -8172,6 +8592,15 @@ msgstr "Sales and Purchases"
 
 msgid "Sales by Package"
 msgstr "Sales by Package"
+
+msgid "Sales forecasting & analysis"
+msgstr "Sales forecasting & analysis"
+
+msgid "Sales inquiry"
+msgstr "Sales inquiry"
+
+msgid "Sales, purchases & inventory"
+msgstr "Sales, purchases & inventory"
 
 msgid "Sales_2"
 msgstr "Sales_2"
@@ -8209,9 +8638,6 @@ msgstr "Sales Report"
 msgid "Sales_Returns"
 msgstr "Sales Returns"
 
-msgid "Master_Data"
-msgstr "Master Data"
-
 msgid "Sales_Section"
 msgstr "Sales & Customers"
 
@@ -8221,11 +8647,17 @@ msgstr "Sample"
 msgid "Sandbox (Test)"
 msgstr "Sandbox (Test)"
 
+msgid "Sara Al Mansouri"
+msgstr "Sara Al Mansouri"
+
 msgid "Saudi_Arabia"
 msgstr "Saudi Arabia"
 
 msgid "Save"
 msgstr "Save"
+
+msgid "Save 2 months"
+msgstr "Save 2 months"
 
 msgid "Save Changes"
 msgstr "Save Changes"
@@ -8445,6 +8877,9 @@ msgstr "Select Branch"
 
 msgid "Select Category"
 msgstr "Select Category"
+
+msgid "Select plan"
+msgstr "Select plan"
 
 msgid "Select_2"
 msgstr "Select_2"
@@ -8749,11 +9184,17 @@ msgstr "Smart Queries"
 msgid "Smart Reports"
 msgstr "Smart Reports"
 
+msgid "Smart reorder alerts"
+msgstr "Smart reorder alerts"
+
 msgid "Smart_System"
 msgstr "Smart System"
 
 msgid "Smooth effect on page load"
 msgstr "Smooth effect on page load"
+
+msgid "Software modules"
+msgstr "Software modules"
 
 msgid "Sold"
 msgstr "Sold"
@@ -8800,6 +9241,9 @@ msgstr "Stack Trace"
 msgid "Start"
 msgstr "Start"
 
+msgid "Start Free Trial"
+msgstr "Start Free Trial"
+
 msgid "Start_2"
 msgstr "Start_2"
 
@@ -8811,6 +9255,9 @@ msgstr "Start Date"
 
 msgid "Start_Import"
 msgstr "Start Import"
+
+msgid "Starter"
+msgstr "Starter"
 
 msgid "Starting Cash"
 msgstr "Starting Cash"
@@ -8899,6 +9346,9 @@ msgstr "Storage Path:"
 msgid "Store"
 msgstr "Store"
 
+msgid "Store linked to inventory & accounting. Cart, reviews, wishlist, loyalty, coupons, bookings. Launches with your live data."
+msgstr "Store linked to inventory & accounting. Cart, reviews, wishlist, loyalty, coupons, bookings. Launches with your live data."
+
 msgid "Store_2"
 msgstr "Store_2"
 
@@ -8950,6 +9400,9 @@ msgstr "Submit"
 msgid "Submit_2"
 msgstr "Submit_2"
 
+msgid "Subscribe Now"
+msgstr "Subscribe Now"
+
 msgid "Subscribers"
 msgstr "Subscribers"
 
@@ -8991,6 +9444,9 @@ msgstr "Summary_2"
 
 msgid "Super_Admin_Title"
 msgstr "Super Admin"
+
+msgid "Supermarket"
+msgstr "Supermarket"
 
 msgid "Supplier"
 msgstr "Supplier"
@@ -9232,6 +9688,9 @@ msgstr "Table Name"
 msgid "Tables"
 msgstr "Tables"
 
+msgid "Talk to Sales"
+msgstr "Talk to Sales"
+
 msgid "Tangent Section Limit"
 msgstr "Tangent Section Limit"
 
@@ -9258,6 +9717,9 @@ msgstr "Task Name"
 
 msgid "Tax"
 msgstr "Tax"
+
+msgid "Tax & multi-currency"
+msgstr "Tax & multi-currency"
 
 msgid "Tax Amount"
 msgstr "Tax Amount"
@@ -9595,6 +10057,9 @@ msgstr "Today Sales"
 msgid "Toggle"
 msgstr "Toggle"
 
+msgid "Toggle billing"
+msgstr "Toggle billing"
+
 msgid "Toggle_Dark_Mode"
 msgstr "Toggle Dark Mode"
 
@@ -9772,6 +10237,9 @@ msgstr "Total Users"
 msgid "Totals"
 msgstr "Totals"
 
+msgid "Touch POS interface"
+msgstr "Touch POS interface"
+
 msgid "Track all transactions"
 msgstr "Track all transactions"
 
@@ -9826,6 +10294,12 @@ msgstr "Transferred"
 msgid "Transfers"
 msgstr "Transfers"
 
+msgid "Transparent Pricing"
+msgstr "Transparent Pricing"
+
+msgid "Transparent pricing - 30-day free trial"
+msgstr "Transparent pricing - 30-day free trial"
+
 msgid "Treasury_Center"
 msgstr "Treasury Center"
 
@@ -9837,6 +10311,9 @@ msgstr "Trial Expired"
 
 msgid "Trial Period"
 msgstr "Trial Period"
+
+msgid "Trial balance"
+msgstr "Trial balance"
 
 msgid "Trial_7_Days"
 msgstr "Trial (7 Days)"
@@ -9940,6 +10417,18 @@ msgstr "Unknown"
 msgid "Unlimited"
 msgstr "Unlimited"
 
+msgid "Unlimited users"
+msgstr "Unlimited users"
+
+msgid "Unlimited warehouse management with quantity, cost, and movement tracking."
+msgstr "Unlimited warehouse management with quantity, cost, and movement tracking."
+
+msgid "Unlimited warehouses"
+msgstr "Unlimited warehouses"
+
+msgid "Unlimited warehouses, transfers, barcode inventory, batch/serial tracking, expiry alerts, smart reorder suggestions."
+msgstr "Unlimited warehouses, transfers, barcode inventory, batch/serial tracking, expiry alerts, smart reorder suggestions."
+
 msgid "Unlock"
 msgstr "Unlock"
 
@@ -9960,6 +10449,12 @@ msgstr "Unresolved Errors"
 
 msgid "Unspecified"
 msgstr "Unspecified"
+
+msgid "Up to 10 users"
+msgstr "Up to 10 users"
+
+msgid "Up to 3 users"
+msgstr "Up to 3 users"
 
 msgid "Up to Date"
 msgstr "Up to Date"
@@ -10078,6 +10573,9 @@ msgstr "User Count"
 msgid "User Deleted"
 msgstr "User Deleted"
 
+msgid "User Guide"
+msgstr "User Guide"
+
 msgid "User Inactive"
 msgstr "User Inactive"
 
@@ -10092,6 +10590,9 @@ msgstr "User Name"
 
 msgid "User Suspended"
 msgstr "User Suspended"
+
+msgid "User guide"
+msgstr "User guide"
 
 msgid "User_2"
 msgstr "User_2"
@@ -10149,6 +10650,9 @@ msgstr "VAT Output"
 
 msgid "VAT Report"
 msgstr "VAT Report"
+
+msgid "VAT reports"
+msgstr "VAT reports"
 
 msgid "VAT_Report_Title"
 msgstr "VAT Report"
@@ -10261,6 +10765,9 @@ msgstr "View Entry"
 msgid "View Operation"
 msgstr "View Operation"
 
+msgid "View Pricing"
+msgstr "View Pricing"
+
 msgid "View and manage all donations"
 msgstr "View and manage all donations"
 
@@ -10272,6 +10779,9 @@ msgstr "View notification"
 
 msgid "View payment cards (encrypted)"
 msgstr "View payment cards (encrypted)"
+
+msgid "View plans"
+msgstr "View plans"
 
 msgid "View_All"
 msgstr "View_All"
@@ -10381,6 +10891,9 @@ msgstr "Warehouse Details"
 msgid "Warehouse Name"
 msgstr "Warehouse Name"
 
+msgid "Warehouse transfers"
+msgstr "Warehouse transfers"
+
 msgid "Warehouse_2"
 msgstr "Warehouse_2"
 
@@ -10441,8 +10954,14 @@ msgstr "Watermark"
 msgid "Watermark_Text"
 msgstr "Watermark Text"
 
+msgid "We Are Here to Help"
+msgstr "We Are Here to Help"
+
 msgid "We could not create"
 msgstr "We could not create"
+
+msgid "We offer custom solutions tailored to your needs. Talk to us for a custom plan."
+msgstr "We offer custom solutions tailored to your needs. Talk to us for a custom plan."
 
 msgid "We_Wish_You_Excellent_Experience"
 msgstr "We wish you an excellent experience"
@@ -10465,8 +10984,23 @@ msgstr "Weekly"
 msgid "Weight Limit"
 msgstr "Weight Limit"
 
+msgid "What is Azadexa?"
+msgstr "What is Azadexa?"
+
+msgid "What is the stock of Toyota spare parts?"
+msgstr "What is the stock of Toyota spare parts?"
+
+msgid "What makes it different from basic accounting software?"
+msgstr "What makes it different from basic accounting software?"
+
+msgid "What's New 2026"
+msgstr "What's New 2026"
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
+
+msgid "WhatsApp support"
+msgstr "WhatsApp support"
 
 msgid "WhatsApp_Business_Number"
 msgstr "WhatsApp Business Number"
@@ -10489,11 +11023,17 @@ msgstr "WhatsApp Settings"
 msgid "When_Disabled_Tax_Rate_Zero"
 msgstr "When disabled: tax rate = 0 in all invoices."
 
+msgid "Who it is for"
+msgstr "Who it is for"
+
 msgid "Wholesale"
 msgstr "Wholesale"
 
 msgid "Why"
 msgstr "Why"
+
+msgid "Why Azad"
+msgstr "Why Azad"
 
 msgid "Why choose Azad system for warehouses in UAE?"
 msgstr ""
@@ -10516,14 +11056,29 @@ msgstr "With Difference"
 msgid "Worker Error"
 msgstr "Worker Error"
 
+msgid "Workshop"
+msgstr "Workshop"
+
 msgid "Write each feature on a separate line"
 msgstr "Write each feature on a separate line"
 
 msgid "Year"
 msgstr "Year"
 
+msgid "Yearly"
+msgstr "Yearly"
+
 msgid "Yes"
 msgstr "Yes"
+
+msgid "Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes."
+msgstr "Yes. Full 5%% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes."
+
+msgid "Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting."
+msgstr "Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting."
+
+msgid "Yes. Multi-branch and multi-warehouse with per-branch permissions, separate reports, stock transfers, and per-branch accounting."
+msgstr "Yes. Multi-branch and multi-warehouse with per-branch permissions, separate reports, stock transfers, and per-branch accounting."
 
 msgid "Yes_Delete_All"
 msgstr "Yes, Delete All"
@@ -10533,6 +11088,9 @@ msgstr "Yes, Export"
 
 msgid "Yes_Save"
 msgstr "Yes, Save"
+
+msgid "You"
+msgstr "You"
 
 msgid "You can complete the process directly with Azad via WhatsApp or email"
 msgstr "You can complete the process directly with Azad via WhatsApp or email"
@@ -10693,6 +11251,9 @@ msgstr "Allowed"
 msgid "amount"
 msgstr "Amount"
 
+msgid "analyzes data, detects patterns, predicts trends"
+msgstr "analyzes data, detects patterns, predicts trends"
+
 msgid "and"
 msgstr "and"
 
@@ -10759,6 +11320,9 @@ msgstr "Apply"
 msgid "approved"
 msgstr "approved"
 
+msgid "ar"
+msgstr "ar"
+
 msgid "arabic_full_name"
 msgstr "Arabic Full Name"
 
@@ -10782,6 +11346,9 @@ msgstr "Assign to User"
 
 msgid "auto_converted_to_base_currency"
 msgstr "Auto Converted To Base Currency"
+
+msgid "automatic"
+msgstr "Automatic"
 
 msgid "available"
 msgstr "Available"
@@ -10824,6 +11391,9 @@ msgstr "Back to Suppliers"
 
 msgid "back_to_users"
 msgstr "Back to Users"
+
+msgid "bad_request"
+msgstr "Bad request"
 
 msgid "balance"
 msgstr "Balance"
@@ -10960,6 +11530,9 @@ msgstr "center"
 msgid "checkout"
 msgstr "Checkout"
 
+msgid "checks every save and flags unbalanced entries instantly"
+msgstr "checks every save and flags unbalanced entries instantly"
+
 msgid "cheque"
 msgstr "Cheque"
 
@@ -10983,6 +11556,9 @@ msgstr "Clear Filter"
 
 msgid "close"
 msgstr "Close"
+
+msgid "close_notification"
+msgstr "Close notification"
 
 msgid "cod"
 msgstr "Cash on Delivery"
@@ -11050,6 +11626,12 @@ msgstr "Confirm Password"
 msgid "confirmed"
 msgstr "Confirmed"
 
+msgid "conflict"
+msgstr "Data conflict — refresh the page and try again"
+
+msgid "connection_error"
+msgstr "Could not connect to server — check your internet connection"
+
 msgid "contact_info"
 msgstr "Contact Info"
 
@@ -11104,6 +11686,9 @@ msgstr "Create Warehouse"
 msgid "created_date"
 msgstr "Created Date"
 
+msgid "creates customers, records invoices, generates reports via text command"
+msgstr "creates customers, records invoices, generates reports via text command"
+
 msgid "credit"
 msgstr "Credit"
 
@@ -11122,8 +11707,32 @@ msgstr "Credit (Payments)"
 msgid "currency"
 msgstr "Currency"
 
+msgid "currency_aed"
+msgstr "UAE Dirham"
+
+msgid "currency_egp"
+msgstr "Egyptian Pound"
+
+msgid "currency_eur"
+msgstr "Euro"
+
+msgid "currency_gbp"
+msgstr "British Pound"
+
+msgid "currency_ils"
+msgstr "Israeli Shekel"
+
+msgid "currency_jod"
+msgstr "Jordanian Dinar"
+
+msgid "currency_sar"
+msgstr "Saudi Riyal"
+
 msgid "currency_tooltip"
 msgstr "Currency Tooltip"
+
+msgid "currency_usd"
+msgstr "US Dollar"
 
 msgid "current package"
 msgstr "current package"
@@ -11218,6 +11827,9 @@ msgstr "Delivery Note"
 msgid "description"
 msgstr "Description"
 
+msgid "desktop"
+msgstr "Desktop"
+
 msgid "detailed"
 msgstr "detailed"
 
@@ -11229,6 +11841,9 @@ msgstr "development"
 
 msgid "difference"
 msgstr "Difference"
+
+msgid "dir_ltr"
+msgstr "ltr"
 
 msgid "director"
 msgstr "Director"
@@ -11311,6 +11926,9 @@ msgstr "Enter your email"
 msgid "empty_cart"
 msgstr "Empty Cart"
 
+msgid "en_US"
+msgstr "en_US"
+
 msgid "enable_from_tax_settings"
 msgstr "Enable From Tax Settings"
 
@@ -11332,6 +11950,9 @@ msgstr "Enter a positive value to add stock, or negative to deduct"
 msgid "enter_serial_numbers"
 msgstr "Enter Serial Numbers"
 
+msgid "enter_valid_values"
+msgstr "Enter valid values"
+
 msgid "entries"
 msgstr "entries"
 
@@ -11340,6 +11961,12 @@ msgstr "Equipment"
 
 msgid "equipment_suppliers"
 msgstr "Equipment Suppliers"
+
+msgid "error"
+msgstr "Error"
+
+msgid "estimated_rate"
+msgstr "Estimated rate"
 
 msgid "example_quantity"
 msgstr "e.g. 10"
@@ -11470,6 +12097,9 @@ msgstr "For sub-warehouses"
 msgid "forgot_password"
 msgstr "Forgot Password"
 
+msgid "form_expired"
+msgstr "Form expired — refresh the page"
+
 msgid "free_from"
 msgstr "Free From"
 
@@ -11536,6 +12166,9 @@ msgstr "In Stock Only"
 msgid "inactive"
 msgstr "Inactive"
 
+msgid "info"
+msgstr "Info"
+
 msgid "initial_balance"
 msgstr "Initial Balance"
 
@@ -11559,6 +12192,9 @@ msgstr "Install App"
 
 msgid "insufficient_inventory"
 msgstr "Insufficient inventory for confirmation"
+
+msgid "interest_amount"
+msgstr "Interest"
 
 msgid "internal"
 msgstr "Internal"
@@ -11623,17 +12259,32 @@ msgstr "jsPDF library not available"
 msgid "lang_en"
 msgstr "English"
 
+msgid "lang_switch_btn"
+msgstr "AR"
+
+msgid "lang_switch_code"
+msgstr "ar"
+
+msgid "lang_switch_label"
+msgstr "العربية"
+
 msgid "last_movement"
 msgstr "Last Movement"
 
 msgid "last_purchase"
 msgstr "Last Purchase"
 
+msgid "last_saved_rate"
+msgstr "Last saved rate"
+
 msgid "last_seen"
 msgstr "Last Seen"
 
 msgid "last_sign_in"
 msgstr "Last Sign In"
+
+msgid "last_updated"
+msgstr "Last updated"
 
 msgid "leave_empty_for_credit"
 msgstr "Leave Empty For Credit"
@@ -11656,8 +12307,14 @@ msgstr "List"
 msgid "list_warehouses_title"
 msgstr "Warehouses List"
 
+msgid "live_rate"
+msgstr "Live"
+
 msgid "loading"
 msgstr "Loading"
+
+msgid "loading_ellipsis"
+msgstr "Loading..."
 
 msgid "location"
 msgstr "Location"
@@ -11695,6 +12352,9 @@ msgstr "Low Stock — Products Needing Restock"
 msgid "loyalty_points"
 msgstr "Loyalty Points"
 
+msgid "ltr"
+msgstr "ltr"
+
 msgid "made_in_palestine"
 msgstr "Made in Palestine"
 
@@ -11728,6 +12388,9 @@ msgstr "Menu"
 msgid "merchant"
 msgstr "merchant"
 
+msgid "meta_language"
+msgstr "English"
+
 msgid "method"
 msgstr "method"
 
@@ -11739,6 +12402,15 @@ msgstr "Minimum Order Amount"
 
 msgid "minimum"
 msgstr "Minimum"
+
+msgid "mo"
+msgstr "mo"
+
+msgid "mobile"
+msgstr "Mobile"
+
+msgid "monthly_installment"
+msgstr "Installment"
 
 msgid "movement_type_adjustment"
 msgstr "Adjustment"
@@ -11851,6 +12523,9 @@ msgstr "No products in this warehouse currently"
 msgid "no_purchases_from_supplier"
 msgstr "No purchases from this supplier yet"
 
+msgid "no_results"
+msgstr "No results"
+
 msgid "no_returns_found"
 msgstr "No returns found"
 
@@ -11902,6 +12577,9 @@ msgstr "Any additional notes about the purchase invoice..."
 msgid "notes_tooltip"
 msgstr "Notes Tooltip"
 
+msgid "notifications"
+msgstr "Notifications"
+
 msgid "notify_me"
 msgstr "Notify Me"
 
@@ -11919,6 +12597,9 @@ msgstr "Store is currently unavailable, will be back soon"
 
 msgid "offline_title"
 msgstr "Store Temporarily Closed"
+
+msgid "og_locale"
+msgstr "en_US"
 
 msgid "ok_button"
 msgstr "OK"
@@ -12004,6 +12685,9 @@ msgstr "Out of Stock — Products Fully Exhausted"
 msgid "owner"
 msgstr "Owner"
 
+msgid "page_total"
+msgstr "Page total"
+
 msgid "paid"
 msgstr "Paid"
 
@@ -12021,6 +12705,9 @@ msgstr "Paid Confirmed"
 
 msgid "paid_in_full"
 msgstr "Paid in Full"
+
+msgid "paid_status"
+msgstr "Paid"
 
 msgid "parent_id"
 msgstr "Parent Warehouse ID"
@@ -12121,6 +12808,12 @@ msgstr "Pending Cheques"
 msgid "pending_orders_awaiting_confirm"
 msgstr "{count} order(s) awaiting confirmation"
 
+msgid "per year"
+msgstr "per year"
+
+msgid "permission_denied"
+msgstr "You do not have permission to perform this action"
+
 msgid "permissions_and_status"
 msgstr "Permissions & Status"
 
@@ -12187,6 +12880,9 @@ msgstr "Print Statement"
 msgid "priority"
 msgstr "Priority"
 
+msgid "processing"
+msgstr "Processing..."
+
 msgid "product"
 msgstr "Product"
 
@@ -12219,6 +12915,9 @@ msgstr "Products Ready"
 
 msgid "products_with_stock"
 msgstr "{count} product(s) with stock > 0"
+
+msgid "profit"
+msgstr "Profit"
 
 msgid "purchase_new_stock"
 msgstr "Purchase New Stock"
@@ -12427,6 +13126,9 @@ msgstr "Sales Log"
 msgid "sales_management"
 msgstr "Sales Management"
 
+msgid "sales_register"
+msgstr "Sales Register"
+
 msgid "sales_rep"
 msgstr "Sales Rep"
 
@@ -12457,6 +13159,21 @@ msgstr "Search"
 msgid "search_customer_hint"
 msgstr "Search Customer Hint"
 
+msgid "search_customers"
+msgstr "Search customers..."
+
+msgid "search_error"
+msgstr "Search error"
+
+msgid "search_products"
+msgstr "Search products..."
+
+msgid "search_suppliers"
+msgstr "Search suppliers..."
+
+msgid "searching"
+msgstr "Searching..."
+
 msgid "secure_checkout"
 msgstr "Secure Checkout"
 
@@ -12465,6 +13182,9 @@ msgstr "Select"
 
 msgid "select_branch"
 msgstr "Select Branch"
+
+msgid "select_placeholder"
+msgstr "Select..."
 
 msgid "select_product"
 msgstr "— Select Product —"
@@ -12496,8 +13216,14 @@ msgstr "Serial Product Requires Unique Numbers"
 msgid "server_connection_error"
 msgstr "Server Connection Error"
 
+msgid "server_error"
+msgstr "Server error — try again later"
+
 msgid "services"
 msgstr "Services"
+
+msgid "session_expired"
+msgstr "Session expired — please log in again"
 
 msgid "settings"
 msgstr "Settings"
@@ -12637,6 +13363,9 @@ msgstr "Subscribe"
 msgid "subtotal"
 msgstr "Subtotal"
 
+msgid "success"
+msgstr "Success"
+
 msgid "successfully"
 msgstr "successfully"
 
@@ -12688,6 +13417,9 @@ msgstr "Comprehensive database for all suppliers and companies"
 msgid "system"
 msgstr "System"
 
+msgid "system_alert"
+msgstr "System alert"
+
 msgid "tagged"
 msgstr "tagged"
 
@@ -12730,6 +13462,9 @@ msgstr "To"
 msgid "to_online"
 msgstr "To Online"
 
+msgid "too_many_requests"
+msgstr "Too many requests — wait a moment and try again"
+
 msgid "top_selling_products"
 msgstr "Top Selling Products"
 
@@ -12738,6 +13473,9 @@ msgstr "Total"
 
 msgid "total_amount"
 msgstr "Total Amount"
+
+msgid "total_label"
+msgstr "Total"
 
 msgid "total_orders"
 msgstr "Total Orders"
@@ -12790,6 +13528,9 @@ msgstr "Unassigned"
 msgid "under_review"
 msgstr "Under Review"
 
+msgid "unexpected_error"
+msgstr "Unexpected error — try again"
+
 msgid "unique_email_required"
 msgstr "Unique email required for user"
 
@@ -12803,6 +13544,9 @@ msgid "units"
 msgstr "Units"
 
 msgid "unpaid"
+msgstr "Unpaid"
+
+msgid "unpaid_status"
 msgstr "Unpaid"
 
 msgid "update"
@@ -12909,6 +13653,9 @@ msgstr "Warehouse Type"
 
 msgid "warehouse_type_label"
 msgstr "Type"
+
+msgid "warning"
+msgstr "Warning"
 
 msgid "warranty_claims"
 msgstr "Warranty Claims"
@@ -14707,6 +15454,9 @@ msgstr "عادي"
 msgid "العالميين"
 msgstr "العالميين"
 
+msgid "العربية"
+msgstr "العربية"
+
 msgid "العرض"
 msgstr "Width"
 
@@ -15374,7 +16124,7 @@ msgid "النسبة"
 msgstr "Percentage"
 
 msgid "النسبة %"
-msgstr "Percentage %"
+msgstr "Percentage %%"
 
 msgid "النسبة %%"
 msgstr "Percentage"
@@ -16532,7 +17282,7 @@ msgid "خصم عام"
 msgstr "General Discount"
 
 msgid "خصم%"
-msgstr "Discount%"
+msgstr "Discount%%"
 
 msgid "خصوصية"
 msgstr "خصوصية"
@@ -16746,9 +17496,6 @@ msgstr "Opening Balance (cash)"
 
 msgid "رصيد الافتتاح:"
 msgstr "Opening Balance:"
-
-msgid "رصيد افتتاحي"
-msgstr "Opening balance"
 
 msgid "رصيد البنك"
 msgstr "Bank Balance"
@@ -17219,10 +17966,10 @@ msgid "ضرائب"
 msgstr "taxes"
 
 msgid "ضريبة %"
-msgstr "Tax %"
+msgstr "Tax %%"
 
 msgid "ضريبة %%"
-msgstr "Tax %%"
+msgstr "Tax %%%%"
 
 msgid "ضريبة القيمة المضافة"
 msgstr "Value Added Tax"
@@ -18336,7 +19083,7 @@ msgid "متبقي"
 msgstr "remaining"
 
 msgid "متبقي %(remaining)s يوم"
-msgstr "%(remaining)s days remaining"
+msgstr "%%(remaining)s days remaining"
 
 msgid "متجرك"
 msgstr "متجرك"
@@ -19739,6 +20486,9 @@ msgstr "يُنصح"
 msgid "— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات"
 msgstr "— Supervisor authorization can be requested for these actions"
 
+msgid "⭐ Most popular"
+msgstr "⭐ Most popular"
 
-msgid "أدخل بيانات حسابك للدخول إلى لوحة التحكم الخاصة بك"
-msgstr "Enter your account credentials to access your dashboard."
+msgid "🧭 Can\\'t find the right plan?"
+msgstr "🧭 Can\\'t find the right plan?"
+

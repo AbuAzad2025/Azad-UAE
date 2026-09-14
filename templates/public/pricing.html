@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ 'شركة أزاد للأنظمة الذكية - الأسعار والباقات' if not is_en else 'Azad IntelliTech - Pricing & Plans' }}</title>
-    <meta name="description" content="{{ 'اختر باقة أزاد المناسبة: Starter $29/شهر، Pro $79/شهر، Enterprise $249/شهر. ERP، محاسبة، مخزون، AI، نقاط بيع. تجربة مجانية 30 يوم.' if not is_en else 'Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial.' }}">
+    <title>{{ _('Azad IntelliTech - Pricing & Plans') }}</title>
+    <meta name="description" content="{{ _('Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial.') }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="{{ url_for('public.pricing', _external=True) }}">
 {% if is_en %}
@@ -146,21 +146,21 @@
 
 {% set _company_name = config.COMPANY_NAME or 'Azad IntelliTech' %}
 {% set _logo_path = config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png' %}
-{% set _features = 'المميزات' if not is_en else 'Features' %}
-{% set _pricing_label = 'الأسعار' if not is_en else 'Pricing' %}
-{% set _about = 'عن أزاد' if not is_en else 'About' %}
-{% set _faq = 'الأسئلة الشائعة' if not is_en else 'FAQ' %}
+{% set _features = _('Features') %}
+{% set _pricing_label = _('Pricing') %}
+{% set _about = _('About') %}
+{% set _faq = _('FAQ') %}
 {% set _contact_ar = 'اتصل بنا' %}
 {% set _contact_en = 'Contact' %}
 {% set _contact = _contact_ar if not is_en else _contact_en %}
-{% set _login = 'تسجيل الدخول' if not is_en else 'Login' %}
-{% set _free_trial = 'تجربة مجانية' if not is_en else 'Free Trial' %}
-{% set _close = 'إغلاق' if not is_en else 'Close' %}
-{% set _menu = 'القائمة' if not is_en else 'Menu' %}
-{% set _lang_label = 'English' if not is_en else 'العربية' %}
+{% set _login = _('Login') %}
+{% set _free_trial = _('Free Trial') %}
+{% set _close = _('Close') %}
+{% set _menu = _('Menu') %}
+{% set _lang_label = _('Ø§ÙØ¹Ø±Ø¨ÙØ©') %}
 {% set _lang_url = url_for('language.set_language', lang='en') if not is_en else url_for('language.set_language', lang='ar') %}
-{% set _lang_btn = 'English' if not is_en else 'العربية' %}
-{% set _wa_msg_sales = developer_wa_msg_sales or 'مرحباً، أرغب في الاستفسار عن باقات أزاد' if not is_en else 'Hello, I would like to inquire about Azad plans' %}
+{% set _lang_btn = _('Ø§ÙØ¹Ø±Ø¨ÙØ©') %}
+{% set _wa_msg_sales = developer_wa_msg_sales or _('Hello, I would like to inquire about Azad plans') %}
 {% set developer_whatsapp_link = developer_whatsapp_link or config.DEVELOPER_WHATSAPP %}
 {% set developer_credit = developer_credit or config.DEVELOPER_CREDIT %}
 
@@ -284,12 +284,12 @@
             <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}" id="brandLogo">
             <div>
                 <span class="azad-brand-text">{{ _company_name }}</span>
-                <small class="azad-brand-tagline">{{ 'ERP • AI • Cloud' if is_en else 'ERP • AI • سحابي' }}</small>
+                <small class="azad-brand-tagline">{{ _('ERP â¢ AI â¢ Cloud') }}</small>
             </div>
         </a>
 
         <div class="azad-nav-links" style="margin-{{ 'left' if not is_rtl else 'right' }}: auto;">
-            <a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a>
+            <a href="{{ url_for('public.landing') }}">{{ _('Home') }}</a>
             <a href="{{ url_for('public.landing') }}#features">{{ _features }}</a>
             <a href="{{ url_for('public.pricing') }}" class="active">{{ _pricing_label }}</a>
             <a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a>
@@ -309,16 +309,16 @@
 {# HERO                                             #}
 {# ──────────────────────────────────────────────── #}
 <section class="pricing-hero">
-    <div class="pricing-hero-badge"><i class="fas fa-tags" aria-hidden="true"></i> <span>{{ 'أسعار شفافة - تجربة 30 يوم مجانية' if not is_en else 'Transparent pricing - 30-day free trial' }}</span></div>
-    <h1>{{ 'اختر الباقة المناسبة لأعمالك' if not is_en else 'Choose the right plan for your business' }}</h1>
-    <p>{{ 'باقات مرنة تبدأ من $29/شهر. كل الباقات تشمل التحديثات والدعم الفني. بدون عقود طويلة.' if not is_en else 'Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts.' }}</p>
+    <div class="pricing-hero-badge"><i class="fas fa-tags" aria-hidden="true"></i> <span>{{ _('Transparent pricing - 30-day free trial') }}</span></div>
+    <h1>{{ _('Choose the right plan for your business') }}</h1>
+    <p>{{ _('Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts.') }}</p>
 
-    {% set _monthly_label = 'شهري' if not is_en else 'Monthly' %}
-    {% set _yearly_label = 'سنوي' if not is_en else 'Yearly' %}
-    {% set _save_label = 'وفر شهرين' if not is_en else 'Save 2 months' %}
+    {% set _monthly_label = _('Monthly') %}
+    {% set _yearly_label = _('Yearly') %}
+    {% set _save_label = _('Save 2 months') %}
     <div class="billing-toggle">
         <span id="billingMonthly">{{ _monthly_label }}</span>
-        <div class="toggle-track" id="billingToggle" role="button" tabindex="0" aria-label="{{ 'تبديل الفواتير' if not is_en else 'Toggle billing' }}"></div>
+        <div class="toggle-track" id="billingToggle" role="button" tabindex="0" aria-label="{{ _('Toggle billing') }}"></div>
         <span id="billingYearly">{{ _yearly_label }} <span class="save-badge">{{ _save_label }}</span></span>
     </div>
 </section>
@@ -338,8 +338,8 @@
 
         <div class="azad-tier-price">
             <span class="price-amount price-display">${{ p.price }}</span>
-            <span class="price-period price-period-display">{{ '/شهرياً' if not is_en else '/month' }}</span>
-            <div class="price-note price-yearly-note" style="display:none;">${{ p.yearly_price }} {{ 'سنوياً' if not is_en else 'per year' }}</div>
+            <span class="price-period price-period-display">{{ _('/month') }}</span>
+            <div class="price-note price-yearly-note" style="display:none;">${{ p.yearly_price }} {{ _('per year') }}</div>
         </div>
 
         <ul class="azad-tier-features">
@@ -348,12 +348,12 @@
             {% endfor %}
         </ul>
 
-        {% set wa_msg_plan = 'مرحباً، أرغب في الاشتراك في باقة ' ~ p.name_ar ~ ' - ' if not is_en else 'Hello, I would like to subscribe to the ' ~ p.name_en ~ ' plan - ' %}
+        {% set wa_msg_plan = 'مرحباً، أرغب في الاشتراك في باقة ' ~ p.name_ar ~ _('Hello, I would like to subscribe to the ') ~ p.name_en ~ ' plan - ' %}
         <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ (wa_msg_plan ~ _monthly_label) | urlencode }}" class="azad-tier-btn-wa wa-subscribe" data-wa-monthly="{{ (wa_msg_plan ~ _monthly_label) | urlencode }}" data-wa-yearly="{{ (wa_msg_plan ~ _yearly_label) | urlencode }}">
-            <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'اشترك الآن' if not is_en else 'Subscribe Now' }}
+            <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}
         </a>
         <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-outline" target="_blank" rel="noopener">
-            <i class="fas fa-question-circle" aria-hidden="true"></i> {{ 'تواصل معنا' if not is_en else 'Contact Us' }}
+            <i class="fas fa-question-circle" aria-hidden="true"></i> {{ _('Contact Us') }}
         </a>
     </div>
     {% endfor %}
@@ -363,14 +363,14 @@
 {# ADD-ONS                                          #}
 {# ──────────────────────────────────────────────── #}
 <section class="addons-section">
-    <h2>{{ 'إضافات اختيارية' if not is_en else 'Optional Add-ons' }}</h2>
-    <p>{{ 'طور نظامك بإضافات متخصصة' if not is_en else 'Enhance your system with specialized add-ons' }}</p>
+    <h2>{{ _('Optional Add-ons') }}</h2>
+    <p>{{ _('Enhance your system with specialized add-ons') }}</p>
     <div class="addons-grid">
         {% for a in addons %}
         <div class="addon-item">
             <i class="fas {{ a.icon }}" aria-hidden="true"></i>
             <h4>{{ a.name_ar if not is_en else a.name_en }}</h4>
-            <div class="addon-price">{{ a.price }}/{{ 'شهر' if not is_en else 'mo' }}</div>
+            <div class="addon-price">{{ a.price }}/{{ _('mo') }}</div>
             <div class="addon-desc">{{ a.desc_ar if not is_en else a.desc_en }}</div>
         </div>
         {% endfor %}
@@ -381,11 +381,11 @@
 {# CTA                                              #}
 {# ──────────────────────────────────────────────── #}
 <section class="cta-section">
-    <h2>{{ '🧭 لا تجد الباقة المناسبة؟' if not is_en else '🧭 Can\'t find the right plan?' }}</h2>
-    <p>{{ 'نقدم حلولاً مخصصة حسب احتياجاتك. تحدث معنا لوضع خطة خاصة بك.' if not is_en else 'We offer custom solutions tailored to your needs. Talk to us for a custom plan.' }}</p>
+    <h2>{{ _('ð§­ Can\'t find the right plan?') }}</h2>
+    <p>{{ _('We offer custom solutions tailored to your needs. Talk to us for a custom plan.') }}</p>
     <div class="cta-buttons">
-        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ 'تحدث مع المبيعات' if not is_en else 'Talk to Sales' }}</a>
-        <a href="tel:{{ developer_whatsapp_link or config.DEVELOPER_PHONE }}" class="azad-tier-btn-outline" style="display:inline-flex;"><i class="fas fa-phone" aria-hidden="true"></i> {{ 'اتصل بنا' if not is_en else 'Call Us' }}</a>
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="azad-tier-btn-wa" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Talk to Sales') }}</a>
+        <a href="tel:{{ developer_whatsapp_link or config.DEVELOPER_PHONE }}" class="azad-tier-btn-outline" style="display:inline-flex;"><i class="fas fa-phone" aria-hidden="true"></i> {{ _('Call Us') }}</a>
     </div>
 </section>
 
@@ -397,17 +397,17 @@
 {% set _footer_email = (developer_email or config.DEVELOPER_EMAIL or '') %}
 {% set _footer_website = (developer_website or config.DEVELOPER_WEBSITE or '') %}
 {% set _footer_address = ((config.COMPANY_ADDRESS_AR if not is_en else config.COMPANY_ADDRESS_EN) or '') %}
-{% set _made_with_label = ('صُنع بحُب في' if not is_en else 'Made with love by') %}
+{% set _made_with_label = (_('Made with love by')) %}
 {% set _made_by_label = (developer_credit or (developer_name_ar or developer_name or _company_name)) %}
 <footer class="azad-footer">
     <div class="azad-section-inner">
         {% if _footer_whatsapp or _footer_phone or _footer_email or _footer_website or _footer_address %}
-        <div class="azad-footer-topbar" aria-label="{{ 'اتصال سريع' if not is_en else 'Quick contact' }}">
+        <div class="azad-footer-topbar" aria-label="{{ _('Quick contact') }}">
             {% if _footer_whatsapp %}
             <a class="azad-footer-topbar-item" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">
                 <span class="azad-footer-topbar-icon icon-wa"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
                 <span>
-                    <div class="azad-footer-topbar-label">{{ 'واتساب' if not is_en else 'WhatsApp' }}</div>
+                    <div class="azad-footer-topbar-label">{{ _('WhatsApp') }}</div>
                     <div class="azad-footer-topbar-value">{{ _footer_whatsapp }}</div>
                 </span>
             </a>
@@ -416,7 +416,7 @@
             <a class="azad-footer-topbar-item" href="mailto:{{ _footer_email }}" aria-label="Email">
                 <span class="azad-footer-topbar-icon icon-mail"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                 <span>
-                    <div class="azad-footer-topbar-label">{{ 'البريد الإلكتروني' if not is_en else 'Email' }}</div>
+                    <div class="azad-footer-topbar-label">{{ _('Email') }}</div>
                     <div class="azad-footer-topbar-value">{{ _footer_email }}</div>
                 </span>
             </a>
@@ -425,7 +425,7 @@
             <a class="azad-footer-topbar-item" href="tel:{{ _footer_phone }}" aria-label="Phone">
                 <span class="azad-footer-topbar-icon icon-call"><i class="fas fa-phone-volume" aria-hidden="true"></i></span>
                 <span>
-                    <div class="azad-footer-topbar-label">{{ 'اتصال' if not is_en else 'Phone' }}</div>
+                    <div class="azad-footer-topbar-label">{{ _('Phone') }}</div>
                     <div class="azad-footer-topbar-value">{{ _footer_phone }}</div>
                 </span>
             </a>
@@ -437,43 +437,43 @@
             <div class="azad-footer-brand">
                 <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
                 <h4 class="footer-gradient-text" style="font-size:1.08rem;margin:0 0 10px;">{{ _company_name }}</h4>
-                <p>{{ 'اختر باقتك من باقات أزاد: Starter، Pro، Enterprise. منصة ERP سحابية كاملة لمؤسسات الإمارات.' if not is_en else 'Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses.' }}</p>
+                <p>{{ _('Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses.') }}</p>
                 <div class="azad-footer-social">
                     {% if _footer_whatsapp %}<a class="whatsapp-bg" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
-                    {% if _footer_phone %}<a class="phone-bg" href="tel:{{ _footer_phone }}" aria-label="{{ 'اتصال' if not is_en else 'Phone' }}"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
+                    {% if _footer_phone %}<a class="phone-bg" href="tel:{{ _footer_phone }}" aria-label="{{ _('Phone') }}"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
                     {% if _footer_email %}<a class="email-bg" href="mailto:{{ _footer_email }}" aria-label="Email"><i class="fas fa-envelope" aria-hidden="true"></i></a>{% endif %}
                 </div>
             </div>
             <div class="azad-footer-col">
-                <h4 class="footer-gradient-text">{{ 'أزاد' if not is_en else 'Azad' }}</h4>
+                <h4 class="footer-gradient-text">{{ _('Azad') }}</h4>
                 <ul class="azad-footer-links">
-                    <li><a href="{{ url_for('public.landing') }}">{{ 'الرئيسية' if not is_en else 'Home' }}</a></li>
+                    <li><a href="{{ url_for('public.landing') }}">{{ _('Home') }}</a></li>
                     <li><a href="{{ url_for('public.landing') }}#features">{{ _features }}</a></li>
                     <li><a href="{{ url_for('public.landing') }}#pricing">{{ _pricing_label }}</a></li>
                     <li><a href="{{ url_for('public.landing') }}#about">{{ _about }}</a></li>
-                    <li><a href="{{ url_for('public.user_guide') }}">{{ 'دليل المستخدم' if not is_en else 'User Guide' }}</a></li>
+                    <li><a href="{{ url_for('public.user_guide') }}">{{ _('User Guide') }}</a></li>
                 </ul>
             </div>
             <div class="azad-footer-col">
-                <h4 class="footer-gradient-text">{{ 'الدعم' if not is_en else 'Support' }}</h4>
+                <h4 class="footer-gradient-text">{{ _('Support') }}</h4>
                 <ul class="azad-footer-links">
                     <li><a href="{{ url_for('public.landing') }}#faq">{{ _faq }}</a></li>
                     <li><a href="{{ url_for('public.landing') }}#contact">{{ _contact }}</a></li>
-                    <li><a href="{{ url_for('public.contact') }}">{{ 'صفحة الاتصال' if not is_en else 'Contact page' }}</a></li>
-                    {% if _footer_website %}<li><a href="{{ _footer_website }}" target="_blank" rel="noopener noreferrer">{{ 'الموقع الرسمي' if not is_en else 'Official site' }}</a></li>{% endif %}
+                    <li><a href="{{ url_for('public.contact') }}">{{ _('Contact page') }}</a></li>
+                    {% if _footer_website %}<li><a href="{{ _footer_website }}" target="_blank" rel="noopener noreferrer">{{ _('Official site') }}</a></li>{% endif %}
                 </ul>
             </div>
             <div class="azad-footer-col">
                 <h4 class="footer-gradient-text">{{ developer_credit if developer_credit else _company_name }}</h4>
                 <ul class="azad-footer-links">
                     <li><span class="info-line"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
-                    <li><span class="info-line"><i class="fas fa-robot" aria-hidden="true"></i> {{ 'مدعوم بالذكاء الاصطناعي' if not is_en else 'AI-powered' }}</span></li>
+                    <li><span class="info-line"><i class="fas fa-robot" aria-hidden="true"></i> {{ _('AI-powered') }}</span></li>
                     {% if _footer_address %}<li><span class="info-line"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ _footer_address }}</span></li>{% endif %}
                 </ul>
             </div>
         </div>
         <div class="azad-footer-bottom">
-            <div>&copy; {{ current_year if current_year else '2025' }} {{ _company_name }}. {{ 'جميع الحقوق محفوظة.' if not is_en else 'All rights reserved.' }}</div>
+            <div>&copy; {{ current_year if current_year else '2025' }} {{ _company_name }}. {{ _('All rights reserved.') }}</div>
             <div class="azad-footer-made-in">
                 <span class="made-label">{{ _made_with_label }}</span>
                 <i class="fas fa-heart footer-heart" aria-hidden="true"></i>
@@ -519,7 +519,7 @@
             const prices = [290, 790, 2490];
             amounts.forEach(function(el, idx) {
                 if (idx < prices.length) el.textContent = '$' + prices[idx];
-                if (periods[idx]) periods[idx].textContent = '{{ "/سنوياً" if not is_en else "/year" }}';
+                if (periods[idx]) periods[idx].textContent = '{{ _('/year') }}';
                 if (notes[idx]) notes[idx].style.display = 'block';
             });
             waBtns.forEach(function(btn) {
@@ -533,7 +533,7 @@
             const prices = [29, 79, 249];
             amounts.forEach(function(el, idx) {
                 if (idx < prices.length) el.textContent = '$' + prices[idx];
-                if (periods[idx]) periods[idx].textContent = '{{ "/شهرياً" if not is_en else "/month" }}';
+                if (periods[idx]) periods[idx].textContent = '{{ _('/month') }}';
                 if (notes[idx]) notes[idx].style.display = 'none';
             });
             waBtns.forEach(function(btn) {

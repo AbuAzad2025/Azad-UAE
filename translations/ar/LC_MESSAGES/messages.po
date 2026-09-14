@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Azad-UAE 2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-21 12:34+0000\n"
+"POT-Creation-Date: 2026-09-14 04:36+0000\n"
 "Last-Translator: \n"
 "Language-Team: ar\n"
 "Language: ar\n"
@@ -20,11 +20,35 @@ msgstr " أخرى"
 msgid " مرة"
 msgstr " مرة"
 
+msgid "\"An integrated and very convenient system. Inventory and sales management became much easier. Fast and understanding support.\""
+msgstr "\"نظام متكامل ومريح جداً. إدارة المخزون والمبيعات صارت أسهل بكثير. الدعم الفني سريع ومتفهم.\""
+
+msgid "\"Financial reports and double-entry accounting helped us organize our accounts accurately. Highly recommended.\""
+msgstr "\"التقارير المالية والمحاسبة بالقيد المزدوج ساعدتنا في تنظيم حساباتنا بدقة. أنصح به بشدة.\""
+
 msgid "(رئيسي)"
 msgstr "(رئيسي)"
 
 msgid "..."
 msgstr "..."
+
+msgid "/mo"
+msgstr "شهرياً"
+
+msgid "/month"
+msgstr "/شهرياً"
+
+msgid "/month — for growing businesses"
+msgstr "شهرياً - للشركات المتوسطة"
+
+msgid "/month — for large enterprises"
+msgstr "شهرياً - للشركات الكبيرة"
+
+msgid "/month — for small businesses"
+msgstr "شهرياً - مناسب للشركات الصغيرة"
+
+msgid "/year"
+msgstr "/سنوياً"
 
 msgid "0-30 Days"
 msgstr "0-30 يوم"
@@ -32,8 +56,26 @@ msgstr "0-30 يوم"
 msgid "10-30 دقيقة"
 msgstr "10-30 دقيقة"
 
+msgid "100% Cloud"
+msgstr "سحابي بالكامل"
+
+msgid "125+ database tables and 25+ software modules covering every aspect of your business."
+msgstr "أكثر من 125 جدول بيانات و 25+ وحدة برمجية تغطي كل جوانب إدارة أعمالك."
+
+msgid "24/7 support + account manager"
+msgstr "دعم فني 24/7 + مدير حساب"
+
+msgid "3 price tiers"
+msgstr "3 مستويات أسعار"
+
+msgid "30-day free trial - No credit card needed"
+msgstr "30 يوم تجربة مجانية - بدون بطاقة ائتمان"
+
 msgid "31-60 Days"
 msgstr "31-60 يوم"
+
+msgid "6 default roles"
+msgstr "6 أدوار افتراضية"
 
 msgid "61-90 Days"
 msgstr "61-90 يوم"
@@ -46,6 +88,9 @@ msgstr "وحدة دفع محمية بكلمة مرور منفصلة"
 
 msgid "A specific password for the vault"
 msgstr "كلمة مرور خاصة بالخزنة"
+
+msgid "A4 / Thermal print"
+msgstr "طباعة A4 / حراري"
 
 msgid "AED_Description"
 msgstr "الدرهم الإماراتي — عملة دولة الإمارات"
@@ -61,6 +106,15 @@ msgstr "المساعد الذكي"
 
 msgid "AI Settings"
 msgstr "إعدادات الذكاء الاصطناعي"
+
+msgid "AI That Speaks Your Language"
+msgstr "ذكاء اصطناعي يتحدث بلغتك"
+
+msgid "AI-powered"
+msgstr "مدعوم بالذكاء الاصطناعي"
+
+msgid "AI-powered business insights"
+msgstr "الذكاء الاصطناعي لتحليل البيانات"
 
 msgid "AI_2"
 msgstr "ذكاء"
@@ -97,6 +151,12 @@ msgstr "مفتاح API للدفع بالعملات المشفرة"
 
 msgid "API_Key_Management"
 msgstr "إدارة مفاتيح API"
+
+msgid "AR"
+msgstr "EN"
+
+msgid "AR/AP analysis"
+msgstr "تحليل ذمم"
 
 msgid "About"
 msgstr "حول"
@@ -182,6 +242,9 @@ msgstr "اسم الحساب"
 msgid "Account_Number"
 msgstr "رقم الحساب"
 
+msgid "Accountant - Trading co. - Abu Dhabi"
+msgstr "محاسبة - شركة تجارية - أبوظبي"
+
 msgid "Accounting"
 msgstr "محاسبة"
 
@@ -199,6 +262,9 @@ msgstr "نظام محاسبي"
 
 msgid "Accounting Totals"
 msgstr "الإجماليات المحاسبية"
+
+msgid "Accounting, inventory, sales, AI, POS, e-commerce"
+msgstr "محاسبة، مخزون، مبيعات، AI، نقاط بيع، متجر إلكتروني"
 
 msgid "Accounting_2"
 msgstr "محاسبية"
@@ -287,6 +353,9 @@ msgstr "شركات نشطة"
 msgid "Active_Customers"
 msgstr "العملاء النشطون"
 
+msgid "Active_Plans"
+msgstr "خطة نشطة"
+
 msgid "Active_Products"
 msgstr "منتجات نشطة"
 
@@ -367,6 +436,9 @@ msgstr "إضافة وتعديل الباقات"
 
 msgid "Add, edit, and manage system packages"
 msgstr "إضافة وتعديل وإدارة باقات النظام"
+
+msgid "Add-on Modules (Flat fee)"
+msgstr "موديولات إضافية (رسوم ثابتة)"
 
 msgid "Add_2"
 msgstr "الإضافة"
@@ -494,6 +566,12 @@ msgstr "التقارير المالية المتقدمة"
 msgid "Advanced Settings"
 msgstr "إعدادات متقدمة"
 
+msgid "Advanced Warehouses"
+msgstr "إدارة مستودعات متقدمة"
+
+msgid "Advanced reports"
+msgstr "تقارير متقدمة"
+
 msgid "Advanced_Accounting_Features"
 msgstr "ميزات محاسبية متقدمة"
 
@@ -551,6 +629,9 @@ msgstr "تحليل التقادم"
 msgid "Agnesi Section Limit"
 msgstr "حد المقطع الأغنيسي"
 
+msgid "Ahmed Al Sayed"
+msgstr "أحمد السيد"
+
 msgid "Alert"
 msgstr "التنبيه"
 
@@ -592,6 +673,21 @@ msgstr "الكل"
 
 msgid "All Rights Reserved"
 msgstr "جميع الحقوق محفوظة"
+
+msgid "All Starter features"
+msgstr "كل ميزات الأساسية"
+
+msgid "All advanced features"
+msgstr "كل الميزات المتقدمة"
+
+msgid "All features"
+msgstr "عرض الكل"
+
+msgid "All plans"
+msgstr "كل الباقات"
+
+msgid "All rights reserved."
+msgstr "جميع الحقوق محفوظة."
 
 msgid "All_Actions_Logged"
 msgstr "النظام يسجل كل العمليات في سجل التدقيق!"
@@ -719,6 +815,9 @@ msgstr "اعتماد"
 msgid "Arabic"
 msgstr "عربي"
 
+msgid "Arabic AI Assistant"
+msgstr "مساعد ذكاء اصطناعي عربي"
+
 msgid "Arabic_2"
 msgstr "العربية"
 
@@ -833,6 +932,9 @@ msgstr "مرفق"
 msgid "Attachments"
 msgstr "المرفقات"
 
+msgid "Attendance (ZKTeco)"
+msgstr "حضور وبصمة (ZKTeco)"
+
 msgid "Attribute Error"
 msgstr "خطأ في السمة"
 
@@ -872,8 +974,17 @@ msgstr "قفل تلقائي"
 msgid "Auto Lock (Minutes)"
 msgstr "القفل التلقائي (بالدقائق)"
 
+msgid "Auto Parts"
+msgstr "قطع غيار"
+
+msgid "Auto backup"
+msgstr "نسخ احتياطي تلقائي"
+
 msgid "Auto lock after 30 minutes"
 msgstr "قفل تلقائي بعد 30 دقيقة"
+
+msgid "Auto parts shop owner - Dubai"
+msgstr "صاحب محل قطع غيار - دبي"
 
 msgid "Auto_Backup"
 msgstr "النسخ التلقائي"
@@ -888,7 +999,7 @@ msgid "Auto_Backups"
 msgstr "نسخ تلقائية"
 
 msgid "Auto_Compression_Saves_60"
-msgstr "ضغط تلقائي يوفر 60% من المساحة"
+msgstr "ضغط تلقائي يوفر 60%% من المساحة"
 
 msgid "Auto_Delete_Old_Backups"
 msgstr "حذف تلقائي للنسخ القديمة"
@@ -913,6 +1024,9 @@ msgstr "تحديث تلقائي لأسعار الصرف"
 
 msgid "Auto_Update_Exchange_Rates_Help"
 msgstr "عند التفعيل سيتم تحديث أسعار الصرف تلقائياً من مزود خارجي موثوق"
+
+msgid "Automated daily cloud backups"
+msgstr "النسخ الاحتياطي التلقائي اليومي"
 
 msgid "Automatic"
 msgstr "تلقائي"
@@ -962,8 +1076,26 @@ msgstr "متوسط الإنفاق"
 msgid "Avoid common passwords"
 msgstr "تجنب كلمات المرور الشائعة"
 
+msgid "Azad"
+msgstr "أزاد"
+
+msgid "Azad - ERP with AI in UAE"
+msgstr "أزاد - ERP مع AI في الإمارات"
+
 msgid "Azad Company Donations"
 msgstr "تبرعات شركة ازاد"
+
+msgid "Azad IntelliTech - Pricing & Plans"
+msgstr "شركة أزاد للأنظمة الذكية - الأسعار والباقات"
+
+msgid "Azad Smart Systems"
+msgstr "شركة أزاد للأنظمة الذكية"
+
+msgid "Azad Smart Systems - Best ERP Software in UAE 2026"
+msgstr "شركة أزاد للأنظمة الذكية - أفضل برنامج ERP للشركات في الإمارات 2026"
+
+msgid "Azad Smart Systems - Full ERP with AI"
+msgstr "شركة أزاد للأنظمة الذكية - ERP متكامل مع AI"
 
 msgid "Azad Systems"
 msgstr "أنظمة ازاد"
@@ -979,6 +1111,12 @@ msgstr "أزاد للأنظمة الذكية"
 
 msgid "Azad_Smart_Systems"
 msgstr "شركة أزاد للأنظمة الذكية"
+
+msgid "Azadexa is a multi-tenant ERP platform built in the UAE. It includes 25+ integrated modules: double-entry accounting, sales, purchases, inventory, HR, payroll, POS, e-commerce, CRM."
+msgstr "أزاديكسا (Azadexa) هي منصة ERP متعددة المستأجرين مطورة في الإمارات. تضم 25+ وحدة متكاملة: محاسبة قيد مزدوج، مبيعات، مشتريات، مخزون، HR، رواتب، نقاط بيع، متجر إلكتروني، CRM."
+
+msgid "Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation."
+msgstr "المنصة تعمل بالقيد المزدوج (Double-Entry) وليس القيد المفرد. توفر دورة محاسبية كاملة: قيود يومية، ميزان مراجعة، ميزانية عمومية، قائمة دخل، تدفق نقدي، وإهلاك الأصول الثابتة."
 
 msgid "BIN"
 msgstr "BIN"
@@ -1100,6 +1238,9 @@ msgstr "الميزانية العمومية"
 msgid "Balance must be zero"
 msgstr ""
 
+msgid "Balance sheet"
+msgstr "ميزانية عمومية"
+
 msgid "Balance_2"
 msgstr "ميزان"
 
@@ -1184,6 +1325,9 @@ msgstr "حوّل المبلغ إلى الحساب البنكي الموضح"
 msgid "Barcode"
 msgstr "الباركود"
 
+msgid "Barcode & QR inventory"
+msgstr "جرد بالباركود و QR"
+
 msgid "Barcode_Scanner"
 msgstr "قارئ الباركود"
 
@@ -1196,6 +1340,9 @@ msgstr "أساسية"
 msgid "Basic Info"
 msgstr "معلومات أساسية"
 
+msgid "Basic reports"
+msgstr "تقارير أساسية"
+
 msgid "Basic_Data"
 msgstr "البيانات الأساسية"
 
@@ -1204,6 +1351,9 @@ msgstr "المعلومات الأساسية"
 
 msgid "Basic_Methods_Cannot_Be_Deleted"
 msgstr "هنا. الطرق الأساسية (COD، تحويل، بطاقة، محفظة) لا تُحذف — يمكن إيقافها."
+
+msgid "Batch & expiry tracking"
+msgstr "تتبع دفعات وصلاحية"
 
 msgid "Beginner Mode Enabled"
 msgstr ""
@@ -1277,6 +1427,9 @@ msgstr "إجباري لكل مستخدم غير المالك وغير المطو
 msgid "Branches"
 msgstr "الفروع"
 
+msgid "Brand New Features"
+msgstr "ميزات جديدة كلياً"
+
 msgid "Brand_Colors"
 msgstr "ألوان الهوية"
 
@@ -1324,6 +1477,12 @@ msgstr "تاريخ البناء"
 
 msgid "Built With"
 msgstr "مبني بواسطة"
+
+msgid "Built in UAE"
+msgstr "مطوّر في الإمارات"
+
+msgid "Built-in Groq AI understands Arabic: creates customers, records invoices, generates reports, detects anomalies. No ChatGPT subscription needed."
+msgstr "مساعد Groq المدمج يفهم العربية وينفذ أوامرك: ينشئ العملاء، يسجل الفواتير، يولد التقارير، ويكشف الشذوذ. بدون اشتراك ChatGPT."
 
 msgid "Builtin"
 msgstr "أساسية"
@@ -1373,6 +1532,9 @@ msgstr "استخدام المعالج"
 msgid "CR"
 msgstr "س.ت"
 
+msgid "CRM Integration"
+msgstr "تكامل CRM"
+
 msgid "CR_Number"
 msgstr "رقم السجل التجاري"
 
@@ -1393,6 +1555,9 @@ msgstr "الآلة الحاسبة"
 
 msgid "Call"
 msgstr "اتصال"
+
+msgid "Call Us"
+msgstr "اتصل بنا"
 
 msgid "Campaign"
 msgstr "حملة"
@@ -1610,6 +1775,9 @@ msgstr "التحليل البياني"
 msgid "Chart_Of_Accounts"
 msgstr "شجرة الحسابات"
 
+msgid "Chat on WhatsApp"
+msgstr "تواصل عبر واتساب"
+
 msgid "Check for Updates"
 msgstr "التحقق من التحديثات"
 
@@ -1652,6 +1820,9 @@ msgstr "الشيك مرتجع"
 msgid "Cheque Under Review"
 msgstr "الشيك قيد المراجعة"
 
+msgid "Cheque management"
+msgstr "إدارة شيكات"
+
 msgid "Cheque-Accounting Integration"
 msgstr "ربط الشيكات بالمحاسبة"
 
@@ -1684,6 +1855,18 @@ msgstr "للشيكات"
 
 msgid "Choose"
 msgstr "اختر"
+
+msgid "Choose the right plan for your business"
+msgstr "اختر الباقة المناسبة لأعمالك"
+
+msgid "Choose the right plan — all include accounting, inventory, invoices, and reports."
+msgstr "اختر الباقة المناسبة — كل الباقات تشمل المحاسبة والمخزون والفواتير والتقارير."
+
+msgid "Choose your Azad plan: Starter $29/mo, Pro $79/mo, Enterprise $249/mo. ERP, accounting, inventory, AI, POS. 30-day free trial."
+msgstr "اختر باقة أزاد المناسبة: Starter $29/شهر، Pro $79/شهر، Enterprise $249/شهر. ERP، محاسبة، مخزون، AI، نقاط بيع. تجربة مجانية 30 يوم."
+
+msgid "Choose your Azad plan: Starter, Pro, Enterprise. Complete cloud ERP for UAE businesses."
+msgstr "اختر باقتك من باقات أزاد: Starter، Pro، Enterprise. منصة ERP سحابية كاملة لمؤسسات الإمارات."
 
 msgid "Chord Length Limit"
 msgstr "حد طول الوتر"
@@ -1759,6 +1942,9 @@ msgstr "الرصيد الختامي"
 
 msgid "Cloud"
 msgstr "سحابي"
+
+msgid "Cloud & secure"
+msgstr "سحابي وآمن"
 
 msgid "Code"
 msgstr "الرمز"
@@ -2029,11 +2215,26 @@ msgstr "فشل الاتصال أثناء الدفع"
 msgid "Connection_Error"
 msgstr "خطأ في الاتصال"
 
+msgid "Contact"
+msgstr "تواصل"
+
 msgid "Contact Information"
 msgstr "بيانات التواصل"
 
+msgid "Contact Sales"
+msgstr "تواصل مع المبيعات"
+
 msgid "Contact Support"
 msgstr "التواصل مع الدعم"
+
+msgid "Contact Us"
+msgstr "تواصل معنا"
+
+msgid "Contact page"
+msgstr "صفحة الاتصال"
+
+msgid "Contact us via WhatsApp. We choose the right plan, set up the cloud, and provide free training. You start immediately. "
+msgstr "تواصل معنا عبر واتساب. نحدد الباقة المناسبة، نجهز البيئة السحابية، ونقدم تدريباً مجانياً لفريقك. يمكنك البدء فوراً. "
 
 msgid "Contact via WhatsApp"
 msgstr "التواصل عبر واتساب"
@@ -2095,6 +2296,9 @@ msgstr "حقوق النشر"
 msgid "Core Limits"
 msgstr "الحدود الأساسية"
 
+msgid "Core Platform"
+msgstr "أركان المنصة"
+
 msgid "Corrupted"
 msgstr "تالف"
 
@@ -2103,6 +2307,9 @@ msgstr "التكلفة"
 
 msgid "Cost Price"
 msgstr "سعر التكلفة"
+
+msgid "Cost centers"
+msgstr "مراكز كلفة"
 
 msgid "Cost_2"
 msgstr "تكلفة"
@@ -2166,6 +2373,9 @@ msgstr "إنشاء باقة"
 
 msgid "Create a budget from the Reports or Budget Management page to compare with actual figures."
 msgstr "أنشئ موازنة من صفحة التقارير أو إدارة الموازنات لمقارنتها بالأرقام الفعلية."
+
+msgid "Create new customer: Ahmed Mohamed, phone 0501234567"
+msgstr "أنشئ عميل جديد: أحمد محمد، هاتف 0501234567"
 
 msgid "Create_2"
 msgstr "الإنشاء"
@@ -2392,6 +2602,9 @@ msgstr "العميل"
 msgid "Customer (if exists)"
 msgstr "العميل (إن وجد)"
 
+msgid "Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?"
+msgstr "تم إنشاء العميل أحمد محمد بنجاح. رقم العميل: CUS-2026-0421. هل تريد فتح ملفه أو إنشاء فاتورة له؟"
+
 msgid "Customer Analysis"
 msgstr "تحليل العملاء"
 
@@ -2551,6 +2764,9 @@ msgstr "خطأ في قاعدة البيانات"
 msgid "Database Version"
 msgstr "إصدار قاعدة البيانات"
 
+msgid "Database tables"
+msgstr "جدول بيانات"
+
 msgid "Database_Settings"
 msgstr "إعدادات قاعدة البيانات"
 
@@ -2675,7 +2891,7 @@ msgid "Default_Sender_Email"
 msgstr "Default_Sender_Email"
 
 msgid "Default_Tax_Rate_Percent"
-msgstr "معدل الضريبة الافتراضي (%)"
+msgstr "معدل الضريبة الافتراضي (%%)"
 
 msgid "Default_Tenant_Maintenance"
 msgstr "صيانة المستأجر الافتراضي"
@@ -3113,7 +3329,7 @@ msgid "Discount Amount"
 msgstr "مبلغ الخصم"
 
 msgid "Discount Percent"
-msgstr "خصم%"
+msgstr "خصم%%"
 
 msgid "Discount Total"
 msgstr "إجمالي الخصم"
@@ -3156,6 +3372,12 @@ msgstr "رقم المستند"
 
 msgid "Document_Type"
 msgstr "نوع المستند"
+
+msgid "Does it support UAE VAT?"
+msgstr "هل تدعم ضريبة القيمة المضافة في الإمارات؟"
+
+msgid "Does it support multiple branches?"
+msgstr "هل تدعم الفروع المتعددة؟"
 
 msgid "Dollar"
 msgstr "دولار"
@@ -3210,6 +3432,12 @@ msgstr "تم، سأدفع الآن"
 
 msgid "Donor"
 msgstr "متبرع"
+
+msgid "Double-Entry Accounting & Smart Reports"
+msgstr "محاسبة القيد المزدوج والتقارير الذكية"
+
+msgid "Double-Entry GL"
+msgstr "محاسبة قيد مزدوج"
 
 msgid "Downgrade"
 msgstr "تخفيض"
@@ -3277,8 +3505,17 @@ msgstr "محفظة إلكترونية"
 msgid "E-Wallet"
 msgstr "محفظة"
 
+msgid "E-invoice with QR"
+msgstr "فاتورة إلكترونية + QR"
+
+msgid "E-invoices + printing"
+msgstr "فواتير إلكترونية + طباعة"
+
 msgid "ERP الإمارات، إدارة مستودعات دبي، برنامج محاسبة، مخزون، نقاط بيع، فواتير إلكترونية، ذكاء اصطناعي، رواتب"
 msgstr "ERP الإمارات، إدارة مستودعات دبي، برنامج محاسبة، مخزون، نقاط بيع، فواتير إلكترونية، ذكاء اصطناعي، رواتب"
+
+msgid "ERP • AI • Cloud"
+msgstr "ERP • AI • سحابي"
 
 msgid "Ecommerce_Stop_Hint"
 msgstr "عند الإيقاف، تتوقف جميع واجهات المتاجر العامة"
@@ -3394,6 +3631,9 @@ msgstr "حملات البريد الإلكتروني"
 msgid "Email Settings"
 msgstr "إعدادات البريد الإلكتروني"
 
+msgid "Email Us"
+msgstr "راسلنا"
+
 msgid "Email address"
 msgstr "بريد إلكتروني"
 
@@ -3432,6 +3672,9 @@ msgstr "موظف"
 
 msgid "Employee Details"
 msgstr "تفاصيل الموظف"
+
+msgid "Employee profile"
+msgstr "ملف موظف شامل"
 
 msgid "Employee_2"
 msgstr "الموظف"
@@ -3543,6 +3786,9 @@ msgstr "الاسم الإنجليزي"
 
 msgid "English_Name_Required"
 msgstr "الاسم بالإنجليزية مطلوب"
+
+msgid "Enhance your system with specialized add-ons"
+msgstr "طور نظامك بإضافات متخصصة"
 
 msgid "Ensure_Backup_Before_Conversion"
 msgstr "تأكد من عمل نسخة احتياطية قبل التحويل"
@@ -3988,6 +4234,9 @@ msgstr "فشل الحفظ"
 msgid "Fast Cashier Screen"
 msgstr ""
 
+msgid "Fast POS with UAE-compliant e-invoicing."
+msgstr "نقاط بيع سريعة مع فواتير إلكترونية متوافقة مع قوانين الإمارات."
+
 msgid "Feature Permissions"
 msgstr "صلاحيات الميزات"
 
@@ -4114,6 +4363,15 @@ msgstr "ثابت"
 msgid "Fixed Issues"
 msgstr "مشاكل تم إصلاحها"
 
+msgid "Fixed asset depreciation"
+msgstr "إهلاك الأصول الثابتة"
+
+msgid "Flexible Plans for Your Business"
+msgstr "باقات مرنة تناسب عملك"
+
+msgid "Flexible plans starting at $29/mo. All plans include updates & support. No long-term contracts."
+msgstr "باقات مرنة تبدأ من $29/شهر. كل الباقات تشمل التحديثات والدعم الفني. بدون عقود طويلة."
+
 msgid "Folium Section Limit"
 msgstr "حد المقطع الورقي"
 
@@ -4183,11 +4441,17 @@ msgstr "إعدادات النموذج"
 msgid "Format Error"
 msgstr "خطأ في التنسيق"
 
+msgid "Four Integrated Pillars"
+msgstr "أربعة أركان متكاملة"
+
 msgid "Free"
 msgstr "مجاني"
 
 msgid "Free Trial"
 msgstr "تجربة مجانية"
+
+msgid "Free Trial - 30 Days"
+msgstr "جرّب مجاناً 30 يوم"
 
 msgid "Free_Services"
 msgstr "خدمات مجانية"
@@ -4210,8 +4474,17 @@ msgstr "من العملة"
 msgid "From_Date"
 msgstr "من:"
 
+msgid "Full AI features"
+msgstr "ذكاء اصطناعي كامل"
+
 msgid "Full Address"
 msgstr "العنوان الكامل"
+
+msgid "Full Arabic support"
+msgstr "دعم عربي كامل"
+
+msgid "Full ERP: accounting, inventory, AI, e-commerce"
+msgstr "نظام ERP متكامل: محاسبة، مخزون، AI، متجر إلكتروني"
 
 msgid "Full Movement Log"
 msgstr "سجل كامل للحركات"
@@ -4221,6 +4494,21 @@ msgstr "الاسم الكامل"
 
 msgid "Full Privacy"
 msgstr "خصوصية كاملة"
+
+msgid "Full audit log"
+msgstr "سجل تدقيق كامل"
+
+msgid "Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll."
+msgstr "منصة ERP سحابية متكاملة — محاسبة، مخازن، AI، نقاط بيع، متجر إلكتروني، موظفين ورواتب."
+
+msgid "Full customization"
+msgstr "تخصيص كامل + تقارير مخصصة"
+
+msgid "Full double-entry accounting cycle: from journal entries to balance sheet."
+msgstr "دورة محاسبية كاملة بالقيد المزدوج: من القيد اليومي إلى الميزانية العمومية."
+
+msgid "Full employee management: contracts, attendance, payroll, leaves, granular permissions."
+msgstr "إدارة متكاملة للموظفين: عقود، حضور، رواتب، إجازات، صلاحيات دقيقة."
 
 msgid "Full_Name"
 msgstr "الاسم الكامل"
@@ -4253,7 +4541,7 @@ msgid "GL_Entries"
 msgstr "قيود الأستاذ العام"
 
 msgid "GZIP_Save_60"
-msgstr "GZIP - توفير 60%"
+msgstr "GZIP - توفير 60%%"
 
 msgid "Gateway"
 msgstr "البوابة"
@@ -4269,6 +4557,12 @@ msgstr "دفتر الأستاذ العام"
 
 msgid "General Settings"
 msgstr "إعدادات عامة"
+
+msgid "General ledger"
+msgstr "دفتر أستاذ عام"
+
+msgid "General ledger (GL)"
+msgstr "دفتر أستاذ عام (GL)"
 
 msgid "General_2"
 msgstr "عام"
@@ -4351,6 +4645,15 @@ msgstr "خليجي"
 msgid "Gulf_Theme"
 msgstr "المظهر الخليجي"
 
+msgid "HR & Payroll"
+msgstr "HR ورواتب"
+
+msgid "HR & payroll"
+msgstr "HR ورواتب وشؤون موظفين"
+
+msgid "HR, Payroll & Permissions"
+msgstr "الموظفين والرواتب والصلاحيات"
+
 msgid "HR_Section"
 msgstr "الموارد البشرية والرواتب"
 
@@ -4389,6 +4692,15 @@ msgstr "حد المقطع الحلزوني"
 
 msgid "Hello"
 msgstr "مرحباً"
+
+msgid "Hello, I want to buy the system or talk to sales"
+msgstr "مرحباً، أريد شراء النظام أو التحدث مع المبيعات"
+
+msgid "Hello, I would like to inquire about Azad plans"
+msgstr "مرحباً، أرغب في الاستفسار عن باقات أزاد"
+
+msgid "Hello, I would like to subscribe to the "
+msgstr " - "
 
 msgid "Help"
 msgstr "مساعدة"
@@ -4483,6 +4795,9 @@ msgstr ""
 msgid "Hours"
 msgstr "ساعات"
 
+msgid "How do I get started?"
+msgstr "كيف أبدأ باستخدام المنصة؟"
+
 msgid "How_Backups_Work"
 msgstr "كيف تعمل النسخ الاحتياطية"
 
@@ -4544,7 +4859,7 @@ msgid "Image"
 msgstr "الصورة"
 
 msgid "Image_Will_Be_5_Percent_Transparent"
-msgstr "ستظهر الصورة بشفافية 5%"
+msgstr "ستظهر الصورة بشفافية 5%%"
 
 msgid "Import"
 msgstr "استيراد"
@@ -4621,6 +4936,9 @@ msgstr "دخل"
 msgid "Income Statement"
 msgstr "قائمة الدخل"
 
+msgid "Income statement"
+msgstr "قائمة دخل"
+
 msgid "Income statement shows financial performance during a specific period"
 msgstr "تُظهر قائمة الدخل الأداء المالي خلال فترة محددة"
 
@@ -4644,6 +4962,9 @@ msgstr "خطأ في الفهرس"
 
 msgid "Indicator"
 msgstr "المؤشر"
+
+msgid "Industry sectors"
+msgstr "قطاع تجاري"
 
 msgid "Industry_Automotive"
 msgstr "سيارات"
@@ -4918,6 +5239,9 @@ msgstr "قائمة الفواتير"
 msgid "Irreversible"
 msgstr "لا يمكن التراجع عنه"
 
+msgid "Is there a built-in online store?"
+msgstr "هل يوجد متجر إلكتروني مدمج؟"
+
 msgid "Is_Percentage"
 msgstr "نسبة مئوية"
 
@@ -5113,6 +5437,9 @@ msgstr "عملاء متوقعون"
 msgid "Leave"
 msgstr "إجازة"
 
+msgid "Leave with approval"
+msgstr "إجازات بدورة موافقة"
+
 msgid "Leave_Blank_To_Keep_Current"
 msgstr "اتركه فارغاً إذا كنت لا تريد تغيير كلمة المرور"
 
@@ -5233,6 +5560,9 @@ msgstr "جارٍ التحميل..."
 msgid "Loan_Amount"
 msgstr "قيمة القرض"
 
+msgid "Loans & overtime"
+msgstr "سلف وعمل إضافي"
+
 msgid "Local"
 msgstr "محلي"
 
@@ -5335,11 +5665,17 @@ msgstr "حرف صغير (a-z)"
 msgid "Made With"
 msgstr "صنع بواسطة"
 
+msgid "Made with love by"
+msgstr "صُنع بحُب في"
+
 msgid "Main"
 msgstr "الرئيسي"
 
 msgid "Main Account"
 msgstr "رئيسي"
+
+msgid "Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?"
+msgstr "المستودع الرئيسي — قطع تويوتا: 1,247 قطعة بقيمة 89,500 درهم. 38 قطعة تحت حد إعادة الطلب. هل تريد طباعة تقرير؟"
 
 msgid "Main_2"
 msgstr "الرئيسية"
@@ -5379,6 +5715,9 @@ msgstr "إدارة الفروع"
 
 msgid "Manage_Payment_Methods"
 msgstr "إدارة طرق الدفع"
+
+msgid "Manage_Plans"
+msgstr "إدارة الخطط"
 
 msgid "Manage_Subscription_Duration"
 msgstr "إدارة مدة الاشتراك"
@@ -5516,13 +5855,13 @@ msgid "Merchant_Discount"
 msgstr "خصم التاجر"
 
 msgid "Merchant_Discount_Percent"
-msgstr "نسبة خصم التاجر %"
+msgstr "نسبة خصم التاجر %%"
 
 msgid "Merchant_Rate_From_Sales"
 msgstr "نسبة التاجر من المبيعات"
 
 msgid "Merchant_Share_Percent"
-msgstr "حصة التاجر %"
+msgstr "حصة التاجر %%"
 
 msgid "Message"
 msgstr "الرسالة"
@@ -5646,6 +5985,12 @@ msgstr "نوع الحركة"
 
 msgid "Movements"
 msgstr "الحركات"
+
+msgid "Multi-Branch"
+msgstr "فروع متعددة"
+
+msgid "Multi-Warehouse & Barcode"
+msgstr "المخازن المتعددة والباركود"
 
 msgid "Multi_Currency"
 msgstr "متعدد العملات"
@@ -5827,6 +6172,9 @@ msgstr "منتج جديد"
 msgid "New Supplier"
 msgstr "مورد جديد"
 
+msgid "New powerful modules: Arabic AI, integrated online store, and multi-warehouse management."
+msgstr "توسّعنا بموديولات قوية: ذكاء اصطناعي عربي، متجر إلكتروني متكامل، ومستودعات متعددة."
+
 msgid "New_2"
 msgstr "الجديد"
 
@@ -5880,6 +6228,9 @@ msgstr "مورد جديد"
 
 msgid "New_Template"
 msgstr "قالب جديد"
+
+msgid "New_Tenant"
+msgstr "مستأجر جديد"
 
 msgid "New_Tenant_Data"
 msgstr "بيانات التينانت الجديد"
@@ -5980,8 +6331,14 @@ msgstr ""
 msgid "No active budgets"
 msgstr "لا توجد موازنات نشطة"
 
+msgid "No credit card"
+msgstr "بدون بطاقة ائتمان"
+
 msgid "No donations found"
 msgstr "لا توجد تبرعات"
+
+msgid "No online storefront"
+msgstr "لا يشمل المتجر الإلكتروني"
 
 msgid "No packages found. Please add packages from the database."
 msgstr "لا توجد باقات. يرجى إضافة باقات من قاعدة البيانات."
@@ -6214,6 +6571,9 @@ msgstr "رقم"
 msgid "Number_Of_Months"
 msgstr "عدد الأشهر"
 
+msgid "Numbers That Speak"
+msgstr "أرقام تتحدث عن نفسها"
+
 msgid "OK"
 msgstr "حسناً"
 
@@ -6234,6 +6594,9 @@ msgstr "من"
 
 msgid "Official contact with Azad"
 msgstr "التواصل الرسمي مع ازاد"
+
+msgid "Official site"
+msgstr "الموقع الرسمي"
 
 msgid "Official_Logo_Path"
 msgstr "مسار الشعار الرسمي"
@@ -6267,6 +6630,15 @@ msgstr "ميزة واحدة في كل سطر"
 
 msgid "Online Store"
 msgstr "المتجر الإلكتروني"
+
+msgid "Online Storefront"
+msgstr "متجر إلكتروني متكامل"
+
+msgid "Online store + API"
+msgstr "متجر إلكتروني + API"
+
+msgid "Online storefront"
+msgstr "متجر إلكتروني"
 
 msgid "Online_Store"
 msgstr "المتجر الإلكتروني"
@@ -6327,6 +6699,9 @@ msgstr "تحسين قاعدة البيانات"
 
 msgid "Optional"
 msgstr "اختياري"
+
+msgid "Optional Add-ons"
+msgstr "إضافات اختيارية"
 
 msgid "Optional_Columns"
 msgstr "أعمدة اختيارية"
@@ -6465,6 +6840,9 @@ msgstr "للمالك فقط"
 
 msgid "Ownership_And_Partners"
 msgstr "الملكية والشركاء"
+
+msgid "POS & E-Invoicing"
+msgstr "الكاشير والفواتير الإلكترونية"
 
 msgid "POS Disabled"
 msgstr "POS غير مفعل"
@@ -6611,7 +6989,7 @@ msgid "Partner_Discount"
 msgstr "خصم الشريك"
 
 msgid "Partner_Discount_Percent"
-msgstr "نسبة خصم الشريك %"
+msgstr "نسبة خصم الشريك %%"
 
 msgid "Partners"
 msgstr "الشركاء"
@@ -6838,6 +7216,9 @@ msgstr "للمدفوعات"
 msgid "Payroll"
 msgstr "رواتب"
 
+msgid "Payroll processing"
+msgstr "مسير رواتب"
+
 msgid "Payroll_And_HR"
 msgstr "الرواتب وشؤون الموظفين"
 
@@ -6870,6 +7251,9 @@ msgstr "المعلقة"
 
 msgid "Per"
 msgstr "حسب"
+
+msgid "Per-user permissions"
+msgstr "صلاحيات لكل مستخدم"
 
 msgid "Per_Company"
 msgstr "لكل شركة على حدة"
@@ -7090,6 +7474,12 @@ msgstr "نقطة البيع"
 msgid "Point The Camera At The Barcode"
 msgstr "وجّه الكاميرا نحو الباركود"
 
+msgid "Point of Sale"
+msgstr "نقاط بيع (POS)"
+
+msgid "Point of Sale (POS)"
+msgstr "نقاط بيع (POS)"
+
 msgid "Point_Of_Sale_POS"
 msgstr "نقطة البيع (POS)"
 
@@ -7209,6 +7599,9 @@ msgstr "للطباعة"
 
 msgid "Privacy Policy"
 msgstr "سياسة الخصوصية"
+
+msgid "Pro"
+msgstr "احترافية"
 
 msgid "Proceed_Anyway"
 msgstr "متابعة بأي حال"
@@ -7489,11 +7882,17 @@ msgstr "سريعة"
 msgid "Quick Actions"
 msgstr "إجراءات سريعة"
 
+msgid "Quick Answers"
+msgstr "إجابات سريعة"
+
 msgid "Quick Cash Customer"
 msgstr "عميل نقدي سريع"
 
 msgid "Quick Templates"
 msgstr "قوالب سريعة"
+
+msgid "Quick contact"
+msgstr "اتصال سريع"
 
 msgid "Quick_2"
 msgstr "السريعة"
@@ -7549,11 +7948,20 @@ msgstr "النسبة التي يحصل عليها التاجر من البيع"
 msgid "Re-enter new password"
 msgstr "أعد إدخال كلمة المرور الجديدة"
 
+msgid "Reach out via any channel below — we respond within hours"
+msgstr "تواصل معنا عبر القنوات التالية وسنرد خلال ساعات"
+
 msgid "Ready"
 msgstr "جاهز"
 
+msgid "Real operation execution"
+msgstr "تنفيذ عمليات حقيقية"
+
 msgid "Real-Time Accounting Events"
 msgstr "الأحداث المحاسبية الفورية"
+
+msgid "Real-time anomaly detection"
+msgstr "كشف شذوذ لحظي"
 
 msgid "Real_Env_File"
 msgstr "ملف البيئة الفعلي"
@@ -7891,6 +8299,9 @@ msgstr "متجاوب"
 msgid "Responsive_Description"
 msgstr "يعمل بكفاءة على جميع الأجهزة"
 
+msgid "Restaurant"
+msgstr "نظام مطاعم"
+
 msgid "Restore"
 msgstr "استعادة"
 
@@ -7968,6 +8379,9 @@ msgstr "العملاء العائدون"
 
 msgid "Returns"
 msgstr "المرتجعات"
+
+msgid "Returns & discounts"
+msgstr "مرتجعات وخصومات"
 
 msgid "Revenue"
 msgstr "الإيرادات"
@@ -8131,6 +8545,9 @@ msgstr "تشفير SSL"
 msgid "SWIFT Code"
 msgstr "رمز SWIFT"
 
+msgid "SaaS_Plans"
+msgstr "خطط الاشتراكات"
+
 msgid "Safe_Restore_Instructions"
 msgstr "تعليمات استعادة آمنة"
 
@@ -8152,6 +8569,9 @@ msgstr "سعر البيع"
 msgid "Sales"
 msgstr "المبيعات"
 
+msgid "Sales & purchase invoices"
+msgstr "فواتير مبيعات ومشتريات"
+
 msgid "Sales / Month"
 msgstr "مبيعات / شهر"
 
@@ -8172,6 +8592,15 @@ msgstr "المبيعات والمشتريات"
 
 msgid "Sales by Package"
 msgstr "المبيعات حسب الباقة"
+
+msgid "Sales forecasting & analysis"
+msgstr "تنبؤ مبيعات وتحليل"
+
+msgid "Sales inquiry"
+msgstr "طلب شراء أو استفسار"
+
+msgid "Sales, purchases & inventory"
+msgstr "مبيعات ومشتريات ومخزون"
 
 msgid "Sales_2"
 msgstr "مبيعات"
@@ -8209,9 +8638,6 @@ msgstr "تقرير المبيعات"
 msgid "Sales_Returns"
 msgstr "مرتجعات المبيعات"
 
-msgid "Master_Data"
-msgstr "البيانات الأساسية"
-
 msgid "Sales_Section"
 msgstr "المبيعات والعملاء"
 
@@ -8221,11 +8647,17 @@ msgstr "عينة"
 msgid "Sandbox (Test)"
 msgstr "تجريبي (Sandbox)"
 
+msgid "Sara Al Mansouri"
+msgstr "سارة المنصوري"
+
 msgid "Saudi_Arabia"
 msgstr "السعودية"
 
 msgid "Save"
 msgstr "حفظ"
+
+msgid "Save 2 months"
+msgstr "وفر شهرين"
 
 msgid "Save Changes"
 msgstr "حفظ التعديلات"
@@ -8445,6 +8877,9 @@ msgstr "اختر الفرع"
 
 msgid "Select Category"
 msgstr "اختر الفئة"
+
+msgid "Select plan"
+msgstr "اختر الباقة"
 
 msgid "Select_2"
 msgstr "الاختيار"
@@ -8749,11 +9184,17 @@ msgstr "استعلامات ذكية"
 msgid "Smart Reports"
 msgstr "تقارير ذكية"
 
+msgid "Smart reorder alerts"
+msgstr "تنبيهات إعادة طلب ذكية"
+
 msgid "Smart_System"
 msgstr "نظام ذكي"
 
 msgid "Smooth effect on page load"
 msgstr "تأثير سلس عند تحميل الصفحة"
+
+msgid "Software modules"
+msgstr "وحدة برمجية"
 
 msgid "Sold"
 msgstr "مُباع"
@@ -8800,6 +9241,9 @@ msgstr "تتبع المكدس"
 msgid "Start"
 msgstr "البداية"
 
+msgid "Start Free Trial"
+msgstr "ابدأ تجربة مجانية"
+
 msgid "Start_2"
 msgstr "بداية"
 
@@ -8811,6 +9255,9 @@ msgstr "تاريخ البدء"
 
 msgid "Start_Import"
 msgstr "بدء الاستيراد"
+
+msgid "Starter"
+msgstr "أساسية"
 
 msgid "Starting Cash"
 msgstr "رصيد الافتتاح (نقدي)"
@@ -8899,6 +9346,9 @@ msgstr "مسار التخزين:"
 msgid "Store"
 msgstr "المتجر"
 
+msgid "Store linked to inventory & accounting. Cart, reviews, wishlist, loyalty, coupons, bookings. Launches with your live data."
+msgstr "متجر مربوط بالمخزون والمحاسبة مباشرة. سلة شراء، تقييمات، قائمة أمنيات، برنامج ولاء، كوبونات خصم، وحجوزات. ينطلق مع بياناتك الفعلية."
+
 msgid "Store_2"
 msgstr "متجر"
 
@@ -8950,6 +9400,9 @@ msgstr "إرسال"
 msgid "Submit_2"
 msgstr "الإرسال"
 
+msgid "Subscribe Now"
+msgstr "اشترك الآن"
+
 msgid "Subscribers"
 msgstr "المشتركون"
 
@@ -8991,6 +9444,9 @@ msgstr "الملخص"
 
 msgid "Super_Admin_Title"
 msgstr "المشرف العام"
+
+msgid "Supermarket"
+msgstr "سوبرماركت"
 
 msgid "Supplier"
 msgstr "المورد"
@@ -9232,6 +9688,9 @@ msgstr "اسم الجدول"
 msgid "Tables"
 msgstr "الجداول"
 
+msgid "Talk to Sales"
+msgstr "تحدث مع المبيعات"
+
 msgid "Tangent Section Limit"
 msgstr "حد المقطع المماس"
 
@@ -9258,6 +9717,9 @@ msgstr "اسم المهمة"
 
 msgid "Tax"
 msgstr "الضريبة"
+
+msgid "Tax & multi-currency"
+msgstr "ضرائب وعملات متعددة"
 
 msgid "Tax Amount"
 msgstr "مبلغ الضريبة"
@@ -9595,6 +10057,9 @@ msgstr "مبيعات اليوم"
 msgid "Toggle"
 msgstr "التبديل"
 
+msgid "Toggle billing"
+msgstr "تبديل الفواتير"
+
 msgid "Toggle_Dark_Mode"
 msgstr "تبديل الوضع الداكن"
 
@@ -9772,6 +10237,9 @@ msgstr "إجمالي المستخدمين"
 msgid "Totals"
 msgstr "الإجماليات"
 
+msgid "Touch POS interface"
+msgstr "واجهة كاشير لمسية"
+
 msgid "Track all transactions"
 msgstr "تتبع جميع المعاملات"
 
@@ -9826,6 +10294,12 @@ msgstr "محوّل"
 msgid "Transfers"
 msgstr "التحويلات"
 
+msgid "Transparent Pricing"
+msgstr "أسعار شفافة"
+
+msgid "Transparent pricing - 30-day free trial"
+msgstr "أسعار شفافة - تجربة 30 يوم مجانية"
+
 msgid "Treasury_Center"
 msgstr "مركز الخزينة"
 
@@ -9837,6 +10311,9 @@ msgstr "انتهت فترة التجربة"
 
 msgid "Trial Period"
 msgstr "فترة التجربة"
+
+msgid "Trial balance"
+msgstr "ميزان مراجعة"
 
 msgid "Trial_7_Days"
 msgstr "تجريبي (7 أيام)"
@@ -9940,6 +10417,18 @@ msgstr "غير معروف"
 msgid "Unlimited"
 msgstr "غير محدود"
 
+msgid "Unlimited users"
+msgstr "مستخدمين غير محدودين"
+
+msgid "Unlimited warehouse management with quantity, cost, and movement tracking."
+msgstr "إدارة غير محدودة للمستودعات مع تتبع الكميات والتكلفة والحركة."
+
+msgid "Unlimited warehouses"
+msgstr "مستودعات غير محدودة"
+
+msgid "Unlimited warehouses, transfers, barcode inventory, batch/serial tracking, expiry alerts, smart reorder suggestions."
+msgstr "مستودعات غير محدودة، نقل مخزون، جرد بالباركود، تتبع دفعات وتواريخ صلاحية، أرقام تسلسلية، تنبيهات ذكية. كل التفاصيل تحت السيطرة."
+
 msgid "Unlock"
 msgstr "فتح"
 
@@ -9960,6 +10449,12 @@ msgstr "أخطاء غير محلولة"
 
 msgid "Unspecified"
 msgstr "غير محدد"
+
+msgid "Up to 10 users"
+msgstr "حتى 10 مستخدمين"
+
+msgid "Up to 3 users"
+msgstr "حتى 3 مستخدمين"
 
 msgid "Up to Date"
 msgstr "محدث"
@@ -10078,6 +10573,9 @@ msgstr "عدد المستخدمين"
 msgid "User Deleted"
 msgstr "المستخدم محذوف"
 
+msgid "User Guide"
+msgstr "دليل المستخدم"
+
 msgid "User Inactive"
 msgstr "المستخدم غير نشط"
 
@@ -10092,6 +10590,9 @@ msgstr "اسم المستخدم"
 
 msgid "User Suspended"
 msgstr "المستخدم معلق"
+
+msgid "User guide"
+msgstr "دليل المستخدم"
 
 msgid "User_2"
 msgstr "مستخدم"
@@ -10149,6 +10650,9 @@ msgstr "ضريبة المخرجات"
 
 msgid "VAT Report"
 msgstr "تقرير ضريبة القيمة المضافة"
+
+msgid "VAT reports"
+msgstr "تقارير ضريبة VAT"
 
 msgid "VAT_Report_Title"
 msgstr "تقرير ضريبة القيمة المضافة"
@@ -10261,6 +10765,9 @@ msgstr "عرض القيد"
 msgid "View Operation"
 msgstr "عرض"
 
+msgid "View Pricing"
+msgstr "عرض الأسعار"
+
 msgid "View and manage all donations"
 msgstr "عرض وإدارة جميع التبرعات"
 
@@ -10272,6 +10779,9 @@ msgstr "عرض الإشعار"
 
 msgid "View payment cards (encrypted)"
 msgstr "عرض بطاقات الدفع (مشفرة)"
+
+msgid "View plans"
+msgstr "شاهد الباقات"
 
 msgid "View_All"
 msgstr "عرض الكل"
@@ -10381,6 +10891,9 @@ msgstr "تفاصيل المستودع"
 msgid "Warehouse Name"
 msgstr "اسم المستودع"
 
+msgid "Warehouse transfers"
+msgstr "تحويلات بين المخازن"
+
 msgid "Warehouse_2"
 msgstr "مستودع"
 
@@ -10441,8 +10954,14 @@ msgstr "العلامة المائية"
 msgid "Watermark_Text"
 msgstr "نص العلامة المائية"
 
+msgid "We Are Here to Help"
+msgstr "فريقنا جاهز لمساعدتك"
+
 msgid "We could not create"
 msgstr "لم نتمكن من إنشاء"
+
+msgid "We offer custom solutions tailored to your needs. Talk to us for a custom plan."
+msgstr "نقدم حلولاً مخصصة حسب احتياجاتك. تحدث معنا لوضع خطة خاصة بك."
 
 msgid "We_Wish_You_Excellent_Experience"
 msgstr "نتمنى لكم تجربة ممتازة"
@@ -10465,8 +10984,23 @@ msgstr "أسبوعي"
 msgid "Weight Limit"
 msgstr "حد الوزن"
 
+msgid "What is Azadexa?"
+msgstr "ما هي منصة أزاديكسا؟"
+
+msgid "What is the stock of Toyota spare parts?"
+msgstr "كم رصيد مستودع قطع غيار تويوتا؟"
+
+msgid "What makes it different from basic accounting software?"
+msgstr "ما الفرق بين أزاديكسا وبرامج المحاسبة العادية؟"
+
+msgid "What's New 2026"
+msgstr "جديد 2026"
+
 msgid "WhatsApp"
 msgstr "واتساب"
+
+msgid "WhatsApp support"
+msgstr "دعم واتساب"
 
 msgid "WhatsApp_Business_Number"
 msgstr "رقم واتساب للأعمال"
@@ -10489,11 +11023,17 @@ msgstr "إعدادات واتساب"
 msgid "When_Disabled_Tax_Rate_Zero"
 msgstr "عند الإيقاف: معدل الضريبة = 0 في كل الفواتير."
 
+msgid "Who it is for"
+msgstr "لمن"
+
 msgid "Wholesale"
 msgstr "جملة"
 
 msgid "Why"
 msgstr "لماذا"
+
+msgid "Why Azad"
+msgstr "لماذا أزاد"
 
 msgid "Why choose Azad system for warehouses in UAE?"
 msgstr ""
@@ -10516,14 +11056,29 @@ msgstr "مع الفرق"
 msgid "Worker Error"
 msgstr "خطأ في العامل"
 
+msgid "Workshop"
+msgstr "ورش"
+
 msgid "Write each feature on a separate line"
 msgstr "اكتب كل ميزة في سطر منفصل"
 
 msgid "Year"
 msgstr "السنة"
 
+msgid "Yearly"
+msgstr "سنوي"
+
 msgid "Yes"
 msgstr "نعم"
+
+msgid "Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes."
+msgstr "نعم، تدعم VAT بنسبة 5%% وفق متطلبات الهيئة الاتحادية للضرائب. توفر تقارير ضريبية شاملة وفواتير إلكترونية مع QR Code."
+
+msgid "Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting."
+msgstr "نعم، يتضمن المتجر الإلكتروني: سلة شراء، تقييمات، قائمة أمنيات، برنامج ولاء ونقاط، قسائم خصم، وحجوزات. مربوط مباشرة بالمخزون والمحاسبة."
+
+msgid "Yes. Multi-branch and multi-warehouse with per-branch permissions, separate reports, stock transfers, and per-branch accounting."
+msgstr "نعم، تدعم الفروع والمستودعات المتعددة مع صلاحيات لكل فرع، تقارير منفصلة، نقل مخزون، وفصل محاسبي حسب الفرع."
 
 msgid "Yes_Delete_All"
 msgstr "نعم، احذف الكل"
@@ -10533,6 +11088,9 @@ msgstr "نعم، صدّر"
 
 msgid "Yes_Save"
 msgstr "نعم، احفظ"
+
+msgid "You"
+msgstr "أنت"
 
 msgid "You can complete the process directly with Azad via WhatsApp or email"
 msgstr "يمكنك إتمام العملية مباشرة مع ازاد عبر واتساب أو البريد"
@@ -10693,6 +11251,9 @@ msgstr "مسموح"
 msgid "amount"
 msgstr "المبلغ"
 
+msgid "analyzes data, detects patterns, predicts trends"
+msgstr "يحلل بياناتك ويكشف الأنماط ويتوقع الاتجاهات"
+
 msgid "and"
 msgstr "و"
 
@@ -10759,6 +11320,9 @@ msgstr "تطبيق"
 msgid "approved"
 msgstr "معتمد"
 
+msgid "ar"
+msgstr "en"
+
 msgid "arabic_full_name"
 msgstr "الاسم الكامل بالعربية"
 
@@ -10782,6 +11346,9 @@ msgstr "تعيين لمستخدم"
 
 msgid "auto_converted_to_base_currency"
 msgstr "سيتم تحويله تلقائياً للعملة الأساسية"
+
+msgid "automatic"
+msgstr "تلقائي"
 
 msgid "available"
 msgstr "المتوفر"
@@ -10824,6 +11391,9 @@ msgstr "العودة للموردين"
 
 msgid "back_to_users"
 msgstr "العودة للمستخدمين"
+
+msgid "bad_request"
+msgstr "طلب غير صالح"
 
 msgid "balance"
 msgstr "الرصيد"
@@ -10960,6 +11530,9 @@ msgstr "المركز"
 msgid "checkout"
 msgstr "إتمام الطلب"
 
+msgid "checks every save and flags unbalanced entries instantly"
+msgstr "يفحص كل عملية حفظ ويكشف القيود غير المتوازنة فوراً"
+
 msgid "cheque"
 msgstr "الشيك"
 
@@ -10983,6 +11556,9 @@ msgstr "إزالة التصفية"
 
 msgid "close"
 msgstr "إغلاق"
+
+msgid "close_notification"
+msgstr "إغلاق الإشعار"
 
 msgid "cod"
 msgstr "الدفع عند الاستلام"
@@ -11053,6 +11629,12 @@ msgstr "تأكيد كلمة المرور"
 msgid "confirmed"
 msgstr "مؤكد"
 
+msgid "conflict"
+msgstr "تعارض في البيانات — حدّث الصفحة وحاول مجدداً"
+
+msgid "connection_error"
+msgstr "تعذر الاتصال بالخادم — تحقق من اتصالك بالإنترنت"
+
 msgid "contact_info"
 msgstr "معلومات الاتصال"
 
@@ -11107,6 +11689,9 @@ msgstr "إنشاء مستودع"
 msgid "created_date"
 msgstr "تاريخ الإنشاء"
 
+msgid "creates customers, records invoices, generates reports via text command"
+msgstr "ينشئ عميل، يسجل فاتورة، يصرف سند، يولد تقرير بأمر نصي"
+
 msgid "credit"
 msgstr "دائن"
 
@@ -11125,8 +11710,32 @@ msgstr "دائن (مدفوعات)"
 msgid "currency"
 msgstr "العملة"
 
+msgid "currency_aed"
+msgstr "درهم إماراتي"
+
+msgid "currency_egp"
+msgstr "جنيه مصري"
+
+msgid "currency_eur"
+msgstr "يورو"
+
+msgid "currency_gbp"
+msgstr "جنيه إسترليني"
+
+msgid "currency_ils"
+msgstr "شيكل فلسطيني"
+
+msgid "currency_jod"
+msgstr "دينار أردني"
+
+msgid "currency_sar"
+msgstr "ريال سعودي"
+
 msgid "currency_tooltip"
 msgstr "العملة التي سيدفع بها العميل - الفاتورة بالدرهم دائماً"
+
+msgid "currency_usd"
+msgstr "دولار أمريكي"
 
 msgid "current package"
 msgstr "الباقة الحالية"
@@ -11221,6 +11830,9 @@ msgstr "ملاحظة التوصيل"
 msgid "description"
 msgstr "الوصف"
 
+msgid "desktop"
+msgstr "كمبيوتر"
+
 msgid "detailed"
 msgstr "تفصيلي"
 
@@ -11232,6 +11844,9 @@ msgstr "تطوير"
 
 msgid "difference"
 msgstr "الفرق"
+
+msgid "dir_ltr"
+msgstr "rtl"
 
 msgid "director"
 msgstr "المدير"
@@ -11314,6 +11929,9 @@ msgstr "أدخل بريدك الإلكتروني"
 msgid "empty_cart"
 msgstr "السلة فارغة"
 
+msgid "en_US"
+msgstr "ar_AE"
+
 msgid "enable_from_tax_settings"
 msgstr "تفعّل من إعدادات الضرائب للشركة"
 
@@ -11335,6 +11953,9 @@ msgstr "أدخل قيمة موجبة للإضافة أو سالبة للخصم"
 msgid "enter_serial_numbers"
 msgstr "إدخال الأرقام التسلسلية"
 
+msgid "enter_valid_values"
+msgstr "أدخل قيم صحيحة"
+
 msgid "entries"
 msgstr "القيود"
 
@@ -11343,6 +11964,12 @@ msgstr "معدات"
 
 msgid "equipment_suppliers"
 msgstr "موردي المعدات"
+
+msgid "error"
+msgstr "خطأ"
+
+msgid "estimated_rate"
+msgstr "سعر تقديري"
 
 msgid "example_quantity"
 msgstr "مثال: 10"
@@ -11473,6 +12100,9 @@ msgstr "للمستودعات الفرعية"
 msgid "forgot_password"
 msgstr "نسيت كلمة المرور"
 
+msgid "form_expired"
+msgstr "انتهت صلاحية النموذج — حدّث الصفحة"
+
 msgid "free_from"
 msgstr "مجاني من"
 
@@ -11539,6 +12169,9 @@ msgstr "المتوفر فقط"
 msgid "inactive"
 msgstr "غير نشط"
 
+msgid "info"
+msgstr "معلومة"
+
 msgid "initial_balance"
 msgstr "الرصيد الابتدائي"
 
@@ -11562,6 +12195,9 @@ msgstr "ثبّت التطبيق"
 
 msgid "insufficient_inventory"
 msgstr "المخزون غير كافٍ للتأكيد"
+
+msgid "interest_amount"
+msgstr "الفائدة"
 
 msgid "internal"
 msgstr "الداخلية"
@@ -11626,17 +12262,32 @@ msgstr "مكتبة jsPDF غير متوفرة"
 msgid "lang_en"
 msgstr "الإنجليزية"
 
+msgid "lang_switch_btn"
+msgstr "EN"
+
+msgid "lang_switch_code"
+msgstr "en"
+
+msgid "lang_switch_label"
+msgstr "English"
+
 msgid "last_movement"
 msgstr "آخر حركة"
 
 msgid "last_purchase"
 msgstr "آخر شراء"
 
+msgid "last_saved_rate"
+msgstr "آخر سعر محفوظ"
+
 msgid "last_seen"
 msgstr "آخر ظهور"
 
 msgid "last_sign_in"
 msgstr "آخر تسجيل دخول"
+
+msgid "last_updated"
+msgstr "آخر تحديث"
 
 msgid "leave_empty_for_credit"
 msgstr "اتركه فارغاً للدفع الآجل"
@@ -11659,8 +12310,14 @@ msgstr "قائمة"
 msgid "list_warehouses_title"
 msgstr "قائمة المستودعات"
 
+msgid "live_rate"
+msgstr "مباشر"
+
 msgid "loading"
 msgstr "جاري التحميل"
+
+msgid "loading_ellipsis"
+msgstr "جارٍ التحميل..."
 
 msgid "location"
 msgstr "الموقع"
@@ -11698,6 +12355,9 @@ msgstr "مخزون منخفض — منتجات تحتاج إعادة تموين"
 msgid "loyalty_points"
 msgstr "نقاط الولاء"
 
+msgid "ltr"
+msgstr "rtl"
+
 msgid "made_in_palestine"
 msgstr "صنع في فلسطين"
 
@@ -11731,6 +12391,9 @@ msgstr "القائمة"
 msgid "merchant"
 msgstr "التاجر"
 
+msgid "meta_language"
+msgstr "English"
+
 msgid "method"
 msgstr "الطريقة"
 
@@ -11742,6 +12405,15 @@ msgstr "الحد الأدنى للطلب"
 
 msgid "minimum"
 msgstr "الأدنى"
+
+msgid "mo"
+msgstr "شهر"
+
+msgid "mobile"
+msgstr "جوال"
+
+msgid "monthly_installment"
+msgstr "القسط"
 
 msgid "movement_type_adjustment"
 msgstr "تعديل"
@@ -11854,6 +12526,9 @@ msgstr "لا توجد منتجات في هذا المستودع حالياً"
 msgid "no_purchases_from_supplier"
 msgstr "لا توجد مشتريات من هذا المورد بعد"
 
+msgid "no_results"
+msgstr "لا توجد نتائج"
+
 msgid "no_returns_found"
 msgstr "لا توجد مرتجعات"
 
@@ -11905,6 +12580,9 @@ msgstr "أي ملاحظات إضافية عن فاتورة المشتريات...
 msgid "notes_tooltip"
 msgstr "أي ملاحظات أو تعليمات إضافية عن هذه الفاتورة"
 
+msgid "notifications"
+msgstr "الإشعارات"
+
 msgid "notify_me"
 msgstr "أبلغني عند التوفر"
 
@@ -11922,6 +12600,9 @@ msgstr "المتجر غير متاح حالياً، سيعود قريباً"
 
 msgid "offline_title"
 msgstr "المتجر مغلق مؤقتاً"
+
+msgid "og_locale"
+msgstr "ar_AE"
 
 msgid "ok_button"
 msgstr "حسناً"
@@ -12007,6 +12688,9 @@ msgstr "نفاد المخزون — منتجات منفذة تماماً"
 msgid "owner"
 msgstr "المالك"
 
+msgid "page_total"
+msgstr "إجمالي الصفحة"
+
 msgid "paid"
 msgstr "مدفوعة"
 
@@ -12024,6 +12708,9 @@ msgstr "مدفوع مؤكد"
 
 msgid "paid_in_full"
 msgstr "مدفوع بالكامل"
+
+msgid "paid_status"
+msgstr "مدفوع"
 
 msgid "parent_id"
 msgstr "معرف المستودع الأب"
@@ -12124,6 +12811,12 @@ msgstr "شيكات معلقة"
 msgid "pending_orders_awaiting_confirm"
 msgstr "{count} طلب/طلبات بانتظار التأكيد"
 
+msgid "per year"
+msgstr "سنوياً"
+
+msgid "permission_denied"
+msgstr "ليس لديك صلاحية لتنفيذ هذا الإجراء"
+
 msgid "permissions_and_status"
 msgstr "الصلاحيات والحالة"
 
@@ -12190,6 +12883,9 @@ msgstr "طباعة كشف الحساب"
 msgid "priority"
 msgstr "الأولوية"
 
+msgid "processing"
+msgstr "جاري المعالجة..."
+
 msgid "product"
 msgstr "المنتج"
 
@@ -12222,6 +12918,9 @@ msgstr "منتجات جاهزة"
 
 msgid "products_with_stock"
 msgstr "{count} منتج برصيد > 0"
+
+msgid "profit"
+msgstr "الربح"
 
 msgid "purchase_new_stock"
 msgstr "شراء مخزون جديد"
@@ -12430,6 +13129,9 @@ msgstr "سجل المبيعات"
 msgid "sales_management"
 msgstr "إدارة المبيعات"
 
+msgid "sales_register"
+msgstr "سجل المبيعات"
+
 msgid "sales_rep"
 msgstr "مندوب المبيعات"
 
@@ -12460,6 +13162,21 @@ msgstr "بحث"
 msgid "search_customer_hint"
 msgstr "فلتر ذكي: ابحث بالاسم أو رقم الهاتف"
 
+msgid "search_customers"
+msgstr "ابحث عن زبون..."
+
+msgid "search_error"
+msgstr "خطأ في البحث"
+
+msgid "search_products"
+msgstr "ابحث عن منتج..."
+
+msgid "search_suppliers"
+msgstr "ابحث عن مورد..."
+
+msgid "searching"
+msgstr "جاري البحث..."
+
 msgid "secure_checkout"
 msgstr "دفع آمن"
 
@@ -12468,6 +13185,9 @@ msgstr "اختيار"
 
 msgid "select_branch"
 msgstr "اختر الفرع"
+
+msgid "select_placeholder"
+msgstr "اختر..."
 
 msgid "select_product"
 msgstr "— اختر منتجاً —"
@@ -12499,8 +13219,14 @@ msgstr "هذا المنتج يتطلب رقماً تسلسلياً فريداً 
 msgid "server_connection_error"
 msgstr "خطأ في الاتصال بالخادم"
 
+msgid "server_error"
+msgstr "خطأ في الخادم — حاول مرة أخرى لاحقاً"
+
 msgid "services"
 msgstr "خدمات"
+
+msgid "session_expired"
+msgstr "انتهت الجلسة — يرجى تسجيل الدخول مجدداً"
 
 msgid "settings"
 msgstr "الإعدادات"
@@ -12640,6 +13366,9 @@ msgstr "اشترك"
 msgid "subtotal"
 msgstr "المجموع الفرعي"
 
+msgid "success"
+msgstr "نجاح"
+
 msgid "successfully"
 msgstr "بنجاح"
 
@@ -12691,6 +13420,9 @@ msgstr "قاعدة بيانات شاملة لجميع الموردين والش�
 msgid "system"
 msgstr "النظام"
 
+msgid "system_alert"
+msgstr "تنبيه النظام"
+
 msgid "tagged"
 msgstr "الموسومة"
 
@@ -12733,6 +13465,9 @@ msgstr "إلى"
 msgid "to_online"
 msgstr "إلى الأونلاين"
 
+msgid "too_many_requests"
+msgstr "طلبات كثيرة — انتظر قليلاً ثم أعد المحاولة"
+
 msgid "top_selling_products"
 msgstr "أكثر المنتجات مبيعاً"
 
@@ -12741,6 +13476,9 @@ msgstr "المجموع"
 
 msgid "total_amount"
 msgstr "المبلغ الإجمالي"
+
+msgid "total_label"
+msgstr "الإجمالي"
 
 msgid "total_orders"
 msgstr "إجمالي الطلبات"
@@ -12793,6 +13531,9 @@ msgstr "غير معين"
 msgid "under_review"
 msgstr "قيد المراجعة"
 
+msgid "unexpected_error"
+msgstr "خطأ غير متوقع — حاول مرة أخرى"
+
 msgid "unique_email_required"
 msgstr "بريد إلكتروني فريد مطلوب للمستخدم"
 
@@ -12807,6 +13548,9 @@ msgstr "وحدات"
 
 msgid "unpaid"
 msgstr "غير مدفوع"
+
+msgid "unpaid_status"
+msgstr "آجل"
 
 msgid "update"
 msgstr "تحديث"
@@ -12912,6 +13656,9 @@ msgstr "نوع المستودع"
 
 msgid "warehouse_type_label"
 msgstr "النوع"
+
+msgid "warning"
+msgstr "تحذير"
 
 msgid "warranty_claims"
 msgstr "مطالبات الضمان"
@@ -14710,6 +15457,9 @@ msgstr "العاديين"
 msgid "العالميين"
 msgstr "العالميين"
 
+msgid "العربية"
+msgstr "English"
+
 msgid "العرض"
 msgstr "العرض"
 
@@ -15377,10 +16127,10 @@ msgid "النسبة"
 msgstr "النسبة"
 
 msgid "النسبة %"
-msgstr "النسبة %"
+msgstr "النسبة %%"
 
 msgid "النسبة %%"
-msgstr "النسبة %%"
+msgstr "النسبة %%%%"
 
 msgid "النشاط"
 msgstr "النشاط"
@@ -16535,7 +17285,7 @@ msgid "خصم عام"
 msgstr "خصم عام"
 
 msgid "خصم%"
-msgstr "خصم%"
+msgstr "خصم%%"
 
 msgid "خصوصية"
 msgstr "خصوصية"
@@ -17219,10 +17969,10 @@ msgid "ضرائب"
 msgstr "ضرائب"
 
 msgid "ضريبة %"
-msgstr "ضريبة %"
+msgstr "ضريبة %%"
 
 msgid "ضريبة %%"
-msgstr "الضريبة %%"
+msgstr "الضريبة %%%%"
 
 msgid "ضريبة القيمة المضافة"
 msgstr "ضريبة القيمة المضافة"
@@ -18337,7 +19087,7 @@ msgid "متبقي"
 msgstr "متبقي"
 
 msgid "متبقي %(remaining)s يوم"
-msgstr "متبقي %(remaining)s يوم"
+msgstr "متبقي %%(remaining)s يوم"
 
 msgid "متجرك"
 msgstr "متجرك"
@@ -19741,6 +20491,9 @@ msgstr "يُنصح"
 msgid "— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات"
 msgstr "— يمكن طلب تفويض المشرف للقيام بهذه الإجراءات"
 
+msgid "⭐ Most popular"
+msgstr "⭐ الأكثر طلباً"
 
-msgid "أدخل بيانات حسابك للدخول إلى لوحة التحكم الخاصة بك"
-msgstr "أدخل بيانات حسابك للدخول إلى لوحة التحكم الخاصة بك"
+msgid "🧭 Can\\'t find the right plan?"
+msgstr "🧭 لا تجد الباقة المناسبة؟"
+

@@ -271,6 +271,12 @@ class TestConfig:
     APP_ENV = "testing"
     HOST = "127.0.0.1"
     PORT = 5000
+    # Point flask-babel at the real compiled catalogs so template gettext
+    # lookups behave exactly like production (TestConfig otherwise drops the
+    # base Config's BABEL_TRANSLATION_DIRECTORIES, leaving Jinja's ``rv %
+    # variables`` finalizer to choke on strings containing ``%``).
+    BABEL_DEFAULT_LOCALE = "ar"
+    BABEL_TRANSLATION_DIRECTORIES = os.path.join(PROJECT_ROOT, "translations")
 
 
 _PYTEST_TEMP_INITIALIZED = False

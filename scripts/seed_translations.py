@@ -37,6 +37,18 @@ def escape_po(text):
     return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", '\\n"\n"')
 
 
+def escape_msgstr(text):
+    """Double literal ``%`` as ``%%`` for msgstr values.
+
+    Jinja2's Babel gettext extension always runs the translated string through
+    ``rv % variables``, so a translation containing a literal ``%`` (e.g.
+    ``100% Cloud``) would otherwise raise
+    ``ValueError: unsupported format character``. The Python ``TRANSLATIONS``
+    dict stays raw; only the compiled catalogs need this.
+    """
+    return text.replace("%", "%%")
+
+
 def write_po(filepath, lang, translations):
     now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M+0000")
     with open(filepath, "w", encoding="utf-8") as f:
@@ -64,7 +76,7 @@ def write_po(filepath, lang, translations):
         for msgid, langs in sorted(translations.items()):
             msgstr = langs.get(lang, "")
             f.write(f'msgid "{escape_po(msgid)}"\n')
-            f.write(f'msgstr "{escape_po(msgstr)}"\n')
+            f.write(f'msgstr "{escape_po(escape_msgstr(msgstr))}"\n')
             f.write("\n")
 
     count = len(translations)
