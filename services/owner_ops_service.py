@@ -31,7 +31,8 @@ class OwnerOpsService:
         """Active tenants ordered by name for the per-tenant AI toggle page."""
         from models.tenant import Tenant
 
-        return Tenant.query.filter_by(is_active=True).order_by(Tenant.name.asc()).all()
+        tenants = Tenant.query.filter_by(is_active=True).all()
+        return sorted(tenants, key=lambda t: t.name)
 
     @staticmethod
     def get_tenant(tenant_id):
