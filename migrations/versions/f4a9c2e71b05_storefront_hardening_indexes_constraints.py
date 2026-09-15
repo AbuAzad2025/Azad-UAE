@@ -111,9 +111,7 @@ def upgrade():
 
     # ── 2. Backfills before NOT NULL ─────────────────────────────────
     if _table_exists("tenant_stores") and _column_exists("tenant_stores", "low_stock_threshold"):
-        op.execute(
-            sa.text("UPDATE tenant_stores SET low_stock_threshold = 5.0 WHERE low_stock_threshold IS NULL")
-        )
+        op.execute(sa.text("UPDATE tenant_stores SET low_stock_threshold = 5.0 WHERE low_stock_threshold IS NULL"))
     if _table_exists("shop_reviews") and _column_exists("shop_reviews", "is_approved"):
         op.execute(sa.text("UPDATE shop_reviews SET is_approved = false WHERE is_approved IS NULL"))
 
@@ -189,9 +187,7 @@ def upgrade():
     # ── 9. Composite indexes ─────────────────────────────────────────
     _create_index("ix_tenant_stores_availability", "tenant_stores", ["is_enabled", "platform_disabled"])
     _create_index("ix_tenant_stores_is_enabled", "tenant_stores", ["is_enabled"])
-    _create_index(
-        "ix_shop_reviews_tenant_product_approved", "shop_reviews", ["tenant_id", "product_id", "is_approved"]
-    )
+    _create_index("ix_shop_reviews_tenant_product_approved", "shop_reviews", ["tenant_id", "product_id", "is_approved"])
     _create_index("ix_wishlist_tenant_account", "shop_wishlist", ["tenant_id", "account_id"])
     _create_index("ix_wishlist_tenant_product", "shop_wishlist", ["tenant_id", "product_id"])
     _create_index(
@@ -202,12 +198,8 @@ def upgrade():
     _create_index("ix_stock_alerts_tenant_product", "shop_stock_alerts", ["tenant_id", "product_id"])
     _create_index("ix_stock_alerts_tenant_email", "shop_stock_alerts", ["tenant_id", "email"])
     _create_index("ix_abandoned_tenant_email", "shop_abandoned_carts", ["tenant_id", "email"])
-    _create_index(
-        "ix_abandoned_recovery_sweep", "shop_abandoned_carts", ["tenant_id", "recovered", "reminder_sent_at"]
-    )
-    _create_index(
-        "ix_store_coupon_tenant_active_until", "store_coupons", ["tenant_id", "is_active", "valid_until"]
-    )
+    _create_index("ix_abandoned_recovery_sweep", "shop_abandoned_carts", ["tenant_id", "recovered", "reminder_sent_at"])
+    _create_index("ix_store_coupon_tenant_active_until", "store_coupons", ["tenant_id", "is_active", "valid_until"])
 
 
 def downgrade():

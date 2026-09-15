@@ -116,11 +116,7 @@ class StoreOrderService:
 
         from services.stock_service import _MAX_LOCK_RETRIES
 
-        stmt = (
-            sa_select(Sale.id)
-            .where(Sale.id == sale.id, Sale.tenant_id == sale.tenant_id)
-            .with_for_update()
-        )
+        stmt = sa_select(Sale.id).where(Sale.id == sale.id, Sale.tenant_id == sale.tenant_id).with_for_update()
         row = None
         for attempt in range(1, _MAX_LOCK_RETRIES + 1):
             savepoint = db.session.begin_nested()

@@ -11,9 +11,7 @@ from extensions import db
 class TenantStore(db.Model):
     __tablename__ = "tenant_stores"
 
-    __table_args__ = (
-        db.Index("ix_tenant_stores_availability", "is_enabled", "platform_disabled"),
-    )
+    __table_args__ = (db.Index("ix_tenant_stores_availability", "is_enabled", "platform_disabled"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -50,9 +48,7 @@ class TenantStore(db.Model):
     meta_description_en = db.Column(db.String(500))
     return_policy_ar = db.Column(db.Text)
     return_policy_en = db.Column(db.Text)
-    low_stock_threshold = db.Column(
-        db.Numeric(15, 3), default=Decimal("5.000"), nullable=False, server_default="5.000"
-    )
+    low_stock_threshold = db.Column(db.Numeric(15, 3), default=Decimal("5.000"), nullable=False, server_default="5.000")
     notify_whatsapp_on_order = db.Column(db.Boolean, default=True, nullable=False)
     notify_email_on_order = db.Column(db.Boolean, default=True, nullable=False)
     subdomain = db.Column(db.String(100), unique=True, index=True)
