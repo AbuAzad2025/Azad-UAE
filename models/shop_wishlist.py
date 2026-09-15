@@ -25,5 +25,9 @@ class ShopWishlist(db.Model):
         index=True,
         default=lambda: datetime.now(UTC),
     )
-    __table_args__ = (db.UniqueConstraint("account_id", "product_id", name="uq_wishlist_account_product"),)
+    __table_args__ = (
+        db.UniqueConstraint("account_id", "product_id", name="uq_wishlist_account_product"),
+        db.Index("ix_wishlist_tenant_account", "tenant_id", "account_id"),
+        db.Index("ix_wishlist_tenant_product", "tenant_id", "product_id"),
+    )
     account = db.relationship("ShopCustomerAccount", backref=db.backref("wishlist_items", lazy="dynamic"))

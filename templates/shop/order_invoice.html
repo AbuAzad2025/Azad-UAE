@@ -11,6 +11,11 @@
       width: 210mm; min-height: 297mm; background: #fff; margin: 0 auto;
       box-shadow: 0 0 20px rgba(0,0,0,0.3); position: relative; overflow: visible;
     }
+    @media screen and (max-width: 640px) {
+      .invoice { width: 100%; min-height: auto; }
+      .header { flex-direction: column; gap: 12px; }
+      .signature-row { flex-direction: column; gap: 12px; }
+    }
     .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: flex-start; }
     .header-left { text-align: right; }
     .header-left h1 { font-size: 18px; margin: 0 0 5px; }
@@ -51,7 +56,7 @@
       <div class="header-left">
         <h1>{{ store.title | e }}</h1>
         {% if store.phone %}<p><i class="fas fa-phone" aria-hidden="true"></i> {{ store.phone | e }}</p>{% endif %}
-        {% if store.whatsapp %}<p><i class="fab fa-whatsapp" aria-hidden="true"></i> WhatsApp: {{ store.whatsapp | e }}</p>{% endif %}
+        {% if store.whatsapp %}<p><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('whatsapp') }}: {{ store.whatsapp | e }}</p>{% endif %}
         {% if store.email %}<p><i class="fas fa-envelope" aria-hidden="true"></i> {{ store.email | e }}</p>{% endif %}
         {% if store.address %}<p><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ store.address | e }}</p>{% endif %}
       </div>

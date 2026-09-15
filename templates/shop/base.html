@@ -28,7 +28,7 @@
   {% if analytics_id %}
 {# SRI omitted for Google Tag Manager — Google rotates script hashes frequently; verify via CSP connect-src instead #}
 <script async src="https://www.googletagmanager.com/gtag/js?id={{ analytics_id }}"></script>
-<script nonce="{{ csp_nonce() }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','{{ analytics_id }}');</script>
+<script nonce="{{ csp_nonce() }}">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',{{ analytics_id|tojson }});</script>
 {% endif %}
   {% block tracking_head %}{% endblock %}
 </head>

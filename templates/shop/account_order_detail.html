@@ -36,7 +36,7 @@
 
           <tr>
 
-            <th>{{ t('shop') }}</th>
+            <th>{{ t('product') }}</th>
 
             <th>{{ t('quantity') }}</th>
 
@@ -54,13 +54,13 @@
 
           <tr>
 
-            <td>{{ line.product.name if line.product else '—' }}</td>
+            <td>{{ line.product.get_display_name(lang) if line.product else '—' }}</td>
 
             <td>{{ line.quantity|int if line.quantity == line.quantity|int else line.quantity }}</td>
 
-            <td>{{ format_currency(line.unit_price) }}</td>
+            <td>{{ format_currency(line.unit_price, currency=order.currency) }}</td>
 
-            <td>{{ format_currency(line.line_total) }}</td>
+            <td>{{ format_currency(line.line_total, currency=order.currency) }}</td>
 
           </tr>
 

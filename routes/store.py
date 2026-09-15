@@ -121,7 +121,13 @@ def admin_settings():
 
                 min_raw = (request.form.get("min_order_amount") or "").strip()
                 if min_raw:
-                    store.min_order_amount = Decimal(str(min_raw))
+                    try:
+                        min_value = Decimal(str(min_raw))
+                    except (ArithmeticError, ValueError):
+                        raise ValueError(gettext("الحد الأدنى للطلب يجب أن يكون رقماً صالحاً."))
+                    if min_value < 0:
+                        raise ValueError(gettext("الحد الأدنى للطلب يجب أن يكون رقماً صالحاً."))
+                    store.min_order_amount = min_value
                 else:
                     store.min_order_amount = None
                 dc_raw = (request.form.get("display_currency") or "").strip().upper()[:3]
@@ -139,7 +145,16 @@ def admin_settings():
                 store.notify_email_on_order = request.form.get("notify_email_on_order") == "on"
 
                 threshold_raw = (request.form.get("low_stock_threshold") or "").strip()
-                store.low_stock_threshold = Decimal(str(threshold_raw)) if threshold_raw else Decimal("5")
+                if threshold_raw:
+                    try:
+                        threshold_value = Decimal(str(threshold_raw))
+                    except (ArithmeticError, ValueError):
+                        raise ValueError(gettext("حد المخزون المنخفض يجب أن يكون رقماً صالحاً."))
+                    if threshold_value < 0:
+                        raise ValueError(gettext("حد المخزون المنخفض يجب أن يكون رقماً صالحاً."))
+                    store.low_stock_threshold = threshold_value
+                else:
+                    store.low_stock_threshold = Decimal("5")
 
                 subdomain_raw = (request.form.get("subdomain") or "").strip()
                 if subdomain_raw:
@@ -290,7 +305,8 @@ def admin_transfer():
 def admin_orders():
     tenant_id = _tenant_id()
     store = StoreService.get_tenant_store(tenant_id, create=True)
-    page = request.args.get("page", 1, type=int)
+    page = request.args.get("page", 1, type=int) or 1
+    page = max(1, min(page, 1000))
     status_filter = (request.args.get("status") or "").strip().lower()
     per_page = 20
     pagination = StoreService.online_orders_query(tenant_id, status_filter).paginate(
@@ -442,7 +458,10 @@ def admin_coupons():
                     )
                     flash(gettext("تم إنشاء الكوبون."), "success")
                 elif action == "toggle":
-                    coupon_id = int(request.form.get("coupon_id", 0) or 0)
+                    try:
+                        coupon_id = int(request.form.get("coupon_id", 0) or 0)
+                    except (TypeError, ValueError):
+                        raise ValueError(gettext("كوبون غير صالح."))
                     enabled = request.form.get("enabled") == "1"
                     StoreCouponService.update_coupon(coupon_id, tenant_id, {"is_active": enabled})
                     flash(gettext("تم تحديث الكوبون."), "success")

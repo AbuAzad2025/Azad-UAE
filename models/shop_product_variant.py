@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from extensions import db
 
@@ -22,8 +23,8 @@ class ShopProductVariant(db.Model):
     name = db.Column(db.String(100), nullable=False)
     name_ar = db.Column(db.String(100), nullable=True)
     sku = db.Column(db.String(100), nullable=True)
-    price_adjustment = db.Column(db.Numeric(15, 3), default=0, nullable=False)
-    stock_quantity = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    price_adjustment = db.Column(db.Numeric(15, 3), default=Decimal("0.000"), nullable=False)
+    stock_quantity = db.Column(db.Numeric(15, 3), default=Decimal("0.000"), nullable=False)
     sort_order = db.Column(db.Integer, default=0, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
     created_at = db.Column(
@@ -37,3 +38,8 @@ class ShopProductVariant(db.Model):
         if lang == "ar" and self.name_ar:
             return self.name_ar
         return self.name
+
+    __table_args__ = (
+        db.Index("ix_variant_tenant_sku", "tenant_id", "sku"),
+        db.Index("ix_variant_product_sort", "product_id", "sort_order"),
+    )

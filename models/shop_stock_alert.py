@@ -28,4 +28,8 @@ class ShopStockAlert(db.Model):
         default=lambda: datetime.now(UTC),
     )
 
-    __table_args__ = (db.UniqueConstraint("email", "product_id", name="uq_stock_alert_email_product"),)
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "email", "product_id", name="uq_stock_alert_tenant_email_product"),
+        db.Index("ix_stock_alerts_tenant_product", "tenant_id", "product_id"),
+        db.Index("ix_stock_alerts_tenant_email", "tenant_id", "email"),
+    )

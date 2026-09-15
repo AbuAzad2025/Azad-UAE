@@ -31,3 +31,7 @@ class ShopSavedPayment(db.Model):
     )
 
     account = db.relationship("ShopCustomerAccount", backref=db.backref("saved_payments", lazy="dynamic"))
+
+    __table_args__ = (
+        db.Index("ix_saved_pay_tenant_account_method", "tenant_id", "account_id", "method_code"),
+    )

@@ -93,9 +93,63 @@ class StoreOrderService:
         }
 
     @staticmethod
+    def _locked_sale(sale: Sale) -> Sale:
+        """Serialize concurrent confirm/cancel on the sale row.
+
+        Uses a Core SELECT … FOR UPDATE (single table, so PG accepts it
+        despite Sale.lines being lazy="joined", and the ORM tenant listener
+        does not interfere), then refreshes the passed instance so guard
+        reads happen under the lock. Sales without a persistent integer id
+        (transients, test doubles) cannot be row-locked and pass through.
+        """
+        if not isinstance(getattr(sale, "id", None), int):
+            return sale
+        try:
+            from sqlalchemy import inspect as sa_inspect
+            from sqlalchemy import select as sa_select
+
+            if not sa_inspect(sale).persistent:
+                return sale
+        except Exception:
+            return sale
+        from sqlalchemy.exc import OperationalError
+
+        from services.stock_service import _MAX_LOCK_RETRIES
+
+        stmt = (
+            sa_select(Sale.id)
+            .where(Sale.id == sale.id, Sale.tenant_id == sale.tenant_id)
+            .with_for_update()
+        )
+        row = None
+        for attempt in range(1, _MAX_LOCK_RETRIES + 1):
+            savepoint = db.session.begin_nested()
+            try:
+                row = db.session.execute(stmt).first()
+                savepoint.commit()
+                break
+            except OperationalError:
+                savepoint.rollback()
+                if attempt == _MAX_LOCK_RETRIES:
+                    raise
+        if row is None:
+            # Row not visible in this session (e.g. uncommitted fixture state
+            # in tests, or a concurrently deleted order in production).
+            # Proceed with the passed instance — downstream guards and the
+            # surrounding atomic_transaction still apply.
+            current_app.logger.debug("Store order row %s not visible for locking; proceeding unlocked", sale.id)
+            return sale
+        try:
+            db.session.refresh(sale)
+        except Exception:
+            current_app.logger.debug("Store order refresh after lock failed for %s", sale.id, exc_info=True)
+        return sale
+
+    @staticmethod
     def confirm_order(sale: Sale, *, mark_paid: bool = False) -> Sale:
         if not StoreOrderService.is_online_order(sale):
             raise ValueError(gettext("هذا ليس طلب متجر إلكتروني."))
+        sale = StoreOrderService._locked_sale(sale)
         if sale.status == "cancelled":
             raise ValueError(gettext("لا يمكن تأكيد طلب ملغى."))
         if sale.status == "confirmed" and StoreOrderService.is_fulfilled(sale):
@@ -116,15 +170,16 @@ class StoreOrderService:
             if internal_method == "cod":
                 internal_method = "cash"
             amount_to_pay = sale.balance_due if sale.balance_due and sale.balance_due > 0 else sale.total_amount
-            payment = SaleService.create_payment_for_sale(
-                sale=sale,
-                amount=amount_to_pay,
-                payment_method=internal_method,
-                currency=sale.currency,
-                exchange_rate=sale.exchange_rate,
-                notes=gettext("دفع طلب متجر — تأكيد من لوحة المتجر"),
-            )
-            sale.recalculate_payment_status()
+            if amount_to_pay and amount_to_pay > 0:
+                payment = SaleService.create_payment_for_sale(
+                    sale=sale,
+                    amount=amount_to_pay,
+                    payment_method=internal_method,
+                    currency=sale.currency,
+                    exchange_rate=sale.exchange_rate,
+                    notes=gettext("دفع طلب متجر — تأكيد من لوحة المتجر"),
+                )
+                sale.recalculate_payment_status()
 
         # Azad platform fee — every confirmed online-store sale, any payment channel
         # (offline channels gated by SystemSettings.azad_platform_fee_include_offline)
@@ -184,7 +239,7 @@ class StoreOrderService:
         if not account:
             return
 
-        lp = ShopLoyalty.query.filter_by(account_id=int(account.id)).first()
+        lp = ShopLoyalty.query.filter_by(account_id=int(account.id), tenant_id=sale.tenant_id).first()
         if lp:
             points = abs(int(txn.points or 0))
             lp.points = max(0, (lp.points or 0) - points)
@@ -203,6 +258,7 @@ class StoreOrderService:
     def cancel_order(sale: Sale) -> Sale:
         if not StoreOrderService.is_online_order(sale):
             raise ValueError(gettext("هذا ليس طلب متجر إلكتروني."))
+        sale = StoreOrderService._locked_sale(sale)
         if sale.status == "cancelled":
             raise ValueError(gettext("الطلب ملغى بالفعل."))
 

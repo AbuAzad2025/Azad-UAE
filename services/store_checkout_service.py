@@ -24,7 +24,7 @@ from utils.currency_utils import resolve_default_currency
 
 class StoreCheckoutService:
     ORDER_TOKEN_SALT = "shop-order-v1"
-    ORDER_TOKEN_MAX_AGE = 60 * 60 * 24 * 7  # 7 days
+    ORDER_TOKEN_MAX_AGE = 60 * 60 * 48  # 48 hours
     _DEV_ONLY_TOKEN_SECRET = "dev-only-shop-order-token-not-for-production"
 
     @staticmethod
@@ -73,7 +73,7 @@ class StoreCheckoutService:
         digits = re.sub(r"\D", "", phone or "")
         if not digits:
             raise ValueError(gettext("رقم الهاتف مطلوب."))
-        if len(digits) < 8:
+        if len(digits) < 8 or len(digits) > 15:
             raise ValueError(gettext("رقم الهاتف غير صالح."))
         return digits
 
@@ -184,15 +184,17 @@ class StoreCheckoutService:
         customer_email: str | None = None,
     ) -> Sale:
         tenant_id = int(store.tenant_id)
+        # NOTE: store open/closed gating lives in routes/shop.py::_require_open_store
+        # (the sole production caller). The service asserts warehouse integrity only.
         online_wh = db.session.get(Warehouse, store.warehouse_id)
-        if not online_wh or not online_wh.is_online:
+        if not online_wh or not online_wh.is_online or int(getattr(online_wh, "tenant_id", 0) or 0) != tenant_id:
             raise ValueError(gettext("مستودع المتجر غير مهيأ."))
 
-        pay_method = StorePaymentMethodService.validate_for_checkout(payment_method_code or "cod")
+        pay_method = StorePaymentMethodService.validate_for_checkout(payment_method_code or "cod", tenant_id=tenant_id)
 
         lines_data = StoreCheckoutService.build_lines_from_cart(tenant_id, cart, online_wh.id)
         if shop_account and shop_account.customer_id:
-            customer = db.session.get(Customer, shop_account.customer_id)
+            customer = Customer.query.filter_by(id=shop_account.customer_id, tenant_id=tenant_id).first()
             if not customer:
                 customer = StoreCheckoutService.get_or_create_customer(
                     tenant_id, customer_name, phone, address, email=customer_email

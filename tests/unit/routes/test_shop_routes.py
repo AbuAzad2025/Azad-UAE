@@ -113,6 +113,8 @@ class TestShopWishlist:
             ),
             patch("routes.shop.ShopWishlist.query", wl_query),
             patch("routes.shop.db.session"),
+            patch("routes.shop._require_open_store", return_value=None),
+            patch("routes.shop.StoreService.active_product", return_value=_mock_product()),
         ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/add/10",
@@ -132,6 +134,7 @@ class TestShopWishlist:
                 return_value=account,
             ),
             patch("routes.shop.ShopWishlist.query"),
+            patch("routes.shop.StoreService.active_product", return_value=_mock_product()),
         ):
             resp = shop_client.post(f"{BASE}/wishlist/add/10")
         assert resp.status_code in (302, 303)
@@ -158,6 +161,7 @@ class TestShopWishlist:
             ),
             patch("routes.shop.ShopWishlist.query", wl_query),
             patch("routes.shop.db.session"),
+            patch("routes.shop._require_open_store", return_value=None),
         ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/remove/10",
@@ -494,9 +498,12 @@ class TestShopProduct:
 
     def test_add_review_invalid_rating(self, shop_client):
         account = _mock_account()
-        with patch(
-            "routes.shop.ShopCustomerAuthService.get_logged_in_account",
-            return_value=account,
+        with (
+            patch(
+                "routes.shop.ShopCustomerAuthService.get_logged_in_account",
+                return_value=account,
+            ),
+            patch("routes.shop.StoreService.active_product", return_value=_mock_product()),
         ):
             resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "9"})
         assert resp.status_code in (302, 303)
@@ -508,6 +515,8 @@ class TestShopProduct:
                 "routes.shop.ShopCustomerAuthService.get_logged_in_account",
                 return_value=account,
             ),
+            patch("routes.shop.StoreService.active_product", return_value=_mock_product()),
+            patch("routes.shop._require_open_store", return_value=None),
             patch("routes.shop.db.session"),
         ):
             resp = shop_client.post(f"{BASE}/p/10/review/add", data={"rating": "5", "comment": "Nice"})
@@ -526,6 +535,7 @@ class TestShopStockAlertAndNewsletter:
         with (
             patch("models.shop_stock_alert.ShopStockAlert.query", alert_q),
             patch("routes.shop.db.session"),
+            patch("routes.shop._require_open_store", return_value=None),
         ):
             resp = shop_client.post(f"{BASE}/stock-alert/10", data={"email": "a@test.com"})
         assert resp.status_code in (302, 303)
@@ -541,6 +551,7 @@ class TestShopStockAlertAndNewsletter:
         with (
             patch("models.shop_newsletter.ShopNewsletter.query", nl_q),
             patch("routes.shop.db.session"),
+            patch("routes.shop._require_open_store", return_value=None),
         ):
             resp = shop_client.post(f"{BASE}/newsletter/subscribe", data={"email": "sub@test.com"})
         assert resp.status_code in (302, 303)
@@ -1130,6 +1141,8 @@ class TestShopRoutesExtended:
         tenant = MagicMock()
         tenant.is_active = True
         tenant.is_suspended = True
+        tenant.brand_color_primary = "#1B7A4E"
+        tenant.brand_color_secondary = "#CE1126"
         with patch("routes.shop.db.session") as mock_db:
             mock_db.get.return_value = tenant
             resp = shop_client.get(f"{BASE}/")
@@ -1143,6 +1156,7 @@ class TestShopRoutesExtended:
                 return_value=account,
             ),
             patch("routes.shop.db.session"),
+            patch("routes.shop._require_open_store", return_value=None),
         ):
             resp = shop_client.post(
                 f"{BASE}/wishlist/remove/10",
@@ -1461,7 +1475,10 @@ class TestShopRoutesMoreCoverage:
         existing = MagicMock()
         alert_q = MagicMock()
         alert_q.filter_by.return_value.first.return_value = existing
-        with patch("models.shop_stock_alert.ShopStockAlert.query", alert_q):
+        with (
+            patch("models.shop_stock_alert.ShopStockAlert.query", alert_q),
+            patch("routes.shop.StoreService.active_product", return_value=_mock_product()),
+        ):
             resp = shop_client.post(f"{BASE}/stock-alert/10", data={"email": "a@b.com"})
         assert resp.status_code in (302, 303)
 

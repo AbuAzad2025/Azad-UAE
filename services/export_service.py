@@ -248,13 +248,13 @@ class ExportService:
         <body>
             <h1>{title}</h1>
             <p><strong>تاريخ التقرير:</strong> {datetime.now(UTC).strftime("%Y-%m-%d %H:%M")}</p>
-            
+
             <div class="stats">
                 {ExportService._generate_stats_html(data.get("stats", {}))}
             </div>
-            
+
             {ExportService._generate_table_html(data.get("table_data", []), data.get("table_headers", []))}
-            
+
             <div class="footer">
                 <p>تم إنشاؤه بواسطة Azad Systems - الخزينة السرية</p>
             </div>

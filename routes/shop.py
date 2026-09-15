@@ -13,6 +13,7 @@ from flask import (
     url_for,
 )
 from flask_babel import gettext
+from requests import RequestException
 
 from extensions import db, limiter
 from models import Tenant
@@ -84,6 +85,18 @@ def _shop_account(store):
     return ShopCustomerAuthService.get_logged_in_account(store.tenant_id)
 
 
+def _shop_customer_type(store, account):
+    """Price tier for cart display — same source checkout charges."""
+    customer_id = getattr(account, "customer_id", None) if account else None
+    if customer_id:
+        from models import Customer
+
+        customer = db.session.get(Customer, customer_id)
+        if customer and int(getattr(customer, "tenant_id", 0) or 0) == int(store.tenant_id):
+            return customer.customer_type or "regular"
+    return "regular"
+
+
 def _require_shop_account(store, ctx):
     account = ctx.get("shop_account") or _shop_account(store)
 
@@ -104,13 +117,23 @@ def _store_context(store):
 
     account = _shop_account(store)
 
-    primary = (tenant.brand_color_primary if tenant else None) or "#1B7A4E"
+    import re as _re
 
-    secondary = (tenant.brand_color_secondary if tenant else None) or "#CE1126"
+    def _safe_color(value, fallback):
+        text = (value or "").strip()
+        if _re.fullmatch(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", text or ""):
+            return text
+        return fallback
+
+    primary = _safe_color(tenant.brand_color_primary if tenant else None, "#1B7A4E")
+
+    secondary = _safe_color(tenant.brand_color_secondary if tenant else None, "#CE1126")
 
     cart_count = int(sum(StoreService.get_cart(session, store.tenant_id).values()) or 0)
 
     store_currency = StorePricingService.resolve_display_currency(store, tenant)
+
+    raw_analytics_id = str(current_app.config.get("ANALYTICS_GA_ID", "") or "")
 
     return {
         "store": store,
@@ -123,7 +146,7 @@ def _store_context(store):
         "cart_count": cart_count,
         "shop_account": account,
         "is_shop_logged_in": account is not None,
-        "analytics_id": current_app.config.get("ANALYTICS_GA_ID", ""),
+        "analytics_id": (raw_analytics_id if _re.fullmatch(r"[A-Za-z0-9-]+", raw_analytics_id) else ""),
         "store_currency": store_currency,
         # Unified display-price helper for every template (fixes audit D1)
         "dp": lambda product: StorePricingService.resolve_display_price(product, tenant, store_currency),
@@ -155,19 +178,51 @@ def _is_ajax():
     ) == "XMLHttpRequest"
 
 
+def _checkout_token_key(tenant_id):
+    return f"checkout_token_{int(tenant_id)}"
+
+
+def _issue_checkout_token(tenant_id):
+    import secrets
+
+    token = secrets.token_urlsafe(16)
+    session[_checkout_token_key(tenant_id)] = token
+    return token
+
+
+def _consume_checkout_token(tenant_id, submitted):
+    """Single-use checkout token: blocks double-submit/refresh duplicates.
+
+    Returns True when the POST may proceed. A missing expected token (direct
+    POST without a prior GET, e.g. API-style callers) is allowed through to
+    stay backward compatible; a present-but-mismatched token is rejected.
+    """
+    key = _checkout_token_key(tenant_id)
+    expected = session.pop(key, None)
+    return not (expected and (submitted or "") != expected)
+
+
 def _track_cart_activity(store, account, session):
     cart = StoreService.get_cart(session, store.tenant_id)
     if not cart:
         return
     import json
+    import secrets
 
     cart_json = json.dumps(cart)
     email = account.email if account else None
+    guest_key = None
+    if account is None:
+        guest_key = session.get(f"shop_guest_key_{store.tenant_id}")
+        if not guest_key:
+            guest_key = secrets.token_urlsafe(16)
+            session[f"shop_guest_key_{store.tenant_id}"] = guest_key
     StoreService.save_abandoned_cart_snapshot(
         store.tenant_id,
         account.id if account else None,
         email,
         cart_json,
+        session_key=guest_key,
     )
 
 
@@ -191,9 +246,13 @@ def offline(slug):
 @limiter.limit("30 per minute")
 def wishlist_add(slug, product_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
     account = _shop_account(store)
     if not account:
         return error_response(message="Login required", status_code=401)
+    if not StoreService.active_product(store.tenant_id, product_id):
+        abort(404)
     if request.content_type and "application/json" in request.content_type:
         existing = StoreService.wishlist_entry(store.tenant_id, account.id, product_id)
         if not existing:
@@ -210,8 +269,11 @@ def wishlist_add(slug, product_id):
 
 
 @shop_bp.route("/<slug>/wishlist/remove/<int:product_id>", methods=["POST"])
+@limiter.limit("30 per minute")
 def wishlist_remove(slug, product_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
     account = _shop_account(store)
     if not account:
         return error_response(message="Login required", status_code=401)
@@ -416,7 +478,8 @@ def catalog(slug):
 
     search = (request.args.get("q") or "").strip()
 
-    page = request.args.get("page", 1, type=int)
+    page = request.args.get("page", 1, type=int) or 1
+    page = max(1, min(page, 1000))
 
     sort = request.args.get("sort", "")
     valid_sorts = ["price_asc", "price_desc", "name_asc", "name_desc", "newest"]
@@ -461,9 +524,12 @@ def catalog(slug):
 
 
 @shop_bp.route("/<slug>/api/search")
+@limiter.limit("60 per minute")
 def api_search(slug):
     """AJAX search — returns JSON for autocomplete."""
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        return success_response(data={"results": []})
     q = (request.args.get("q") or "").strip()
     if not q or len(q) < 2:
         return success_response(data={"results": []})
@@ -526,7 +592,9 @@ def product_detail(slug, product_id):
     wa_url = ShopCustomerAuthService.whatsapp_order_url(store, product, ctx["lang"], 1)
 
     variants = StoreService.get_product_variants(store.tenant_id, product.id)
-    loyalty_points = StoreService.get_loyalty_points(ctx["shop_account"].id) if ctx["shop_account"] else 0
+    loyalty_points = (
+        StoreService.get_loyalty_points(ctx["shop_account"].id, store.tenant_id) if ctx["shop_account"] else 0
+    )
     reviews = StoreService.approved_reviews(store.tenant_id, product.id)
     review_count = len(reviews)
     avg_rating = round(sum(r.rating for r in reviews) / review_count, 1) if review_count else None
@@ -548,6 +616,7 @@ def product_detail(slug, product_id):
 
 
 @shop_bp.route("/<slug>/p/<int:product_id>/reviews", methods=["GET"])
+@limiter.limit("60 per minute")
 def product_reviews(slug, product_id):
     store = _resolve_store(slug)
     reviews = StoreService.approved_reviews(store.tenant_id, product_id)
@@ -571,12 +640,17 @@ def product_reviews(slug, product_id):
 @limiter.limit("10 per minute", methods=["POST"])
 def add_review(slug, product_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
     account = _shop_account(store)
     if not account:
         flash(t("login_required", shop_lang()), "warning")
         return redirect(url_for("shop.account_login", slug=store.store_slug))
+    product = StoreService.active_product(store.tenant_id, product_id)
+    if not product:
+        abort(404)
     rating = request.form.get("rating", type=int)
-    comment = (request.form.get("comment") or "").strip()
+    comment = (request.form.get("comment") or "").strip()[:2000]
     if not rating or rating < 1 or rating > 5:
         flash("Rating must be 1-5", "danger")
         return redirect(
@@ -601,12 +675,17 @@ def add_review(slug, product_id):
 @limiter.limit("10 per minute", methods=["POST"])
 def stock_alert(slug, product_id):
     store = _resolve_store(slug)
-    email = (request.form.get("email") or "").strip()
+    if _require_open_store(store):
+        abort(503)
+    email = (request.form.get("email") or "").strip().lower()[:254]
     if not email or "@" not in email:
         flash("Email is required", "danger")
         return redirect(
             safe_redirect_target(request.referrer, "shop.product_detail", slug=store.store_slug, product_id=product_id)
         )
+    product = StoreService.active_product(store.tenant_id, product_id)
+    if not product:
+        abort(404)
     from models.shop_stock_alert import ShopStockAlert
 
     existing = StoreService.stock_alert_subscriber(store.tenant_id, product_id, email)
@@ -624,7 +703,9 @@ def stock_alert(slug, product_id):
 @limiter.limit("10 per minute", methods=["POST"])
 def newsletter_subscribe(slug):
     store = _resolve_store(slug)
-    email = (request.form.get("email") or "").strip()
+    if _require_open_store(store):
+        abort(503)
+    email = (request.form.get("email") or "").strip().lower()[:254]
     if not email or "@" not in email:
         flash(t("invalid_email", shop_lang()), "danger")
         return redirect(safe_redirect_target(request.referrer, "shop.catalog", slug=store.store_slug))
@@ -652,7 +733,12 @@ def cart_view(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    totals = StoreService.cart_totals(store.tenant_id, cart, display_currency=ctx["store_currency"])
+    totals = StoreService.cart_totals(
+        store.tenant_id,
+        cart,
+        display_currency=ctx["store_currency"],
+        customer_type=_shop_customer_type(store, ctx["shop_account"]),
+    )
 
     return render_template("shop/cart.html", totals=totals, noindex=True, **ctx)
 
@@ -734,7 +820,11 @@ def cart_update(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    stock_map = StoreService.online_stock_map(store.tenant_id, list(cart.keys()) or None)
+    try:
+        cart_pids = [int(k) for k in cart]
+    except (TypeError, ValueError):
+        cart_pids = []
+    stock_map = StoreService.online_stock_map(store.tenant_id, cart_pids or None)
 
     for key in list(cart.keys()):
         field = f"qty_{key}"
@@ -748,13 +838,17 @@ def cart_update(slug):
         except (TypeError, ValueError):
             qty = 0
 
-        max_q = float(stock_map.get(int(key), 0))
+        try:
+            max_q = float(stock_map.get(int(key), 0))
+        except (TypeError, ValueError):
+            max_q = 0
 
-        if qty <= 0:
+        new_qty = min(qty, max_q) if qty > 0 else 0
+        if new_qty <= 0:
             cart.pop(key, None)
 
         else:
-            cart[key] = min(qty, max_q)
+            cart[key] = new_qty
 
     StoreService.save_cart(session, store.tenant_id, cart)
     _track_cart_activity(store, _shop_account(store), session)
@@ -765,7 +859,12 @@ def cart_update(slug):
 
         tenant_ajax = db.session.get(Tenant, store.tenant_id)
         currency_ajax = StorePricingService.resolve_display_currency(store, tenant_ajax)
-        totals_ajax = StoreService.cart_totals(store.tenant_id, cart_ajax, display_currency=currency_ajax)
+        totals_ajax = StoreService.cart_totals(
+            store.tenant_id,
+            cart_ajax,
+            display_currency=currency_ajax,
+            customer_type=_shop_customer_type(store, _shop_account(store)),
+        )
         count = int(sum(cart_ajax.values()) or 0)
         return success_response(
             data={
@@ -783,6 +882,8 @@ def cart_update(slug):
 @limiter.limit("40 per minute")
 def cart_remove(slug, product_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
@@ -800,8 +901,11 @@ def cart_remove(slug, product_id):
 
 
 @shop_bp.route("/<slug>/cart/count", methods=["GET"])
+@limiter.limit("60 per minute")
 def cart_count(slug):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        return success_response(data={"count": 0})
     cart = StoreService.get_cart(session, store.tenant_id)
     count = int(sum(cart.values()) or 0)
     return success_response(data={"count": count})
@@ -823,7 +927,12 @@ def checkout(slug):
 
     cart = StoreService.get_cart(session, store.tenant_id)
 
-    totals = StoreService.cart_totals(store.tenant_id, cart, display_currency=ctx["store_currency"])
+    totals = StoreService.cart_totals(
+        store.tenant_id,
+        cart,
+        display_currency=ctx["store_currency"],
+        customer_type=_shop_customer_type(store, account),
+    )
 
     if not totals["lines"]:
         return redirect(url_for("shop.catalog", slug=store.store_slug))
@@ -833,6 +942,10 @@ def checkout(slug):
     if request.method == "POST":
         if request.form.get("website"):
             abort(400)
+
+        if not _consume_checkout_token(store.tenant_id, request.form.get("checkout_token")):
+            flash(t("already_submitted", ctx["lang"]), "info")
+            return redirect(url_for("shop.cart_view", slug=store.store_slug))
 
         try:
             name = (request.form.get("customer_name") or (account.name if account else "") or "").strip()
@@ -845,7 +958,7 @@ def checkout(slug):
 
             notes = (request.form.get("notes") or "").strip()
 
-            payment_method = (request.form.get("payment_method") or "").strip()
+            payment_method = (request.form.get("payment_method") or "").strip().lower()
 
             if not address:
                 raise ValueError(
@@ -887,7 +1000,7 @@ def checkout(slug):
                         customer_email=getattr(account, "email", None),
                     )
                     return redirect(payment["payment_url"])
-                except ValueError as pe:
+                except (ValueError, RequestException) as pe:
                     with atomic_transaction("checkout_payment_fail"):
                         sale.payment_status = "init_failed"
                         sale.notes = (sale.notes or "") + gettext(f"\n[فشل init الدفع الإلكتروني: {str(pe)}]")
@@ -928,13 +1041,14 @@ def checkout(slug):
             (gettext("لا توجد طرق دفع متاحة حالياً.") if ctx["lang"] == "ar" else "No payment methods available."),
             "warning",
         )
-    loyalty_points = StoreService.get_loyalty_points(account.id) if account else 0
+    loyalty_points = StoreService.get_loyalty_points(account.id, store.tenant_id) if account else 0
 
     return render_template(
         "shop/checkout.html",
         totals=totals,
         min_order=min_order,
         noindex=True,
+        checkout_token=_issue_checkout_token(store.tenant_id),
         payment_methods=payment_methods,
         payment_hint=lambda pm: StorePaymentMethodService.format_checkout_instructions(pm, ctx["lang"]),
         loyalty_points=loyalty_points,
@@ -980,8 +1094,11 @@ def return_policy(slug):
 
 
 @shop_bp.route("/<slug>/quick-view/<int:product_id>")
+@limiter.limit("60 per minute")
 def quick_view(slug, product_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
     ctx = _store_context(store)
     product = StoreService.active_product_or_404(store.tenant_id, product_id)
     stock_map = StoreService.online_stock_map(store.tenant_id, [product.id])
@@ -1136,8 +1253,10 @@ def save_payment(slug):
     account = _shop_account(store)
     if not account:
         return error_response(message="Login required", status_code=401)
-    method_code = request.form.get("method_code", "").strip()
-    label = (request.form.get("label") or "").strip() or method_code
+    method_code = request.form.get("method_code", "").strip()[:64]
+    label = ((request.form.get("label") or "").strip() or method_code)[:64]
+    if not StorePaymentMethodService.get_by_code(method_code, tenant_id=store.tenant_id):
+        return error_response(message="Unknown payment method", status_code=400)
     from models.shop_saved_payment import ShopSavedPayment
 
     with atomic_transaction("save_payment"):
@@ -1154,6 +1273,7 @@ def save_payment(slug):
 
 
 @shop_bp.route("/<slug>/account/payments/delete/<int:payment_id>", methods=["POST"])
+@limiter.limit("10 per minute")
 def delete_saved_payment(slug, payment_id):
     store = _resolve_store(slug)
     account = _shop_account(store)
@@ -1170,6 +1290,8 @@ def delete_saved_payment(slug, payment_id):
 @limiter.limit("10 per minute")
 def reorder(slug, sale_id):
     store = _resolve_store(slug)
+    if _require_open_store(store):
+        abort(503)
     account = _shop_account(store)
     if not account:
         flash(t("login_required", shop_lang()), "warning")
@@ -1187,7 +1309,7 @@ def reorder(slug, sale_id):
         available = float(stock_map.get(line.product_id, 0))
         if available > 0:
             qty = min(float(line.quantity), available)
-            cart[str(line.product_id)] = cart.get(str(line.product_id), 0) + qty
+            cart[str(line.product_id)] = min(cart.get(str(line.product_id), 0) + qty, available)
     StoreService.save_cart(session, store.tenant_id, cart)
     flash(t("cart_updated"), "success")
     return redirect(url_for("shop.cart_view", slug=store.store_slug))
@@ -1217,6 +1339,7 @@ def order_invoice(slug, sale_id):
 
 
 @shop_bp.route("/<slug>/track")
+@limiter.limit("10 per minute")
 def order_track(slug):
     store = _resolve_store(slug)
     ctx = _store_context(store)
@@ -1226,10 +1349,18 @@ def order_track(slug):
         sale = StoreService.online_order_by_number(store.tenant_id, order_number)
         if not sale:
             flash(t("order_not_found", ctx["lang"]), "warning")
+    account = ctx["shop_account"]
+    show_order_financials = bool(
+        sale
+        and account
+        and getattr(account, "customer_id", None)
+        and getattr(sale, "customer_id", None) == account.customer_id
+    )
     return render_template(
         "shop/order_track.html",
         sale=sale,
         order_number=order_number,
+        show_order_financials=show_order_financials,
         status_label=(StoreOrderService.status_label(sale.status, ctx.get("lang", "")) if sale else None),
         **ctx,
     )
@@ -1248,6 +1379,6 @@ def order_confirmation(slug, token):
 
     sale = StoreService.online_order_or_404(store.tenant_id, int(payload["sale_id"]))
 
-    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod")
+    pay_method = StorePaymentMethodService.get_by_code(sale.checkout_payment_method or "cod", tenant_id=store.tenant_id)
 
     return render_template("shop/order_success.html", sale=sale, token=token, pay_method=pay_method, **ctx)

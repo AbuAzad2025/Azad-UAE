@@ -42,6 +42,9 @@ class StoreOnlinePaymentService:
 
     @staticmethod
     def create_payment_for_sale(sale, store, *, customer_email: str | None = None, crypto_currency: str = "btc"):
+        existing_ref = getattr(sale, "checkout_gateway_ref", None)
+        if isinstance(existing_ref, str) and existing_ref.strip():
+            raise ValueError(gettext("يوجد دفع إلكتروني قائم لهذا الطلب."))
         amount_aed = float(Decimal(str(sale.amount_aed or 0)))
         if amount_aed < 1:
             raise ValueError(gettext("الحد الأدنى للدفع الإلكتروني 1 AED."))

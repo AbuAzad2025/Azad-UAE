@@ -6,6 +6,8 @@ from extensions import db
 class ShopLoyalty(db.Model):
     __tablename__ = "shop_loyalty"
 
+    __table_args__ = (db.UniqueConstraint("account_id", name="uq_shop_loyalty_account"),)
+
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
         db.Integer,

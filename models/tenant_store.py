@@ -1,12 +1,19 @@
 """Online store settings — one store per tenant, bound to one online warehouse."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
+
+from sqlalchemy.orm import validates
 
 from extensions import db
 
 
 class TenantStore(db.Model):
     __tablename__ = "tenant_stores"
+
+    __table_args__ = (
+        db.Index("ix_tenant_stores_availability", "is_enabled", "platform_disabled"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -20,7 +27,7 @@ class TenantStore(db.Model):
         db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
-    is_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    is_enabled = db.Column(db.Boolean, default=False, nullable=False, server_default="false", index=True)
     # Platform-owner hard lock (force-OFF). When True the store is forced closed
     # regardless of is_enabled, and the tenant owner cannot re-enable it.
     platform_disabled = db.Column(db.Boolean, default=False, nullable=False, server_default="false")
@@ -43,7 +50,9 @@ class TenantStore(db.Model):
     meta_description_en = db.Column(db.String(500))
     return_policy_ar = db.Column(db.Text)
     return_policy_en = db.Column(db.Text)
-    low_stock_threshold = db.Column(db.Numeric(15, 3), default=5)
+    low_stock_threshold = db.Column(
+        db.Numeric(15, 3), default=Decimal("5.000"), nullable=False, server_default="5.000"
+    )
     notify_whatsapp_on_order = db.Column(db.Boolean, default=True, nullable=False)
     notify_email_on_order = db.Column(db.Boolean, default=True, nullable=False)
     subdomain = db.Column(db.String(100), unique=True, index=True)
@@ -63,6 +72,13 @@ class TenantStore(db.Model):
 
     tenant = db.relationship("Tenant", backref=db.backref("store", uselist=False), foreign_keys=[tenant_id])
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
+
+    @validates("store_slug", "subdomain", "custom_domain")
+    def _normalize_routing_fields(self, key, value):
+        if value is None:
+            return None
+        normalized = str(value).strip().lower()
+        return normalized or None
 
     def __repr__(self):
         return f"<TenantStore tenant={self.tenant_id} slug={self.store_slug}>"

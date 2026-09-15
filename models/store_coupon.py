@@ -2,12 +2,29 @@
 
 from datetime import UTC, datetime
 
+from sqlalchemy.orm import validates
+
 from extensions import db
 
 
 class StoreCoupon(db.Model):
     __tablename__ = "store_coupons"
-    __table_args__ = (db.UniqueConstraint("tenant_id", "code", name="uq_store_coupon_tenant_code"),)
+    __table_args__ = (
+        db.UniqueConstraint("tenant_id", "code", name="uq_store_coupon_tenant_code"),
+        db.CheckConstraint(
+            "discount_percent IS NULL OR (discount_percent >= 0 AND discount_percent <= 100)",
+            name="ck_store_coupon_pct_0_100",
+        ),
+        db.CheckConstraint(
+            "discount_amount IS NULL OR discount_amount >= 0",
+            name="ck_store_coupon_amt_nonneg",
+        ),
+        db.CheckConstraint(
+            "min_order_amount IS NULL OR min_order_amount >= 0",
+            name="ck_store_coupon_min_nonneg",
+        ),
+        db.Index("ix_store_coupon_tenant_active_until", "tenant_id", "is_active", "valid_until"),
+    )
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -34,6 +51,10 @@ class StoreCoupon(db.Model):
     )
 
     tenant = db.relationship("Tenant", backref=db.backref("store_coupons", lazy="dynamic"))
+
+    @validates("code")
+    def _normalize_code(self, key, value):
+        return StoreCoupon.normalize_code(value)
 
     @staticmethod
     def normalize_code(code: str) -> str:

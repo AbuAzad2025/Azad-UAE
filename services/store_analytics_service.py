@@ -66,7 +66,7 @@ class StoreAnalyticsService:
         result = []
         for product_id, qty, total in rows:
             product = db.session.get(Product, product_id)
-            if product:
+            if product and int(getattr(product, "tenant_id", 0) or 0) == int(tid):
                 result.append(
                     {
                         "product": product,

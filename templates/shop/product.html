@@ -85,9 +85,9 @@
       <div class="ps-form-group">
         <label for="ps_qty">{{ t('quantity') }}</label>
         <div class="ps-qty-wrap ic-7">
-          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-minus>−</button>
+          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-minus aria-label="{{ t('decrease_quantity') }}">−</button>
           <input type="number" id="ps_qty" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input ic-9">
-          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-plus>+</button>
+          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-plus aria-label="{{ t('increase_quantity') }}">+</button>
         </div>
       </div>
       <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-10"><i class="fas fa-shopping-basket" aria-hidden="true"></i> {{ t('add_to_cart') }}</button>
@@ -112,9 +112,9 @@
 
 <div class="ps-share">
   <span>{{ t('share') }}:</span>
-  <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
-  <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ product.get_display_name(lang)|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on Twitter"><i class="fab fa-twitter" aria-hidden="true"></i></a>
-  <a href="https://wa.me/?text={{ product.get_display_name(lang)|urlencode }}%20{{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="Share on WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="{{ t('share_facebook') }}"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+  <a href="https://twitter.com/intent/tweet?url={{ request.url|urlencode }}&text={{ product.get_display_name(lang)|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="{{ t('share_twitter') }}"><i class="fab fa-twitter" aria-hidden="true"></i></a>
+  <a href="https://wa.me/?text={{ product.get_display_name(lang)|urlencode }}%20{{ request.url|urlencode }}" target="_blank" rel="noopener" class="ps-share-btn" aria-label="{{ t('share_whatsapp') }}"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
 </div>
 
 {% if related_products %}

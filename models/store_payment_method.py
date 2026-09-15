@@ -26,6 +26,10 @@ class StorePaymentMethod(db.Model):
     description_en = db.Column(db.Text)
     icon = db.Column(db.String(80), default="fas fa-money-bill-wave")
     is_enabled = db.Column(db.Boolean, default=True, nullable=False, index=True)
+    # Platform-owner force-OFF lock for a single payment method. When True the
+    # method is hidden from checkout regardless of is_enabled, and the tenant
+    # cannot re-enable it.
+    platform_disabled = db.Column(db.Boolean, default=False, nullable=False, server_default="false")
     is_builtin = db.Column(db.Boolean, default=False, nullable=False)
     sort_order = db.Column(db.Integer, default=100, nullable=False)
     config_json = db.Column(db.Text)

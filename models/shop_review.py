@@ -5,6 +5,12 @@ from extensions import db
 
 class ShopReview(db.Model):
     __tablename__ = "shop_reviews"
+
+    __table_args__ = (
+        db.CheckConstraint("rating BETWEEN 1 AND 5", name="ck_shop_review_rating_1_5"),
+        db.Index("ix_shop_reviews_tenant_product_approved", "tenant_id", "product_id", "is_approved"),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
         db.Integer,
@@ -22,7 +28,7 @@ class ShopReview(db.Model):
     customer_name = db.Column(db.String(100), nullable=False)
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
-    is_approved = db.Column(db.Boolean, default=False, index=True)
+    is_approved = db.Column(db.Boolean, default=False, nullable=False, server_default="false", index=True)
     created_at = db.Column(
         db.DateTime(timezone=True),
         nullable=False,

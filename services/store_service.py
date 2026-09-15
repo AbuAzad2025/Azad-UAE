@@ -110,8 +110,21 @@ class StoreService:
             store_slug=slug,
             title=tenant.name_ar or tenant.name,
         )
-        db.session.add(store)
-        db.session.flush()
+        # Concurrent first-visits can race the check-then-insert above (the
+        # tenant_id unique constraint admits exactly one winner). Retry on a
+        # savepoint so a lost race re-reads the winner instead of 500ing.
+        from sqlalchemy.exc import IntegrityError
+
+        savepoint = db.session.begin_nested()
+        try:
+            db.session.add(store)
+            db.session.flush()
+            savepoint.commit()
+        except IntegrityError:
+            savepoint.rollback()
+            store = TenantStore.query.filter_by(tenant_id=tenant_id).first()
+            if store is None:
+                raise
         return store
 
     @staticmethod
@@ -220,9 +233,12 @@ class StoreService:
 
     @staticmethod
     def set_stores_globally_enabled(enabled: bool):
-        settings = SystemSettings.get_current()
-        settings.enable_ecommerce = bool(enabled)
-        db.session.flush()
+        from utils.db_safety import atomic_transaction
+
+        with atomic_transaction("set_stores_globally_enabled"):
+            settings = SystemSettings.get_current()
+            settings.enable_ecommerce = bool(enabled)
+            db.session.flush()
 
     @staticmethod
     def is_platform_locked(store: TenantStore | None) -> bool:
@@ -295,7 +311,9 @@ class StoreService:
         if not tenant or not getattr(tenant, "is_active", True) or getattr(tenant, "is_suspended", False):
             return False
         online_wh = db.session.get(Warehouse, store.warehouse_id)
-        return bool(online_wh and online_wh.is_active and online_wh.is_online)
+        if not online_wh or not online_wh.is_active or not online_wh.is_online:
+            return False
+        return int(getattr(online_wh, "tenant_id", 0) or 0) == int(store.tenant_id)
 
     @staticmethod
     def cart_session_key(tenant_id: int) -> str:
@@ -398,10 +416,20 @@ class StoreService:
         }
 
     @staticmethod
-    def cart_totals(tenant_id: int, cart: dict, display_currency: str | None = None) -> dict:
+    def cart_totals(
+        tenant_id: int,
+        cart: dict,
+        display_currency: str | None = None,
+        customer_type: str = "regular",
+    ) -> dict:
         """Cart lines + totals. When display_currency is provided, each line also
         carries display_price / display_line_total and the dict display_subtotal —
-        resolved via the unified StorePricingService."""
+        resolved via the unified StorePricingService.
+
+        Prices come from ``product.get_price_for_customer(customer_type)`` — the
+        same source checkout charges — so tiered (partner/merchant) customers see
+        the amount they will actually pay.
+        """
         from services.store_pricing_service import StorePricingService
 
         lines = []
@@ -419,7 +447,8 @@ class StoreService:
                 qty = max_q
             if qty <= 0:
                 continue
-            line_total = Decimal(str(product.regular_price or 0)) * qty
+            unit_price = Decimal(str(product.get_price_for_customer(customer_type) or 0))
+            line_total = unit_price * qty
             subtotal += line_total
             line = {"product": product, "quantity": qty, "line_total": line_total}
             if display_currency:
@@ -468,10 +497,13 @@ class StoreService:
         )
 
     @staticmethod
-    def get_loyalty_points(account_id: int):
+    def get_loyalty_points(account_id: int, tenant_id: int | None = None):
         from models.shop_loyalty import ShopLoyalty
 
-        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        query = ShopLoyalty.query.filter_by(account_id=int(account_id))
+        if tenant_id is not None:
+            query = query.filter_by(tenant_id=int(tenant_id))
+        lp = query.first()
         return lp.points if lp else 0
 
     @staticmethod
@@ -481,7 +513,7 @@ class StoreService:
         from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
 
         points_earned = int(total_amount)
-        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id), tenant_id=int(tenant_id)).first()
         if not lp:
             lp = ShopLoyalty(
                 tenant_id=int(tenant_id),
@@ -506,11 +538,14 @@ class StoreService:
     def redeem_loyalty_points(tenant_id: int, account_id: int, points: int):
         from models.shop_loyalty import ShopLoyalty, ShopLoyaltyTransaction
 
-        lp = ShopLoyalty.query.filter_by(account_id=int(account_id)).first()
+        points = int(points or 0)
+        if points <= 0:
+            raise ValueError("Invalid loyalty points amount")
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id), tenant_id=int(tenant_id)).first()
         if not lp or (lp.points or 0) < points:
             raise ValueError("Insufficient loyalty points")
         lp.points = (lp.points or 0) - points
-        lp.points_redeemed = (lp.points or 0) + points
+        lp.points_redeemed = (lp.points_redeemed or 0) + points
         txn = ShopLoyaltyTransaction(
             tenant_id=int(tenant_id),
             account_id=int(account_id),
@@ -577,23 +612,35 @@ class StoreService:
     # ─── Storefront route queries (relocated from routes/shop.py) ───
 
     @staticmethod
-    def save_abandoned_cart_snapshot(tenant_id, account_id, email, cart_json):
-        """Upsert the abandoned-cart snapshot for a storefront session."""
+    def save_abandoned_cart_snapshot(tenant_id, account_id, email, cart_json, session_key=None):
+        """Upsert the abandoned-cart snapshot for a storefront session.
+
+        Identified accounts key on (tenant, account); anonymous guests key on
+        (tenant, session_key) so visitors no longer overwrite each other's
+        carts. A guest call without a session key keeps the legacy shared-row
+        behavior.
+        """
         from models.shop_abandoned_cart import ShopAbandonedCart
 
-        existing = ShopAbandonedCart.query.filter_by(
+        query = ShopAbandonedCart.query.filter_by(
             tenant_id=tenant_id,
             account_id=account_id,
             recovered=False,
-        ).first()
+        )
+        if account_id is None and session_key:
+            query = query.filter_by(session_key=session_key)
+        existing = query.first()
         if existing:
             existing.cart_data = cart_json
+            if session_key:
+                existing.session_key = session_key
         else:
             ac = ShopAbandonedCart(
                 tenant_id=tenant_id,
                 account_id=account_id,
                 email=email,
                 cart_data=cart_json,
+                session_key=session_key,
             )
             db.session.add(ac)
         db.session.flush()
@@ -615,6 +662,7 @@ class StoreService:
         from models.shop_wishlist import ShopWishlist
 
         ShopWishlist.query.filter_by(account_id=account_id, product_id=product_id, tenant_id=tenant_id).delete()
+        db.session.flush()
 
     @staticmethod
     def wishlist_items(tenant_id, account_id):

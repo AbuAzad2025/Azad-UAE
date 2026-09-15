@@ -113,7 +113,7 @@ class StorePaymentMethodService:
         tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         q = StorePaymentMethod.query.filter_by(tenant_id=tenant_id)
         if enabled_only:
-            q = q.filter_by(is_enabled=True)
+            q = q.filter_by(is_enabled=True, platform_disabled=False)
         return q.order_by(StorePaymentMethod.sort_order.asc(), StorePaymentMethod.id.asc()).all()
 
     @staticmethod
@@ -141,8 +141,19 @@ class StorePaymentMethodService:
     def validate_for_checkout(code: str, tenant_id: int | None = None) -> StorePaymentMethod:
         tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
         method = StorePaymentMethodService.get_by_code(code, tenant_id=tenant_id)
-        if not method or not method.is_enabled:
+        if not method or not method.is_enabled or getattr(method, "platform_disabled", False):
             raise ValueError(gettext("طريقة الدفع غير متاحة."))
+        return method
+
+    @staticmethod
+    def set_platform_disabled(method_id: int, disabled: bool, tenant_id: int | None = None) -> StorePaymentMethod:
+        """Platform-owner only: hard force-OFF lock for one payment method."""
+        tenant_id = tenant_id or StorePaymentMethodService._get_tenant_id()
+        method = db.session.get(StorePaymentMethod, int(method_id))
+        if not method or method.tenant_id != tenant_id:
+            raise ValueError(gettext("طريقة الدفع غير موجودة."))
+        with atomic_transaction("platform_disable_payment_method"):
+            method.platform_disabled = bool(disabled)
         return method
 
     @staticmethod
@@ -151,6 +162,8 @@ class StorePaymentMethodService:
         method = db.session.get(StorePaymentMethod, int(method_id))
         if not method or method.tenant_id != tenant_id:
             raise ValueError(gettext("طريقة الدفع غير موجودة."))
+        if enabled and getattr(method, "platform_disabled", False):
+            raise ValueError(gettext("طريقة الدفع معطلة من المنصة ولا يمكن تفعيلها."))
         with atomic_transaction("toggle_payment_method"):
             method.is_enabled = bool(enabled)
         return method

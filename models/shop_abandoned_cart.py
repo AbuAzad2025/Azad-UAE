@@ -21,6 +21,9 @@ class ShopAbandonedCart(db.Model):
     )
     email = db.Column(db.String(200), nullable=True)
     cart_data = db.Column(db.Text, nullable=True)
+    # Per-session key for anonymous visitors. Without it every guest on a
+    # tenant shares one upsert row and overwrites each other's carts.
+    session_key = db.Column(db.String(64), nullable=True, index=True)
     reminder_sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
     reminder_count = db.Column(db.Integer, default=0, nullable=False)
     recovered = db.Column(db.Boolean, default=False, nullable=False, index=True)
@@ -33,3 +36,8 @@ class ShopAbandonedCart(db.Model):
 
     tenant = db.relationship("Tenant", backref=db.backref("abandoned_carts", lazy="dynamic"))
     account = db.relationship("ShopCustomerAccount", backref=db.backref("abandoned_carts", lazy="dynamic"))
+
+    __table_args__ = (
+        db.Index("ix_abandoned_tenant_email", "tenant_id", "email"),
+        db.Index("ix_abandoned_recovery_sweep", "tenant_id", "recovered", "reminder_sent_at"),
+    )

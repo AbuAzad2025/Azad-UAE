@@ -67,6 +67,7 @@ class TestSafeFloatAndWishlist:
             patch("routes.shop.atomic_transaction"),
             patch("routes.shop.db.session.add"),
             patch("routes.shop.StoreService.wishlist_count", return_value=2),
+            patch("routes.shop.StoreService.active_product", return_value=_product()),
         ):
             resp = shop_cov3_client.post(
                 f"{BASE}/wishlist/add/10", json={}, headers={"Content-Type": "application/json"}
@@ -143,7 +144,10 @@ class TestAuthArcs:
         assert resp.status_code == 200
 
     def test_add_review_bad_rating(self, shop_cov3_client):
-        with patch("routes.shop._shop_account", return_value=_account()):
+        with (
+            patch("routes.shop._shop_account", return_value=_account()),
+            patch("routes.shop.StoreService.active_product", return_value=_product()),
+        ):
             resp = shop_cov3_client.post(f"{BASE}/p/10/review/add", data={"rating": "9"})
         assert resp.status_code == 302
 
@@ -352,6 +356,10 @@ class TestCheckoutAndOrders:
             patch("routes.shop._shop_account", return_value=_account()),
             patch("routes.shop.atomic_transaction"),
             patch("routes.shop.db.session.add"),
+            patch(
+                "routes.shop.StorePaymentMethodService.get_by_code",
+                return_value=MagicMock(code="cod"),
+            ),
         ):
             assert (
                 shop_cov3_client.post(f"{BASE}/account/payments/save", data={"method_code": "cod"}).status_code == 302
