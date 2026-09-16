@@ -614,7 +614,12 @@ jobs:
           pip install -r requirements.txt gunicorn playwright
           python -m playwright install --with-deps chromium
       - name: Install Node deps (for JS tours)
-        run: npm ci --no-audit --no-fund
+        run: |
+          npm ci --no-audit --no-fund
+          # The tours run via `npx playwright` (Node 1.62.x), whose expected
+          # browser build differs from the one installed by pip's playwright.
+          # Install the Node-side chromium as well (deps already installed above).
+          npx playwright install chromium
       - name: Seed auth users and export states
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
