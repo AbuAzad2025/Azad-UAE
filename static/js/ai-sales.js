@@ -58,10 +58,8 @@ $(document).ready(() => {
 		});
 	}
 
-	// فحص المخزون
+	// فحص المخزون (callers guarantee productId/quantity — guarded at the change handler)
 	function checkStockAlert(productId, quantity, lineIndex) {
-		if (!productId || !quantity) return;
-
 		$.ajax({
 			url: "/ai/check-stock",
 			method: "POST",
@@ -147,10 +145,8 @@ $(document).ready(() => {
 		});
 	}
 
-	// البحث في الأسواق العالمية
+	// البحث في الأسواق العالمية (productId guarded truthy by the change handler)
 	function searchGlobalMarket(productId, lineIndex) {
-		if (!productId) return;
-
 		$.ajax({
 			url: `/ai/search-market-price/${productId}`,
 			method: "GET",
@@ -185,10 +181,8 @@ $(document).ready(() => {
 		});
 	}
 
-	// معرفة التوافق
+	// معرفة التوافق (productId guarded truthy by the change handler)
 	function findCompatibleVehicles(productId) {
-		if (!productId) return;
-
 		$.ajax({
 			url: `/ai/find-compatible/${productId}`,
 			method: "GET",

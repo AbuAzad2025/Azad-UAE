@@ -1,4 +1,98 @@
-import { vi } from 'vitest';
+import { vi, beforeEach } from 'vitest';
+
+// Save native window.addEventListener before any test can mock it (used by
+// gap100_base to reliably clean leaked error handlers across vi.resetModules).
+if (typeof window !== 'undefined' && typeof EventTarget !== 'undefined' && EventTarget.prototype.addEventListener) {
+  try {
+    const ETProto = EventTarget.prototype;
+    const _origProtoAdd = ETProto.addEventListener;
+    const _origProtoRemove = ETProto.removeEventListener;
+    globalThis.__trackedErrorHandlers = [];
+    // Wrap prototype to catch all EventTarget listeners
+    ETProto.addEventListener = function (type, handler, ...rest) {
+      if ((type === "error" || type === "unhandledrejection") && typeof handler === "function") {
+        globalThis.__trackedErrorHandlers.push({ target: this, type, handler });
+      }
+      return _origProtoAdd.call(this, type, handler, ...rest);
+    };
+    ETProto.removeEventListener = function (type, handler, ...rest) {
+      const idx = globalThis.__trackedErrorHandlers.findIndex((e) => e.target === this && e.type === type && e.handler === handler);
+      if (idx !== -1) globalThis.__trackedErrorHandlers.splice(idx, 1);
+      return _origProtoRemove.call(this, type, handler, ...rest);
+    };
+    // Also wrap window's own addEventListener if it shadows prototype (jsdom does)
+    const winOwnAdd = window.addEventListener;
+    const winOwnRemove = window.removeEventListener;
+    if (winOwnAdd !== ETProto.addEventListener) {
+      globalThis.__nativeWindowAddEventListener = winOwnAdd.bind(window);
+      globalThis.__nativeWindowRemoveEventListener = winOwnRemove.bind(window);
+      const winWrapper = function (type, handler, ...rest) {
+        if ((type === "error" || type === "unhandledrejection") && typeof handler === "function") {
+          const already = globalThis.__trackedErrorHandlers.some((e) => e.target === this && e.type === type && e.handler === handler);
+          if (!already) globalThis.__trackedErrorHandlers.push({ target: this, type, handler });
+        }
+        return winOwnAdd.call(this, type, handler, ...rest);
+      };
+      winWrapper.__isTrackedWrapper = true;
+      window.addEventListener = winWrapper;
+      window.removeEventListener = function (type, handler, ...rest) {
+        const idx = globalThis.__trackedErrorHandlers.findIndex((e) => e.target === this && e.type === type && e.handler === handler);
+        if (idx !== -1) globalThis.__trackedErrorHandlers.splice(idx, 1);
+        return winOwnRemove.call(this, type, handler, ...rest);
+      };
+    } else {
+      globalThis.__nativeWindowAddEventListener = _origProtoAdd.bind(window);
+      globalThis.__nativeWindowRemoveEventListener = _origProtoRemove.bind(window);
+    }
+    globalThis.__cleanupLeakedErrorHandlers = () => {
+      for (const { target, type, handler } of globalThis.__trackedErrorHandlers.splice(0)) {
+        try { _origProtoRemove.call(target, type, handler); } catch (_) {}
+        try { winOwnRemove.call(target, type, handler); } catch (_) {}
+      }
+    };
+    // Ensure window wrapper survives vi.restoreAllMocks (which restores window.addEventListener to native)
+    const _origRestoreAllMocks = vi.restoreAllMocks.bind(vi);
+    vi.restoreAllMocks = function (...args) {
+      const res = _origRestoreAllMocks(...args);
+      try {
+        if (!window.addEventListener.__isTrackedWrapper) {
+          const nat = globalThis.__nativeWindowAddEventListener;
+          if (nat) {
+            const wr = function (type, handler, ...rest) {
+              if ((type === "error" || type === "unhandledrejection") && typeof handler === "function") {
+                const already = globalThis.__trackedErrorHandlers.some((e) => e.target === this && e.type === type && e.handler === handler);
+                if (!already) globalThis.__trackedErrorHandlers.push({ target: this, type, handler });
+              }
+              return nat.call(this, type, handler, ...rest);
+            };
+            wr.__isTrackedWrapper = true;
+            window.addEventListener = wr;
+          }
+        }
+      } catch (_) {}
+      return res;
+    };
+    // Global beforeEach to clean leaked handlers before every test (prevents cross-file pollution)
+    beforeEach(() => {
+      try { globalThis.__cleanupLeakedErrorHandlers?.(); } catch (_) {}
+      try { window.addEventListener.mockRestore?.(); } catch (_) {}
+      if (!window.addEventListener.__isTrackedWrapper) {
+        const nat = globalThis.__nativeWindowAddEventListener;
+        if (nat) {
+          const wr = function (type, handler, ...rest) {
+            if ((type === "error" || type === "unhandledrejection") && typeof handler === "function") {
+              const already = globalThis.__trackedErrorHandlers.some((e) => e.target === this && e.type === type && e.handler === handler);
+              if (!already) globalThis.__trackedErrorHandlers.push({ target: this, type, handler });
+            }
+            return nat.call(this, type, handler, ...rest);
+          };
+          wr.__isTrackedWrapper = true;
+          window.addEventListener = wr;
+        }
+      }
+    });
+  } catch (_) {}
+}
 
 // Emulate i18n.js global so classic scripts can call bare `t()` (the browser
 // loads static/js/i18n.js before POS modules). Identity passthrough keeps the

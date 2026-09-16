@@ -452,8 +452,7 @@ function safeEval(expr) {
 		}
 		const base = parsePrimary();
 		if (peek() === "^" || (peek() === "*" && src[pos + 1] === "*")) {
-			if (src[pos] === "^") pos++;
-			else pos += 2;
+			pos += 2;
 			return base ** parseFactor();
 		}
 		return base;

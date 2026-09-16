@@ -12,6 +12,7 @@ export default defineConfig({
       include: ["static/js/**/*.js"],
       exclude: [
         "static/js/**/*.min.js",
+        "static/js/dist/**",
         "**/node_modules/**",
         "**/tests/**",
         "static/js/pos/cashier-logic.js",

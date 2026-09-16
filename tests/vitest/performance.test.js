@@ -327,40 +327,45 @@ describe('performance.js', () => {
     expect(global.alert).toHaveBeenCalledTimes(2);
   });
 
-  it('handles scroll with rAF throttling', async () => {
-    const listeners = {};
-    const spy = vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
-      listeners[evt] = cb;
-    });
-    await importPerf();
-    expect(listeners.scroll).toBeDefined();
-    listeners.scroll();
-    listeners.scroll();
-    expect(spy).toHaveBeenCalled();
-  });
+   it('handles scroll with rAF throttling', async () => {
+     const listeners = {};
+     const spy = vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
+       listeners[evt] = cb;
+     });
+     try {
+       await importPerf();
+       expect(listeners.scroll).toBeDefined();
+       listeners.scroll();
+       listeners.scroll();
+       expect(spy).toHaveBeenCalled();
+     } finally {
+       spy.mockRestore();
+     }
+   });
 
-  it('adjusts DataTables columns on resize', async () => {
-    vi.useFakeTimers();
-    try {
-      const adjust = vi.fn();
-      const $ = global.$;
-      $.fn.DataTable = {};
-      $.fn.dataTable = {
-        defaults: {},
-        tables: vi.fn(() => ({ columns: { adjust } })),
-      };
-      const listeners = {};
-      vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
-        listeners[evt] = cb;
-      });
-      await importPerf();
-      listeners.resize();
-      vi.advanceTimersByTime(260);
-      expect(adjust).toHaveBeenCalled();
-    } finally {
-      vi.useRealTimers();
-    }
-  });
+   it('adjusts DataTables columns on resize', async () => {
+     vi.useFakeTimers();
+     const adjust = vi.fn();
+     const $ = global.$;
+     $.fn.DataTable = {};
+     $.fn.dataTable = {
+       defaults: {},
+       tables: vi.fn(() => ({ columns: { adjust } })),
+     };
+     const listeners = {};
+     const spy = vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
+       listeners[evt] = cb;
+     });
+     try {
+       await importPerf();
+       listeners.resize();
+       vi.advanceTimersByTime(260);
+       expect(adjust).toHaveBeenCalled();
+     } finally {
+       vi.useRealTimers();
+       spy.mockRestore();
+     }
+   });
 
   it('initializes tooltips and focuses first input on modal show', async () => {
     const tooltipEl = document.createElement('span');
@@ -396,19 +401,20 @@ describe('performance.js', () => {
     expect(animateCalls[0].duration).toBe(500);
   });
 
-  it('runs performance monitoring load handler', async () => {
-    vi.useFakeTimers();
-    try {
-      const listeners = {};
-      vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
-        listeners[evt] = cb;
-      });
-      await importPerf();
-      expect(listeners.load).toBeDefined();
-      listeners.load();
-      vi.advanceTimersByTime(150);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-});
+   it('runs performance monitoring load handler', async () => {
+     vi.useFakeTimers();
+     const listeners = {};
+     const spy = vi.spyOn(window, 'addEventListener').mockImplementation((evt, cb) => {
+       listeners[evt] = cb;
+     });
+     try {
+       await importPerf();
+       expect(listeners.load).toBeDefined();
+       listeners.load();
+       vi.advanceTimersByTime(150);
+     } finally {
+       vi.useRealTimers();
+       spy.mockRestore();
+     }
+   });
+ });
