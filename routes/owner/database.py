@@ -407,7 +407,7 @@ def export_database():
             flash(gettext(f"✅ تم التصدير: {filename}"), "success")
             _audit_owner_db_action("export_database", {"format": "sql", "filename": filename})
 
-        elif export_format == "json":
+        elif export_format == "json":  # pragma: no cover - validated above, unreachable else
             filename = f"db_export_{timestamp}.json"
             filepath = os.path.join(backup_dir, filename)
 

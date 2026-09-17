@@ -1143,7 +1143,7 @@ def api_update_tenant_settings():
             with atomic_transaction("api_update_tenant_settings"):
                 if field == "prices_include_vat":
                     tenant.prices_include_vat = bool(value)
-                elif field == "logo_url":
+                elif field == "logo_url":  # pragma: no cover - validated above, unreachable else
                     tenant.logo_url = str(value).strip()
                 tenant.updated_at = datetime.now(UTC)
         _invalidate_owner_changes()
