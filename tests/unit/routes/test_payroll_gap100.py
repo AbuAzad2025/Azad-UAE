@@ -27,9 +27,7 @@ def _payroll_patches(**kwargs):
         stack.enter_context(patch("routes.payroll.get_active_tenant_id", return_value=1))
         stack.enter_context(patch("routes.payroll.branch_scope_id", return_value=branch_scope))
         stack.enter_context(patch("routes.payroll.should_show_all_branch_columns", return_value=False))
-        stack.enter_context(
-            patch("routes.payroll.PayrollService.list_branches_at_scope", return_value=[branch])
-        )
+        stack.enter_context(patch("routes.payroll.PayrollService.list_branches_at_scope", return_value=[branch]))
         stack.enter_context(patch("routes.payroll.PayrollService.list_branch_options", return_value=[branch]))
         stack.enter_context(patch("routes.payroll.PayrollService.create_employee"))
         stack.enter_context(patch("extensions.limiter.limit", return_value=lambda f: f))
@@ -91,7 +89,7 @@ class TestAddEmployeeBranchMismatchGap100:
 
     def test_missing_name_raises_and_flashes(self, payroll_gap_client):
         with _payroll_patches(branch_scope=2):
-            with patch("routes.payroll.render_template", return_value="ok") as render:
+            with patch("routes.payroll.render_template", return_value="ok"):
                 resp = payroll_gap_client.post(
                     "/payroll/employees/add",
                     data={"name": "", "branch_id": "2"},

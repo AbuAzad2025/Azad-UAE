@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from models.pos_cash_movement import PosCashMovement
-from tests.unit.routes.test_pos_v2_routes import _mock_session, _pos_api_patches
+from tests.unit.routes.test_pos_v2_routes import _pos_api_patches
 
 
 @pytest.fixture
@@ -65,7 +65,10 @@ class TestAccumulateShiftTotalsGap1486:
         empty_sale = MagicMock(total_amount=Decimal("0"), payments=[])
         with (
             patch("services.pos_write_service.PosWriteService.session_sales", return_value=[empty_sale]),
-            patch("services.pos_write_service.PosWriteService.shift_cash_movements", return_value=[pay_in, pay_out, unknown]),
+            patch(
+                "services.pos_write_service.PosWriteService.shift_cash_movements",
+                return_value=[pay_in, pay_out, unknown],
+            ),
             patch("routes.pos.payment_amount_base", return_value=Decimal("0")),
         ):
             _accumulate_shift_totals(shift)
@@ -99,7 +102,6 @@ class TestPublishCfdRefreshGap1997:
 
         q = MagicMock()
         q.put_nowait.side_effect = Exception("broken")
-        stale_entry = (1, 11, q)
         # subscriber matches tenant/session so it will be added to stale
         pos_module._CFD_SUBSCRIBERS.append((1, 11, q))
         # also add a stale entry that is NOT in subscribers to hit false branch

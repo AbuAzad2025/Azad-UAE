@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import builtins
 from contextlib import ExitStack
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 from routes.owner import owner_bp
 
@@ -57,7 +57,7 @@ class TestExportDatabaseJsonGap100:
         mock_db.session.execute.side_effect = [r_a, r_b]
 
         atomic = _atomic()
-        m_open = mock_open()
+        mock_open()
         with ExitStack() as stack:
             stack.enter_context(patch("routes.owner.database.render_template", return_value="ok"))
             stack.enter_context(patch("routes.owner.database.url_for", return_value="/"))
@@ -82,7 +82,7 @@ class TestExportDatabaseJsonGap100:
             stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
             stack.enter_context(patch("services.logging_core.LoggingCore.log_error"))
             stack.enter_context(patch("routes.owner.database.select_all_query", return_value="SELECT 1"))
-            m_open = mock_open()
+            mock_open()
             # conditional open prevents breaking Babel .mo loading
             stack.enter_context(patch.object(builtins, "open", side_effect=_conditional_open))
             dump_mock = stack.enter_context(patch("routes.owner.database.json.dump"))

@@ -3,15 +3,11 @@
 Missing per report: 59, 308->482, 386->389, 390->393, 476->482, 514->517, 518->521, 959->976
 """
 
-import os
 import tempfile
 from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-import routes.products as products_mod
-from routes.products import _parse_category_payload
 
 
 def _warehouse(wid=1):
@@ -228,12 +224,12 @@ class TestImportBranches308_482:
         # force exception after filepath creation to hit cleanup true branch (file exists)
         import pandas as pd
 
-        df = pd.DataFrame({"name": ["X"], "price": [1.0]})
+        pd.DataFrame({"name": ["X"], "price": [1.0]})
         # make _read_import_dataframe raise after file is saved (filepath exists)
         with (
             patch("routes.products._read_import_dataframe", side_effect=RuntimeError("boom")),
             patch("routes.products.ProductService.get_default_warehouse", return_value=_warehouse()),
-            patch("routes.products.current_app") as cur_app,
+            patch("routes.products.current_app"),
             patch("routes.products.render_template", return_value="ok"),
         ):
             # need UPLOAD_FOLDER to be upload_dir already via fixture
@@ -344,7 +340,6 @@ class TestEditBranch959_976:
         }
 
     def test_edit_merchant_not_found_returns_render(self, cov_products_client):
-        from tests.unit.routes.conftest import _chain_query
 
         prod = _product(10)
         prod.partner_shares = []

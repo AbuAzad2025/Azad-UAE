@@ -58,9 +58,7 @@ class TestIntegrationExceptionGap100:
                 )
             )
             # Ensure test_currency_api not called
-            stack.enter_context(
-                patch("services.integration_service.IntegrationService.test_currency_api")
-            )
+            stack.enter_context(patch("services.integration_service.IntegrationService.test_currency_api"))
             resp = app.test_client().post("/owner/integrations/test/email")
         assert resp.status_code == 500
         data = resp.get_json()

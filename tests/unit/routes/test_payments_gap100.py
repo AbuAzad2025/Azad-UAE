@@ -55,7 +55,11 @@ class TestRestoreReceiptGap100:
         ):
             resp = payments_gap_client.post("/payments/receipts/1/restore", follow_redirects=False)
         assert resp.status_code == 302
-        assert "/payments/archived" in resp.location or "/payments/receipts" in resp.location or resp.location.endswith("/archived")
+        assert (
+            "/payments/archived" in resp.location
+            or "/payments/receipts" in resp.location
+            or resp.location.endswith("/archived")
+        )
 
     def test_restore_receipt_exception_still_redirects(self, payments_gap_client):
         archived = MagicMock()
