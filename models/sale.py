@@ -154,6 +154,7 @@ class Sale(db.Model):
     )
     order_type = db.Column(db.String(20), nullable=True, index=True)
     table_id = db.Column(db.Integer, db.ForeignKey("pos_tables.id", ondelete="RESTRICT"), nullable=True, index=True)
+    shipment_id = db.Column(db.Integer, db.ForeignKey("shipments.id", ondelete="SET NULL"), nullable=True, index=True)
 
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
 
@@ -197,6 +198,7 @@ class Sale(db.Model):
 
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
     branch: Mapped["Branch | None"] = relationship("Branch", backref="sales", foreign_keys=[branch_id])
+    shipment = db.relationship("Shipment", foreign_keys=[shipment_id])
     lines: Mapped[list["SaleLine"]] = relationship("SaleLine", back_populates="sale", lazy="joined")
     payments: Mapped[list["Payment"]] = relationship("Payment", back_populates="sale", lazy="dynamic")
     tenant = db.relationship("Tenant", backref="sales", foreign_keys=[tenant_id])

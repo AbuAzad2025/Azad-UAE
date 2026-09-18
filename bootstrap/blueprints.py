@@ -183,6 +183,7 @@ def register_blueprints(app):
     assets_bp = _import_bp(app, "routes.assets", "assets_bp")
     quotations_bp = _import_bp(app, "routes.quotations", "quotations_bp")
     transfers_bp = _import_bp(app, "routes.transfers", "transfers_bp")
+    shipment_bp = _import_bp(app, "routes.shipments", "shipment_bp")
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -236,5 +237,6 @@ def register_blueprints(app):
     app.register_blueprint(stock_sync_bp)
     app.register_blueprint(quotations_bp)
     app.register_blueprint(transfers_bp)
+    app.register_blueprint(shipment_bp)
 
     return app

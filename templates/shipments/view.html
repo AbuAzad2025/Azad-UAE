@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}إرسالية {{ shipment.shipment_number }}{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h3>إرسالية {{ shipment.shipment_number }} <span class="badge badge-{{ shipment.status }}">{{ shipment.status_ar }}</span></h3>
+  <div class="card mb-3"><div class="card-body">
+    <p><strong>من:</strong> {{ shipment.from_warehouse.name if shipment.from_warehouse else '-' }} → <strong>إلى:</strong> {{ shipment.destination_name }} ({{ shipment.destination_type }})</p>
+    <p><strong>القيمة:</strong> {{ "%.3f"|format(shipment.total_value or 0) }} — <strong>الكمية:</strong> {{ shipment.total_quantity }}</p>
+    <p><strong>الملاحظات:</strong> {{ shipment.notes or '-' }}</p>
+  </div></div>
+  <div class="card mb-3"><div class="card-header">البنود</div>
+    <table class="table mb-0"><thead><tr><th>المنتج</th><th>الكمية</th><th>سعر التكلفة</th><th>الإجمالي</th></tr></thead>
+    <tbody>{% for l in shipment.lines %}<tr><td>{{ l.product.name if l.product else l.product_id }}</td><td>{{ l.quantity }}</td><td>{{ l.unit_cost }}</td><td>{{ l.line_total }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  <div class="mb-3">
+    {% if shipment.status == 'draft' %}
+      <form method="POST" action="{{ url_for('shipments.send_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-info">إرسال</button></form>
+      <form method="POST" action="{{ url_for('shipments.cancel_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-danger">إلغاء</button></form>
+    {% elif shipment.status == 'in_transit' %}
+      <form method="POST" action="{{ url_for('shipments.arrive_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-success">تأكيد الوصول</button></form>
+    {% elif shipment.status == 'arrived' %}
+      <form method="POST" action="{{ url_for('shipments.start_selling', id=shipment.id) }}" style="display:inline"><button class="btn btn-primary">بدء البيع الميداني</button></form>
+    {% elif shipment.status in ['arrived','selling'] %}
+      <form method="POST" action="{{ url_for('shipments.close_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-secondary">إغلاق الإرسالية</button></form>
+    {% endif %}
+  </div>
+  {% if sales %}
+  <div class="card"><div class="card-header">المبيعات المرتبطة ({{ sales|length }})</div>
+    <table class="table mb-0"><thead><tr><th>رقم الفاتورة</th><th>العميل</th><th>الإجمالي</th><th>المدفوع</th></tr></thead>
+    <tbody>{% for sale in sales %}<tr><td><a href="{{ url_for('sales.view', id=sale.id) }}">{{ sale.sale_number }}</a></td><td>{{ sale.customer.name if sale.customer else '' }}</td><td>{{ sale.total_amount }}</td><td>{{ sale.paid_amount }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

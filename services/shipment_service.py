@@ -1,4 +1,5 @@
-from datetime import UTC
+from datetime import UTC, datetime
+from decimal import Decimal
 
 from extensions import db
 
@@ -61,3 +62,156 @@ class ShipmentService:
         if not tid:
             return []
         return Shipment.query.filter_by(tenant_id=tid).order_by(Shipment.created_at.desc()).all()
+
+    # ── Field-sales expedition (pre-invoice, Van) ──
+    @staticmethod
+    def _generate_shipment_number():
+        try:
+            from models.shipment import Shipment
+            from utils.helpers import generate_number
+
+            return generate_number("SH", Shipment, "shipment_number")
+        except Exception:
+            return f"SH-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+
+    @staticmethod
+    def create_field_shipment(
+        *,
+        from_warehouse_id,
+        destination_name,
+        destination_warehouse_id=None,
+        destination_type="site",
+        tenant_id=None,
+        created_by_id=None,
+        assigned_to_id=None,
+        lines_data=None,
+        notes=None,
+    ):
+        from models.shipment import Shipment, ShipmentLine
+
+        if not from_warehouse_id:
+            raise ValueError("from_warehouse_id مطلوب")
+        if not destination_name or not str(destination_name).strip():
+            raise ValueError("destination_name (موقع الإرسالية) مطلوب")
+        if not lines_data:
+            raise ValueError("يجب إضافة منتج واحد على الأقل")
+
+        shipment = Shipment(
+            shipment_number=ShipmentService._generate_shipment_number(),
+            tenant_id=tenant_id,
+            source_type="field_sale",
+            source_id=0,
+            from_warehouse_id=from_warehouse_id,
+            destination_warehouse_id=destination_warehouse_id,
+            destination_name=str(destination_name).strip(),
+            destination_type=destination_type or "site",
+            status="draft",
+            notes=notes,
+            created_by_id=created_by_id,
+            assigned_to_id=assigned_to_id,
+        )
+        db.session.add(shipment)
+        db.session.flush()
+
+        for row in lines_data:
+            product_id = row.get("product_id")
+            qty = Decimal(str(row.get("quantity", 0)))
+            if not product_id or qty <= 0:
+                raise ValueError("كل بند يحتاج product_id و quantity > 0")
+            unit_cost = Decimal(str(row.get("unit_cost", row.get("cost", 0) or 0)))
+            unit_price = Decimal(str(row.get("unit_price", row.get("price", 0) or 0)))
+            line = ShipmentLine(
+                shipment_id=shipment.id,
+                product_id=int(product_id),
+                quantity=qty,
+                unit_cost=unit_cost,
+                unit_price=unit_price,
+            )
+            line.calculate_line_total()
+            db.session.add(line)
+
+        db.session.flush()
+        shipment.calculate_totals()
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def send_shipment(shipment_id, user_id=None):
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            raise ValueError("الإرسالية غير موجودة")
+        if shipment.status != "draft":
+            raise ValueError(f"لا يمكن الإرسال من حالة {shipment.status}")
+        shipment.status = "in_transit"
+        shipment.shipped_at = datetime.now(UTC)
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def arrive_shipment(shipment_id, user_id=None):
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            raise ValueError("الإرسالية غير موجودة")
+        if shipment.status != "in_transit":
+            raise ValueError(f"لا يمكن تأكيد الوصول من حالة {shipment.status}")
+        shipment.status = "arrived"
+        shipment.arrived_at = datetime.now(UTC)
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def start_selling(shipment_id, user_id=None):
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            raise ValueError("الإرسالية غير موجودة")
+        if shipment.status != "arrived":
+            raise ValueError(f"لا يمكن بدء البيع من حالة {shipment.status}")
+        shipment.status = "selling"
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def close_shipment(shipment_id, user_id=None):
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            raise ValueError("الإرسالية غير موجودة")
+        if shipment.status not in ("arrived", "selling"):
+            raise ValueError(f"لا يمكن الإغلاق من حالة {shipment.status}")
+        shipment.status = "closed"
+        shipment.closed_at = datetime.now(UTC)
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def cancel_shipment(shipment_id, user_id=None):
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            raise ValueError("الإرسالية غير موجودة")
+        if shipment.status == "closed":
+            raise ValueError("لا يمكن إلغاء إرسالية مغلقة")
+        if shipment.status == "cancelled":
+            raise ValueError("الإرسالية ملغاة بالفعل")
+        shipment.status = "cancelled"
+        db.session.flush()
+        return shipment
+
+    @staticmethod
+    def get_shipment_or_404(shipment_id):
+        from flask import abort
+
+        from models.shipment import Shipment
+
+        shipment = db.session.get(Shipment, shipment_id)
+        if not shipment:
+            abort(404)
+        return shipment
