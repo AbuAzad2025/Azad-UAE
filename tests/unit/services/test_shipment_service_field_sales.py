@@ -35,11 +35,11 @@ def _product(db_session, sample_tenant):
 
 
 def p_id_counter():
-    p_id_counter.cnt += 1
+    p_id_counter.cnt += 1  # type: ignore[attr-defined]
     return [p_id_counter.cnt]
 
 
-p_id_counter.cnt = 0
+p_id_counter.cnt = 0  # type: ignore[attr-defined]
 
 
 class TestCreateFieldShipment:
