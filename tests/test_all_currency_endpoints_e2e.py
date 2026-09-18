@@ -9,29 +9,17 @@ from __future__ import annotations
 import os
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from flask import Flask
 
-from app.factory import create_app
-from config import Config
-from extensions import db
 from models import (
-    Branch,
     Cheque,
-    Customer,
     Payment,
-    Product,
     Sale,
-    SaleLine,
-    Tenant,
-    User,
-    Warehouse,
+    Shipment,
 )
-from models.shipment import ShipmentLine
 from utils.currency_utils import resolve_tenant_base_currency
-from utils.tenanting import tenant_query
 
 
 def test_resolve_tenant_base_currency():
@@ -154,7 +142,6 @@ def test_cheques_create_uses_tenant_base():
 
 
 def test_payments_create_uses_tenant_base():
-    from models import Payment, Sale
     sale = Sale(
         tenant_id=1,
         sale_number="S-TEST-001",
@@ -181,7 +168,6 @@ def test_payments_create_uses_tenant_base():
 
 
 def test_shipment_create_uses_tenant_base():
-    from models import Shipment
     s = Shipment(
         tenant_id=1,
         shipment_number="SH-TEST-001",
@@ -211,7 +197,6 @@ def test_invoice_template_renders_tenant_currency(app):
         status="confirmed",
         payment_status="paid",
     )
-    from flask import render_template
     with app.test_request_context():
         html = render_template("invoices/modern.html",
             sale=sale,
@@ -234,12 +219,11 @@ def test_base_template_injects_BASE_CURRENCY(app):
 
 
 def test_no_hardcoded_AED_in_templates():
-    import os
     for root, _, files in os.walk("templates"):
         for f in files:
             if f.endswith(".html"):
                 path = os.path.join(root, f)
-                with open(path, "r", encoding="utf-8") as fp:
+                with open(path, encoding="utf-8") as fp:
                     content = fp.read()
                     if "'AED'" in content or '"AED"' in content:
                         if "NOWPayments" not in path and "gateway" not in path.lower():
