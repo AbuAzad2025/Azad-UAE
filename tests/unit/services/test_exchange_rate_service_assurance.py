@@ -25,7 +25,7 @@ def _clear_display_cache():
 class TestCacheHelpers:
     def test_cache_key(self):
         key = _ERS()._cache_key("usd", ("EUR", "AED"))
-        assert key == "USD:AED,EUR"
+        assert key == "global:USD:AED,EUR"
 
     def test_cache_ttl_from_config(self, app):
         app.config["CURRENCY_ONLINE_CACHE_TIMEOUT"] = "120"
@@ -86,7 +86,7 @@ class TestFetchProviders:
 
 class TestDisplayRates:
     def test_cache_hit(self, mocker):
-        _ERS()._display_cache["USD:AED,EUR"] = {
+        _ERS()._display_cache["global:USD:AED,EUR"] = {
             "timestamp": __import__("time").time(),
             "rates": {"USD": 1.0, "AED": 3.67, "EUR": 0.92},
             "provider": "primary",
@@ -118,7 +118,7 @@ class TestDisplayRates:
         assert result["rates"]["AED"] == _ERS().DISPLAY_FALLBACK["AED"]
 
     def test_stale_cache_when_apis_fail(self, mocker):
-        _ERS()._display_cache["USD:AED"] = {
+        _ERS()._display_cache["global:USD:AED"] = {
             "timestamp": 0,
             "rates": {"USD": 1.0, "AED": 3.5},
             "provider": "primary",

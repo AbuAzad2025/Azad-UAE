@@ -19,7 +19,7 @@ def _resp(status=200, payload=None, exc=None):
 
 
 def test_cache_key_and_ttl_and_timeout(app):
-    assert ExchangeRateService._cache_key("usd", ("ILS", "AED")) == "USD:AED,ILS"
+    assert ExchangeRateService._cache_key("usd", ("ILS", "AED")) == "global:USD:AED,ILS"
     assert ExchangeRateService._cache_ttl() == ExchangeRateService._display_cache_ttl
     app.config["CURRENCY_ONLINE_CACHE_TIMEOUT"] = "60"
     assert ExchangeRateService._cache_ttl() == 60

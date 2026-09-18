@@ -45,7 +45,7 @@ class TestCurrencyMetadata:
 
 class TestGetAllRates:
     def test_cache_hit(self):
-        CurrencyService._rates_cache["AED"] = {
+        CurrencyService._rates_cache["global:AED"] = {
             "timestamp": __import__("time").time(),
             "rates": {"AED": Decimal("1"), "USD": Decimal("0.27")},
         }
@@ -140,7 +140,7 @@ class TestExchangeRateDetails:
         assert details["rate"] == Decimal("1.000000")
 
     def test_cache_path(self):
-        CurrencyService._rates_cache["USD"] = {
+        CurrencyService._rates_cache["global:USD"] = {
             "timestamp": __import__("time").time(),
             "rates": {"AED": Decimal("3.67")},
         }

@@ -63,7 +63,7 @@ def test_fetch_open_er_branches():
 
 def test_get_all_rates_cache_and_fallback():
     _clear()
-    CurrencyService._rates_cache["AED"] = {"timestamp": time.time(), "rates": {"USD": Decimal("0.5")}}
+    CurrencyService._rates_cache["global:AED"] = {"timestamp": time.time(), "rates": {"USD": Decimal("0.5")}}
     assert CurrencyService.get_all_rates("AED") == {"USD": Decimal("0.5")}
     _clear()
     with (
@@ -105,7 +105,7 @@ def test_details_user_parity_cache_http_forex_fallback():
     out = CurrencyService.get_exchange_rate_details("USD", "AED", user_rate="-5")
     assert out["source"] != "user_input"
     assert CurrencyService.get_exchange_rate_details("AED", "AED")["source"] == "parity"
-    CurrencyService._rates_cache["USD"] = {"timestamp": time.time(), "rates": {"AED": Decimal("3.6725")}}
+    CurrencyService._rates_cache["global:USD"] = {"timestamp": time.time(), "rates": {"AED": Decimal("3.6725")}}
     out = CurrencyService.get_exchange_rate_details("USD", "AED")
     assert out["source"] == "cache" and out["cached"] is True
     _clear()

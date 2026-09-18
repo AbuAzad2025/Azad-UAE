@@ -133,7 +133,7 @@ class TestCurrencyServiceFetch:
             patch.object(CurrencyService, "_fetch_open_er_api_rates", return_value={}),
         ):
             rates_cls.return_value.get_rate.side_effect = RuntimeError("forex down")
-            details = CurrencyService.get_exchange_rate_details("USD", "EUR")
+            details = CurrencyService.get_exchange_rate_details("USD", "AED")
         assert details["source"] == "fallback_static"
 
     def test_get_all_rates_forex_get_rates_exception(self):
@@ -237,7 +237,7 @@ class TestExchangeRateServiceDisplayProviders:
     def test_stale_cache_used_when_apis_fail(self):
         from services.exchange_rate_service import ExchangeRateService
 
-        ExchangeRateService._display_cache["USD:AED"] = {
+        ExchangeRateService._display_cache["global:USD:AED"] = {
             "timestamp": 0,
             "rates": {"USD": 1.0, "AED": 3.5},
             "provider": "primary",
