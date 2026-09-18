@@ -304,6 +304,8 @@ class TestGetOrCreateRealDatabase:
         from models import Currency
 
         code = "C" + uuid.uuid4().hex[:2].upper()
+        db_session.query(Currency).filter_by(code=code).delete(synchronize_session=False)
+        db_session.commit()
         instance, created = get_or_create(
             db_session,
             Currency,

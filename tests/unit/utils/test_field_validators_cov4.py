@@ -94,7 +94,7 @@ def test_arabic_words_edges():
     assert number_to_arabic_words("bad-input") == ""  # 151-154
     assert number_to_arabic_words(-5) == ""  # 155-156
     assert "صفر" in number_to_arabic_words(0)  # 106-108
-    assert "فلس" in number_to_arabic_words(1500.75)  # 162-164 minor>0
+    assert "أغورة" in number_to_arabic_words(1500.75, currency="ILS")  # 162-164 minor>0 with explicit currency
     assert "فقط لا غير" in number_to_arabic_words(100)  # 165
     assert "ألفان" in number_to_arabic_words(2000)  # 89-90
     assert "ملايين" in number_to_arabic_words(5_000_000)  # 101-102
