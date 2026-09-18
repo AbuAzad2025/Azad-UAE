@@ -110,19 +110,58 @@ def test_sales_create_explicit_currency_preserved_usd():
 
 def test_purchases_create_uses_tenant_base():
     from models import Purchase
-    pur = Purchase(tenant_id=1, supplier_id=1, warehouse_id=1, total_amount=Decimal("500"), amount=Decimal("500"), currency="ILS", status="confirmed", purchase_number="PUR-TEST-001", supplier_name="Test Supplier", amount_aed=Decimal("500"), user_id=1)
+
+    pur = Purchase(
+        tenant_id=1,
+        supplier_id=1,
+        warehouse_id=1,
+        total_amount=Decimal("500"),
+        amount=Decimal("500"),
+        currency="ILS",
+        status="confirmed",
+        purchase_number="PUR-TEST-001",
+        supplier_name="Test Supplier",
+        amount_aed=Decimal("500"),
+        user_id=1,
+    )
     assert pur.currency == resolve_tenant_base_currency(1)
 
 
 def test_purchases_create_uses_tenant_base_aed():
     from models import Purchase
-    pur = Purchase(tenant_id=2, supplier_id=2, warehouse_id=2, total_amount=Decimal("500"), amount=Decimal("500"), currency="AED", status="confirmed", purchase_number="PUR-TEST-002", supplier_name="Test Supplier", amount_aed=Decimal("500"), user_id=2)
+
+    pur = Purchase(
+        tenant_id=2,
+        supplier_id=2,
+        warehouse_id=2,
+        total_amount=Decimal("500"),
+        amount=Decimal("500"),
+        currency="AED",
+        status="confirmed",
+        purchase_number="PUR-TEST-002",
+        supplier_name="Test Supplier",
+        amount_aed=Decimal("500"),
+        user_id=2,
+    )
     assert pur.currency == resolve_tenant_base_currency(2)
 
 
 def test_purchases_create_uses_tenant_base_usd():
     from models import Purchase
-    pur = Purchase(tenant_id=3, supplier_id=3, warehouse_id=3, total_amount=Decimal("500"), amount=Decimal("500"), currency="USD", status="confirmed", purchase_number="PUR-TEST-003", supplier_name="Test Supplier", amount_aed=Decimal("500"), user_id=3)
+
+    pur = Purchase(
+        tenant_id=3,
+        supplier_id=3,
+        warehouse_id=3,
+        total_amount=Decimal("500"),
+        amount=Decimal("500"),
+        currency="USD",
+        status="confirmed",
+        purchase_number="PUR-TEST-003",
+        supplier_name="Test Supplier",
+        amount_aed=Decimal("500"),
+        user_id=3,
+    )
     assert pur.currency == resolve_tenant_base_currency(3)
 
 
@@ -182,6 +221,7 @@ def test_shipment_create_uses_tenant_base():
 
 def test_invoice_template_renders_tenant_currency(app):
     from flask import render_template
+
     sale = Sale(
         tenant_id=1,
         sale_number="S-TEST",
@@ -198,19 +238,22 @@ def test_invoice_template_renders_tenant_currency(app):
         payment_status="paid",
     )
     with app.test_request_context():
-        html = render_template("invoices/modern.html",
+        html = render_template(
+            "invoices/modern.html",
             sale=sale,
             settings=MagicMock(),
             print_branch=MagicMock(),
             print_user_name="Test",
             amount_in_words="",
-            qr_data_url="")
+            qr_data_url="",
+        )
         assert "ILS" in html or "شيكل" in html
         assert "AED" not in html or "درهم" not in html
 
 
 def test_base_template_injects_BASE_CURRENCY(app):
     from flask import render_template_string
+
     with app.test_request_context():
         html = render_template_string("""
             <html><head>{{ get_template_attribute('base.html', 'BASE_CURRENCY_SCRIPT')() }}</head></html>
@@ -227,11 +270,16 @@ def test_no_hardcoded_AED_in_templates():
                     content = fp.read()
                     if "'AED'" in content or '"AED"' in content:
                         if "NOWPayments" not in path and "gateway" not in path.lower():
-                            lines = content.split('\n')
+                            lines = content.split("\n")
                             for i, line in enumerate(lines):
                                 if "'AED'" in line or '"AED"' in line:
                                     stripped = line.strip()
-                                    if not stripped.startswith("#") and not stripped.startswith("//") and "i18n" not in line and "translation" not in line.lower():
+                                    if (
+                                        not stripped.startswith("#")
+                                        and not stripped.startswith("//")
+                                        and "i18n" not in line
+                                        and "translation" not in line.lower()
+                                    ):
                                         pass
 
 
