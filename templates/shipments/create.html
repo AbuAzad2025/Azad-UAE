@@ -9,7 +9,7 @@
       <div class="col-md-4"><label class="form-label">من مستودع *</label>
         <select name="from_warehouse_id" class="form-control" required>{% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}</option>{% endfor %}</select></div>
       <div class="col-md-4"><label class="form-label">إلى موقع *</label>
-        <input type="text" name="destination_name" class="form-control" required placeholder="مثال: موقع الرياض - معرض متنقل"></div>
+        <input type="text" name="destination_name" class="form-control" required placeholder="{{ t('مثال') }}: {{ t('موقع الرياض') }} - {{ t('معرض متنقل') }}"></div>
       <div class="col-md-2"><label class="form-label">المسؤول</label>
         <select name="assigned_to_id" class="form-control"><option value="">—</option>{% for u in users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}</select></div>
       <div class="col-md-2"><label class="form-label">الملاحظات</label><input type="text" name="notes" class="form-control"></div>
