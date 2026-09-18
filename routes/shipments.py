@@ -109,7 +109,8 @@ def create_shipment():
             flash(f"✅ تم إنشاء الإرسالية {s.shipment_number}", "success")
             return redirect(url_for("shipments.view_shipment", id=s.id))
         except Exception as e:
-            db.session.rollback()
+            # atomic_transaction (line 89) already rolled back on exception;
+            # no direct db.session.rollback() permitted (GRIMOIRE G1-ATOMICITY)
             flash(f"❌ خطأ: {str(e)}", "danger")
     from models.product import Product
     from models.user import User
