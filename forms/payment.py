@@ -9,6 +9,8 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, NumberRange, Optional
 
+from utils.currency_utils import context_aware_default_currency
+
 
 class ReceiptForm(FlaskForm):
     customer_id = SelectField("الزبون", coerce=int, validators=[DataRequired()])
@@ -16,9 +18,9 @@ class ReceiptForm(FlaskForm):
     currency = SelectField(
         "العملة",
         choices=[("AED", "درهم"), ("USD", "دولار"), ("EUR", "يورو")],
-        default="AED",
+        default=context_aware_default_currency,
         validators=[DataRequired()],
-    )  # TODO: use Config.DEFAULT_CURRENCY
+    )
     exchange_rate = DecimalField("سعر الصرف (اختياري)", validators=[Optional(), NumberRange(min=0)])
     payment_method = SelectField(
         "طريقة الدفع",

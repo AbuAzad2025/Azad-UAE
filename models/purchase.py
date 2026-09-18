@@ -4,7 +4,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from sqlalchemy.orm import Mapped, relationship
 
 from extensions import db
-from utils.currency_utils import context_aware_default_currency
+from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 
 
 class Purchase(db.Model):
@@ -244,13 +244,14 @@ class Purchase(db.Model):
         base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
         self.base_currency = base_currency
 
-        # Calculate amount in tenant base currency (using stored base_currency)
-        if self.currency == base_currency:
-            self.amount_aed = self.total_amount
-        else:
-            self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+        # Centralized FX conversion — single source of truth (D08)
+        self.amount_aed = convert_and_quantize_aed(
+            self.total_amount,
+            self.currency,
+            exchange_rate_decimal,
+            base_currency=base_currency,
+            tenant_id=self.tenant_id,
+        )
 
     def to_dict(self, include_lines=False):
         data = {

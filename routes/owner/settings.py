@@ -15,6 +15,7 @@ from routes.owner.shared import (
 from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
+from utils.regional_defaults import FALLBACK_CURRENCY
 
 from .common import (
     IntegrationSettings,
@@ -324,7 +325,7 @@ def system_config():
                     logger.exception("Failed to parse subscription_perpetual_fee_aed from form data")
 
                 try:
-                    default_currency = request.form.get("default_currency", "ILS")
+                    default_currency = request.form.get("default_currency", FALLBACK_CURRENCY)
                     settings.default_currency = default_currency
                 except Exception:
                     logger.exception("Failed to parse default_currency from form data")
@@ -894,7 +895,7 @@ def currency_settings():
             with atomic_transaction("currency_settings"):
                 settings = SystemSettings.get_current()
 
-                default_currency = request.form.get("default_currency", "AED")
+                default_currency = request.form.get("default_currency", FALLBACK_CURRENCY)
                 settings.default_currency = default_currency
                 try:
                     from models import Tenant
@@ -941,7 +942,7 @@ def exchange_rates():
         action = request.form.get("action", "save")
         if action == "save":
             from_currency = (request.form.get("from_currency") or "USD").upper()
-            to_currency = (request.form.get("to_currency") or "AED").upper()
+            to_currency = (request.form.get("to_currency") or FALLBACK_CURRENCY).upper()
             rate_val = request.form.get("rate", type=float)
             request.form.get("effective_date") or today
 

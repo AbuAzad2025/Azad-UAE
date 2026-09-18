@@ -80,7 +80,7 @@ This:
 | Entity | ID/details |
 |---|---|
 | Owner user | `username=owner`, password = `OWNER_PASSWORD` env |
-| Currencies | AED (base), ILS, USD |
+| Currencies | ILS (fallback/base via `FALLBACK_CURRENCY`), tenant `base_currency` dynamic, AED/USD etc. |
 | Roles | 9 (owner / super_admin / developer / manager / seller / branch_manager / accountant / kitchen / cashier) |
 | Permissions | 36 |
 | Industry fields | 74 |

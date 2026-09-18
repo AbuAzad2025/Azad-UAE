@@ -234,7 +234,7 @@ function _applyBasePrice(index, basePrice) {
 	const rate = parseFloat($("#exchange_rate").val()) || 1;
 	const currency = $("#currency").val();
 	let finalPrice = numericBase;
-	if (currency !== (window._FX_FALLBACK_BASE || "AED") && rate > 0) {
+	if (currency !== (window._FX_FALLBACK_BASE || "ILS") && rate > 0) {
 		finalPrice = numericBase / rate;
 	}
 	$priceInput.val(finalPrice.toFixed(2));
@@ -279,7 +279,7 @@ function _loadProductPrice(index) {
 			const currency = $("#currency").val();
 
 			let finalPrice = data.price;
-			if (currency !== (window._FX_FALLBACK_BASE || "AED") && rate > 0) {
+			if (currency !== (window._FX_FALLBACK_BASE || "ILS") && rate > 0) {
 				finalPrice = data.price / rate;
 			}
 
@@ -483,7 +483,7 @@ function updateLinePrices() {
 
 		if (!Number.isNaN(basePrice)) {
 			let finalPrice = basePrice;
-			if (currency !== (window._FX_FALLBACK_BASE || "AED") && rate > 0) {
+			if (currency !== (window._FX_FALLBACK_BASE || "ILS") && rate > 0) {
 				finalPrice = basePrice / rate;
 			}
 			$priceInput.val(finalPrice.toFixed(2));
@@ -640,7 +640,7 @@ $("#currency").on("change", function () {
 	// Update payment currency display
 	$("#payment_currency_display").text(currency);
 
-	if (currency === (window._FX_FALLBACK_BASE || "AED")) {
+	if (currency === (window._FX_FALLBACK_BASE || "ILS")) {
 		$rateInput.val("1.000000");
 		$rateInput.data("server-rate", 1);
 		serverExchangeRate = 1;
@@ -655,7 +655,7 @@ $("#currency").on("change", function () {
 	$rateInput.val("...").css("background-color", "#fff8dc");
 
 	$.ajax({
-		url: `/api/currency-rate/${currency}/${window._FX_FALLBACK_BASE || "AED"}`,
+		url: `/api/currency-rate/${currency}/${window._FX_FALLBACK_BASE || "ILS"}`,
 		success: (data) => {
 			if (data.rate) {
 				serverExchangeRate = data.rate;
@@ -664,7 +664,7 @@ $("#currency").on("change", function () {
 				$rateInput.prop("readonly", false);
 				$rateInput.css("background-color", "#d4edda");
 				azad.showSuccess(
-					`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} ${window._FX_FALLBACK_BASE || "AED"}`,
+					`✅ تم جلب سعر الصرف: 1 ${currency} = ${data.rate.toFixed(3)} ${window._FX_FALLBACK_BASE || "ILS"}`,
 				);
 				updateLinePrices();
 			} else if (data.manual_input_required) {

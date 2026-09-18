@@ -256,22 +256,26 @@ class Sale(db.Model):
         base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
         self.base_currency = base_currency
 
-        # Calculate amount in tenant base currency (using stored base_currency)
-        if self.currency == base_currency:
-            self.amount_aed = self.total_amount
-        else:
-            self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+        # Centralized FX conversion — single source of truth (D08)
+        from utils.currency_utils import convert_and_quantize_aed
+
+        self.amount_aed = convert_and_quantize_aed(
+            self.total_amount,
+            self.currency,
+            exchange_rate_decimal,
+            base_currency=base_currency,
+            tenant_id=self.tenant_id,
+        )
 
         # Calculate paid amount in tenant base currency
         paid_foreign = Decimal(str(self.paid_amount)) if self.paid_amount else Decimal("0")
-        if self.currency == base_currency:
-            self.paid_amount_aed = paid_foreign
-        else:
-            self.paid_amount_aed = (paid_foreign * exchange_rate_decimal).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+        self.paid_amount_aed = convert_and_quantize_aed(
+            paid_foreign,
+            self.currency,
+            exchange_rate_decimal,
+            base_currency=base_currency,
+            tenant_id=self.tenant_id,
+        )
 
         # Calculate balance and status using the centralized logic
         self.recalculate_payment_status()
@@ -304,9 +308,13 @@ class Sale(db.Model):
         self.paid_amount_aed = total_confirmed_paid_aed
         try:
             ex = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
+            # D22: guard zero/negative exchange_rate — never divide by zero
+            if ex <= Decimal("0"):
+                ex = Decimal("1")
             if self.currency == self.base_currency:
-                self.paid_amount = total_confirmed_paid_aed
+                self.paid_amount = total_confirmed_paid_aed.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
+                # Inverse of convert_and_quantize_aed (base → foreign); guarded ex > 0
                 self.paid_amount = (total_confirmed_paid_aed / ex).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         except Exception:
             self.paid_amount = self.paid_amount or Decimal("0")

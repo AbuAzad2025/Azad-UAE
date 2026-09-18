@@ -180,23 +180,25 @@ def validate_cheque(cheque):
 
 
 def calculate_amount_aed(cheque):
-    from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency
+    from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
 
-    base_currency = get_system_default_currency()
+    tenant_id = cheque.tenant_id if cheque is not None else None
+    base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
     cheque.amount_aed = convert_and_quantize_aed(
         cheque.amount,
         cheque.currency,
         cheque.exchange_rate,
         base_currency=base_currency,
-        tenant_id=(cheque.tenant_id if cheque is not None else None),
+        tenant_id=tenant_id,
     )
 
 
 def _post_gl(cheque, lines, description, reference_type):
-    from utils.currency_utils import get_system_default_currency
+    from utils.currency_utils import resolve_tenant_base_currency
 
-    base_currency = get_system_default_currency()
-    gl_ensure_core_accounts(tenant_id=(cheque.tenant_id if cheque is not None else None))
+    tenant_id = cheque.tenant_id if cheque is not None else None
+    base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+    gl_ensure_core_accounts(tenant_id=tenant_id)
     return gl_post_or_fail(
         lines=lines,
         description=description,
@@ -205,7 +207,7 @@ def _post_gl(cheque, lines, description, reference_type):
         currency=base_currency,
         exchange_rate=1.0,
         branch_id=cheque.branch_id,
-        tenant_id=(cheque.tenant_id if cheque is not None else None),
+        tenant_id=tenant_id,
     )
 
 
@@ -478,16 +480,20 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
     if cheque.status not in ["deposited", "pending"]:
         raise ValueError(gettext(f"لا يمكن تأكيد صرف شيك بحالة: {cheque.status_ar}"))
     try:
+        from utils.currency_utils import resolve_tenant_base_currency
+
+        tenant_id_for_base = cheque.tenant_id if cheque is not None else None
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id_for_base)
         cheque.status = "cleared"
         cheque.clearance_date = clearance_date or datetime.now().date()
-        if cheque.currency != "AED" and clearance_exchange_rate:
+        if (cheque.currency or "").upper() != (base_currency or "").upper() and clearance_exchange_rate:
             cheque.clearance_exchange_rate = Decimal(str(clearance_exchange_rate))
-        elif cheque.currency != "AED":
+        elif (cheque.currency or "").upper() != (base_currency or "").upper():
             try:
                 rate_info = gl_resolve_exchange_rate(
-                    cheque.issue_date,
+                    cheque.clearance_date,
                     cheque.currency,
-                    "AED",
+                    base_currency,
                     (cheque.tenant_id if cheque is not None else None),
                 )
                 cheque.clearance_exchange_rate = Decimal(str(rate_info["rate"]))
@@ -502,6 +508,7 @@ def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=No
             cheque.amount,
             cheque.currency,
             cheque.clearance_exchange_rate,
+            base_currency=base_currency,
             tenant_id=(cheque.tenant_id if cheque is not None else None),
         )
         cheque.currency_gain_loss = cheque.actual_amount_aed - cheque.amount_aed

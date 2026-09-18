@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from extensions import db
+from utils.currency_utils import get_system_default_currency
 
 
 class BankReconciliation(db.Model):
@@ -218,7 +219,7 @@ class BankStatementLine(db.Model):
     reference = db.Column(db.String(120), index=True)
     description = db.Column(db.String(255))
     amount = db.Column(db.Numeric(18, 3), nullable=False)
-    currency = db.Column(db.String(3), default="AED")
+    currency = db.Column(db.String(3), default=get_system_default_currency)
 
     # Matching status
     status = db.Column(

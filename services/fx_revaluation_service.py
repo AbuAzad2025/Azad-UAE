@@ -24,6 +24,7 @@ from utils.currency_utils import (
 )
 from utils.db_safety import atomic_transaction
 from utils.gl_reference_types import GLRef
+from utils.tenanting import get_active_tenant_id, is_platform_owner, tenant_query
 
 logger = logging.getLogger(__name__)
 
@@ -47,26 +48,39 @@ def _current_rate(from_currency: str, to_currency: str, tenant_id: int | None) -
 def _open_sales(tenant_id: int | None, base_currency: str):
     from models import Sale
 
-    q = Sale.query.filter(
-        Sale.payment_status.in_(["unpaid", "partial", "pending_cheque"]),
-        Sale.currency != base_currency,
-        Sale.status != "cancelled",
-        Sale.balance_due > _THRESHOLD,
-    )
     if tenant_id is not None:
+        # Tenant-scoped via tenant_query (AGENTS.md 2.1) + explicit filter for correctness
+        q = tenant_query(Sale).filter(
+            Sale.payment_status.in_(["unpaid", "partial", "pending_cheque"]),
+            Sale.currency != base_currency,
+            Sale.status != "cancelled",
+            Sale.balance_due > _THRESHOLD,
+        )
         q = q.filter(Sale.tenant_id == tenant_id)
+    else:
+        q = Sale.query.filter(
+            Sale.payment_status.in_(["unpaid", "partial", "pending_cheque"]),
+            Sale.currency != base_currency,
+            Sale.status != "cancelled",
+            Sale.balance_due > _THRESHOLD,
+        )
     return q.all()
 
 
 def _open_purchases(tenant_id: int | None, base_currency: str):
     from models import Purchase
 
-    q = Purchase.query.filter(
-        Purchase.currency != base_currency,
-        Purchase.status != "cancelled",
-    )
     if tenant_id is not None:
+        q = tenant_query(Purchase).filter(
+            Purchase.currency != base_currency,
+            Purchase.status != "cancelled",
+        )
         q = q.filter(Purchase.tenant_id == tenant_id)
+    else:
+        q = Purchase.query.filter(
+            Purchase.currency != base_currency,
+            Purchase.status != "cancelled",
+        )
     results = []
     for p in q.all():
         paid = p.get_paid_amount()
@@ -81,13 +95,19 @@ def _posted_period_entries(period_month: str, tenant_id: int | None) -> list[int
     from models.gl import GLJournalEntry
 
     tag = f"{_REVALUATION_TAG}|{period_month}"
-    q = GLJournalEntry.query.filter(
-        GLJournalEntry.notes.like(f"%{tag}%"),
-        GLJournalEntry.status == "posted",
-        GLJournalEntry.is_reversed.is_(False),
-    )
     if tenant_id is not None:
+        q = tenant_query(GLJournalEntry).filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
         q = q.filter(GLJournalEntry.tenant_id == tenant_id)
+    else:
+        q = GLJournalEntry.query.filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
     return [e.id for e in q.all()]
 
 
@@ -101,6 +121,13 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
     Returns a summary dict with keys: ar_count, ap_count, ar_diff, ap_diff,
     entry_ids.
     """
+    if tenant_id is None:
+        # Require explicit tenant_id for tenant isolation; platform owner may scan all
+        if not is_platform_owner():
+            resolved = get_active_tenant_id()
+            if resolved is None:
+                raise ValueError("tenant_id is required for FX revaluation")
+            tenant_id = resolved
     base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
     now = datetime.now(UTC)
     period = now.strftime("%Y-%m")
@@ -334,13 +361,19 @@ def reverse_previous_revaluation(
     from models.gl import GLJournalEntry
 
     tag = f"{_REVALUATION_TAG}|{period_month}"
-    q = GLJournalEntry.query.filter(
-        GLJournalEntry.notes.like(f"%{tag}%"),
-        GLJournalEntry.status == "posted",
-        GLJournalEntry.is_reversed.is_(False),
-    )
     if tenant_id is not None:
+        q = tenant_query(GLJournalEntry).filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
         q = q.filter(GLJournalEntry.tenant_id == tenant_id)
+    else:
+        q = GLJournalEntry.query.filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
 
     reversed_ids = []
     with atomic_transaction("fx_revaluation_reversal"):

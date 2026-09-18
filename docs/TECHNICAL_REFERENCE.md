@@ -8,7 +8,7 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 
 الميزات الرئيسية المُفعّلة حالياً:
 - POS متعدد القنوات (promotion engine، parked carts، manager overrides، cash movements، RMA، split tender)
-- تعدد العملات (FX settlement، revaluation، AED quantization)
+- تعدد العملات (FX settlement، revaluation، base-currency quantization via `_BASE_QUANTUM`)
 - المساعد الذكي (RBAC + confirmation gates + neural engine)
 - مزامنة POS خارجي (API key auth، sync batches، idempotency)
 - خزينة الدفع (CardVault، PaymentVault)
@@ -185,7 +185,7 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 ### العملات المتعددة
 - النماذج: `Currency`، `ExchangeRate`، `ExchangeRateRecord`
 - الخدمات: `exchange_rate_service.py`، `fx_revaluation_service.py`، `currency_service.py`
-- الأدوات: `utils/currency_utils.py` — `convert_and_quantize_aed()`، `_AED_QUANTUM = Decimal("0.001")`
+- الأدوات: `utils/currency_utils.py` — `convert_and_quantize_aed()` (legacy alias; canonical `_BASE_QUANTUM = Decimal("0.001")`)
 
 ### نقاط البيع (POS)
 - النماذج: `PosSession`، `PosShift`، `PosCart`، `PosFloor` / `PosTable` / `PosTableOrder`، `PosKdsOrder`، `PosOrderType`، `PosOverrideToken`، `PosCashMovement`
@@ -323,8 +323,8 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 - `InventoryReconciliationService` — تسوية مخزونية
 
 ### العملات المتعددة
-- التكميم: `Decimal("0.001")` + `ROUND_HALF_UP`
-- `convert_and_quantize_aed()` — التحويل والتكميم
+- التكميم: `Decimal("0.001")` (`_BASE_QUANTUM`, legacy alias `_AED_QUANTUM`) + `ROUND_HALF_UP` — per `utils/regional_defaults.FALLBACK_CURRENCY`
+- `convert_and_quantize_aed()` — التحويل والتكميم (tenant `base_currency`/`default_currency` via `get_system_default_currency()`)
 - `ExchangeRateService` — يُرجع `rate` كـ string
 - `fx_revaluation_service.py` — إعادة تقييم شهري للمراكز المفتوحة
 
@@ -496,6 +496,6 @@ External POS → POST /api/v2/stock/sync
 ### تدفق العملات المتعددة
 ```
 Transaction → ExchangeRateService.resolve_exchange_rate_for_transaction()
-   → convert_and_quantize_aed() (Decimal("0.001")، ROUND_HALF_UP)
-   → FX revaluation (month-end)
+   → convert_and_quantize_aed() (Decimal("0.001") via _BASE_QUANTUM، ROUND_HALF_UP)
+   → FX revaluation (month-end) — base currency from FALLBACK_CURRENCY / tenant base_currency
 ```

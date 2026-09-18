@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from sqlalchemy.orm import Mapped, relationship
 
 from extensions import db
-from utils.currency_utils import context_aware_default_currency
+from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 
 
 class PurchaseReturn(db.Model):
@@ -43,6 +43,7 @@ class PurchaseReturn(db.Model):
     total_amount = db.Column(db.Numeric(15, 3), nullable=False, default=0)
 
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
+    base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False, default=0)
 
@@ -81,7 +82,18 @@ class PurchaseReturn(db.Model):
         self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
         self.total_amount = self.subtotal
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
-        self.amount_aed = (self.total_amount * exchange_rate_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        from utils.currency_utils import resolve_tenant_base_currency
+
+        base_currency = resolve_tenant_base_currency(tenant_id=self.tenant_id)
+        self.base_currency = base_currency
+        # Centralized FX conversion — single source of truth (D08)
+        self.amount_aed = convert_and_quantize_aed(
+            self.total_amount,
+            self.currency,
+            exchange_rate_decimal,
+            base_currency=base_currency,
+            tenant_id=self.tenant_id,
+        )
 
 
 class PurchaseReturnLine(db.Model):

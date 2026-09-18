@@ -92,8 +92,10 @@ class ExchangeRateService:
     }
 
     @staticmethod
-    def _cache_key(base: str, symbols: tuple[str, ...]) -> str:
-        return f"{base.upper()}:{','.join(sorted(symbols))}"
+    def _cache_key(base: str, symbols: tuple[str, ...], tenant_id: int | None = None) -> str:
+        # D26: tenant-isolated display cache
+        tid = str(tenant_id) if tenant_id is not None else "global"
+        return f"{tid}:{base.upper()}:{','.join(sorted(symbols))}"
 
     @staticmethod
     def _cache_ttl() -> int:
@@ -248,6 +250,7 @@ class ExchangeRateService:
     def get_online_rates_for_display(
         base: str = "USD",
         symbols: tuple[str, ...] | None = None,
+        tenant_id: int | None = None,
     ) -> dict[str, Any]:
         """
         Fetch online rates for DISPLAY only.  Never use for accounting.
@@ -266,7 +269,14 @@ class ExchangeRateService:
         base = (base or "USD").upper()
         symbols = symbols or ExchangeRateService.DISPLAY_CURRENCIES
         symbols = tuple(s.upper() for s in symbols)
-        cache_key = ExchangeRateService._cache_key(base, symbols)
+        if tenant_id is None:
+            try:
+                from utils.tenanting import get_active_tenant_id
+
+                tenant_id = get_active_tenant_id()
+            except Exception:
+                tenant_id = None
+        cache_key = ExchangeRateService._cache_key(base, symbols, tenant_id)
         now = time.time()
         ttl = ExchangeRateService._cache_ttl()
 
@@ -541,7 +551,9 @@ class ExchangeRateService:
         try:
             from services.currency_service import CurrencyService
 
-            details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=None)
+            details = CurrencyService.get_exchange_rate_details(
+                from_currency, to_currency, user_rate=None, tenant_id=tenant_id
+            )
             rate_decimal = details.get("rate")
             if details.get("source") == "fallback_static" and (to_currency or "").upper() != "AED":
                 logger.warning(

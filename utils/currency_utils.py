@@ -108,15 +108,16 @@ def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
     return context_aware_default_currency()
 
 
-_AED_QUANTUM = Decimal("0.001")
+_BASE_QUANTUM = Decimal("0.001")
+_AED_QUANTUM = _BASE_QUANTUM  # legacy alias
 
 
 def convert_and_quantize_aed(amount, currency, exchange_rate, base_currency=None, tenant_id=None):
     """Centralized currency → base-currency conversion with strict quantization.
 
-    Returns a ``Decimal`` always quantized to 0.001 (AED precision) using
+    Returns a ``Decimal`` always quantized to 0.001 (base-currency precision) using
     ``ROUND_HALF_UP``.  This is the **single source of truth** for computing
-    ``amount_aed`` across every module.
+    ``amount_aed`` across every module (alias; canonical name uses base quantum).
 
     Parameters
     ----------
@@ -139,8 +140,8 @@ def convert_and_quantize_aed(amount, currency, exchange_rate, base_currency=None
     if base_currency is None:
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
     if (currency or "").upper() == (base_currency or "").upper():
-        return amt.quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
-    return (amt * rate).quantize(_AED_QUANTUM, rounding=ROUND_HALF_UP)
+        return amt.quantize(_BASE_QUANTUM, rounding=ROUND_HALF_UP)
+    return (amt * rate).quantize(_BASE_QUANTUM, rounding=ROUND_HALF_UP)
 
 
 def get_currency_symbol(code):

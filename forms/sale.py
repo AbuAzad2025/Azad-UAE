@@ -4,15 +4,17 @@ from flask_wtf import FlaskForm
 from wtforms import DecimalField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Optional
 
+from utils.currency_utils import context_aware_default_currency
+
 
 class SaleForm(FlaskForm):
     customer_id = SelectField("الزبون", coerce=int, validators=[DataRequired()])
     currency = SelectField(
         "العملة",
         choices=[("AED", "درهم"), ("USD", "دولار"), ("EUR", "يورو")],
-        default="AED",
+        default=context_aware_default_currency,
         validators=[DataRequired()],
-    )  # TODO: use Config.DEFAULT_CURRENCY
+    )
     exchange_rate = DecimalField("سعر الصرف", default=Decimal("1.0"), validators=[Optional(), NumberRange(min=0)])
     discount_amount = DecimalField("الخصم", default=Decimal(), validators=[Optional(), NumberRange(min=0)])
     shipping_cost = DecimalField("الشحن", default=Decimal(), validators=[Optional(), NumberRange(min=0)])

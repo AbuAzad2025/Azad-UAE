@@ -60,7 +60,7 @@
 | Payment Vault | خزنة الدفع | Encrypted card storage, NOWPayments & Stripe webhooks, public purchase/donation APIs with idempotency | تخزين بطاقات مشفّر، ويبهوكس NOWPayments وStripe، واجهات شراء/تبرع عامة مع حماية التكرار |
 | Fixed Assets | الأصول الثابتة | Depreciation schedules (straight-line, declining balance) | جداول الإهلاك (الخط المستقيم، التناقصي) |
 | Cheques | الشيكات | Full lifecycle: receive, deposit, clear, bounce, cancel | دورة حياة كاملة: استلام، إيداع، تصفية، رد، إلغاء |
-| Multi-currency | العملات المتعددة | FX rates, AED quantization, unrealized revaluation | أسعار الصرف، التكميم AED، إعادة التقييم غير المحقق |
+| Multi-currency | العملات المتعددة | FX rates, base-currency quantization (`_BASE_QUANTUM`), unrealized revaluation | أسعار الصرف، التكميم بعملة الأساس، إعادة التقييم غير المحقق |
 | External Sync | المزامنة الخارجية | API-key authenticated stock sync for external POS systems | مزامنة مخزون مُوثّقة بـ API key لأنظمة POS الخارجية |
 
 ## 6. Technology Stack | حزمة التقنيات

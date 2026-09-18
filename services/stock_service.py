@@ -843,8 +843,24 @@ class StockService:
 
             capitalize_landed = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
             unit_cost_for_valuation = line.landed_inventory_unit_cost if capitalize_landed else line.inventory_unit_cost
-            exchange_rate_decimal = Decimal(str(purchase.exchange_rate))
-            cost_in_aed = unit_cost_for_valuation * exchange_rate_decimal
+            # D23: Landed costs (freight/insurance/customs/other) are stored in purchase.currency,
+            # so landed_inventory_unit_cost is wholly in purchase currency. A single FX
+            # conversion converts the full landed cost to base currency. If landed costs
+            # were ever collected in a different currency, introduce
+            # purchase.landed_cost_currency and convert that slice separately to avoid
+            # double conversion.
+            exchange_rate_decimal = Decimal(str(purchase.exchange_rate)) if purchase.exchange_rate else Decimal("1")
+            if exchange_rate_decimal <= Decimal("0"):
+                exchange_rate_decimal = Decimal("1")
+            from utils.currency_utils import convert_and_quantize_aed
+
+            cost_in_aed = convert_and_quantize_aed(
+                unit_cost_for_valuation,
+                purchase.currency,
+                exchange_rate_decimal,
+                base_currency=getattr(purchase, "base_currency", None),
+                tenant_id=tenant_id,
+            )
 
             # MWAC recalculation (Phase 4)
             if mwac_enabled and tenant_id and warehouse_id:

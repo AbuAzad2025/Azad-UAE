@@ -52,7 +52,17 @@ class CurrencyService:
     CACHE_TTL_SECONDS = 300  # 5 دقائق
     _rates_cache: dict[str, Any] = {}
 
+    @staticmethod
+    def _cache_key(base: str, tenant_id: int | None = None) -> str:
+        # D26: tenant-isolated cache — prevents cross-tenant leak
+        tid = str(tenant_id) if tenant_id is not None else "global"
+        return f"{tid}:{(base or '').upper()}"
+
     # Fallback rates: value of 1 AED in target currency
+    # DEPRECATED (D12): AED-anchored static table — only valid when tenant base is AED.
+    # For non-AED tenants this cross-rate is WRONG MONEY. New code must use
+    # ExchangeRateService.resolve_exchange_rate_for_transaction() which refuses
+    # this fallback and degrades to last_record / needs_input.
     # Updated ILS: 1 AED ≈ 1.05 ILS (was 0.98, which implied 1 ILS = 1.02 AED — incorrect)
     FALLBACK_RATES = {
         "AED": Decimal("1.00"),
@@ -145,11 +155,12 @@ class CurrencyService:
             return {}
 
     @staticmethod
-    def get_all_rates(base=None):
+    def get_all_rates(base=None, tenant_id: int | None = None):
         base = (base or get_system_default_currency()).upper()
+        cache_key = CurrencyService._cache_key(base, tenant_id)
 
-        # Check cache first
-        cache_entry = CurrencyService._rates_cache.get(base)
+        # Check cache first (tenant-isolated)
+        cache_entry = CurrencyService._rates_cache.get(cache_key)
         if cache_entry and (time.time() - cache_entry["timestamp"]) < CurrencyService.CACHE_TTL_SECONDS:
             return cache_entry["rates"].copy()
 
@@ -170,7 +181,7 @@ class CurrencyService:
                 # Ensure base currency is 1.0
                 rates[base] = Decimal("1.00")
 
-                CurrencyService._rates_cache[base] = {
+                CurrencyService._rates_cache[cache_key] = {
                     "timestamp": time.time(),
                     "rates": rates,
                 }
@@ -181,7 +192,7 @@ class CurrencyService:
 
         http_rates = CurrencyService._fetch_open_er_api_rates(base)
         if http_rates:
-            CurrencyService._rates_cache[base] = {
+            CurrencyService._rates_cache[cache_key] = {
                 "timestamp": time.time(),
                 "rates": http_rates,
             }
@@ -228,11 +239,11 @@ class CurrencyService:
                 # 1 Base = (val_target / val_base) Target
                 rates[curr] = (val_target / val_base).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
 
-        CurrencyService._rates_cache[base] = {"timestamp": time.time(), "rates": rates}
+        CurrencyService._rates_cache[cache_key] = {"timestamp": time.time(), "rates": rates}
         return rates
 
     @staticmethod
-    def get_exchange_rate_details(from_currency, to_currency=None, user_rate=None):
+    def get_exchange_rate_details(from_currency, to_currency=None, user_rate=None, tenant_id: int | None = None):
         """
         Detailed exchange-rate resolver with source metadata.
         Source priority:
@@ -247,7 +258,7 @@ class CurrencyService:
             # Dynamic tenant base currency (was hardcoded "AED")
             from utils.currency_utils import resolve_tenant_base_currency
 
-            to_currency = resolve_tenant_base_currency()
+            to_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         if not from_currency:
             from_currency = to_currency
 
@@ -276,7 +287,8 @@ class CurrencyService:
                 "age_seconds": 0,
             }
 
-        cache_entry = CurrencyService._rates_cache.get(from_currency)
+        cache_key = CurrencyService._cache_key(from_currency, tenant_id)
+        cache_entry = CurrencyService._rates_cache.get(cache_key)
         if cache_entry:
             age = max(0, int(now_ts - float(cache_entry.get("timestamp", 0))))
             cached_rates = cache_entry.get("rates") or {}
@@ -291,7 +303,7 @@ class CurrencyService:
 
         http_rates = CurrencyService._fetch_open_er_api_rates(from_currency)
         if http_rates:
-            CurrencyService._rates_cache[from_currency] = {
+            CurrencyService._rates_cache[cache_key] = {
                 "timestamp": now_ts,
                 "rates": http_rates,
             }
@@ -309,7 +321,7 @@ class CurrencyService:
                 c = CurrencyRates()
                 rate = c.get_rate(from_currency, to_currency)
                 rate = Decimal(str(rate)).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)
-                CurrencyService._rates_cache[from_currency] = {
+                CurrencyService._rates_cache[cache_key] = {
                     "timestamp": now_ts,
                     "rates": {from_currency: Decimal("1.000000"), to_currency: rate},
                 }
@@ -327,6 +339,22 @@ class CurrencyService:
                     exc_info=True,
                 )
 
+        # D12 guard: refuse AED-anchored fallback for non-AED tenant bases
+        if (to_currency or "").upper() != "AED":
+            logger.warning(
+                "Refusing AED-anchored static fallback for non-AED tenant base %s (%s -> %s); "
+                "fallback is deprecated — caller must resolve via online rate or manual input",
+                to_currency,
+                from_currency,
+                to_currency,
+            )
+            return {
+                "rate": None,
+                "source": "needs_input",
+                "cached": False,
+                "age_seconds": 0,
+            }
+
         def get_aed_value(target):
             if target == "AED":
                 return Decimal("1")
@@ -343,6 +371,8 @@ class CurrencyService:
         }
 
     @staticmethod
-    def get_exchange_rate(from_currency, to_currency=None, user_rate=None):
-        details = CurrencyService.get_exchange_rate_details(from_currency, to_currency, user_rate=user_rate)
+    def get_exchange_rate(from_currency, to_currency=None, user_rate=None, tenant_id: int | None = None):
+        details = CurrencyService.get_exchange_rate_details(
+            from_currency, to_currency, user_rate=user_rate, tenant_id=tenant_id
+        )
         return details["rate"]

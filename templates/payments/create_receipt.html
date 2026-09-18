@@ -187,7 +187,7 @@
             <strong>{{ _('المتبقي') }}:</strong><br>
 
             {% set sale_balance_display = sale.balance_due %}
-            {% if sale.currency != 'AED' and sale.exchange_rate %}
+            {% if sale.currency != tenant_base_currency and sale.exchange_rate %}
               {% set sale_balance_display = sale.balance_due / sale.exchange_rate %}
             {% endif %}
             <span class="text-danger">{{ format_currency(sale_balance_display, sale.currency) }}</span>

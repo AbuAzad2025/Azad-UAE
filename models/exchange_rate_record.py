@@ -21,6 +21,7 @@ class ExchangeRateRecord(db.Model):
             "from_currency",
             "to_currency",
             "effective_date",
+            "source",
             name="uq_rate_tenant_pair_date",
         ),
     )

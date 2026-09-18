@@ -33,6 +33,8 @@ class PaymentService:
     def _resolve_transaction_rate(currency, user_exchange_rate=None, tenant_id=None):
         from utils.currency_utils import resolve_tenant_base_currency
 
+        # Tenant-aware base currency; None falls back to system default via
+        # resolve_tenant_base_currency (covers tests without request context)
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
             currency,
@@ -203,18 +205,19 @@ class PaymentService:
             raise ValueError(gettext("المورد غير موجود"))
 
         try:
+            tenant_id_for_rate = supplier.tenant_id if supplier is not None else None
             payment_number = generate_number(
                 "PAY",
                 Payment,
                 "payment_number",
                 branch_id=branch_id,
-                tenant_id=(supplier.tenant_id if supplier is not None else None),
+                tenant_id=tenant_id_for_rate,
             )
 
-            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
-            base_currency = resolve_tenant_base_currency(
-                tenant_id=(supplier.tenant_id if supplier is not None else None)
+            exchange_rate = PaymentService._resolve_transaction_rate(
+                currency, user_exchange_rate, tenant_id=tenant_id_for_rate
             )
+            base_currency = resolve_tenant_base_currency(tenant_id=tenant_id_for_rate)
 
             payment = Payment(
                 tenant_id=(supplier.tenant_id if supplier is not None else None)
@@ -381,7 +384,7 @@ class PaymentService:
             tenant_id=tenant_id,
         )
 
-        exchange_rate = PaymentService._resolve_transaction_rate(currency)
+        exchange_rate = PaymentService._resolve_transaction_rate(currency, tenant_id=tenant_id)
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         amount_decimal = Decimal(str(amount))
         amount_aed = convert_and_quantize_aed(amount_decimal, currency, exchange_rate, tenant_id=tenant_id)
@@ -474,32 +477,41 @@ class PaymentService:
             if user:
                 resolved_branch_id = user.branch_id
 
+        resolved_tenant_id = tenant_id or (customer.tenant_id if customer is not None else None)
+        base_currency = resolve_tenant_base_currency(tenant_id=resolved_tenant_id)
+        # Amount is in base currency (tenant's base); resolve rate for completeness
+        exchange_rate = PaymentService._resolve_transaction_rate(base_currency, tenant_id=resolved_tenant_id)
+        amount_decimal = Decimal(str(amount or 0))
+        amount_aed = convert_and_quantize_aed(
+            amount_decimal, base_currency, exchange_rate, tenant_id=resolved_tenant_id
+        )
         payment_number = generate_number(
             "PAY",
             Payment,
             "payment_number",
             branch_id=resolved_branch_id,
-            tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
+            tenant_id=resolved_tenant_id,
         )
         payment = Payment(
             payment_number=payment_number,
             customer_id=customer.id,
-            amount=Decimal(str(amount or 0)),
-            amount_aed=Decimal(str(amount or 0)),
-            currency="AED",
-            exchange_rate=1,
+            amount=amount_decimal,
+            amount_aed=amount_aed,
+            currency=base_currency,
+            exchange_rate=exchange_rate,
+            base_currency=base_currency,
             payment_date=datetime.now(UTC),
             payment_method=payment_method,
             user_id=user_id or (current_user.id if current_user and current_user.is_authenticated else None),
             direction="incoming",
             payment_type="customer_payment",
-            tenant_id=tenant_id or (customer.tenant_id if customer is not None else None),
+            tenant_id=resolved_tenant_id,
             branch_id=resolved_branch_id,
         )
         db.session.add(payment)
         db.session.flush()
 
-        customer.apply_receipt(Decimal(str(amount or 0)))
+        customer.apply_receipt(amount_aed)
 
         return payment
 
@@ -577,7 +589,7 @@ class PaymentService:
                 tenant_id=tenant_id,
             )
 
-            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate)
+            exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate, tenant_id=tenant_id)
             base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
 
             receipt = Receipt(

@@ -170,7 +170,7 @@ table.statement-table thead th {
                 {% endif %}
               </div>
               {% endif %}
-              {% if t.currency and t.currency != 'AED' %}
+              {% if t.currency and t.currency != tenant_base_currency %}
               <span class="payment-chip">{{ t.currency }} @ {{ "%.4f"|format(t.exchange_rate) }}</span>
               {% endif %}
             </td>
