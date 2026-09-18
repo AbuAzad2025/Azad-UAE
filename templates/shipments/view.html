@@ -15,14 +15,14 @@
   </div>
   <div class="mb-3">
     {% if shipment.status == 'draft' %}
-      <form method="POST" action="{{ url_for('shipments.send_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-info">إرسال</button></form>
-      <form method="POST" action="{{ url_for('shipments.cancel_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-danger">إلغاء</button></form>
+      <form method="POST" action="{{ url_for('shipments.send_shipment', id=shipment.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-info">إرسال</button></form>
+      <form method="POST" action="{{ url_for('shipments.cancel_shipment', id=shipment.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-danger">إلغاء</button></form>
     {% elif shipment.status == 'in_transit' %}
-      <form method="POST" action="{{ url_for('shipments.arrive_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-success">تأكيد الوصول</button></form>
+      <form method="POST" action="{{ url_for('shipments.arrive_shipment', id=shipment.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-success">تأكيد الوصول</button></form>
     {% elif shipment.status == 'arrived' %}
-      <form method="POST" action="{{ url_for('shipments.start_selling', id=shipment.id) }}" style="display:inline"><button class="btn btn-primary">بدء البيع الميداني</button></form>
+      <form method="POST" action="{{ url_for('shipments.start_selling', id=shipment.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-primary">بدء البيع الميداني</button></form>
     {% elif shipment.status in ['arrived','selling'] %}
-      <form method="POST" action="{{ url_for('shipments.close_shipment', id=shipment.id) }}" style="display:inline"><button class="btn btn-secondary">إغلاق الإرسالية</button></form>
+      <form method="POST" action="{{ url_for('shipments.close_shipment', id=shipment.id) }}" style="display:inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-secondary">إغلاق الإرسالية</button></form>
     {% endif %}
   </div>
   {% if sales %}

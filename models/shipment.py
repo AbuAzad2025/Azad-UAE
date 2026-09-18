@@ -162,7 +162,8 @@ class Shipment(db.Model):
         self.total_value = val
 
     def __repr__(self):
-        return f"<Shipment {self.shipment_number or self.source_type + '#' + str(self.source_id)} {self.status}>"
+        num = getattr(self, "shipment_number", None) or (self.source_type + "#" + str(self.source_id))
+        return f"<Shipment {num} {self.status}>"
 
 
 class ShipmentLine(db.Model):

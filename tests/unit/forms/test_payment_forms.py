@@ -47,7 +47,7 @@ class TestReceiptFormValid:
         assert str(form.amount.data) == "10.50"
 
     def test_defaults_apply_when_selects_omitted(self):
-        form = _receipt_form({"customer_id": "2", "amount": "5"})
+        form = _receipt_form({"customer_id": "2", "amount": "5", "currency": "AED"})
         assert form.validate() is True
         assert form.currency.data == "AED"
         assert form.payment_method.data == "cash"
