@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: azad-uae
+    runtime: python
+    buildCommand: pip install -r requirements.txt && npm ci && npm run build:assets
+    startCommand: gunicorn -w 2 --bind 0.0.0.0:$PORT 'app.factory:create_app()'
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: FLASK_ENV
+        value: production
+      - key: CACHE_TYPE
+        value: redis
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+    healthCheckPath: /health
