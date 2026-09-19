@@ -1,17 +1,23 @@
 """Quick coverage for uncovered shipment templates."""
 
+from extensions import db
+from models.shipment import Shipment
+from models.warehouse import Warehouse
+
 
 def test_shipments_list_and_view_render(auth_client, sample_tenant, sample_branch, sample_user):
-    from extensions import db
-    from models.shipment import Shipment
-    from models.warehouse import Warehouse
     wh = Warehouse(tenant_id=sample_tenant.id, name="WH-TEST", code="WHTEST", is_active=True)
     db.session.add(wh)
     db.session.flush()
     s = Shipment(
-        tenant_id=sample_tenant.id, shipment_number="SHIP-001",
-        from_warehouse_id=wh.id, destination_name="Site",
-        destination_type="site", source_type="sale", source_id=1, status="pending",
+        tenant_id=sample_tenant.id,
+        shipment_number="SHIP-001",
+        from_warehouse_id=wh.id,
+        destination_name="Site",
+        destination_type="site",
+        source_type="sale",
+        source_id=1,
+        status="pending",
     )
     db.session.add(s)
     db.session.commit()
