@@ -1,5 +1,5 @@
 """Quick coverage for uncovered shipment templates."""
-from flask import Flask
+
 
 def test_shipments_view_template_renders(app):
     with app.test_client() as client:
