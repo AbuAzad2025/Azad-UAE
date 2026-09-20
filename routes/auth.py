@@ -115,6 +115,7 @@ def _render_login(**extra):
     active_stores = []
     try:
         from services.user_service import UserService
+
         active_tenants = UserService.active_tenants()
         active_stores = [
             {
@@ -127,6 +128,7 @@ def _render_login(**extra):
         ]
     except Exception as exc:
         import logging
+
         logging.getLogger(__name__).warning("Failed to load active stores for login page: %s", exc)
     return render_template(
         "auth/login.html",
