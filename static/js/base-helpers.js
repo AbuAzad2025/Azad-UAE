@@ -634,7 +634,6 @@ function initNavbarCalculator() {
 	if (btnLoanCalc) {
 		btnLoanCalc.addEventListener("click", () => {
 			const p = parseFloat(document.getElementById("loanPrincipal").value || "0");
-			const annual = parseFloat(document.getElementById("loanRate").value || "0");
 			const months = parseInt(document.getElementById("loanMonths").value || "0", 10);
 			const out = document.getElementById("loanResult");
 
@@ -644,11 +643,7 @@ function initNavbarCalculator() {
 				return;
 			}
 
-			const r = annual / 100 / 12;
-			const emiMsg = "[BACKEND ONLY: /api/calculate-loan]";
-			const totalMsg = "[BACKEND ONLY]";
-			const interest = total - p;
-
+			// ZERO FRONTEND CALC: backend API must compute EMI rate
 			out.className = "alert alert-info mt-2 mb-0";
 			const emiVal = 0; // ZERO FRONTEND CALC: backend must compute EMI
 			const totalVal = 0;

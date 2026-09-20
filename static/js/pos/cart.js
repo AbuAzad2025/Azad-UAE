@@ -64,9 +64,8 @@ const recalc = async () => {
 				body: JSON.stringify({
 					lines: state.cart.map((it) => ({
 						quantity: it.qty,
-						// ZERO CLIENT CALC: do NOT send computed unit_price; backend reads from DB
 						product_id: it.id,
-					}),
+					})),
 					discount_amount: discountAmount,
 					shipping_cost: shipping,
 					tax_rate: taxRate,
@@ -181,7 +180,8 @@ const renderCart = async () => {
 	const sym = currencySymbolFor(selectedCurrency());
 	state.cart.forEach((it, idx) => {
 		const tr = document.createElement("tr");
-		const lineTotal = 0; // ZERO FRONTEND CALC: backend provides exact total via /sales/api/calculate-totals
+		// ZERO FRONTEND CALC: backend provides exact total; no client-side lineTotal
+		// (line total removed — see audit report /sales/api/calculate-totals)
 		const meta =
 			(it.sku ? `SKU: ${esc(it.sku)}` : "") + (it.barcode ? ` | ${esc(it.barcode)}` : "");
 		tr.innerHTML = `

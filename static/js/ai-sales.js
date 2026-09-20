@@ -53,7 +53,8 @@ $(document).ready(() => {
 					priceInput.after(badge);
 					document.getElementById(btnId)?.addEventListener("click", () => {
 						// ZERO FRONTEND PRICE CALC: apply backend-recommended price directly
-						const serverPrice = Number(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
+						const serverPrice =
+							Number(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
 						window._applyRecommendedPrice(lineIndex, serverPrice);
 					});
 				}
