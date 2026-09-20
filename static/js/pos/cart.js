@@ -48,19 +48,9 @@ const recalc = async () => {
 	const taxRate = Math.max(0, Math.min(100, toNum(qs("#taxRate").value)));
 	const shipping = Math.max(0, toNum(qs("#shippingCost").value));
 	const discountAmount = Math.max(0, toNum(qs("#discountAmount").value));
-	let subtotal = 0;
-	let discount = 0;
-	state.cart.forEach((it) => {
-		const lineBase = it.qty * it.price;
-		const lineDisc = lineBase * (it.discountPercent / 100);
-		subtotal += lineBase - lineDisc;
-		discount += lineDisc;
-	});
-	const quickTax = pricesIncludeVatMeta ? 0 : subtotal * (taxRate / 100);
-	const quickTotal = Math.max(0, subtotal + quickTax + shipping - discountAmount);
-	qs("#kpiSubtotal").textContent = fmt(subtotal);
-	qs("#kpiDiscount").textContent = fmt(discount + discountAmount);
-	qs("#kpiTotal").textContent = fmt(quickTotal);
+	qs("#kpiSubtotal").textContent = fmt(0);
+	qs("#kpiDiscount").textContent = fmt(0);
+	qs("#kpiTotal").textContent = fmt(0);
 	qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 	if (state.cart.length > 0) {
 		try {
@@ -74,9 +64,9 @@ const recalc = async () => {
 				body: JSON.stringify({
 					lines: state.cart.map((it) => ({
 						quantity: it.qty,
-						unit_price: it.price,
-						discount_percent: it.discountPercent,
-					})),
+						// ZERO CLIENT CALC: do NOT send computed unit_price; backend reads from DB
+						product_id: it.id,
+					}),
 					discount_amount: discountAmount,
 					shipping_cost: shipping,
 					tax_rate: taxRate,
@@ -109,18 +99,18 @@ const recalc = async () => {
 		} catch (_) {}
 	}
 	const quickTotals = {
-		subtotal,
-		tax: quickTax,
+		subtotal: 0,
+		tax: 0,
 		shipping,
 		discountAmount,
 		taxRate,
-		total: quickTotal,
+		total: 0,
 		prices_include_vat: pricesIncludeVatMeta,
 	};
 	if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
 	state.lastTotals = quickTotals;
 	const chg = qs("#kpiChange");
-	if (chg) chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - quickTotal));
+	if (chg) chg.textContent = fmt(0);
 	return quickTotals;
 };
 
@@ -191,7 +181,7 @@ const renderCart = async () => {
 	const sym = currencySymbolFor(selectedCurrency());
 	state.cart.forEach((it, idx) => {
 		const tr = document.createElement("tr");
-		const lineTotal = it.qty * it.price * (1 - it.discountPercent / 100);
+		const lineTotal = 0; // ZERO FRONTEND CALC: backend provides exact total via /sales/api/calculate-totals
 		const meta =
 			(it.sku ? `SKU: ${esc(it.sku)}` : "") + (it.barcode ? ` | ${esc(it.barcode)}` : "");
 		tr.innerHTML = `
@@ -199,7 +189,7 @@ const renderCart = async () => {
                     <div class="pos-cart-item">
                         <div class="ci-top">
                             <span class="ci-name">${esc(it.name)}</span>
-                            <span class="ci-price">${fmt(lineTotal)} ${sym}</span>
+	                        <span class="ci-price">${fmt(it.basePrice)} ${sym} / وحدة</span>
                         </div>
                         ${meta ? `<div class="ci-meta">${meta}</div>` : ""}
                         ${it.serial ? `<div class="ci-meta">SN: ${esc(it.serial)}</div>` : ""}

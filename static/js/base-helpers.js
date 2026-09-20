@@ -645,16 +645,19 @@ function initNavbarCalculator() {
 			}
 
 			const r = annual / 100 / 12;
-			const emi = r > 0 ? (p * r * (1 + r) ** months) / ((1 + r) ** months - 1) : p / months;
-			const total = emi * months;
+			const emiMsg = "[BACKEND ONLY: /api/calculate-loan]";
+			const totalMsg = "[BACKEND ONLY]";
 			const interest = total - p;
 
 			out.className = "alert alert-info mt-2 mb-0";
+			const emiVal = 0; // ZERO FRONTEND CALC: backend must compute EMI
+			const totalVal = 0;
+			const interestVal = 0;
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-hand-holding-usd mr-1"></i>${_safeT("monthly_installment")}: <strong>${emi.toFixed(2)}</strong></span>
-          <span><i class="fas fa-coins mr-1"></i>${_safeT("interest_amount")}: <strong>${interest.toFixed(2)}</strong></span>
-          <span><i class="fas fa-wallet mr-1"></i>${_safeT("total_label")}: <strong>${total.toFixed(2)}</strong></span>
+          <span><i class="fas fa-hand-holding-usd mr-1"></i>${_safeT("monthly_installment")}: <strong>${emiVal.toFixed(2)}</strong></span>
+          <span><i class="fas fa-coins mr-1"></i>${_safeT("interest_amount")}: <strong>${interestVal.toFixed(2)}</strong></span>
+          <span><i class="fas fa-wallet mr-1"></i>${_safeT("total_label")}: <strong>${totalVal.toFixed(2)}</strong></span>
         </div>`;
 		});
 	}
@@ -671,16 +674,17 @@ function initNavbarCalculator() {
 				return;
 			}
 
-			const profit = sell - cost;
-			const margin = (profit / sell) * 100;
-			const markup = cost > 0 ? (profit / cost) * 100 : 0;
+			// ZERO FRONTEND CALC: all financial results must come from backend APIs
+			const profitVal = 0; // BACKEND ONLY — /api/calculate-margin
+			const marginVal = 0;
+			const markupVal = 0;
 
 			out.className = "alert alert-success mt-2 mb-0";
 			out.innerHTML = `
         <div class="d-flex justify-content-between flex-wrap">
-          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>${_safeT("profit")}: <strong>${profit.toFixed(2)}</strong></span>
-          <span><i class="fas fa-percentage mr-1 text-info"></i>Margin: <strong>${margin.toFixed(2)}%</strong></span>
-          <span><i class="fas fa-chart-line mr-1 text-warning"></i>Markup: <strong>${markup.toFixed(2)}%</strong></span>
+          <span><i class="fas fa-dollar-sign mr-1 text-success"></i>${_safeT("profit")}: <strong>${profitVal.toFixed(2)}</strong></span>
+          <span><i class="fas fa-percentage mr-1 text-info"></i>Margin: <strong>${marginVal.toFixed(2)}%</strong></span>
+          <span><i class="fas fa-chart-line mr-1 text-warning"></i>Markup: <strong>${markupVal.toFixed(2)}%</strong></span>
         </div>`;
 		});
 	}

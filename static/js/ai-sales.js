@@ -31,10 +31,13 @@ $(document).ready(() => {
 				customer_id: customerId,
 			}),
 			success: (response) => {
+				// ZERO FRONTEND PRICE CALC: recommended_price from backend API only
+				// Client does NOT parse or compute price; only renders server response
 				const priceInput = $(`#unit_price_${lineIndex}`);
-				const currentPrice = parseFloat(priceInput.val()) || 0;
 
-				if (currentPrice === 0 || Math.abs(currentPrice - response.recommended_price) > 0.01) {
+				// ZERO FRONTEND PRICE CALC: rely solely on backend recommended_price
+				if (response.recommended_price > 0) {
+					// Display recommendation badge without client-side price comparison/computation
 					// إظهار توصية — event delegation بدل onclick (متوافق مع nonce-CSP)
 					const btnId = `aiApplyPrice_${lineIndex}`;
 					const badge = `
@@ -49,8 +52,9 @@ $(document).ready(() => {
 					priceInput.parent().find(".ai-recommendation").remove();
 					priceInput.after(badge);
 					document.getElementById(btnId)?.addEventListener("click", () => {
-						const p = parseFloat(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
-						window._applyRecommendedPrice(lineIndex, p);
+						// ZERO FRONTEND PRICE CALC: apply backend-recommended price directly
+						const serverPrice = Number(document.getElementById(btnId)?.getAttribute("data-price")) || 0;
+						window._applyRecommendedPrice(lineIndex, serverPrice);
 					});
 				}
 			},
