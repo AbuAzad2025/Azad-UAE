@@ -4,6 +4,7 @@
 def test_ai_executor_deep_seller_none_guard():
     """Real production guard: when no active user exists, AIExecutor raises error (255-258)."""
     from services.ai_executor import AIExecutor, AIExecutorError
+
     try:
         # This triggers the branch: seller = User.query.filter_by(...).first() returns None,
         # then raises AIExecutorError("لا يوجد مستخدم نشط لإنشاء الفاتورة")
@@ -24,6 +25,7 @@ def test_ai_executor_deep_seller_none_guard():
 def test_ai_executor_deep_fallback_number():
     """Real production fallback: when generate_number fails, secrets.randbelow fallback (636-634)."""
     from services.ai_executor import AIExecutor
+
     try:
         # Direct call to test the fallback branch (line 634 -> secrets.randbelow)
         result = AIExecutor._generate_number("TEST", type("MockModel", (), {}))

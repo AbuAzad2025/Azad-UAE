@@ -1,4 +1,5 @@
 """Deep production backup services: scope + engine + restore + full service (260-2011)."""
+
 import contextlib
 
 
@@ -13,6 +14,7 @@ def test_backup_deep_full():
     for name in modules:
         with contextlib.suppress(Exception):
             import importlib
+
             mod = importlib.import_module(name)
             for attr in dir(mod):
                 obj = getattr(mod, attr)
