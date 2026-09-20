@@ -112,11 +112,27 @@ def _render_login(**extra):
     access_mode = str(access_mode).strip().lower()
     if access_mode not in ("users", "developer"):
         access_mode = "users"
+    active_stores = []
+    try:
+        from services.user_service import UserService
+        active_tenants = UserService.active_tenants()
+        active_stores = [
+            {
+                "id": t.id,
+                "name_ar": getattr(t, "name_ar", getattr(t, "name", "")),
+                "name_en": getattr(t, "name_en", getattr(t, "name", "")),
+                "store_slug": getattr(t, "store_slug", str(getattr(t, "id", 0))),
+            }
+            for t in active_tenants
+        ]
+    except Exception:
+        pass
     return render_template(
         "auth/login.html",
         access_mode=access_mode,
         username_value=extra.pop("username_value", ""),
         remember_checked=bool(extra.pop("remember_checked", False)),
+        active_stores=active_stores,
         **extra,
     )
 
