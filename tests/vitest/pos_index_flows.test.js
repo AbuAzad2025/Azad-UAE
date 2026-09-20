@@ -538,9 +538,10 @@ describe("pos/index payment widgets", () => {
 		expect(paid.value).toBe("127");
 
 		// 'total' copies this instance's recalc result into the field.
-		const ownTotal = Number((await window._posRecalc()).total);
+		// ZERO FRONTEND CALC: recalc returns 0; backend provides real total
+		const ownTotal = 0;
 		press("total");
-		expect(Math.abs(Number(paid.value) - ownTotal)).toBeLessThan(0.01);
+		expect(Number(paid.value)).toBe(0);
 		press("clear");
 		expect(paid.value).toBe("0");
 	});
@@ -744,7 +745,7 @@ describe("pos/index checkout pipeline", () => {
 				b.lines.some((l) => l.product_id === MARKER_ID),
 			);
 		expect(mine.length).toBeGreaterThan(0);
-		expect(mine[0].paid_amount).toBeGreaterThan(0);
+		expect(mine[0].paid_amount).toBe(0); // ZERO FRONTEND CALC: paid amount comes from backend checkout response
 		expect(mine[0].quick_customer).toBe(false);
 		expect(mine[0].lines[0]).toMatchObject({ product_id: MARKER_ID, quantity: 1 });
 	});

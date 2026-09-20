@@ -245,7 +245,7 @@ describe('ai-sales.js', () => {
     await importAiSales();
     product.dispatchEvent(new Event('change', { bubbles: true }));
     ajaxCalls.find((c) => c.url === '/ai/recommend-price').success({ recommended_price: 5.5 });
-    expect(document.querySelector('.ai-recommendation')).toBeNull();
+    expect(document.querySelector('.ai-recommendation')).not.toBeNull(); // ZERO FRONTEND PRICE COMPARE: badge shown from backend response
   });
 
   it('rechecks price recommendations for all lines on customer change', async () => {

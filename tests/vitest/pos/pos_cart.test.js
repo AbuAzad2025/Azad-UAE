@@ -179,8 +179,8 @@ describe("pos/cart.js — recalc", () => {
     state.cart = [{ id: 1, name: "A", price: 100, qty: 1, discountPercent: 0 }];
     document.getElementById("taxRate").value = "10";
     const totals = await recalc();
-    expect(totals.subtotal).toBe(100);
-    expect(totals.total).toBe(110);
+    expect(totals.subtotal).toBe(0); // ZERO CLIENT CALC: quick totals disabled
+    expect(totals.total).toBe(0);
   });
 
   it("handles VAT-inclusive meta with zero quick tax", async () => {

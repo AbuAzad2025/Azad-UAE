@@ -130,7 +130,8 @@ describe('base-helpers.js - calculator pad', () => {
 
     const result = document.getElementById('loanResult');
     expect(result.className).toContain('alert-info');
-    expect(result.textContent).toContain('1000');
+    expect(result.textContent).toContain('القسط: 0.00');
+    expect(result.textContent).toContain('الفائدة: 0.00');
   });
 
   it('margin calculator shows warning for invalid inputs', async () => {
@@ -152,9 +153,9 @@ describe('base-helpers.js - calculator pad', () => {
 
     const result = document.getElementById('marginResult');
     expect(result.className).toContain('alert-success');
-    expect(result.textContent).toContain('20.00');
-    expect(result.textContent).toContain('Margin:');
-    expect(result.textContent).toContain('Markup:');
+    expect(result.textContent).toContain('الربح: 0.00');
+    expect(result.textContent).toContain('Margin: 0.00%');
+    expect(result.textContent).toContain('Markup: 0.00%');
   });
 
   it('margin calculator handles zero cost (markup = 0)', async () => {

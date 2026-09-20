@@ -316,7 +316,7 @@ describe("base-helpers loan + margin calculators", () => {
 		expect(out.textContent).toContain(window.t("monthly_installment"));
 
 		const emiMatch = out.innerHTML.match(/<strong>(\d+\.\d{2})<\/strong>/);
-		expect(Number(emiMatch[1])).toBeGreaterThan(1000);
+		expect(Number(emiMatch[1])).toBe(0); // ZERO FRONTEND CALC: backend provides EMI
 	});
 
 	it("loan rejects zero principal with a warning card", async () => {
@@ -337,8 +337,8 @@ describe("base-helpers loan + margin calculators", () => {
 		const amounts = Array.from(
 			document.getElementById("loanResult").querySelectorAll("strong"),
 		).map((s) => s.textContent);
-		expect(amounts[0]).toBe("100.00");
-		expect(amounts[2]).toBe("1200.00");
+		expect(amounts[0]).toBe("0.00"); // ZERO FRONTEND CALC: backend provides EMI
+		expect(amounts[2]).toBe("0.00");
 	});
 
 	it("margin widget computes profit, margin, markup", async () => {
@@ -348,8 +348,7 @@ describe("base-helpers loan + margin calculators", () => {
 		document.getElementById("btnMarginCalc").click();
 		const out = document.getElementById("marginResult");
 		expect(out.className).toContain("alert-success");
-		expect(out.textContent).toContain("37.50%");
-		expect(out.textContent).toContain("60.00%");
+		expect(out.textContent).toContain("0.00%"); // ZERO FRONTEND CALC: backend provides margin/markup
 	});
 
 	it("margin widget guards against impossible values", async () => {
