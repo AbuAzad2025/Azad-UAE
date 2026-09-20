@@ -89,7 +89,7 @@ afterEach(() => {
 });
 
 async function loadModule() {
-  await import(MOD_PATH + String.fromCharCode(63) + Date.now());
+  await import(MOD_PATH);
   await new Promise((r) => setTimeout(r, 50));
 }
 

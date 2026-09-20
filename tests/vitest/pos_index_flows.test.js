@@ -202,7 +202,7 @@ afterEach(async () => {
 
 async function loadModule() {
 	delete window._posFmt;
-	await import(`${MOD_PATH}?t=${Date.now()}-${Math.random()}`);
+	await import(MOD_PATH);
 	await new Promise((r) => setTimeout(r, 30));
 }
 

@@ -60,7 +60,7 @@ afterEach(() => {
 });
 
 async function loadModule() {
-  return import(MOD_PATH + "?" + Date.now());
+  return import(MOD_PATH);
 }
 
 describe("pos/core.js — formatting helpers", () => {
@@ -158,7 +158,7 @@ describe("pos/core.js — currency helpers", () => {
     sym.content = "US$";
     document.head.appendChild(sym);
     window.t = (k) => k;
-    const { currencySymbolFor } = await import(MOD_PATH + "?" + Date.now());
+    const { currencySymbolFor } = await import(MOD_PATH);
     expect(currencySymbolFor("USD")).toBe("US$");
   });
 });

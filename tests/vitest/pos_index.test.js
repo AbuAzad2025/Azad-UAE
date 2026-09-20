@@ -57,7 +57,7 @@ beforeEach(() => {
 
 afterEach(async () => { vi.useRealTimers(); vi.clearAllTimers(); vi.restoreAllMocks(); await new Promise((r) => setTimeout(r, 0)); document.body.innerHTML = ""; document.head.innerHTML = ""; });
 
-async function loadModule() { delete window._posFmt; await import(MOD_PATH + String.fromCharCode(63) + Date.now()); await new Promise((r) => setTimeout(r, 50)); }
+async function loadModule() { delete window._posFmt; await import(MOD_PATH); await new Promise((r) => setTimeout(r, 50)); }
 
 describe("pos/index basics", () => {
   it("loads", async () => { await loadModule(); });
