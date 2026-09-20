@@ -125,8 +125,9 @@ def _render_login(**extra):
             }
             for t in active_tenants
         ]
-    except Exception:
-        pass
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Failed to load active stores for login page: %s", exc)
     return render_template(
         "auth/login.html",
         access_mode=access_mode,
