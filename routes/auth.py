@@ -108,7 +108,10 @@ def _render_login(**extra):
     """
     access_mode = extra.pop("access_mode", None)
     if access_mode is None:
-        access_mode = request.args.get("mode") or "users"
+        try:
+            access_mode = request.args.get("mode") or "users"
+        except RuntimeError:
+            access_mode = "users"
     access_mode = str(access_mode).strip().lower()
     if access_mode not in ("users", "developer"):
         access_mode = "users"
