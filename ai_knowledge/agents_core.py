@@ -309,10 +309,15 @@ def ask_azad_enhanced(question: str, context: dict | None = None, user_id: int |
         try:
             brain = get_master_brain()
             brain_result = brain.ask(question, context, user_id)
-            result["answer"] = brain_result.get("answer", "")
-            result["source"] = "master_brain"
-            result["confidence"] = 0.6
-            result["thinking_steps"].append("Fell back to MasterBrain")
+            brain_answer = brain_result.get("answer", "")
+            # Never promote an abstention into a "master_brain" verdict: an
+            # ungrounded answer must keep source "local" so downstream stages
+            # (AIService fast path) cannot short-circuit on it.
+            if brain_answer and not brain_result.get("abstained"):
+                result["answer"] = brain_answer
+                result["source"] = "master_brain"
+                result["confidence"] = 0.6
+                result["thinking_steps"].append("Fell back to MasterBrain")
         except Exception as e:
             result["answer"] = "عذراً، حدث خطأ في معالجة سؤالك. يرجى المحاولة مرة أخرى."
             result["thinking_steps"].append(f"Error: {str(e)[:100]}")

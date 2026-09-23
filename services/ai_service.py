@@ -1025,6 +1025,23 @@ class AIService:
         local_result = intelligent_assistant.process(message, user_id, context)
         local_response = local_result.get("response", "")
 
+        # Cognitive precedence: an ERP-grounded local verdict (RBAC-checked,
+        # tenant-scoped, trace-backed) must never be discarded in favor of a
+        # MasterBrain fallback. Only low-confidence cognitive verdicts flow on
+        # to the LLM collaboration stages for enrichment.
+        if (
+            local_result.get("method") == "cognitive"
+            and local_result.get("success")
+            and local_response
+            and not local_result.get("needs_escalation")
+        ):
+            AIService._record_telemetry(
+                {"message": message, "user_id": user_id, "context": ctx},
+                fallback_path="cognitive",
+                confidence=local_result.get("confidence", 0.9),
+            )
+            return f"{local_response}\n\n<sub>💻 المصدر: النظام المحلي الذكي</sub>", None
+
         force_local = ctx.get("force_local", False)
         knowledge_context = "" if force_local else AIService._gather_intent_knowledge(message, local_result)
 
@@ -1076,7 +1093,12 @@ class AIService:
 
             fast_path = ask_azad_enhanced(message, user_id=user_id)
             if fast_path and fast_path.get("answer") and fast_path.get("source") != "local":
-                return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: GROQ API + معرفة النظام</sub>", None
+                source_label = (
+                    "GROQ API + معرفة النظام"
+                    if fast_path.get("source") in ("llm", "groq", "gemini", "openai")
+                    else "معرفة النظام"
+                )
+                return f"{fast_path['answer']}\n\n<sub>🤖 المصدر: {source_label}</sub>", None
         except Exception:
             logger.debug("Knowledge agents failed for chat message", exc_info=True)
 

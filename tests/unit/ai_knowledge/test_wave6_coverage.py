@@ -912,7 +912,8 @@ class TestMasterBrainWave6:
         r3 = brain._synthesize_answer("قيد مزدوج", {"steps": []}, None, acc, "question")
         assert "مزدوج" in r3["text"]
         r4 = brain._synthesize_answer("random", {"steps": []}, None, {}, "action")
-        assert r4["confidence"] >= 0.6
+        assert r4["abstained"] is True
+        assert "مستعد لمساعدتك" not in r4["text"]
 
     def test_module_level_helpers(self):
         from ai_knowledge.agents import master_brain as mb

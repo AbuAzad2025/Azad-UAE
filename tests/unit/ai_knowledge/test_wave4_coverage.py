@@ -1138,7 +1138,7 @@ class TestAgentsCoreWave4:
                 "ai_knowledge.agents_core._get_llm_response",
                 side_effect=RuntimeError("llm fail"),
             ),
-            patch("ai_knowledge.agents.master_brain.get_master_brain") as gmb,
+            patch("ai_knowledge.agents_core.get_master_brain") as gmb,
             patch("ai_knowledge.trainer.trainer") as tr,
         ):
             gmb.return_value.ask.return_value = {"answer": "brain answer"}
@@ -1152,7 +1152,7 @@ class TestAgentsCoreWave4:
             ),
             patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch(
-                "ai_knowledge.agents.master_brain.get_master_brain",
+                "ai_knowledge.agents_core.get_master_brain",
                 side_effect=RuntimeError("brain fail"),
             ),
             patch("ai_knowledge.trainer.trainer", side_effect=RuntimeError("train fail")),
@@ -1823,7 +1823,7 @@ class TestWave4Extended:
             patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
             patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
             patch(
-                "ai_knowledge.agents.master_brain.get_master_brain",
+                "ai_knowledge.agents_core.get_master_brain",
                 side_effect=RuntimeError("brain"),
             ),
             patch("ai_knowledge.trainer.trainer", side_effect=RuntimeError("train")),

@@ -347,6 +347,7 @@ class MasterBrain:
                 "confidence": answer["confidence"],
                 "reasoning": reasoning_result.get("steps", []),
                 "sources": answer.get("sources", []),
+                "abstained": bool(answer.get("abstained")),
                 "suggestions": suggestions,
                 "domain": domain,
                 "intent": intent,
@@ -547,6 +548,7 @@ class MasterBrain:
                 confidence = 0.94
 
         # إجابة عامة ذكية
+        abstained = False
         if not answer_parts:
             if intent == "question":
                 answer_parts.append("دعني أفكر في سؤالك بعمق...")
@@ -556,18 +558,18 @@ class MasterBrain:
                 answer_parts.append("3. تحديد المجال (محاسبة، ضرائب، إدارة، صيانة)")
                 confidence = 0.6
             else:
-                answer_parts.append("فهمت سؤالك. أنا مستعد لمساعدتك في:")
-                answer_parts.append("📊 المحاسبة والمالية")
-                answer_parts.append("💰 الضرائب والجمارك")
-                answer_parts.append("📦 إدارة المخزون")
-                answer_parts.append("🔧 الصيانة والهندسة")
-                answer_parts.append("💼 الإدارة والتخطيط")
-                confidence = 0.7
+                # No knowledge or neural grounding exists for this message —
+                # abstain precisely instead of emitting a canned domain menu.
+                answer_parts.append("لم أجد في قاعدة المعرفة المحلية ما يجيب عن رسالتك بدقة.")
+                answer_parts.append("حدد طلبك (مثال: رصيد العميل أحمد، ملخص المبيعات) وسأنفذه من بيانات شركتك.")
+                confidence = 0.3
+                abstained = True
 
         return {
             "text": "\n".join(answer_parts),
             "confidence": confidence,
             "sources": sources,
+            "abstained": abstained,
         }
 
     def _remember(self, user_id: int, question: str, answer: str):

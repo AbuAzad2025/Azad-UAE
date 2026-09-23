@@ -218,6 +218,9 @@ def chat():
     context["current_user"] = current_user
     context["is_owner"] = current_user.is_owner if current_user else False
     context["force_local"] = ai_mode == "local"
+    # Route every message through the native cognitive engine
+    # (RBAC-grounded ERP reasoning) inside IntelligentAssistant.process().
+    context["use_cognitive"] = True
 
     # Apply input validation / sanitization
     safe_message, prompt_error = _sanitize_ai_prompt(message, context)

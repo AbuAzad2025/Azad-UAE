@@ -117,18 +117,9 @@ class IntelligentAssistant:
             رد ديناميكي مبني على فهم حقيقي
         """
         try:
-            # ========== المرحلة 0: المعرفة السريعة (Quick Knowledge) ==========
-            quick_answer = self.quick_learner.get_answer(message)
-            if quick_answer:
-                return {
-                    "success": True,
-                    "response": f"{quick_answer}\n\n<sub>⚡ معلومة سريعة</sub>",
-                    "intent": "quick_answer",
-                    "confidence": 1.0,
-                    "method": "quick_learner",
-                }
-
-            # ========== المرحلة 0.5: المحرك المعرفي الأصلي (اختياري صريح) ==========
+            # ========== المرحلة 0: المحرك المعرفي الأصلي (اختياري صريح) ==========
+            # Runs BEFORE memorized quick answers: live reasoning over
+            # tenant-scoped ERP data must beat stale memorized strings.
             # Legacy pipeline stays default so existing behavior and tests are
             # untouched. Callers opt in via context={"use_cognitive": True,
             # "current_user": user}.
@@ -151,11 +142,29 @@ class IntelligentAssistant:
                             "confidence": cognitive.confidence,
                             "data_used": bool(cognitive.provenance and cognitive.provenance.queries),
                             "method": "cognitive",
+                            "needs_escalation": cognitive.needs_escalation,
                         }
                 except Exception as exc:
                     logger.debug("Cognitive engine skipped, legacy pipeline continues: %s", exc)
 
-            # ========== المرحلة 1: فهم النية والسياق ==========
+            # ========== المرحلة 1: المعرفة السريعة (Quick Knowledge) ==========
+            # A QuickLearner storage failure must degrade to the pipelines
+            # below — never abort the whole request with an error response.
+            quick_answer = None
+            try:
+                quick_answer = self.quick_learner.get_answer(message)
+            except Exception as exc:
+                logger.debug("Quick knowledge skipped: %s", exc)
+            if quick_answer:
+                return {
+                    "success": True,
+                    "response": f"{quick_answer}\n\n<sub>⚡ معلومة سريعة</sub>",
+                    "intent": "quick_answer",
+                    "confidence": 1.0,
+                    "method": "quick_learner",
+                }
+
+            # ========== المرحلة 2: فهم النية والسياق ==========
             assert user_id is not None
             assert context is not None
             understanding = self._understand_message(message, user_id, context)
@@ -167,16 +176,16 @@ class IntelligentAssistant:
             entities = understanding["entities"]
             conversation_context = understanding["context"]
 
-            # ========== المرحلة 2: جمع البيانات الحقيقية ==========
+            # ========== المرحلة 3: جمع البيانات الحقيقية ==========
             real_data = self._collect_real_data(intent, entities, user_id)
 
-            # ========== المرحلة 3: التحليل والاستنتاج ==========
+            # ========== المرحلة 4: التحليل والاستنتاج ==========
             analysis = self._analyze_and_reason(intent, real_data, conversation_context)
 
-            # ========== المرحلة 4: التوليد الديناميكي ==========
+            # ========== المرحلة 5: التوليد الديناميكي ==========
             response = self._generate_dynamic_response(intent, analysis, entities, real_data)
 
-            # ========== المرحلة 5: التعلم ==========
+            # ========== المرحلة 6: التعلم ==========
             self._learn_from_interaction(message, response, user_id)
 
             return {

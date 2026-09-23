@@ -205,3 +205,67 @@ class TestAssistantOptIn:
         ):
             result = assistant.process("سؤال", user_id=1, context={})
             assert result["method"] == "quick_learner"
+
+    def test_quick_learner_failure_degrades_to_cognitive(self):
+        from ai_knowledge.agents.intelligent_assistant import IntelligentAssistant
+
+        assistant = IntelligentAssistant()
+        with (
+            patch(
+                "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
+                side_effect=RuntimeError("db offline"),
+            ),
+            patch.object(engine, "_history", return_value=[]),
+        ):
+            result = assistant.process("هاي", user_id=1, context={"use_cognitive": True})
+            assert result["method"] == "cognitive"
+            assert result["success"] is True
+
+    def test_reasoning_beats_stale_memorized_answer(self):
+        from ai_knowledge.agents.intelligent_assistant import IntelligentAssistant
+
+        assistant = IntelligentAssistant()
+        with (
+            patch(
+                "ai_knowledge.learning.quick_learner.quick_learner.get_answer",
+                return_value="رد محفوظ قديم",
+            ),
+            patch.object(engine, "_history", return_value=[]),
+        ):
+            result = assistant.process("هاي", user_id=1, context={"use_cognitive": True})
+            assert result["method"] == "cognitive"
+            assert "رد محفوظ قديم" not in result["response"]
+
+
+class TestAbstentionPropagation:
+    def test_abstained_brain_keeps_local_source(self):
+        from ai_knowledge.agents_core import ask_azad_enhanced
+
+        brain = MagicMock()
+        brain.ask.return_value = {"answer": "لم أجد شيئا", "confidence": 0.3, "abstained": True}
+        with (
+            patch("ai_knowledge.system_knowledge.FAQ", {}),
+            patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
+            patch("ai_knowledge.agents_core.get_master_brain", return_value=brain),
+            patch("ai_knowledge.trainer.trainer.learn_from_interaction"),
+        ):
+            result = ask_azad_enhanced("xyz سؤال بلا أساس")
+        assert result["source"] == "local"
+        assert result["answer"] == ""
+
+    def test_grounded_brain_keeps_master_brain_source(self):
+        from ai_knowledge.agents_core import ask_azad_enhanced
+
+        brain = MagicMock()
+        brain.ask.return_value = {"answer": "ضريبة القيمة المضافة 5%", "confidence": 0.95}
+        with (
+            patch("ai_knowledge.system_knowledge.FAQ", {}),
+            patch("ai_knowledge.system_knowledge.search_knowledge", return_value=[]),
+            patch("ai_knowledge.agents_core._check_llm_availability", return_value=False),
+            patch("ai_knowledge.agents_core.get_master_brain", return_value=brain),
+            patch("ai_knowledge.trainer.trainer.learn_from_interaction"),
+        ):
+            result = ask_azad_enhanced("ما ضريبة القيمة المضافة")
+        assert result["source"] == "master_brain"
+        assert "5%" in result["answer"]
