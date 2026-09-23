@@ -1,0 +1,39 @@
+{# Fixed active-store banners — visitor browsable, no login required #}
+{% if active_stores and active_stores|length > 0 %}
+<section class="azad-stores-banner" aria-label="{{ _('المتاجر النشطة') }}">
+  <div class="azad-stores-banner__inner">
+    <h3 class="azad-stores-banner__title"><i class="fas fa-store" aria-hidden="true"></i> {{ _('تصفح متاجرنا') }} <span class="azad-stores-banner__count">({{ active_stores|length }})</span></h3>
+    {% if active_stores|length > 6 %}
+    <div class="azad-stores-banner__search-wrap">
+      <input type="text" id="publicStoreSearch" class="azad-stores-banner__search" placeholder="{{ _('ابحث عن متجر...') }}" aria-label="{{ _('البحث') }}">
+      <i class="fas fa-search azad-stores-banner__search-icon" aria-hidden="true"></i>
+    </div>
+    {% endif %}
+    <div class="azad-stores-banner__grid" id="publicStoreGrid">
+      {% for store in active_stores %}
+      <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="azad-stores-banner__card" data-store-name="{{ store.name_ar or store.name_en or '' }}" title="{{ _('تصفح كزائر') }}">
+        <span class="azad-stores-banner__icon"><i class="fas fa-store"></i></span>
+        <span class="azad-stores-banner__name">{{ store.name_ar or store.name_en or _('متجر') }}</span>
+        <span class="azad-stores-banner__go">{{ _('دخول') }} <i class="fas fa-arrow-left" aria-hidden="true"></i></span>
+      </a>
+      {% endfor %}
+    </div>
+    <p class="azad-stores-banner__hint">{{ _('التصفح متاح للزوار بدون تسجيل. إن كنت مسجلاً، ستظهر صلاحياتك داخل المتجر.') }}</p>
+  </div>
+</section>
+<script nonce="{{ csp_nonce() }}">
+(() => {
+  const inp = document.getElementById('publicStoreSearch');
+  const cards = document.querySelectorAll('.azad-stores-banner__card');
+  if (inp && cards.length) {
+    inp.addEventListener('input', e => {
+      const q = e.target.value.toLowerCase().trim();
+      cards.forEach(c => {
+        const n = (c.getAttribute('data-store-name')||'').toLowerCase();
+        c.style.display = (n.includes(q) || c.textContent.toLowerCase().includes(q)) ? '' : 'none';
+      });
+    });
+  }
+})();
+</script>
+{% endif %}

@@ -778,25 +778,26 @@ html[dir="rtl"] .azad-login-lang { left: auto; right: 18px; }
 html[dir="rtl"] .azad-login-input-wrap input.azad-ltr { direction: ltr; text-align: right; }
 html[dir="rtl"] .azad-login-forgot::after { left: auto; right: 0; }
 
-/* ── Store Links on Login Page ── */
-.azad-login-stores { max-width:480px; margin:1.5rem auto 0; padding:1.25rem; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border-radius:16px; box-shadow:0 10px 40px rgba(102,126,234,0.25); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.15); animation:fadeSlideUp .6s ease-out,pulseGlow 3s infinite alternate }
-
-@keyframes fadeSlideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-
-@keyframes pulseGlow { from{box-shadow:0 10px 40px rgba(102,126,234,0.25)} to{box-shadow:0 14px 50px rgba(102,126,234,0.45)} }
-.azad-login-stores__title { font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:.75rem; display:flex; align-items:center; gap:.6rem; text-shadow:0 1px 2px rgba(0,0,0,.2) }
-.azad-login-stores__search-wrap { position:relative; margin-bottom:.6rem }
-.azad-login-stores__search { width:100%; padding:.55rem 2.5rem .55rem 1rem; border:none; border-radius:8px; font-size:.9rem; background:rgba(255,255,255,.92); color:#333; transition:box-shadow .2s,background .2s }
-.azad-login-stores__search:focus { outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.35); background:#fff }
-.azad-login-stores__search-icon { position:absolute; right:.75rem; top:50%; transform:translateY(-50%); color:#667eea; pointer-events:none }
-.azad-login-stores__list { max-height:240px; overflow-y:auto; border-radius:8px }
-.azad-login-stores__item { display:flex; align-items:center; justify-content:space-between; padding:.65rem .9rem; text-decoration:none; color:#333; background:rgba(255,255,255,.92); border-bottom:1px solid rgba(102,126,234,.1); transition:all .18s ease; border-radius:6px; margin-bottom:2px }
-.azad-login-stores__item:hover { background:#667eea; color:#fff; transform:translateX(4px); box-shadow:0 4px 12px rgba(102,126,234,.25) }
-.azad-login-stores__item:hover .azad-login-stores__arrow { color:#fff; transform:translateX(3px) }
-.azad-login-stores__icon { width:32px; height:32px; border-radius:50%; background:#667eea; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:.75rem; flex-shrink:0; margin-right:.6rem; box-shadow:0 2px 6px rgba(102,126,234,.3) }
-.azad-login-stores__name { flex:1; font-weight:600; font-size:.92rem }
-.azad-login-stores__arrow { color:#667eea; font-size:.8rem; transition:all .2s ease }
-.azad-login-stores__hint { font-size:.8rem; color:rgba(255,255,255,.85); text-align:center; margin-top:.6rem }
+/* ── Store Links on Login Page — Premium ── */
+@keyframes loginBannerIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes loginShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.azad-login-stores{max-width:480px;margin:1.5rem auto 0;padding:18px;background:linear-gradient(135deg,#0f1724 0%,#1e293b 100%);border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.25);animation:loginBannerIn .6s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
+.azad-login-stores::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(212,160,23,.08),transparent);background-size:200% 100%;animation:loginShimmer 3s infinite;pointer-events:none}
+.azad-login-stores__title{font-size:1.05rem;font-weight:800;color:#facc15;margin-bottom:.75rem;display:flex;align-items:center;gap:.6rem;position:relative}
+.azad-login-stores__search-wrap{position:relative;margin-bottom:.6rem}
+.azad-login-stores__search{width:100%;padding:10px 36px 10px 12px;border:none;border-radius:10px;font-size:.92rem;background:rgba(255,255,255,.96);color:#0f1724;transition:box-shadow .2s}
+.azad-login-stores__search:focus{outline:none;box-shadow:0 0 0 3px rgba(250,204,21,.2);background:#fff}
+.azad-login-stores__search-icon{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:#64748b;pointer-events:none}
+.azad-login-stores__list{max-height:260px;overflow-y:auto;border-radius:10px}
+.azad-login-stores__item{position:relative;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;text-decoration:none;color:#0f1724;background:#fff;border-radius:10px;transition:all .22s cubic-bezier(.34,1.56,.64,1);margin-bottom:6px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid rgba(15,23,36,.06);overflow:hidden}
+.azad-login-stores__item::after{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#facc15,#f59e0b);opacity:0;transition:opacity .22s}
+.azad-login-stores__item:hover{transform:translateY(-3px) scale(1.01);box-shadow:0 10px 24px rgba(0,0,0,.14);border-color:rgba(212,160,23,.25)}
+.azad-login-stores__item:hover::after{opacity:1}
+.azad-login-stores__icon{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#facc15 0%,#f59e0b 100%);color:#0f1724;display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;box-shadow:0 4px 10px rgba(250,204,21,.3)}
+.azad-login-stores__name{flex:1;font-weight:800;font-size:.92rem}
+.azad-login-stores__arrow{color:#d4a017;font-size:.8rem;transition:transform .2s}
+.azad-login-stores__item:hover .azad-login-stores__arrow{transform:translateX(4px)}
+.azad-login-stores__hint{font-size:.78rem;color:#94a3b8;text-align:center;margin-top:.6rem;position:relative}
 
 /* ── Print ── */
 @media print {

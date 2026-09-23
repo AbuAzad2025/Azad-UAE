@@ -62,7 +62,16 @@ def landing():
         lang = session.get("language", "ar")
     packages = _public_packages()
 
-    return render_template("public/landing.html", packages=packages, is_en=lang == "en")
+    return render_template("public/landing.html", packages=packages, is_en=lang == "en", active_stores=_active_stores())
+
+
+def _active_stores() -> list:
+    try:
+        from services.user_service import UserService
+        tenants = UserService.active_tenants()
+        return [{"store_slug": getattr(t, "slug", str(t.id)), "name_ar": getattr(t, "name_ar", getattr(t, "name", "")), "name_en": getattr(t, "name_en", "")} for t in tenants]
+    except Exception:
+        return []
 
 
 def _public_packages() -> list:
@@ -98,6 +107,7 @@ def pricing():
         "packages": packages,
         "is_en": lang == "en",
         "developer_whatsapp_link": current_app.config.get("DEVELOPER_WHATSAPP") or "",
+        "active_stores": _active_stores(),
     }
     if lang == "en":
         return render_template("public/pricing_en.html", **ctx)
@@ -108,7 +118,7 @@ def pricing():
 def features():
     """صفحة المميزات — قالب موحد i18n عبر t() و current_language"""
     lang = session.get("language", "ar")
-    return render_template("public/features.html", is_en=lang == "en")
+    return render_template("public/features.html", is_en=lang == "en", active_stores=_active_stores())
 
 
 @public_bp.route("/user-guide")

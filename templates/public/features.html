@@ -51,6 +51,7 @@
       <a class="lang" href="{{ url_for('language.set_language', lang='en' if current_language == 'ar' else 'ar') }}"><i class="fas fa-globe" aria-hidden="true"></i> {{ 'EN' if current_language == 'ar' else 'AR' }}</a>
     </div>
   </nav>
+{% include "partials/store_banners.html" %}
 
   <header>
     <h1>{{ t('System_Features') }}</h1>
