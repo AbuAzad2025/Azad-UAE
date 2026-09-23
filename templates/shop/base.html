@@ -16,10 +16,10 @@
   {% endblock %}
   <link rel="manifest" href="{{ url_for('static', filename='shop-manifest.json') }}">
   <meta name="theme-color" content="{{ theme_primary or '#1B7A4E' }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ dist_url('css/shop-theme.css') }}">
    <style nonce="{{ csp_nonce() }}">:root { --theme-primary: {{ theme_primary }}; --theme-secondary: {{ theme_secondary }}; }</style>

@@ -10,8 +10,8 @@
 	--ps-muted: #5c5c5c;
 	--ps-radius: 14px;
 	--ps-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-	--ps-font-ar: "IBM Plex Sans Arabic", "Tajawal", sans-serif;
-	--ps-font-en: "Sora", "Inter", system-ui, sans-serif;
+	--ps-font-ar: "Tajawal", "Sora", system-ui, sans-serif;
+	--ps-font-en: "Sora", "Tajawal", system-ui, sans-serif;
 	--ps-border: #e6e0d4;
 	--ps-surface: #faf8f3;
 
