@@ -31,8 +31,36 @@
 
 {% block extra_css %}
 <style nonce="{{ csp_nonce() }}">
-.content { padding-bottom: 60px; }
-.erp-footer { max-width: 1100px; margin: 0 auto; width: 94%; border-radius: 12px 12px 0 0; }
+/* AI Assistant clearance above the global fixed footer.
+   Global theme (erp-theme-unified.css): `.main-footer.erp-footer` is
+   `position: fixed; bottom: 0; z-index: 1020` and `.content-wrapper`
+   reserves 72px (desktop) / 96px (mobile). This page adds its own clearance
+   via --ai-footer-clear (measured at runtime from the real footer +
+   mobile bottom-nav heights, with safe fallbacks) so the chat card, message
+   history, and input form never slide under the footer. The global footer
+   itself is intentionally NOT restyled here — it stays full-width fixed. */
+:root { --ai-footer-clear: 110px; }
+/* NOTE: specificity must beat AdminLTE `.content-wrapper > .content` (0,2,0),
+   otherwise this padding is dead CSS and the footer overlaps the chat. */
+.content-wrapper > .content { padding-bottom: calc(var(--ai-footer-clear) + 24px); }
+/* Chat input bar — pinned to the bottom of the chat card (in normal card
+   flow), kept below the global footer stacking level (1020). */
+.chat-input-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 1010;
+  background: #fff;
+  border-radius: 0 0 16px 16px;
+}
+/* Keep focused input / card clear of the fixed footer when scrolled into view */
+#userMessage { scroll-margin-bottom: calc(var(--ai-footer-clear) + 24px); }
+.chat-card { scroll-margin-bottom: calc(var(--ai-footer-clear) + 16px); }
+@media (max-width: 767px) {
+  /* Taller fallback: stacked footer + fixed mobile bottom nav (~68px) */
+  :root { --ai-footer-clear: 220px; }
+  .content-wrapper > .content { padding-bottom: calc(var(--ai-footer-clear) + 16px); }
+  #userMessage { scroll-margin-bottom: calc(var(--ai-footer-clear) + 16px); }
+}
 .chat-card {
   background: white;
   border-radius: 16px;
@@ -42,12 +70,15 @@
   height: 62vh;
   display: flex;
   flex-direction: column;
-  margin-bottom: 20px;
+  /* Breathing room above the fixed global footer (see --ai-footer-clear). */
+  margin-bottom: calc(var(--ai-footer-clear) / 4 + 12px);
 }
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  padding-bottom: 28px;
+  scroll-padding-bottom: 28px;
   background: #f8f9fa;
 }
 .bot-message {
@@ -186,7 +217,7 @@
     </div>
   </div>
 
-  <div class="px-3 py-2 bg-white border-top">
+  <div class="px-3 py-2 bg-white border-top chat-input-bar">
     <div class="d-flex justify-content-between mb-2">
       <div class="btn-group btn-group-sm">
         <button type="button" class="btn btn-outline-danger" data-action="clear-chat" title="{{ t('مسح') }} {{ t('المحادثة_2') }}">
@@ -546,6 +577,38 @@ window.switchAIMode = (mode) => {
 
   const savedMode = localStorage.getItem('ai_mode') || 'groq';
   switchAIMode(savedMode);
+
+// Footer clearance — measure the real fixed footer (+ mobile bottom nav when
+// visible) and expose it as --ai-footer-clear so the chat never slides under it.
+(function initAiFooterClearance() {
+  const root = document.documentElement;
+  function isVisible(el) {
+    if (!el) return false;
+    const cs = window.getComputedStyle(el);
+    return cs.display !== 'none' && cs.visibility !== 'hidden' && el.offsetHeight > 0;
+  }
+  function updateAiFooterClearance() {
+    let clear = window.innerWidth < 768 ? 220 : 110;
+    const footer = document.querySelector('.main-footer.erp-footer');
+    if (isVisible(footer)) clear = Math.max(clear, footer.offsetHeight + 24);
+    const mobileNav = document.querySelector('.erp-mobile-nav');
+    if (window.innerWidth < 768 && isVisible(mobileNav)) clear += mobileNav.offsetHeight;
+    clear = Math.min(Math.max(clear, 120), 480);
+    root.style.setProperty('--ai-footer-clear', clear + 'px');
+  }
+  window.addEventListener('resize', updateAiFooterClearance);
+  window.addEventListener('orientationchange', updateAiFooterClearance);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(updateAiFooterClearance);
+    document.querySelectorAll('.main-footer.erp-footer, .erp-mobile-nav').forEach((el) => ro.observe(el));
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateAiFooterClearance);
+  } else {
+    updateAiFooterClearance();
+  }
+  window.addEventListener('load', updateAiFooterClearance);
+})();
 
 // Excel Upload
 function hideExcelUploader() { 
