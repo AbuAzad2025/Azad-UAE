@@ -68,8 +68,16 @@ def landing():
 def _active_stores() -> list:
     try:
         from services.user_service import UserService
+
         tenants = UserService.active_tenants()
-        return [{"store_slug": getattr(t, "slug", str(t.id)), "name_ar": getattr(t, "name_ar", getattr(t, "name", "")), "name_en": getattr(t, "name_en", "")} for t in tenants]
+        return [
+            {
+                "store_slug": getattr(t, "slug", str(t.id)),
+                "name_ar": getattr(t, "name_ar", getattr(t, "name", "")),
+                "name_en": getattr(t, "name_en", ""),
+            }
+            for t in tenants
+        ]
     except Exception:
         return []
 
