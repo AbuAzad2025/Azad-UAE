@@ -31,15 +31,18 @@
 
 {% block extra_css %}
 <style nonce="{{ csp_nonce() }}">
+.content { padding-bottom: 60px; }
+.erp-footer { max-width: 1100px; margin: 0 auto; width: 94%; border-radius: 12px 12px 0 0; }
 .chat-card {
   background: white;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-  min-height: 500px;
-  max-height: 750px;
-  height: 65vh;
+  min-height: 480px;
+  max-height: calc(100vh - 280px);
+  height: 62vh;
   display: flex;
   flex-direction: column;
+  margin-bottom: 20px;
 }
 .chat-messages {
   flex: 1;
