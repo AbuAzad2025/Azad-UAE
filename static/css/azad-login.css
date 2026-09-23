@@ -789,6 +789,7 @@ html[dir="rtl"] .azad-login-forgot::after { left: auto; right: 0; }
 .azad-login-stores-bar__list{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1;max-height:44px;overflow-y:auto}
 .azad-login-stores-bar__item{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;color:#0f1724;border-radius:999px;font-size:.82rem;font-weight:700;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:transform .15s,box-shadow .15s;white-space:nowrap}
 .azad-login-stores-bar__item:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+
 @media (max-width:640px){.azad-login-stores-bar__inner{flex-direction:column;align-items:stretch}.azad-login-stores-bar__search input{width:100%}.azad-login-stores-bar__list{max-height:90px}}
 
 /* ── Print ── */
