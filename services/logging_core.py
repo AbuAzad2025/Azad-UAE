@@ -384,9 +384,7 @@ class _RateMonitor:
         return self.count(category, window) >= threshold
 
 
-# ══════════════════════════════════════════════════════════════════
 #  LoggingCore — the unified service
-# ══════════════════════════════════════════════════════════════════
 
 
 class LoggingCore:
@@ -400,8 +398,6 @@ class LoggingCore:
     _rate_monitor = _RateMonitor()
     _json_mode = False
 
-    # ──────────────────────────────────────────────────────────────
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def setup(cls, app) -> None:
@@ -611,9 +607,7 @@ class LoggingCore:
         def _logging_teardown(exc):
             pass
 
-    # ──────────────────────────────────────────────────────────────
     #  WARNINGS CAPTURE
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def _capture_warnings(cls, app):
@@ -652,9 +646,7 @@ class LoggingCore:
         except Exception:
             app.logger.warning("[WARN] Could not hook warnings.showwarning")
 
-    # ──────────────────────────────────────────────────────────────
     #  JSON LOGGING SETUP
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def _setup_json_logging(cls, app):
@@ -664,9 +656,7 @@ class LoggingCore:
                 handler.setFormatter(_JsonFormatter())
         app.logger.info("[OK] JSON logging format active")
 
-    # ──────────────────────────────────────────────────────────────
     #  SELF-DIAGNOSTICS
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def _run_self_diagnostics(cls, app):
@@ -695,9 +685,7 @@ class LoggingCore:
         else:
             app.logger.info("[OK] All log handlers verified writable")
 
-    # ──────────────────────────────────────────────────────────────
     #  ALERT CALLBACKS
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def register_alert_callback(cls, fn):
@@ -721,9 +709,7 @@ class LoggingCore:
             except Exception:
                 cls._log(logging.WARNING, "Alert callback %s failed", fn.__name__)  # type: ignore[attr-defined]
 
-    # ──────────────────────────────────────────────────────────────
     #  TRACE ID PROPAGATION
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def set_trace_id(cls):
@@ -741,9 +727,7 @@ class LoggingCore:
             g.request_id = trace_id
             g.trace_id = trace_id
 
-    # ──────────────────────────────────────────────────────────────
     #  ERROR LOGGING (Database + File)
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def log_error(
@@ -1051,9 +1035,7 @@ class LoggingCore:
         except Exception:
             logger.debug("Failed to write fallback message to stderr", exc_info=True)
 
-    # ──────────────────────────────────────────────────────────────
     #  ERROR QUERIES
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def get_error_logs(
@@ -1240,9 +1222,7 @@ class LoggingCore:
             logger.exception("Clear all error logs failed")
             return 0
 
-    # ═══════════════════════════════════════════════════════════════════════
     #  AUDIT LOGGING (Business Operations)
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def log_audit(
@@ -1279,9 +1259,7 @@ class LoggingCore:
         except Exception as e:
             cls._fallback_write(f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}")
 
-    # ──────────────────────────────────────────────────────────────
     #  AUDIT QUERIES
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def get_audit_logs(
@@ -1324,9 +1302,7 @@ class LoggingCore:
 
         return pagination.items, pagination, stats, users
 
-    # ──────────────────────────────────────────────────────────────
     #  SECURITY LOGGING
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def log_security(
@@ -1381,9 +1357,7 @@ class LoggingCore:
                 extra={"event_type": event_type, "ip": ip, "username": str(user)},
             )
 
-    # ──────────────────────────────────────────────────────────────
     #  HEALTH CHECKS
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def health_check(cls) -> dict:
@@ -1456,8 +1430,6 @@ class LoggingCore:
         except ImportError:
             return {"healthy": True, "error": "psutil not available"}
 
-    # ──────────────────────────────────────────────────────────────
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def monitor_endpoint(cls, f):
@@ -1514,9 +1486,7 @@ class LoggingCore:
                         slow.append(line.strip())
         return {"slow_queries_count": len(slow), "slow_queries": slow[-20:]}
 
-    # ──────────────────────────────────────────────────────────────
     #  APPLICATION METRICS
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def get_app_metrics(cls) -> dict:
@@ -1537,9 +1507,7 @@ class LoggingCore:
         except Exception as e:
             return {"error": str(e)}
 
-    # ──────────────────────────────────────────────────────────────
     #  SYSTEM HEALTH (from monitoring_service)
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def check_database(cls) -> dict:
@@ -1609,9 +1577,7 @@ class LoggingCore:
             "status": "healthy",
         }
 
-    # ──────────────────────────────────────────────────────────────
     #  ACTIVITY MONITORING (Owner Dashboard)
-    # ──────────────────────────────────────────────────────────────
 
     _TABLE_NAME_RE = re.compile(r"^[a-z0-9_]+$")
     _STATS_BLOCKED_TABLES = frozenset(
@@ -1726,8 +1692,6 @@ class LoggingCore:
             },
         }
 
-    # ──────────────────────────────────────────────────────────────
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def get_performance_metrics_data(cls) -> dict:
@@ -1769,9 +1733,7 @@ class LoggingCore:
         except Exception:
             logger.debug("Failed to write performance metric to file", exc_info=True)
 
-    # ──────────────────────────────────────────────────────────────
     #  SECURITY / DEVICE FINGERPRINT (from advanced_audit.py)
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def generate_device_fingerprint(cls) -> str:
@@ -1835,9 +1797,7 @@ class LoggingCore:
 
         return query.limit(100).all()
 
-    # ──────────────────────────────────────────────────────────────
     #  AUTO-CLEANUP
-    # ──────────────────────────────────────────────────────────────
 
     @classmethod
     def auto_cleanup(

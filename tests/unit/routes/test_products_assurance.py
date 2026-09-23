@@ -46,9 +46,7 @@ def products_import_app(app_factory, bypass_product_auth, upload_dir):
     return app_factory(products_bp, config_overrides={"UPLOAD_FOLDER": upload_dir})
 
 
-# ---------------------------------------------------------------------------
 # Module-level helpers
-# ---------------------------------------------------------------------------
 
 
 class TestSafeFloatRequireFloat:
@@ -242,9 +240,7 @@ class TestScopedCustomersQuery:
         assert query.filter.call_count >= 1
 
 
-# ---------------------------------------------------------------------------
 # Import template & import_products
-# ---------------------------------------------------------------------------
 
 
 class TestImportTemplate:
@@ -369,9 +365,7 @@ class TestImportGrid:
         ctx["session"].commit.assert_called()
 
 
-# ---------------------------------------------------------------------------
 # Index branch-scoped filters & branch columns
-# ---------------------------------------------------------------------------
 
 
 class TestIndexAssurance:
@@ -417,9 +411,7 @@ class TestIndexAssurance:
         assert render.call_args[1]["show_branch_columns"] is True
 
 
-# ---------------------------------------------------------------------------
 # Create / edit validation branches
-# ---------------------------------------------------------------------------
 
 
 class TestCreateAssurance:
@@ -735,9 +727,7 @@ class TestEditAssurance:
         assert resp.status_code == 200
 
 
-# ---------------------------------------------------------------------------
 # Delete (soft/hard/html vs json)
-# ---------------------------------------------------------------------------
 
 
 class TestDeleteAssurance:
@@ -785,9 +775,7 @@ class TestDeleteAssurance:
         ctx["session"].delete.assert_called_with(product)
 
 
-# ---------------------------------------------------------------------------
 # adjust_stock extras
-# ---------------------------------------------------------------------------
 
 
 class TestAdjustStockAssurance:
@@ -837,9 +825,7 @@ class TestAdjustStockAssurance:
         assert resp.status_code == 500
 
 
-# ---------------------------------------------------------------------------
 # api_search
-# ---------------------------------------------------------------------------
 
 
 class TestApiSearchAssurance:
@@ -866,9 +852,7 @@ class TestApiSearchAssurance:
         assert len(resp.get_json()["data"]) == 2
 
 
-# ---------------------------------------------------------------------------
 # Categories form paths
-# ---------------------------------------------------------------------------
 
 
 class TestCategoriesAssurance:
@@ -904,9 +888,7 @@ class TestCategoriesAssurance:
         assert resp.location.endswith("/products/categories")
 
 
-# ---------------------------------------------------------------------------
 # Print labels
-# ---------------------------------------------------------------------------
 
 
 class TestPrintLabelsAssurance:

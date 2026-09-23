@@ -120,9 +120,7 @@ class TransformersBrain:
 
         return vocab
 
-    # ========================================================================
     # Self-Attention Mechanism - آلية الانتباه الذاتي
-    # ========================================================================
 
     def self_attention(self, query: list[float], key: list[float], value: list[float]) -> list[float]:
         """
@@ -181,9 +179,7 @@ class TransformersBrain:
         sum_exp = sum(exp_scores)
         return [e / sum_exp for e in exp_scores]
 
-    # ========================================================================
     # Positional Encoding - ترميز الموضع
-    # ========================================================================
 
     @staticmethod
     def positional_encoding(position: int, d_model: int) -> list[float]:
@@ -206,9 +202,7 @@ class TransformersBrain:
 
         return encoding[:d_model]
 
-    # ========================================================================
     # Feed-Forward Network - الشبكة الأمامية
-    # ========================================================================
 
     def feed_forward(self, x: list[float]) -> list[float]:
         """
@@ -224,9 +218,7 @@ class TransformersBrain:
 
         return output[: self.d_model]
 
-    # ========================================================================
     # Transformer Block - كتلة المحول
-    # ========================================================================
 
     def transformer_block(self, x: list[float], position: int) -> list[float]:
         """
@@ -264,9 +256,7 @@ class TransformersBrain:
 
         return [(xi - mean) / std for xi in x]
 
-    # ========================================================================
     # Natural Language Understanding - فهم اللغة الطبيعية
-    # ========================================================================
 
     def understand(self, text: str) -> dict:
         """
@@ -419,9 +409,7 @@ class TransformersBrain:
 
         return attention_map
 
-    # ========================================================================
     # Generation - التوليد
-    # ========================================================================
 
     def generate_response(self, prompt: str, max_length: int = 50) -> str:
         """
@@ -460,9 +448,7 @@ class TransformersBrain:
 
         return response
 
-    # ========================================================================
     # Context Management - إدارة السياق
-    # ========================================================================
 
     def add_to_context(self, text: str):
         """إضافة للسياق"""
@@ -493,9 +479,7 @@ class TransformersBrain:
         return f"السياق: {len(self.context_memory)} رسالة - النية الغالبة: {most_common_intent}"
 
 
-# ============================================================================
 # Singleton
-# ============================================================================
 
 _transformers_brain_instance = None
 

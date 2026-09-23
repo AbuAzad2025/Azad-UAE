@@ -131,8 +131,6 @@ class GLMappingSeedPreviewRow:
         return asdict(self)
 
 
-# ------------------------------------------------------------------
-# ------------------------------------------------------------------
 
 # Each rule defines how to discover a postable GL account candidate for a
 # concept when the legacy code did not yield a safe proposal.
@@ -554,9 +552,7 @@ class GLMappingValidationService:
             "rows": rows,
         }
 
-    # ------------------------------------------------------------------
     # Phase 1G – Safe Seed Preview (read-only, never writes to DB)
-    # ------------------------------------------------------------------
 
     PREVIEW_FIELDS = (
         "tenant_id",
@@ -721,8 +717,6 @@ class GLMappingValidationService:
             issues.append("Account is a header/group account and is not postable.")
         return issues
 
-    # ------------------------------------------------------------------
-    # ------------------------------------------------------------------
 
     DISCOVERY_FIELDS = (
         "tenant_id",

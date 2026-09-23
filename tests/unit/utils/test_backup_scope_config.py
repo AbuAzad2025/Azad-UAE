@@ -30,9 +30,7 @@ from services.backup_scope_config import (
     write_data_directory,
 )
 
-# ===========================================================================
 # Pure function: sanitize_slug
-# ===========================================================================
 
 
 @pytest.mark.parametrize(
@@ -52,9 +50,7 @@ def test_sanitize_slug(slug, expected):
     assert sanitize_slug(slug) == expected
 
 
-# ===========================================================================
 # Pure function: _serialize_row
-# ===========================================================================
 
 
 @pytest.mark.parametrize(
@@ -75,9 +71,7 @@ def test_serialize_row(item, expected_key, expected_val):
     assert result[expected_key] == expected_val
 
 
-# ===========================================================================
 # Pure function: _path_from_urlish
-# ===========================================================================
 
 
 @pytest.mark.parametrize(
@@ -101,9 +95,7 @@ def test_path_from_urlish_traversal_rejected(tmp_path):
     assert result is None
 
 
-# ===========================================================================
 # Pure function: scope_filter_summary
-# ===========================================================================
 
 
 @pytest.mark.parametrize(
@@ -120,9 +112,7 @@ def test_scope_filter_summary(scope, tid, bid, sid, expected):
     assert expected in result
 
 
-# ===========================================================================
 # table_exists via mock connection
-# ===========================================================================
 
 
 def test_table_exists_returns_true_when_table_found(mock_db_connection):
@@ -136,9 +126,7 @@ def test_table_exists_returns_false_when_table_missing(mock_db_connection):
     assert table_exists(conn, "ghost_table") is False
 
 
-# ===========================================================================
 # _fetch_rows via mock connection
-# ===========================================================================
 
 
 def test_fetch_rows_returns_serialized_rows(mock_db_connection):
@@ -158,9 +146,7 @@ def test_fetch_rows_empty(mock_db_connection):
     assert result == []
 
 
-# ===========================================================================
 # _fetch_child_rows via mock connection
-# ===========================================================================
 
 
 def test_fetch_child_rows_returns_empty_when_no_parents(mock_db_connection):
@@ -187,9 +173,7 @@ def test_fetch_child_rows_returns_rows(mocker, mock_db_connection):
     assert result[0]["sale_id"] == 1
 
 
-# ===========================================================================
 # _merge_product_customer_dependencies
-# ===========================================================================
 
 
 def _merge_setup(
@@ -260,9 +244,7 @@ def test_merge_reports_unresolved_ref(mocker, mock_db_connection):
     assert any("missing_merchant" in u for u in unresolved)
 
 
-# ===========================================================================
 # export_scoped_database  (patched helpers)
-# ===========================================================================
 
 
 @pytest.fixture
@@ -327,9 +309,7 @@ def test_export_scoped_database_requires_store_id(patch_export_helpers):
     assert "store_id required" in str(skipped)
 
 
-# ===========================================================================
 # export_tenant_database wrapper
-# ===========================================================================
 
 
 def test_export_tenant_database_returns_4_tuple(patch_export_helpers):
@@ -340,9 +320,7 @@ def test_export_tenant_database_returns_4_tuple(patch_export_helpers):
     assert isinstance(tables, dict)
 
 
-# ===========================================================================
 # write_data_directory / read_data_directory round-trip
-# ===========================================================================
 
 
 def test_write_read_directory_roundtrip(tmp_path):

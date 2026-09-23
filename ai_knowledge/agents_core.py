@@ -17,11 +17,9 @@ from ai_knowledge.agents.master_brain import (
 
 logger = logging.getLogger(__name__)
 
-# ============================================================================
 # Cached dotenv loading (S6): avoid re-parsing .env from disk on EVERY web
 # request. The file is re-read only when its mtime changes (e.g. after the
 # owner updates an API key via /ai/config).
-# ============================================================================
 
 _env_loaded_mtime: float | None = None
 
@@ -41,9 +39,7 @@ def load_env_cached() -> None:
         logger.debug("dotenv cached load skipped: %s", exc)
 
 
-# ============================================================================
 # intelligent_response - dispatcher-aware wrapper
-# ============================================================================
 
 
 def intelligent_response(message: str, user_id: int | None = None, context: dict | None = None) -> str:
@@ -106,9 +102,7 @@ def intelligent_response(message: str, user_id: int | None = None, context: dict
         return "عذراً، حدث خطأ أثناء المعالجة. يرجى المحاولة مرة أخرى."
 
 
-# ============================================================================
 # ENHANCED AI - System Knowledge + Groq Chain-of-Thought + Tool-Use
-# ============================================================================
 
 _llm_available = None
 _llm_available_mtime = object()

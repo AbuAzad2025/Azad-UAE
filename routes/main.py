@@ -148,9 +148,7 @@ def dashboard():
         return render_template("errors/500.html"), 500
 
 
-# ───────────────────────────────────────────────────────────────
 # Dashboard chart datasets — small JSON endpoints (envelope responses)
-# ───────────────────────────────────────────────────────────────
 
 
 @main_bp.route("/dashboard/api/charts/sales-trend")
@@ -220,9 +218,7 @@ def api_dashboard_stock_alerts():
     return success_response(data=data)
 
 
-# ───────────────────────────────────────────────────────────────
 # User Self-Profile — view and edit own data only
-# ───────────────────────────────────────────────────────────────
 
 
 @main_bp.route("/my-profile")
@@ -353,9 +349,7 @@ def my_profile_update():
     return redirect(url_for("main.my_profile"))
 
 
-# ───────────────────────────────────────────────────────────────
 # Tenant Public Profile — read-only company info page
-# ───────────────────────────────────────────────────────────────
 
 
 @main_bp.route("/tenant/<slug>")

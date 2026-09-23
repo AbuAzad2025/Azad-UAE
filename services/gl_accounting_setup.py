@@ -108,9 +108,7 @@ from utils.db_safety import atomic_transaction
 logger = logging.getLogger(__name__)
 from models.gl import GLAccount, GLAccountMapping
 
-# ---------------------------------------------------------------------------
 # Reusable concept rules
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -551,9 +549,7 @@ DEFAULT_CONCEPT_RULES.update(
 )
 
 
-# ---------------------------------------------------------------------------
 # Result dataclasses
-# ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
@@ -604,15 +600,11 @@ class SetupResult:
         }
 
 
-# ---------------------------------------------------------------------------
-# ---------------------------------------------------------------------------
 
 
 class GLAccountingSetupService:
     """Reusable service to prepare a tenant's GL concept mappings."""
 
-    # ================================================================
-    # ================================================================
 
     @staticmethod
     def plan(tenant_id: int) -> SetupPlan | None:
@@ -763,8 +755,6 @@ class GLAccountingSetupService:
             include_ready=True,
         )
 
-    # ================================================================
-    # ================================================================
 
     @staticmethod
     def _build_plan(tenant: Tenant) -> list[SetupPlanAction]:
@@ -834,8 +824,6 @@ class GLAccountingSetupService:
 
         return actions
 
-    # ================================================================
-    # ================================================================
 
     @staticmethod
     def _find_best_candidate(tenant: Tenant, rule: ConceptSetupRule) -> GLAccount | None:
@@ -878,8 +866,6 @@ class GLAccountingSetupService:
 
         return None
 
-    # ================================================================
-    # ================================================================
 
     @staticmethod
     def _create_account(tenant: Tenant, concept_code: str) -> GLAccount:

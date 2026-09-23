@@ -23,9 +23,7 @@ __all__ = ["ReportsQueryService"]
 
 
 class ReportsQueryService:
-    # ------------------------------------------------------------------
     # Cached payment totals
-    # ------------------------------------------------------------------
     @staticmethod
     @cached_query(timeout=60, key_prefix="sale_paid")
     def get_confirmed_sale_paid_aed(sale_id, tenant_id=None, branch_id=None):
@@ -79,9 +77,7 @@ class ReportsQueryService:
             q = q.filter(Payment.branch_id == branch_id)
         return Decimal(str(q.scalar() or 0))
 
-    # ------------------------------------------------------------------
     # Branch-scoped entity queries
-    # ------------------------------------------------------------------
     @staticmethod
     def _scoped_customer_query():
         from models import Customer, Payment, Sale
@@ -129,9 +125,7 @@ class ReportsQueryService:
             db.session.query(ReportsQueryService._scoped_customer_query().filter_by(id=record_id).exists()).scalar()
         )
 
-    # ------------------------------------------------------------------
     # Partners / merchants / suppliers report (bulk grouped queries)
-    # ------------------------------------------------------------------
     @staticmethod
     def build_partners_report(date_from, date_to, tenant_id, scoped_branch_id):
         from models import Customer, PartnerCommissionEntry, Payment, Product, Purchase, Sale, SaleLine
@@ -554,9 +548,7 @@ class ReportsQueryService:
             "suppliers_summary": suppliers_summary,
         }
 
-    # ------------------------------------------------------------------
     # Sales report
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_sales_report(
         tenant_id, scoped_branch_id, date_from, date_to, customer_id, seller_id, seller_user_id=None
@@ -620,9 +612,7 @@ class ReportsQueryService:
             sellers_query = sellers_query.filter(User.id.in_(seller_ids))
         return sellers_query.order_by(User.username).limit(500).all()
 
-    # ------------------------------------------------------------------
     # Purchases report
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_purchases_report(tenant_id, scoped_branch_id, date_from, date_to, supplier_id):
         from models import Purchase
@@ -686,9 +676,7 @@ class ReportsQueryService:
 
         return ReportsQueryService._scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name).all()
 
-    # ------------------------------------------------------------------
     # Receivables aging
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_receivables_sales(tenant_id, scoped_branch_id, customer_id):
         from models import Sale
@@ -702,9 +690,7 @@ class ReportsQueryService:
             all_sales = all_sales.filter(Sale.customer_id == customer_id)
         return all_sales.order_by(Sale.sale_date.desc()).limit(5000).all()
 
-    # ------------------------------------------------------------------
     # Inventory reconciliation warehouses
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_inventory_reconciliation_warehouses(branch_id, user):
         from models import Warehouse as WarehouseModel
@@ -728,9 +714,7 @@ class ReportsQueryService:
 
         return Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
 
-    # ------------------------------------------------------------------
     # Inventory report (page + export share identical map/product queries)
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_inventory_warehouses(tenant_id, branch_id, user, ordered=True):
         from models import Warehouse
@@ -820,9 +804,7 @@ class ReportsQueryService:
 
         return query.order_by(Product.name).all()
 
-    # ------------------------------------------------------------------
     # Entity search
-    # ------------------------------------------------------------------
     @staticmethod
     def search_entities(query_text, entity_type):
         from models import Customer, Supplier
@@ -860,9 +842,7 @@ class ReportsQueryService:
 
         return results
 
-    # ------------------------------------------------------------------
     # Entity report fragment (supplier / customer detail)
-    # ------------------------------------------------------------------
     @staticmethod
     def build_supplier_fragment_data(record_id, tenant_id, scoped_branch_id):
         from datetime import datetime as dt
@@ -1192,9 +1172,7 @@ class ReportsQueryService:
         context["transactions"] = all_trans
         return context
 
-    # ------------------------------------------------------------------
     # AP aging (payables aging buckets per supplier)
-    # ------------------------------------------------------------------
     AP_AGING_BUCKETS = ("0-30", "31-60", "61-90", "90+")
 
     @staticmethod
@@ -1316,9 +1294,7 @@ class ReportsQueryService:
             "generated_for_supplier": supplier_id,
         }
 
-    # ------------------------------------------------------------------
     # Top selling
-    # ------------------------------------------------------------------
     @staticmethod
     def fetch_top_selling_products(date_from, date_to, tenant_id, scoped_branch_id, limit):
         from models import Product, Sale, SaleLine

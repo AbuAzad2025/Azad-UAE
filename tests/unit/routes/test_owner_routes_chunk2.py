@@ -183,9 +183,7 @@ class TestApiUpdateTenantSettings:
         assert resp.status_code == 500
         assert resp.json["success"] is False
 
-    # ------------------------------------------------------------------
     # Edge: field is None or empty
-    # ------------------------------------------------------------------
 
     def test_none_field_returns_400(
         self,

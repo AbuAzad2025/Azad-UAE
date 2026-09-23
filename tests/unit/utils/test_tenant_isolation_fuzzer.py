@@ -18,9 +18,7 @@ from extensions import db
 from utils.db_safety import atomic_transaction
 from utils.tenanting import tenant_query
 
-# ---------------------------------------------------------------------------
 # Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="module")
@@ -101,9 +99,7 @@ def _tenants(app):
         }
 
 
-# ---------------------------------------------------------------------------
 # Direct-model isolation tests
-# ---------------------------------------------------------------------------
 
 
 class TestTenantQueryBoundary:
@@ -176,9 +172,7 @@ class TestTenantQueryBoundary:
                 )
 
 
-# ---------------------------------------------------------------------------
 # Application-layer isolation (route-level with test client)
-# ---------------------------------------------------------------------------
 
 
 class TestRouteLevelIsolation:
@@ -214,9 +208,7 @@ class TestRouteLevelIsolation:
         assert resp.status_code in (302, 400, 401, 403)
 
 
-# ---------------------------------------------------------------------------
 # Corrupted / malicious payload tests
-# ---------------------------------------------------------------------------
 
 
 class TestMaliciousRequestIsolation:

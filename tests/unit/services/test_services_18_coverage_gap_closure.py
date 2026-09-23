@@ -13,9 +13,7 @@ import pytest
 from models import Product
 from services.ai_service import AIService
 
-# ---------------------------------------------------------------------------
 # advanced_analytics
-# ---------------------------------------------------------------------------
 
 
 class TestAdvancedAnalyticsGaps:
@@ -60,9 +58,7 @@ class TestAdvancedAnalyticsGaps:
         assert result["items"][0]["percentage"] == 0
 
 
-# ---------------------------------------------------------------------------
 # ai_executor
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -239,9 +235,7 @@ class TestAIExecutorGaps:
         assert result["cost"] == pytest.approx(200.0)
 
 
-# ---------------------------------------------------------------------------
 # ai_service
-# ---------------------------------------------------------------------------
 
 
 class TestAIServiceGetModelGaps:
@@ -254,9 +248,7 @@ class TestAIServiceGetModelGaps:
         assert AIService._get_model(Product, 1) is None
 
 
-# ---------------------------------------------------------------------------
 # analytics_service
-# ---------------------------------------------------------------------------
 
 
 class TestAnalyticsServiceDonationGaps:
@@ -277,9 +269,7 @@ class TestAnalyticsServiceDonationGaps:
         assert result["purchases"][0] >= 20
 
 
-# ---------------------------------------------------------------------------
 # archive_service
-# ---------------------------------------------------------------------------
 
 
 class TestArchiveServiceGaps:
@@ -384,9 +374,7 @@ class TestArchiveServiceGaps:
             ArchiveService.cleanup_old_archives(days=30)
 
 
-# ---------------------------------------------------------------------------
 # backup_exec
-# ---------------------------------------------------------------------------
 
 
 class TestBackupExecGaps:
@@ -405,13 +393,9 @@ class TestBackupExecGaps:
         mock_run.assert_called_once()
 
 
-# ---------------------------------------------------------------------------
 # branch_audit_service
-# ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
 # campaign_service
-# ---------------------------------------------------------------------------
 
 
 class TestCeleryTasksGaps:
@@ -446,9 +430,7 @@ class TestCeleryTasksGaps:
         mock_session.rollback.assert_called()
 
 
-# ---------------------------------------------------------------------------
 # cheque_accounting_integration
-# ---------------------------------------------------------------------------
 
 
 class TestChequeServiceValidationGaps:

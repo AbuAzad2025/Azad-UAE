@@ -114,9 +114,7 @@ def pytest_configure(config):
         importlib.reload(_dep)
 
 
-# ---------------------------------------------------------------------------
 # App & client factories
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -154,9 +152,7 @@ def app_factory():
     return _create_app
 
 
-# ---------------------------------------------------------------------------
 # Generic authenticated user (route tests under tests/unit/routes/)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -182,9 +178,7 @@ def mock_user():
     return user
 
 
-# ---------------------------------------------------------------------------
 # Auth bypass fixtures  (/owner/* routes)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -224,9 +218,7 @@ def mock_owner_client(app_factory, bypass_owner_auth):
     return _app.test_client()
 
 
-# ---------------------------------------------------------------------------
 # Company-admin client  (for @company_admin_required endpoints)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -255,9 +247,7 @@ def mock_company_admin_client(app_factory, bypass_company_admin_auth):
     return _app.test_client()
 
 
-# ---------------------------------------------------------------------------
 # Payment-vault owner client  (/payment-vault/* routes)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -271,9 +261,7 @@ def mock_vault_owner_client(app_factory, bypass_owner_auth):
     return _app.test_client()
 
 
-# ---------------------------------------------------------------------------
 # Product client  (/products/* routes)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -301,9 +289,7 @@ def product_client(app_factory, bypass_product_auth):
     return _app.test_client()
 
 
-# ---------------------------------------------------------------------------
 # AI route fixtures  (/ai/* routes)
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture

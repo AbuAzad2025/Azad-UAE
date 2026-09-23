@@ -417,9 +417,7 @@ class TestTenantIsolationHardening:
         assert get_active_tenant_id(user=owner) == sample_tenant.id
 
 
-# ---------------------------------------------------------------------------
 # Flask test-client route-level tests
-# ---------------------------------------------------------------------------
 
 
 class TestLoginRouteLevel:

@@ -275,7 +275,6 @@ def accountant_required(f):
 # Usage:
 #   @require_subscription_feature('pos')
 #   @require_subscription_feature('enterprise')
-# ---------------------------------------------------------------------
 
 # Known `enable_*` boolean columns on the Tenant model.
 _FEATURE_COLUMNS = frozenset(
@@ -348,7 +347,6 @@ def require_subscription_feature(feature_name: str):
 # Validates X-API-Key / X-API-Secret headers, resolves tenant, sets
 # g.active_tenant_id so existing ORM auto-scoping (tenant_orm.py) fires
 # with zero duplicated security code.
-# ------------------------------------------------------------------------
 
 
 def api_key_required(scope="read"):
@@ -423,7 +421,6 @@ def api_key_required(scope="read"):
 # Usage:
 #   @enforce_resource_limit('users')
 #   @enforce_resource_limit('invoices_monthly')
-# ---------------------------------------------------------------------
 
 _LIMIT_CHECKERS: dict[str, Any] = {}
 

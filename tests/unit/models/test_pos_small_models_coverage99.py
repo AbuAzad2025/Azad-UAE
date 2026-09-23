@@ -17,9 +17,7 @@ from models.pos_printer import PosPrinter
 from models.pos_shift import PosShift
 from models.shipment import Shipment
 
-# ---------------------------------------------------------------------------
 # Shipment
-# ---------------------------------------------------------------------------
 
 
 class TestShipmentValidators:
@@ -52,9 +50,7 @@ class TestShipmentValidators:
         assert s._validate_exactly_one_explicit("sale_id", 5) == 5
 
 
-# ---------------------------------------------------------------------------
 # PosOverrideToken
-# ---------------------------------------------------------------------------
 
 
 class TestPosOverrideToken:
@@ -98,9 +94,7 @@ class TestPosOverrideToken:
         assert "by=7" in s
 
 
-# ---------------------------------------------------------------------------
 # PosShift
-# ---------------------------------------------------------------------------
 
 
 class TestPosShiftMethods:
@@ -159,9 +153,7 @@ class TestPosShiftMethods:
         assert s.duration_minutes >= 19
 
 
-# ---------------------------------------------------------------------------
 # PosPrinter
-# ---------------------------------------------------------------------------
 
 
 class TestPosPrinterClassMethod:

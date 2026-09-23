@@ -40,9 +40,7 @@ from sqlalchemy import func
 
 logger = logging.getLogger(__name__)
 
-# ====================================================================
 # Model cache contract (Master Directive — Phase 1: latency reduction)
-# ====================================================================
 # Trained sklearn artifacts are cached on disk with a JSON sidecar
 # (``{model}.meta.json``) carrying the cache schema version, the training
 # sample volume, and a version hash. A model is retrained only when its
@@ -222,9 +220,7 @@ class AzadNeuralEngine:
             self.scalers[model_name] = StandardScaler()
             self.encoders[model_name] = LabelEncoder()
 
-    # ====================================================================
     # 1. مهندس الصيانة - Maintenance Engineer
-    # ====================================================================
 
     def train_maintenance_prediction(self, from_app_context=None):
         """
@@ -425,9 +421,7 @@ class AzadNeuralEngine:
             "model": "neural_network",
         }
 
-    # ====================================================================
     # 2. المحاسب الخبير - Expert Accountant
-    # ====================================================================
 
     def train_accounting_assistant(self, from_app_context=None):
         """
@@ -571,9 +565,7 @@ class AzadNeuralEngine:
                 "recommendation": "تعذر التحقق",
             }
 
-    # ====================================================================
     # 3. المدير المالي - Financial Manager
-    # ====================================================================
 
     def train_financial_planning(self, from_app_context=None):
         """
@@ -845,9 +837,7 @@ class AzadNeuralEngine:
             "confidence": 0.85,
         }
 
-    # ====================================================================
     # 4. محلل الأسعار الذكي - Smart Pricing
-    # ====================================================================
 
     def train_price_optimizer(self, from_app_context=None):
         """
@@ -1051,9 +1041,7 @@ class AzadNeuralEngine:
                 "model": "fallback",
             }
 
-    # ====================================================================
     # 5. محلل المبيعات - Sales Analyst
-    # ====================================================================
 
     def train_sales_forecaster(self, from_app_context=None):
         """
@@ -1262,9 +1250,7 @@ class AzadNeuralEngine:
             "confidence": 0.88,
         }
 
-    # ====================================================================
     # 6. مصنف العملاء الذكي - Customer Intelligence
-    # ====================================================================
 
     def train_customer_classifier(self, from_app_context=None):
         """
@@ -1463,9 +1449,7 @@ class AzadNeuralEngine:
             "model": ("neural_network" if self._is_model_loaded("customer_classifier") else "rule_based"),
         }
 
-    # ====================================================================
     # 7. كاشف الاحتيال - Fraud Detection
-    # ====================================================================
 
     def train_fraud_detector(self, from_app_context=None):
         """
@@ -1624,9 +1608,7 @@ class AzadNeuralEngine:
             logger.error(f"Fraud detection failed: {e}")
             return {"is_fraud": False, "risk_score": 0, "reasons": []}
 
-    # ====================================================================
     # 8. محسن المخزون - Inventory Optimizer
-    # ====================================================================
 
     def train_inventory_optimizer(self, from_app_context=None):
         """
@@ -1809,9 +1791,7 @@ class AzadNeuralEngine:
             "model": ("neural_network" if self._is_model_loaded("inventory_optimizer") else "calculated"),
         }
 
-    # ====================================================================
     # 9. متنبئ الطلب - Demand Predictor
-    # ====================================================================
 
     def train_demand_predictor(self, from_app_context=None):
         """
@@ -2017,9 +1997,7 @@ class AzadNeuralEngine:
             "model": "neural_network",
         }
 
-    # ====================================================================
     # 10. محسن الربح - Profit Optimizer
-    # ====================================================================
 
     def train_profit_optimizer(self, from_app_context=None):
         """
@@ -2102,9 +2080,7 @@ class AzadNeuralEngine:
 
         return {"success": True, "r2_score": r2, "samples": len(sales)}
 
-    # ====================================================================
     # 11. متنبئ فقدان العملاء - Churn Prediction
-    # ====================================================================
 
     def train_churn_predictor(self, from_app_context=None):
         """
@@ -2188,9 +2164,7 @@ class AzadNeuralEngine:
 
         return {"success": True, "accuracy": accuracy, "samples": len(customers)}
 
-    # ====================================================================
     # Utilities - أدوات مساعدة
-    # ====================================================================
 
     def _meta_path(self, model_name: str) -> str:
         """Filesystem path of the JSON cache sidecar for a model."""
@@ -2709,9 +2683,7 @@ class AzadNeuralEngine:
         }
 
 
-# ============================================================================
 # Singleton Instance - للاستخدام السهل
-# ============================================================================
 
 _neural_engine_instance = None
 

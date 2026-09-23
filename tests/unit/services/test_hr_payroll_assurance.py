@@ -3,9 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# ---------------------------------------------------------------------------
 # Net Salary Computations — 8 worker scenarios
-# ---------------------------------------------------------------------------
 
 
 class TestNetSalaryComputation:
@@ -174,9 +172,7 @@ class TestNetSalaryNegativeGuard:
         assert r["debt"] == Decimal("1000.00")
 
 
-# ---------------------------------------------------------------------------
 # Immutable Payroll Approval Lock
-# ---------------------------------------------------------------------------
 
 
 class TestImmutablePayrollLock:
@@ -221,9 +217,7 @@ class TestImmutablePayrollLock:
         assert PayrollEngine.can_edit(approved) is False
 
 
-# ---------------------------------------------------------------------------
 # Locked State Modification Attempts
-# ---------------------------------------------------------------------------
 
 
 class TestLockedModificationAttempt:
@@ -281,9 +275,7 @@ class TestLockedModificationAttempt:
             PayrollService.update_allowances(tx, Decimal("100"))
 
 
-# ---------------------------------------------------------------------------
 # Unpaid Leave Deduction Lookup
-# ---------------------------------------------------------------------------
 
 
 class TestUnpaidLeaveDeduction:
@@ -340,9 +332,7 @@ class TestUnpaidLeaveDeduction:
         assert days == 10
 
 
-# ---------------------------------------------------------------------------
 # Payroll Batch GL Approval
-# ---------------------------------------------------------------------------
 
 
 class TestPayrollBatchGLApproval:

@@ -168,9 +168,7 @@ class MaintenanceService:
                 "tenants": tenant_reports,
             }
 
-    # ──────────────────────────────────────────────────────────────────
     # Default Tenant Maintenance
-    # ──────────────────────────────────────────────────────────────────
 
     @staticmethod
     def _default_for_type(data_type: str):
@@ -308,9 +306,7 @@ class MaintenanceService:
             "conflicts": conflicts,
         }
 
-    # ──────────────────────────────────────────────────────────────────
     # Test Database Cleanup
-    # ──────────────────────────────────────────────────────────────────
 
     STALE_TEST_DATABASES = [
         "azadexa_dev",

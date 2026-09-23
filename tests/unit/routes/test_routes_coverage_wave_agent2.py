@@ -32,9 +32,7 @@ def _obj(**attrs):
     return obj
 
 
-# ===========================================================================
 # advanced_ledger.py residual branches
-# ===========================================================================
 class TestAdvancedLedgerWave:
     def test_add_customs_tax_missing_account(self, advanced_ledger_client):
         """POST without gl_account_id -> warning flash + re-render (81-82)."""
@@ -109,9 +107,7 @@ class TestAdvancedLedgerWave:
         mocks["render"].assert_called()
 
 
-# ===========================================================================
 # ai.py - before/after request access policy
-# ===========================================================================
 def _state(**overrides):
     base = {
         "allowed": True,
@@ -188,9 +184,7 @@ class TestAiAccessPolicy:
         assert resp.status_code == 200
 
 
-# ===========================================================================
 # ai.py - chat owner-execute elif
-# ===========================================================================
 class TestChatOwnerExecuteElif:
     def test_owner_without_execute_level_uses_wizard(self, app_factory, mock_user):
         """can_execute_mutations False but owner -> _process_user_action (465)."""
@@ -212,9 +206,7 @@ class TestChatOwnerExecuteElif:
         proc.assert_called_once()
 
 
-# ===========================================================================
 # ai.py - internal context helpers
-# ===========================================================================
 class TestConversationHelpers:
     def test_autosave_pop(self):
         from routes.ai_routes import _conversation_ctx
@@ -243,9 +235,7 @@ class TestConversationHelpers:
             _conversation_clear(7, 2)
 
 
-# ===========================================================================
 # ai.py - interactive wizard (_process_user_action) residual branches
-# ===========================================================================
 @contextmanager
 def _wizard_env(ctx):
     with (
@@ -1001,9 +991,7 @@ class TestProcessUserActionMisc:
         assert "خطأ في التنفيذ" in result
 
 
-# ===========================================================================
 # ai.py - config / upload-excel / excel helpers
-# ===========================================================================
 class TestConfigUploadWave:
     def test_config_creates_env_when_missing(self, ai_client, tmp_path):
         env_dir = tmp_path / "routes"

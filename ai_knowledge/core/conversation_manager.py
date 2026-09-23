@@ -318,9 +318,7 @@ class ConversationManager:
         return {"error": "No active conversation"}
 
 
-# ============================================================================
 # Singleton
-# ============================================================================
 
 _conversation_manager_instance = None
 

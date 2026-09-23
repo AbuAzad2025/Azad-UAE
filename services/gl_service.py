@@ -1526,9 +1526,7 @@ class GLService:
             "ap_difference": float(gl_ap - total_supplier_balance),
         }
 
-    # ------------------------------------------------------------------
     # Read-model queries relocated from routes/ledger.py
-    # ------------------------------------------------------------------
     @staticmethod
     def list_active_accounts():
         """Active GL accounts ordered by code (ledger index)."""

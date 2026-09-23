@@ -67,9 +67,7 @@ def _vat_product(db_session, sample_tenant):
         db_session.commit()
 
 
-# ──────────────────────────────────────────────────────────────
 # Fixtures
-# ──────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -198,9 +196,7 @@ def sample_user_vat(db_session, sample_tenant, sample_role, sample_branch):
     return u
 
 
-# ──────────────────────────────────────────────────────────────
 # 1. Sale.calculate_totals — VAT-inclusive pricing
-# ──────────────────────────────────────────────────────────────
 
 
 class TestSaleVatInclusiveTotals:
@@ -382,9 +378,7 @@ class TestSaleVatInclusiveTotals:
         assert sale.total_amount == Decimal("116.00"), f"Expected total_amount=116.00, got {sale.total_amount}"
 
 
-# ──────────────────────────────────────────────────────────────
 # 2. Purchase.calculate_totals — VAT-inclusive pricing
-# ──────────────────────────────────────────────────────────────
 
 
 class TestPurchaseVatInclusiveTotals:
@@ -478,9 +472,7 @@ class TestPurchaseVatInclusiveTotals:
         )
 
 
-# ──────────────────────────────────────────────────────────────
 # 3. PurchaseLine.inventory_unit_cost — VAT-free for inventory
-# ──────────────────────────────────────────────────────────────
 
 
 class TestPurchaseLineInventoryUnitCost:
@@ -594,9 +586,7 @@ class TestPurchaseLineInventoryUnitCost:
         )
 
 
-# ──────────────────────────────────────────────────────────────
 # 4. GL Sale Posting — Revenue must be VAT-exclusive
-# ──────────────────────────────────────────────────────────────
 
 
 class TestSaleGlVatExclusive:
@@ -685,9 +675,7 @@ class TestSaleGlVatExclusive:
         assert sale.taxable_amount == Decimal("90.00"), f"Expected taxable_amount=90.00, got {sale.taxable_amount}"
 
 
-# ──────────────────────────────────────────────────────────────
 # 5. GL Purchase Posting — Inventory debit = taxable_amount
-# ──────────────────────────────────────────────────────────────
 
 
 class TestPurchaseGlVatExclusive:
@@ -778,9 +766,7 @@ class TestPurchaseGlVatExclusive:
         assert purchase.total_amount == Decimal("131.00")  # 116 + 15 landed
 
 
-# ──────────────────────────────────────────────────────────────
 # 6. Purchase Return — Inventory credit VAT-exclusive
-# ──────────────────────────────────────────────────────────────
 
 
 class TestPurchaseReturnVatExclusive:
@@ -840,9 +826,7 @@ class TestPurchaseReturnVatExclusive:
         assert ret.subtotal == Decimal("232.00"), f"Expected return subtotal=232.00, got {ret.subtotal}"
 
 
-# ──────────────────────────────────────────────────────────────
 # 7. Branch-level override & Tenant fallback
-# ──────────────────────────────────────────────────────────────
 
 
 class TestPricesIncludeVatResolution:
@@ -881,9 +865,7 @@ class TestPricesIncludeVatResolution:
         assert result is False, "Tenant with prices_include_vat=False should return False"
 
 
-# ──────────────────────────────────────────────────────────────
 # 8. MWAC compatibility — Inventory cost must never include VAT
-# ──────────────────────────────────────────────────────────────
 
 
 class TestMwacVatCompatibility:

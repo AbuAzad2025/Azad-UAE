@@ -22,9 +22,7 @@ from ai_knowledge.tool_schemas import (
     validate_tool_args_safe,
 )
 
-# ---------------------------------------------------------------------------
 # Payloads missing at least one mandatory business field, per mutation tool
-# ---------------------------------------------------------------------------
 MISSING_PAYLOADS: dict[str, dict] = {
     "create_customer": {"phone": "0501234567"},  # missing name
     "customer_balance": {},  # missing name

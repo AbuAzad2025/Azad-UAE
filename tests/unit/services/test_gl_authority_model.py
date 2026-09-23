@@ -11,9 +11,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# ---------------------------------------------------------------------------
 # Module-level: reuse session app; enable dynamic GL mapping for this module
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -34,9 +32,7 @@ def _enable_dynamic_gl_mapping(app):
         app.config["SERVER_NAME"] = prev["SERVER_NAME"]
 
 
-# ===================================================================
 # 1. Provisioning scope
-# ===================================================================
 
 
 class TestProvisioningScope:
@@ -120,9 +116,7 @@ class TestProvisioningScope:
                 assert account.tenant_id == tenant.id, f"Mapping {mapping.concept_code} -> foreign {account.code}"
 
 
-# ===================================================================
 # 2. Liquidity mode
-# ===================================================================
 
 
 class TestLiquidityMode:
@@ -296,9 +290,7 @@ class TestLiquidityMode:
                 )
 
 
-# ===================================================================
 # 3. Record mode
-# ===================================================================
 
 
 class TestRecordMode:
@@ -488,9 +480,7 @@ class TestRecordMode:
                 )
 
 
-# ===================================================================
 # 4. Mapping mode — GAIN/LOSS use mapping
-# ===================================================================
 
 
 class TestMappingMode:
@@ -593,9 +583,7 @@ class TestMappingMode:
             assert resolved_loss.id == loss_map.gl_account_id
 
 
-# ===================================================================
 # 5. Stale mapping warnings (read-only)
-# ===================================================================
 
 
 class TestStaleMappings:
@@ -730,9 +718,7 @@ class TestStaleMappings:
             )
 
 
-# ===================================================================
 # 6. Tenant/Branch Isolation Validation
-# ===================================================================
 
 
 class TestTenantBranchIsolation:
@@ -936,9 +922,7 @@ class TestTenantBranchIsolation:
                 assert line.branch_id == branch2.id
 
 
-# ===================================================================
 # 7. Additional authority model edge cases
-# ===================================================================
 
 
 class TestAuthorityModelEdgeCases:

@@ -5,9 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# =============================================================================
 #  Fixtures: service & model mocks
-# =============================================================================
 
 
 @pytest.fixture(autouse=True)
@@ -154,9 +152,7 @@ def mock_payment_log(mocker):
     return mocker.patch("routes.payment_vault.PaymentLog.log_action")
 
 
-# ---------------------------------------------------------------------------
 # helpers
-# ---------------------------------------------------------------------------
 
 
 def _make_pagination(items, page, per_page, total):
@@ -174,9 +170,7 @@ def _make_pagination(items, page, per_page, total):
     return p
 
 
-# =============================================================================
 #  /process-payment
-# =============================================================================
 
 
 class TestProcessPayment:
@@ -311,9 +305,7 @@ class TestProcessPayment:
         assert resp.status_code == 400
 
 
-# =============================================================================
 #  /package/<id>/toggle
-# =============================================================================
 
 
 class TestTogglePackage:
@@ -339,9 +331,7 @@ class TestTogglePackage:
         assert body["success"] is False
 
 
-# =============================================================================
 #  /payment-vault/api/package-stats/<id>
-# =============================================================================
 
 
 class TestPackageStats:
@@ -377,9 +367,7 @@ class TestPackageStats:
         assert stats["total_revenue"] == 0
 
 
-# =============================================================================
 #  /api/notifications
-# =============================================================================
 
 
 class TestNotifications:
@@ -403,9 +391,7 @@ class TestNotifications:
         assert len(body["data"]["notifications"]) == 5
 
 
-# =============================================================================
 #  /api/live-stats
-# =============================================================================
 
 
 class TestLiveStats:
@@ -422,9 +408,7 @@ class TestLiveStats:
         assert body["data"]["security_level"] == "high"
 
 
-# =============================================================================
 #  /api/v2/purchases
-# =============================================================================
 
 
 class TestV2Purchases:
@@ -474,9 +458,7 @@ class TestV2Purchases:
         assert resp.status_code == 200
 
 
-# =============================================================================
 #  /api/v2/donations
-# =============================================================================
 
 
 class TestV2Donations:
@@ -525,9 +507,7 @@ class TestV2Donations:
         assert resp.status_code == 200
 
 
-# =============================================================================
 #  /donation/<id>/approve / /donation/<id>/reject
-# =============================================================================
 
 
 class TestDonationApproveReject:
@@ -555,9 +535,7 @@ class TestDonationApproveReject:
         mock_db.rollback.assert_called_once()
 
 
-# =============================================================================
 #  /purchase/<id>/activate
-# =============================================================================
 
 
 class TestActivatePurchase:

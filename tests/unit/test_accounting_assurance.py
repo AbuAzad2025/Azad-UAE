@@ -15,9 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# ===================================================================
 # TestGLDoubleEntryBalance
-# ===================================================================
 
 
 class TestGLDoubleEntryBalance:
@@ -92,9 +90,7 @@ class TestGLDoubleEntryBalance:
         assert result.id == 42
 
 
-# ===================================================================
 # TestPartnerProfitAndLossDistribution
-# ===================================================================
 
 
 class TestPartnerProfitAndLossDistribution:
@@ -240,9 +236,7 @@ class TestPartnerProfitAndLossDistribution:
         )
 
 
-# ===================================================================
 # TestBankAutoMatchingAndSuspenseRouting
-# ===================================================================
 
 
 class TestBankAutoMatchingAndSuspenseRouting:
@@ -427,9 +421,7 @@ class TestBankAutoMatchingAndSuspenseRouting:
         assert results == []
 
 
-# ===================================================================
 # TestGLConceptRegistry
-# ===================================================================
 
 
 class TestGLConceptRegistry:

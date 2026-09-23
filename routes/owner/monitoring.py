@@ -287,9 +287,7 @@ def forecasting():
     return render_template("owner/forecasting.html", historical=historical, forecast=forecast)
 
 
-# ───────────────────────────────────────────────────────────────
 # Tenant Management — full control for the owner
-# ───────────────────────────────────────────────────────────────
 
 
 @owner_bp.route("/error-audit-logs")

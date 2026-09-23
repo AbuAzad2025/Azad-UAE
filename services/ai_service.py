@@ -2407,9 +2407,7 @@ class AIService:
 
         return AzadResponses.smart_response(message, context)
 
-    # ========================================================================
     # دوال استخدام جميع وحدات AI - Integration Methods
-    # ========================================================================
 
     @staticmethod
     def get_contextual_response(message, user=None, conversation_history=None):
@@ -2702,9 +2700,7 @@ class AIService:
         except Exception:
             return {"compliant": True, "warnings": []}
 
-    # ========================================================================
     # دوال الشبكات العصبية المتقدمة - Neural Networks
-    # ========================================================================
 
     @staticmethod
     def predict_price_with_neural(product_id, customer_id, quantity=1):
@@ -2857,9 +2853,7 @@ class AIService:
             logger.error(f"Failed to get neural status: {e}")
             return {"trained_models": 0, "total_models": 0}
 
-    # ========================================================================
     # Advanced Capabilities - القدرات المتقدمة
-    # ========================================================================
 
     @staticmethod
     def think_deeply(problem: str, context: dict | None = None):
@@ -3095,9 +3089,7 @@ class AIService:
             },
         }
 
-    # ========================================================================
     # العقل الموحد الخارق - Master Brain Integration
-    # ========================================================================
 
     @staticmethod
     def ask_genius(question: str, context: dict | None = None, user_id: int | None = None):
@@ -3192,9 +3184,7 @@ class AIService:
         except Exception as e:
             return {"error": str(e), "is_balanced": False}
 
-    # ========================================================================
     # Transformers - معمارية المحولات المتقدمة
-    # ========================================================================
 
     @staticmethod
     def understand_with_transformers(text: str):
@@ -3262,9 +3252,7 @@ class AIService:
             logger.warning("Attention-map build failed", exc_info=True)
             return {}
 
-    # ========================================================================
     # كمبيوترات السيارات - Automotive ECU Expert
-    # ========================================================================
 
     @staticmethod
     def diagnose_obd_code(code: str):
@@ -3318,9 +3306,7 @@ class AIService:
             logger.warning("get_ecu_info failed", exc_info=True)
             return {}
 
-    # ========================================================================
     # التعلم الخارجي - External Learning
-    # ========================================================================
 
     @staticmethod
     def get_learning_sources():

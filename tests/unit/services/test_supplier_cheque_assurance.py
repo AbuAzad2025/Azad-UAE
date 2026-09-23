@@ -4,9 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# ---------------------------------------------------------------------------
 # Supplier Ageing Bucket Partitions
-# ---------------------------------------------------------------------------
 
 
 class TestSupplierAgeingBuckets:
@@ -70,9 +68,7 @@ class TestSupplierAgeingBuckets:
         assert self._bucket(d) == "90_plus"
 
 
-# ---------------------------------------------------------------------------
 # Cheque Clearance GL Routing
-# ---------------------------------------------------------------------------
 
 
 class TestChequeClearanceGL:
@@ -213,9 +209,7 @@ class TestChequeClearanceGL:
         assert cheque.status == "cleared"
 
 
-# ---------------------------------------------------------------------------
 # Cheque Bounce GL Routing
-# ---------------------------------------------------------------------------
 
 
 class TestChequeBounceGL:
@@ -406,9 +400,7 @@ class TestChequeBounceGL:
         assert cheque.clearance_date is not None
 
 
-# ---------------------------------------------------------------------------
 # Cheque State Transition Guards
-# ---------------------------------------------------------------------------
 
 
 class TestChequeStateTransitions:

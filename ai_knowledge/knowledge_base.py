@@ -1266,9 +1266,7 @@ class AutomotiveECUKnowledge:
         return sensors.get(sensor_name.upper(), {})
 
 
-# ============================================================================
 # Singleton
-# ============================================================================
 
 _automotive_ecu_instance = None
 

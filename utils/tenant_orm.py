@@ -172,7 +172,6 @@ TENANT_DATA_BLUEPRINTS = frozenset(
 # g.public_tenant_id during _resolve_store() and have the ORM listener check
 # for it. That would be more explicit but adds complexity. The current
 # approach explicitly scopes every query and is tested.
-# ────────────────────────────────────────────────────────────────────────────
 _TENANT_MODELS: list[type] | None = None
 _SESSION_GET_PATCHED = False
 
@@ -396,7 +395,6 @@ def _inject_tenant_criteria(execute_state):
 #   the active tenant TenantIsolationError is raised.
 # UPDATE / DELETE: any tenant-bearing row whose tenant_id is non-NULL and
 #   does NOT match the active tenant triggers an error.
-# -------------------------------------------------------------------------
 
 
 @event.listens_for(Session, "before_flush")

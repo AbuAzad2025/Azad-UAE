@@ -6,9 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# =============================================================================
 # _reject_stale_webhook_timestamp
-# =============================================================================
 
 
 class TestReplayProtection:
@@ -93,9 +91,7 @@ class TestReplayProtection:
         assert code == 401
 
 
-# =============================================================================
 # _check_idempotency_key / _save_idempotency_key
-# =============================================================================
 
 
 class TestIdempotencyKey:
@@ -212,9 +208,7 @@ class TestIdempotencyKey:
         mock_complete.assert_called_once_with(mock_record, {"success": True}, 201)
 
 
-# =============================================================================
 # _validate_api_key
-# =============================================================================
 
 
 class TestApiKeyValidation:
@@ -290,9 +284,7 @@ class TestApiKeyValidation:
             assert g.vault_api_key is mock_key
 
 
-# =============================================================================
 # Webhook endpoint — signature validation integration
-# =============================================================================
 
 
 class TestWebhookSignatureValidation:
@@ -361,9 +353,7 @@ class TestWebhookSignatureValidation:
         assert resp.status_code == 503
 
 
-# =============================================================================
 # Public API endpoints — idempotency + API-key integration
-# =============================================================================
 
 
 class TestPurchaseEndpointIdempotency:
@@ -517,9 +507,7 @@ class TestDonationEndpointSecurity:
         spy.assert_not_called()
 
 
-# =============================================================================
 # API Key model — scope column
-# =============================================================================
 
 
 class TestApiKeyModel:

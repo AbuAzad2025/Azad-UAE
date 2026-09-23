@@ -38,9 +38,7 @@ def ledger_admin_client(app_factory, bypass_admin_auth):
     return app.test_client()
 
 
-# ---------------------------------------------------------------------------
 # gl_periods POST
-# ---------------------------------------------------------------------------
 
 
 class TestGlPeriodsPostCoverage:
@@ -86,9 +84,7 @@ class TestGlPeriodsPostCoverage:
         assert existing.is_closed is False
 
 
-# ---------------------------------------------------------------------------
 # accounts_tree: tenant_id None + platform_owner + 0 tenants
-# ---------------------------------------------------------------------------
 
 
 class TestAccountsTreeEmptyOwner:
@@ -112,9 +108,7 @@ class TestAccountsTreeEmptyOwner:
         assert resp.status_code == 200
 
 
-# ---------------------------------------------------------------------------
 # api_calculate_journal_balance exception handler (L528-529)
-# ---------------------------------------------------------------------------
 
 
 class TestApiCalculateJournalBalanceError:
@@ -150,9 +144,7 @@ class TestApiCalculateJournalBalanceError:
         assert resp.status_code in (200, 400)
 
 
-# ---------------------------------------------------------------------------
 # admin_trial_balance loop with non-zero balances (L866-874)
-# ---------------------------------------------------------------------------
 
 
 class TestAdminTrialBalanceLoop:
@@ -174,9 +166,7 @@ class TestAdminTrialBalanceLoop:
         assert resp.status_code == 200
 
 
-# ---------------------------------------------------------------------------
 # close_fiscal_year (L1039-1069)
-# ---------------------------------------------------------------------------
 
 
 class TestCloseFiscalYear:
@@ -251,9 +241,7 @@ class TestCloseFiscalYear:
         assert resp.status_code == 302
 
 
-# ---------------------------------------------------------------------------
 # fiscal_year_preview (L1077-1100)
-# ---------------------------------------------------------------------------
 
 
 class TestFiscalYearPreview:

@@ -19,9 +19,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ---------------------------------------------------------------------------
 # maintenance_service
-# ---------------------------------------------------------------------------
 from services import maintenance_service as ms_module
 from services.maintenance_service import MaintenanceService
 
@@ -217,9 +215,7 @@ class TestMaintenanceCoverage:
         assert result in ("No default tenant found", "tenant", "(skipped: --check mode)")
 
 
-# ---------------------------------------------------------------------------
 # pos_rma_service
-# ---------------------------------------------------------------------------
 from services.pos_rma_service import PosRmaService  # noqa: E402
 
 
@@ -494,9 +490,7 @@ class TestPosRmaCoverage:
         assert PosRmaService.user_can_return_beyond_own_sales(no_checker) is False
 
 
-# ---------------------------------------------------------------------------
 # payroll_service
-# ---------------------------------------------------------------------------
 from services.payroll_service import PayrollService  # noqa: E402
 
 
@@ -749,9 +743,7 @@ class TestPayrollCoverage:
             assert len(PayrollService.list_branches_at_scope(tenant_id=1, scoped_branch_id=5)) == 1
 
 
-# ---------------------------------------------------------------------------
 # product_service
-# ---------------------------------------------------------------------------
 from services.product_service import ProductService  # noqa: E402
 
 
@@ -924,9 +916,7 @@ class TestProductCoverage:
         assert len(result) == 1
 
 
-# ---------------------------------------------------------------------------
 # stock_service — 95% with 18 uncovered lines
-# ---------------------------------------------------------------------------
 from services.stock_service import (  # noqa: E402
     StockService,
     _MWACHelper,

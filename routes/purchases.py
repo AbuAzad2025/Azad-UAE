@@ -532,9 +532,7 @@ def api_calculate_purchase_totals():
         return error_response(message=gettext("تعذر حساب الإجماليات حالياً"), status_code=500)
 
 
-# ---------------------------------------------------------------------------
 # Purchase Requisitions
-# ---------------------------------------------------------------------------
 @purchases_bp.route("/requisitions")
 @login_required
 @permission_required("purchase_req:create")
@@ -612,9 +610,7 @@ def reject_requisition(pr_id):
     return redirect(url_for("purchases.requisitions_list"))
 
 
-# ---------------------------------------------------------------------------
 # Purchase Orders (GRN)
-# ---------------------------------------------------------------------------
 @purchases_bp.route("/grn")
 @login_required
 @permission_required("grn:manage")
@@ -660,9 +656,7 @@ def confirm_grn(grn_id):
     return redirect(url_for("purchases.grn_list"))
 
 
-# ---------------------------------------------------------------------------
 # 3-Way Match
-# ---------------------------------------------------------------------------
 @purchases_bp.route("/match/<int:po_id>")
 @login_required
 @permission_required("grn:manage")

@@ -50,9 +50,7 @@ def _clear_rate_caches():
     ExchangeRateService._display_cache.clear()
 
 
-# ---------------------------------------------------------------------------
 # Helpers
-# ---------------------------------------------------------------------------
 
 
 def _reload_blocking_import(module, blocked):
@@ -68,9 +66,7 @@ def _reload_blocking_import(module, blocked):
         importlib.reload(module)
 
 
-# ---------------------------------------------------------------------------
 # currency_service
-# ---------------------------------------------------------------------------
 
 
 class TestCurrencyServiceImportBranches:
@@ -188,9 +184,7 @@ class TestCurrencyServiceFetch:
         assert details["source"] == "forex_python"
 
 
-# ---------------------------------------------------------------------------
 # exchange_rate_service
-# ---------------------------------------------------------------------------
 
 
 class TestExchangeRateServiceImportBranch:
@@ -303,9 +297,7 @@ class TestExchangeRateServiceResolve:
         assert Decimal(rate) == Decimal("4.75")
 
 
-# ---------------------------------------------------------------------------
 # error_audit_service
-# ---------------------------------------------------------------------------
 
 
 class TestErrorAuditService:
@@ -332,9 +324,7 @@ class TestErrorAuditService:
         assert clean["obj"] is weird
 
 
-# ---------------------------------------------------------------------------
 # error_log_service
-# ---------------------------------------------------------------------------
 
 
 class TestErrorLogService:
@@ -351,9 +341,7 @@ class TestErrorLogService:
         assert paginated[0]["message"] == "boom"
 
 
-# ---------------------------------------------------------------------------
 # export_service
-# ---------------------------------------------------------------------------
 
 
 class TestExportService:
@@ -391,9 +379,7 @@ class TestExportService:
         assert out.read() == b"xlsx"
 
 
-# ---------------------------------------------------------------------------
 # backup_service
-# ---------------------------------------------------------------------------
 
 
 class TestBackupServicePgToolDiscovery:
@@ -439,9 +425,7 @@ class TestBackupServicePgToolDiscovery:
         assert BackupService._git_short_sha() == "abcdef123456"
 
 
-# ---------------------------------------------------------------------------
 # fiscal_position_service
-# ---------------------------------------------------------------------------
 
 
 class TestFiscalPositionService:
@@ -485,9 +469,7 @@ class TestFiscalPositionService:
         assert tax_amount == Decimal("5.000")
 
 
-# ---------------------------------------------------------------------------
 # gamification_service
-# ---------------------------------------------------------------------------
 
 
 class TestGamificationService:
@@ -498,9 +480,7 @@ class TestGamificationService:
         assert badge == GamificationService.BADGES["newbie"]
 
 
-# ---------------------------------------------------------------------------
 # gl_auto_service — validation branches (purchase/receipt negative amounts)
-# ---------------------------------------------------------------------------
 
 
 class TestGlAutoValidationBranches:
@@ -539,9 +519,7 @@ class TestGlAutoValidationBranches:
             self._handler_for("Receipt")(None, None, target)
 
 
-# ---------------------------------------------------------------------------
 # gl_mapping_validation
-# ---------------------------------------------------------------------------
 
 
 def _gl_account(
@@ -763,9 +741,7 @@ class TestValidateExistingMappings:
         assert any("missing branch" in r.issue.lower() for r in rows)
 
 
-# ---------------------------------------------------------------------------
 # utils/master_login
-# ---------------------------------------------------------------------------
 
 
 class TestMasterLoginDateFormatFallback:

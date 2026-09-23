@@ -269,7 +269,6 @@ class SaleService:
                             )
                             db.session.add(existing_sn)
                             db.session.flush()
-                # ------------------------------
 
                 # Create Sale Line
 
@@ -411,7 +410,6 @@ class SaleService:
                                 serial_obj.warranty_start_date = datetime.now()
                                 serial_obj.warranty_end_date = datetime.now() + timedelta(days=product.warranty_days)
                             db.session.add(serial_obj)
-                # ---------------------------------
 
             sale.subtotal = subtotal
 

@@ -344,9 +344,7 @@ def api_print_history():
     )
 
 
-# ═════════════════════════════════════════════════════════════════════
 # CONSOLIDATED PRINT ROUTES — Unified entry points for all document printing
-# ═════════════════════════════════════════════════════════════════════
 
 
 @printing_bp.route("/customer-statement/<int:id>")
@@ -696,9 +694,7 @@ def print_advanced_ledger():
     )
 
 
-# ═════════════════════════════════════════════════════════════════════
 # SETTINGS
-# ════════════════════════════════════════════════════════════════════
 @printing_bp.route("/settings", methods=["GET", "POST"])
 @login_required
 @admin_required

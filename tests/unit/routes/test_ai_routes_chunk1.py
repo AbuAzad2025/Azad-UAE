@@ -9,9 +9,7 @@ Covers the first 3 JSON API endpoints in ``routes/ai_routes/``:
 All AI / LLM calls are mocked via ``mock_ai_service``.  No real API is hit.
 """
 
-# ===========================================================================
 # POST /recommend-price
-# ===========================================================================
 
 
 class TestRecommendPrice:
@@ -110,9 +108,7 @@ class TestRecommendPrice:
         mock_ai_service.recommend_price.assert_not_called()
 
 
-# ===========================================================================
 # POST /check-stock
-# ===========================================================================
 
 
 class TestCheckStock:
@@ -215,9 +211,7 @@ class TestCheckStock:
         assert "error" in resp.get_json()["message"]
 
 
-# ===========================================================================
 # GET /analyze-customer/<customer_id>
-# ===========================================================================
 
 
 class TestAnalyzeCustomer:

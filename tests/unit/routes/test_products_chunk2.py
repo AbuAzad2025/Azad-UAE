@@ -6,9 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# =============================================================================
 # Direct unit tests for module-level safe_float / require_float
-# =============================================================================
 
 
 class TestSafeFloat:
@@ -63,9 +61,7 @@ class TestRequireFloat:
             require_float(value)
 
 
-# =============================================================================
 # _get_alternative_warehouses
-# =============================================================================
 
 
 def _make_wh(id_, name, name_ar=None):
@@ -158,9 +154,7 @@ class TestGetAlternativeWarehouses:
         assert result[0]["name_ar"] == "Online WH"
 
 
-# =============================================================================
 # adjust_stock — insufficient stock → cross-warehouse map
-# =============================================================================
 
 
 class TestAdjustStockInsufficientCrossWarehouse:
@@ -232,9 +226,7 @@ class TestAdjustStockInsufficientCrossWarehouse:
         assert body["meta"]["alternative_locations"] == []
 
 
-# =============================================================================
 # Cost-price edit constraint — JSON branch
-# =============================================================================
 
 
 class TestCostPriceEditConstraint:
@@ -258,9 +250,7 @@ class TestCostPriceEditConstraint:
         assert allowed is True
 
 
-# =============================================================================
 # Delete endpoint — JSON responses
-# =============================================================================
 
 
 class TestDeleteEndpointJson:
@@ -325,9 +315,7 @@ class TestDeleteEndpointJson:
         assert body["success"] is False
 
 
-# =============================================================================
 # safe_float / require_float route-level integration
-# =============================================================================
 
 
 class TestSafeFloatRouteIntegration:
@@ -346,9 +334,7 @@ class TestSafeFloatRouteIntegration:
         assert body["success"] is True
 
 
-# =============================================================================
 # X-Requested-With JSON detection
-# =============================================================================
 
 
 class TestAjaxHeaderJsonResponses:
@@ -406,9 +392,7 @@ class TestAjaxHeaderJsonResponses:
         assert body["success"] is True
 
 
-# =============================================================================
 # Online Warehouse Isolation
-# =============================================================================
 
 
 class TestOnlineWarehouseIsolation:
@@ -450,9 +434,7 @@ class TestOnlineWarehouseIsolation:
         assert physical_entry["available_stock"] == 105.0
 
 
-# =============================================================================
 # Partner Commission Routing
-# =============================================================================
 
 
 class TestPartnerCommissionRouting:

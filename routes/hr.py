@@ -154,9 +154,7 @@ def create_contract():
     return redirect(url_for("hr.departments_list"))
 
 
-# ---------------------------------------------------------------------------
 # Leave Balance Ledger
-# ---------------------------------------------------------------------------
 @hr_bp.route("/leave-ledger")
 @login_required
 @permission_required("hr:leave_manage")
@@ -214,9 +212,7 @@ def carry_forward_leave():
     return redirect(url_for("hr.leave_ledger"))
 
 
-# ---------------------------------------------------------------------------
 # Overtime Management
-# ---------------------------------------------------------------------------
 @hr_bp.route("/overtime")
 @login_required
 @permission_required("hr:manage")

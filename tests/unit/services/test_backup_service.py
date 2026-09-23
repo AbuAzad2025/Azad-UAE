@@ -22,9 +22,7 @@ from services.backup_scope_config import (
 )
 from services.backup_service import BACKUP_VERSION, BackupService
 
-# ---------------------------------------------------------------------------
 # Fixtures
-# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(autouse=True)
@@ -154,9 +152,7 @@ def _make_tenant_archive(archive_path, tenant_id=7, branch_id=None, store_id=Non
     return manifest
 
 
-# ---------------------------------------------------------------------------
 # Pure helpers
-# ---------------------------------------------------------------------------
 
 
 class TestRetentionAndInit:

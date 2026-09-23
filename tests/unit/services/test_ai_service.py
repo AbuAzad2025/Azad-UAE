@@ -168,9 +168,7 @@ def _clear_api_keys(monkeypatch):
         monkeypatch.delenv(key, raising=False)
 
 
-# ---------------------------------------------------------------------------
 # Configuration & security
-# ---------------------------------------------------------------------------
 
 
 class TestConfig:
@@ -273,9 +271,7 @@ class TestUserInfoForOwner:
         assert "password_hash" not in result["users"][0]
 
 
-# ---------------------------------------------------------------------------
 # Pricing, stock, customer analytics
-# ---------------------------------------------------------------------------
 
 
 class TestRecommendPrice:
@@ -430,9 +426,7 @@ class TestExchangeRate:
         assert result["source"] == "سعر افتراضي"
 
 
-# ---------------------------------------------------------------------------
 # Sales analytics
-# ---------------------------------------------------------------------------
 
 
 def _confirmed_sale(db_session, sample_tenant, sample_customer, sample_user, **kwargs):
@@ -555,9 +549,7 @@ class TestInventoryHealth:
         assert good["health_score"] >= 60
 
 
-# ---------------------------------------------------------------------------
 # Chat & actions
-# ---------------------------------------------------------------------------
 
 
 class TestChatResponse:
@@ -863,9 +855,7 @@ class TestMiscHelpers:
         AIService._train_local_from_groq("q", "l", "g", 1)
 
 
-# ---------------------------------------------------------------------------
 # Lazy singleton getters
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -940,9 +930,7 @@ def test_singleton_getters(method, path, cls_name, mocker):
     assert second is inst
 
 
-# ---------------------------------------------------------------------------
 # Contextual response & integration wrappers
-# ---------------------------------------------------------------------------
 
 
 class TestContextualResponse:
@@ -1034,9 +1022,7 @@ class TestIntegrationWrappers:
         assert AIService.get_tax_and_customs_info("x") == {}
 
 
-# ---------------------------------------------------------------------------
 # Neural & advanced capabilities (mocked)
-# ---------------------------------------------------------------------------
 
 
 class TestNeuralAndAdvanced:
@@ -1246,9 +1232,7 @@ class TestNeuralAndAdvanced:
         assert AIService.generate_document_with_ai("invoice", {}) == "doc"
 
 
-# ---------------------------------------------------------------------------
 # Additional branches for full coverage
-# ---------------------------------------------------------------------------
 
 
 class TestCoverageGaps:

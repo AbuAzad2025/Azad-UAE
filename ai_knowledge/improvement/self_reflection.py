@@ -228,9 +228,7 @@ class SelfReflectionEngine:
         logger.info(f"📚 Learned from mistake: {lesson[:50]}")
 
 
-# ============================================================================
 # Singleton
-# ============================================================================
 
 _reflection_engine_instance = None
 

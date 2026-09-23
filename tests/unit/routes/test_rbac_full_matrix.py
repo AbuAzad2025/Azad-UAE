@@ -115,9 +115,7 @@ def _all_blueprints(module_path: str) -> list:
     return out
 
 
-# ---------------------------------------------------------------------------
 # 1. Every blueprint in routes/ must declare at least one view function.
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("module_path", _BLUEPRINT_MODULES)
@@ -142,9 +140,7 @@ def test_blueprint_declares_views(module_path):
     assert rules, f"{module_path} registered zero view functions"
 
 
-# ---------------------------------------------------------------------------
 # 2. ROLE_LEVELS + PermissionEnum sanity
-# ---------------------------------------------------------------------------
 
 
 def test_role_level_constants_match_seeded_roles():
@@ -220,9 +216,7 @@ def test_permission_enum_contains_member(perm_enum_name):
     assert hasattr(PermissionEnum, perm_enum_name), f"PermissionEnum.{perm_enum_name} missing"
 
 
-# ---------------------------------------------------------------------------
 # 3. Source-level guard: decorators must not honour bypass flags
-# ---------------------------------------------------------------------------
 
 
 _DECORATOR_FILES = [
@@ -257,9 +251,7 @@ def test_no_bypass_admin_flags_in_decorators(rel_path):
     assert not leaks, f"{rel_path}: forbidden bypass keywords {leaks}"
 
 
-# ---------------------------------------------------------------------------
 # 4. Direct decorator contract smoke
-# ---------------------------------------------------------------------------
 
 
 def test_owner_required_rejects_non_owner():
@@ -327,9 +319,7 @@ def test_admin_required_rejects_non_admin():
                 view()
 
 
-# ---------------------------------------------------------------------------
 # 5. System-init catalogue membership
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -350,9 +340,7 @@ def test_system_init_role_seeder_present(function_name):
     assert hasattr(si, function_name), f"utils.system_init missing {function_name}"
 
 
-# ---------------------------------------------------------------------------
 # 6. Permission-seeding helpers
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -390,10 +378,8 @@ def test_permission_catalog_includes_seeded_perm(constant_name):
     assert constant_name in PERMISSION_CODES, f"{constant_name} missing from PERMISSION_CODES"
 
 
-# ---------------------------------------------------------------------------
 # 7. Per-module RBAC audit: every blueprint module must declare an
 # auth/perm decorator in its source (or be public-only).
-# ---------------------------------------------------------------------------
 
 
 _PUBLIC_BLUEPRINT_MODULES = frozenset(
@@ -526,9 +512,7 @@ def test_public_surface_module_has_views():
     assert rules, f"{module_path} is empty — the public surface has no views"
 
 
-# ---------------------------------------------------------------------------
 # 8. Cross-tenant / cross-branch separation sanity
-# ---------------------------------------------------------------------------
 
 
 def test_branch_scope_id_helper_is_callable():

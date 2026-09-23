@@ -27,9 +27,7 @@ from services.backup_scope_config import (
 )
 from services.backup_scoped_engine import SCOPE_BRANCH, SCOPE_STORE, SCOPE_TENANT
 
-# ---------------------------------------------------------------------------
 # _default_for_type branches
-# ---------------------------------------------------------------------------
 
 
 class TestDefaultForType:
@@ -62,9 +60,7 @@ class TestDefaultForType:
         assert _default_for_type(dt) == ""
 
 
-# ---------------------------------------------------------------------------
 # column_metadata
-# ---------------------------------------------------------------------------
 
 
 class TestColumnMetadata:
@@ -75,9 +71,7 @@ class TestColumnMetadata:
         assert result == []
 
 
-# ---------------------------------------------------------------------------
 # normalize_row_to_target
-# ---------------------------------------------------------------------------
 
 
 class TestNormalizeRowToTarget:
@@ -116,9 +110,7 @@ class TestNormalizeRowToTarget:
         assert "note" not in out
 
 
-# ---------------------------------------------------------------------------
 # scope_filter_summary
-# ---------------------------------------------------------------------------
 
 
 class TestScopeFilterSummary:
@@ -142,9 +134,7 @@ class TestScopeFilterSummary:
         assert scope_filter_summary("weird", 1) == "weird"
 
 
-# ---------------------------------------------------------------------------
 # _path_from_urlish branches
-# ---------------------------------------------------------------------------
 
 
 class TestPathFromUrlish:
@@ -195,9 +185,7 @@ class TestPathFromUrlish:
         assert _path_from_urlish("uploads/nonexistent.png", str(tmp_path)) is None
 
 
-# ---------------------------------------------------------------------------
 # build_tenant_uploads_archive
-# ---------------------------------------------------------------------------
 
 
 class TestBuildTenantUploadsArchive:
@@ -222,9 +210,7 @@ class TestBuildTenantUploadsArchive:
         assert result["files_requested"] == 2
 
 
-# ---------------------------------------------------------------------------
 # write_data_directory + read_data_directory
-# ---------------------------------------------------------------------------
 
 
 class TestWriteReadDataDirectory:
@@ -255,9 +241,7 @@ class TestWriteReadDataDirectory:
         assert isinstance(meta, dict)
 
 
-# ---------------------------------------------------------------------------
 # sanitize_slug
-# ---------------------------------------------------------------------------
 
 
 class TestSanitizeSlug:
@@ -286,9 +270,7 @@ class TestSanitizeSlug:
         assert sanitize_slug("") == "tenant"
 
 
-# ---------------------------------------------------------------------------
 # table_exists
-# ---------------------------------------------------------------------------
 
 
 class TestTableExists:

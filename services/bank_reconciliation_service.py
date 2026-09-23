@@ -328,9 +328,7 @@ class BankReconciliationService:
             "outstanding_cheques_out": outstanding_cheques_out,
         }
 
-    # ------------------------------------------------------------------
     # Auto-matching with GL lines and Bank Statement Lines (Odoo-style)
-    # ------------------------------------------------------------------
 
     @staticmethod
     def auto_match_gl_lines(
@@ -428,9 +426,7 @@ class BankReconciliationService:
         db.session.flush()
         return count
 
-    # ------------------------------------------------------------------
     # Suspense-account routing for orphan bank statement lines
-    # ------------------------------------------------------------------
 
     @staticmethod
     def match_transaction(

@@ -8,9 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ---------------------------------------------------------------------------
 # 1. action_dispatcher line 536: _create_user missing username/password
-# ---------------------------------------------------------------------------
 
 
 class TestCreateUserValidation:
@@ -63,9 +61,7 @@ class TestCreateUserValidation:
             assert result.success is False
 
 
-# ---------------------------------------------------------------------------
 # 2. data_analyzer line 132: trend='مستقر' (stable)
-# ---------------------------------------------------------------------------
 
 
 class TestDataAnalyzerStableTrend:
@@ -92,9 +88,7 @@ class TestDataAnalyzerStableTrend:
             assert result["analysis"]["trend"] == "مستقر"
 
 
-# ---------------------------------------------------------------------------
 # 3. auto_retraining line 31: current_count >= last_count + 100
-# ---------------------------------------------------------------------------
 
 
 class TestAutoRetrainingThreshold:
@@ -139,9 +133,7 @@ class TestAutoRetrainingThreshold:
                 assert AutoRetrainingScheduler.should_retrain() is False
 
 
-# ---------------------------------------------------------------------------
 # 4. models/ai.py lines 24, 57, 87: to_dict on AiMemory, AiInteraction, AiExpertise
-# ---------------------------------------------------------------------------
 
 
 class TestAiModelToDict:
@@ -270,9 +262,7 @@ class TestAiModelToDict:
             assert exp.to_dict()["created_at"] is None
 
 
-# ---------------------------------------------------------------------------
 # 5. models/api_key.py line 24: generate_key staticmethod
-# ---------------------------------------------------------------------------
 
 
 class TestAPIKeyGenerateKey:
@@ -290,9 +280,7 @@ class TestAPIKeyGenerateKey:
         assert len(keys) == 10
 
 
-# ---------------------------------------------------------------------------
 # 6. models/archive.py line 33: to_dict
-# ---------------------------------------------------------------------------
 
 
 class TestArchivedRecordToDict:
@@ -315,9 +303,7 @@ class TestArchivedRecordToDict:
             assert "2025-06-15" in d["archived_at"]
 
 
-# ---------------------------------------------------------------------------
 # 7. models/card_vault.py lines 10-16: ImportError fallback for cryptography
-# ---------------------------------------------------------------------------
 
 
 class TestCardVaultImportError:
