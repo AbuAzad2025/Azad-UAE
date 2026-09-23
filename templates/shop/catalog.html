@@ -16,34 +16,39 @@
   </div>
 </section>
 
-{# Search #}
+{# Search + filters — clean 2-row toolbar #}
 <div class="ps-toolbar">
-  <form class="needs-validation ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
-    {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}" aria-label="category">{% endif %}
-    <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}" data-search-autocomplete>
-    <button type="submit" title="{{ t('search') }}"><i class="fas fa-search" aria-hidden="true"></i></button>
-    <div class="ps-autocomplete-wrap" style="position:relative">
-      <div class="ps-autocomplete-results" style="display:none"></div>
+  <form class="needs-validation ps-search-form" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}" role="search">
+    {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+    {% if current_sort %}<input type="hidden" name="sort" value="{{ current_sort }}">{% endif %}
+    {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+    {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+    {% if in_stock_only %}<input type="hidden" name="in_stock_only" value="1">{% endif %}
+    <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}" data-search-autocomplete autocomplete="off">
+    <button type="submit" aria-label="{{ t('search') }}"><i class="fas fa-search" aria-hidden="true"></i></button>
+  </form>
+  <div class="ps-autocomplete-results" id="psAutocomplete" style="display:none"></div>
+  <form class="needs-validation ps-toolbar-row" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
+    {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+    {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}
+    <div class="ps-sort">
+      <label for="sort-select">{{ t('sort_by') }}</label>
+      <select id="sort-select" name="sort" data-action="submit-form">
+        <option value="">{{ t('default') }}</option>
+        <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>{{ t('price_low') }}</option>
+        <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>{{ t('price_high') }}</option>
+        <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>{{ t('name_az') }}</option>
+        <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>{{ t('newest') }}</option>
+      </select>
     </div>
-    <div class="ps-toolbar-row">
-      <div class="ps-sort">
-        <label for="sort-select">{{ t('sort_by') }}:</label>
-        <select id="sort-select" name="sort" data-action="submit-form">
-          <option value="">{{ t('default') }}</option>
-          <option value="price_asc" {% if current_sort == 'price_asc' %}selected{% endif %}>{{ t('price_low') }}</option>
-          <option value="price_desc" {% if current_sort == 'price_desc' %}selected{% endif %}>{{ t('price_high') }}</option>
-          <option value="name_asc" {% if current_sort == 'name_asc' %}selected{% endif %}>{{ t('name_az') }}</option>
-          <option value="newest" {% if current_sort == 'newest' %}selected{% endif %}>{{ t('newest') }}</option>
-        </select>
-      </div>
-      <div class="ps-filters">
-        <label for="min_price" class="sr-only">{{ t('min') }}</label>
-        <input type="number" name="min_price" id="min_price" placeholder="{{ t('min') }}" value="{{ min_price or '' }}" min="0" step="0.01">
-        <label for="max_price" class="sr-only">{{ t('max') }}</label>
-        <input type="number" name="max_price" id="max_price" placeholder="{{ t('max') }}" value="{{ max_price or '' }}" min="0" step="0.01">
-        <label for="in_stock_only"><input type="checkbox" name="in_stock_only" id="in_stock_only" value="1" {% if in_stock_only %}checked{% endif %}> {{ t('in_stock_only') }}</label>
-        <button type="submit" class="ps-btn ps-btn-sm">{{ t('filter') }}</button>
-      </div>
+    <div class="ps-filters">
+      <label for="min_price" class="sr-only">{{ t('min') }}</label>
+      <input type="number" name="min_price" id="min_price" placeholder="{{ t('min') }}" value="{{ min_price or '' }}" min="0" step="0.01" aria-label="{{ t('min') }}">
+      <label for="max_price" class="sr-only">{{ t('max') }}</label>
+      <input type="number" name="max_price" id="max_price" placeholder="{{ t('max') }}" value="{{ max_price or '' }}" min="0" step="0.01" aria-label="{{ t('max') }}">
+      <label for="in_stock_only" class="ps-check"><input type="checkbox" name="in_stock_only" id="in_stock_only" value="1" {% if in_stock_only %}checked{% endif %}> {{ t('in_stock_only') }}</label>
+      <button type="submit" class="ps-btn ps-btn-sm ps-btn-primary">{{ t('filter') }}</button>
+      {% if search or min_price or max_price or in_stock_only or current_sort %}<a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-sm ps-btn-ghost">{{ t('clear') }}</a>{% endif %}
     </div>
   </form>
 </div>
@@ -85,50 +90,38 @@
     {% set available_val = row.available if row.available is defined else (row.stock if row.stock is defined else 0) %}
     {% set stock = available_val %}
     <article class="ps-card">
-      <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-card-img">
+      <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}" class="ps-card-img" aria-label="{{ product.get_display_name(lang) }}">
         {% if product.image_url %}
-        <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" loading="lazy">
+        <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" loading="lazy" decoding="async">
         {% else %}
         <div class="ps-placeholder"><i class="fas fa-box-open" aria-hidden="true"></i></div>
         {% endif %}
-        {% if stock <= 0 %}
-        <span class="ps-stock-badge ps-stock-out">{{ t('out_of_stock') }}</span>
-        {% elif stock <= (store.low_stock_threshold if store.low_stock_threshold else 5) %}
-        <span class="ps-stock-badge ps-stock-low">{{ t('low_stock') }}: {{ stock|int }}</span>
-        {% else %}
-        <span class="ps-stock-badge ps-stock-in">{{ t('in_stock') }}</span>
-        {% endif %}
-        <button type="button" class="ps-btn ps-btn-ghost ps-btn-sm" data-quick-view data-product-id="{{ product.id }}" title="{{ t('quick_view') }}">
-          <i class="fas fa-eye" aria-hidden="true"></i>
-        </button>
+        <span class="ps-stock-badge {% if stock <= 0 %}ps-stock-out{% elif stock <= (store.low_stock_threshold if store.low_stock_threshold else 5) %}ps-stock-low{% else %}ps-stock-in{% endif %}">{% if stock <= 0 %}{{ t('out_of_stock') }}{% elif stock <= (store.low_stock_threshold if store.low_stock_threshold else 5) %}{{ t('low_stock') }}{% else %}{{ t('in_stock') }}{% endif %}</span>
+        <span class="ps-quick-view" data-quick-view data-product-id="{{ product.id }}" role="button" tabindex="0" aria-label="{{ t('quick_view') }}"><i class="fas fa-eye" aria-hidden="true"></i></span>
       </a>
       <div class="ps-card-body">
-        <h3 class="ps-card-title">
-          <a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}">{{ product.get_display_name(lang) }}</a>
-          {% if is_shop_logged_in %}
-          <button class="ps-wishlist-btn ps-wishlist-btn-sm" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart" aria-hidden="true"></i></button>
-          {% endif %}
-        </h3>
+        <div class="ps-card-head">
+          <h3 class="ps-card-title"><a href="{{ url_for('shop.product_detail', slug=store.store_slug, product_id=product.id) }}">{{ product.get_display_name(lang) }}</a></h3>
+          {% if is_shop_logged_in %}<button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart" aria-hidden="true"></i></button>{% endif %}
+        </div>
         {% if product.sku %}<div class="ps-card-meta">{{ product.sku }}</div>{% endif %}
         <div class="ps-card-footer">
           <span class="ps-price">{{ format_currency(row.display_price, currency=store_currency) }}</span>
-          <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
-            <input type="hidden" name="product_id" value="{{ product.id }}" aria-label="product id">
-            <input type="hidden" name="quantity" value="1" aria-label="quantity" min="0">
-            <button type="submit" class="ps-btn ps-btn-primary ps-btn-sm"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('add_to_cart') }}</button>
+          {% if stock > 0 %}
+          <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart class="ps-card-actions">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="product_id" value="{{ product.id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="ps-btn ps-btn-primary ps-btn-sm"><i class="fas fa-bag-shopping" aria-hidden="true"></i> {{ t('add_to_cart') }}</button>
           </form>
-          {% if not is_shop_logged_in and wa_digits %}
-          {% set wa_text = t('whatsapp_inquiry_text', product=product.get_display_name(lang), price=format_currency(row.display_price, currency=store_currency)) | urlencode %}
-          <a href="https://wa.me/{{ wa_digits }}?text={{ wa_text|urlencode }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-sm" title="{{ t('WhatsApp') }}"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>
+          {% else %}
+          <span class="ps-btn ps-btn-ghost ps-btn-sm" aria-disabled="true">{{ t('out_of_stock') }}</span>
           {% endif %}
         </div>
+        {% if not is_shop_logged_in and wa_digits and stock > 0 %}
+        <a href="https://wa.me/{{ wa_digits }}?text={{ (t('whatsapp_inquiry_text', product=product.get_display_name(lang), price=format_currency(row.display_price, currency=store_currency)) | urlencode) }}" target="_blank" rel="noopener" class="ps-wa-link"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('WhatsApp') }}</a>
+        {% endif %}
       </div>
-      {% if stock > 0 %}
-      <button type="button" class="ps-quick-add" data-quick-add data-product-id="{{ product.id }}" data-store-slug="{{ store.store_slug }}">
-        <i class="fas fa-bolt" aria-hidden="true"></i> {{ t('add_to_cart') }}
-      </button>
-      {% endif %}
     </article>
     {% endfor %}
   </div>

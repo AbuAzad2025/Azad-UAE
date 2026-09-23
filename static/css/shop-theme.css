@@ -347,40 +347,110 @@ body.ps-shop.rtl {
 
 .ps-toolbar {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 1.25rem;
+	flex-direction: column;
+	gap: 0.85rem;
+	margin-bottom: 1.5rem;
 }
 
 .ps-search-form {
-	flex: 1;
-	min-width: 200px;
-	max-width: 380px;
 	display: flex;
+	align-items: center;
 	background: #fff;
 	border-radius: 999px;
 	border: 1px solid rgba(0, 0, 0, 0.08);
 	overflow: hidden;
 	box-shadow: var(--ps-shadow);
+	max-width: 520px;
 }
 
 .ps-search-form input {
 	flex: 1;
 	border: none;
-	padding: 0.65rem 1rem;
+	padding: 0.7rem 1.1rem;
 	font: inherit;
 	outline: none;
 	background: transparent;
+	min-width: 0;
 }
 
 .ps-search-form button {
 	border: none;
 	background: var(--theme-primary, var(--ps-green));
 	color: #fff;
-	padding: 0 1rem;
+	padding: 0 1.15rem;
+	align-self: stretch;
+	display: grid;
+	place-items: center;
 	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.ps-autocomplete-results {
+	position: absolute;
+	top: calc(100% + 8px);
+	inset-inline: 0;
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+	border: 1px solid var(--ps-border);
+	max-height: 320px;
+	overflow-y: auto;
+	z-index: 30;
+}
+
+.ps-toolbar-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.ps-sort {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.88rem;
+}
+
+.ps-sort label {
+	font-weight: 600;
+	color: var(--ps-muted);
+	white-space: nowrap;
+}
+
+.ps-sort select {
+	padding: 0.5rem 0.75rem;
+	border-radius: 10px;
+	border: 1px solid var(--ps-border);
+	background: #fff;
+	font: inherit;
+	font-size: 0.85rem;
+}
+
+.ps-filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.ps-filters input[type="number"] {
+	width: 110px;
+	padding: 0.5rem 0.65rem;
+	border-radius: 10px;
+	border: 1px solid var(--ps-border);
+	font: inherit;
+	font-size: 0.85rem;
+}
+
+.ps-check {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+	white-space: nowrap;
 }
 
 /* purgecss start ignore */
@@ -417,8 +487,23 @@ body.ps-shop.rtl {
 
 .ps-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	gap: 1.25rem;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: 1.5rem;
+	align-items: stretch;
+}
+
+@media (max-width: 900px) {
+	.ps-grid {
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: 1rem;
+	}
+}
+
+@media (max-width: 480px) {
+	.ps-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.75rem;
+	}
 }
 
 .ps-card {
@@ -467,24 +552,108 @@ body.ps-shop.rtl {
 	opacity: 0.35;
 }
 
+.ps-stock-badge {
+	position: absolute;
+	top: 10px;
+	inset-inline-start: 10px;
+	padding: 0.3rem 0.65rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 700;
+	backdrop-filter: blur(6px);
+}
+
+.ps-stock-out {
+	background: rgba(206, 17, 38, 0.92);
+	color: #fff;
+}
+
+.ps-stock-low {
+	background: rgba(212, 175, 55, 0.92);
+	color: #1a1a1a;
+}
+
+.ps-stock-in {
+	background: rgba(0, 122, 61, 0.88);
+	color: #fff;
+}
+
+.ps-quick-view {
+	position: absolute;
+	top: 10px;
+	inset-inline-end: 10px;
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.92);
+	display: grid;
+	place-items: center;
+	font-size: 0.85rem;
+	color: var(--ps-green);
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+	cursor: pointer;
+	opacity: 0;
+	transform: scale(0.9);
+	transition:
+		opacity 0.2s,
+		transform 0.2s;
+}
+
+.ps-card:hover .ps-quick-view {
+	opacity: 1;
+	transform: scale(1);
+}
+
 .ps-card-body {
-	padding: 1rem 1.1rem 1.15rem;
+	padding: 0.9rem 1rem 1rem;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	gap: 0.4rem;
+}
+
+.ps-card-head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 0.5rem;
 }
 
 .ps-card-title {
-	margin: 0 0 0.35rem;
-	font-size: 1rem;
+	margin: 0;
+	font-size: 0.95rem;
 	font-weight: 700;
 	line-height: 1.35;
+	flex: 1;
+	min-width: 0;
+}
+
+.ps-card-title a {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.ps-wishlist-btn {
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: 1px solid var(--ps-border);
+	background: #fff;
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	color: var(--ps-muted);
+	cursor: pointer;
 }
 
 .ps-card-meta {
-	font-size: 0.78rem;
+	font-size: 0.75rem;
 	color: var(--ps-muted);
-	margin-bottom: 0.65rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .ps-card-footer {
@@ -493,6 +662,22 @@ body.ps-shop.rtl {
 	align-items: center;
 	justify-content: space-between;
 	gap: 0.5rem;
+	flex-wrap: nowrap;
+}
+
+.ps-card-actions {
+	margin-left: auto;
+}
+
+.ps-wa-link {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: #128c7e;
+	color: #fff !important;
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
 }
 
 .ps-price {
@@ -1168,11 +1353,31 @@ body.ps-shop.rtl {
 	color: var(--theme-primary, var(--ps-green));
 }
 
-/* Category cards strip */
+/* Category cards strip — horizontal scroll on mobile */
 .ps-category-strip {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	gap: 1rem;
+	display: flex;
+	gap: 0.85rem;
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+	scrollbar-width: thin;
+	-webkit-overflow-scrolling: touch;
+}
+
+.ps-category-strip::-webkit-scrollbar {
+	height: 6px;
+}
+
+.ps-category-strip::-webkit-scrollbar-thumb {
+	background: var(--ps-border);
+	border-radius: 999px;
+}
+
+@media (min-width: 901px) {
+	.ps-category-strip {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+		overflow: visible;
+	}
 }
 
 .ps-cat-card {
@@ -1180,15 +1385,23 @@ body.ps-shop.rtl {
 	flex-direction: column;
 	align-items: center;
 	gap: 0.65rem;
-	padding: 1.4rem 1rem;
+	padding: 1.2rem 0.9rem;
 	border-radius: 16px;
 	background: var(--azad-warm-white);
 	border: 1px solid var(--ps-border);
 	text-align: center;
+	min-width: 130px;
+	flex-shrink: 0;
 	transition:
 		transform 0.2s,
 		box-shadow 0.2s,
 		border-color 0.2s;
+}
+
+@media (min-width: 901px) {
+	.ps-cat-card {
+		min-width: 0;
+	}
 }
 
 .ps-cat-card:hover {
