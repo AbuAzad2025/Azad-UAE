@@ -600,11 +600,8 @@ class SetupResult:
         }
 
 
-
-
 class GLAccountingSetupService:
     """Reusable service to prepare a tenant's GL concept mappings."""
-
 
     @staticmethod
     def plan(tenant_id: int) -> SetupPlan | None:
@@ -755,7 +752,6 @@ class GLAccountingSetupService:
             include_ready=True,
         )
 
-
     @staticmethod
     def _build_plan(tenant: Tenant) -> list[SetupPlanAction]:
         """Build the action list for one tenant."""
@@ -824,7 +820,6 @@ class GLAccountingSetupService:
 
         return actions
 
-
     @staticmethod
     def _find_best_candidate(tenant: Tenant, rule: ConceptSetupRule) -> GLAccount | None:
         """Find the best existing postable GL account for a concept."""
@@ -865,7 +860,6 @@ class GLAccountingSetupService:
                     return sorted(postable, key=lambda x: x.code)[0]
 
         return None
-
 
     @staticmethod
     def _create_account(tenant: Tenant, concept_code: str) -> GLAccount:

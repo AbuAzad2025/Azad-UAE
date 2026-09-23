@@ -398,7 +398,6 @@ class LoggingCore:
     _rate_monitor = _RateMonitor()
     _json_mode = False
 
-
     @classmethod
     def setup(cls, app) -> None:
         """Configure all loggers once at application startup.
@@ -1430,7 +1429,6 @@ class LoggingCore:
         except ImportError:
             return {"healthy": True, "error": "psutil not available"}
 
-
     @classmethod
     def monitor_endpoint(cls, f):
         """Decorator to monitor individual endpoint performance.
@@ -1691,7 +1689,6 @@ class LoggingCore:
                 "recent_actions": len(recent_audits),
             },
         }
-
 
     @classmethod
     def get_performance_metrics_data(cls) -> dict:
