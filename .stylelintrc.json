@@ -5,6 +5,7 @@
 		"static/datatables/**",
 		"static/fonts/**",
 		"static/theme/**",
+		"static/css/dist/**",
 		"**/*.min.css"
 	],
 	"rules": {

@@ -780,6 +780,7 @@ html[dir="rtl"] .azad-login-forgot::after { left: auto; right: 0; }
 
 /* ── Store Links on Login Page — Premium ── */
 @keyframes loginBannerIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+
 @keyframes loginShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
 .azad-login-stores{max-width:480px;margin:1.5rem auto 0;padding:18px;background:linear-gradient(135deg,#0f1724 0%,#1e293b 100%);border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.25);animation:loginBannerIn .6s cubic-bezier(.34,1.56,.64,1);position:relative;overflow:hidden}
 .azad-login-stores::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(212,160,23,.08),transparent);background-size:200% 100%;animation:loginShimmer 3s infinite;pointer-events:none}
