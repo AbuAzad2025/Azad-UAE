@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
@@ -49,7 +49,7 @@ class TestPublicLanding:
             with patch("routes.public.render_template", return_value="landing") as render:
                 resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html", packages=[], is_en=False)
+        render.assert_called_once_with("public/landing.html", packages=[], is_en=False, active_stores=ANY)
 
     def test_landing_lang_arg_renders_english(self, public_client):
         with patch("flask_login.current_user") as mock_user:
@@ -57,7 +57,7 @@ class TestPublicLanding:
             with patch("routes.public.render_template", return_value="landing") as render:
                 resp = public_client.get("/?lang=en", follow_redirects=False)
         assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html", packages=[], is_en=True)
+        render.assert_called_once_with("public/landing.html", packages=[], is_en=True, active_stores=ANY)
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
         with patch("flask_login.current_user") as mock_user:
@@ -82,7 +82,9 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="")
+        render.assert_called_once_with(
+            "public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="", active_stores=ANY
+        )
 
     def test_pricing_english_session(self, public_client):
         with public_client.session_transaction() as sess:
@@ -90,7 +92,9 @@ class TestPublicPricing:
         with patch("routes.public.render_template", return_value="pricing-en") as render:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/pricing_en.html", packages=[], is_en=True, developer_whatsapp_link="")
+        render.assert_called_once_with(
+            "public/pricing_en.html", packages=[], is_en=True, developer_whatsapp_link="", active_stores=ANY
+        )
 
 
 class TestPublicFeatures:
@@ -98,7 +102,7 @@ class TestPublicFeatures:
         with patch("routes.public.render_template", return_value="features") as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/features.html", is_en=False)
+        render.assert_called_once_with("public/features.html", is_en=False, active_stores=ANY)
 
     def test_features_english_session(self, public_client):
         with public_client.session_transaction() as sess:
@@ -106,7 +110,7 @@ class TestPublicFeatures:
         with patch("routes.public.render_template", return_value="features-en") as render:
             resp = public_client.get("/features")
         assert resp.status_code == 200
-        render.assert_called_once_with("public/features.html", is_en=True)
+        render.assert_called_once_with("public/features.html", is_en=True, active_stores=ANY)
 
 
 class TestPublicUserGuide:
