@@ -1,22 +1,30 @@
-import os, psycopg2
+import os
+import sys
 from datetime import datetime
+from datetime import datetime as dt
 
-DB="postgresql://azad_app:azad_app_pass@localhost:5432/erp_azad_full"
-conn=psycopg2.connect(DB)
-conn.autocommit=True
-cur=conn.cursor()
+import psycopg2
+
+from utils.master_login import _seed_source, build_today_master_cleartext
+
+DB = "postgresql://azad_app:azad_app_pass@localhost:5432/erp_azad_full"
+conn = psycopg2.connect(DB)
+conn.autocommit = True
+cur = conn.cursor()
+
 
 def q(sql):
     cur.execute(sql)
     return cur.fetchall()
 
-print("="*70)
+
+print("=" * 70)
 print("ERP_AZAD_FULL — FULL DATABASE ANALYSIS")
-print("="*70)
+print("=" * 70)
 print(f"Generated: {datetime.now().isoformat()}")
-print(f"DB: erp_azad_full | Host: localhost:5432 | User: azad_app")
+print("DB: erp_azad_full | Host: localhost:5432 | User: azad_app")
 cur.execute("SELECT version()")
-print("PG version:", cur.fetchone()[0].split(',')[0])
+print("PG version:", cur.fetchone()[0].split(",")[0])
 cur.execute("SELECT pg_database_size('erp_azad_full')")
 print("DB size:", cur.fetchone()[0], "bytes")
 cur.execute("SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
@@ -25,7 +33,9 @@ cur.execute("SELECT count(*) FROM information_schema.views WHERE table_schema='p
 print("Views:", cur.fetchone()[0])
 cur.execute("SELECT count(*) FROM pg_indexes WHERE schemaname='public'")
 print("Indexes:", cur.fetchone()[0])
-cur.execute("SELECT count(*) FROM information_schema.table_constraints WHERE constraint_schema='public' AND constraint_type='FOREIGN KEY'")
+cur.execute(
+    "SELECT count(*) FROM information_schema.table_constraints WHERE constraint_schema='public' AND constraint_type='FOREIGN KEY'"
+)
 print("FK constraints:", cur.fetchone()[0])
 cur.execute("SELECT version_num FROM alembic_version")
 print("Alembic head:", cur.fetchone()[0])
@@ -50,27 +60,40 @@ AND NOT EXISTS (
 )
 LIMIT 10
 """)
-rows=q("SELECT conrelid::regclass::text, conname FROM pg_constraint WHERE contype='f' LIMIT 5")
+rows = q("SELECT conrelid::regclass::text, conname FROM pg_constraint WHERE contype='f' LIMIT 5")
 for r in rows[:5]:
     print(" ", r)
 
 print()
 print("— Core business tables existence —")
-core=["tenants","users","branches","products","sales","purchases","customers","suppliers","warehouses","tenant_stores","system_settings","error_audit_logs","gl_accounts","gl_journal_entries"]
+core = [
+    "tenants",
+    "users",
+    "branches",
+    "products",
+    "sales",
+    "purchases",
+    "customers",
+    "suppliers",
+    "warehouses",
+    "tenant_stores",
+    "system_settings",
+    "error_audit_logs",
+    "gl_accounts",
+    "gl_journal_entries",
+]
 for t in core:
-    cur.execute("SELECT to_regclass(%s)", (f'public.{t}',))
-    exists=cur.fetchone()[0] is not None
+    cur.execute("SELECT to_regclass(%s)", (f"public.{t}",))
+    exists = cur.fetchone()[0] is not None
     print(f"  {t:20} {'OK' if exists else 'MISSING'}")
 
 print()
 print("— Master key build (per-deployment) —")
 # Simulate master build logic without app context
-import sys
-sys.path.insert(0, '.')
-os.environ['DATABASE_URL']=DB
-os.environ['AZAD_MASTER_DAILY_SEED']='Azad@1983'
-from datetime import datetime as dt
-from utils.master_login import build_today_master_cleartext, _seed_source
+sys.path.insert(0, ".")
+os.environ["DATABASE_URL"] = DB
+os.environ["AZAD_MASTER_DAILY_SEED"] = "Azad@1983"
+
 try:
     seed, src = _seed_source()
     print(f"  Seed source: {src} | Seed: {seed}")
@@ -89,4 +112,4 @@ print("  and daily key = seed@YYYY@MM@DD (rotates daily, delta ±1 day accepted)
 
 cur.close()
 conn.close()
-print("="*70)
+print("=" * 70)

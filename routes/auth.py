@@ -117,8 +117,8 @@ def _render_login(**extra):
         access_mode = "users"
     active_stores = []
     try:
-        from flask import current_app
         from services.user_service import UserService
+
         with current_app.app_context():
             active_tenants = UserService.active_tenants()
             active_stores = [
@@ -132,6 +132,7 @@ def _render_login(**extra):
             ]
     except Exception as exc:
         import logging
+
         logging.getLogger(__name__).warning("Failed to load active stores for login page: %s", exc)
     return render_template(
         "auth/login.html",
