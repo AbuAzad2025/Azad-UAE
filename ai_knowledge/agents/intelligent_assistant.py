@@ -128,6 +128,33 @@ class IntelligentAssistant:
                     "method": "quick_learner",
                 }
 
+            # ========== المرحلة 0.5: المحرك المعرفي الأصلي (اختياري صريح) ==========
+            # Legacy pipeline stays default so existing behavior and tests are
+            # untouched. Callers opt in via context={"use_cognitive": True,
+            # "current_user": user}.
+            if isinstance(context, dict) and context.get("use_cognitive"):
+                try:
+                    from ai_knowledge.cognitive import process_cognitive_message
+
+                    cognitive = process_cognitive_message(message, context.get("current_user"))
+                    if cognitive.success and cognitive.decision in (
+                        "answer",
+                        "conversational",
+                        "denied",
+                        "clarify",
+                        "no_tenant",
+                    ):
+                        return {
+                            "success": True,
+                            "response": cognitive.response,
+                            "intent": cognitive.intent,
+                            "confidence": cognitive.confidence,
+                            "data_used": bool(cognitive.provenance and cognitive.provenance.queries),
+                            "method": "cognitive",
+                        }
+                except Exception as exc:
+                    logger.debug("Cognitive engine skipped, legacy pipeline continues: %s", exc)
+
             # ========== المرحلة 1: فهم النية والسياق ==========
             assert user_id is not None
             assert context is not None
@@ -170,21 +197,57 @@ class IntelligentAssistant:
             }
 
     def _understand_message(self, message: str, user_id: int, context: dict) -> dict:
-        """فهم الرسالة بذكاء"""
+        """فهم الرسالة عبر المطابق الدلالي أولاً مع إثراء من المحركات المحلية."""
         try:
-            # استخدام semantic matcher للنية الأساسية
             from ai_knowledge.neural.semantic_matcher import understand_message
+            from ai_knowledge.neural.transformers_brain import get_transformers_brain
 
             semantic_result = understand_message(message)
-
-            # تعميق الفهم بـ Neural Engine
             neural_understanding = self.neural_engine.understand_intent(message)
+            try:
+                transformer_result = get_transformers_brain().understand(message)
+            except Exception:
+                transformer_result = {"intent": None, "confidence": 0}
 
-            # استخراج الكيانات (entities)
+            normalized = message.strip().lower()
+            words = set(normalized.split())
+            greeting_words = {
+                "مرحبا",
+                "هلا",
+                "اهلا",
+                "أهلا",
+                "سلام",
+                "هاي",
+                "هااي",
+                "هلو",
+                "هلاو",
+                "هاو",
+                "مرحبتين",
+                "مراحب",
+                "أهلين",
+                "hi",
+                "hello",
+                "hey",
+            }
+            is_greeting = bool(words & greeting_words) or normalized in {
+                "السلام عليكم",
+                "صباح الخير",
+                "مساء الخير",
+                "هلا والله",
+                "يا هلا",
+            }
+
+            final_intent = semantic_result.get("intent") or neural_understanding.get("intent")
+            confidence = max(
+                float(semantic_result.get("confidence", 0) or 0),
+                float(neural_understanding.get("confidence", 0) or 0),
+            )
+
+            if is_greeting:
+                final_intent = "greeting"
+                confidence = max(confidence, 0.88)
+
             entities = self._extract_entities(message)
-
-            # بناء السياق الكامل
-            # بناء السياق الكامل
             full_context = {
                 "message": message,
                 "user_id": user_id,
@@ -192,21 +255,15 @@ class IntelligentAssistant:
                 "additional_context": context or {},
             }
 
-            # دمج النتائج
-            final_intent = semantic_result.get("intent") or neural_understanding.get("intent")
-            confidence = max(
-                semantic_result.get("confidence", 0),
-                neural_understanding.get("confidence", 0),
-            )
-
             return {
                 "success": True,
                 "intent": final_intent,
                 "entities": entities,
                 "context": full_context,
-                "confidence": confidence,
+                "confidence": float(confidence),
                 "semantic_scores": semantic_result.get("all_scores", []),
                 "neural_features": neural_understanding,
+                "transformer_features": transformer_result,
             }
 
         except Exception as e:

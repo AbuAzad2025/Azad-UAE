@@ -55,6 +55,13 @@ class TestCovIntelligentAssistantAnalyze:
         assert result["insights"] == []
         assert result["warnings"] == []
 
+    def test_understand_message_greeting_local_confidence(self):
+        assistant = IntelligentAssistant()
+        result = assistant._understand_message("هاي", 7, {})
+        assert result["success"] is True
+        assert result["intent"] == "greeting"
+        assert result["confidence"] >= 0.88
+
 
 class TestCovIntelligentAssistantGenerate:
     def test_customer_balance_no_overdue_516_518(self):
