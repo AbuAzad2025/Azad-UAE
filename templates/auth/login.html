@@ -30,6 +30,26 @@
     <a href="{{ url_for('language.set_language', lang='en', next=request.full_path) }}" class="{% if session.get('language') == 'en' %}is-active{% endif %}">EN</a>
   </nav>
 
+  {% if active_stores and active_stores|length > 0 %}
+  <div class="azad-login-stores-bar" role="region" aria-label="{{ _('المتاجر النشطة') }}">
+    <div class="azad-login-stores-bar__inner">
+      <span class="azad-login-stores-bar__label"><i class="fas fa-store" aria-hidden="true"></i> {{ _('المتاجر النشطة') }}</span>
+      <div class="azad-login-stores-bar__search">
+        <input type="text" id="storeSearchInput" placeholder="{{ _('ابحث عن متجر...') }}" aria-label="{{ _('البحث') }}">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </div>
+      <div class="azad-login-stores-bar__list" id="storeList">
+        {% for store in active_stores %}
+        <a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="azad-login-stores-bar__item" data-store-name="{{ store.name_ar or store.name_en or '' }}">
+          <i class="fas fa-store" aria-hidden="true"></i>
+          <span>{{ store.name_ar or store.name_en or _('متجر') }}</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="azad-login-shell">
 
     <aside class="azad-login-brand">
@@ -55,25 +75,7 @@
       </div>
     </aside>
 
-    {% if active_stores and active_stores|length > 0 %}
-    <aside class="azad-login-stores" aria-label="{{ _('المتاجر النشطة') }}">
-      <h3 class="azad-login-stores__title"><i class="fas fa-store" aria-hidden="true"></i> {{ _('المتاجر النشطة') }}</h3>
-      <div class="azad-login-stores__search-wrap">
-        <input type="text" id="storeSearchInput" class="azad-login-stores__search" placeholder="{{ _('ابحث عن متجرك...') }}" aria-label="{{ _('البحث في المتاجر') }}">
-        <i class="fas fa-search azad-login-stores__search-icon" aria-hidden="true"></i>
-      </div>
-      <div class="azad-login-stores__list" id="storeList">
-        {% for store in active_stores %}
-        <a href="{{ url_for('shop.account_register', slug=store.store_slug) }}" class="azad-login-stores__item" data-store-name="{{ store.name_ar or store.name_en or '' }}">
-          <span class="azad-login-stores__icon" aria-hidden="true"><i class="fas fa-building-columns"></i></span>
-          <span class="azad-login-stores__name">{{ store.name_ar or store.name_en or _('متجر') }}</span>
-          <span class="azad-login-stores__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
-        </a>
-        {% endfor %}
-      </div>
-      <p class="azad-login-stores__hint">{{ _('اختر متجرك للدخول أو التسجيل كعميل.') }}</p>
-    </aside>
-    {% endif %}
+
 
     <main class="azad-login-card-wrap">
       <div class="azad-login-card">
@@ -174,9 +176,8 @@
         });
       }
 
-      // Flashy store search/navigation
       const searchInput = document.getElementById('storeSearchInput');
-      const storeItems = document.querySelectorAll('.azad-login-stores__item');
+      const storeItems = document.querySelectorAll('.azad-login-stores-bar__item');
       if (searchInput && storeItems.length > 0) {
         searchInput.addEventListener('input', (e) => {
           const q = e.target.value.toLowerCase().trim();
