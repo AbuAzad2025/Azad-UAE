@@ -141,6 +141,7 @@ static/uploads/**
 !static/uploads/tenants/
 static/uploads/tenants/**
 !static/uploads/tenants/**/.gitkeep
+uploads/training/**
 
 # AI Runtime Memory
 ai_knowledge/*.json

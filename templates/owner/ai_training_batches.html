@@ -1,0 +1,60 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}{{ t('AI_Training_Batches') }}{% endblock %}
+{% block page_title %}<i class="fas fa-layer-group ml-2" aria-hidden="true"></i>{{ t('AI_Training_Batches') }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('owner.ai_training') }}">{{ t('AI_Training') }}</a></li>
+<li class="breadcrumb-item active">{{ t('AI_Training_Batches') }}</li>
+{% endblock %}
+
+{% block content %}
+{% if tenant %}
+<div class="alert alert-info">
+  <strong>{{ t('Tenant') }}:</strong> {{ tenant.name_ar|default('') or tenant.name|default('') }}
+  <a href="{{ url_for('owner.ai_training_upload', tenant_id=tenant.id) }}" class="btn btn-sm btn-success float-right">
+    <i class="fas fa-upload mr-1"></i>{{ t('Upload_Training_File') }}
+  </a>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-light"><strong>{{ t('Import_Batches') }} ({{ batches|length }})</strong></div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>#</th>
+            <th>{{ t('File_Name') }}</th>
+            <th>{{ t('Type') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+            <th class="text-center">{{ t('Records') }}</th>
+            <th>{{ t('Date') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for batch in batches|default([]) %}
+          <tr>
+            <td>{{ batch.id }}</td>
+            <td><code>{{ batch.source_file }}</code></td>
+            <td>{{ batch.file_type }}</td>
+            <td class="text-center">
+              {% if batch.status == 'completed' %}<span class="badge badge-success">{{ batch.status }}</span>
+              {% elif batch.status == 'failed' %}<span class="badge badge-danger">{{ batch.status }}</span>
+              {% elif batch.status == 'processing' %}<span class="badge badge-warning">{{ batch.status }}</span>
+              {% else %}<span class="badge badge-secondary">{{ batch.status }}</span>{% endif %}
+            </td>
+            <td class="text-center">{{ batch.processed_count }} / {{ batch.record_count }}</td>
+            <td>{{ batch.created_at }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-3">{{ t('No_Data') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -74,6 +74,7 @@ from utils.sanitizer import InputSanitizer
 from utils.tenanting import get_active_tenant_id
 
 from . import ai_training as ai_training_module
+from . import ai_training_advanced as ai_training_advanced_module
 
 # Import sub-modules so they register their routes on the shared owner_bp.
 # Each sub-module is loaded here to ensure all @owner_bp.route decorators fire.
@@ -248,6 +249,14 @@ __all__ = [
     "ai_training_toggle",
     "ai_training_correct",
     "ai_training_module",
+    "ai_training_advanced_module",
+    "ai_training_upload",
+    "ai_training_progress",
+    "ai_training_metrics",
+    "ai_training_knowledge_graph",
+    "ai_training_health",
+    "ai_training_batches",
+    "ai_semantic_train",
     "tenant_store_platform_toggle",
     "api_tenant_toggle_status",
     "api_tenant_update_package",

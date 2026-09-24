@@ -1,0 +1,161 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}{{ t('AI_Training_Progress') }}{% endblock %}
+{% block page_title %}<i class="fas fa-chart-line ml-2" aria-hidden="true"></i>{{ t('AI_Training_Progress') }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('owner.ai_training') }}">{{ t('AI_Training') }}</a></li>
+<li class="breadcrumb-item active">{{ t('Progress_Analytics') }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-3">
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('owner.ai_training_progress') }}" class="form-inline">
+      <label class="mr-2" for="tenant_id">{{ t('Tenant') }}</label>
+      <select name="tenant_id" id="tenant_id" class="form-control mr-2" onchange="this.form.submit()">
+        <option value="">— {{ t('Choose') }} —</option>
+        {% for row in tenants|default([]) %}
+        <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">{{ t('Show') }}</button>
+    </form>
+  </div>
+</div>
+
+{% if tenant %}
+<div class="row mb-3">
+  <div class="col-md-3"><div class="card shadow-sm"><div class="card-body text-center"><h4>{{ progress_data.covered_concepts|default(0) }} / {{ progress_data.total_concepts|default(0) }}</h4><span class="text-muted">{{ t('Covered_Concepts') }}</span></div></div></div>
+  <div class="col-md-3"><div class="card shadow-sm"><div class="card-body text-center"><h4>{{ progress_data.coverage_percentage|default(0) }}%</h4><span class="text-muted">{{ t('Coverage') }}</span></div></div></div>
+  <div class="col-md-3"><div class="card shadow-sm"><div class="card-body text-center"><h4>{{ progress_data.average_mastery_score|default(0) }}</h4><span class="text-muted">{{ t('Mastery') }}</span></div></div></div>
+  <div class="col-md-3"><div class="card shadow-sm"><div class="card-body text-center"><h4>{{ health_report.health_score|default(0) }}</h4><span class="text-muted">{{ t('Health_Score') }}</span></div></div></div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light"><strong>{{ t('Domain_Coverage') }}</strong></div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>{{ t('Domain') }}</th><th>{{ t('Records') }}</th><th>{{ t('Confidence') }}</th><th>{{ t('Coverage') }}</th></tr></thead>
+            <tbody>
+              {% for domain, stats in progress_data.by_domain|default({})|dictsort %}
+              <tr>
+                <td><code>{{ domain }}</code></td>
+                <td>{{ stats.covered }}/{{ stats.total }}</td>
+                <td>{{ "%.2f"|format(stats.avg_mastery / 100) }}</td>
+                <td>{{ "%.1f"|format(stats.coverage) }}%</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center text-muted py-3">{{ t('No_Data') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light"><strong>{{ t('Learning_Velocity') }}</strong></div>
+      <div class="card-body">
+        <div class="row mb-3">
+          <div class="col-6 text-center">
+            <h3>{{ "%.2f"|format(velocity_data.velocity|default(0)) }}</h3>
+            <span class="text-muted">{{ t('Concepts_Per_Week') }}</span>
+          </div>
+          <div class="col-6 text-center">
+            <h3 class="{% if velocity_data.trend == 'improving' %}text-success{% elif velocity_data.trend == 'declining' %}text-danger{% else %}text-muted{% endif %}">{{ velocity_data.trend|default('unknown') }}</h3>
+            <span class="text-muted">{{ t('Trend') }}</span>
+          </div>
+        </div>
+        <div class="progress" style="height: 25px;">
+          <div class="progress-bar {% if velocity_data.trend == 'improving' %}bg-success{% elif velocity_data.trend == 'declining' %}bg-danger{% else %}bg-secondary{% endif %}" role="progressbar" style="width: {{ [velocity_data.velocity|default(0) * 100, 100]|min }}%" aria-valuenow="{{ velocity_data.velocity|default(0) }}" aria-valuemin="0" aria-valuemax="100">
+            {{ "%.1f"|format(velocity_data.velocity|default(0) * 100) }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light"><strong>{{ t('Knowledge_Graph') }}</strong></div>
+      <div class="card-body">
+        <p class="text-muted mb-2">{{ t('Knowledge_Graph_Description') }}</p>
+        <div class="row">
+          <div class="col-6 text-center">
+            <h3>{{ metrics_data.knowledge_graph_edges|default(0) }}</h3>
+            <span class="text-muted">{{ t('Relationships') }}</span>
+          </div>
+          <div class="col-6 text-center">
+            <h3>{{ metrics_data.total_concepts|default(0) }}</h3>
+            <span class="text-muted">{{ t('Concepts') }}</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline-primary btn-sm btn-block" onclick="window.location.href='{{ url_for('owner.ai_training_knowledge_graph', tenant_id=tenant.id) }}'">
+          <i class="fas fa-project-diagram mr-2"></i>{{ t('View_Graph') }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light"><strong>{{ t('Health_Report') }}</strong></div>
+      <div class="card-body">
+        <div class="alert alert-{% if health_report.health_status == 'excellent' %}success{% elif health_report.health_status == 'good' %}primary{% elif health_report.health_status == 'fair' %}warning{% else %}danger{% endif %} mb-2">
+          <strong>{{ health_report.health_status|default('unknown') }}</strong>
+        </div>
+        <p class="mb-1">{{ t('Average_Mastery') }}: {{ health_report.average_mastery_score|default(0) }}</p>
+        <p class="mb-1">{{ t('Learning_Velocity') }}: {{ "%.2f"|format(health_report.learning_velocity|default(0)) }}</p>
+        <p class="mb-2">{{ t('Total_Concepts') }}: {{ health_report.total_concepts|default(0) }}</p>
+        <button type="button" class="btn btn-outline-info btn-sm btn-block" onclick="window.location.href='{{ url_for('owner.ai_training_health', tenant_id=tenant.id) }}'">
+          <i class="fas fa-heartbeat mr-2"></i>{{ t('View_Health_Report') }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-light"><strong>{{ t('Concept_Mastery') }}</strong></div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="thead-light">
+          <tr><th>{{ t('Concept') }}</th><th>{{ t('Domain') }}</th><th>{{ t('Mastery') }}</th><th>{{ t('Confidence') }}</th><th>{{ t('Usage') }}</th><th>{{ t('Status') }}</th></tr>
+        </thead>
+        <tbody>
+          {% for record in progress_data.records|default([]) %}
+          <tr>
+            <td><code>{{ record.concept_name }}</code></td>
+            <td>{{ record.domain }}</td>
+            <td>
+              <div class="progress" style="height: 10px;">
+                <div class="progress-bar {% if record.mastery_score >= 80 %}bg-success{% elif record.mastery_score >= 60 %}bg-primary{% elif record.mastery_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ record.mastery_score }}%" aria-valuenow="{{ record.mastery_score }}" aria-valuemin="0" aria-valuemax="100">
+                </div>
+              </div>
+              {{ record.mastery_score }}
+            </td>
+            <td>{{ "%.2f"|format(record.confidence) }}</td>
+            <td>{{ record.usage_count }}</td>
+            <td>
+              {% if record.covered %}<span class="badge badge-success">{{ t('Covered') }}</span>
+              {% else %}<span class="badge badge-warning">{{ t('Not_Covered') }}</span>{% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="text-center text-muted py-3">{{ t('No_Data') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

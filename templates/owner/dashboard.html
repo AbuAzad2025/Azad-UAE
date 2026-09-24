@@ -235,6 +235,12 @@
         <a href="{{ url_for('owner.ai_training') }}" class="btn btn-outline-success btn-block mb-2">
           <i class="fas fa-brain mr-1" aria-hidden="true"></i> {{ t('AI_Training') }}
         </a>
+        <a href="{{ url_for('owner.ai_training_upload') }}" class="btn btn-outline-success btn-block mb-2">
+          <i class="fas fa-upload mr-1" aria-hidden="true"></i> {{ t('AI_Training_Upload') }}
+        </a>
+        <a href="{{ url_for('owner.ai_training_progress') }}" class="btn btn-outline-success btn-block mb-2">
+          <i class="fas fa-chart-line mr-1" aria-hidden="true"></i> {{ t('AI_Training_Progress') }}
+        </a>
         <a href="{{ url_for('owner.integrations') }}" class="btn btn-outline-secondary btn-block">
           <i class="fas fa-plug mr-1" aria-hidden="true"></i> {{ t('Integrations') }}
         </a>

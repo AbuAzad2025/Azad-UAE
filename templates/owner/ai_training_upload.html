@@ -1,0 +1,86 @@
+{% extends 'owner/base.html' %}
+
+{% block title %}{{ t('AI_Training_Upload') }}{% endblock %}
+{% block page_title %}<i class="fas fa-upload ml-2" aria-hidden="true"></i>{{ t('AI_Training_Upload') }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('owner.ai_training') }}">{{ t('AI_Training') }}</a></li>
+<li class="breadcrumb-item active">{{ t('Upload_Training_Data') }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm border-0 mb-3">
+  <div class="card-body">
+    <form method="GET" action="{{ url_for('owner.ai_training_upload') }}" class="form-inline">
+      <label class="mr-2" for="tenant_id">{{ t('Tenant') }}</label>
+      <select name="tenant_id" id="tenant_id" class="form-control mr-2" onchange="this.form.submit()">
+        <option value="">— {{ t('Choose') }} —</option>
+        {% for row in tenants|default([]) %}
+        <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="btn btn-primary">{{ t('Show') }}</button>
+    </form>
+  </div>
+</div>
+
+{% if tenant %}
+<div class="row mb-3">
+  <div class="col-md-8 offset-2">
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-light">
+        <strong><i class="fas fa-file-upload mr-2"></i>{{ t('Upload_Training_File') }}</strong>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('owner.ai_training_upload', tenant_id=tenant.id) }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+          <input type="hidden" name="tenant_id" value="{{ tenant.id }}">
+
+          <div class="form-group">
+            <label for="file">{{ t('Training_File') }} <span class="text-danger">*</span></label>
+            <input type="file" id="file" name="file" class="form-control-file" required accept=".json,.xlsx,.xls">
+            <small class="form-text text-muted">{{ t('Supported_Formats') }}: JSON, XLSX, XLS</small>
+          </div>
+
+          <div class="alert alert-info mt-3">
+            <strong><i class="fas fa-info-circle mr-2"></i>{{ t('File_Requirements') }}:</strong>
+            <ul class="mb-0">
+              <li>{{ t('JSON_Format') }}: {"training_data": [{"question": "...", "answer": "...", "category": "...", "confidence": 0.95}]}</li>
+              <li>{{ t('Excel_Format') }}: columns "question", "answer", "category" (optional), "confidence" (optional)</li>
+            </ul>
+          </div>
+
+          <button type="submit" class="btn btn-success btn-block">
+            <i class="fas fa-upload mr-2"></i>{{ t('Upload_Process') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-light"><strong>{{ t('Recent_Imports') }}</strong></div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>{{ t('File_Name') }}</th>
+            <th>{{ t('Type') }}</th>
+            <th class="text-center">{{ t('Status') }}</th>
+            <th class="text-center">{{ t('Records') }}</th>
+            <th>{{ t('Date') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Batches would be loaded here -->
+          <tr><td colspan="5" class="text-center text-muted py-3">{{ t('No_Imports_Found') }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
