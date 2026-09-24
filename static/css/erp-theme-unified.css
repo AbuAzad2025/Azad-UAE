@@ -3844,6 +3844,7 @@ label,
   padding: 0 !important;
 }
 .erp-footer-inner { padding: 4px 18px !important; }
+
 /* Compact single-row footer: brand | chips | actions, one-line copyright. */
 .erp-footer-row { gap: 8px 14px; align-items: center; flex-wrap: nowrap; }
 .erp-footer-brand { gap: 10px; min-width: 0; }
@@ -3857,9 +3858,11 @@ label,
 .erp-footer-action { padding: 5px 10px; font-size: 0.76rem; }
 .erp-footer-copyright { margin-top: 2px !important; padding-top: 4px !important; font-size: 0.72rem; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .erp-footer-copyright::before { width: 80px; }
+
 @media (max-width: 991px) {
   .erp-footer-muted { display: none; }
 }
+
 @media (max-width: 767px) {
   .main-footer.erp-footer { inset-inline-start: 0 !important; inset-inline-end: 0 !important; }
   .erp-footer-inner { padding: 6px 12px !important; }
@@ -3870,11 +3873,13 @@ label,
   .erp-footer-action { padding: 5px 8px; font-size: 0.72rem; }
   .erp-footer-copyright { font-size: 0.68rem; }
   .erp-footer-copyright .erp-footer-made-in { display: none; }
+
   /* Lift the fixed footer above the fixed mobile bottom nav (both are
      bottom:0 otherwise, and the nav paints over the footer). Reserve both. */
   body:not(.view-desktop) .main-footer.erp-footer {
     bottom: calc(var(--az-mobile-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
   }
+
   body:not(.view-desktop) .content-wrapper {
     padding-bottom: calc(104px + var(--az-mobile-nav-height) + env(safe-area-inset-bottom, 0px)) !important;
   }

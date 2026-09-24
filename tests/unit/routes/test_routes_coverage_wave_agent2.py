@@ -1151,13 +1151,15 @@ class TestExcelHelpersWave:
         mapping = _intelligent_column_detector(df)
         assert mapping["quantity"] == "col3"
 
-    def test_train_ai_from_excel_success(self):
+    def test_train_ai_from_excel_success(self, db_session, sample_tenant):
         from routes.ai_routes import _train_ai_from_excel
 
         df = pd.DataFrame({"name": ["A"], "part": ["P"], "price": [10]})
-        _train_ai_from_excel(df, 1, 0, 42)
+        result = _train_ai_from_excel(df, 1, 0, 42, sample_tenant.id)
+        assert result["learned"] is True
+        assert result["rows"] == 1
 
     def test_train_ai_from_excel_handles_error(self):
         from routes.ai_routes import _train_ai_from_excel
 
-        _train_ai_from_excel(None, 1, 0, 42)
+        _train_ai_from_excel(None, 1, 0, 42, 10)
