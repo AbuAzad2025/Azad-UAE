@@ -136,7 +136,7 @@ class Package(db.Model):
                  "enable_reports": True, "enable_ai": True, "enable_store": True,
                  "enable_gl": True, "enable_api": True, "enable_pos": True},
         }
-        tier_features = _TIER_FEATURES.get(tier, {})
+        # TIER_FEATURES mapping removed - using direct attribute access instead
         for col in TENANT_FLAG_COLUMNS:
             value = _TIER_FEATURES.get(col, getattr(self, col, None))
             if value is not None:
