@@ -266,20 +266,9 @@ def _get_tenant_storage_mb(tid: int) -> int:
     """Calculate total storage usage in MB for a tenant across all upload paths."""
     try:
         from models import (
+            Attachment,
             Product,
             ProductImage,
-            Attachment,
-            Customer,
-            Supplier,
-            Sale,
-            Purchase,
-            Expense,
-            Receipt,
-            Payment,
-            PaymentVault,
-            CardVault,
-            Warehouse,
-            StockMovement,
         )
 
         total_bytes = 0
@@ -321,11 +310,6 @@ def _get_tenant_storage_mb(tid: int) -> int:
 
 def check_storage_limit() -> None:
     """Check if tenant has exceeded its storage quota (max_storage_mb)."""
-    from models import (
-        Product,
-        ProductImage,
-        Attachment,
-    )
 
     tenant = _active_tenant()
     if not tenant:
