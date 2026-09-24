@@ -92,6 +92,7 @@ class TestIntegrationSettingsModel:
         from models.integration_settings import IntegrationSettings
 
         mock_q = MagicMock()
+        mock_q.filter_by.return_value.filter.return_value.first.return_value = None
         mock_q.filter_by.return_value.first.return_value = None
         mocker.patch.object(
             IntegrationSettings,

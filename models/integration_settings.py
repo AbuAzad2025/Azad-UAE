@@ -22,7 +22,7 @@ class IntegrationSettings(db.Model):
     tenant_id = db.Column(
         db.Integer,
         db.ForeignKey("tenants.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
 
@@ -55,11 +55,17 @@ class IntegrationSettings(db.Model):
     @staticmethod
     def get_service_config(service_name, tenant_id=None):
         """
-        الحصول على إعدادات خدمة معينة
+        الحصول على إعدادات خدمة معينة.
+
+        tenant_id=None means the platform-global row (owner panel scope) and
+        strictly matches NULL rows — it never falls back to another tenant's
+        row (cross-tenant leak guard).
         """
         q = IntegrationSettings.query.filter_by(service_name=service_name)
         if tenant_id is not None:
             q = q.filter_by(tenant_id=tenant_id)
+        else:
+            q = q.filter(IntegrationSettings.tenant_id.is_(None))
         integration = q.first()
         if not integration:
             # إنشاء سجل جديد بإعدادات افتراضية
