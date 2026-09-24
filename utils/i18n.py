@@ -3342,6 +3342,11 @@ TRANSLATIONS = {
     "Menu_Position": {"ar": "موقع القائمة", "en": "Menu Position"},
     "System_Tools": {"ar": "أدوات النظام", "en": "System Tools"},
     "AI_Assistant": {"ar": "المساعد الذكي", "en": "AI Assistant"},
+    "AI_And_Integrations": {"ar": "الذكاء الاصطناعي والتكاملات", "en": "AI & Integrations"},
+    "Desc_AI_Integrations": {
+        "ar": "تدريب المساعد الذكي وإعدادات التكاملات",
+        "en": "AI assistant training and integration settings",
+    },
     "Toggle_Dark_Mode": {"ar": "تبديل الوضع الداكن", "en": "Toggle Dark Mode"},
     "Select_Theme": {"ar": "اختر المظهر", "en": "Select Theme"},
     "Palestinian_Theme": {"ar": "المظهر الفلسطيني", "en": "Palestinian Theme"},
