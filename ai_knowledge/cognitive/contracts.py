@@ -20,6 +20,14 @@ class CognitiveIntent(StrEnum):
     GL_BALANCE = "gl_balance"
     HR_SUMMARY = "hr_summary"
     VAULT_BALANCE = "vault_balance"
+    PATTERN_ANALYSIS = "pattern_analysis"
+    PROFIT_MARGIN = "profit_margin"
+    DEAD_STOCK = "dead_stock"
+    TOP_PRODUCTS = "top_products"
+    DEBT_OVERVIEW = "debt_overview"
+    TAX_SUMMARY = "tax_summary"
+    SUPPLIER_STATUS = "supplier_status"
+    SYSTEM_GUIDE = "system_guide"
     UNKNOWN = "unknown"
 
 
@@ -28,6 +36,7 @@ CONVERSATIONAL_INTENTS = frozenset(
         CognitiveIntent.GREETING,
         CognitiveIntent.HELP,
         CognitiveIntent.WHO_ARE_YOU,
+        CognitiveIntent.SYSTEM_GUIDE,
         CognitiveIntent.UNKNOWN,
     }
 )

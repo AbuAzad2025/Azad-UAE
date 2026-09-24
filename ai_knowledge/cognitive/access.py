@@ -19,6 +19,13 @@ INTENT_PERMISSION: dict[CognitiveIntent, str] = {
     CognitiveIntent.GL_BALANCE: "view_ledger",
     CognitiveIntent.HR_SUMMARY: "hr.view",
     CognitiveIntent.VAULT_BALANCE: "manage_payments",
+    CognitiveIntent.PATTERN_ANALYSIS: "view_reports",
+    CognitiveIntent.PROFIT_MARGIN: "view_reports",
+    CognitiveIntent.DEAD_STOCK: "manage_warehouse",
+    CognitiveIntent.TOP_PRODUCTS: "view_reports",
+    CognitiveIntent.DEBT_OVERVIEW: "manage_customers",
+    CognitiveIntent.TAX_SUMMARY: "view_reports",
+    CognitiveIntent.SUPPLIER_STATUS: "manage_suppliers",
 }
 
 _DISPATCHER_ACTION: dict[CognitiveIntent, str] = {

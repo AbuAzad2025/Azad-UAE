@@ -50,12 +50,13 @@ def _history(user: object | None, limit: int = 6) -> list[tuple[str, str | None]
 
 
 def _previous_slots(intent: CognitiveIntent, past: list[tuple[str, str | None]]) -> dict[str, str]:
+    wanted = "customer_name" if intent == CognitiveIntent.CUSTOMER_BALANCE else "supplier_name"
     for query, _saved in past:
         if not query:
             continue
         found = extract_slots(intent, normalize_message(query), None)
-        if found.values.get("customer_name"):
-            return {"customer_name": found.values["customer_name"]}
+        if found.values.get(wanted):
+            return {wanted: found.values[wanted]}
     return {}
 
 
@@ -118,6 +119,19 @@ def process(message: str, user: object | None = None) -> CognitiveResult:
     intent = hypothesis.intent
 
     if intent in CONVERSATIONAL_INTENTS and intent != CognitiveIntent.UNKNOWN:
+        if intent == CognitiveIntent.SYSTEM_GUIDE:
+            from ai_knowledge.cognitive.guide import resolve_guide_topic
+
+            topic = resolve_guide_topic(normalized.tokens)
+            return CognitiveResult(
+                success=True,
+                response=composer.compose_guide(topic),
+                intent=intent.value,
+                confidence=hypothesis.confidence,
+                decision="conversational",
+                trace=_trace_note(f"Guide topic={topic or 'index'}.", hypothesis.confidence),
+                provenance=Provenance(tenant_id=None),
+            )
         return CognitiveResult(
             success=True,
             response=composer.compose_conversational(intent),
@@ -128,6 +142,11 @@ def process(message: str, user: object | None = None) -> CognitiveResult:
             provenance=Provenance(tenant_id=None),
         )
     if intent == CognitiveIntent.UNKNOWN:
+        from ai_knowledge.cognitive.fallback import try_dynamic_fallback
+
+        dynamic = try_dynamic_fallback(normalized, user)
+        if dynamic is not None:
+            return dynamic
         return CognitiveResult(
             success=True,
             response=composer.compose_unknown(hypothesis),

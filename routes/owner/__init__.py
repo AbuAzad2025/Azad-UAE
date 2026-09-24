@@ -73,9 +73,12 @@ from utils.safe_redirect import safe_redirect_target
 from utils.sanitizer import InputSanitizer
 from utils.tenanting import get_active_tenant_id
 
+from . import ai_training as ai_training_module
+
 # Import sub-modules so they register their routes on the shared owner_bp.
 # Each sub-module is loaded here to ensure all @owner_bp.route decorators fire.
 from . import backups, core, database, maintenance, monitoring, settings, shared, tenants, users
+from .ai_training import ai_training, ai_training_correct, ai_training_qa, ai_training_toggle
 
 # Re-export route handler names so `from routes.owner import X` works
 # (matching the flat-module API from pre-refactoring routes/owner.py).
@@ -240,6 +243,11 @@ __all__ = [
     "api_toggle_warehouse_negative",
     "api_supervisor_override",
     "tenant_ai_toggle",
+    "ai_training",
+    "ai_training_qa",
+    "ai_training_toggle",
+    "ai_training_correct",
+    "ai_training_module",
     "tenant_store_platform_toggle",
     "api_tenant_toggle_status",
     "api_tenant_update_package",

@@ -1649,38 +1649,65 @@ class TestDataRoutes:
 
 class TestKnowledgeRoutes:
     def test_add_website_ok(self, ai_client):
-        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+            patch("routes.ai_routes.knowledge.knowledge_expander") as ke,
+        ):
             ke.add_website.return_value = {"success": True}
             resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
         assert resp.status_code == 200
 
     def test_add_website_missing_url_400(self, ai_client):
-        with _admin_patch():
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+        ):
             resp = ai_client.post("/ai/knowledge/add-website", json={})
         assert resp.status_code == 400
 
     def test_add_website_error(self, ai_client):
-        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+            patch("routes.ai_routes.knowledge.knowledge_expander") as ke,
+        ):
             ke.add_website.side_effect = RuntimeError("e")
             resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://x.com"})
         assert resp.status_code == 500
 
     def test_add_document_ok(self, ai_client):
-        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+            patch("routes.ai_routes.knowledge.knowledge_expander") as ke,
+        ):
             ke.add_document.return_value = {"success": True}
             resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 200
 
     def test_add_document_missing_400(self, ai_client):
-        with _admin_patch():
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+        ):
             resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T"})
         assert resp.status_code == 400
 
     def test_add_document_error(self, ai_client):
-        with _admin_patch(), patch("routes.ai_routes.knowledge.knowledge_expander") as ke:
+        with (
+            _admin_patch(),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+            patch("routes.ai_routes.knowledge.knowledge_expander") as ke,
+        ):
             ke.add_document.side_effect = RuntimeError("e")
             resp = ai_client.post("/ai/knowledge/add-document", json={"title": "T", "content": "C"})
         assert resp.status_code == 500
+
+    def test_add_website_non_owner_404(self, ai_client):
+        with patch("utils.decorators.is_global_owner_user", return_value=False):
+            resp = ai_client.post("/ai/knowledge/add-website", json={"url": "https://example.com"})
+        assert resp.status_code == 404
 
     def test_search_ok(self, ai_client):
         with patch("routes.ai_routes.knowledge.knowledge_expander") as ke:

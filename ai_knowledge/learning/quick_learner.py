@@ -46,36 +46,35 @@ class QuickLearner:
         return True
 
     def get_answer(self, question: str, tenant_id: int | None = None) -> str | None:
-        """البحث عن إجابة — مطابقة تامة أو جزئية أو ضبابية مع عزل حسب المستأجر."""
-        from extensions import db
+        """البحث عن إجابة — مطابقة تامة ثم جزئية ثم ضبابية، كلها داخل نطاق المستأجر.
+
+        When ``tenant_id`` is given, only that tenant's rows are considered —
+        global (NULL-tenant) rows are never returned to a tenanted caller.
+        Callers without a tenant (system seeding) keep the legacy scope.
+        """
         from models.ai import AiMemory
 
         key = question.strip().lower()
         query = AiMemory.query.filter_by(is_active=True)
         if tenant_id is not None:
-            query = query.filter(
-                db.or_(
-                    AiMemory.tenant_id == tenant_id,
-                    AiMemory.tenant_id.is_(None),
-                )
-            )
+            query = query.filter(AiMemory.tenant_id == tenant_id)
         rows = query.all()
-        candidates = []
         for row in rows:
-            k = row.key
-            if k == key:
+            if row.key == key:
                 self._bump_access(row)
                 return row.value
-            if k in key or key in k:
+        ordered = sorted(rows, key=lambda row: len(row.key or ""), reverse=True)
+        for row in ordered:
+            candidate = row.key or ""
+            if candidate and candidate != key and (candidate in key or key in candidate):
                 self._bump_access(row)
                 return row.value
-            candidates.append((k, row))
-        if candidates:
-            keys = [k for k, _ in candidates]
+        if ordered:
+            keys = [row.key for row in ordered if row.key]
             close = difflib.get_close_matches(key, keys, n=1, cutoff=0.6)
             if close:
-                for k, row in candidates:
-                    if k == close[0]:
+                for row in ordered:
+                    if row.key == close[0]:
                         self._bump_access(row)
                         return row.value
         return None

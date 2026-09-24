@@ -51,3 +51,27 @@ class TestCovQuickLearner:
 
         result = QuickLearner().get_answer("anything at all", tenant_id=sample_tenant.id)
         assert result is None
+
+    def test_global_rows_hidden_from_tenant_caller(self, db_session, sample_tenant):
+        """P0: tenant-scoped callers must never see global (NULL-tenant) rows."""
+        from ai_knowledge.learning.quick_learner import QuickLearner
+
+        self._add_memory(db_session, None, "shared secret", "leaked")
+        assert QuickLearner().get_answer("shared secret", tenant_id=sample_tenant.id) is None
+        assert QuickLearner().get_answer("shared secret", tenant_id=None) == "leaked"
+
+    def test_other_tenant_rows_hidden(self, db_session, sample_tenant):
+        """P0: tenant A's rows are invisible to tenant B."""
+        from ai_knowledge.learning.quick_learner import QuickLearner
+
+        self._add_memory(db_session, sample_tenant.id, "tenant secret", "hidden")
+        assert QuickLearner().get_answer("tenant secret", tenant_id=sample_tenant.id + 999) is None
+        assert QuickLearner().get_answer("tenant secret", tenant_id=sample_tenant.id) == "hidden"
+
+    def test_exact_match_beats_substring_order(self, db_session, sample_tenant):
+        """Deterministic: exact key wins even when a longer key also contains it."""
+        from ai_knowledge.learning.quick_learner import QuickLearner
+
+        self._add_memory(db_session, sample_tenant.id, "رصيد العميل أحمد", "exact-hit")
+        self._add_memory(db_session, sample_tenant.id, "رصيد العميل أحمد اليوم", "longer-hit")
+        assert QuickLearner().get_answer("رصيد العميل أحمد", tenant_id=sample_tenant.id) == "exact-hit"

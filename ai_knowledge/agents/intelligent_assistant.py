@@ -148,11 +148,23 @@ class IntelligentAssistant:
                     logger.debug("Cognitive engine skipped, legacy pipeline continues: %s", exc)
 
             # ========== المرحلة 1: المعرفة السريعة (Quick Knowledge) ==========
+            # Strictly tenant-scoped: a memory row must never cross tenants.
             # A QuickLearner storage failure must degrade to the pipelines
             # below — never abort the whole request with an error response.
             quick_answer = None
             try:
-                quick_answer = self.quick_learner.get_answer(message)
+                tenant_id = None
+                try:
+                    from flask import has_request_context
+                    from flask_login import current_user
+
+                    from utils.tenanting import get_active_tenant_id
+
+                    if has_request_context():
+                        tenant_id = get_active_tenant_id(current_user)
+                except Exception as exc:
+                    logger.debug("Tenant resolution for quick knowledge failed: %s", exc)
+                quick_answer = self.quick_learner.get_answer(message, tenant_id=tenant_id)
             except Exception as exc:
                 logger.debug("Quick knowledge skipped: %s", exc)
             if quick_answer:

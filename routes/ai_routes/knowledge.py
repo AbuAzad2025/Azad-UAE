@@ -12,7 +12,7 @@ from ai_knowledge.expansion.knowledge_expansion import knowledge_expander
 from ai_knowledge.improvement.self_improvement import self_improvement
 from services.ai_service import AIService
 from utils.api_response import error_response, success_response
-from utils.decorators import admin_required, permission_required
+from utils.decorators import admin_required, owner_required, permission_required
 
 from .blueprint import ai_bp
 
@@ -171,7 +171,7 @@ def performance_analysis():
 
 @ai_bp.route("/knowledge/add-website", methods=["POST"])
 @login_required
-@admin_required
+@owner_required
 def add_knowledge_website():
     """إضافة موقع ويب للمعرفة"""
     try:
@@ -199,7 +199,7 @@ def add_knowledge_website():
 
 @ai_bp.route("/knowledge/add-document", methods=["POST"])
 @login_required
-@admin_required
+@owner_required
 def add_knowledge_document():
     """إضافة مستند للمعرفة"""
     try:

@@ -16,7 +16,10 @@ class TestKnowledgeEmptyBody:
         assert resp.status_code == 400
 
     def test_add_website_empty_body_400(self, ai_client):
-        with patch("routes.ai_routes.knowledge.knowledge_expander"):
+        with (
+            patch("routes.ai_routes.knowledge.knowledge_expander"),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+        ):
             resp = ai_client.post(
                 "/ai/knowledge/add-website",
                 data="",
@@ -25,7 +28,10 @@ class TestKnowledgeEmptyBody:
         assert resp.status_code == 400
 
     def test_add_website_missing_url_400(self, ai_client):
-        with patch("routes.ai_routes.knowledge.knowledge_expander"):
+        with (
+            patch("routes.ai_routes.knowledge.knowledge_expander"),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+        ):
             resp = ai_client.post(
                 "/ai/knowledge/add-website",
                 json={"category": "general", "description": "docs"},
@@ -34,7 +40,10 @@ class TestKnowledgeEmptyBody:
         assert "الرابط" in resp.get_json()["message"]
 
     def test_add_document_empty_body_400(self, ai_client):
-        with patch("routes.ai_routes.knowledge.knowledge_expander"):
+        with (
+            patch("routes.ai_routes.knowledge.knowledge_expander"),
+            patch("utils.decorators.is_global_owner_user", return_value=True),
+        ):
             resp = ai_client.post(
                 "/ai/knowledge/add-document",
                 data="",

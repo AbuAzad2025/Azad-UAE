@@ -3,9 +3,11 @@
 أزاد يضيف مصادر معرفة جديدة
 """
 
+import ipaddress
 import json
 import logging
 import os
+import socket
 from datetime import datetime
 from typing import Any
 from urllib.parse import urlparse
@@ -14,6 +16,40 @@ import requests
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
+
+_BLOCKED_HOST_SUFFIXES = (".local", ".internal", ".lan", ".localhost")
+
+
+def is_public_http_url(url: str) -> bool:
+    """Fail-closed SSRF guard: only public http(s) hosts may be fetched."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return False
+        host = (parsed.hostname or "").lower().rstrip(".")
+        if not host or host == "localhost" or host.endswith(_BLOCKED_HOST_SUFFIXES):
+            return False
+        try:
+            infos = socket.getaddrinfo(host, None, family=socket.AF_UNSPEC)
+        except OSError:
+            return False
+        for info in infos:
+            try:
+                ip = ipaddress.ip_address(info[4][0])
+            except ValueError:
+                return False
+            if (
+                ip.is_private
+                or ip.is_loopback
+                or ip.is_link_local
+                or ip.is_multicast
+                or ip.is_reserved
+                or ip.is_unspecified
+            ):
+                return False
+        return True
+    except Exception:
+        return False
 
 
 class KnowledgeExpander:
@@ -63,6 +99,9 @@ class KnowledgeExpander:
 
             if not parsed_url.netloc:
                 return {"success": False, "error": "رابط غير صحيح"}
+
+            if not is_public_http_url(url):
+                return {"success": False, "error": "الرابط غير مسموح: يقبل فقط عناوين http(s) العامة"}
 
             # جلب المحتوى
             content: dict[str, Any] = self._fetch_website_content(url)

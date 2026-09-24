@@ -2,7 +2,6 @@
 
 import logging
 import os
-from datetime import datetime
 from typing import cast
 
 import pandas as pd
@@ -280,7 +279,10 @@ def _process_excel_intelligently(file, warehouse_id, user):
                     elif len(errors) == MAX_AI_EXCEL_ERRORS:
                         errors.append(gettext("… تم إخفاء بقية الأخطاء (الحد الأقصى للعرض)"))
 
-        _train_ai_from_excel(df, products_created, products_updated, user.id)
+        try:
+            _train_ai_from_excel(df, products_created, products_updated, user.id, tid)
+        except Exception:
+            logger.exception("AI training from Excel failed")
 
         error_details = "\n".join(errors) if errors else ""
 
@@ -380,19 +382,25 @@ def _intelligent_column_detector(df):
     return column_mapping if len(column_mapping) >= 3 else None
 
 
-def _train_ai_from_excel(df, created, updated, user_id):
-    """تدريب AI من بيانات Excel"""
-    try:
-        {
-            "source": "excel_upload",
-            "timestamp": datetime.now().isoformat(),
-            "user_id": user_id,
-            "products_created": created,
-            "products_updated": updated,
-            "total_rows": len(df),
-            "columns": list(df.columns),
-            "sample_data": df.head(5).to_dict(),
-        }
+def _train_ai_from_excel(df, created, updated, user_id, tenant_id):
+    """تدريب AI من بيانات Excel — ملخص استيراد مربوط بالمستأجر (flush فقط)."""
+    from ai_knowledge.trainer import trainer
 
-    except Exception as e:
-        print(f"AI training from Excel failed: {e}")
+    total_rows = len(df)
+    question = f"ملخص استيراد المنتجات: إنشاء {created} وتحديث {updated} من {total_rows}"
+    answer = f"تم استيراد {total_rows} سطرا من Excel: {created} منتجا جديدا و{updated} منتجا محدثا."
+    trainer.learn_from_interaction(
+        question,
+        answer,
+        user_id=user_id,
+        success=True,
+        tenant_id=tenant_id,
+    )
+    logger.info(
+        "AI trained from Excel import: created=%s updated=%s rows=%s tenant=%s",
+        created,
+        updated,
+        total_rows,
+        tenant_id,
+    )
+    return {"learned": True, "created": created, "updated": updated, "rows": total_rows}

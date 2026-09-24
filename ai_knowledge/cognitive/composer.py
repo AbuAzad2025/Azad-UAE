@@ -10,14 +10,21 @@ from ai_knowledge.cognitive.contracts import (
     SlotSet,
 )
 
-_SLOT_LABELS = {"customer_name": "اسم العميل", "days": "عدد الأيام"}
+_SLOT_LABELS = {"customer_name": "اسم العميل", "supplier_name": "اسم المورد", "days": "عدد الأيام"}
 
 _CAPABILITIES = (
     "ملخص المبيعات",
     "رصيد عميل",
+    "ديون العملاء",
     "حالة المخزون",
+    "المنتجات الراكدة",
+    "أعلى المنتجات مبيعا",
+    "أنماط المبيعات",
+    "هوامش الربح",
     "ملخص المشتريات",
+    "حالة الموردين",
     "ملخص المصروفات",
+    "ملخص الضرائب",
     "حالة المدفوعات",
     "حالة الشيكات",
     "أرصدة الحسابات",
@@ -54,9 +61,25 @@ def compose_data(intent: CognitiveIntent, trace: ReasoningTrace, provenance: Pro
         CognitiveIntent.GL_BALANCE: "أرصدة الحسابات",
         CognitiveIntent.HR_SUMMARY: "ملخص الموظفين",
         CognitiveIntent.VAULT_BALANCE: "أرصدة الصناديق",
+        CognitiveIntent.PATTERN_ANALYSIS: "أنماط المبيعات",
+        CognitiveIntent.PROFIT_MARGIN: "هوامش الربح",
+        CognitiveIntent.DEAD_STOCK: "المنتجات الراكدة",
+        CognitiveIntent.TOP_PRODUCTS: "أعلى المنتجات مبيعا",
+        CognitiveIntent.DEBT_OVERVIEW: "ديون العملاء",
+        CognitiveIntent.TAX_SUMMARY: "ملخص الضرائب",
+        CognitiveIntent.SUPPLIER_STATUS: "حالة الموردين",
     }
     title = titles.get(intent, intent.value)
     return f"{title}:\n{trace.conclusion}{_provenance_line(provenance)}"
+
+
+def compose_guide(topic: str | None) -> str:
+    from ai_knowledge.cognitive.guide import GUIDE_TOPICS, guide_topics_list
+
+    if topic and topic in GUIDE_TOPICS:
+        entry = GUIDE_TOPICS[topic]
+        return f"{entry['title']}:\n`{entry['command']}`\n{entry['hint']}"
+    return "أدلة الاستخدام المتاحة: " + guide_topics_list() + ". اذكر الميزة (مثال: وين القيود؟)."
 
 
 def compose_need_slots(intent: CognitiveIntent, slots: SlotSet) -> str:

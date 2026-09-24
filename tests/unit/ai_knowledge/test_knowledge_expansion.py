@@ -46,6 +46,31 @@ class TestKnowledgeExpansion:
             result = KnowledgeExpander().add_document("content", "Title", "general")
             assert isinstance(result, dict)
 
+
+class TestSsrfGuard:
+    def test_blocks_private_and_local_hosts(self):
+        from ai_knowledge.expansion.knowledge_expansion import is_public_http_url
+
+        assert is_public_http_url("http://localhost/admin") is False
+        assert is_public_http_url("http://127.0.0.1:8000/") is False
+        assert is_public_http_url("http://10.0.0.5/") is False
+        assert is_public_http_url("http://192.168.1.1/") is False
+        assert is_public_http_url("http://169.254.169.254/") is False
+        assert is_public_http_url("ftp://8.8.8.8/file") is False
+        assert is_public_http_url("not-a-url") is False
+        assert is_public_http_url("") is False
+
+    def test_allows_public_ip_literal(self):
+        from ai_knowledge.expansion.knowledge_expansion import is_public_http_url
+
+        assert is_public_http_url("https://8.8.8.8/") is True
+
+    def test_add_website_rejects_blocked_host(self, tmp_path):
+        with patch("ai_knowledge.get_knowledge_path", return_value=str(tmp_path)):
+            result = KnowledgeExpander().add_website("http://127.0.0.1:8000/secret")
+        assert result["success"] is False
+        assert "غير مسموح" in result["error"]
+
     def test_search_knowledge(self, tmp_path):
         def path_fn(name):
             return str(tmp_path / name)

@@ -14,6 +14,10 @@ _NAME_AFTER_MARKER = re.compile(
     r"(?:العميل|الزبون|عميل|زبون|customer)\s+([^\d،,؛:()]{2,60}?)(?:\s+[؟?]|$)",
     re.IGNORECASE,
 )
+_SUPPLIER_MARKER = re.compile(
+    r"(?:المورد|مورد|supplier|vendor)\s+([^\d،,؛:()]{2,60}?)(?:\s+[؟?]|$)",
+    re.IGNORECASE,
+)
 _COLON_FORM = re.compile(r"^(?:رصيد|balance)\s*[:：=]\s*(.+)$", re.IGNORECASE)
 _DAYS_RE = re.compile(r"(\d+)\s*(?:يوم|days?)", re.IGNORECASE)
 
@@ -42,6 +46,15 @@ def extract_slots(
             carried = (previous_slots.get("customer_name") or "").strip()
             if carried and len(normalized.tokens) <= 4:
                 values["customer_name"] = carried
+                values["carried_from_history"] = "1"
+    if intent == CognitiveIntent.SUPPLIER_STATUS:
+        marker = _SUPPLIER_MARKER.search(normalized.raw)
+        if marker and marker.group(1).strip():
+            values["supplier_name"] = _clean_name(marker.group(1))
+        if not values.get("supplier_name") and previous_slots:
+            carried = (previous_slots.get("supplier_name") or "").strip()
+            if carried and len(normalized.tokens) <= 4:
+                values["supplier_name"] = carried
                 values["carried_from_history"] = "1"
     days = _DAYS_RE.search(normalized.raw)
     if days:

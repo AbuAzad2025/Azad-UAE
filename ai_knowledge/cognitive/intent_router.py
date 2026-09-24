@@ -26,6 +26,7 @@ _PHRASES: dict[CognitiveIntent, tuple[str, ...]] = {
         "هلا والله",
         "يا هلا",
         "هاي هلا",
+        "هلا فيك",
     ),
     CognitiveIntent.HELP: ("كيف استخدم", "شو بتسوي", "what is", "how to"),
     CognitiveIntent.WHO_ARE_YOU: ("who are you", "what is your name", "مين انت", "من انت", "عرف عن نفسك"),
@@ -33,31 +34,159 @@ _PHRASES: dict[CognitiveIntent, tuple[str, ...]] = {
     CognitiveIntent.SALES_SUMMARY: ("ملخص المبيعات", "تقرير المبيعات", "sales summary", "sales report"),
     CognitiveIntent.INVENTORY_STATUS: ("فحص المخزون", "low stock", "stock check"),
     CognitiveIntent.GL_BALANCE: ("ميزان المراجعه", "trial balance"),
+    CognitiveIntent.PATTERN_ANALYSIS: ("انماط المبيعات", "تحليل الانماط", "اتجاه المبيعات", "sales patterns"),
+    CognitiveIntent.PROFIT_MARGIN: ("هوامش الربح", "هامش الربح", "profit margin"),
+    CognitiveIntent.DEAD_STOCK: ("الحركات الراكده", "المنتجات الراكده", "منتجات بدون مبيعات", "dead stock"),
+    CognitiveIntent.TOP_PRODUCTS: ("اعلي المنتجات مبيعا", "الاكثر مبيعا", "الافضل مبيعا", "top products"),
+    CognitiveIntent.DEBT_OVERVIEW: ("ديون العملاء", "ذمم العملاء", "رصيد العملاء", "كشف الديون"),
+    CognitiveIntent.TAX_SUMMARY: ("ضريبه القيمه", "vat report", "tax summary"),
+    CognitiveIntent.SUPPLIER_STATUS: ("كشف الموردين", "حساب المورد", "supplier statement"),
+    CognitiveIntent.PURCHASE_SUMMARY: ("امر الشراء", "فاتوره الشراء"),
 }
+
+_GUIDE_TRIGGERS = frozenset({"وين", "اين", "خطوات", "اختصار", "اختصارات", "طريقه"})
+_GUIDE_FEATURES = frozenset(
+    {
+        "قيد",
+        "قيود",
+        "فاتوره",
+        "فواتير",
+        "تقرير",
+        "تقارير",
+        "مخزون",
+        "عميل",
+        "عملاء",
+        "منتج",
+        "منتجات",
+        "مورد",
+        "موردين",
+        "صلاحيه",
+        "صلاحيات",
+        "اعدادات",
+        "شيك",
+        "شيكات",
+        "راتب",
+        "رواتب",
+        "حساب",
+        "حسابات",
+        "ميزان",
+        "ضريبه",
+        "مبيعات",
+        "مشتريات",
+        "مصروف",
+    }
+)
+
+
+def _guide_compounds() -> tuple[frozenset[str], ...]:
+    return tuple(frozenset({trigger, feature}) for trigger in _GUIDE_TRIGGERS for feature in _GUIDE_FEATURES) + (
+        frozenset({"كيف", "انشي"}),
+        frozenset({"كيف", "اسوي"}),
+        frozenset({"كيف", "اعمل"}),
+    )
+
 
 _KEYWORDS: dict[CognitiveIntent, frozenset[str]] = {
     CognitiveIntent.GREETING: frozenset(
-        {"مرحبا", "هلا", "اهلا", "سلام", "هاي", "هلاو", "هلو", "هاو", "مرحبتين", "مراحب", "اهلين", "hi", "hello", "hey"}
+        {
+            "مرحبا",
+            "هلا",
+            "اهلا",
+            "سلام",
+            "هاي",
+            "هلاو",
+            "هلو",
+            "هاو",
+            "مرحبتين",
+            "مراحب",
+            "اهلين",
+            "كيفك",
+            "شلونك",
+            "اخبار",
+            "hi",
+            "hello",
+            "hey",
+        }
     ),
     CognitiveIntent.HELP: frozenset({"مساعده", "ساعد", "شرح", "دليل", "help", "guide"}),
     CognitiveIntent.WHO_ARE_YOU: frozenset({"اسمك", "وظيفتك", "انت مين"}),
-    CognitiveIntent.SALES_SUMMARY: frozenset({"مبيعات", "فاتوره", "بيع", "sales", "invoice", "ايراد", "ربح"}),
-    CognitiveIntent.CUSTOMER_BALANCE: frozenset({"رصيد", "عميل", "زبون", "customer", "balance", "ديون", "ذمم"}),
-    CognitiveIntent.INVENTORY_STATUS: frozenset({"مخزون", "inventory", "stock", "منتج", "بضاعه"}),
-    CognitiveIntent.PURCHASE_SUMMARY: frozenset({"مشتريات", "شراء", "مورد", "purchase", "supplier"}),
-    CognitiveIntent.EXPENSE_SUMMARY: frozenset({"مصروف", "مصاريف", "expense"}),
-    CognitiveIntent.PAYMENT_STATUS: frozenset({"دفعه", "مدفوعات", "قبض", "payment", "receive"}),
-    CognitiveIntent.CHEQUE_STATUS: frozenset({"شيك", "شك", "cheque", "check"}),
-    CognitiveIntent.GL_BALANCE: frozenset({"قيد", "دفتر", "استاذ", "ميزانيه", "محاسبه", "gl", "ledger", "journal"}),
-    CognitiveIntent.HR_SUMMARY: frozenset({"موظف", "راتب", "hr", "employee", "payroll", "salary"}),
-    CognitiveIntent.VAULT_BALANCE: frozenset({"خزنه", "صندوق", "vault", "كاش", "cash"}),
+    CognitiveIntent.SALES_SUMMARY: frozenset(
+        {
+            "مبيعات",
+            "فاتوره",
+            "فواتير",
+            "بيع",
+            "مبيع",
+            "sales",
+            "invoice",
+            "invoices",
+            "ايراد",
+            "ايرادات",
+            "ربح",
+            "ارباح",
+        }
+    ),
+    CognitiveIntent.CUSTOMER_BALANCE: frozenset({"رصيد", "عميل", "زبون", "customer", "balance", "ديون", "ذمم", "كشف"}),
+    CognitiveIntent.INVENTORY_STATUS: frozenset(
+        {"مخزون", "inventory", "stock", "منتج", "منتجات", "بضاعه", "بضائع", "جرد", "اصناف"}
+    ),
+    CognitiveIntent.PURCHASE_SUMMARY: frozenset({"مشتريات", "شراء", "توريد", "اوامر", "purchase"}),
+    CognitiveIntent.EXPENSE_SUMMARY: frozenset({"مصروف", "مصاريف", "تكاليف", "تكلفه", "نثريات", "expense"}),
+    CognitiveIntent.PAYMENT_STATUS: frozenset(
+        {"دفعه", "دفعات", "مدفوعات", "قبض", "تحصيل", "سداد", "payment", "payments", "receive"}
+    ),
+    CognitiveIntent.CHEQUE_STATUS: frozenset({"شيك", "شيكات", "شك", "cheque", "cheques", "check"}),
+    CognitiveIntent.GL_BALANCE: frozenset(
+        {"قيد", "قيود", "دفتر", "دفاتر", "استاذ", "ميزانيه", "ميزان", "محاسبه", "حسابات", "gl", "ledger", "journal"}
+    ),
+    CognitiveIntent.HR_SUMMARY: frozenset(
+        {"موظف", "موظفين", "راتب", "رواتب", "حضور", "اجازات", "hr", "employee", "payroll", "salary"}
+    ),
+    CognitiveIntent.VAULT_BALANCE: frozenset({"خزنه", "خزن", "صندوق", "صناديق", "سيوله", "vault", "cash"}),
+    CognitiveIntent.PATTERN_ANALYSIS: frozenset(
+        {"انماط", "نمط", "اتجاه", "اتجاهات", "تحليل", "مبيعات", "patterns", "trend", "trends", "analysis"}
+    ),
+    CognitiveIntent.PROFIT_MARGIN: frozenset({"هوامش", "هامش", "الربحيه", "ربحيه", "margin", "margins"}),
+    CognitiveIntent.DEAD_STOCK: frozenset(
+        {"راكد", "راكده", "ركود", "بطيء", "بطييه", "حركات", "dead", "slow", "stagnant"}
+    ),
+    CognitiveIntent.TOP_PRODUCTS: frozenset({"اعلي", "اكثر", "افضل", "مبيعا", "منتجات", "top", "best", "bestsellers"}),
+    CognitiveIntent.DEBT_OVERVIEW: frozenset({"ديون", "ذمم", "مديونيه", "debt", "debts", "receivable", "receivables"}),
+    CognitiveIntent.TAX_SUMMARY: frozenset({"ضريبه", "ضرايب", "القيمه", "vat", "tax", "taxes"}),
+    CognitiveIntent.SUPPLIER_STATUS: frozenset({"مورد", "موردين", "supplier", "suppliers", "vendor", "vendors"}),
+    CognitiveIntent.SYSTEM_GUIDE: _GUIDE_TRIGGERS,
 }
 
 _COMPOUNDS: dict[CognitiveIntent, tuple[frozenset[str], ...]] = {
-    CognitiveIntent.CUSTOMER_BALANCE: (frozenset({"رصيد", "عميل"}), frozenset({"رصيد", "زبون"})),
+    CognitiveIntent.CUSTOMER_BALANCE: (
+        frozenset({"رصيد", "عميل"}),
+        frozenset({"رصيد", "زبون"}),
+        frozenset({"كشف", "عميل"}),
+        frozenset({"حساب", "عميل"}),
+    ),
     CognitiveIntent.SALES_SUMMARY: (frozenset({"مبيعات", "ملخص"}), frozenset({"مبيعات", "تقرير"})),
+    CognitiveIntent.PURCHASE_SUMMARY: (frozenset({"فاتوره", "شراء"}),),
     CognitiveIntent.CHEQUE_STATUS: (frozenset({"شيك", "رصيد"}),),
     CognitiveIntent.GL_BALANCE: (frozenset({"قيد", "محاسبه"}),),
+    CognitiveIntent.PATTERN_ANALYSIS: (frozenset({"انماط", "مبيعات"}), frozenset({"اتجاه", "مبيعات"})),
+    CognitiveIntent.PROFIT_MARGIN: (frozenset({"هوامش", "ربح"}), frozenset({"هامش", "ربح"})),
+    CognitiveIntent.DEAD_STOCK: (
+        frozenset({"منتج", "راكد"}),
+        frozenset({"مخزون", "راكد"}),
+        frozenset({"بدون", "مبيعات"}),
+    ),
+    CognitiveIntent.TOP_PRODUCTS: (
+        frozenset({"اكثر", "مبيعا"}),
+        frozenset({"اعلي", "مبيعا"}),
+        frozenset({"افضل", "مبيعا"}),
+    ),
+    CognitiveIntent.DEBT_OVERVIEW: (
+        frozenset({"ديون", "عملاء"}),
+        frozenset({"ذمم", "عملاء"}),
+        frozenset({"رصيد", "عملاء"}),
+    ),
+    CognitiveIntent.SUPPLIER_STATUS: (frozenset({"حساب", "مورد"}), frozenset({"شراء", "مورد"})),
+    CognitiveIntent.SYSTEM_GUIDE: _guide_compounds(),
 }
 
 
