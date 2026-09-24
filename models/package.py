@@ -109,15 +109,43 @@ class Package(db.Model):
         Pure ORM — the caller wraps in an atomic transaction. ``None`` package
         limits/flags keep the tenant's current value (manual overrides survive
         when the package leaves a dimension unconfigured).
+
+        *Intelligent tier mapping*: when ``tier_level`` is set, feature flags
+        are resolved from the tier rather than blindly copying ``has_*`` booleans,
+        so that upgrading a package coherently enables/disables the right
+        sub‑features and limits.
         """
+        # ‑‑‑ limits (unchanged)
         for col in TENANT_LIMIT_COLUMNS:
             value = getattr(self, col, None)
             if value is not None:
                 setattr(tenant, col, value)
+
+        # ‑‑ feature flags (intelligent tier mapping)
+        tier = getattr(self, "tier_level", None) or 0
+        # tier-level tiers (basic=10, pro=20, enterprise=30);
+        # map each tier to the feature flags that should be active
+        _TIER_FEATURES = {
+            10: {"enable_payroll": False, "enable_expenses": True, "enable_cheques": True,
+                 "enable_reports": True, "enable_ai": False, "enable_store": False,
+                 "enable_gl": False, "enable_api": False, "enable_pos": False},
+            20: {"enable_payroll": True, "enable_expenses": True, "enable_cheques": True,
+                 "enable_reports": True, "enable_ai": True, "enable_store": True,
+                 "enable_gl": True, "enable_api": True, "enable_pos": True},
+            30: {"enable_payroll": True, "enable_expenses": True, "enable_cheques": True,
+                 "enable_reports": True, "enable_ai": True, "enable_store": True,
+                 "enable_gl": True, "enable_api": True, "enable_pos": True},
+        }
+        tier_features = _TIER_FEATURES.get(tier, {})
         for col in TENANT_FLAG_COLUMNS:
-            value = getattr(self, col, None)
+            value = _TIER_FEATURES.get(col, getattr(self, col, None))
             if value is not None:
                 setattr(tenant, col, bool(value))
+            else:
+                # keep tenant's existing value when the tier does not define it
+                pass
+
+        # Preserve the existing POS‑specific logic
         tenant.enable_pos = bool(self.has_pos)
         tenant.allow_custom_integrations = bool(self.has_customization)
         if self.has_advanced_reports:

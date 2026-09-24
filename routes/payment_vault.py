@@ -37,9 +37,12 @@ from services.vault_query_service import VaultQueryService
 from utils.api_response import error_response, paginated_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
+from utils.feature_guards import install_feature_gate
 from utils.tenanting import tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
+
+install_feature_gate(payment_vault_bp, "allow_custom_integrations")
 logger = logging.getLogger(__name__)
 
 _DEV_VAULT_ORIGINS = frozenset(

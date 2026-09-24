@@ -12,10 +12,13 @@ from flask import Blueprint, current_app, request
 
 from extensions import limiter
 from utils.api_response import error_response, success_response
+from utils.feature_guards import install_feature_gate
 
 logger = logging.getLogger(__name__)
 
 billing_webhook_bp = Blueprint("billing_webhook", __name__, url_prefix="/billing-webhook")
+
+install_feature_gate(billing_webhook_bp, "allow_custom_integrations")
 
 _WEBHOOK_MAX_AGE = 300
 

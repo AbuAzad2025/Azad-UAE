@@ -26,8 +26,11 @@ from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.feature_guards import install_feature_gate
 
 ledger_bp = Blueprint("ledger", __name__, url_prefix="/ledger")
+
+install_feature_gate(ledger_bp, "gl")
 
 
 def _effective_branch_id():

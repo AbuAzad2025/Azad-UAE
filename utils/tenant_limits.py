@@ -11,6 +11,7 @@ import logging
 from datetime import UTC, datetime
 
 from flask_login import current_user
+from sqlalchemy import func
 
 from extensions import db
 from utils.tenanting import get_active_tenant_id
@@ -224,6 +225,12 @@ def get_tenant_usage_summary(tenant) -> list[dict]:
             lambda: _count_model(Supplier, tid, lambda q: q.filter_by(is_active=True)),
         ),
         (
+            "storage_mb",
+            "التخزين (MB)",
+            _limit("max_storage_mb"),
+            lambda: _get_tenant_storage_mb(tid),
+        ),
+        (
             "sales_per_month",
             "مبيعات الشهر",
             _limit("max_sales_per_month"),
@@ -252,6 +259,86 @@ def get_tenant_usage_summary(tenant) -> list[dict]:
 def get_tenant_usage_warnings(tenant) -> list[dict]:
     """Usage rows at or above the 80% warning threshold (for the banner)."""
     return [row for row in get_tenant_usage_summary(tenant) if row["warn"]]
+
+
+
+def _get_tenant_storage_mb(tid: int) -> int:
+    """Calculate total storage usage in MB for a tenant across all upload paths."""
+    try:
+        from models import (
+            Product,
+            ProductImage,
+            Attachment,
+            Customer,
+            Supplier,
+            Sale,
+            Purchase,
+            Expense,
+            Receipt,
+            Payment,
+            PaymentVault,
+            CardVault,
+            Warehouse,
+            StockMovement,
+        )
+
+        total_bytes = 0
+
+        # Product images
+        try:
+            total_bytes += db.session.query(
+                func.coalesce(func.sum(ProductImage.file_size), 0)
+            ).join(Product, ProductImage.product_id == Product.id).filter(
+                Product.tenant_id == tid
+            ).scalar() or 0
+        except Exception:
+            pass
+
+        # Attachments (generic)
+        try:
+            total_bytes += db.session.query(
+                func.coalesce(func.sum(Attachment.file_size), 0)
+            ).filter(Attachment.tenant_id == tid).scalar() or 0
+        except Exception:
+            pass
+
+        # If no specific models, fall back to filesystem check
+        if total_bytes == 0:
+            import os
+            upload_base = f"uploads/tenants/{tid}"
+            if os.path.exists(upload_base):
+                for root, dirs, files in os.walk(upload_base):
+                    for f in files:
+                        try:
+                            total_bytes += os.path.getsize(os.path.join(root, f))
+                        except OSError:
+                            pass
+
+        return total_bytes // (1024 * 1024)  # Convert to MB
+    except Exception:
+        return 0
+
+
+def check_storage_limit() -> None:
+    """Check if tenant has exceeded its storage quota (max_storage_mb)."""
+    from models import (
+        Product,
+        ProductImage,
+        Attachment,
+    )
+
+    tenant = _active_tenant()
+    if not tenant:
+        return  # no tenant context -- skip (owner/platform mode)
+
+    limit_val = getattr(tenant, 'max_storage_mb', None)
+    if limit_val is None or limit_val <= 0:
+        return  # no limit configured or unlimited
+
+    current_mb = _get_tenant_storage_mb(tenant.id)
+
+    if current_mb >= limit_val:
+        raise TenantLimitError('storage', limit_val, current_mb)
 
 
 def enforce_feature(feature_flag: str, feature_name_ar: str) -> None:

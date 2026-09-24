@@ -20,10 +20,13 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.decorators import branch_scope_id, permission_required
+from utils.feature_guards import install_feature_gate
 from utils.logger import log_event
 from utils.tenanting import get_active_tenant_id
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+
+install_feature_gate(api_bp, "api")
 
 _DEV_TRUSTED_ORIGINS = frozenset(
     {
