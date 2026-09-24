@@ -141,9 +141,7 @@ class Package(db.Model):
             value = _TIER_FEATURES.get(col, getattr(self, col, None))
             if value is not None:
                 setattr(tenant, col, bool(value))
-            else:
-                # keep tenant's existing value when the tier does not define it
-                pass
+            # else: keep tenant's existing value when the tier does not define it
 
         # Preserve the existing POS‑specific logic
         tenant.enable_pos = bool(self.has_pos)
