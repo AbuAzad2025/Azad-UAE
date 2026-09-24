@@ -157,3 +157,17 @@
 
 10.6 `tests/unit/test_grimoire_compliance.py` runs the AST checker in CI. Zero errors are required. Warnings are tracked and must trend downward.
     يُشغّل `tests/unit/test_grimoire_compliance.py` الفاحص AST في CI. يُتطلّب صفر أخطاء. يتم تتبع التحذيرات ويجب أن تتجه نحو الانخفاض.
+
+## 11. Platform/Tenant Boundary | حد المنصة والمستأجر
+
+11.1 The platform owner workspace (`routes/owner/`, `templates/owner/`) MUST handle only platform-level concerns: tenant lifecycle (activation/deactivation), subscription/license control, system health, global configurations, AI API keys, and security monitoring.
+    يجب أن يتعامل فضاء عمل مالك المنصة (`routes/owner/` و `templates/owner/`) فقط مع الشؤون على مستوى المنصة: دورة حياة المستأجرين، والتحكم بالاشتراكات، وصحة النظام، والإعدادات العامة، ومفاتيح AI، والمراقبة الأمنية.
+
+11.2 Tenant financial operations, sales analytics, bookkeeping/ledger data, and customer records (including stored payment instruments) MUST NEVER be queryable or renderable from the owner panel — neither cross-tenant aggregates nor single-tenant views. They belong exclusively to the tenant workspace under strict `tenant_id` scoping and tenant RBAC.
+    يُمنع منعاً باتاً الاستعلام عن العمليات المالية للمستأجرين أو تحليلات المبيعات أو بيانات الدفاتر أو سجلات العملاء (بما فيها أدوات الدفع المخزنة) أو عرضها من لوحة المالك — لا مجمّعة عبر المستأجرين ولا لعرض مستأجر واحد. مكانها حصرياً فضاء عمل المستأجر تحت نطاق `tenant_id` صارم وصلاحيات المستأجر.
+
+11.3 Any owner maintenance surface that touches tenant business rows (e.g. archived snapshots) MUST require an explicit validated `?tenant_id=` and filter strictly by it; unscoped listings MUST 404.
+    أي سطح صيانة للمالك يمس صفوف أعمال المستأجرين (مثل الأرشيف) يجب أن يتطلب `?tenant_id=` صريحاً مُتحققاً منه وأن يُرشّح به حصراً؛ والقوائم غير المحددة النطاق يجب أن تُرجع 404.
+
+11.4 `tests/unit/routes/test_owner_boundary.py` pins this invariant in CI: purged endpoints 404, archived requires a valid tenant, and cross-tenant aggregation helpers stay deleted.
+    يُثبّت `tests/unit/routes/test_owner_boundary.py` هذا الثابت في CI: النقاط المحذوفة تُرجع 404، والأرشيف يتطلب مستأجراً صالحاً، وتبقى مساعدات التجميع عبر المستأجرين محذوفة.

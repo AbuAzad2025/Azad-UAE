@@ -169,58 +169,6 @@ class OwnerOpsService:
             return []
         return User.query.filter(User.id.in_(user_ids)).all()
 
-    # ── cards vault ──────────────────────────────────────────────────────────
-
-    @staticmethod
-    def card_vault_context(page, customer_id, tid):
-        """Paginated vault listing plus aggregate stats, scoped when tid set."""
-        from sqlalchemy import func
-
-        from extensions import db
-        from models import CardVault
-
-        query = CardVault.query.filter_by(is_active=True)
-        if customer_id:
-            query = query.filter_by(customer_id=customer_id)
-        if tid is not None:
-            query = query.filter(CardVault.tenant_id == tid)
-
-        pagination = query.order_by(CardVault.created_at.desc()).paginate(page=page, per_page=50, error_out=False)
-
-        total_cards = CardVault.query.filter_by(is_active=True)
-        if tid is not None:
-            total_cards = total_cards.filter(CardVault.tenant_id == tid)
-        total_cards = total_cards.count()
-
-        total_usage = db.session.query(func.sum(CardVault.usage_count))
-        if tid is not None:
-            total_usage = total_usage.filter(CardVault.tenant_id == tid)
-        total_usage = total_usage.scalar() or 0
-
-        stats = {
-            "total_cards": total_cards,
-            "total_usage": total_usage,
-            "visa_count": (
-                CardVault.query.filter_by(card_type="visa", is_active=True).filter(CardVault.tenant_id == tid).count()
-                if tid is not None
-                else CardVault.query.filter_by(card_type="visa", is_active=True).count()
-            ),
-            "mastercard_count": (
-                CardVault.query.filter_by(card_type="mastercard", is_active=True)
-                .filter(CardVault.tenant_id == tid)
-                .count()
-                if tid is not None
-                else CardVault.query.filter_by(card_type="mastercard", is_active=True).count()
-            ),
-        }
-        return {"pagination": pagination, "stats": stats}
-
-    @staticmethod
-    def get_card_or_404(record_id):
-        from models import CardVault
-
-        return CardVault.query.get_or_404(record_id)
-
     # ── settings ─────────────────────────────────────────────────────────────
 
     @staticmethod

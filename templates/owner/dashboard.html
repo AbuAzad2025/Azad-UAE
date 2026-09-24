@@ -160,9 +160,6 @@
         <a href="{{ url_for('owner.list_backups') }}" class="btn btn-outline-info btn-block mb-2">
           <i class="fas fa-download mr-1" aria-hidden="true"></i> {{ t('Backups') }}
         </a>
-        <a href="{{ url_for('owner.cards_vault') }}" class="btn btn-outline-danger btn-block mb-2">
-          <i class="fas fa-credit-card mr-1" aria-hidden="true"></i> {{ t('Card_Vault') }}
-        </a>
         {% if current_user.is_owner %}<a href="{{ url_for('payment_vault.index') }}" class="btn btn-outline-warning btn-block mb-2">
           <i class="fas fa-vault mr-1" aria-hidden="true"></i> {{ t('Secret_Vault') }}
         </a>{% endif %}
@@ -265,7 +262,7 @@
 </div>
 
 <div class="row mt-3">
-  <div class="col-lg-3 col-md-6">
+  <div class="col-lg-4 col-md-6">
     <div class="card shadow-sm border-0 hover-lift">
       <div class="card-header bg-success text-white">
         <h5 class="mb-0"><i class="fas fa-heartbeat mr-2" aria-hidden="true"></i> {{ t('System_Monitoring') }}</h5>
@@ -286,23 +283,7 @@
     </div>
   </div>
 
-  <div class="col-lg-3 col-md-6">
-    <div class="card shadow-sm border-0 hover-lift">
-      <div class="card-header bg-danger text-white">
-        <h5 class="mb-0"><i class="fas fa-chart-bar mr-2" aria-hidden="true"></i> {{ t('Advanced_Analytics') }}</h5>
-      </div>
-      <div class="card-body">
-        <p class="text-muted small mb-3"><i class="fas fa-info-circle mr-1" aria-hidden="true"></i> {{ t('Desc_Deep_Insights') }}</p>
-        <a href="{{ url_for('owner.financial_dashboard_advanced') }}" class="btn btn-outline-success btn-block mb-2"><i class="fas fa-chart-pie mr-1" aria-hidden="true"></i> {{ t('Financial_Dashboard') }}</a>
-        <a href="{{ url_for('owner.sales_insights') }}" class="btn btn-outline-primary btn-block mb-2"><i class="fas fa-shopping-cart mr-1" aria-hidden="true"></i> {{ t('Sales_Analysis') }}</a>
-        <a href="{{ url_for('owner.customer_insights') }}" class="btn btn-outline-info btn-block mb-2"><i class="fas fa-users mr-1" aria-hidden="true"></i> {{ t('Customer_Analysis') }}</a>
-        <a href="{{ url_for('owner.product_performance') }}" class="btn btn-outline-warning btn-block mb-2"><i class="fas fa-box mr-1" aria-hidden="true"></i> {{ t('Product_Performance') }}</a>
-        <a href="{{ url_for('owner.forecasting') }}" class="btn btn-outline-danger btn-block"><i class="fas fa-chart-line mr-1" aria-hidden="true"></i> {{ t('Forecasting') }}</a>
-      </div>
-    </div>
-  </div>
-
-  <div class="col-lg-3 col-md-6">
+  <div class="col-lg-4 col-md-6">
     <div class="card shadow-sm border-0 hover-lift">
       <div class="card-header bg-warning text-dark">
         <h5 class="mb-0"><i class="fas fa-cog mr-2" aria-hidden="true"></i> {{ t('Advanced_Settings') }}</h5>
@@ -319,7 +300,7 @@
     </div>
   </div>
 
-  <div class="col-lg-3 col-md-6">
+  <div class="col-lg-4 col-md-6">
     <div class="card shadow-sm border-0 hover-lift">
       <div class="card-header bg-info text-white">
         <h5 class="mb-0"><i class="fas fa-tools mr-2" aria-hidden="true"></i> {{ t('System_Tools') }}</h5>

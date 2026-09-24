@@ -23,6 +23,21 @@
 
     <section class="content">
         <div class="container-fluid">
+            <div class="card shadow-sm border-0 mb-3">
+              <div class="card-body">
+                <form method="GET" action="{{ url_for('owner.archived') }}" class="form-inline">
+                  <label class="mr-2" for="tenant_id">{{ t('Tenant') }}</label>
+                  <select name="tenant_id" id="tenant_id" class="form-control mr-2" onchange="this.form.submit()">
+                    <option value="">— {{ t('Choose') }} —</option>
+                    {% for row in tenants|default([]) %}
+                    <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
+                    {% endfor %}
+                  </select>
+                  <input type="text" name="table" class="form-control mr-2" placeholder="{{ t('Table') }}" value="{{ request.args.get('table', '') }}">
+                  <button type="submit" class="btn btn-primary">{{ t('Show') }}</button>
+                </form>
+              </div>
+            </div>
             <div class="row">
                 <div class="col-12">
                     <div class="card">

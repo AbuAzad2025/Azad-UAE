@@ -225,59 +225,20 @@ class TestApiKeys:
 
 
 class TestDashboards:
-    def _check(self, owner_client, url, service, method, ret):
-        with (
-            patch(f"{service}.{method}", return_value=ret),
-            patch("routes.owner.monitoring.get_active_tenant_id", return_value=1),
-            patch("routes.owner.monitoring._owner_branch_scope", return_value=None),
-            patch("routes.owner.monitoring.render_template", return_value="ok"),
-        ):
-            assert owner_client.get(url).status_code == 200
-
-    def test_financial_dashboard(self, owner_client):
-        self._check(
-            owner_client,
+    # Boundary: tenant-business analytics removed from the owner panel.
+    # Each URL must 404; tenant equivalents live in reports/ledger/main.
+    @pytest.mark.parametrize(
+        "url",
+        [
             "/owner/financial-dashboard-advanced",
-            "services.financial_service.FinancialService",
-            "get_financial_dashboard_advanced_context",
-            {"months_data": [], "kpis": {}},
-        )
-
-    def test_sales_insights(self, owner_client):
-        self._check(
-            owner_client,
             "/owner/sales-insights",
-            "services.analytics_service.AnalyticsService",
-            "get_sales_insights",
-            {},
-        )
-
-    def test_customer_insights(self, owner_client):
-        self._check(
-            owner_client,
             "/owner/customer-insights",
-            "services.analytics_service.AnalyticsService",
-            "get_customer_insights",
-            [],
-        )
-
-    def test_product_performance(self, owner_client):
-        self._check(
-            owner_client,
             "/owner/product-performance",
-            "services.analytics_service.AnalyticsService",
-            "get_product_performance",
-            [],
-        )
-
-    def test_forecasting(self, owner_client):
-        self._check(
-            owner_client,
             "/owner/forecasting",
-            "services.analytics_service.AnalyticsService",
-            "get_forecasting_data",
-            ([], []),
-        )
+        ],
+    )
+    def test_tenant_analytics_removed_from_owner_panel(self, owner_client, url):
+        assert owner_client.get(url).status_code == 404
 
 
 class TestErrorLogs:

@@ -200,53 +200,6 @@ class TestApiKeysAndUsers:
         assert OwnerOpsService.get_users_by_ids([]) == []
 
 
-# ── card vault ───────────────────────────────────────────────────────────────
-
-
-class TestCardVault:
-    def _card(self, db_session, tenant_id, customer_id, card_type="visa", active=True, usage=3):
-        from models import CardVault
-
-        card = CardVault(
-            tenant_id=tenant_id,
-            customer_id=customer_id,
-            card_hash="h" + _uid() * 4,
-            card_number_encrypted=b"x",
-            cardholder_name_encrypted=b"y",
-            card_type=card_type,
-            last_four="1234",
-            is_active=active,
-            usage_count=usage,
-        )
-        db_session.add(card)
-        db_session.flush()
-        return card
-
-    def test_context_scopes_and_counts(self, db_session, sample_tenant, sample_customer):
-        card = self._card(db_session, sample_tenant.id, sample_customer.id, usage=7)
-
-        ctx = OwnerOpsService.card_vault_context(1, None, sample_tenant.id)
-        assert card.id in [c.id for c in ctx["pagination"].items]
-        assert ctx["stats"]["total_cards"] >= 1
-        assert ctx["stats"]["total_usage"] >= 7
-        assert ctx["stats"]["visa_count"] >= 1
-        assert ctx["stats"]["mastercard_count"] >= 0
-
-        scoped = OwnerOpsService.card_vault_context(1, sample_customer.id, sample_tenant.id)
-        assert all(c.customer_id == sample_customer.id for c in scoped["pagination"].items)
-
-    def test_inactive_cards_excluded(self, db_session, sample_tenant, sample_customer):
-        self._card(db_session, sample_tenant.id, sample_customer.id, active=False)
-        ctx = OwnerOpsService.card_vault_context(1, sample_customer.id, sample_tenant.id)
-        assert all(c.is_active for c in ctx["pagination"].items)
-
-    def test_get_card_or_404(self, db_session, sample_tenant, sample_customer):
-        card = self._card(db_session, sample_tenant.id, sample_customer.id)
-        assert OwnerOpsService.get_card_or_404(card.id).id == card.id
-        with pytest.raises(NotFound):
-            OwnerOpsService.get_card_or_404(999999999)
-
-
 # ── data cleanup / maintenance audit logs ────────────────────────────────────
 
 
@@ -507,9 +460,3 @@ class TestTenantDirectoryAndStoreOps:
         assert isinstance(users, list)
         stats = OwnerOpsService.login_history_stats(None)
         assert set(stats) == {"total_logins", "failed_logins", "today_logins"}
-
-    def test_card_vault_context_without_tenant(self, db_session):
-        ctx = OwnerOpsService.card_vault_context(1, None, None)
-        assert set(ctx) == {"pagination", "stats"}
-        assert ctx["stats"]["total_cards"] >= 0
-        assert isinstance(ctx["stats"]["total_usage"], (int, float))

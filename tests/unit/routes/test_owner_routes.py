@@ -589,13 +589,6 @@ def _owner_route_patches(mock_db=None, **overrides):
             ),
         ),
         (
-            "services.financial_service.FinancialService.financial_overview",
-            patch(
-                "services.financial_service.FinancialService.financial_overview",
-                return_value="ok",
-            ),
-        ),
-        (
             "services.financial_service.FinancialService.get_financial_dashboard_advanced_context",
             patch(
                 "services.financial_service.FinancialService.get_financial_dashboard_advanced_context",
@@ -907,28 +900,6 @@ def _owner_route_patches(mock_db=None, **overrides):
             ),
         ),
         (
-            "services.owner_ops_service.OwnerOpsService.card_vault_context",
-            patch(
-                "services.owner_ops_service.OwnerOpsService.card_vault_context",
-                return_value={
-                    "pagination": MagicMock(items=[]),
-                    "stats": {
-                        "total_cards": 0,
-                        "total_usage": 0,
-                        "visa_count": 0,
-                        "mastercard_count": 0,
-                    },
-                },
-            ),
-        ),
-        (
-            "services.owner_ops_service.OwnerOpsService.get_card_or_404",
-            patch(
-                "services.owner_ops_service.OwnerOpsService.get_card_or_404",
-                return_value=MagicMock(),
-            ),
-        ),
-        (
             "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
             patch(
                 "services.owner_ops_service.OwnerOpsService.data_cleanup_stats",
@@ -1067,15 +1038,12 @@ OWNER_GET_ROUTES = [
     "/owner/dashboard",
     "/owner/system-stats",
     "/owner/audit-logs",
-    "/owner/archived",
     "/owner/users-list",
     "/owner/users/create",
     "/owner/users/1/edit",
     "/owner/users/1/profile",
     "/owner/roles-permissions",
-    "/owner/financial-overview",
     "/owner/config",
-    "/owner/cards-vault",
     "/owner/database-tools",
     "/owner/integrations",
     "/owner/backups/list",
@@ -1097,7 +1065,6 @@ OWNER_GET_ROUTES = [
     "/owner/security-alerts",
     "/owner/ip-whitelist",
     "/owner/api-keys",
-    "/owner/financial-dashboard-advanced",
     "/owner/tax-settings",
     "/owner/currency-settings",
     "/owner/exchange-rates",
@@ -1109,10 +1076,6 @@ OWNER_GET_ROUTES = [
     "/owner/verify-backups",
     "/owner/data-cleanup",
     "/owner/import-export-tools",
-    "/owner/sales-insights",
-    "/owner/customer-insights",
-    "/owner/product-performance",
-    "/owner/forecasting",
     "/owner/tenants",
     "/owner/tenants/create",
     "/owner/error-audit-logs",
@@ -1374,8 +1337,9 @@ class TestOwnerPostRoutes:
         assert resp.status_code == 200
 
     def test_cards_vault_view(self, owner_client):
+        # Boundary: tenant card vault removed from the owner panel (P0 leak).
         resp = owner_client.get("/owner/cards-vault/1/view")
-        assert resp.status_code == 200
+        assert resp.status_code == 404
 
     def test_owner_root_redirects(self, owner_client):
         resp = owner_client.get("/owner/", follow_redirects=False)
@@ -1479,8 +1443,9 @@ class TestOwnerExtendedCoverage:
             assert resp.status_code in (302, 303, 200)
 
     def test_cards_vault_with_customer_filter(self, owner_client):
+        # Boundary: tenant card vault removed from the owner panel (P0 leak).
         resp = owner_client.get("/owner/cards-vault?customer=5")
-        assert resp.status_code == 200
+        assert resp.status_code == 404
 
     def test_login_history_with_filters(self, owner_client):
         resp = owner_client.get("/owner/login-history?user_id=1&success=true")
@@ -1491,8 +1456,9 @@ class TestOwnerExtendedCoverage:
         assert resp.status_code == 200
 
     def test_financial_overview_platform_param(self, owner_client):
+        # Boundary: cross-tenant financial aggregation removed from owner panel.
         resp = owner_client.get("/owner/financial-overview?_platform=1")
-        assert resp.status_code == 200
+        assert resp.status_code == 404
 
     def test_backup_now_failure_json(self, owner_client):
         with patch("services.backup_service.BackupService.create_backup", return_value=None):

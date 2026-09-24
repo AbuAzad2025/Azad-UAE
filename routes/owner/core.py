@@ -5,10 +5,10 @@ import logging
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
-from services.owner_ops_service import OwnerOpsService
 from utils.decorators import two_factor_required
 
 from .common import (
+    abort,
     company_admin_required,
     current_app,
     current_user,
@@ -25,7 +25,6 @@ from .common import (
 from .shared import (
     _audit_owner_db_action,
     _mask_db_uri,
-    _owner_branch_scope,
 )
 
 logger = logging.getLogger(__name__)
@@ -192,35 +191,39 @@ def audit_logs():
 @owner_bp.route("/archived")
 @owner_required
 def archived():
+    """Archived business snapshots — strictly one tenant at a time.
+
+    Platform boundary: the owner must pick an explicit active tenant;
+    without ?tenant_id= (or with an unknown/inactive one) this 404s so
+    archived sales/purchases/payments of all tenants are never listed
+    together in the platform workspace.
+    """
+    from models.archive import ArchivedRecord
     from services.archive_service import ArchiveService
+    from services.owner_ops_service import OwnerOpsService
+
+    tid = request.args.get("tenant_id", type=int)
+    tenant = OwnerOpsService.get_tenant(int(tid)) if tid else None
+    if tenant is None or not getattr(tenant, "is_active", False):
+        abort(404)
+    tenants = OwnerOpsService.active_ai_tenants()
 
     page = request.args.get("page", 1, type=int)
     table_name = request.args.get("table", "", type=str)
 
-    pagination = ArchiveService.get_archived_records_query(table_name=table_name or None).paginate(
-        page=page, per_page=50, error_out=False
+    pagination = (
+        ArchiveService.get_archived_records_query(table_name=table_name or None)
+        .filter(ArchivedRecord.tenant_id == tenant.id)
+        .paginate(page=page, per_page=50, error_out=False)
     )
 
-    return render_template("owner/archived.html", records=pagination.items, pagination=pagination)
-
-
-@owner_bp.route("/financial-overview")
-@owner_required
-def financial_overview():
-    from services.financial_service import FinancialService
-    from utils.auth_helpers import is_global_owner_user
-    from utils.tenanting import get_active_tenant_id
-
-    period = request.args.get("period", "month", type=str)
-    scoped_branch_id = _owner_branch_scope()
-    # Platform owner: check _platform param or no active tenant
-    force_platform = request.args.get("_platform", type=int) == 1
-    tid = (
-        None
-        if (is_global_owner_user(current_user) and (force_platform or get_active_tenant_id(current_user) is None))
-        else get_active_tenant_id(current_user)
+    return render_template(
+        "owner/archived.html",
+        records=pagination.items,
+        pagination=pagination,
+        tenant=tenant,
+        tenants=tenants,
     )
-    return FinancialService.financial_overview(period, tid, scoped_branch_id)
 
 
 @owner_bp.route("/config")
@@ -238,53 +241,3 @@ def config():
     }
 
     return render_template("owner/config.html", config=config_data)
-
-
-@owner_bp.route("/cards-vault")
-@owner_required
-def cards_vault():
-    page = request.args.get("page", 1, type=int)
-    customer_id = request.args.get("customer", type=int)
-
-    tid = get_active_tenant_id(current_user)
-    vault = OwnerOpsService.card_vault_context(page, customer_id, tid)
-    pagination = vault["pagination"]
-    stats = vault["stats"]
-
-    _audit_owner_db_action("view_card_vault_list", {"total_cards": stats["total_cards"]})
-
-    return render_template(
-        "owner/cards_vault.html",
-        cards=pagination.items,
-        pagination=pagination,
-        stats=stats,
-    )
-
-
-@owner_bp.route("/cards-vault/<int:id>/view")
-@owner_required
-def view_card(**kwargs):
-    record_id = kwargs.pop("id")
-    card = OwnerOpsService.get_card_or_404(record_id)
-
-    from flask import current_app
-
-    from services.card_encryption_service import CardEncryptionService
-
-    cipher = CardEncryptionService(encryption_key=current_app.config.get("CARD_ENCRYPTION_KEY") or "")
-    try:
-        card_data = card.to_dict(cipher=cipher)
-    except Exception:
-        card_data = card.to_dict()
-
-    _audit_owner_db_action(
-        "view_card_vault_detail",
-        {
-            "card_id": record_id,
-            "customer_id": card.customer_id,
-            "last_four": card.last_four,
-            "include_sensitive": True,
-        },
-    )
-
-    return render_template("owner/view_card.html", card=card, card_data=card_data)

@@ -1,4 +1,4 @@
-"""Monitoring, analytics, and error audit routes for the owner blueprint."""
+"""Monitoring, API keys, and error audit routes for the owner blueprint."""
 
 import logging
 from datetime import UTC, datetime
@@ -27,7 +27,6 @@ from .common import (
 from .shared import (
     _invalidate_owner_changes,
     _mask_api_key,
-    _owner_branch_scope,
 )
 
 logger = logging.getLogger(__name__)
@@ -226,65 +225,6 @@ def toggle_api_key(**kwargs):
     status = gettext("تفعيل") if key.is_active else gettext("تعطيل")
     flash(gettext(f"✅ تم {status} API Key"), "success")
     return redirect(url_for("owner.api_keys"))
-
-
-@owner_bp.route("/financial-dashboard-advanced")
-@owner_required
-def financial_dashboard_advanced():
-    from services.financial_service import FinancialService
-
-    tid = get_active_tenant_id(current_user)
-    scoped_branch_id = _owner_branch_scope()
-    context = FinancialService.get_financial_dashboard_advanced_context(tenant_id=tid, branch_id=scoped_branch_id)
-    return render_template(
-        "owner/financial_dashboard_advanced.html",
-        months_data=context["months_data"],
-        kpis=context["kpis"],
-    )
-
-
-@owner_bp.route("/sales-insights")
-@owner_required
-def sales_insights():
-    from services.analytics_service import AnalyticsService
-
-    scoped_branch_id = _owner_branch_scope()
-    tid = get_active_tenant_id(current_user)
-    insights = AnalyticsService.get_sales_insights(tenant_id=tid, branch_id=scoped_branch_id)
-    return render_template("owner/sales_insights.html", insights=insights)
-
-
-@owner_bp.route("/customer-insights")
-@owner_required
-def customer_insights():
-    from services.analytics_service import AnalyticsService
-
-    scoped_branch_id = _owner_branch_scope()
-    tid = get_active_tenant_id(current_user)
-    customers = AnalyticsService.get_customer_insights(tenant_id=tid, branch_id=scoped_branch_id)
-    return render_template("owner/customer_insights.html", customers=customers)
-
-
-@owner_bp.route("/product-performance")
-@owner_required
-def product_performance():
-    from services.analytics_service import AnalyticsService
-
-    scoped_branch_id = _owner_branch_scope()
-    tid = get_active_tenant_id(current_user)
-    products = AnalyticsService.get_product_performance(tenant_id=tid, branch_id=scoped_branch_id)
-    return render_template("owner/product_performance.html", products=products)
-
-
-@owner_bp.route("/forecasting")
-@owner_required
-def forecasting():
-    from services.analytics_service import AnalyticsService
-
-    scoped_branch_id = _owner_branch_scope()
-    tid = get_active_tenant_id(current_user)
-    historical, forecast = AnalyticsService.get_forecasting_data(tenant_id=tid, branch_id=scoped_branch_id)
-    return render_template("owner/forecasting.html", historical=historical, forecast=forecast)
 
 
 # Tenant Management — full control for the owner
