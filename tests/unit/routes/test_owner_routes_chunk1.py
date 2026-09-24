@@ -105,7 +105,6 @@ class TestOwnerDashboard:
 
     def test_returns_200_empty_stats(self, owner_client, mocker):
         mocker.patch("routes.owner.core.get_active_tenant_id", return_value=None)
-        mocker.patch("routes.owner.core._owner_branch_scope", return_value=None)
 
         mocker.patch("utils.owner_panel.build_platform_overview", return_value={})
         mocker.patch("utils.owner_panel.build_tenant_management_rows", return_value=[])
@@ -119,7 +118,6 @@ class TestOwnerDashboard:
 
     def test_returns_200_with_data(self, owner_client, mocker):
         mocker.patch("routes.owner.core.get_active_tenant_id", return_value=None)
-        mocker.patch("routes.owner.core._owner_branch_scope", return_value=None)
 
         mocker.patch(
             "utils.owner_panel.build_platform_telemetry",
