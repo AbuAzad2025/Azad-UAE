@@ -387,8 +387,8 @@ def _train_ai_from_excel(df, created, updated, user_id, tenant_id):
     from ai_knowledge.trainer import trainer
 
     total_rows = len(df)
-    question = f"ملخص استيراد المنتجات: إنشاء {created} وتحديث {updated} من {total_rows}"
-    answer = f"تم استيراد {total_rows} سطرا من Excel: {created} منتجا جديدا و{updated} منتجا محدثا."
+    question = f"ملخص استيراد المنتجات: إنشاء {created} وتحديث {updated} من {total_rows}"  # i18n-ignore
+    answer = f"تم استيراد {total_rows} سطرا من Excel: {created} منتجا جديدا و{updated} منتجا محدثا."  # i18n-ignore
     trainer.learn_from_interaction(
         question,
         answer,
