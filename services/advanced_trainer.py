@@ -37,7 +37,7 @@ class AdvancedTrainer:
             tenant_query(AiMemory).filter(AiMemory.tenant_id == int(tenant_id), AiMemory.is_active.is_(True)).all()
         )
 
-        index = {
+        index: dict[str, Any] = {
             "total_records": len(memories),
             "domains": defaultdict(int),
             "top_concepts": [],
@@ -63,7 +63,7 @@ class AdvancedTrainer:
         index["domains"] = dict(sorted(index["domains"].items(), key=lambda x: x[1], reverse=True))
 
         # Top concepts by frequency
-        concept_freq = defaultdict(int)
+        concept_freq: dict[str, int] = defaultdict(int)
         for concepts in self._concept_cache.values():
             for c in concepts:
                 concept_freq[c] += 1
@@ -211,7 +211,7 @@ class AdvancedTrainer:
         recommendations = []
 
         # Analyze by domain
-        domain_stats = defaultdict(lambda: {"count": 0, "avg_confidence": 0.0})
+        domain_stats: dict[str, dict[str, Any]] = defaultdict(lambda: {"count": 0, "avg_confidence": 0.0})
         for mem in memories:
             domain = mem.category or "general"
             domain_stats[domain]["count"] += 1
@@ -420,7 +420,7 @@ class AdvancedTrainer:
         """Get comprehensive domain statistics for a tenant."""
         memories = tenant_query(AiMemory).filter(AiMemory.tenant_id == int(tenant_id)).all()
 
-        domains = defaultdict(lambda: {"count": 0, "confidence_sum": 0.0, "active_count": 0})
+        domains: dict[str, dict[str, Any]] = defaultdict(lambda: {"count": 0, "confidence_sum": 0.0, "active_count": 0})
         for mem in memories:
             domain = mem.category or "general"
             domains[domain]["count"] += 1
@@ -429,7 +429,7 @@ class AdvancedTrainer:
                 domains[domain]["active_count"] += 1
 
         # Calculate averages
-        domain_stats = {}
+        domain_stats: dict[str, dict[str, Any]] = {}
         for domain, stats in domains.items():
             avg_conf = stats["confidence_sum"] / stats["count"] if stats["count"] > 0 else 0.0
             domain_stats[domain] = {

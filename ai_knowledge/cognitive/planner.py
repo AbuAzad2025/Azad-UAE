@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timedelta
+from typing import Any
 
 from ai_knowledge.cognitive.contracts import (
     CognitiveIntent,
@@ -27,7 +28,8 @@ ROW_LIMIT = 500
 
 def _to_float(value: object) -> float:
     try:
-        return float(value or 0)
+        candidate: Any = 0 if value is None else value
+        return float(candidate)
     except (TypeError, ValueError):
         return 0.0
 
@@ -224,7 +226,7 @@ def _pattern_analysis(days: int, user: object) -> tuple[str, str, int, dict]:
         return obs, f"Sale[tenant,last={days}d]", 0, {"count": 0}
     names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     totals = {day: sum(amounts) for day, amounts in by_day.items()}
-    best = max(totals, key=totals.get)
+    best = max(totals, key=lambda day: totals[day])
     obs = (
         f"Analyzed {len(rows)} sales over last {days} days across {len(by_day)} active weekdays. "
         f"Strongest day: {names[best]} ({totals[best]:,.2f})."

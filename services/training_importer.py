@@ -36,7 +36,7 @@ class TrainingImporter:
         os.makedirs(self.upload_folder, exist_ok=True)
         return self.upload_folder
 
-    def import_from_json(self, file_path: str, tenant_id: int, user_id: int = None) -> dict[str, Any]:
+    def import_from_json(self, file_path: str, tenant_id: int, user_id: int | None = None) -> dict[str, Any]:
         """Import training data from JSON file with format validation."""
         batch = None
         try:
@@ -118,7 +118,7 @@ class TrainingImporter:
                 "batch_id": batch.id if batch else None,
             }
 
-    def import_from_excel(self, file_path: str, tenant_id: int, user_id: int = None) -> dict[str, Any]:
+    def import_from_excel(self, file_path: str, tenant_id: int, user_id: int | None = None) -> dict[str, Any]:
         """Import training data from Excel file with column mapping."""
         batch = None
         try:

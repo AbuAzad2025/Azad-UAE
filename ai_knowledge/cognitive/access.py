@@ -54,7 +54,8 @@ def check_access(intent: CognitiveIntent, user: object | None) -> tuple[bool, st
     except Exception as exc:
         logger.debug("AI permission check skipped: %s", exc)
     try:
-        if bool(user.has_permission(needed)):  # type: ignore[union-attr]
+        has_perm = getattr(user, "has_permission", None)
+        if callable(has_perm) and bool(has_perm(needed)):
             return True, needed
     except Exception as exc:
         logger.debug("Base permission check failed: %s", exc)

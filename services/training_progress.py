@@ -36,7 +36,7 @@ def get_training_progress(tenant_id: int, domain: str = "") -> dict[str, Any]:
     avg_velocity = sum(float(r.learning_velocity) for r in records) / total if total > 0 else 0.0
 
     # Group by domain
-    by_domain = defaultdict(lambda: {"total": 0, "covered": 0, "avg_mastery": 0.0})
+    by_domain: dict[str, dict[str, Any]] = defaultdict(lambda: {"total": 0, "covered": 0, "avg_mastery": 0.0})
     for r in records:
         by_domain[r.domain]["total"] += 1
         if r.covered:
@@ -194,7 +194,7 @@ def get_learning_velocity(tenant_id: int) -> dict[str, Any]:
     # Group by week
     from collections import defaultdict
 
-    weekly = defaultdict(int)
+    weekly: dict[int, int] = defaultdict(int)
     for r in progress_records:
         if r.updated_at:
             week = r.updated_at.isocalendar()[1]

@@ -30,7 +30,8 @@ CLARIFY_THRESHOLD = 0.40
 
 
 def _history(user: object | None, limit: int = 6) -> list[tuple[str, str | None]]:
-    if user is None or not getattr(user, "id", None):
+    user_id = getattr(user, "id", None) if user is not None else None
+    if not user_id:
         return []
     try:
         from models.ai import AiInteraction
@@ -38,7 +39,7 @@ def _history(user: object | None, limit: int = 6) -> list[tuple[str, str | None]
 
         rows = (
             tenant_query(AiInteraction, user)
-            .filter(AiInteraction.user_id == user.id)  # type: ignore[union-attr]
+            .filter(AiInteraction.user_id == user_id)
             .order_by(AiInteraction.id.desc())
             .limit(limit)
             .all()
