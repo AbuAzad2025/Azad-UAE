@@ -529,9 +529,6 @@
           {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('System_Backups')) }}
           {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('System_Health')) }}
           {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('AI_Keys')) }}
-          {{ _nav(url_for('owner.ai_training'), 'fas fa-brain text-success', t('AI_Training')) }}
-          {{ _nav(url_for('owner.ai_training_upload'), 'fas fa-upload text-success', t('AI_Training_Upload')) }}
-          {{ _nav(url_for('owner.ai_training_progress'), 'fas fa-chart-line text-success', t('AI_Training_Progress')) }}
           {% endif %}
 
           {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
