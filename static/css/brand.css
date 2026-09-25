@@ -1,0 +1,13 @@
+/* Brand tokens shared by public pricing pages. */
+
+:root {
+  --azad-brand-gold: #d4a017;
+  --azad-brand-gold-light: #e8c45a;
+}
+
+.azad-stores-banner {
+  border: 1px solid var(--azad-brand-gold);
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: center;
+}
