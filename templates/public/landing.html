@@ -131,7 +131,7 @@
             <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
             <div>
                 <span class="azad-brand-text">{{ _company_name }}</span>
-                <small class="azad-brand-tagline">{{ _('ERP â¢ AI â¢ Cloud') }}</small>
+                <small class="azad-brand-tagline">{{ _('ERP • AI • Cloud') }}</small>
             </div>
         </a>
 
@@ -349,7 +349,7 @@
         <div class="azad-section-center">
             <div class="azad-section-tag"><i class="fas fa-tags" aria-hidden="true"></i> {{ _('Transparent Pricing') }}</div>
             <h2 class="azad-section-title">{{ _('Flexible Plans for Your Business') }}</h2>
-            <p class="azad-section-desc">{{ _('Choose the right plan â all include accounting, inventory, invoices, and reports.') }}</p>
+            <p class="azad-section-desc">{{ _('Choose the right plan — all include accounting, inventory, invoices, and reports.') }}</p>
         </div>
 
         <div class="azad-pricing-grid">
@@ -382,7 +382,7 @@
                     <div class="azad-tier-card-inner">
                         <div class="azad-tier-name">{{ _('Starter') }}</div>
                         <div class="azad-tier-price-big">$29</div>
-                        <div class="azad-tier-price-sub">{{ _('/month â for small businesses') }}</div>
+                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_starter') }}</div>
                         <div class="azad-tier-badge">{{ _('â­ Most popular') }}</div>
                         <ul class="azad-tier-features">
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Up to 3 users') }}</li>
@@ -400,7 +400,7 @@
                     <div class="azad-tier-card-inner">
                         <div class="azad-tier-name">{{ _('Professional') }}</div>
                         <div class="azad-tier-price-big">$79</div>
-                        <div class="azad-tier-price-sub">{{ _('/month â for growing businesses') }}</div>
+                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_professional') }}</div>
                         <ul class="azad-tier-features">
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Up to 10 users') }}</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('All Starter features') }}</li>
@@ -418,7 +418,7 @@
                     <div class="azad-tier-card-inner">
                         <div class="azad-tier-name">{{ _('Enterprise') }}</div>
                         <div class="azad-tier-price-big">$249</div>
-                        <div class="azad-tier-price-sub">{{ _('/month â for large enterprises') }}</div>
+                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_enterprise') }}</div>
                         <ul class="azad-tier-features">
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Unlimited users') }}</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('All advanced features') }}</li>
@@ -506,7 +506,7 @@
                 <div class="azad-ai-bubble user"><span class="sender" style="color:var(--azad-accent);">👤 {{ _('You') }}</span>{{ _('Create new customer: Ahmed Mohamed, phone 0501234567') }}</div>
                 <div class="azad-ai-bubble bot"><span class="sender" style="color:var(--azad-success);">🤖 AI</span>{{ _('Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?') }}</div>
                 <div class="azad-ai-bubble user"><span class="sender" style="color:var(--azad-accent);">👤 {{ _('You') }}</span>{{ _('What is the stock of Toyota spare parts?') }}</div>
-                <div class="azad-ai-bubble bot"><span class="sender" style="color:var(--azad-success);">🤖 AI</span>{{ _('Main warehouse â Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?') }}</div>
+                <div class="azad-ai-bubble bot"><span class="sender" style="color:var(--azad-success);">🤖 AI</span>{{ 'Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?' }}</div>
             </div>
         </div>
     </div>
@@ -564,7 +564,7 @@
             </div>
             <div class="azad-faq-item">
                 <div class="azad-faq-q">{{ _('What makes it different from basic accounting software?') }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
-                <div class="azad-faq-a">{{ _('Azadexa uses double-entry accounting â not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation.') }}</div>
+                <div class="azad-faq-a">{{ _('Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation.') }}</div>
             </div>
             <div class="azad-faq-item">
                 <div class="azad-faq-q">{{ _('Does it support UAE VAT?') }} <i class="fas fa-chevron-down" aria-hidden="true"></i></div>
@@ -594,7 +594,7 @@
         <div class="azad-section-center">
             <div class="azad-section-tag"><i class="fas fa-phone-alt" aria-hidden="true"></i> {{ _('Contact') }}</div>
             <h2 class="azad-section-title">{{ _('We Are Here to Help') }}</h2>
-            <p class="azad-section-desc">{{ _('Reach out via any channel below â we respond within hours') }}</p>
+            <p class="azad-section-desc">{{ _('Reach out via any channel below — we respond within hours') }}</p>
         </div>
         <div class="azad-contact-grid">
             <div class="azad-contact-card">
@@ -670,7 +670,7 @@
             <div class="azad-footer-brand">
                 <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
                 <h4 class="footer-gradient-text" style="font-size:1.08rem;margin:0 0 10px;">{{ _company_name }}</h4>
-                <p>{{ _('Full cloud ERP â accounting, warehouses, AI, POS, e-commerce, HR & payroll.') }}</p>
+                <p>{{ _('Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.') }}</p>
                 <div class="azad-footer-social">
                     {% if _footer_whatsapp %}<a class="whatsapp-bg" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
                     {% if _footer_phone %}<a class="phone-bg" href="tel:{{ _footer_phone }}" aria-label="{{ _('Phone') }}"><i class="fas fa-phone" aria-hidden="true"></i></a>{% endif %}
