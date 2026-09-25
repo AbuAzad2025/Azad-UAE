@@ -330,6 +330,34 @@ class TestOwnerRoutes:
         assert resp.status_code in (200, 404, 403), resp.status_code
 
 
+class TestOwnerTrainingTemplates:
+    """owner/ai_training*.html + owner/archived.html (explicit tenant scope)."""
+
+    def test_ai_training_picker_renders(self, owner_client):
+        resp = owner_client.get("/owner/ai-training", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+    def test_ai_training_with_tenant_renders(self, owner_client, sample_tenant):
+        resp = owner_client.get(f"/owner/ai-training?tenant_id={sample_tenant.id}", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+    def test_ai_training_upload_renders(self, owner_client, sample_tenant):
+        resp = owner_client.get(f"/owner/ai-training/upload?tenant_id={sample_tenant.id}", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+    def test_ai_training_progress_renders(self, owner_client, sample_tenant):
+        resp = owner_client.get(f"/owner/ai-training/progress?tenant_id={sample_tenant.id}", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+    def test_ai_training_batches_renders(self, owner_client, sample_tenant):
+        resp = owner_client.get(f"/owner/ai-training/batches?tenant_id={sample_tenant.id}", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+    def test_archived_with_tenant_renders(self, owner_client, sample_tenant):
+        resp = owner_client.get(f"/owner/archived?tenant_id={sample_tenant.id}", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+
 class TestPublicDonateRoutes:
     """public/donate_azad.html + public/donate_thanks.html."""
 
