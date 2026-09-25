@@ -217,12 +217,23 @@ class TestTenantUsageSummary:
         db_session.commit()
 
         rows = {row["key"]: row for row in get_tenant_usage_summary(sample_tenant)}
-        assert set(rows) == {"users", "branches", "warehouses", "products", "customers", "suppliers", "sales_per_month"}
+        assert set(rows) == {
+            "users",
+            "branches",
+            "warehouses",
+            "products",
+            "customers",
+            "suppliers",
+            "storage_mb",
+            "sales_per_month",
+        }
         assert rows["users"]["limit"] == 10
         assert rows["users"]["unlimited"] is False
         assert rows["products"]["unlimited"] is True
         assert rows["products"]["limit"] is None
         assert rows["products"]["percent"] == 0
+        assert rows["storage_mb"]["limit"] == 1024
+        assert rows["storage_mb"]["unlimited"] is False
 
     def test_warn_at_80_percent(self, db_session, sample_tenant, sample_user):
         from utils.tenant_limits import get_tenant_usage_warnings
