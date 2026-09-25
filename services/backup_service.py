@@ -63,6 +63,8 @@ class BackupService:
     BACKUP_PREFIX = "azad_backup_"
     LEGACY_MANUAL_PREFIX = "manual_backup_"
     LEGACY_AUTO_PREFIX = "auto_backup_"
+    TENANT_MANUAL_RATE_MINUTES = 60
+    TENANT_MANUAL_KEEP_LAST = 5
     _crypto_instance: BackupCrypto | None = None
 
     @classmethod
@@ -1177,6 +1179,81 @@ class BackupService:
             last_action="create_backup",
         )
         return None
+
+    @classmethod
+    def _tenant_manual_backups(cls, tenant_id: int) -> list[dict[str, Any]]:
+        """Newest-first manual tenant-scope backups owned by one tenant."""
+        out = []
+        for meta in cls.list_backups():
+            if meta.get("backup_scope") != "tenant":
+                continue
+            if int(meta.get("tenant_id") or 0) != int(tenant_id):
+                continue
+            if "auto" in str(meta.get("filename", "")).lower():
+                continue
+            out.append(meta)
+        return out
+
+    @classmethod
+    def _prune_tenant_manual_backups(cls, tenant_id: int) -> int:
+        """Keep only the newest tenant manual backups; return removed count."""
+        keep = {m.get("filename") for m in cls._tenant_manual_backups(tenant_id)[: cls.TENANT_MANUAL_KEEP_LAST]}
+        removed = 0
+        for meta in cls._tenant_manual_backups(tenant_id):
+            filename = meta.get("filename")
+            if filename and filename not in keep and cls.delete_backup(filename):
+                removed += 1
+        return removed
+
+    @classmethod
+    def create_tenant_manual_backup(cls, user) -> dict[str, Any]:
+        """Tenant self-service manual backup of the user's own company.
+
+        Guardrails (expert practice for shared-DB SaaS):
+        - global owners are sent to the platform panel (separate flow);
+        - requires an active tenant in the user session;
+        - rate-limited to one manual backup per TENANT_MANUAL_RATE_MINUTES;
+        - retention keeps the newest TENANT_MANUAL_KEEP_LAST manual files;
+        - restore is intentionally NOT exposed (owner-only, separate DB).
+        """
+        from extensions import db
+        from utils.auth_helpers import is_global_owner_user
+        from utils.tenanting import get_active_tenant_id
+
+        if is_global_owner_user(user):
+            return {"ok": False, "error": "owners use the platform backup panel"}
+        tid = get_active_tenant_id(user)
+        if not tid:
+            return {"ok": False, "error": "no active tenant"}
+        tenant = db.session.get(Tenant, int(tid))
+        if tenant is None or not getattr(tenant, "is_active", False):
+            return {"ok": False, "error": "tenant not found or inactive"}
+
+        now_ts = datetime.now(UTC).timestamp()
+        recent = cls._tenant_manual_backups(int(tid))
+        if recent:
+            newest = max(float(m.get("modified", 0) or 0) for m in recent)
+            wait = cls.TENANT_MANUAL_RATE_MINUTES * 60 - (now_ts - newest)
+            if wait > 0:
+                return {"ok": False, "error": "rate_limited", "retry_after_minutes": int(wait // 60) + 1}
+
+        result = cls.create_backup(
+            manual=True,
+            description=f"tenant manual backup (tenant {int(tid)})",
+            scope="tenant",
+            tenant_id=int(tid),
+            created_by={"user_id": getattr(user, "id", None), "username": getattr(user, "username", "")},
+        )
+        if not result:
+            return {"ok": False, "error": "backup failed"}
+        pruned = cls._prune_tenant_manual_backups(int(tid))
+        logger.info(
+            "Tenant manual backup created: tenant=%s file=%s pruned=%s",
+            tid,
+            result.get("filename"),
+            pruned,
+        )
+        return {"ok": True, "filename": result.get("filename"), "size_mb": result.get("size_mb")}
 
     @classmethod
     def _create_system_backup(

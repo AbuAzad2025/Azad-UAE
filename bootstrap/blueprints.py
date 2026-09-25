@@ -139,6 +139,7 @@ def register_blueprints(app):
     uinv_bp = _import_bp(app, "routes.unified_inventory", "uinv_bp")
     language_bp = _import_bp(app, "routes.language", "language_bp")
     tenants_bp = _import_bp(app, "routes.tenants", "tenants_bp")
+    tenant_backups_bp = _import_bp(app, "routes.tenant_backups", "tenant_backups_bp")
     payroll_bp = _import_bp(app, "routes.payroll", "payroll_bp")
 
     if os.environ.get("DISABLE_AI"):
@@ -215,6 +216,7 @@ def register_blueprints(app):
     app.register_blueprint(store_bp)
     app.register_blueprint(shop_bp)
     app.register_blueprint(tenants_bp)
+    app.register_blueprint(tenant_backups_bp)
     app.register_blueprint(language_bp)
     app.register_blueprint(whatsapp_bp)
     app.register_blueprint(api_docs_bp)

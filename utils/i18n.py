@@ -245,6 +245,12 @@ TRANSLATIONS = {
     "Available_4": {"ar": "الموجودة", "en": "Available_4"},
     "Backup": {"ar": "الاحتياطية", "en": "Backup"},
     "Backups": {"ar": "النسخ", "en": "Backups"},
+    "Tenant_Backup_Hint": {
+        "ar": "نسخة كاملة لبيانات شركتك فقط. الاستعادة يتم عبر مالك المنصة.",
+        "en": "A full backup of your company data only. Restore is handled by the platform owner.",
+    },
+    "Backup_Rate_Hint": {"ar": "نسخة يدوية واحدة كل ساعة كحد أقصى.", "en": "At most one manual backup per hour."},
+    "My_Backups": {"ar": "نسخي الاحتياطية", "en": "My Backups"},
     "Backups_2": {"ar": "نسخ", "en": "Backups_2"},
     "Balance_2": {"ar": "ميزان", "en": "Balance_2"},
     "Balance_3": {"ar": "رصيد", "en": "Balance_3"},

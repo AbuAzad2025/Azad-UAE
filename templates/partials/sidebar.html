@@ -513,8 +513,8 @@
             {% endif %}
           {{ _end(_u) }}
 
-          {% set _bak = current_user.is_authenticated and current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Backups'), _bak) }}
+          {% set _bak = current_user.is_authenticated and not current_user.is_owner and current_user.has_permission('manage_backups') %}
+          {{ _nav(url_for('tenant_backups.index'), 'fas fa-database', t('Backups'), _bak) }}
 
           {# ═══════════════════════════════════════════════════════ #}
           {#  8. الشركة والمالك (Company & Owner)                     #}
@@ -534,7 +534,7 @@
           {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
           {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Company_Dashboard'), 'owner.company_dashboard') }}
           {% if current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('Company_Backups')) }}
+          {{ _nav(url_for('tenant_backups.index'), 'fas fa-database', t('Company_Backups')) }}
           {% endif %}
           {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Company_Data')) }}
           {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Invoice_Headers')) }}

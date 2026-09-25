@@ -358,6 +358,23 @@ class TestOwnerTrainingTemplates:
         assert resp.status_code in (200, 404, 403), resp.status_code
 
 
+class TestTenantBackupsTemplates:
+    """templates/backups/list.html (tenant self-service, permission-gated)."""
+
+    def test_tenant_backups_list_renders(self, auth_client, db_session, sample_role):
+        from models import Permission
+
+        perm = db_session.query(Permission).filter_by(code="manage_backups").first()
+        if perm is None:
+            perm = Permission(code="manage_backups", name="Backups", name_ar="نسخ", category="test")
+            db_session.add(perm)
+        if perm not in sample_role.permissions:
+            sample_role.permissions.append(perm)
+        db_session.commit()
+        resp = auth_client.get("/backups/", follow_redirects=True)
+        assert resp.status_code in (200, 404, 403), resp.status_code
+
+
 class TestPublicDonateRoutes:
     """public/donate_azad.html + public/donate_thanks.html."""
 
