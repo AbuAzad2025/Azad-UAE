@@ -171,3 +171,6 @@
 
 11.4 `tests/unit/routes/test_owner_boundary.py` pins this invariant in CI: purged endpoints 404, archived requires a valid tenant, and cross-tenant aggregation helpers stay deleted.
     يُثبّت `tests/unit/routes/test_owner_boundary.py` هذا الثابت في CI: النقاط المحذوفة تُرجع 404، والأرشيف يتطلب مستأجراً صالحاً، وتبقى مساعدات التجميع عبر المستأجرين محذوفة.
+
+11.5 Package feature flags with a default-False (e.g. `enable_api`) MUST NEVER gate session-authenticated or infrastructure endpoints (frontend `/api/*`, `/health`, telemetry ingest). They may only gate genuinely optional external surfaces. Pinned by `tests/unit/routes/test_feature_gates.py`.
+    أعلام الباقات ذات الافتراضي False (مثل `enable_api`) يُمنع أن تحجب نقاط الجلسات أو البنية التحتية (واجهات `/api` الأمامية و`/health` والتليمتري). يُسمح بها فقط على الأسطح الخارجية الاختيارية فعلاً. مُثبّت عبر `tests/unit/routes/test_feature_gates.py`.
