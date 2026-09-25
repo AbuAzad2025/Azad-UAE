@@ -189,7 +189,7 @@
 
           {% set _sale = current_user.is_authenticated and current_user.has_permission('manage_sales') %}
           {{ _tree('fas fa-file-invoice', t('Sales'), 'sales', _sale) }}
-            {% if _sale and tenant_enable_pos %}
+            {% if _sale and tenant_enable_pos and system_enable_pos %}
             <li class="nav-item">
               <a href="{{ url_for('pos.index') }}" class="nav-link">
                 <i class="fas fa-cash-register nav-icon text-info" aria-hidden="true"></i>
@@ -522,7 +522,7 @@
           {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
           {{ _sec(t('Company_Management'), _co_perm) }}
 
-          {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
+          {% if current_user.is_authenticated and ((current_user.is_owner and not current_user.tenant_id) or (current_user.role and current_user.role.slug == 'developer')) %}
           {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Owner_Dashboard'), 'owner.dashboard') }}
           {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('System_Settings'), 'owner.system_config') }}
           {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Platform_Users')) }}
@@ -531,15 +531,16 @@
           {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('AI_Keys')) }}
           {% endif %}
 
-          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] %}
+          {% if current_user.is_authenticated and current_user.role and current_user.role.slug in ['super_admin', 'manager'] and current_user.tenant_id %}
           {{ _nav(url_for('owner.company_dashboard'), 'fas fa-building text-info', t('Company_Dashboard'), 'owner.company_dashboard') }}
-          {% if current_user.has_permission('manage_backups') %}
-          {{ _nav(url_for('tenant_backups.index'), 'fas fa-database', t('Company_Backups')) }}
-          {% endif %}
           {{ _nav(url_for('owner.company_info'), 'fas fa-id-card', t('Company_Data')) }}
           {{ _nav(url_for('owner.invoice_settings'), 'fas fa-file-invoice', t('Invoice_Headers')) }}
+          {% if current_user.has_permission('view_reports') %}
           {{ _nav(url_for('printing.print_history'), 'fas fa-history', t('Print_Log')) }}
+          {% endif %}
+          {% if current_user.is_authenticated and current_user.is_admin() %}
           {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Print_Settings')) }}
+          {% endif %}
           {% endif %}
 
         </ul>

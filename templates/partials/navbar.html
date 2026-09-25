@@ -25,21 +25,21 @@
         <span class="d-none d-lg-inline">{{ t('Sales') }}</span>
       </a>
       {% endif %}
-      {% if current_user.is_authenticated and (current_user.has_permission('manage_purchases') or current_user.has_permission('manage_suppliers')) %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_purchases') %}
       <a href="{{ url_for('purchases.index') }}" class="erp-nav-main-link {% if request.endpoint and 'purchases' in request.endpoint %}active{% endif %}" 
           {% if request.endpoint and 'purchases' in request.endpoint %}aria-current="page"{% endif %} role="menuitem" title="{{ t('Procurement') }}">
         <i class="fas fa-truck" aria-hidden="true"></i>
         <span class="d-none d-lg-inline">{{ t('Procurement') }}</span>
       </a>
       {% endif %}
-      {% if current_user.is_authenticated and (current_user.has_permission('manage_products') or current_user.has_permission('manage_warehouse')) %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_products') %}
       <a href="{{ url_for('products.index') }}" class="erp-nav-main-link {% if request.endpoint and 'products' in request.endpoint %}active{% endif %}" 
           {% if request.endpoint and 'products' in request.endpoint %}aria-current="page"{% endif %} role="menuitem" title="{{ t('Inventory') }}">
         <i class="fas fa-warehouse" aria-hidden="true"></i>
         <span class="d-none d-lg-inline">{{ t('Inventory') }}</span>
       </a>
       {% endif %}
-      {% if current_user.is_authenticated and (current_user.has_permission('manage_payments') or current_user.has_permission('manage_expenses')) %}
+      {% if current_user.is_authenticated and current_user.has_permission('manage_payments') %}
       <a href="{{ url_for('payments.receipts') }}" class="erp-nav-main-link {% if request.endpoint and 'payments' in request.endpoint %}active{% endif %}" 
           {% if request.endpoint and 'payments' in request.endpoint %}aria-current="page"{% endif %} role="menuitem" title="{{ t('Finance') }}">
         <i class="fas fa-money-bill-wave" aria-hidden="true"></i>
@@ -53,7 +53,7 @@
         <span class="d-none d-lg-inline">{{ t('Reports') }}</span>
       </a>
       {% endif %}
-      {% if current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
+      {% if current_user.is_authenticated and ((current_user.is_owner and not current_user.tenant_id) or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
       <a href="{{ url_for('owner.company_info' if (current_user.role and current_user.role.slug in ['super_admin','manager']) else 'owner.system_config') }}" 
          class="erp-nav-main-link {% if request.endpoint and 'owner.' in request.endpoint %}active{% endif %}" 
           {% if request.endpoint and 'owner.' in request.endpoint %}aria-current="page"{% endif %} role="menuitem" title="{{ t('Settings') }}">
@@ -113,9 +113,11 @@
             <i class="fas fa-sitemap mr-2" aria-hidden="true"></i>{{ t('All_Branches') }}
           </span>
           {% endif %}
+          {% if (current_user.is_owner and not current_user.tenant_id) or (current_user.role and current_user.role.slug == 'developer') %}
           <a class="dropdown-item" href="{{ url_for('tenants.switch', tenant_id=0) }}">
             <i class="fas fa-building mr-2" aria-hidden="true"></i>{{ t('Switch_Company') }}
           </a>
+          {% endif %}
           {% endif %}
         </div>
       </div>

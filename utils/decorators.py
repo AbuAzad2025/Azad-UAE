@@ -63,6 +63,9 @@ def permission_required(permission_code):
 
             return f(*args, **kwargs)
 
+        decorated_function._required_permission = (
+            permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
+        )
         return decorated_function
 
     return decorator
@@ -109,6 +112,7 @@ def admin_required(f):
 
         return f(*args, **kwargs)
 
+    decorated_function._required_guard = "admin"
     return decorated_function
 
 
@@ -152,6 +156,7 @@ def owner_required(f):
 
         return f(*args, **kwargs)
 
+    decorated_function._required_guard = "global_owner"
     return decorated_function
 
 
@@ -196,6 +201,7 @@ def company_admin_required(f):
 
         return f(*args, **kwargs)
 
+    decorated_function._required_guard = "company_admin"
     return decorated_function
 
 
@@ -221,6 +227,7 @@ def owner_or_company_admin(f):
                 return f(*args, **kwargs)
         abort(403)
 
+    decorated_function._required_guard = "owner_or_company_admin"
     return decorated_function
 
 
