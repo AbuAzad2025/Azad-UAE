@@ -7,11 +7,11 @@ Usage in routes before db.session.add() / db.session.commit().
 
 from __future__ import annotations
 
+import contextlib
 import logging
 from datetime import UTC, datetime
 
 from flask_login import current_user
-from sqlalchemy import func
 
 from extensions import db
 from utils.tenanting import get_active_tenant_id
@@ -261,48 +261,32 @@ def get_tenant_usage_warnings(tenant) -> list[dict]:
     return [row for row in get_tenant_usage_summary(tenant) if row["warn"]]
 
 
-
 def _get_tenant_storage_mb(tid: int) -> int:
-    """Calculate total storage usage in MB for a tenant across all upload paths."""
+    """Total tenant upload size in MB, walked from the static folder.
+
+    Canonical root is ``static/uploads/tenants/{id}`` (see
+    ``utils.static_asset_paths.tenant_upload_dir``); the legacy
+    ``static/uploads/products/{id}`` tree is included for older uploads.
+    """
     try:
-        from models import (
-            Attachment,
-            Product,
-            ProductImage,
-        )
+        from flask import current_app, has_app_context
+
+        if not has_app_context():
+            return 0
+        static_folder = str(current_app.static_folder or "")
+        if not static_folder:
+            return 0
+        import os
 
         total_bytes = 0
-
-        # Product images
-        try:
-            total_bytes += db.session.query(
-                func.coalesce(func.sum(ProductImage.file_size), 0)
-            ).join(Product, ProductImage.product_id == Product.id).filter(
-                Product.tenant_id == tid
-            ).scalar() or 0
-        except Exception:
-            pass
-
-        # Attachments (generic)
-        try:
-            total_bytes += db.session.query(
-                func.coalesce(func.sum(Attachment.file_size), 0)
-            ).filter(Attachment.tenant_id == tid).scalar() or 0
-        except Exception:
-            pass
-
-        # If no specific models, fall back to filesystem check
-        if total_bytes == 0:
-            import os
-            upload_base = f"uploads/tenants/{tid}"
-            if os.path.exists(upload_base):
-                for root, dirs, files in os.walk(upload_base):
-                    for f in files:
-                        try:
-                            total_bytes += os.path.getsize(os.path.join(root, f))
-                        except OSError:
-                            pass
-
+        for rel in (f"uploads/tenants/{int(tid)}", f"uploads/products/{int(tid)}"):
+            root = os.path.join(static_folder, *rel.split("/"))
+            if not os.path.isdir(root):
+                continue
+            for _dir, _sub, files in os.walk(root):
+                for name in files:
+                    with contextlib.suppress(OSError):
+                        total_bytes += os.path.getsize(os.path.join(_dir, name))
         return total_bytes // (1024 * 1024)  # Convert to MB
     except Exception:
         return 0
@@ -315,14 +299,14 @@ def check_storage_limit() -> None:
     if not tenant:
         return  # no tenant context -- skip (owner/platform mode)
 
-    limit_val = getattr(tenant, 'max_storage_mb', None)
+    limit_val = getattr(tenant, "max_storage_mb", None)
     if limit_val is None or limit_val <= 0:
         return  # no limit configured or unlimited
 
     current_mb = _get_tenant_storage_mb(tenant.id)
 
     if current_mb >= limit_val:
-        raise TenantLimitError('storage', limit_val, current_mb)
+        raise TenantLimitError("storage", limit_val, current_mb)
 
 
 def enforce_feature(feature_flag: str, feature_name_ar: str) -> None:

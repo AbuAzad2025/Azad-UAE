@@ -126,22 +126,54 @@ class Package(db.Model):
         # tier-level tiers (basic=10, pro=20, enterprise=30);
         # map each tier to the feature flags that should be active
         _TIER_FEATURES = {
-            10: {"enable_payroll": False, "enable_expenses": True, "enable_cheques": True,
-                 "enable_reports": True, "enable_ai": False, "enable_store": False,
-                 "enable_gl": False, "enable_api": False, "enable_pos": False},
-            20: {"enable_payroll": True, "enable_expenses": True, "enable_cheques": True,
-                 "enable_reports": True, "enable_ai": True, "enable_store": True,
-                 "enable_gl": True, "enable_api": True, "enable_pos": True},
-            30: {"enable_payroll": True, "enable_expenses": True, "enable_cheques": True,
-                 "enable_reports": True, "enable_ai": True, "enable_store": True,
-                 "enable_gl": True, "enable_api": True, "enable_pos": True},
+            10: {
+                "enable_payroll": False,
+                "enable_expenses": True,
+                "enable_cheques": True,
+                "enable_reports": True,
+                "enable_ai": False,
+                "enable_store": False,
+                "enable_gl": False,
+                "enable_api": False,
+                "enable_pos": False,
+            },
+            20: {
+                "enable_payroll": True,
+                "enable_expenses": True,
+                "enable_cheques": True,
+                "enable_reports": True,
+                "enable_ai": True,
+                "enable_store": True,
+                "enable_gl": True,
+                "enable_api": True,
+                "enable_pos": True,
+            },
+            30: {
+                "enable_payroll": True,
+                "enable_expenses": True,
+                "enable_cheques": True,
+                "enable_reports": True,
+                "enable_ai": True,
+                "enable_store": True,
+                "enable_gl": True,
+                "enable_api": True,
+                "enable_pos": True,
+            },
         }
-        # TIER_FEATURES mapping removed - using direct attribute access instead
+        tier_map = _TIER_FEATURES.get(tier, {})
         for col in TENANT_FLAG_COLUMNS:
-            value = _TIER_FEATURES.get(col, getattr(self, col, None))
-            if value is not None:
+            value = getattr(self, col, None)
+            if value is None:
+                # Unconfigured dimension: tenant's current value survives.
+                continue
+            default = Package.__table__.c[col].default
+            default_val = default.arg if default is not None else None
+            if col in tier_map and bool(value) == bool(default_val):
+                # Left at the column default: resolve coherently from the tier.
+                setattr(tenant, col, bool(tier_map[col]))
+            else:
+                # Explicit package value wins over the tier.
                 setattr(tenant, col, bool(value))
-            # else: keep tenant's existing value when the tier does not define it
 
         # Preserve the existing POS‑specific logic
         tenant.enable_pos = bool(self.has_pos)

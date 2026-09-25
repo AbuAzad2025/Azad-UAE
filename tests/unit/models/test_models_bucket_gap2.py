@@ -177,6 +177,31 @@ class TestPackageApply:
         pkg.apply_to_tenant(sample_tenant)
         assert sample_tenant.enable_reports is True
 
+    def test_tier_fills_defaulted_flags_coherently(self, db_session, sample_tenant):
+        sample_tenant.enable_ai = False
+        sample_tenant.enable_payroll = False
+        pkg = self._package(flags=False)
+        pkg.tier_level = 20  # pro tier
+        pkg.enable_ai = False  # explicitly at column default → tier resolves True
+        pkg.enable_payroll = False  # explicitly at default → tier resolves True
+        pkg.apply_to_tenant(sample_tenant)
+        assert sample_tenant.enable_ai is True
+        assert sample_tenant.enable_payroll is True
+
+    def test_explicit_flag_beats_tier(self, db_session, sample_tenant):
+        pkg = self._package(flags=False)
+        pkg.tier_level = 10  # basic tier maps payroll False...
+        pkg.enable_payroll = True  # ...but the explicit package value wins
+        pkg.apply_to_tenant(sample_tenant)
+        assert sample_tenant.enable_payroll is True
+
+    def test_unknown_tier_copies_package_values(self, db_session, sample_tenant):
+        pkg = self._package(flags=False)
+        pkg.tier_level = 99
+        pkg.enable_ai = True
+        pkg.apply_to_tenant(sample_tenant)
+        assert sample_tenant.enable_ai is True
+
     def test_package_repr_and_dict(self, db_session):
         pkg = self._package()
         assert "<Package" in repr(pkg)
