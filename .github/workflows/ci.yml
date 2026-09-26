@@ -296,6 +296,9 @@ jobs:
       - name: Strict i18n lint (templates & Python)
         run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
 
+      - name: Alembic graph gate (single head, reversible chain)
+        run: python scripts/lint/check_migration_head.py
+
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github

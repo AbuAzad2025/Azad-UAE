@@ -91,13 +91,19 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 - Kept only the latest 2 runs per workflow (CI, Alembic Round-Trip)
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → 5542ed4cd59f`
+- **Migration chain (single head):** `squash_001 → … → b1f4c7a92d60`
+  - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
+    parent, every revision has a `downgrade()`) before trusting any value written here
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)
   - `cdefc18af945` + `1c2195e00e66` F-08: gl_accounts.is_contra (1190/3300/5201 prime), 2122→asset/1100, +2999 Suspense
   - `5542ed4cd59f` D-L1-01: money precision 15,2→15,3 (card_payments/donations/payment_vault/wallets)
   - `dd28ea3aa6cc` D-C3: gl_journal_lines.explicit_account_allowed (honored by validate_entry)
+  - `52693a51` integrations: nullable platform tenant on integration settings
+  - `b1f4c7a92d60` Phase 1: 41 composite `(tenant_id, status|created_at|code)` indexes on the
+    tables the query layer actually filters on — CONCURRENTLY, idempotent, schema-aware
+    (skips a table whose shape does not match the models rather than aborting a deploy)
 - **GL integrity fixes:** fixed_asset disposal→gl_post_or_fail (D-C3), payroll advances 1160→1170 (D-C4), expense delete→archive (D-C7), transfer_stock moves PWC valuation (D-C8), FX revaluation per-voucher with branch_id (D-C13), tolerance/quantize unified 0.001 (D-C12/D-C18), dynamic GL mapping fail-fast (D-C14), bounce-fee idempotency (D-C16)
 - **COA deliberately kept postable:** 1130/1140/2110/2120/4100/5100/5150 remain is_header=false (engine posts directly via concepts)
 

@@ -913,6 +913,20 @@ class TestSecurityAuditFixes:
             r = Role(slug="seller", name=f"Cashier_{suffix}", is_active=True)
             db_session.add(r)
             db_session.flush()
+        # conftest sets SKIP_SYSTEM_INTEGRITY=1, so platform seeding never runs and both the
+        # seller role and the permission rows may be absent or empty. The endpoint under test
+        # is guarded by view_reports, so provision what the test needs rather than depending
+        # on seeded data (a skip here would hide the branch-isolation assertion entirely).
+        from models import Permission
+
+        vr = Permission.query.filter_by(code="view_reports").first()
+        if vr is None:
+            vr = Permission(code="view_reports", name="View Reports", category="reports")
+            db_session.add(vr)
+            db_session.flush()
+        if not r.permissions or not any(p.code == "view_reports" for p in r.permissions):
+            r.permissions = list(r.permissions or []) + [vr]
+            db_session.flush()
         u = User(
             tenant_id=t.id,
             branch_id=b1.id,
