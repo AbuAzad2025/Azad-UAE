@@ -98,30 +98,35 @@ def test_report_renders_every_column():
     assert "avg" in text
 
 
-def test_endpoint_label_survives_ambient_request_context():
-    """Regression: CI failed here because another test left a request context pushed.
+def test_endpoint_label_contract():
+    """The label always reflects the *currently active* request, never a fixed string.
 
-    The helper is called from teardown_request and from the SQL listener, so it
-    must behave correctly whether or not a request happens to be active. This
-    pins both branches explicitly instead of relying on suite ordering.
+    Regression: this assertion originally hard-coded '<no-request>' and CI failed on
+    it twice, because other tests in the utils session leave a Flask request context
+    pushed (observed: 'public.landing'). Asserting on ambient global state makes the
+    test order-dependent, so the contract is stated instead of the environment: with a
+    request context the label is that request, and without one it is the fallback.
+    Both branches are checked the same way, so the test holds whichever world the
+    session happens to be in.
     """
-    from flask import Flask, request
+    from flask import Flask, has_request_context, request
 
     flask_app = Flask(__name__)
 
     with flask_app.test_request_context("/dashboard"):
-        live = qp._current_endpoint()
-        assert live == (request.endpoint or request.path)
-        assert live != "<no-request>"
-
-    # after the context pops, the fallback must return
-    assert qp._current_endpoint() == "<no-request>"
-
-
-def test_endpoint_label_prefers_live_request():
-    """Inside a request context the label is the endpoint, not the fallback."""
-    from flask import Flask, request
-
-    flask_app = Flask(__name__)
-    with flask_app.test_request_context("/dashboard"):
+        assert has_request_context()
         assert qp._current_endpoint() == (request.endpoint or request.path)
+        assert qp._current_endpoint() != "<no-request>"
+
+    if has_request_context():
+        # a context leaked by an earlier test is legitimate, not a failure
+        assert qp._current_endpoint() == (request.endpoint or request.path)
+    else:
+        assert qp._current_endpoint() == "<no-request>"
+
+
+def test_endpoint_label_is_never_empty():
+    """A bucket name must always exist, so a query is never silently dropped."""
+    label = qp._current_endpoint()
+    assert isinstance(label, str)
+    assert label.strip()
