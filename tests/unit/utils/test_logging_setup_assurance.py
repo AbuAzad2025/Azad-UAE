@@ -102,10 +102,18 @@ class TestSetupLogging:
         wrapped = io.TextIOWrapper(BytesIO(), encoding="utf-8")
         wrapper = mocker.patch("io.TextIOWrapper", return_value=wrapped)
         mocker.patch.object(app.logger, "info")
+        import sys as real_sys
+
         from utils.logging_setup import setup_logging
 
+        stdout_before, stderr_before = real_sys.stdout, real_sys.stderr
         setup_logging(app)
         assert wrapper.call_count >= 2
+        # the UTF-8 view must stay local to the handlers: reassigning the global
+        # sys.stdout/sys.stderr leaks a wrapper that outlives the original stream
+        assert real_sys.stdout is stdout_before
+        assert real_sys.stderr is stderr_before
+        assert app.logger.handlers[0].stream is wrapped
 
     def test_setup_logging_configures_handlers(self, app, mocker):
         mocker.patch("utils.logging_setup.sys.platform", "linux")
