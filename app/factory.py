@@ -92,6 +92,12 @@ def create_app(config_class=Config) -> Flask:
     LoggingCore.setup(app)
     LoggingCore.schedule_cleanup(app)
 
+    # Opt-in N+1 profiler (QUERY_PROFILE=1). Off by default and inert when off.
+    if os.environ.get("QUERY_PROFILE", "").strip().lower() in {"1", "true", "yes", "on"}:
+        from utils.query_profiler import enable_profiling
+
+        enable_profiling(app)
+
     # System integrity check
     if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
         print("Running system integrity check...")

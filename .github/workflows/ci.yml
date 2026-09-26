@@ -148,6 +148,35 @@ jobs:
           ls -la .coverage 2>/dev/null || true
           cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
 
+      # ── N+1 profiling (opt-in, rides the existing test runs) ──────────────
+      # The profiler is loaded only for the two groups that exercise real request
+      # lifecycles, and only on one PostgreSQL version, so the wall-clock cost of
+      # the suite is unchanged. QUERY_PROFILE_OUT points at a directory that is
+      # created here; the plugin writes the JSON in pytest's cleanup hook, which
+      # runs even when a test fails, so a red run still yields the profile.
+      - name: Profile SELECT queries per route
+        if: ${{ matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16) }}
+        env:
+          QUERY_PROFILE: "1"
+          QUERY_PROFILE_OUT: ${{ github.workspace }}/query-profile
+          QUERY_PROFILE_TOP: "25"
+          PYTHONPATH: ${{ github.workspace }}/tests
+        run: |
+          mkdir -p query-profile
+          pytest ${{ matrix.test-path }} -p query_profile_plugin -q --tb=short --no-cov || true
+          test -f query-profile/query_profile.json \
+            && echo "profile written for ${{ matrix.test-group }}" \
+            || echo "WARNING: no query_profile.json produced for ${{ matrix.test-group }}"
+
+      - name: Upload query profile
+        if: ${{ always() && (matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16)) }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: query-profile-${{ matrix.cov-flag }}
+          path: query-profile/query_profile.json
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Upload coverage to Codecov (optional)
         if: always()
         uses: codecov/codecov-action@v7
