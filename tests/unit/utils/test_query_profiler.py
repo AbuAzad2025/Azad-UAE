@@ -98,6 +98,30 @@ def test_report_renders_every_column():
     assert "avg" in text
 
 
-def test_endpoint_label_without_request_context():
-    # Profiling must never raise outside a request (CLI, worker, teardown).
+def test_endpoint_label_survives_ambient_request_context():
+    """Regression: CI failed here because another test left a request context pushed.
+
+    The helper is called from teardown_request and from the SQL listener, so it
+    must behave correctly whether or not a request happens to be active. This
+    pins both branches explicitly instead of relying on suite ordering.
+    """
+    from flask import Flask, request
+
+    flask_app = Flask(__name__)
+
+    with flask_app.test_request_context("/dashboard"):
+        live = qp._current_endpoint()
+        assert live == (request.endpoint or request.path)
+        assert live != "<no-request>"
+
+    # after the context pops, the fallback must return
     assert qp._current_endpoint() == "<no-request>"
+
+
+def test_endpoint_label_prefers_live_request():
+    """Inside a request context the label is the endpoint, not the fallback."""
+    from flask import Flask, request
+
+    flask_app = Flask(__name__)
+    with flask_app.test_request_context("/dashboard"):
+        assert qp._current_endpoint() == (request.endpoint or request.path)
