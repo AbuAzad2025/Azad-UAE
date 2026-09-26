@@ -68,7 +68,8 @@ def main() -> int:
     print(f"head      : {[(h, revisions[h]) for h in heads]}")
 
     if heads:
-        chain, cur = [], heads[0]
+        chain: list[str] = []
+        cur: str | None = heads[0]
         while cur:
             chain.append(cur)
             cur = parents.get(cur)
