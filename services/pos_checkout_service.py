@@ -234,7 +234,7 @@ class PosCheckoutService:
 
         if payments_data and len(payments_data) > 1 and not multi_tender_allowed:
             raise PosCheckoutError(
-                gettext('ميزة "pos_multi_tender" غير مفعلة لخطة اشتراكك الحالية.'),
+                gettext('Feature "pos_multi_tender" is not enabled on your current subscription plan.'),
                 403,
                 {"feature": "pos_multi_tender"},
             )

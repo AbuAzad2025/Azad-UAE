@@ -72,7 +72,7 @@ def _feature_denial(feature_name: str):
     abort(
         403,
         description=gettext(
-            'ميزة "%(feature)s" غير مفعّلة في باقتك الحالية. رقِّ باقتك لتفعيلها.',
+            "Feature %(feature)s is not enabled on your current plan. Upgrade your plan to enable it.",
             feature=feature_name,
         ),
     )
