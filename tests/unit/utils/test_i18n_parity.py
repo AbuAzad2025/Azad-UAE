@@ -85,7 +85,9 @@ def _po_msgids() -> set[str]:
             continue
         with po.open("rb") as fh:
             for message in read_po(fh):
-                if message.id:
+                # message.id is str | tuple | list; a tuple/list id is a
+                # context-sensitive plural form and cannot be looked up by name
+                if isinstance(message.id, str) and message.id:
                     msgids.add(message.id)
     return msgids
 
