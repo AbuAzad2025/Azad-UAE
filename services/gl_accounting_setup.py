@@ -33,32 +33,29 @@ Public API
   bulk_execute(dry_run=False) -> list[SetupResult]
     Applies the plan to every existing tenant.
 
-How Tenant Onboarding Will Call It (Future)
---------------------------------------------
-Inside `services/tenant_service.py` (or equivalent tenant creation flow):
+Status: NOT part of the application boot path
+----------------------------------------------
+This module is reachable from exactly three places, none of them a production
+request or a `flask run` boot:
 
-    from services.gl_accounting_setup import GLAccountingSetupService
+  * tests/conftest.py            -> the ``sample_gl_accounts`` fixture
+  * tests/integration/conftest.py -> the ``demo_gl_accounts`` fixture
+  * tests/unit/**                -> direct unit coverage
 
-    def finalize_new_tenant(tenant_id: int) -> None:
-        # ... create tenant, branches, users ...
-        result = GLAccountingSetupService.execute(tenant_id, dry_run=False)
-        if result.errors:
-            raise AccountingSetupError(result.errors)
-        # ... proceed to activate tenant ...
+The chart of accounts that a running install actually gets is built by
+``services/gl_tree_builder.py`` via ``GLService.ensure_core_accounts``, which
+``utils/system_init._ensure_tenant_gl_trees`` calls at boot and
+``routes/owner/tenants.py`` calls on tenant creation. That path is
+self-healing; this one is a skip-if-exists planner.
 
-This keeps the accounting setup logic inside the service layer, not in
-ad-hoc scripts.
+It is also listed in ``scripts/ops/enforce_grimoire.py``
+(``DRY_RUN_ROLLBACK_FILES``) because ``execute(dry_run=True)`` deliberately
+rolls back. That is why it must not be deleted: the fixtures above depend on it.
 
-How Local / Test Setup Calls It (Now)
---------------------------------------
-A thin CLI wrapper (`tools/qa/run_gl_accounting_setup.py`) calls the same
-service:
-
-    python tools/qa/run_gl_accounting_setup.py --plan
-    python tools/qa/run_gl_accounting_setup.py --execute --tenant-id 2
-    python tools/qa/run_gl_accounting_setup.py --execute
-
-The wrapper is disposable; the service is permanent.
+An earlier version of this docstring described a CLI wrapper at
+``tools/qa/run_gl_accounting_setup.py``. No such file exists, and neither does
+the ``tools/`` directory - the commands were aspirational. Corrected here so the
+next reader does not go looking for it.
 
 Data Created
 ------------

@@ -43,13 +43,35 @@ class TestManifestShape:
             assert s.note, f"{s.key} has no note explaining its wiring"
 
     def test_deliberate_unseeded_entries_explain_themselves(self):
-        """Anything we choose not to seed must say why, in the manifest itself."""
+        """Anything we choose not to seed must carry a real justification.
+
+        Checked as substance rather than as magic words. An earlier version
+        required the note to contain "DELIBERATE" / "tenant business" /
+        "operator", which failed on three entries whose reasoning was perfectly
+        good prose ("No table exists", "never in bulk"). Matching on wording
+        punishes a well-written note and passes a lazy one containing a keyword.
+        """
         assert manifest.DELIBERATELY_UNSEEDED
         for s in manifest.DELIBERATELY_UNSEEDED:
             assert s.seeder is None
-            assert (
-                "DELIBERATE" in s.note.upper() or "tenant business" in s.note.lower() or "operator" in s.note.lower()
-            ), f"{s.key} is deliberately unseeded but does not say why"
+            assert s.note != s.label, f"{s.key} note just restates the label"
+            assert len(s.note) >= 40, f"{s.key} needs a real explanation, got {s.note!r}"
+
+    def test_packages_records_why_it_is_not_seeded(self):
+        """Guard the one exclusion most likely to be "helpfully" reverted.
+
+        An idempotent seeder for SaaS packages exists
+        (``saas_provisioning_service.seed_packages``) and is deliberately not
+        called at boot, because the platform owner sets SaaS pricing from the
+        Owner panel. Wiring it in would silently override that decision, so the
+        manifest has to say so out loud.
+        """
+        packages = _seed_set("packages")
+        assert packages.seeder is None
+        assert "DELIBERATE" in packages.note.upper()
+        assert "owner" in packages.note.lower()
+        # The dormant seeder is named in ``source``; the note says why it is not run.
+        assert "seed_packages" in packages.source
 
     def test_business_data_is_never_auto_seeded(self):
         """Guard rail: tenant business tables must not acquire a seeder.
@@ -106,12 +128,26 @@ class TestManifestMatchesSource:
         assert len(registry.BASE_ACCOUNTS) == 98
 
     def test_document_sequence_count(self):
-        text = open(
-            importlib.import_module("services.document_sequence_service").__file__,
-            encoding="utf-8",
-        ).read()
-        declared = text.count('("')  # each default tuple starts with ("CODE", "fmt"
-        assert _seed_set("document_sequences").expected == declared
+        """Count the ``defaults`` dict keys in the source, not occurrences of text.
+
+        The dict is a local inside ``get_or_create``, so it cannot be imported.
+        Counting ``("`` over the file over-counts badly (15 against a true 9)
+        because the same shape appears elsewhere, so the AST is parsed instead.
+        """
+        import ast
+
+        import services.document_sequence_service as dss
+
+        tree = ast.parse(open(dss.__file__, encoding="utf-8").read())
+        counts = [
+            len(n.value.keys)
+            for n in ast.walk(tree)
+            if isinstance(n, ast.Assign)
+            and any(getattr(t, "id", None) == "defaults" for t in n.targets)
+            and isinstance(n.value, ast.Dict)
+        ]
+        assert counts, "could not find the defaults dict in document_sequence_service"
+        assert _seed_set("document_sequences").expected == max(counts)
 
 
 class TestManifestProbesResolve:

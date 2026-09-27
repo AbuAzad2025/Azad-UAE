@@ -69,29 +69,48 @@ def _is_atomic_transaction_name(node: ast.AST) -> bool:
     return isinstance(node, ast.Name) and node.id == "atomic_transaction"
 
 
-def _load_baseline() -> set[str]:
+def _load_baseline() -> dict[str, int]:
     """Read the accepted-violation snapshot, if one exists.
 
     The gate lands before the cleanup it is meant to enforce, so the existing
     violations are recorded rather than left for the next author to rediscover.
     Only *new* violations fail, which keeps the gate enforceable from day one
     instead of being switched off until the backlog is clear.
+
+    The baseline maps ``<relpath>|<message>`` to how many times that exact
+    problem is accepted in that file. Counting, rather than listing line
+    numbers, is what makes the gate both stable and useful:
+
+    * Keying on the line meant that editing a docstring above a call shifted it
+      and the gate reported a brand new violation for code nobody had touched.
+    * Keying on the pair alone meant the opposite failure: a file that already
+      had one ``atomic_transaction`` would hide every further one added to it.
+
+    Counting satisfies both - the identity survives an edit above the call, and
+    adding a tenth call to a file with nine still fails the build.
     """
     if not BASELINE_PATH.is_file():
-        return set()
-    return {
-        line.strip()
-        for line in BASELINE_PATH.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    }
+        return {}
+    accepted: dict[str, int] = {}
+    for line in BASELINE_PATH.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.lstrip().startswith("#"):
+            continue
+        key, _, count = line.rpartition("=")
+        try:
+            accepted[key.strip()] = int(count)
+        except ValueError:
+            continue
+    return accepted
 
 
-def _write_baseline(findings: set[str]) -> None:
-    body = "\n".join(sorted(findings))
+def _write_baseline(findings: dict[str, int]) -> None:
+    body = "\n".join(f"{key}={count}" for key, count in sorted(findings.items()))
     BASELINE_PATH.write_text(
         "# Accepted transaction-boundary violations in services/.\n"
-        "# Each line is '<relpath>:<lineno>:<message>'.\n"
-        "# Delete a line as you fix it; the gate fails on anything not listed.\n"
+        "# Format: '<relpath>|<message>=<accepted count>'.\n"
+        "# The count is what makes the gate stable under edits above a call and\n"
+        "# still able to fail on a newly added one. Drop a line as you fix it.\n"
         "# Regenerate with: python scripts/lint/check_txn_boundaries.py --write-baseline\n"
         f"{body}\n",
         encoding="utf-8",
@@ -146,27 +165,41 @@ def main() -> int:
                     )
                 )
 
-    findings = {f"{rel}:{line}: {message}" for rel, line, message in failures}
+    counts: dict[str, int] = {}
+    located: dict[str, int] = {}
+    for rel, line, message in failures:
+        key = f"{rel}|{message}"
+        counts[key] = counts.get(key, 0) + 1
+        # Report the first occurrence; that is enough to navigate to.
+        located.setdefault(key, line)
 
     if write_baseline:
-        _write_baseline(findings)
-        print(f"Wrote baseline with {len(findings)} accepted violation(s) to {BASELINE_PATH.name}.")
+        _write_baseline(counts)
+        total = sum(counts.values())
+        print(f"Wrote baseline: {total} accepted violation(s) across {len(counts)} file/message pair(s).")
         return 0
 
     baseline = _load_baseline()
-    new_findings = findings - baseline
-    resolved = baseline - findings
+    new_findings: list[str] = []
+    for key, count in sorted(counts.items()):
+        allowed = baseline.get(key, 0)
+        if count > allowed:
+            new_findings.append(key)
+
+    resolved = sorted(set(baseline) - set(counts))
+    total_found = sum(counts.values())
+    total_accepted = sum(baseline.values())
 
     print(
         f"Transaction-boundary gate: scanned {scanned} service file(s) - "
-        f"{len(findings)} violation(s), {len(baseline)} baselined, "
-        f"{len(new_findings)} new. Allowlisted entry points: "
-        f"{', '.join(sorted(ENTRY_POINT_ALLOWLIST)) or 'none'}"
+        f"{total_found} violation(s), {total_accepted} baselined, {len(new_findings)} new. "
+        f"Allowlisted entry points: {', '.join(sorted(ENTRY_POINT_ALLOWLIST)) or 'none'}"
     )
-    for item in sorted(new_findings):
-        print(f"::error::{item}")
-    for item in sorted(resolved):
-        print(f"::warning::baselined violation no longer occurs, drop it from the baseline: {item}")
+    for key in new_findings:
+        rel, _, message = key.partition("|")
+        print(f"::error file={rel},line={located.get(key, 0)}::{message}")
+    for key in resolved:
+        print(f"::warning::baselined violation no longer occurs, drop it from the baseline: {key}")
 
     return 1 if new_findings else 0
 

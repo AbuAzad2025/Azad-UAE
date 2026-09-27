@@ -1,8 +1,26 @@
 """
-RUNTIME CORE FILE.
+One-off accounting data repair (legacy).
 
-This module is called from `utils/system_init.py` during normal application startup.
-Do not delete or move it without updating startup wiring.
+Status: NOT called during application startup. ``utils/system_init.py`` used to
+call ``repair_accounting_data()`` and no longer does - it now logs::
+
+    SystemInit: Accounting data repair skipped (handled by migration).
+
+The original docstring here claimed the opposite ("called from
+utils/system_init.py during normal application startup. Do not delete or move it
+without updating startup wiring") and that claim was what kept this looking like
+a live boot path. It has no production caller; only
+``tests/unit/test_accounting_repair.py`` and the patches in
+``tests/unit/utils/test_system_init.py`` reference it.
+
+What it did, and why it is no longer wired: it backfilled a "Default Merchant"
+customer and an opening-inventory GL entry. Schema migration now covers the
+structural half, so the seeding half was dropped from the boot path rather than
+run on every start. Because ``Product.merchant_customer_id`` is therefore left
+NULL for new products, this module is kept as the place to reintroduce that
+behaviour deliberately, with a migration, if it is ever wanted again.
+
+Do not wire this back into ``create_app`` without reading the note above.
 """
 
 from __future__ import annotations

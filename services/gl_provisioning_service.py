@@ -34,6 +34,19 @@ class ProvisionResult:
 class GLProvisioningService:
     @staticmethod
     def provision_tenant(tenant_id: int, force: bool = False) -> ProvisionResult:
+        """Create any missing base/industry accounts and mappings for a tenant.
+
+        Args:
+            tenant_id: Tenant to provision.
+            force: **Accepted but not implemented.** Accounts that already exist
+                are skipped and never updated, so ``force=True`` is currently a
+                no-op rather than a rebuild. It is kept because callers pass it
+                and ``test_force_flag_accepted`` covers the signature, but do not
+                read it as "recreate the chart". For a genuine repair use
+                ``GLService.ensure_core_accounts``, which matches on code and
+                repairs the name, type, parent, header, level and contra flags -
+                that is the self-healing path, and it is what the boot uses.
+        """
         result = ProvisionResult(tenant_id=tenant_id)
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:

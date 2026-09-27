@@ -305,7 +305,9 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         seeder=None,
         expected=None,
         source="services/hr_service.py",
-        note="Tenant business data.",
+        note="Tenant business data. Departments, job positions and leave types "
+        "reflect how this particular company is organised, so the operator sets them "
+        "up; a generic guess would put wrong rows in front of their staff.",
         tags=("deliberate-empty", "hr"),
     ),
     SeedSet(
@@ -315,7 +317,8 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         seeder=None,
         expected=None,
         source="models/crm.py",
-        note="Tenant business data.",
+        note="Tenant business data. CRM stages are a sales-process decision with "
+        "consequences for reporting, so each company defines its own pipeline.",
         tags=("deliberate-empty", "crm"),
     ),
     SeedSet(
@@ -325,7 +328,8 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         seeder=None,
         expected=None,
         source="models/helpdesk.py",
-        note="Tenant business data.",
+        note="Tenant business data. Ticket categories and priorities are a support "
+        "policy choice; the defaults belong to the company, not to the platform.",
         tags=("deliberate-empty", "helpdesk"),
     ),
     SeedSet(
@@ -335,7 +339,9 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         seeder=None,
         expected=None,
         source="models/cost_center.py, models/profit_center.py, models/fiscal_position.py",
-        note="Tenant business data.",
+        note="Tenant business data. These are allocation structures specific to this "
+        "company's cost and profit analysis, and a platform default would "
+        "misstate its management accounts.",
         tags=("deliberate-empty", "finance"),
     ),
     SeedSet(
@@ -345,7 +351,8 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         seeder=None,
         expected=None,
         source="models/advanced_accounting.py",
-        note="Tenant business data.",
+        note="Tenant business data. Customs duties and calculation rules depend on the "
+        "tenant's trade and its contractual agreements.",
         tags=("deliberate-empty", "finance"),
     ),
     SeedSet(
@@ -391,8 +398,39 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         expected=None,
         source="utils/tax_settings.py, models/tenant.py",
         note="No table. Rates live in tenant/system-settings columns; "
-        "VAT_RATES_BY_COUNTRY in utils/tax_settings.py is a display fallback.",
+        "VAT_RATES_BY_COUNTRY in utils/tax_settings.py is a display fallback "
+        "only, and default_tax_rate() returns zero unless the tenant has set one.",
         tags=("deliberate-empty", "finance"),
+    ),
+    # ── Load-bearing but not a boot path. Recorded so nobody deletes them. ──
+    SeedSet(
+        key="gl_accounting_setup_service",
+        label="GL accounting setup service (test/tooling path)",
+        scope="deliberate",
+        seeder=None,
+        expected=None,
+        source="services/gl_accounting_setup.py",
+        note="Looks like an alternative seeder but is NOT on the boot path. It is "
+        "load-bearing: the sample_gl_accounts and demo_gl_accounts fixtures in "
+        "tests/conftest.py and tests/integration/conftest.py call it, ~40 unit "
+        "tests exercise it, and scripts/ops/enforce_grimoire.py allowlists it in "
+        "DRY_RUN_ROLLBACK_FILES. Do not delete. The live chart of accounts is "
+        "built by services/gl_tree_builder.py.",
+        tags=("deliberate-empty", "gl", "do-not-delete"),
+    ),
+    SeedSet(
+        key="accounting_repair",
+        label="One-off accounting repair (not wired to boot)",
+        scope="deliberate",
+        seeder=None,
+        expected=None,
+        source="app/runtime/accounting_repair.py",
+        note="Its docstring used to claim it is called from utils/system_init.py "
+        "at startup; that was false and has been corrected. system_init now logs "
+        "'Accounting data repair skipped (handled by migration)'. Kept because "
+        "tests/unit/test_accounting_repair.py and the patches in "
+        "test_system_init.py reference it. Do not re-wire it into create_app.",
+        tags=("deliberate-empty", "finance", "do-not-delete"),
     ),
 )
 
