@@ -32,6 +32,7 @@ from .common import (
     flash,
     get_active_tenant_id,
     get_system_default_currency,
+    limiter,
     login_required,
     owner_bp,
     owner_or_company_admin,
@@ -1182,6 +1183,7 @@ def api_toggle_warehouse_negative():
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
 @login_required
+@limiter.limit("5 per minute", methods=["POST"])
 def api_supervisor_override():
     """Verify supervisor credentials for cashier override actions.
 
@@ -1194,13 +1196,19 @@ def api_supervisor_override():
 
     * ``action`` must be one of the curated ``utils.pos_security``
       surface actions (validated by the calling services).
-    * ``supervisor_id`` must resolve to a real, active user.
+    * ``supervisor_id`` is resolved through ``scoped_user_query`` so a
+      supervisor can only ever be drawn from the caller's own tenant.
+      ``User`` is exempt from ORM tenant auto-scoping, so an unscoped
+      ``db.session.get(User, ...)`` here would let any logged-in user in
+      any tenant target every account on the platform.
     * The supervisor must hold the ``manager`` or ``admin`` role
       (``supervisor.is_manager() / supervisor.is_admin()``).
     * The supervisor's plaintext ``password`` (validated via
       ``supervisor.check_password``) confirms physical presence of the
       supervisor at the terminal — this is the actual authorization
       gate.
+    * Every failure mode returns one indistinguishable 403 so the
+      endpoint cannot be used to enumerate user ids, roles or tenancy.
     * Every override is logged to ``LoggingCore.log_audit`` with
       ``(supervisor_id, action, cashier_id)`` for forensic tracing.
     """
@@ -1218,16 +1226,29 @@ def api_supervisor_override():
                 message=gettext("معرّف المشرف وكلمة المرور مطلوبان"),
                 status_code=400,
             )
-        supervisor = db.session.get(User, supervisor_id)
-        if not supervisor or not supervisor.is_active:
-            return error_response(
-                message=gettext("المشرف غير موجود أو غير نشط"),
-                status_code=404,
+        from utils.tenanting import scoped_user_query
+
+        # Tenant-scoped: a cashier may only ever authorise a supervisor from
+        # their own tenant.
+        supervisor = (
+            scoped_user_query(active_only=True, exclude_owners=True)
+            .filter(User.id == int(supervisor_id))
+            .first()
+        )
+        # One indistinguishable failure response. Distinguishing "no such
+        # user" from "not a supervisor" from "wrong password" turns this into
+        # a platform-wide account-enumeration and password oracle.
+        if (
+            not supervisor
+            or not (supervisor.is_manager() or supervisor.is_admin())
+            or not supervisor.check_password(password)
+        ):
+            logger.warning(
+                "Rejected supervisor override attempt by user_id=%s for supervisor_id=%s",
+                getattr(current_user, "id", None),
+                supervisor_id,
             )
-        if not supervisor.is_manager() and not supervisor.is_admin():
-            return error_response(message=gettext("المستخدم ليس مشرفاً"), status_code=403)
-        if not supervisor.check_password(password):
-            return error_response(message=gettext("كلمة المرور غير صحيحة"), status_code=403)
+            return error_response(message=gettext("غير مصرح"), status_code=403)
         LoggingCore.log_audit(
             "supervisor_override",
             "system",

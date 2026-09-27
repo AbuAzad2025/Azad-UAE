@@ -3,7 +3,7 @@ import json
 import logging
 from functools import wraps
 
-from flask import current_app, g, has_request_context
+from flask import current_app, g, has_request_context, request
 
 from extensions import cache
 
@@ -22,11 +22,42 @@ def _tenant_cache_salt() -> str:
     return ""
 
 
+def _visibility_cache_salt() -> str:
+    """Salt covering everything a cached view is allowed to vary by.
+
+    The tenant id alone is not sufficient. Two more dimensions change what a
+    tenant-scoped view may return, and both were missing from the key:
+
+    * **Branch scope** — a tenant-wide user (``branch_id IS NULL``) and a
+      branch-5 manager share a tenant, so a tenant-wide response was served to
+      the branch manager, exposing rows the branch restriction exists to hide.
+    * **The query string** — endpoints such as ``/api/analytics/top-customers``
+      read ``?limit=`` / ``?page=`` / ``?days=`` from ``request.args`` inside the
+      view body rather than as view arguments, so ``args``/``kwargs`` in the
+      decorator are ``()`` and every variant collided on one entry. Callers
+      silently received whichever variant happened to be cached first.
+    """
+    if not has_request_context():
+        return _tenant_cache_salt()
+
+    from flask_login import current_user
+
+    from utils.branching import branch_scope_id_for
+
+    try:
+        branch = branch_scope_id_for(current_user)
+    except Exception:  # pragma: no cover - anonymous/edge sessions
+        branch = None
+
+    query_string = request.query_string.decode("utf-8", "replace")
+    return f"{_tenant_cache_salt()}|b={branch}|q={query_string}"
+
+
 def cached_query(timeout=300, key_prefix=None):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            salt = _tenant_cache_salt()
+            salt = _visibility_cache_salt()
             raw_key = json.dumps(str(args) + str(kwargs) + salt, ensure_ascii=False)
             digest = hashlib.sha256(raw_key.encode(), usedforsecurity=False).hexdigest()
             prefix = key_prefix or f.__name__

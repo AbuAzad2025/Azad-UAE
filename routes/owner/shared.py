@@ -117,7 +117,64 @@ _EXPORT_FORMATS = frozenset({"sql", "json"})
 
 
 def _is_blocked_table(identifier: str) -> bool:
-    return (identifier or "").strip().lower() in _BLOCKED_SQL_TABLES
+    name = (identifier or "").strip().lower()
+    if name in _BLOCKED_SQL_TABLES:
+        return True
+    # Schema-derived block set. The hand-written list above is an *additional*
+    # guard, never the primary one: it silently fails when a model's
+    # __tablename__ is plural where the list holds a singular token (that is
+    # exactly how ``gl_journal_lines``, ``sale_lines``, ``card_payments``,
+    # ``employees``, ``pos_sessions`` and ``shop_customer_accounts`` came to be
+    # readable from the platform plane). Deriving from SQLAlchemy metadata means
+    # a newly added tenant-scoped model is covered the moment it is declared.
+    return name in _schema_blocked_tables()
+
+
+_SCHEMA_BLOCKED_CACHE: frozenset[str] | None = None
+
+# Column-name fragments that mark a table as carrying credentials/secrets and
+# therefore off-limits to the platform plane even if it has no tenant_id.
+_CREDENTIAL_COLUMN_MARKERS = (
+    "password",
+    "passwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "private_key",
+    "credential",
+    "salt",
+    "hash",
+)
+
+
+def _schema_blocked_tables() -> frozenset[str]:
+    """Every model table that is tenant-owned or carries credentials.
+
+    Built from SQLAlchemy metadata rather than ``inspect(db.engine)`` so it needs
+    no live database round-trip, is deterministic in tests and CI, and cannot
+    drift from the ORM definitions.
+    """
+    global _SCHEMA_BLOCKED_CACHE
+    if _SCHEMA_BLOCKED_CACHE is not None:
+        return _SCHEMA_BLOCKED_CACHE
+
+    # Metadata only holds tables whose module has been imported. Importing the
+    # package registers every model, so the derived set is complete no matter
+    # which blueprint triggered this first.
+    import models  # noqa: F401  (import-for-side-effect: registers all tables)
+
+    blocked: set[str] = {"alembic_version"}
+    for table in db.metadata.tables.values():
+        columns = {c.name.lower() for c in table.columns}
+        has_credential_column = any(
+            marker in column for marker in _CREDENTIAL_COLUMN_MARKERS for column in columns
+        )
+        if "tenant_id" in columns or has_credential_column:
+            blocked.add(table.name.lower())
+
+    _SCHEMA_BLOCKED_CACHE = frozenset(blocked)
+    return _SCHEMA_BLOCKED_CACHE
 
 
 def _owner_branch_scope():
@@ -192,8 +249,9 @@ def _sql_references_blocked_table(sql_query: str) -> str | None:
     if not sql_query:
         return None
     lowered = sql_query.lower()
+    blocked = _BLOCKED_SQL_TABLES | _schema_blocked_tables()
     for token in _SQL_TOKEN_RE.findall(lowered):
-        if token in _BLOCKED_SQL_TABLES:
+        if token in blocked:
             return token
     return None
 
