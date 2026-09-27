@@ -50,9 +50,31 @@ class TestStoragePaths:
             bs.ensure_storage_paths()
         assert target.is_dir()
 
-    def test_unwritable_location_does_not_raise(self, app, monkeypatch, tmp_path):
-        """A provisioning failure must be logged, never fatal."""
-        monkeypatch.setattr(bs, "STORAGE_DIRS", ("definitely/not/creatable/\0bad",))
+    @pytest.mark.parametrize(
+        "bad",
+        [
+            pytest.param("definitely/not/creatable/\0bad", id="embedded-null"),
+            pytest.param("", id="empty"),
+            pytest.param(None, id="none"),
+            pytest.param(12345, id="not-a-str"),
+            pytest.param(b"bytes/path", id="bytes"),
+            pytest.param("/proc/cannot/create/this", id="abs-path"),
+            pytest.param("/sys/nope/deeper", id="read-only-parent"),
+            pytest.param("AGENTS.md/child", id="through-a-file"),
+            pytest.param("x" * 5000, id="very-long"),
+            pytest.param("../../../../escape", id="dot-escape"),
+        ],
+    )
+    def test_unwritable_location_does_not_raise(self, app, monkeypatch, bad):
+        """A provisioning failure must be logged, never fatal.
+
+        ``pathlib`` defers path validation until the syscall, so an embedded
+        null character surfaces from ``mkdir()`` as a ``ValueError`` rather than
+        the ``OSError`` a permission failure produces. Both have to be caught or
+        a malformed entry takes the whole boot down - which is what CI caught
+        when this test was first written with a single null-byte path.
+        """
+        monkeypatch.setattr(bs, "STORAGE_DIRS", (bad,))
         with app.app_context():
             bs.ensure_storage_paths()  # must not raise
 

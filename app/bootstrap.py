@@ -66,10 +66,21 @@ def ensure_storage_paths() -> None:
     """Create every directory the app writes to. Never raises."""
     root = _project_root()
     for rel in STORAGE_DIRS:
-        path = root / rel
+        try:
+            path = root / rel
+        except (TypeError, ValueError) as exc:
+            # A malformed entry raises before any syscall. pathlib raises
+            # ValueError for an embedded null character rather than the OSError
+            # a real mkdir failure produces, so both are handled here - the
+            # contract is that this function never propagates.
+            current_app.logger.warning("bootstrap: unusable storage path %r: %s", rel, exc)
+            continue
         try:
             path.mkdir(parents=True, exist_ok=True)
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
+            # ValueError, not just OSError: pathlib defers path validation until
+            # the syscall, so an embedded null character surfaces from mkdir()
+            # rather than from the constructor above.
             current_app.logger.warning("bootstrap: cannot create directory %s: %s", rel, exc)
             continue
         # Restrictive where it matters. Uploaded files are user-supplied, so they
