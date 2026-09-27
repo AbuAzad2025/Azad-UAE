@@ -558,6 +558,30 @@ def pytest_runtest_setup(item):
     _ensure_signal_connected()
 
 
+# Test input that must not be reported as a project warning.
+#
+# tests/unit/services/test_logging_core_second_pass.py calls
+# ``warnings.showwarning("dep msg", DeprecationWarning, ...)`` directly, to drive
+# ``LoggingCore._capture_warnings`` with a warning and with a failing append. The
+# message is synthetic, but it still lands in pytest's warning summary and
+# surfaces as a CI annotation on every services run.
+#
+# It cannot be suppressed with a ``filterwarnings`` entry, because filters apply
+# to ``warnings.warn()``; a direct ``showwarning()`` call goes straight to the
+# recorder. This hook is the one place that can drop it, and it matches on the
+# exact message so every genuine DeprecationWarning is still reported.
+_SYNTHETIC_WARNING_MESSAGES = frozenset({"dep msg"})
+
+
+def pytest_warning_recorded(warning_message, when, nodeid, location):  # noqa: ARG001
+    if when != "runtest":
+        return None
+    message = getattr(warning_message, "message", None)
+    if isinstance(message, str) and message.strip() in _SYNTHETIC_WARNING_MESSAGES:
+        return False
+    return None
+
+
 def pytest_sessionfinish(session, exitstatus):
     try:
         out_path = os.path.join(PROJECT_ROOT, "templates_rendered.json")
