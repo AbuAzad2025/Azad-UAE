@@ -115,9 +115,29 @@ def _current_endpoint() -> str:
     return "<no-request>"
 
 
-def _record_current_request() -> None:
+def _record_current_request(response=None):  # noqa: ANN001
+    """Accumulate one request's counters. Registered as an ``after_request`` hook.
+
+    Flask invokes ``after_request`` handlers as ``handler(response)`` and
+    requires the response to be returned, so this must both accept the response
+    and pass it back. The previous zero-argument signature raised
+    ``TypeError: _record_current_request() takes 0 positional arguments but 1
+    was given`` on *every* request, turning each one into a 500.
+
+    It also has to set the recorded flag. The teardown hook uses that flag to
+    fill in only the requests that never reached ``after_request`` (aborts, early
+    4xx), so without setting it every request was counted twice.
+    """
     if not _ENABLED:
-        return
+        return response
+
+    from flask import g, has_request_context
+
+    if has_request_context():
+        if getattr(g, "_query_profiler_recorded", False):
+            return response
+        g._query_profiler_recorded = True
+
     endpoint = _current_endpoint()
     rec = _COUNTS.setdefault(endpoint, [0, 0, 0])
     rec[0] += 1
@@ -125,6 +145,7 @@ def _record_current_request() -> None:
     rec[2] += _LAST_SQL["write"]
     _LAST_SQL["select"] = 0
     _LAST_SQL["write"] = 0
+    return response
 
 
 @event.listens_for(Engine, "before_cursor_execute", named=True)

@@ -130,3 +130,62 @@ def test_endpoint_label_is_never_empty():
     label = qp._current_endpoint()
     assert isinstance(label, str)
     assert label.strip()
+
+
+def test_after_request_hook_accepts_and_returns_the_response():
+    """The after_request hook must match Flask's ``handler(response)`` contract.
+
+    Regression, and the reason the profiler produced nothing in CI: the hook was
+    registered as ``app.after_request(_record_current_request)`` while the
+    function took no arguments, so every single request raised
+    ``TypeError: _record_current_request() takes 0 positional arguments but 1
+    was given`` and returned 500. It was masked because the profiler step was
+    failing earlier for an unrelated reason (no DATABASE_URL), so the error was
+    never seen. The existing tests only drove the counters directly and never
+    exercised the Flask wiring, which is why it survived.
+    """
+    from flask import Flask
+
+    flask_app = Flask(__name__)
+
+    @flask_app.route("/ping")
+    def ping():
+        return "pong"
+
+    qp.enable_profiling(flask_app)
+    try:
+        client = flask_app.test_client()
+        for _ in range(2):
+            resp = client.get("/ping")
+            assert resp.status_code == 200
+            assert resp.get_data(as_text=True) == "pong"
+    finally:
+        qp.disable_profiling()
+
+
+def test_a_request_is_counted_exactly_once():
+    """after_request and teardown must not both count the same request.
+
+    The teardown hook only exists to cover requests that never reach
+    after_request (aborts, early 4xx). It decides that with
+    ``g._query_profiler_recorded``, which the after_request path has to set --
+    otherwise every normal request is tallied twice and avg_selects is wrong,
+    which is precisely the number an N+1 refactor is judged on.
+    """
+    from flask import Flask
+
+    flask_app = Flask(__name__)
+
+    @flask_app.route("/ping")
+    def ping():
+        return "pong"
+
+    qp.enable_profiling(flask_app)
+    try:
+        client = flask_app.test_client()
+        client.get("/ping")
+        client.get("/ping")
+        recorded = qp.snapshot().get("ping", {}).get("requests")
+        assert recorded == 2, f"expected 2 recorded requests, got {recorded}"
+    finally:
+        qp.disable_profiling()
