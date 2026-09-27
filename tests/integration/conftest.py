@@ -98,12 +98,18 @@ def demo_product_in_stock(db_session, demo_tenant, demo_warehouse):
 
 @pytest.fixture
 def demo_gl_accounts(db_session, demo_tenant, app):
-    """Ensure core chart of accounts exists for the demo tenant."""
+    """Ensure core chart of accounts exists for the demo tenant.
+
+    GLService.ensure_core_accounts does both halves of the job: it runs
+    GLTreeBuilder.build for the accounts and, when dynamic GL mapping is
+    enabled, GLService.ensure_gl_mappings for the concept rows. It previously
+    also called GLAccountingSetupService.execute, which was redundant double
+    seeding off the same GL_MODULE_DEFINITIONS source - and, because the two
+    allocate branch liquidity codes differently (``1120-B{branch.id}`` versus a
+    ``1120-B{allocation-counter}``), a latent collision on
+    ``uq_gl_accounts_tenant_code``.
+    """
     with app.app_context():
         GLService.ensure_core_accounts(tenant_id=demo_tenant.id)
-        if app.config.get("ENABLE_DYNAMIC_GL_MAPPING"):
-            from services.gl_accounting_setup import GLAccountingSetupService
-
-            GLAccountingSetupService.execute(tenant_id=demo_tenant.id, dry_run=False)
         db_session.commit()
     return demo_tenant

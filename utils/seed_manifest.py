@@ -405,32 +405,46 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
     # ── Load-bearing but not a boot path. Recorded so nobody deletes them. ──
     SeedSet(
         key="gl_accounting_setup_service",
-        label="GL accounting setup service (test/tooling path)",
+        label="GL accounting setup service (REMOVED - superseded)",
         scope="deliberate",
         seeder=None,
         expected=None,
-        source="services/gl_accounting_setup.py",
-        note="Looks like an alternative seeder but is NOT on the boot path. It is "
-        "load-bearing: the sample_gl_accounts and demo_gl_accounts fixtures in "
-        "tests/conftest.py and tests/integration/conftest.py call it, ~40 unit "
-        "tests exercise it, and scripts/ops/enforce_grimoire.py allowlists it in "
-        "DRY_RUN_ROLLBACK_FILES. Do not delete. The live chart of accounts is "
-        "built by services/gl_tree_builder.py.",
-        tags=("deliberate-empty", "gl", "do-not-delete"),
+        source="services/gl_accounting_setup.py (deleted)",
+        note="DELETED as redundant, not lost. Its two jobs are both covered by "
+        "GLService.ensure_core_accounts: GLTreeBuilder.build for the accounts and "
+        "GLService.ensure_gl_mappings for the concept rows, both driven by "
+        "GL_MODULE_DEFINITIONS in models/gl_account_registry.py (16 modules) and "
+        "GL_CONCEPT_REGISTRY in models/_constants.py (63 concepts). Its own "
+        "DEFAULT_CONCEPT_RULES held 40 ConceptSetupRule entries - a stale second "
+        "copy that had drifted from the registry (VAT_OUTPUT pointed at 2130, "
+        "which is Deferred Cheques Payable, and PAYROLL_EXPENSE at 6100, which is "
+        "a header that cannot be posted to). That copy was deliberately NOT "
+        "ported: carrying known-wrong rules into the new engine would be worse "
+        "than dropping them. The two conftest fixtures and ils_coa that called it "
+        "were repointed first, so the removal lost no coverage of the live path.",
+        tags=("deliberate-empty", "gl", "removed-superseded"),
     ),
     SeedSet(
         key="accounting_repair",
-        label="One-off accounting repair (not wired to boot)",
+        label="One-off accounting repair (rules extracted, module retained)",
         scope="deliberate",
         seeder=None,
         expected=None,
         source="app/runtime/accounting_repair.py",
-        note="Its docstring used to claim it is called from utils/system_init.py "
-        "at startup; that was false and has been corrected. system_init now logs "
-        "'Accounting data repair skipped (handled by migration)'. Kept because "
-        "tests/unit/test_accounting_repair.py and the patches in "
-        "test_system_init.py reference it. Do not re-wire it into create_app.",
-        tags=("deliberate-empty", "finance", "do-not-delete"),
+        note="NOT deleted: it still holds four business rules that nothing else "
+        "carries, and deleting it would be data loss. (1) ensure a default "
+        "merchant Customer exists per tenant; (2) link Products left with a null "
+        "merchant_customer_id; (3) backfill legacy cheque GL entries missing "
+        "reference_type/reference_id; (4) post an opening-inventory migration "
+        "adjustment, but only when a real difference exists. Rules 3 and 4 are "
+        "one-off data migrations that belong in Alembic and must never run on "
+        "every boot - rule 4 posts GL entries. Rules 1 and 2 are a per-tenant "
+        "invariant that belongs in tenant provisioning. Its docstring used to "
+        "claim it is called from utils/system_init.py at startup, which was false "
+        "and has been corrected; system_init logs 'Accounting data repair skipped "
+        "(handled by migration)'. Consequence to be aware of: with it off the boot "
+        "path, Product.merchant_customer_id stays NULL for new products.",
+        tags=("deliberate-empty", "finance", "rules-extracted"),
     ),
 )
 

@@ -64,10 +64,11 @@ EXEMPT_FILES: frozenset[str] = frozenset(
     }
 )
 
-# gl_accounting_setup.py has an intentional dry-run rollback
+# Files with an intentional dry-run rollback. services/gl_accounting_setup.py
+# used to be listed here; it was removed as superseded by
+# services/gl_tree_builder.py + GLService.ensure_core_accounts.
 DRY_RUN_ROLLBACK_FILES: frozenset[str] = frozenset(
     {
-        "services/gl_accounting_setup.py",
         "services/backup_scoped_engine.py",
         "services/backup_scoped_restore.py",
         "services/backup_service.py",

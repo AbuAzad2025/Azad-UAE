@@ -17,9 +17,7 @@ from models import (
     User,
     Warehouse,
 )
-from services.gl_accounting_setup import GLAccountingSetupService
 from services.gl_service import GLService
-from services.gl_tree_builder import GLTreeBuilder
 from services.sale_service import SaleService
 
 
@@ -176,9 +174,13 @@ def ils_currency_setup(db_session, ils_tenant):
 
 @pytest.fixture
 def ils_coa(db_session, ils_tenant, ils_branch, negative_warehouse):
-    """Build full GL chart for the tenant."""
-    GLTreeBuilder.build(tenant_id=ils_tenant.id, cleanup_extra=False)
-    GLAccountingSetupService.execute(tenant_id=ils_tenant.id, dry_run=False)
+    """Build full GL chart for the tenant.
+
+    ensure_core_accounts builds the accounts and the concept mappings in one
+    call; the previous second call into GLAccountingSetupService duplicated it
+    from the same GL_MODULE_DEFINITIONS source.
+    """
+    GLService.ensure_core_accounts(tenant_id=ils_tenant.id, cleanup_extra=False)
     tenant = db_session.get(Tenant, ils_tenant.id)
     tenant.enable_tax = True
     tenant.default_tax_rate = Decimal("16.00")

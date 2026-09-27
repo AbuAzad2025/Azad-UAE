@@ -5,8 +5,10 @@
 1.1 `db.session.commit()` MUST exist only in `utils/db_safety.py`.
     يجب أن يكون `db.session.commit()` موجوداً فقط في `utils/db_safety.py`.
 
-1.2 `db.session.rollback()` MUST exist only in `utils/db_safety.py` and in `services/gl_accounting_setup.py` for dry-run branches.
-    يجب أن يكون `db.session.rollback()` موجوداً فقط في `utils/db_safety.py` وفي `services/gl_accounting_setup.py` للفروع الجافة.
+1.2 `db.session.rollback()` MUST exist only in `utils/db_safety.py` and in the `services/backup_*.py` dry-run branches.
+    (Rule 1.2 previously also listed `services/gl_accounting_setup.py`; that module was removed as
+    superseded by `services/gl_tree_builder.py`, so the exception list is now the backup services only.
+    The enforced copy of this rule is `DRY_RUN_ROLLBACK_FILES` in `scripts/ops/enforce_grimoire.py`.)
 
 1.3 `services/` MUST use `db.session.flush()` exclusively. `commit()` and `rollback()` are forbidden in this layer.
     يجب أن تستخدم `services/` حصراً `db.session.flush()`. يُمنع `commit()` و `rollback()` في هذه الطبقة.

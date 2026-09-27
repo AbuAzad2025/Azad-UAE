@@ -1398,17 +1398,18 @@ def sample_product_with_stock(db_session, sample_tenant, sample_warehouse):
 
 @pytest.fixture
 def sample_gl_accounts(db_session, sample_tenant, app):
-    """Ensure core chart of accounts exists for the tenant."""
-    from services.gl_accounting_setup import GLAccountingSetupService
+    """Ensure core chart of accounts exists for the tenant.
+
+    GLService.ensure_core_accounts covers both halves - GLTreeBuilder.build for
+    the accounts and GLService.ensure_gl_mappings for the concept rows when
+    dynamic GL mapping is on - so the previous second call into
+    GLAccountingSetupService was redundant seeding off the same
+    GL_MODULE_DEFINITIONS source.
+    """
     from services.gl_service import GLService
 
     with app.app_context():
         GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
-        if app.config.get("ENABLE_DYNAMIC_GL_MAPPING"):
-            GLAccountingSetupService.execute(
-                tenant_id=sample_tenant.id,
-                dry_run=False,
-            )
         db_session.commit()
     return sample_tenant
 

@@ -63,7 +63,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_core_data"),
             patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
-            patch("app.runtime.accounting_repair.repair_accounting_data"),
             patch("utils.telemetry.start_telemetry"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "false"}, clear=False),
         ):
@@ -87,7 +86,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_core_data"),
             patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
-            patch("app.runtime.accounting_repair.repair_accounting_data"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "true"}, clear=False),
         ):
             system_init_module._ensure_system_integrity_inner(flask_app)
@@ -110,7 +108,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_core_data"),
             patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
-            patch("app.runtime.accounting_repair.repair_accounting_data"),
             patch("utils.telemetry.start_telemetry") as start_telemetry,
             patch.dict("os.environ", {}, clear=False),
         ):
@@ -135,7 +132,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_core_data"),
             patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
-            patch("app.runtime.accounting_repair.repair_accounting_data"),
             patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch(
                 "services.logging_core.LoggingCore.log_error",
@@ -169,10 +165,6 @@ class TestEnsureSystemIntegrity:
                 "utils.system_init._ensure_tenant_gl_trees",
                 side_effect=RuntimeError("gl"),
             ),
-            patch(
-                "app.runtime.accounting_repair.repair_accounting_data",
-                side_effect=RuntimeError("acct"),
-            ),
             patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch("services.logging_core.LoggingCore.log_error"),
             patch.dict("os.environ", {}, clear=False),
@@ -192,7 +184,7 @@ class TestRoleAndPermissionBootstrap:
             patch("utils.constants.PERMISSION_CODES", ["manage_sales"]),
             patch(
                 "utils.constants.PERMISSIONS",
-                {"manage_sales": {"en": "Sales", "ar": "مبيعات"}},
+                {"manage_sales": {"en": "Sales", "ar": "Ù…Ø¨ÙŠØ¹Ø§Øª"}},
             ),
         ):
             system_init_module._ensure_permissions()

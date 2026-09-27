@@ -163,7 +163,7 @@ AZADEXA هو نظام ERP SaaS متعدد المستأجرين (multi-tenant) م
 
 ### المحاسبة العامة (GL)
 - النماذج: `GLAccount`، `GLJournalEntry`، `GLJournalLine`، `GLPeriod`، `GLAccountMapping`، `CostCenter`، `Budget` / `BudgetLine`
-- الخدمات: `gl_service.py`، `gl_posting.py`، `gl_tree_builder.py`، `gl_account_resolver.py`، `gl_mapping_validation.py`، `gl_accounting_setup.py`، `gl_helpers.py`، `gl_provisioning_service.py`، `gl_auto_service.py`
+- الخدمات: `gl_service.py`، `gl_posting.py`، `gl_tree_builder.py`، `gl_account_resolver.py`، `gl_mapping_validation.py`، ``، `gl_helpers.py`، `gl_provisioning_service.py`، `gl_auto_service.py`
 - المسارات: `routes/ledger.py`، `routes/admin_ledger.py`، `routes/advanced_ledger.py`
 
 ### المدفوعات والشيكات والتسوية البنكية

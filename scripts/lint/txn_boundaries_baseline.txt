@@ -11,8 +11,6 @@ services/depreciation_service.py|atomic_transaction() in services/ - the commit 
 services/donation_gl_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
 services/exchange_rate_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
 services/fx_revaluation_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=2
-services/gl_accounting_setup.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
-services/gl_accounting_setup.py|db.session.rollback() in services/ - only the caller (routes/, or an allowlisted entry point) may end a transaction=1
 services/gl_provisioning_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
 services/gl_tree_builder.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
 services/integration_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
