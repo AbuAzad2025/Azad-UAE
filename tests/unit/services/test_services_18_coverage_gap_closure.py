@@ -513,7 +513,7 @@ class TestChequeServiceProcessGaps:
 
         process_cheque_clear(cheque)
 
-    def test_bounce_customer_balance_adjust_failure_logged(self, mocker):
+    def test_bounce_customer_balance_adjust_failure_propagates(self, mocker):
         cheque = MagicMock(
             id=2,
             tenant_id=1,
@@ -532,7 +532,11 @@ class TestChequeServiceProcessGaps:
         mocker.patch("models.Receipt")
         from services.cheque_service import process_cheque_bounce
 
-        process_cheque_bounce(cheque, "NSF")
+        # A failed customer-balance adjustment aborts the bounce rather than
+        # logging and leaving the cheque marked bounced with the customer
+        # keeping credit they are not entitled to.
+        with pytest.raises(RuntimeError, match="balance"):
+            process_cheque_bounce(cheque, "NSF")
 
     def test_bounce_fatal_error_reraises(self, mocker):
         cheque = MagicMock(id=3, status="deposited", status_ar="مودع", cheque_type="incoming")

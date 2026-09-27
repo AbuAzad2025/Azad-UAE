@@ -41,7 +41,18 @@ def _warehouse():
 
 
 def _supplier():
-    return SimpleNamespace(id=4, tenant_id=1, name="Sup", phone="050", email="s@x.ae")
+    # apply_purchase is part of the interface create_purchase calls on a
+    # supplier. The double did not implement it and the service's old
+    # `except Exception` around the call swallowed the resulting AttributeError,
+    # so these tests passed without ever exercising the accumulator.
+    return SimpleNamespace(
+        id=4,
+        tenant_id=1,
+        name="Sup",
+        phone="050",
+        email="s@x.ae",
+        apply_purchase=MagicMock(),
+    )
 
 
 def _product():

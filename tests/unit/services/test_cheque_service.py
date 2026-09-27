@@ -517,14 +517,20 @@ class TestChequeEdgePaths:
         process_cheque_bounce(outgoing_cheque, reason="Returned")
         assert outgoing_cheque.status == "bounced"
 
-    def test_bounce_customer_adjust_failure_logged(self, mocker, db_session, sample_customer, incoming_cheque):
+    def test_bounce_customer_adjust_failure_propagates(self, mocker, db_session, sample_customer, incoming_cheque):
+        """A failed customer-balance adjustment must abort the bounce.
+
+        This used to assert the opposite: the failure was logged via
+        logger.error and the cheque was still marked bounced, so the customer
+        kept credit they were not entitled to and only a log line recorded it.
+        It now propagates so the caller's transaction rolls back.
+        """
         incoming_cheque.status = "deposited"
         incoming_cheque.customer_id = sample_customer.id
         db_session.flush()
         mocker.patch.object(sample_customer, "adjust_balance", side_effect=RuntimeError("cust"))
-        err = mocker.patch("services.cheque_service.logger.error")
-        process_cheque_bounce(incoming_cheque, reason="NSF")
-        err.assert_called()
+        with pytest.raises(RuntimeError, match="cust"):
+            process_cheque_bounce(incoming_cheque, reason="NSF")
 
     def test_cancel_outgoing_customer_credit(self, db_session, sample_customer, outgoing_cheque):
         outgoing_cheque.customer_id = sample_customer.id

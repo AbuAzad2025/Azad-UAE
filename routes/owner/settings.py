@@ -1208,7 +1208,9 @@ def api_supervisor_override():
       ``db.session.get(User, ...)`` here would let any logged-in user in
       any tenant target every account on the platform.
     * The supervisor must hold the ``manager`` or ``admin`` role
-      (``supervisor.is_manager() / supervisor.is_admin()``).
+      (``supervisor.is_manager() / supervisor.is_admin()``). Platform owners
+      are allowed through as well, since an owner can legitimately supervise
+      at a till.
     * The supervisor's plaintext ``password`` (validated via
       ``supervisor.check_password``) confirms physical presence of the
       supervisor at the terminal — this is the actual authorization
@@ -1235,10 +1237,11 @@ def api_supervisor_override():
         from utils.tenanting import scoped_user_query
 
         # Tenant-scoped: a cashier may only ever authorise a supervisor from
-        # their own tenant.
-        supervisor = (
-            scoped_user_query(active_only=True, exclude_owners=True).filter(User.id == int(supervisor_id)).first()
-        )
+        # their own tenant. Owners are not excluded - an owner legitimately
+        # supervises at a till, and the caller must still present the correct
+        # password, so excluding them added no protection while rejecting a
+        # valid supervisor.
+        supervisor = scoped_user_query(active_only=True).filter(User.id == int(supervisor_id)).first()
         # One indistinguishable failure response. Distinguishing "no such
         # user" from "not a supervisor" from "wrong password" turns this into
         # a platform-wide account-enumeration and password oracle.
