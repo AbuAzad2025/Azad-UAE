@@ -51,6 +51,18 @@ def _mock_user_entity(**kwargs):
     return user
 
 
+def _user_query(result):
+    """Stand-in for the query scoped_user_query() returns.
+
+    The endpoint resolves the supervisor through scoped_user_query and then
+    calls .filter(...).first(), so the double has to support that chain.
+    """
+    q = MagicMock()
+    q.filter.return_value = q
+    q.first.return_value = result
+    return q
+
+
 def _mock_role(slug="seller", level=10):
     role = MagicMock()
     role.slug = slug
@@ -2076,8 +2088,7 @@ class TestOwnerExtendedCoverage:
 
     def test_api_supervisor_override_success(self, owner_client):
         supervisor = _mock_user_entity(id=5, is_manager=True, is_admin=True, password_ok=True)
-        with patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.get.return_value = supervisor
+        with patch("utils.tenanting.scoped_user_query", return_value=_user_query(supervisor)):
             resp = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "secret", "action": "discount"},
@@ -2086,8 +2097,7 @@ class TestOwnerExtendedCoverage:
 
     def test_api_supervisor_override_bad_password(self, owner_client):
         supervisor = _mock_user_entity(id=5, password_ok=False)
-        with patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.get.return_value = supervisor
+        with patch("utils.tenanting.scoped_user_query", return_value=_user_query(supervisor)):
             resp = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "wrong"},
@@ -3292,24 +3302,24 @@ class TestOwnerGapClosure:
     def test_supervisor_override_paths(self, owner_client):
         resp = owner_client.post("/owner/api/supervisor-override", data={})
         assert resp.status_code in (400, 404)
-        inactive = _mock_user_entity(id=5, is_active=False)
-        with patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.get.return_value = inactive
+        # An inactive supervisor is filtered out by scoped_user_query(active_only=True),
+        # so the query yields no row and the endpoint cannot tell that case apart
+        # from a wrong password. The old code answered 404 "not found or inactive",
+        # which confirmed the account existed. Every failure mode is one 403.
+        with patch("utils.tenanting.scoped_user_query", return_value=_user_query(None)):
             resp2 = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "x"},
             )
-        assert resp2.status_code == 404
+        assert resp2.status_code == 403
         not_mgr = _mock_user_entity(id=5, is_manager=False, is_admin=False)
-        with patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.get.return_value = not_mgr
+        with patch("utils.tenanting.scoped_user_query", return_value=_user_query(not_mgr)):
             resp3 = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "x"},
             )
         assert resp3.status_code == 403
-        with patch("routes.owner.settings.db") as mock_db:
-            mock_db.session.get.side_effect = RuntimeError("lookup fail")
+        with patch("utils.tenanting.scoped_user_query", side_effect=RuntimeError("lookup fail")):
             resp4 = owner_client.post(
                 "/owner/api/supervisor-override",
                 json={"supervisor_id": 5, "password": "secret", "action": "discount"},
