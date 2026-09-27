@@ -10,7 +10,7 @@ Seeding was spread across eight modules with no index: ``utils/system_init.py``,
 ``services/document_sequence_service.py``. Nothing recorded which of those
 actually run on a given boot. That is how AGENTS.md came to claim "37 perms /
 8 roles / 76 industry fields" when the real counts are 36 / 9 / 74, and how
-``app/runtime/accounting_repair.py`` came to carry a docstring claiming it runs
+``scripts/ops/repair_accounting_data.py`` came to carry a docstring claiming it runs
 at startup when it has no production caller.
 
 This module is the index. It is **pure data plus dotted callables** - importing it
@@ -426,25 +426,32 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
     ),
     SeedSet(
         key="accounting_repair",
-        label="One-off accounting repair (rules extracted, module retained)",
+        label="Opt-in accounting data repair (deliberately NOT on the boot path)",
         scope="deliberate",
         seeder=None,
         expected=None,
-        source="app/runtime/accounting_repair.py",
-        note="NOT deleted: it still holds four business rules that nothing else "
-        "carries, and deleting it would be data loss. (1) ensure a default "
-        "merchant Customer exists per tenant; (2) link Products left with a null "
-        "merchant_customer_id; (3) backfill legacy cheque GL entries missing "
-        "reference_type/reference_id; (4) post an opening-inventory migration "
-        "adjustment, but only when a real difference exists. Rules 3 and 4 are "
-        "one-off data migrations that belong in Alembic and must never run on "
-        "every boot - rule 4 posts GL entries. Rules 1 and 2 are a per-tenant "
-        "invariant that belongs in tenant provisioning. Its docstring used to "
-        "claim it is called from utils/system_init.py at startup, which was false "
-        "and has been corrected; system_init logs 'Accounting data repair skipped "
-        "(handled by migration)'. Consequence to be aware of: with it off the boot "
-        "path, Product.merchant_customer_id stays NULL for new products.",
-        tags=("deliberate-empty", "finance", "rules-extracted"),
+        source="scripts/ops/repair_accounting_data.py",
+        note="Deliberately excluded from app/bootstrap.py. It carries four rules: "
+        "(1) ensure a default merchant Customer exists; (2) link Products with a "
+        "null merchant_customer_id to it; (3) backfill legacy cheque GL entries "
+        "missing reference_type/reference_id; (4) post an opening-inventory "
+        "adjustment when a real difference exists. Rules 1 and 2 were NOT ported "
+        "into boot: they fabricate business data, creating a synthetic 'Default "
+        "Merchant' and attaching every product that has no merchant to it. A "
+        "product with no merchant partner is legitimately NULL - "
+        "services/reports_query_service.py selects merchant-share rows with "
+        "merchant_customer_id.isnot(None) and routes/products.py sets the field "
+        "from an explicit form input - so auto-assigning a placeholder would make "
+        "every product read as a revenue-share arrangement. Rules 3 and 4 were NOT "
+        "ported either: rule 4 posts a real GL journal entry, and its guard "
+        "compares sum(current_stock * cost_price) against account 1140, two "
+        "figures that legitimately disagree under transfers, write-offs, PWC "
+        "valuation and FX revaluation, so the 'difference' it posts is not an "
+        "invariant. All four were moved to scripts/ops/repair_accounting_data.py "
+        "with a real CLI, out of app/runtime/ where the location and a false "
+        "docstring made it read like a live boot path. Run it deliberately: "
+        "python -m scripts.ops.repair_accounting_data --tenant-id 1",
+        tags=("deliberate-empty", "finance", "opt-in-only"),
     ),
 )
 

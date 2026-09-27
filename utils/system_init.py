@@ -37,7 +37,7 @@ def ensure_system_integrity(app):
 
     NOTE:
     This is a runtime core entrypoint. It also invokes accounting-safe
-    startup repair logic from `app.runtime.accounting_repair`.
+    startup repair logic from `scripts.ops.repair_accounting_data`.
     """
     with app.app_context():
         from utils.tenanting import without_tenant_scope

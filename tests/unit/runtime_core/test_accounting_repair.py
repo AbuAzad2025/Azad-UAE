@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.runtime.accounting_repair import repair_accounting_data
+from scripts.ops.repair_accounting_data import repair_accounting_data
 
 
 class TestRepairAccountingData:
@@ -42,7 +42,7 @@ class TestRepairAccountingData:
         branch = MagicMock(id=3)
         Branch = mocker.patch("models.Branch")
         Branch.query.filter_by.return_value.first.return_value = branch
-        mock_db = mocker.patch("app.runtime.accounting_repair.db")
+        mock_db = mocker.patch("scripts.ops.repair_accounting_data.db")
         return mock_db, merchant, product
 
     def test_creates_merchant_when_missing(self, mocker):
@@ -58,7 +58,7 @@ class TestRepairAccountingData:
         mocker.patch("models.gl.GLJournalEntry").query.filter.return_value.all.return_value = []
         mocker.patch("models.gl.GLJournalEntry").query.filter_by.return_value.first.return_value = None
         mocker.patch("models.Branch").query.filter_by.return_value.first.return_value = MagicMock(id=1)
-        mock_db = mocker.patch("app.runtime.accounting_repair.db")
+        mock_db = mocker.patch("scripts.ops.repair_accounting_data.db")
         result = repair_accounting_data()
         assert result["merchant_id"] == 9
         mock_db.session.add.assert_called()
@@ -170,7 +170,7 @@ class TestRepairAccountingData:
         mocker.patch("utils.tenant_orm.tenant_query").all.return_value = []
         mocker.patch("models.gl.GLJournalEntry").query.filter_by.return_value.first.return_value = None
         mocker.patch("models.Branch").query.filter_by.return_value.first.return_value = MagicMock(id=1)
-        mocker.patch("app.runtime.accounting_repair.db")
+        mocker.patch("scripts.ops.repair_accounting_data.db")
         repair_accounting_data()
         ensure.assert_called_with(tenant_id=7)
 
@@ -194,7 +194,7 @@ class TestRepairAccountingData:
         mock_db, merchant, product = self._base_patches(mocker)
         mocker.patch("services.gl_service.GLService.post_entry")
         mocker.patch(
-            "app.runtime.accounting_repair.atomic_transaction",
+            "scripts.ops.repair_accounting_data.atomic_transaction",
             side_effect=RuntimeError("commit fail"),
         )
         with pytest.raises(RuntimeError):
