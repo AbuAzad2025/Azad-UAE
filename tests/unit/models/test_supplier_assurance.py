@@ -29,6 +29,13 @@ def _supplier_stub(**kwargs):
         purchases = kwargs.get("purchases", MagicMock())
 
         last_purchase_date = kwargs.get("last_purchase_date")
+
+        def _locked(self):
+            # The accumulators take a SELECT ... FOR UPDATE before reading.
+            # These tests exercise the arithmetic on a session-less stub, so the
+            # lock is stubbed out here.
+            return self
+
         total_purchases_base = Supplier.total_purchases_base
         total_paid_base = Supplier.total_paid_base
         get_balance_aed = Supplier.get_balance_aed

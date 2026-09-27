@@ -22,6 +22,13 @@ def _customer_stub(**kwargs):
         email = kwargs.get("email", "ali@test.com")
         is_active = kwargs.get("is_active", True)
 
+        def _locked(self):
+            # The balance mutators take a SELECT ... FOR UPDATE before reading.
+            # These tests exercise the arithmetic on a session-less stub, so the
+            # lock is stubbed out here; tests/unit/services/test_customer_service.py
+            # covers it against a real session.
+            return self
+
         get_balance_aed = Customer.get_balance_aed
         get_balance_base = Customer.get_balance_base
         apply_sale = Customer.apply_sale

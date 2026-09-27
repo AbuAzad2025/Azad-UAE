@@ -120,6 +120,10 @@ class Supplier(db.Model):
     # balance from total_purchases_aed - total_paid_aed, so a single lost
     # update permanently desynchronised AP aging from the GL.
     def _locked(self):
+        # A transient instance has no row yet, so there is nothing for another
+        # transaction to be holding: no lock is needed and none is possible.
+        if self.id is None:
+            return self
         from utils.db_safety import lock_row_for_update
 
         return lock_row_for_update(type(self), self.id, label=f"Supplier({self.id})")

@@ -89,6 +89,10 @@ class Customer(db.Model):
     # permanently. The lock lives here rather than at each of the ~20 call
     # sites so no caller can forget it.
     def _locked(self):
+        # A transient instance has no row yet, so there is nothing for another
+        # transaction to be holding: no lock is needed and none is possible.
+        if self.id is None:
+            return self
         from utils.db_safety import lock_row_for_update
 
         return lock_row_for_update(type(self), self.id, label=f"Customer({self.id})")
