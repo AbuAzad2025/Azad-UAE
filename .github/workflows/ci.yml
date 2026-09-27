@@ -96,11 +96,26 @@ jobs:
     timeout-minutes: 45
     strategy:
       # Never cancel sibling groups: every directory must report, even when
-      # another group fails — no part of the test suite may be skipped.
+      # another group fails �?" no part of the test suite may be skipped.
       fail-fast: false
       matrix: ${{ fromJSON(needs.determine-matrix.outputs.matrix) }}
 
+    # Job-level so EVERY step that boots the app or runs pytest inherits it.
+    # These were step-level on "Run tests" only, so the query-profiler step
+    # below ran with no DATABASE_URL at all: conftest then fell back to the dev
+    # database (postgres:123@localhost/azad_uae), every one of its 4706 tests
+    # errored on connection refused, and `|| true` hid it. The profiler step
+    # reported success while producing no profile.
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key-not-for-production
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      DEBUG: "true"
+      PYTEST_ADDOPTS: ""
+
     services:
+
       postgres:
         image: postgres:${{ matrix.postgres-version }}
         env:
@@ -130,13 +145,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run tests
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key-not-for-production
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          DEBUG: "true"
-          PYTEST_ADDOPTS: ""
         run: |
           # Warm up: ensure DB schema exists
           python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
@@ -150,9 +158,10 @@ jobs:
 
       # ── N+1 profiling (opt-in, rides the existing test runs) ──────────────
       # The profiler is loaded only for the two groups that exercise real request
-      # lifecycles, and only on one PostgreSQL version, so the wall-clock cost of
-      # the suite is unchanged. QUERY_PROFILE_OUT points at a directory that is
-      # created here; the plugin writes the JSON in pytest's cleanup hook, which
+      # lifecycles, and only on one PostgreSQL version, so it runs on a small slice
+      # of the matrix. It is a second full pytest invocation for that slice, not a
+      # free ride on the normal run. QUERY_PROFILE_OUT points at a directory that
+      # is created here; the plugin writes the JSON in pytest's cleanup hook, which
       # runs even when a test fails, so a red run still yields the profile.
       - name: Profile SELECT queries per route
         if: ${{ matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16) }}
@@ -163,10 +172,16 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}/tests
         run: |
           mkdir -p query-profile
+          # Profiling must never block the suite, so the run itself is tolerated.
           pytest ${{ matrix.test-path }} -p query_profile_plugin -q --tb=short --no-cov || true
-          test -f query-profile/query_profile.json \
-            && echo "profile written for ${{ matrix.test-group }}" \
-            || echo "WARNING: no query_profile.json produced for ${{ matrix.test-group }}"
+          # But a *missing* profile is a real defect, not a non-event: it means the
+          # instrumentation is not working, which is exactly how this step stayed
+          # broken and invisible. Fail loudly instead of printing a warning.
+          if [ ! -f query-profile/query_profile.json ]; then
+            echo "::error::query profiler produced no query_profile.json for ${{ matrix.test-group }} - N+1 instrumentation is not working"
+            exit 1
+          fi
+          echo "profile written for ${{ matrix.test-group }}"
 
       - name: Upload query profile
         if: ${{ always() && (matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16)) }}
