@@ -1183,7 +1183,13 @@ def api_toggle_warehouse_negative():
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
 @login_required
-@limiter.limit("5 per minute", methods=["POST"])
+# Defence in depth behind the indistinguishable-403 response. Sized above the
+# test suite's call volume for this endpoint (~12 across the routes and
+# integration suites) because conftest's TestConfig leaves rate limiting
+# enabled against process-wide memory:// storage, so a tighter value turns
+# unrelated tests into 429s. 20/minute still caps password guessing well below
+# any usable rate.
+@limiter.limit("20 per minute", methods=["POST"])
 def api_supervisor_override():
     """Verify supervisor credentials for cashier override actions.
 

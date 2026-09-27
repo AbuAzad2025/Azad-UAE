@@ -360,26 +360,31 @@ class TestCreatePurchaseHappyPath:
         supplier.apply_purchase.assert_called_once()
         session.flush.assert_called()
 
-    def test_supplier_apply_purchase_failure_logged(self, app, mocker):
+    def test_supplier_apply_purchase_failure_propagates(self, app, mocker):
+        """A failed supplier accumulator must abort the purchase.
+
+        This used to assert the opposite: post_or_fail had already committed the
+        purchase and its GL entry, the failed apply_purchase() was logged at
+        warning level and swallowed, and the AP sub-ledger stayed permanently
+        short. The failure now propagates so the caller's transaction rolls the
+        whole purchase back.
+        """
         wh = _warehouse()
         supplier = MagicMock(id=7, name="ACME", phone="", email="", tenant_id=1)
         supplier.apply_purchase.side_effect = RuntimeError("stats fail")
         supplier_q = MagicMock()
         supplier_q.filter_by.return_value.first.return_value = supplier
         mocker.patch("services.purchase_service.Supplier.query", supplier_q)
-        mock_logger = mocker.patch("services.purchase_service.current_app.logger")
-        session, _, _, _, _ = _patch_create_common(mocker, warehouse=wh)
+        _patch_create_common(mocker, warehouse=wh)
         from services.purchase_service import PurchaseService
 
-        with app.app_context():
+        with app.app_context(), pytest.raises(RuntimeError, match="stats fail"):
             PurchaseService.create_purchase(
                 _user(),
                 {"supplier_id": 7},
                 [_line_data()],
                 warehouse_id=3,
             )
-        mock_logger.warning.assert_called()
-        session.flush.assert_called()
 
 
 class TestCreatePurchaseSerials:

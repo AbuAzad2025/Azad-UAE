@@ -5,6 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 
 def _strategy(country="AE"):
     s = MagicMock(country_code=country)
@@ -56,7 +58,15 @@ class TestTaxService:
 
         assert TaxService._get_strategy().country_code == "AE"
 
-    def test_get_vat_return_gl_fallback_on_error(self, mocker):
+    def test_get_vat_return_propagates_gl_failure(self, mocker):
+        """A GL failure must abort the return, not file a zero-VAT return.
+
+        This used to assert the opposite: the service caught the GL error and
+        returned a return built from output_vat = input_vat = 0, which is the
+        figure submitted to the tax authority and understates the liability
+        unrecoverably once filed. The error now propagates so the caller's
+        transaction rolls back and the failure is visible.
+        """
         mocker.patch("services.tax_service.TaxService._get_strategy", return_value=_strategy())
         mocker.patch(
             "services.gl_service.GLService.get_vat_report",
@@ -64,9 +74,8 @@ class TestTaxService:
         )
         from services.tax_service import TaxService
 
-        result = TaxService.get_vat_return("2025-01-01", "2025-01-31", tenant_id=1)
-        assert result["source"] == "gl"
-        assert result["net_vat"] == Decimal("60")
+        with pytest.raises(RuntimeError, match="gl"):
+            TaxService.get_vat_return("2025-01-01", "2025-01-31", tenant_id=1)
 
     def test_get_vat_return_uses_gl_amounts(self, mocker):
         mocker.patch("services.tax_service.TaxService._get_strategy", return_value=_strategy())

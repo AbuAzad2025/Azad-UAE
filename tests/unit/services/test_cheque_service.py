@@ -340,10 +340,18 @@ class TestBounceCheque:
         process_cheque_bounce(incoming_cheque, reason="NSF", bounce_fee=Decimal("25"))
         post.assert_called_once()
 
-    def test_bounce_fee_failure_logged(self, mocker, incoming_cheque):
+    def test_bounce_fee_failure_propagates(self, mocker, incoming_cheque):
+        """A failed bounce-fee posting must abort the bounce.
+
+        This used to assert the opposite: the GL failure was logged and the
+        cheque was still marked bounced, so the fee never reached the GL and
+        only a log line recorded it. It now propagates to the caller so the
+        transaction rolls back.
+        """
         incoming_cheque.status = "deposited"
         mocker.patch("services.gl_posting.post_or_fail", side_effect=RuntimeError("gl"))
-        process_cheque_bounce(incoming_cheque, reason="NSF", bounce_fee=Decimal("10"))
+        with pytest.raises(RuntimeError, match="gl"):
+            process_cheque_bounce(incoming_cheque, reason="NSF", bounce_fee=Decimal("10"))
 
     def test_bounce_adjusts_customer(self, mocker, db_session, sample_customer, incoming_cheque):
         incoming_cheque.status = "deposited"
