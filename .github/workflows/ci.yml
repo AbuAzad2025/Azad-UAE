@@ -144,6 +144,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # WeasyPrint warns that HarfBuzz-Subset "will be required by future
+      # versions". Installing it now keeps the PDF/print tests off a
+      # deprecation that will otherwise become a hard failure on a WeasyPrint
+      # major bump. Not fatal if the package is unavailable on the runner image:
+      # it is forward-compatibility, not a current requirement.
+      - name: Install system libs for WeasyPrint
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libharfbuzz-subset0 \
+            || echo "::notice::libharfbuzz-subset0 not available on this runner; WeasyPrint will require it at a future major version"
+
       - name: Run tests
         run: |
           # Warm up: ensure DB schema exists
@@ -185,7 +196,7 @@ jobs:
 
       - name: Upload query profile
         if: ${{ always() && (matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16)) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: query-profile-${{ matrix.cov-flag }}
           path: query-profile/query_profile.json
@@ -543,9 +554,30 @@ jobs:
           # ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation
           # tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.
           # --config-file is a top-level CLI option and must precede the `run` subcommand.
+          #
+          # Stays non-blocking (a fuzz finding must not fail the build on its own),
+          # but the finding is no longer swallowed: the old `|| echo` discarded
+          # Schemathesis's own output, so the annotation said only "issues (ignored)"
+          # and the actual failing check was invisible without reading raw logs.
+          set +e
           schemathesis --config-file scripts/schemathesis.toml run http://localhost:5000/api-docs/openapi.json \
             --max-failures 1 \
-            --exclude-checks ignored_auth,negative_data_rejection || echo "::warning::api-fuzz found non-blocking issues (ignored)"
+            --exclude-checks ignored_auth,negative_data_rejection 2>&1 | tee schemathesis.log
+          fuzz_rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$fuzz_rc" -ne 0 ]; then
+            echo "::warning title=api-fuzz::Schemathesis exited ${fuzz_rc} — failing checks (see schemathesis-log artifact):"
+            grep -iE "failed|error|missing_property|not defined" schemathesis.log | head -15 || true
+          fi
+
+      - name: Upload api-fuzz log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: schemathesis-log
+          path: schemathesis.log
+          if-no-files-found: ignore
+          retention-days: 14
 
   # ── Tenant isolation fuzzer ──
   tenant-isolation-fuzzer:

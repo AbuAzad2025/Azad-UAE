@@ -53,6 +53,32 @@ login_manager.session_protection = "strong"
 csrf = CSRFProtect()
 
 
+# Flask-Caching resolves a CACHE_TYPE without a dot through the legacy
+# ``flask_caching.backend`` module and emits a DeprecationWarning for it, and it
+# only recognises the literal string "null" when deciding whether to warn that
+# caching is disabled. Passing the full class path satisfies both. Normalising
+# here keeps every other reference to the short names (config.py defaults, .env,
+# render.yaml, the test suite) working unchanged.
+_CACHE_TYPE_DOTTED_PATHS = {
+    "null": "flask_caching.backends.NullCache",
+    "nullcache": "flask_caching.backends.NullCache",
+    "redis": "flask_caching.backends.RedisCache",
+    "rediscache": "flask_caching.backends.RedisCache",
+    "redissentinelcache": "flask_caching.backends.RedisSentinelCache",
+    "redisclustercache": "flask_caching.backends.RedisClusterCache",
+    "simple": "flask_caching.backends.SimpleCache",
+    "simplecache": "flask_caching.backends.SimpleCache",
+    "filesystem": "flask_caching.backends.FileSystemCache",
+    "filesystemcache": "flask_caching.backends.FileSystemCache",
+    "memcached": "flask_caching.backends.MemcachedCache",
+    "memcachedcache": "flask_caching.backends.MemcachedCache",
+    "saslmemcachedcache": "flask_caching.backends.SASLMemcachedCache",
+    "uwsgi": "flask_caching.backends.UWSGICache",
+    "uwsgicache": "flask_caching.backends.UWSGICache",
+    "uwsgiprocesscache": "flask_caching.backends.UWSGICache",
+}
+
+
 class TenantAwareCache:
     """Flask-Caching wrapper that prefixes every key with the active tenant id.
 
@@ -101,6 +127,12 @@ class TenantAwareCache:
         cache_type = (config or app.config).get("CACHE_TYPE")
         if cache_type in (None, "", "null") and app.config.get("APP_ENV", "").lower() != "production":
             app.config.setdefault("CACHE_NO_NULL_WARNING", True)
+        dotted = _CACHE_TYPE_DOTTED_PATHS.get(str(cache_type or "").strip().lower())
+        if dotted:
+            app.config["CACHE_TYPE"] = dotted
+            if config is not None and "CACHE_TYPE" in config:
+                # Copy rather than mutate: callers pass this dict in.
+                config = {**config, "CACHE_TYPE": dotted}
         return self._cache.init_app(app, config=config)
 
     def __getattr__(self, name):
