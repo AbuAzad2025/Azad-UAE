@@ -167,9 +167,7 @@ def _schema_blocked_tables() -> frozenset[str]:
     blocked: set[str] = {"alembic_version"}
     for table in db.metadata.tables.values():
         columns = {c.name.lower() for c in table.columns}
-        has_credential_column = any(
-            marker in column for marker in _CREDENTIAL_COLUMN_MARKERS for column in columns
-        )
+        has_credential_column = any(marker in column for marker in _CREDENTIAL_COLUMN_MARKERS for column in columns)
         if "tenant_id" in columns or has_credential_column:
             blocked.add(table.name.lower())
 

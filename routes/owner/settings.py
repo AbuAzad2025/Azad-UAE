@@ -1231,9 +1231,7 @@ def api_supervisor_override():
         # Tenant-scoped: a cashier may only ever authorise a supervisor from
         # their own tenant.
         supervisor = (
-            scoped_user_query(active_only=True, exclude_owners=True)
-            .filter(User.id == int(supervisor_id))
-            .first()
+            scoped_user_query(active_only=True, exclude_owners=True).filter(User.id == int(supervisor_id)).first()
         )
         # One indistinguishable failure response. Distinguishing "no such
         # user" from "not a supervisor" from "wrong password" turns this into

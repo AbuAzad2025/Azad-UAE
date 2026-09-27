@@ -1606,8 +1606,7 @@ class GLService:
             query = query.filter(GLJournalEntry.branch_id == branch_id)
 
         return {
-            row[0]: (row[1] or Decimal("0"), row[2] or Decimal("0"))
-            for row in query.group_by(GLJournalLine.account_id)
+            row[0]: (row[1] or Decimal("0"), row[2] or Decimal("0")) for row in query.group_by(GLJournalLine.account_id)
         }
 
     @staticmethod
@@ -1690,7 +1689,16 @@ class GLService:
         # that previously ran their own two queries per account.
         balances = GLService._account_balances(
             tid,
-            [acc.id for acc in (*asset_accounts, *liability_accounts, *equity_accounts, *revenue_accounts, *expense_accounts)],
+            [
+                acc.id
+                for acc in (
+                    *asset_accounts,
+                    *liability_accounts,
+                    *equity_accounts,
+                    *revenue_accounts,
+                    *expense_accounts,
+                )
+            ],
             date_to=date_to,
             branch_id=branch_id,
         )
