@@ -51,6 +51,36 @@ def _resolve_extends(ast: nodes.Template) -> str | None:
     return None
 
 
+def _template_references(ast: nodes.Template) -> list[tuple[str, str, int]]:
+    """Every other template this one pulls in, as (kind, target, lineno).
+
+    Covers ``{% extends %}``, ``{% include %}``, ``{% from x import ... %}`` and
+    ``{% import x %}``. A target that no longer exists raises TemplateNotFound
+    at render time, taking the whole page with it, and because these are
+    resolved lazily the failure only shows up on the route that happens to hit
+    it - which is why a moved or renamed partial can stay broken for a long time
+    before anyone notices.
+    """
+    found: list[tuple[str, str, int]] = []
+    for node in _iter_nodes(ast):
+        template_node: nodes.Expr | None = None
+        kind = ""
+        if isinstance(node, nodes.Extends):
+            template_node, kind = node.template, "extends"
+        elif isinstance(node, nodes.Include):
+            template_node, kind = node.template, "include"
+        elif isinstance(node, nodes.FromImport):
+            template_node, kind = node.template, "from"
+        elif isinstance(node, nodes.Import):
+            template_node, kind = node.template, "import"
+        if template_node is None or not isinstance(template_node, nodes.Const):
+            continue
+        value = template_node.value
+        if isinstance(value, str) and not value.startswith(("http://", "https://")):
+            found.append((kind, PurePosixPath(value).as_posix(), node.lineno))
+    return found
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
@@ -109,11 +139,19 @@ def main() -> int:
                     )
                 )
 
+    # --- Reference integrity gate --------------------------------------------
+    # Every extends/include/from/import target must exist. These are resolved
+    # lazily, so a moved or deleted partial raises TemplateNotFound only on the
+    # route that reaches it - a broken page discovered by a user, not by CI.
+    for rel, ast in asts.items():
+        for kind, target, lineno in _template_references(ast):
+            if target not in asts:
+                failures.append((rel, lineno, f"{{% {kind} '{target}' %}} does not exist"))
+
     print(f"Jinja template gate: parsed {len(templates)} template(s) under templates/ — {len(failures)} failure(s).")
     for rel, line, message in failures:
         # GitHub Actions annotation format
         print(f"::error file=templates/{rel},line={line}::{message}")
-
     if not templates:
         print("::error::No templates found — the gate itself must be misconfigured.")
         return 1

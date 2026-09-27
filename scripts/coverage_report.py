@@ -189,11 +189,35 @@ def _get_vitest_coverage_pct():
     return None
 
 
+def _js_key(p: str) -> str:
+    """Canonical key for a JS asset, from any form the templates use.
+
+    References arrive as ``js/foo.js`` (url_for / dist_url) or
+    ``/static/js/foo.js`` (a literal src), while files on disk are relative to
+    ``static/js`` and so are just ``foo.js``. Normalising to one key is what
+    makes the reachability set comparison meaningful at all - without it the
+    two sets never intersect and the reported ratio is two unrelated counts
+    divided into each other.
+    """
+    key = _norm(p).replace("\\", "/")
+    for prefix in ("static/js/", "js/"):
+        if key.startswith(prefix):
+            key = key[len(prefix) :]
+            break
+    return key.lstrip("/")
+
+
 def get_js_coverage(rendered_templates: set[str]):
     js_dir = PROJECT_ROOT / "static" / "js"
     all_js: set[str] = set()
     for jf in js_dir.rglob("*.js"):
-        all_js.add(_norm(str(jf.relative_to(js_dir))))
+        rel = str(jf.relative_to(js_dir)).replace("\\", "/")
+        # dist/ holds terser build output, not a source asset. Counting it put 55
+        # phantom files in the denominator whenever a build had run, so the same
+        # commit reported a different ratio depending on build state.
+        if rel.startswith("dist/") or "/dist/" in rel:
+            continue
+        all_js.add(rel)
 
     referenced: set[str] = set()
     templates_dir = PROJECT_ROOT / "templates"
@@ -206,16 +230,12 @@ def get_js_coverage(rendered_templates: set[str]):
         except Exception:
             continue
         for m in _SCRIPT_RE.findall(content):
-            if "/static/js/" in m:
-                js_rel = m.split("/static/js/")[-1]
-                referenced.add(_norm(js_rel))
-            elif m.startswith("static/js/"):
-                js_rel = m[len("static/js/") :]
-                referenced.add(_norm(js_rel))
+            if "/static/js/" in m or m.startswith("static/js/"):
+                referenced.add(_js_key(m))
         for m in _JS_URLFOR_RE.findall(content):
-            referenced.add(_norm(m))
+            referenced.add(_js_key(m))
         for m in _JS_DIST_URL_RE.findall(content):
-            referenced.add(_norm(m))
+            referenced.add(_js_key(m))
     return all_js, referenced
 
 
@@ -266,13 +286,22 @@ def main():
 
         # ── JS ──
         all_js, js_ref = get_js_coverage(rendered_templates)
-        js_pct = (len(js_ref) / len(all_js) * 100) if all_js else 0
+        # Reachability is the share of real source files that a rendered
+        # template actually loads. Count the intersection, not the size of the
+        # reference list: a reference that resolves to no file (or to a vendor
+        # bundle) must not inflate the result, and the ratio is clamped so it
+        # can never report above 100%.
+        reachable = all_js & js_ref
+        js_pct = min(100.0, (len(reachable) / len(all_js) * 100)) if all_js else 0
+        dangling = js_ref - all_js
         js_test_pct = _get_vitest_coverage_pct()
         yield "### Frontend (JavaScript) — تغطية ملفات JS"
         yield ""
-        yield f"- إجمالي ملفات JS: **{len(all_js)}**"
-        yield f"- ملفات JS مُحمّلة عبر قوالب تم اختبارها: **{len(js_ref)}**"
+        yield f"- إجمالي ملفات JS المصدر: **{len(all_js)}**"
+        yield f"- ملفات JS مُحمّلة عبر قوالب تم اختبارها: **{len(reachable)}**"
         yield f"- نسبة الوصول (reachability): **{_pct(js_pct)}**"
+        if dangling:
+            yield f"- مراجع لا تقابل ملفاً على القرص: **{len(dangling)}**"
         if js_test_pct is not None:
             yield f"- نسبة تغطية الاختبارات (vitest): **{_pct(js_test_pct)}**"
         else:
