@@ -328,6 +328,9 @@ jobs:
       - name: Alembic graph gate (single head, reversible chain)
         run: python scripts/lint/check_migration_head.py
 
+      - name: Transaction-boundary gate (services never end a transaction)
+        run: python scripts/lint/check_txn_boundaries.py
+
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github

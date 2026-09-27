@@ -81,34 +81,51 @@ class Customer(db.Model):
 
     # دوال مساعدة لتحديث الرصيد بشكل تراكمي وسريع
     # الدلالة: موجب = رصيد/ائتمان للعميل، سالب = ذمة على العميل
+    #
+    # These were previously a plain read-modify-write on `self.balance`, so two
+    # concurrent sales for the same customer both read the same opening
+    # balance and both wrote the decremented value - one transaction's
+    # receivable was lost and the AR sub-ledger disagreed with the GL
+    # permanently. The lock lives here rather than at each of the ~20 call
+    # sites so no caller can forget it.
+    def _locked(self):
+        from utils.db_safety import lock_row_for_update
+
+        return lock_row_for_update(type(self), self.id, label=f"Customer({self.id})")
+
     def apply_sale(self, amount_aed):
         """فاتورة بيع: العميل يدين لنا أكثر -> الرصيد ينقص (أكثر سالباً)."""
         from decimal import Decimal
 
+        self._locked()
         self.balance = (self.balance or Decimal("0")) - Decimal(str(amount_aed or 0))
 
     def apply_receipt(self, amount_aed):
         """سند قبض: العميل يدفع لنا -> الرصيد يزيد (أكثر موجبة)."""
         from decimal import Decimal
 
+        self._locked()
         self.balance = (self.balance or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def apply_return(self, amount_aed):
         """مرتجع مبيعات: العميل يحصل ائتمان -> الرصيد يزيد (أكثر موجبة)."""
         from decimal import Decimal
 
+        self._locked()
         self.balance = (self.balance or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def adjust_balance(self, delta_aed):
         """تعديل الرصيد: delta موجب = زيادة رصيد العميل، delta سالب = زيادة ذمته."""
         from decimal import Decimal
 
+        self._locked()
         self.balance = (self.balance or Decimal("0")) + Decimal(str(delta_aed or 0))
 
     def set_balance(self, new_balance_aed):
         """تعيين رصيد العميل مباشرة (لعمليات التصحيح/الإدارة)."""
         from decimal import Decimal
 
+        self._locked()
         self.balance = Decimal(str(new_balance_aed or 0))
 
     def get_display_name(self, lang="ar"):

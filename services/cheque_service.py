@@ -667,65 +667,59 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
         cheque.clearance_date = datetime.now().date()
         _create_bounce_journal_entry(cheque)
         if bounce_fee is not None and bounce_fee > 0:
-            try:
-                from models import GLJournalEntry
-                from services.gl_posting import post_or_fail
+            from models import GLJournalEntry
+            from services.gl_posting import post_or_fail
 
-                fee_desc = gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}")
-                # Idempotency guard: reuse the canonical existence checker (no
-                # description match) so a repeated bounce never double-posts.
-                from utils.gl_reference_types import ref_variants
+            fee_desc = gettext(f"رسوم ارتداد شيك {cheque.cheque_type_ar} رقم {cheque.cheque_bank_number}")
+            # Idempotency guard: reuse the canonical existence checker (no
+            # description match) so a repeated bounce never double-posts.
+            from utils.gl_reference_types import ref_variants
 
-                existing_fee_q = GLJournalEntry.query.filter(
-                    GLJournalEntry.reference_type.in_(ref_variants(GLRef.CHEQUE_BOUNCE)),
-                    GLJournalEntry.reference_id == cheque.id,
-                    GLJournalEntry.status == "posted",
+            existing_fee_q = GLJournalEntry.query.filter(
+                GLJournalEntry.reference_type.in_(ref_variants(GLRef.CHEQUE_BOUNCE)),
+                GLJournalEntry.reference_id == cheque.id,
+                GLJournalEntry.status == "posted",
+            )
+            if cheque.tenant_id is not None:
+                existing_fee_q = existing_fee_q.filter(GLJournalEntry.tenant_id == cheque.tenant_id)
+            if existing_fee_q.first() is None:
+                expense_account = GLService.get_account_code_for_concept(
+                    "MISC_EXPENSE",
+                    branch_id=cheque.branch_id,
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
+                    fallback_key="misc_expense",
                 )
-                if cheque.tenant_id is not None:
-                    existing_fee_q = existing_fee_q.filter(GLJournalEntry.tenant_id == cheque.tenant_id)
-                if existing_fee_q.first() is None:
-                    expense_account = GLService.get_account_code_for_concept(
-                        "MISC_EXPENSE",
-                        branch_id=cheque.branch_id,
-                        tenant_id=(cheque.tenant_id if cheque is not None else None),
-                        fallback_key="misc_expense",
-                    )
-                    bank_account = gl_get_default_liquidity_account(
-                        "bank",
-                        branch_id=cheque.branch_id,
-                        tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    )
-                    fee_lines = [
-                        {
-                            "account": expense_account,
-                            "concept_code": "MISC_EXPENSE",
-                            "debit": Decimal(str(bounce_fee)),
-                            "credit": 0,
-                            "description": gettext(f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
-                        },
-                        {
-                            "account": bank_account,
-                            "concept_code": "BANK",
-                            "debit": 0,
-                            "credit": Decimal(str(bounce_fee)),
-                            "description": gettext(f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
-                        },
-                    ]
-                    post_or_fail(
-                        fee_lines,
-                        description=fee_desc,
-                        reference_type=GLRef.CHEQUE_BOUNCE,
-                        reference_id=cheque.id,
-                        branch_id=cheque.branch_id,
-                        tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    )
-            except Exception as fee_err:
-                logger.error(f"Failed to post bounce fee for cheque {cheque.id}: {fee_err}")
+                bank_account = gl_get_default_liquidity_account(
+                    "bank",
+                    branch_id=cheque.branch_id,
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
+                )
+                fee_lines = [
+                    {
+                        "account": expense_account,
+                        "concept_code": "MISC_EXPENSE",
+                        "debit": Decimal(str(bounce_fee)),
+                        "credit": 0,
+                        "description": gettext(f"رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
+                    },
+                    {
+                        "account": bank_account,
+                        "concept_code": "BANK",
+                        "debit": 0,
+                        "credit": Decimal(str(bounce_fee)),
+                        "description": gettext(f"خصم رسوم ارتداد شيك رقم {cheque.cheque_bank_number}"),
+                    },
+                ]
+                post_or_fail(
+                    fee_lines,
+                    description=fee_desc,
+                    reference_type=GLRef.CHEQUE_BOUNCE,
+                    reference_id=cheque.id,
+                    branch_id=cheque.branch_id,
+                    tenant_id=(cheque.tenant_id if cheque is not None else None),
+                )
         if cheque.cheque_type == "incoming" and cheque.customer_id:
-            try:
-                cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
-            except Exception as cust_err:
-                logger.error(f"Failed to adjust customer balance on bounce cheque {cheque.id}: {cust_err}")
+            cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
         from models.payment import Payment
         from models.receipt import Receipt
 

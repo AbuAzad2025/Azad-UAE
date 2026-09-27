@@ -1569,95 +1569,108 @@ class GLService:
         )
 
     @staticmethod
-    def build_income_statement(tid, date_from, date_to, branch_id):
-        """Per-account revenue/expense balances for the income statement."""
+    def _account_balances(tid, account_ids, date_from=None, date_to=None, branch_id=None):
+        """Sum debit/credit for every account in ``account_ids`` using ONE query.
+
+        The statements previously issued two ``SUM()`` queries per GL account
+        (~320 round-trips for a full balance sheet) because each account was
+        filtered inside a Python loop. Grouping once by ``account_id`` collapses
+        that to a single scan.
+
+        The date predicates are applied directly to ``entry_date`` rather than
+        through ``func.date(entry_date)``: wrapping the column in a function
+        makes the predicate non-sargable and stops it using the entry-date
+        indexes.
+        """
         from sqlalchemy import func
 
-        from utils.gl_tenant import scope_gl_accounts
+        if not account_ids:
+            return {}
 
-        def _filter_tenant(q):
-            if tid is not None:
-                return q.filter(GLJournalEntry.tenant_id == tid)
-            return q
+        query = (
+            db.session.query(
+                GLJournalLine.account_id,
+                func.coalesce(func.sum(GLJournalLine.debit), 0),
+                func.coalesce(func.sum(GLJournalLine.credit), 0),
+            )
+            .join(GLJournalEntry, GLJournalEntry.id == GLJournalLine.entry_id)
+            .filter(GLJournalLine.account_id.in_(account_ids))
+        )
+        if tid is not None:
+            query = query.filter(GLJournalEntry.tenant_id == tid)
+        if date_from:
+            query = query.filter(GLJournalEntry.entry_date >= date_from)
+        if date_to:
+            query = query.filter(GLJournalEntry.entry_date <= date_to)
+        if branch_id:
+            query = query.filter(GLJournalEntry.branch_id == branch_id)
+
+        return {
+            row[0]: (row[1] or Decimal("0"), row[2] or Decimal("0"))
+            for row in query.group_by(GLJournalLine.account_id)
+        }
+
+    @staticmethod
+    def _labelled_balances(accounts, balances, normal):
+        """Map accounts to ``{label: amount}``, keeping every balance.
+
+        ``label`` is the account name so the statement templates keep their
+        ``for name, amount in ....items()`` contract, but two accounts sharing a
+        name (routine for branch-scoped accounts such as ``1110-B3``, and
+        possible for any tenant-authored duplicate) previously overwrote each
+        other in the dict and one balance vanished from the statement. A
+        colliding label is disambiguated with the account code.
+
+        ``normal`` is ``+1`` for debit-normal balances and ``-1`` for
+        credit-normal ones.
+        """
+        labelled: dict[str, float] = {}
+        used: set[str] = set()
+        for acc in accounts:
+            debit, credit = balances.get(acc.id, (Decimal("0"), Decimal("0")))
+            amount = (debit - credit) * normal
+            if not amount:
+                continue
+            label = acc.name
+            if label in used:
+                label = f"{acc.name} ({acc.code})"
+            used.add(label)
+            labelled[label] = float(amount)
+        return labelled
+
+    @staticmethod
+    def build_income_statement(tid, date_from, date_to, branch_id):
+        """Per-account revenue/expense balances for the income statement."""
+        from utils.gl_tenant import scope_gl_accounts
 
         revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "revenue")).all()
         expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "expense")).all()
 
-        revenues = {}
-        total_revenue = Decimal("0")
+        balances = GLService._account_balances(
+            tid,
+            [acc.id for acc in (*revenue_accounts, *expense_accounts)],
+            date_from=date_from,
+            date_to=date_to,
+            branch_id=branch_id,
+        )
 
-        for acc in revenue_accounts:
-            query_credit = _filter_tenant(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            query_debit = _filter_tenant(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
+        revenues = GLService._labelled_balances(revenue_accounts, balances, normal=-1)
+        expenses = GLService._labelled_balances(expense_accounts, balances, normal=1)
 
-            if date_from:
-                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-
-            if date_to:
-                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-            if branch_id:
-                query_credit = query_credit.filter(GLJournalEntry.branch_id == branch_id)
-                query_debit = query_debit.filter(GLJournalEntry.branch_id == branch_id)
-
-            credit = query_credit.scalar() or Decimal("0")
-            debit = query_debit.scalar() or Decimal("0")
-            balance = credit - debit
-
-            if balance != 0:
-                revenues[acc.name] = float(balance)
-                total_revenue += balance
-
-        expenses = {}
-        total_expense = Decimal("0")
-
-        for acc in expense_accounts:
-            query_debit = _filter_tenant(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            query_credit = _filter_tenant(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-
-            if date_from:
-                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) >= date_from)
-
-            if date_to:
-                query_debit = query_debit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-                query_credit = query_credit.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-            if branch_id:
-                query_debit = query_debit.filter(GLJournalEntry.branch_id == branch_id)
-                query_credit = query_credit.filter(GLJournalEntry.branch_id == branch_id)
-
-            debit = query_debit.scalar() or Decimal("0")
-            credit = query_credit.scalar() or Decimal("0")
-            balance = debit - credit
-
-            if balance != 0:
-                expenses[acc.name] = float(balance)
-                total_expense += balance
-
-        net_profit = total_revenue - total_expense
+        total_revenue = sum(Decimal(str(v)) for v in revenues.values())
+        total_expense = sum(Decimal(str(v)) for v in expenses.values())
 
         return {
             "revenues": revenues,
             "expenses": expenses,
             "total_revenue": total_revenue,
             "total_expense": total_expense,
-            "net_profit": net_profit,
+            "net_profit": total_revenue - total_expense,
         }
 
     @staticmethod
     def build_balance_sheet(tid, branch_id, date_to):
         """Asset/liability/equity balances plus period net profit."""
-        from sqlalchemy import func
-
         from utils.gl_tenant import scope_gl_accounts
 
         assets = {}
@@ -1668,92 +1681,37 @@ class GLService:
         liability_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "liability")).all()
         equity_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.type == "equity")).all()
 
-        def _apply_entry_filters(q):
-            if tid is not None:
-                q = q.filter(GLJournalEntry.tenant_id == tid)
-            if date_to:
-                q = q.filter(func.date(GLJournalEntry.entry_date) <= date_to)
-            if branch_id:
-                q = q.filter(GLJournalEntry.branch_id == branch_id)
-            return q
-
-        total_assets = Decimal("0")
-        for acc in asset_accounts:
-            debit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            credit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            debit = debit_query.scalar() or Decimal("0")
-            credit = credit_query.scalar() or Decimal("0")
-            balance = debit - credit
-
-            if balance != 0:
-                assets[acc.name] = float(balance)
-                total_assets += balance
-
-        total_liabilities = Decimal("0")
-        for acc in liability_accounts:
-            credit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            debit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            credit = credit_query.scalar() or Decimal("0")
-            debit = debit_query.scalar() or Decimal("0")
-            balance = credit - debit
-
-            if balance != 0:
-                liabilities[acc.name] = float(balance)
-                total_liabilities += balance
-
-        total_equity = Decimal("0")
-        for acc in equity_accounts:
-            credit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            debit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            credit = credit_query.scalar() or Decimal("0")
-            debit = debit_query.scalar() or Decimal("0")
-            balance = credit - debit
-
-            if balance != 0:
-                equity[acc.name] = float(balance)
-                total_equity += balance
-
-        # Calculate Net Profit (Revenue - Expenses) for Equity Section
+        # Revenue/expense for the period, retained earnings section.
         revenue_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("4%"))).all()
         expense_accounts = scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("5%"))).all()
-        expense_accounts += scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("6%"))).all()
+        expense_accounts = expense_accounts + scope_gl_accounts(GLAccount.query.filter(GLAccount.code.like("6%"))).all()
 
-        total_revenue_period = Decimal("0")
-        for acc in revenue_accounts:
-            credit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            debit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            credit = credit_query.scalar() or Decimal("0")
-            debit = debit_query.scalar() or Decimal("0")
-            total_revenue_period += credit - debit
+        # One grouped scan covers every section, including the period P&L totals
+        # that previously ran their own two queries per account.
+        balances = GLService._account_balances(
+            tid,
+            [acc.id for acc in (*asset_accounts, *liability_accounts, *equity_accounts, *revenue_accounts, *expense_accounts)],
+            date_to=date_to,
+            branch_id=branch_id,
+        )
 
-        total_expense_period = Decimal("0")
-        for acc in expense_accounts:
-            debit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.debit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            credit_query = _apply_entry_filters(
-                db.session.query(func.sum(GLJournalLine.credit)).filter_by(account_id=acc.id).join(GLJournalEntry)
-            )
-            debit = debit_query.scalar() or Decimal("0")
-            credit = credit_query.scalar() or Decimal("0")
-            total_expense_period += debit - credit
+        assets = GLService._labelled_balances(asset_accounts, balances, normal=1)
+        liabilities = GLService._labelled_balances(liability_accounts, balances, normal=-1)
+        equity = GLService._labelled_balances(equity_accounts, balances, normal=-1)
 
+        total_assets = sum(Decimal(str(v)) for v in assets.values())
+        total_liabilities = sum(Decimal(str(v)) for v in liabilities.values())
+        total_equity = sum(Decimal(str(v)) for v in equity.values())
+
+        def _period_total(accounts, normal):
+            total = Decimal("0")
+            for acc in accounts:
+                debit, credit = balances.get(acc.id, (Decimal("0"), Decimal("0")))
+                total += (debit - credit) * normal
+            return total
+
+        total_revenue_period = _period_total(revenue_accounts, normal=-1)
+        total_expense_period = _period_total(expense_accounts, normal=1)
         net_profit_period = total_revenue_period - total_expense_period
 
         if net_profit_period != 0:

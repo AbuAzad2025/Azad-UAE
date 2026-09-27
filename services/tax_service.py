@@ -66,18 +66,17 @@ class TaxService:
         from services.gl_service import GLService
 
         strategy = cls._get_strategy(tenant_id)
-        try:
-            gl_report = GLService.get_vat_report(
-                date_from=date_from or None,
-                date_to=date_to or None,
-                tenant_id=tenant_id,
-            )
-            output_vat = Decimal(str(gl_report.get("vat_output", 0)))
-            input_vat = Decimal(str(gl_report.get("vat_input", 0)))
-        except Exception:
-            logger.warning("GL VAT report unavailable; VAT return falls back to zero amounts", exc_info=True)
-            output_vat = Decimal("0")
-            input_vat = Decimal("0")
+        # No fallback. These amounts are what gets filed with the tax authority:
+        # emitting a return of 0/0 because the GL report failed would understate
+        # the liability and is unrecoverable once filed. Let the caller's
+        # transaction roll back and surface the error instead.
+        gl_report = GLService.get_vat_report(
+            date_from=date_from or None,
+            date_to=date_to or None,
+            tenant_id=tenant_id,
+        )
+        output_vat = Decimal(str(gl_report.get("vat_output", 0)))
+        input_vat = Decimal(str(gl_report.get("vat_input", 0)))
 
         result = strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
         result["source"] = "gl"

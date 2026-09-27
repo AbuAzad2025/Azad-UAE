@@ -114,12 +114,24 @@ class Supplier(db.Model):
         return total - paid
 
     # دوال مساعدة لتحديث الإحصائيات/الرصيد بشكل تراكمي
+    #
+    # Each takes a row lock (SELECT ... FOR UPDATE) before reading. These were
+    # plain read-modify-write, and get_balance_base() derives the entire AP
+    # balance from total_purchases_aed - total_paid_aed, so a single lost
+    # update permanently desynchronised AP aging from the GL.
+    def _locked(self):
+        from utils.db_safety import lock_row_for_update
+
+        return lock_row_for_update(type(self), self.id, label=f"Supplier({self.id})")
+
     def apply_purchase(self, amount_aed: Decimal):
         """تحديث إجمالي المشتريات عند إنشاء فاتورة شراء."""
+        self._locked()
         self.total_purchases_aed = (self.total_purchases_aed or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def apply_payment(self, amount_aed: Decimal):
         """تحديث إجمالي المدفوع للمورد عند سند صرف."""
+        self._locked()
         self.total_paid_aed = (self.total_paid_aed or Decimal("0")) + Decimal(str(amount_aed or 0))
 
     def apply_purchase_base(self, amount: Decimal):

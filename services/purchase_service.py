@@ -389,12 +389,15 @@ class PurchaseService:
         )
 
         if supplier:
-            try:
-                from decimal import Decimal as _D
+            # No swallow. post_or_fail has already committed the purchase and
+            # its GL entry above; a failure here used to be logged as a warning
+            # and the purchase stayed committed while the AP sub-ledger
+            # (supplier total_purchases_aed / total_paid_aed) stayed short
+            # permanently, corrupting every AP ageing report. Let it propagate
+            # so the caller's transaction rolls the whole purchase back.
+            from decimal import Decimal as _D
 
-                supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
-            except Exception as e:
-                current_app.logger.warning(f"Supplier stats update failed: {e}")
+            supplier.apply_purchase(_D(str(purchase.amount_aed or 0)))
 
         db.session.flush()
         LoggingCore.log_audit("create", "purchases", purchase.id)

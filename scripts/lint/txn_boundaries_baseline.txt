@@ -1,0 +1,53 @@
+# Accepted transaction-boundary violations in services/.
+# Each line is '<relpath>:<lineno>:<message>'.
+# Delete a line as you fix it; the gate fails on anything not listed.
+# Regenerate with: python scripts/lint/check_txn_boundaries.py --write-baseline
+services/ai_executor.py:170: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:282: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:343: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:435: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:485: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:521: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:566: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/ai_executor.py:85: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/archive_service.py:149: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/auto_approval_service.py:136: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/auto_approval_service.py:65: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/azad_platform_fee_service.py:259: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/azad_platform_fee_service.py:331: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/depreciation_service.py:48: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/donation_gl_service.py:150: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/exchange_rate_service.py:666: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/fx_revaluation_service.py:183: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/fx_revaluation_service.py:379: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/gl_accounting_setup.py:721: db.session.rollback() in services/ - only the caller (routes/, or an allowlisted entry point) may end a transaction
+services/gl_accounting_setup.py:723: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/gl_provisioning_service.py:43: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/gl_tree_builder.py:140: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/integration_service.py:59: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/logging_core.py:1199: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/logging_core.py:1217: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/logging_core.py:1342: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/logging_core.py:1770: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/nowpayments_service.py:281: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/nowpayments_service.py:99: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/procurement_service.py:202: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/saas_provisioning_service.py:141: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/saas_provisioning_service.py:210: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/stock_sync_service.py:96: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:155: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:167: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:183: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:220: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:271: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_payment_method_service.py:89: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_service.py:238: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/store_service.py:256: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/user_service.py:245: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/user_service.py:294: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/user_service.py:300: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/webhook_service.py:139: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/webhook_service.py:177: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/webhook_service.py:188: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/webhook_service.py:195: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
+services/webhook_service.py:96: atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here
