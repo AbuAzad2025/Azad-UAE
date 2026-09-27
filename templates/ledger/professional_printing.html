@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('Professional Printing System') }}{% endblock %}
 
-{% block styles %}
+{% block extra_css %}
 <link rel="stylesheet" href="{{ dist_url('css/professional-print.css') }}">
 {% endblock %}
 
@@ -171,7 +171,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script nonce="{{ csp_nonce() }}">
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-action]');

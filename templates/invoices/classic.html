@@ -5,7 +5,7 @@
    ============================================================================= #}
 {% extends 'invoices/_base.html' %}
 
-{% block invoice_css_vars %}
+{% block document_css_vars %}
 <style nonce="{{ csp_nonce() }}">
   :root {
     --header-color: {{ settings.header_color or '#2c3e50' }};

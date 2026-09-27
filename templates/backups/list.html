@@ -2,7 +2,7 @@
 {% block title %}{{ t('Backups') }}{% endblock %}
 {% block page_title %}<i class="fas fa-database ml-2" aria-hidden="true"></i>{{ t('Backups') }}{% endblock %}
 
-{% block breadcrumb %}
+{% block breadcrumb_items %}
 <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">{{ t('Dashboard') }}</a></li>
 <li class="breadcrumb-item active">{{ t('Backups') }}</li>
 {% endblock %}

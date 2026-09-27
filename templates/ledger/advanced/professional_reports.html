@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('Professional Financial Reports') }}{% endblock %}
 
-{% block styles %}
+{% block extra_css %}
 <style nonce="{{ csp_nonce() }}">
 /* TODO: Rename .ic-* classes to descriptive names (e.g., .stat-gradient-primary) */
 .report-dashboard {
@@ -393,7 +393,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 
 <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
 

@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     {# TODO: Add <link rel="manifest"> when static/manifest.json is created #}
+    {% block extra_head %}{% endblock %}
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
     <link rel="stylesheet" href="{{ dist_url('css/pos.css') }}">
@@ -69,6 +70,11 @@
     <script nonce="{{ csp_nonce() }}">
         window.I18N_LANG = "{{ current_language or 'ar' }}";
         window.I18N_TRANSLATIONS = {{ translation_dict | tojson }};
+    </script>
+    <script nonce="{{ csp_nonce() }}">
+        window._FX_API_URL = '{{ url_for("api.exchange_rates_display") }}';
+        window._FX_BASE_CURRENCY = '{{ FX_BASE_CURRENCY }}';
+        window._FX_FALLBACK_BASE = '{{ FX_BASE_CURRENCY }}';
     </script>
     {% block extra_js %}{% endblock %}
 </body>

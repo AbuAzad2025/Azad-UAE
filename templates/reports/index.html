@@ -2,7 +2,7 @@
 {% block title %}{{ tenant_name_ar or company_name_ar or t('Accounting_System') }} - {{ t('Reports') }} {{ t('And_statistics') }}{% endblock %}
 {% block page_title %}{{ t('Reports') }}{% endblock %}
 
-{% block head %}
+{% block extra_css %}
 <style nonce="{{ csp_nonce() }}">
 .report-card { transition: transform .15s ease, box-shadow .15s ease; cursor: pointer; }
 .report-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }

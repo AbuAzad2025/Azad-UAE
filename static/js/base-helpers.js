@@ -273,8 +273,11 @@ async function loadFxRates() {
 	}
 
 	try {
-		const baseCurrency =
-			window._FX_BASE_CURRENCY || "{{ tenant_base_currency|default(\x27USD\x27) }}";
+		// This file is served verbatim as a static asset — Jinja is NOT rendered
+		// here, so a "{{ ... }}" expression would ship to the browser as a
+		// 41-character literal. The real value is injected by the layout as
+		// window._FX_BASE_CURRENCY (see templates/base.html).
+		const baseCurrency = window._FX_BASE_CURRENCY || "USD";
 		const res = await fetch(`${window._FX_API_URL}?base=${encodeURIComponent(baseCurrency)}`, {
 			cache: "no-store",
 		});

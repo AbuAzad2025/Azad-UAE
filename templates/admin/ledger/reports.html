@@ -239,7 +239,7 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block extra_js %}
 <script nonce="{{ csp_nonce() }}">
 // {{ t('ملء') }} {{ t('List') }} {{ t('Accounts') }}
 document.addEventListener('DOMContentLoaded', () => {

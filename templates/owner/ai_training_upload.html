@@ -3,7 +3,7 @@
 {% block title %}{{ t('AI_Training_Upload') }}{% endblock %}
 {% block page_title %}<i class="fas fa-upload ml-2" aria-hidden="true"></i>{{ t('AI_Training_Upload') }}{% endblock %}
 
-{% block breadcrumb %}
+{% block breadcrumb_items %}
 <li class="breadcrumb-item"><a href="{{ url_for('owner.dashboard') }}">{{ t('Owner_Dashboard') }}</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('owner.ai_training') }}">{{ t('AI_Training') }}</a></li>
 <li class="breadcrumb-item active">{{ t('Upload_Training_Data') }}</li>
