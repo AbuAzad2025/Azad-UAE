@@ -20,6 +20,7 @@ from flask import (
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import config
+from app.bootstrap import run_boot_provisioning
 from app.context import register_context_processors
 from app.handlers import register_error_handlers
 from app.integrity import run_system_integrity_check
@@ -92,6 +93,12 @@ def create_app(config_class=Config) -> Flask:
     LoggingCore.setup(app)
     LoggingCore.schedule_cleanup(app)
 
+    # Zero-touch provisioning, phase 1: storage paths and schema health.
+    # Idempotent and individually guarded. Runs after init_extensions so the
+    # engine exists, and before the integrity/seed steps below so an incomplete
+    # schema is reported before anything tries to write to it.
+    run_boot_provisioning(app, phase="pre")
+
     # Opt-in N+1 profiler (QUERY_PROFILE=1). Off by default and inert when off.
     if os.environ.get("QUERY_PROFILE", "").strip().lower() in {"1", "true", "yes", "on"}:
         from utils.query_profiler import enable_profiling
@@ -121,6 +128,11 @@ def create_app(config_class=Config) -> Flask:
                     app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
         else:
             app.logger.info("Default tenant maintenance service not available - skipping")
+
+    # Zero-touch provisioning, phase 2: report the credential state *after*
+    # seeding, so the operator sees the account that actually exists rather than
+    # a pre-seed snapshot.
+    run_boot_provisioning(app, phase="post")
 
     # Proxy Fix for Nginx/Cloudflare
     cast(Any, app).wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)

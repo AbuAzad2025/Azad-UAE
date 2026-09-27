@@ -29,7 +29,9 @@ from .common import (
 logger = logging.getLogger(__name__)
 
 UPLOAD_FOLDER = "uploads/training"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Directory is provisioned by app/bootstrap.py at startup. Creating it here ran a
+# filesystem side effect at import time, which fails whenever the process is
+# started from a read-only working directory.
 
 ALLOWED_EXTENSIONS = {".json", ".xlsx", ".xls"}
 
