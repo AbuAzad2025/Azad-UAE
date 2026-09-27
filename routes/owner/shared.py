@@ -165,11 +165,30 @@ def _schema_blocked_tables() -> frozenset[str]:
     import models  # noqa: F401  (import-for-side-effect: registers all tables)
 
     blocked: set[str] = {"alembic_version"}
+
+    # Tables that carry a tenant_id column of their own.
+    tenant_scoped = {name for name, table in db.metadata.tables.items() if "tenant_id" in table.columns}
+
     for table in db.metadata.tables.values():
         columns = {c.name.lower() for c in table.columns}
         has_credential_column = any(marker in column for marker in _CREDENTIAL_COLUMN_MARKERS for column in columns)
         if "tenant_id" in columns or has_credential_column:
             blocked.add(table.name.lower())
+            continue
+        # Tenant-owned by inheritance: a child table with no tenant_id of its own
+        # that hangs off a tenant-scoped parent. ``shipment_lines`` is the case in
+        # point - it reaches tenancy only through shipment_id -> shipments, so a
+        # tenant_id-only test let the platform console read every tenant's
+        # shipment lines, which is exactly what the module's own contract
+        # ("the platform plane cannot reach tenant business data") forbids.
+        for column in table.columns:
+            for fk in column.foreign_keys:
+                if fk.column.table.name in tenant_scoped:
+                    blocked.add(table.name.lower())
+                    break
+            else:
+                continue
+            break
 
     _SCHEMA_BLOCKED_CACHE = frozenset(blocked)
     return _SCHEMA_BLOCKED_CACHE
