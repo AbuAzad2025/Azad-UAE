@@ -83,8 +83,8 @@
         </div>
         <div class="col-md-3">
           <div class="form-group">
-            <label>{{ t('Branch') }} ({{ t('Branch') }})</label>
-            <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+            <label for="f_branch_id">{{ t('Branch') }} ({{ t('Branch') }})</label>
+            <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}" id="f_branch_id">
               <option value="">— {{ t('Optional') }} —</option>
               {% for b in branches or [] %}
               <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
@@ -228,7 +228,7 @@ function addLine() {
       </select>
     </td>
     <td>
-      <input type="text" name="line_${lineCounter}_description" class="form-control" 
+      <input type="text" name="line_${lineCounter}_description" class="form-control" aria-label="{{ t('Description') }}" 
              placeholder="{{ t('Description_3') }} ({{ t('Optional') }})" maxlength="500">
     </td>
     <td>
@@ -391,7 +391,7 @@ function addLineWithData(accountCode, accountName, debit, credit) {
       </select>
     </td>
     <td>
-      <input type="text" name="line_${lineCounter}_description" class="form-control" 
+      <input type="text" name="line_${lineCounter}_description" class="form-control" aria-label="{{ t('Description') }}" 
              value="${accountName}" placeholder="{{ t('Description_3') }} ({{ t('Optional') }})" maxlength="500">
     </td>
     <td>

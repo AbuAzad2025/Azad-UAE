@@ -25,8 +25,8 @@
         <div class="row">
           <div class="col-md-6">
             <div class="form-group">
-              <label>{{ t('الفئة') }} {{ t('الأب') }}</label>
-              <select name="parent_id" class="form-control" aria-label="{{ t('Parent_Category') }}">
+              <label for="f_parent_id">{{ t('الفئة') }} {{ t('الأب') }}</label>
+              <select name="parent_id" class="form-control" aria-label="{{ t('Parent_Category') }}" id="f_parent_id">
                 <option value="" {% if not form_data.get('parent_id') %}selected{% endif %}>{{ t('None') }}</option>
                 {% for parent in parent_categories %}
                 <option value="{{ parent.id }}" {% if form_data.get('parent_id') and form_data.get('parent_id')|int == parent.id %}selected{% endif %}>
@@ -38,8 +38,8 @@
           </div>
           <div class="col-md-6">
             <div class="form-group">
-              <label>{{ t('Account') }} {{ t('Accounting_4') }} *</label>
-              <select name="gl_account_id" class="form-control" required aria-label="{{ t('GL_Account') }}">
+              <label for="f_gl_account_id">{{ t('Account') }} {{ t('Accounting_4') }} *</label>
+              <select name="gl_account_id" class="form-control" required aria-label="{{ t('GL_Account') }}" id="f_gl_account_id">
                 {% for account in accounts %}
                 <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
                   {{ account.code }} - {{ account.name_ar }}

@@ -24,8 +24,8 @@
         <form class="needs-validation" novalidate action="{{ url_for('admin_ledger.settings') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
-            <label>{{ t('Currency') }} {{ t('الأساسية') }}:</label>
-            <select class="form-control" name="currency" aria-label="{{ t('Currency') }} {{ t('الأساسية') }}">
+            <label for="f_currency">{{ t('Currency') }} {{ t('الأساسية') }}:</label>
+            <select class="form-control" name="currency" aria-label="{{ t('Currency') }} {{ t('الأساسية') }}" id="f_currency">
               <option value="AED" selected>{{ t('Dirham') }} {{ t('إماراتي') }} (AED)</option>
               <option value="USD">{{ t('Dollar') }} {{ t('أمريكي') }} (USD)</option>
               <option value="EUR">{{ t('Euro') }} (EUR)</option>
@@ -34,24 +34,24 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Year') }} {{ t('Finance') }}:</label>
-            <select class="form-control" name="fiscal_year" aria-label="{{ t('Year') }} {{ t('Finance') }}">
+            <label for="f_fiscal_year">{{ t('Year') }} {{ t('Finance') }}:</label>
+            <select class="form-control" name="fiscal_year" aria-label="{{ t('Year') }} {{ t('Finance') }}" id="f_fiscal_year">
               <option value="calendar">{{ t('تقويمي') }} ({{ t('يناير') }} - {{ t('ديسمبر') }})</option>
               <option value="fiscal">{{ t('مالي') }} ({{ t('أبريل') }} - {{ t('مارس') }})</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>{{ t('System_2') }} {{ t('الترقيم') }}:</label>
-            <select class="form-control" name="numbering" aria-label="{{ t('System_2') }} {{ t('الترقيم') }}">
+            <label for="f_numbering">{{ t('System_2') }} {{ t('الترقيم') }}:</label>
+            <select class="form-control" name="numbering" aria-label="{{ t('System_2') }} {{ t('الترقيم') }}" id="f_numbering">
               <option value="auto">{{ t('تلقائي') }}</option>
               <option value="manual">{{ t('Manual') }}</option>
             </select>
           </div>
           
           <div class="form-group">
-            <label>{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}:</label>
-            <select class="form-control" name="decimal_places" aria-label="{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}">
+            <label for="f_decimal_places">{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}:</label>
+            <select class="form-control" name="decimal_places" aria-label="{{ t('Count') }} {{ t('الأرقام') }} {{ t('العشرية') }}" id="f_decimal_places">
               <option value="2" selected>2</option>
               <option value="3">3</option>
               <option value="4">4</option>
@@ -78,8 +78,8 @@
         <form action="{{ url_for('admin_ledger.settings') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
-            <label>{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}:</label>
-            <select class="form-control" name="account_code_length" aria-label="{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}">
+            <label for="f_account_code_length">{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}:</label>
+            <select class="form-control" name="account_code_length" aria-label="{{ t('طول') }} {{ t('Code_2') }} {{ t('Account') }}" id="f_account_code_length">
               <option value="4" selected>4 {{ t('أرقام') }}</option>
               <option value="6">6 {{ t('أرقام') }}</option>
               <option value="8">8 {{ t('أرقام') }}</option>
@@ -87,8 +87,8 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('مستوى') }} {{ t('Accounts') }}:</label>
-            <select class="form-control" name="account_levels" aria-label="{{ t('مستوى') }} {{ t('Accounts') }}">
+            <label for="f_account_levels">{{ t('مستوى') }} {{ t('Accounts') }}:</label>
+            <select class="form-control" name="account_levels" aria-label="{{ t('مستوى') }} {{ t('Accounts') }}" id="f_account_levels">
               <option value="3" selected>3 {{ t('مستويات') }}</option>
               <option value="4">4 {{ t('مستويات') }}</option>
               <option value="5">5 {{ t('مستويات') }}</option>
@@ -137,8 +137,8 @@
         <form action="{{ url_for('admin_ledger.settings') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
-            <label>{{ t('تنسيق') }} {{ t('التواريخ') }}:</label>
-            <select class="form-control" name="date_format" aria-label="{{ t('تنسيق') }} {{ t('التواريخ') }}">
+            <label for="f_date_format">{{ t('تنسيق') }} {{ t('التواريخ') }}:</label>
+            <select class="form-control" name="date_format" aria-label="{{ t('تنسيق') }} {{ t('التواريخ') }}" id="f_date_format">
               <option value="dd/mm/yyyy" selected>{{ t('يوم') }}/{{ t('شهر') }}/{{ t('سنة') }}</option>
               <option value="mm/dd/yyyy">{{ t('شهر') }}/{{ t('يوم') }}/{{ t('سنة') }}</option>
               <option value="yyyy-mm-dd">{{ t('سنة') }}-{{ t('شهر') }}-{{ t('يوم') }}</option>
@@ -146,8 +146,8 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('تنسيق') }} {{ t('الأرقام') }}:</label>
-            <select class="form-control" name="number_format" aria-label="{{ t('تنسيق') }} {{ t('الأرقام') }}">
+            <label for="f_number_format">{{ t('تنسيق') }} {{ t('الأرقام') }}:</label>
+            <select class="form-control" name="number_format" aria-label="{{ t('تنسيق') }} {{ t('الأرقام') }}" id="f_number_format">
               <option value="1,234.56" selected>1,234.56</option>
               <option value="1.234,56">1.234,56</option>
               <option value="1 234,56">1 234,56</option>
@@ -155,8 +155,8 @@
           </div>
           
           <div class="form-group">
-            <label>{{ t('Language') }} {{ t('الافتراضية') }}:</label>
-            <select class="form-control" name="default_language" aria-label="{{ t('Language') }} {{ t('الافتراضية') }}">
+            <label for="f_default_language">{{ t('Language') }} {{ t('الافتراضية') }}:</label>
+            <select class="form-control" name="default_language" aria-label="{{ t('Language') }} {{ t('الافتراضية') }}" id="f_default_language">
               <option value="ar" selected>{{ t('Arabic_2') }}</option>
               <option value="en">{{ t('English_2') }}</option>
             </select>
@@ -192,13 +192,13 @@
         <form action="{{ url_for('admin_ledger.settings') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <div class="form-group">
-            <label>{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }}):</label>
-            <input type="number" class="form-control" name="session_timeout" value="30" min="5" max="480" aria-label="{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }})">
+            <label for="f_session_timeout">{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }}):</label>
+            <input type="number" class="form-control" name="session_timeout" value="30" min="5" max="480" aria-label="{{ t('Duration') }} {{ t('انتهاء') }} {{ t('Session') }} ({{ t('دقيقة') }})" id="f_session_timeout">
           </div>
           
           <div class="form-group">
-            <label>{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}:</label>
-            <input type="number" class="form-control" name="max_login_attempts" value="3" min="1" max="10" aria-label="{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}">
+            <label for="f_max_login_attempts">{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}:</label>
+            <input type="number" class="form-control" name="max_login_attempts" value="3" min="1" max="10" aria-label="{{ t('Count') }} {{ t('المحاولات') }} {{ t('المسموحة') }}" id="f_max_login_attempts">
           </div>
           
           <div class="form-group">
@@ -245,8 +245,8 @@
             <form action="{{ url_for('admin_ledger.settings') }}" method="post">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <div class="form-group">
-                <label>{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
-                <select class="form-control" name="backup_frequency" aria-label="{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}">
+                <label for="f_backup_frequency">{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
+                <select class="form-control" name="backup_frequency" aria-label="{{ t('تكرار') }} {{ t('Backups') }} {{ t('Reserve') }}" id="f_backup_frequency">
                   <option value="daily" selected>{{ t('Daily') }}</option>
                   <option value="weekly">{{ t('Weekly') }}</option>
                   <option value="monthly">{{ t('Monthly') }}</option>
@@ -254,13 +254,13 @@
               </div>
               
               <div class="form-group">
-                <label>{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
-                <input type="time" class="form-control" name="backup_time" value="02:00" aria-label="{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}">
+                <label for="f_backup_time">{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}:</label>
+                <input type="time" class="form-control" name="backup_time" value="02:00" aria-label="{{ t('Time') }} {{ t('Backups') }} {{ t('Reserve') }}" id="f_backup_time">
               </div>
               
               <div class="form-group">
-                <label>{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}:</label>
-                <input type="number" class="form-control" name="backup_retention" value="30" min="1" max="365" aria-label="{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}">
+                <label for="f_backup_retention">{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}:</label>
+                <input type="number" class="form-control" name="backup_retention" value="30" min="1" max="365" aria-label="{{ t('Count') }} {{ t('Backups') }} {{ t('المحفوظة') }}" id="f_backup_retention">
               </div>
               
               <button type="submit" class="btn btn-secondary">

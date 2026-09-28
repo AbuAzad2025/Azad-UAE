@@ -11,21 +11,22 @@
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3 mb-3">
-        <div class="col-md-6"><label class="form-label">{{ t('Purchase Order') }} *</label>
-          <select name="po_id" class="form-select" required><option value="">{{ t('Select PO') }}</option>
+        <div class="col-md-6"><label class="form-label" for="f_po_id">{{ t('Purchase Order') }} *</label>
+          <select name="po_id" class="form-select" required id="f_po_id"><option value="">{{ t('Select PO') }}</option>
           {% for po in pos|default([]) %}<option value="{{ po.id }}">{{ po.po_number }} - {{ po.supplier.name if po.supplier else '' }} ({{ po.total_amount }})</option>{% endfor %}
           </select>
         </div>
-        <div class="col-md-6"><label class="form-label">{{ t('Notes') }}</label><input type="text" name="notes" class="form-control"></div>
+        <div class="col-md-6"><label class="form-label" for="f_notes">{{ t('Notes') }}</label><input type="text" name="notes" class="form-control" id="f_notes"></div>
       </div>
       <h5>{{ t('Received Items') }}</h5>
       <div id="grn-lines">
-        <div class="row g-2 mb-2 grn-line-row">
-          <div class="col-md-3"><input type="number" name="line_0_po_line_id" class="form-control" placeholder="{{ t('PO Line ID') }}" required></div>
-          <div class="col-md-3"><input type="number" step="0.001" name="line_0_received_quantity" class="form-control" placeholder="{{ t('Received Qty') }}" required></div>
-          <div class="col-md-3"><select name="line_0_condition" class="form-select"><option value="acceptable">{{ t('Acceptable') }}</option><option value="damaged">{{ t('Damaged') }}</option></select></div>
-          <div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div>
-        </div>
+      <div class="row g-2 mb-2 grn-line-row">
+        <div class="col-md-3"><input type="number" name="line_0_po_line_id" class="form-control" aria-label="{{ t('PO Line ID') }}" placeholder="{{ t('PO Line ID') }}" required></div>
+        <div class="col-md-3"><input type="number" step="0.001" name="line_0_received_quantity" class="form-control" aria-label="{{ t('Received Qty') }}" placeholder="{{ t('Received Qty') }}" required></div>
+        <div class="col-md-3"><select name="line_0_condition" class="form-select" aria-label="{{ t('Condition') }}"><option value="acceptable">{{ t('Acceptable') }}</option><option value="damaged">{{ t('Damaged') }}</option></select></div>
+        <div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div>
+      </div>
+
       </div>
       <button type="button" id="add-grn-line" class="btn btn-sm btn-outline-primary mb-3">{{ t('Add Line') }}</button>
       <div><button type="submit" class="btn btn-primary">{{ t('Create GRN') }}</button></div>
@@ -65,8 +66,8 @@
 {% block extra_js %}
 <script nonce="{{ csp_nonce() }}">
 document.getElementById('add-grn-line')?.addEventListener('click', function() {
-  var idx = document.querySelectorAll('.grn-line-row').length;
-  var html = '<div class="row g-2 mb-2 grn-line-row"><div class="col-md-3"><input type="number" name="line_'+idx+'_po_line_id" class="form-control" placeholder="{{ t("PO Line ID") }}" required></div><div class="col-md-3"><input type="number" step="0.001" name="line_'+idx+'_received_quantity" class="form-control" placeholder="{{ t("Received Qty") }}" required></div><div class="col-md-3"><select name="line_'+idx+'_condition" class="form-select"><option value="acceptable">{{ t("Acceptable") }}</option><option value="damaged">{{ t("Damaged") }}</option></select></div><div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';
+  const idx = document.querySelectorAll('.grn-line-row').length;
+  const html = '<div class="row g-2 mb-2 grn-line-row"><div class="col-md-3"><input type="number" name="line_'+idx+'_po_line_id" class="form-control" aria-label="{{ t("PO Line ID") }}" placeholder="{{ t("PO Line ID") }}" required></div><div class="col-md-3"><input type="number" step="0.001" name="line_'+idx+'_received_quantity" class="form-control" aria-label="{{ t("Received Qty") }}" placeholder="{{ t("Received Qty") }}" required></div><div class="col-md-3"><select name="line_'+idx+'_condition" class="form-select" aria-label="{{ t("Condition") }}"><option value="acceptable">{{ t("Acceptable") }}</option><option value="damaged">{{ t("Damaged") }}</option></select></div><div class="col-md-3"><button type="button" class="btn btn-sm btn-danger remove-line">X</button></div></div>';
   document.getElementById('grn-lines').insertAdjacentHTML('beforeend', html);
 });
 document.addEventListener('click', function(e) { if (e.target.classList.contains('remove-line')) e.target.closest('.grn-line-row').remove(); });

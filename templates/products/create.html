@@ -353,8 +353,8 @@ $(function() {
     const rowId = 'row-' + Date.now();
     partnersList.append(`
       <tr id="${rowId}">
-        <td><select name="partner_customer_id[]" class="form-control form-control-sm" required>${partnerOptions}</select></td>
-        <td><input type="number" name="partner_percentage[]" class="form-control form-control-sm input-ltr" dir="ltr" min="0.01" max="100" step="0.01" value="${percentage || ''}" required></td>
+        <td><select name="partner_customer_id[]" class="form-control form-control-sm" aria-label="{{ t('Partner') }}" required>${partnerOptions}</select></td>
+        <td><input type="number" name="partner_percentage[]" class="form-control form-control-sm input-ltr" dir="ltr" aria-label="{{ t('Percentage') }}" min="0.01" max="100" step="0.01" value="${percentage || ''}" required></td>
         <td><button type="button" class="btn btn-danger btn-sm remove-partner-btn" data-row="${rowId}" title="{{ t('Delete') }}"><i class="fas fa-trash" aria-hidden="true"></i></button></td>
       </tr>`);
     if (partnerId) $('#' + rowId + ' select').val(String(partnerId));

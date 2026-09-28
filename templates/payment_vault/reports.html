@@ -65,8 +65,8 @@
                                value="{{ request.args.get('to_date', '') }}" id="input_to_date" aria-label="to date">
                     </div>
                     <div class="col-md-3">
-                        <label>{{ _('Report Type') }}</label>
-                        <select name="report_type" class="form-control" aria-label="report type">
+                        <label for="f_report_type">{{ _('Report Type') }}</label>
+                        <select name="report_type" class="form-control" aria-label="report type" id="f_report_type">
                             <option value="all">{{ _('All') }}</option>
                             <option value="purchases">{{ _('Purchases Only') }}</option>
                             <option value="donations">{{ _('Donations Only') }}</option>

@@ -75,8 +75,8 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
 
           <div class="form-group">
-            <label>{{ t('Select_Data_Type') }}</label>
-            <select name="cleanup_type" class="form-control" required aria-label="cleanup type">
+            <label for="f_cleanup_type">{{ t('Select_Data_Type') }}</label>
+            <select name="cleanup_type" class="form-control" required aria-label="cleanup type" id="f_cleanup_type">
               <option value="">{{ t('Choose') }}</option>
               <option value="logs">{{ t('System_Logs') }}</option>
               <option value="archived">{{ t('Archived_Records') }}</option>

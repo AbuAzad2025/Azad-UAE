@@ -588,6 +588,37 @@ def create_from_sale(sale_id):
             bank_name = request.form.get("bank_name")
             notes = request.form.get("notes")
 
+            # This form is shared with payments.create_payment (the purchase
+            # path), which is the only place the per-method fields are consumed
+            # - it folds bank_name_transfer / reference_number_transfer /
+            # reference_number_card / card_last4 into Payment.bank_name,
+            # Payment.reference_number and Payment.notes, because Payment has
+            # no dedicated columns for them. Mirror that folding here instead of
+            # passing keys create_receipt silently ignores, so the sale-side
+            # payment records the same details the purchase side does.
+            bank_name_transfer = request.form.get("bank_name_transfer")
+            reference_number_transfer = request.form.get("reference_number_transfer")
+            reference_number_card = request.form.get("reference_number_card")
+            card_last4 = (request.form.get("card_last4") or "").strip()
+            ewallet_name = (request.form.get("ewallet_name") or "").strip()
+            method = payment_method_value
+            if method == "card" and reference_number_card:
+                reference_number = reference_number_card
+            elif method == "bank_transfer" and reference_number_transfer:
+                reference_number = reference_number_transfer
+            if method == "bank_transfer" and bank_name_transfer:
+                bank_name = bank_name_transfer
+            if method == "card" and card_last4:
+                suffix = gettext("آخر 4 أرقام من البطاقة")
+                notes = f"{notes or ''} {suffix}: {card_last4}".strip()
+            if method == "e_wallet" and ewallet_name:
+                # Payment has no e-wallet column. payments.create_payment already
+                # handles the same problem for card_last4 by folding it into
+                # notes, so this follows the established pattern rather than
+                # adding a column to a protected financial table.
+                suffix = gettext("المحفظة")
+                notes = f"{notes or ''} {suffix}: {ewallet_name}".strip()
+
             allocate_to_sales = {sale.id: amount}
 
             receipt_data = {

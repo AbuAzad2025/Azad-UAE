@@ -33,8 +33,8 @@
             <input type="text" name="id_number" class="form-control" id="input_id_number" aria-label="id number">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">{{ _('النوع') }}</label>
-            <select name="partner_type" class="form-select" aria-label="partner type">
+            <label class="form-label fw-semibold" for="f_partner_type">{{ _('النوع') }}</label>
+            <select name="partner_type" class="form-select" aria-label="partner type" id="f_partner_type">
               <option value="investor">{{ _('شريك استثماري') }}</option>
               <option value="working_partner">{{ _('شريك عامل') }}</option>
               <option value="silent_partner">{{ _('شريك صامت') }}</option>
@@ -44,7 +44,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">{{ _('مستوى الشراكة') }}</label>
+            <label class="form-label fw-semibold" for="scope_type">{{ _('مستوى الشراكة') }}</label>
             <select name="scope_type" id="scope_type" class="form-select" data-action="update-scope-options" aria-label="scope type">
               <option value="company">{{ _('مستوى الشركة') }}</option>
               <option value="branch">{{ _('فرع محدد') }}</option>
@@ -52,7 +52,7 @@
             </select>
           </div>
           <div class="col-md-6 d-none" id="scope_id_container">
-            <label class="form-label fw-semibold" id="scope_id_label">—</label>
+            <label class="form-label fw-semibold" id="scope_id_label" for="scope_id">—</label>
             <select name="scope_id" id="scope_id" class="form-select" aria-label="scope id">
               <option value="">— {{ _('اختر') }} —</option>
             </select>
@@ -93,12 +93,12 @@
             <input type="email" name="email" class="form-control" id="input_email" aria-label="email">
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold">{{ _('العنوان') }}</label>
-            <textarea name="address" class="form-control" rows="2" aria-label="address" maxlength="255"></textarea>
+            <label class="form-label fw-semibold" for="f_address">{{ _('العنوان') }}</label>
+            <textarea name="address" class="form-control" rows="2" aria-label="address" maxlength="255" id="f_address"></textarea>
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold">{{ _('ملاحظات') }}</label>
-            <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500"></textarea>
+            <label class="form-label fw-semibold" for="f_notes">{{ _('ملاحظات') }}</label>
+            <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500" id="f_notes"></textarea>
           </div>
         </div>
       </div>

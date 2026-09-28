@@ -43,9 +43,9 @@
               
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>{{ t('نوع') }} {{ t('Account') }} *</label>
+                  <label for="f_tax_type">{{ t('نوع') }} {{ t('Account') }} *</label>
                   {% set selected_tax_type = form_data.get('tax_type', 'customs') %}
-                  <select name="tax_type" class="form-control" required aria-label="{{ t('Tax_Type') }}">
+                  <select name="tax_type" class="form-control" required aria-label="{{ t('Tax_Type') }}" id="f_tax_type">
                     <option value="customs" {% if selected_tax_type == 'customs' %}selected{% endif %}>{{ t('جمارك') }}</option>
                     <option value="vat" {% if selected_tax_type == 'vat' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('Value') }} {{ t('المضافة') }}</option>
                     <option value="excise" {% if selected_tax_type == 'excise' %}selected{% endif %}>{{ t('Tax_2') }} {{ t('انتقائية') }}</option>
@@ -56,8 +56,8 @@
               
               <div class="col-md-4">
                 <div class="form-group">
-                  <label>{{ t('Account') }} {{ t('Accounting_4') }} *</label>
-                  <select name="gl_account_id" class="form-control" required aria-label="{{ t('GL_Account') }}">
+                  <label for="f_gl_account_id">{{ t('Account') }} {{ t('Accounting_4') }} *</label>
+                  <select name="gl_account_id" class="form-control" required aria-label="{{ t('GL_Account') }}" id="f_gl_account_id">
                     <option value="" {% if not form_data.get('gl_account_id') %}selected{% endif %}>{{ t('None') }}</option>
                     {% for account in accounts %}
                     <option value="{{ account.id }}" {% if form_data.get('gl_account_id') and form_data.get('gl_account_id')|int == account.id %}selected{% endif %}>
@@ -93,8 +93,8 @@
             </div>
 
             <div class="form-group">
-              <label>{{ t('Description') }}</label>
-              <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Description_3') }}" maxlength="500">{{ form_data.get('description', '') }}</textarea>
+              <label for="f_description">{{ t('Description') }}</label>
+              <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Description_3') }}" maxlength="500" id="f_description">{{ form_data.get('description', '') }}</textarea>
             </div>
 
             <div class="form-group">

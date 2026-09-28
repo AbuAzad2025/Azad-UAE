@@ -85,8 +85,8 @@
         <div class="filters-card">
             <form class="needs-validation row" method="GET" action="">
                 <div class="col-md-3">
-                    <label>{{ _('Status') }}</label>
-                    <select name="status" class="form-control" data-action="submit-form" aria-label="status">
+                    <label for="f_status">{{ _('Status') }}</label>
+                    <select name="status" class="form-control" data-action="submit-form" aria-label="status" id="f_status">
                         <option value="">{{ _('None') }}</option>
                         <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>{{ _('Completed_2') }}</option>
                         <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>{{ _('قيد') }} {{ _('Waiting') }}</option>
@@ -95,8 +95,8 @@
                 </div>
                 
                 <div class="col-md-3">
-                    <label>{{ _('Currency') }} {{ _('الرقمية') }}</label>
-                    <select name="crypto" class="form-control" data-action="submit-form" aria-label="crypto">
+                    <label for="f_crypto">{{ _('Currency') }} {{ _('الرقمية') }}</label>
+                    <select name="crypto" class="form-control" data-action="submit-form" aria-label="crypto" id="f_crypto">
                         <option value="">{{ _('None') }}</option>
                         <option value="btc" {% if request.args.get('crypto') == 'btc' %}selected{% endif %}>Bitcoin</option>
                         <option value="eth" {% if request.args.get('crypto') == 'eth' %}selected{% endif %}>Ethereum</option>

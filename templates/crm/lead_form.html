@@ -11,22 +11,22 @@
       {% if view and lead %}
       <div class="row">
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Name') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.name }}"></div>
+          <div class="form-group"><label for="f_input">{{ t('Name') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.name }}" id="f_input"></div>
         </div>
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Email_2') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.email or '-' }}"></div>
+          <div class="form-group"><label for="f_input_2">{{ t('Email_2') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.email or '-' }}" id="f_input_2"></div>
         </div>
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Phone') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.phone or '-' }}"></div>
+          <div class="form-group"><label for="f_input_3">{{ t('Phone') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.phone or '-' }}" id="f_input_3"></div>
         </div>
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Company') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.company or '-' }}"></div>
+          <div class="form-group"><label for="f_input_4">{{ t('Company') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.company or '-' }}" id="f_input_4"></div>
         </div>
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Revenue_2') }} {{ t('Expected') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.expected_revenue|format_currency }}"></div>
+          <div class="form-group"><label for="f_input_5">{{ t('Revenue_2') }} {{ t('Expected') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ lead.expected_revenue|format_currency }}" id="f_input_5"></div>
         </div>
         <div class="col-md-6">
-          <div class="form-group"><label>{{ t('Status') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ t(lead.status) }}"></div>
+          <div class="form-group"><label for="f_input_6">{{ t('Status') }}</label><input type="text" class="form-control-plaintext" readonly value="{{ t(lead.status) }}" id="f_input_6"></div>
         </div>
       </div>
       <a href="{{ url_for('crm.edit_lead', lead_id=lead.id) }}" class="btn btn-primary">{{ t('Edit') }}</a>

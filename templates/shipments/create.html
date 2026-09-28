@@ -6,23 +6,23 @@
   <form method="POST" id="shipment-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row g-3">
-      <div class="col-md-4"><label class="form-label">من مستودع *</label>
-        <select name="from_warehouse_id" class="form-control" required>{% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}</option>{% endfor %}</select></div>
-      <div class="col-md-4"><label class="form-label">إلى موقع *</label>
-        <input type="text" name="destination_name" class="form-control" required placeholder="{{ t('مثال') }}: {{ t('موقع الرياض') }} - {{ t('معرض متنقل') }}"></div>
-      <div class="col-md-2"><label class="form-label">المسؤول</label>
-        <select name="assigned_to_id" class="form-control"><option value="">—</option>{% for u in users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}</select></div>
-      <div class="col-md-2"><label class="form-label">الملاحظات</label><input type="text" name="notes" class="form-control"></div>
+      <div class="col-md-4"><label class="form-label" for="f_from_warehouse_id">من مستودع *</label>
+        <select name="from_warehouse_id" class="form-control" required id="f_from_warehouse_id">{% for w in warehouses %}<option value="{{ w.id }}">{{ w.name }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><label class="form-label" for="f_destination_name">إلى موقع *</label>
+        <input type="text" name="destination_name" class="form-control" required placeholder="{{ t('مثال') }}: {{ t('موقع الرياض') }} - {{ t('معرض متنقل') }}" id="f_destination_name"></div>
+      <div class="col-md-2"><label class="form-label" for="f_assigned_to_id">المسؤول</label>
+        <select name="assigned_to_id" class="form-control" id="f_assigned_to_id"><option value="">—</option>{% for u in users %}<option value="{{ u.id }}">{{ u.username }}</option>{% endfor %}</select></div>
+      <div class="col-md-2"><label class="form-label" for="f_notes">الملاحظات</label><input type="text" name="notes" class="form-control" id="f_notes"></div>
     </div>
     <hr>
     <h5>البنود</h5>
     <div id="items-wrapper" data-index="0" data-url-products="{{ url_for('shipments.api_products') }}" data-url-warehouses="{{ url_for('shipments.api_warehouses') }}">
       <div class="shipment-item border rounded p-3 mb-2">
         <div class="row g-2">
-          <div class="col-md-6"><label>المنتج *</label><select name="lines[0][product_id]" class="form-control" required><option value="">اختر</option>{% for p in products %}<option value="{{ p.id }}">{{ p.name }} — {{ p.sku }}</option>{% endfor %}</select></div>
-          <div class="col-md-2"><label>الكمية *</label><input type="number" step="0.001" name="lines[0][quantity]" class="form-control" required></div>
-          <div class="col-md-2"><label>سعر التكلفة</label><input type="number" step="0.001" name="lines[0][unit_cost]" class="form-control"></div>
-          <div class="col-md-2"><label>سعر البيع</label><input type="number" step="0.001" name="lines[0][unit_price]" class="form-control"></div>
+          <div class="col-md-6"><label for="f_lines">المنتج *</label><select name="lines[0][product_id]" class="form-control" required id="f_lines"><option value="">اختر</option>{% for p in products %}<option value="{{ p.id }}">{{ p.name }} — {{ p.sku }}</option>{% endfor %}</select></div>
+          <div class="col-md-2"><label for="f_lines_2">الكمية *</label><input type="number" step="0.001" name="lines[0][quantity]" class="form-control" required id="f_lines_2"></div>
+          <div class="col-md-2"><label for="f_lines_3">سعر التكلفة</label><input type="number" step="0.001" name="lines[0][unit_cost]" class="form-control" id="f_lines_3"></div>
+          <div class="col-md-2"><label for="f_lines_4">سعر البيع</label><input type="number" step="0.001" name="lines[0][unit_price]" class="form-control" id="f_lines_4"></div>
         </div>
       </div>
     </div>

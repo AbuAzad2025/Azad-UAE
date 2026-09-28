@@ -49,16 +49,16 @@
               <input type="email" name="email" class="form-control" value="{{ tenant.email or '' }}" id="input_email" aria-label="email">
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-semibold">{{ t('Default_Currency') }}</label>
-              <select name="default_currency" class="form-select" aria-label="default currency">
+              <label class="form-label fw-semibold" for="f_default_currency">{{ t('Default_Currency') }}</label>
+              <select name="default_currency" class="form-select" aria-label="default currency" id="f_default_currency">
                 <option value="AED" {% if tenant.default_currency == 'AED' %}selected{% endif %}>{{ t('AED_Description') }}</option>
                 <option value="ILS" {% if tenant.default_currency == 'ILS' %}selected{% endif %}>ILS - {{ t('Shekel') }}</option>
                 <option value="USD" {% if tenant.default_currency == 'USD' %}selected{% endif %}>USD - {{ t('Dollar') }}</option>
               </select>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">{{ t('Address') }}</label>
-              <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255">{{ tenant.address_ar or '' }}</textarea>
+              <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address') }}</label>
+              <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255" id="f_address_ar">{{ tenant.address_ar or '' }}</textarea>
             </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">{{ t('Max_Users') }}</label>

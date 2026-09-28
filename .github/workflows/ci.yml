@@ -357,6 +357,9 @@ jobs:
       - name: Transaction-boundary gate (services never end a transaction)
         run: python scripts/lint/check_txn_boundaries.py
 
+      - name: Accessibility gate (every form control has an accessible name)
+        run: python scripts/lint/check_a11y_labels.py
+
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github

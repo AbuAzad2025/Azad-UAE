@@ -42,9 +42,9 @@
 
                             <div class="form-group">
 
-                                <label>{{ _('الفرع') }}</label>
+                                <label for="f_branch_id">{{ _('الفرع') }}</label>
 
-                                <select name="branch_id" class="form-control select2" required aria-label="{{ _('اختر الفرع') }}">
+                                <select name="branch_id" class="form-control select2" required aria-label="{{ _('اختر الفرع') }}" id="f_branch_id">
 
                                     {% for branch in branches %}
 
@@ -62,9 +62,9 @@
 
                             <div class="form-group">
 
-                                <label>{{ _('الشهر') }}</label>
+                                <label for="f_month">{{ _('الشهر') }}</label>
 
-                                <select name="month" class="form-control" aria-label="{{ _('الشهر') }}">
+                                <select name="month" class="form-control" aria-label="{{ _('الشهر') }}" id="f_month">
 
                                     {% for i in range(1, 13) %}
 
@@ -152,9 +152,9 @@
 
                             <div class="form-group">
 
-                                <label>{{ _('الموظف') }}</label>
+                                <label for="f_employee_id">{{ _('الموظف') }}</label>
 
-                                <select name="employee_id" class="form-control select2" required aria-label="{{ _('اختر الموظف') }}">
+                                <select name="employee_id" class="form-control select2" required aria-label="{{ _('اختر الموظف') }}" id="f_employee_id">
 
                                     {% for emp in employees %}
 
@@ -172,9 +172,9 @@
 
                             <div class="form-group">
 
-                                <label>{{ _('الشهر') }}</label>
+                                <label for="f_month_2">{{ _('الشهر') }}</label>
 
-                                <select name="month" class="form-control" aria-label="{{ _('الشهر') }}">
+                                <select name="month" class="form-control" aria-label="{{ _('الشهر') }}" id="f_month_2">
 
                                     {% for i in range(1, 13) %}
 

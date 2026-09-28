@@ -18,12 +18,12 @@
           <div class="form-group">
             <label class="font-weight-bold">{{ t('transfer_direction') }}</label>
             <div>
-              <label class="radio-inline ml-3">
-                <input type="radio" name="direction" value="to_online" checked>
+              <label class="radio-inline ml-3" for="f_direction">
+                <input type="radio" name="direction" value="to_online" checked id="f_direction">
                 <i class="fas fa-arrow-right text-info" aria-hidden="true"></i> {{ t('to_online') }}
               </label>
-              <label class="radio-inline">
-                <input type="radio" name="direction" value="from_online">
+              <label class="radio-inline" for="f_direction_2">
+                <input type="radio" name="direction" value="from_online" id="f_direction_2">
                 <i class="fas fa-arrow-left text-warning" aria-hidden="true"></i> {{ t('from_online') }}
               </label>
             </div>

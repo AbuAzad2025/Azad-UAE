@@ -17,7 +17,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group"><label for="comment_body">{{ t('comment') }}</label>
           <textarea id="comment_body" name="body" class="form-control" rows="2" required></textarea></div>
-        <div class="checkbox mb-2"><label><input type="checkbox" name="is_internal" value="1"> {{ t('internal') }}</label></div>
+        <div class="checkbox mb-2"><label for="f_is_internal"><input type="checkbox" name="is_internal" value="1" id="f_is_internal"> {{ t('internal') }}</label></div>
         <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-reply" aria-hidden="true"></i> {{ t('add_comment') }}</button>
       </form>
       <hr>

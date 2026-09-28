@@ -33,7 +33,7 @@
                     <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
                     {% endfor %}
                   </select>
-                  <input type="text" name="table" class="form-control mr-2" placeholder="{{ t('Table') }}" value="{{ request.args.get('table', '') }}">
+                  <input type="text" name="table" class="form-control mr-2" aria-label="{{ t('Table') }}" placeholder="{{ t('Table') }}" value="{{ request.args.get('table', '') }}">
                   <button type="submit" class="btn btn-primary">{{ t('Show') }}</button>
                 </form>
               </div>

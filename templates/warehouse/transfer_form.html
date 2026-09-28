@@ -9,20 +9,20 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label">{{ t('From Warehouse') }} *</label>
-            <select name="from_warehouse_id" class="form-select" required>
+            <label class="form-label" for="f_from_warehouse_id">{{ t('From Warehouse') }} *</label>
+            <select name="from_warehouse_id" class="form-select" required id="f_from_warehouse_id">
               <option value="">{{ t('Select') }}</option>
             </select>
           </div>
           <div class="col-md-4">
-            <label class="form-label">{{ t('To Warehouse') }} *</label>
-            <select name="to_warehouse_id" class="form-select" required>
+            <label class="form-label" for="f_to_warehouse_id">{{ t('To Warehouse') }} *</label>
+            <select name="to_warehouse_id" class="form-select" required id="f_to_warehouse_id">
               <option value="">{{ t('Select') }}</option>
             </select>
           </div>
           <div class="col-md-4">
-            <label class="form-label">{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="2">{{ transfer.notes if transfer else '' }}</textarea>
+            <label class="form-label" for="f_notes">{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="2" id="f_notes">{{ transfer.notes if transfer else '' }}</textarea>
           </div>
         </div>
       </div>

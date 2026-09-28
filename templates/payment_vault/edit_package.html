@@ -43,13 +43,13 @@
                     </div>
                     
                     <div class="form-group">
-                        <label>{{ _('Description (Arabic)') }}</label>
-                        <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar" maxlength="500">{{ package.description_ar or '' }}</textarea>
+                        <label for="f_description_ar">{{ _('Description (Arabic)') }}</label>
+                        <textarea name="description_ar" class="form-control" rows="2" aria-label="description ar" maxlength="500" id="f_description_ar">{{ package.description_ar or '' }}</textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label>{{ _('Description (English)') }}</label>
-                        <textarea name="description_en" class="form-control" rows="2" aria-label="description en" maxlength="500">{{ package.description_en or '' }}</textarea>
+                        <label for="f_description_en">{{ _('Description (English)') }}</label>
+                        <textarea name="description_en" class="form-control" rows="2" aria-label="description en" maxlength="500" id="f_description_en">{{ package.description_en or '' }}</textarea>
                     </div>
                     
                     <div class="row">
@@ -148,8 +148,8 @@
                     </div>
 
                     <div class="form-group">
-                        <label>{{ _('Features (one per line)') }}</label>
-                        <textarea name="features" class="form-control" rows="8" aria-label="features">{% if package.features %}{{ package.features|join('\n') }}{% endif %}</textarea>
+                        <label for="f_features">{{ _('Features (one per line)') }}</label>
+                        <textarea name="features" class="form-control" rows="8" aria-label="features" id="f_features">{% if package.features %}{{ package.features|join('\n') }}{% endif %}</textarea>
                         <small class="form-text text-muted">{{ _('Write each feature on a separate line') }}</small>
                     </div>
                     

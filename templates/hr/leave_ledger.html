@@ -8,14 +8,14 @@
     <form method="POST" action="{{ url_for('hr.accrue_leave') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3 align-items-end">
-        <div class="col-md-3"><label class="form-label">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required></div>
-        <div class="col-md-3"><label class="form-label">{{ t('Leave Type') }} *</label>
-          <select name="leave_type_id" class="form-select" required><option value="">{{ t('Select') }}</option>
+        <div class="col-md-3"><label class="form-label" for="f_user_id">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required id="f_user_id"></div>
+        <div class="col-md-3"><label class="form-label" for="f_leave_type_id">{{ t('Leave Type') }} *</label>
+          <select name="leave_type_id" class="form-select" required id="f_leave_type_id"><option value="">{{ t('Select') }}</option>
           {% for lt in leave_types %}<option value="{{ lt.id }}">{{ lt.name }}</option>{% endfor %}
           </select>
         </div>
-        <div class="col-md-2"><label class="form-label">{{ t('Year') }} *</label><input type="number" name="year" class="form-control" required></div>
-        <div class="col-md-2"><label class="form-label">{{ t('Days') }} *</label><input type="number" step="0.5" name="entitled_days" class="form-control" required></div>
+        <div class="col-md-2"><label class="form-label" for="f_year">{{ t('Year') }} *</label><input type="number" name="year" class="form-control" required id="f_year"></div>
+        <div class="col-md-2"><label class="form-label" for="f_entitled_days">{{ t('Days') }} *</label><input type="number" step="0.5" name="entitled_days" class="form-control" required id="f_entitled_days"></div>
         <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">{{ t('Accrue') }}</button></div>
       </div>
     </form>

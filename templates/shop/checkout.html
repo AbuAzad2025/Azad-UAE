@@ -60,8 +60,8 @@
         <h3><i class="fas fa-credit-card" aria-hidden="true"></i> {{ t('payment_method') }} *</h3>
         <div class="ps-pay-methods" role="radiogroup">
           {% for pm in payment_methods %}
-          <label class="ps-pay-option">
-            <input type="radio" name="payment_method" value="{{ pm.code }}" form="checkout-form" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}" aria-label="payment method">
+          <label class="ps-pay-option" for="f_payment_method">
+            <input type="radio" name="payment_method" value="{{ pm.code }}" form="checkout-form" {% if loop.first %}checked{% endif %} required data-hint="{{ payment_hint(pm)|e }}" aria-label="payment method" id="f_payment_method">
             <span class="ps-pay-card">
               <i class="{{ pm.icon }}"></i>
               <span class="ps-pay-name">{{ pm.display_name(lang) }}</span>

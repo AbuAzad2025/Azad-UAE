@@ -169,8 +169,8 @@
             </div>
             <div class="col-xl-4 col-lg-6 col-md-7">
               <div class="form-group">
-                <label>{{ t('Country') }}</label>
-                <select name="country" class="form-control compact-control select-center" aria-label="country">
+                <label for="f_country">{{ t('Country') }}</label>
+                <select name="country" class="form-control compact-control select-center" aria-label="country" id="f_country">
                   <option value="UAE" {{ 'selected' if tenant.country == 'UAE' }}>{{ t('UAE') }}</option>
                   <option value="Saudi" {{ 'selected' if tenant.country == 'Saudi' }}>{{ t('Saudi_Arabia') }}</option>
                   <option value="Palestine" {{ 'selected' if tenant.country == 'Palestine' }}>{{ t('Palestine') }}</option>

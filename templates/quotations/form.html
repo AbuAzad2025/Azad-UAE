@@ -9,26 +9,26 @@
       <div class="card-body">
         <div class="row g-3">
           <div class="col-md-4">
-            <label class="form-label">{{ t('Customer') }} *</label>
-            <select name="customer_id" class="form-select" required>
+            <label class="form-label" for="f_customer_id">{{ t('Customer') }} *</label>
+            <select name="customer_id" class="form-select" required id="f_customer_id">
               <option value="">{{ t('Select') }}</option>
             </select>
           </div>
           <div class="col-md-2">
-            <label class="form-label">{{ t('Expiry Date') }}</label>
-            <input type="date" name="expiry_date" class="form-control" value="{{ quotation.expiry_date if quotation and quotation.expiry_date else '' }}">
+            <label class="form-label" for="f_expiry_date">{{ t('Expiry Date') }}</label>
+            <input type="date" name="expiry_date" class="form-control" value="{{ quotation.expiry_date if quotation and quotation.expiry_date else '' }}" id="f_expiry_date">
           </div>
           <div class="col-md-2">
-            <label class="form-label">{{ t('Currency') }}</label>
-            <input type="text" name="currency" class="form-control" value="{{ quotation.currency if quotation else 'AED' }}">
+            <label class="form-label" for="f_currency">{{ t('Currency') }}</label>
+            <input type="text" name="currency" class="form-control" value="{{ quotation.currency if quotation else 'AED' }}" id="f_currency">
           </div>
           <div class="col-md-4">
-            <label class="form-label">{{ t('Notes') }}</label>
-            <textarea name="notes" class="form-control" rows="2">{{ quotation.notes if quotation else '' }}</textarea>
+            <label class="form-label" for="f_notes">{{ t('Notes') }}</label>
+            <textarea name="notes" class="form-control" rows="2" id="f_notes">{{ quotation.notes if quotation else '' }}</textarea>
           </div>
           <div class="col-md-12">
-            <label class="form-label">{{ t('Terms & Conditions') }}</label>
-            <textarea name="terms" class="form-control" rows="2">{{ quotation.terms if quotation else '' }}</textarea>
+            <label class="form-label" for="f_terms">{{ t('Terms & Conditions') }}</label>
+            <textarea name="terms" class="form-control" rows="2" id="f_terms">{{ quotation.terms if quotation else '' }}</textarea>
           </div>
         </div>
       </div>

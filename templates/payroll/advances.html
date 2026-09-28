@@ -12,8 +12,8 @@
                 <form class="needs-validation" method="post">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
                     <div class="form-group">
-                        <label>{{ _('الموظف') }}</label>
-                        <select name="employee_id" class="form-control select2" required aria-label="{{ _('اختر الموظف') }}">
+                        <label for="f_employee_id">{{ _('الموظف') }}</label>
+                        <select name="employee_id" class="form-control select2" required aria-label="{{ _('اختر الموظف') }}" id="f_employee_id">
                             {% for emp in employees %}
                             <option value="{{ emp.id }}">{{ emp.name }}</option>
                             {% endfor %}
@@ -24,8 +24,8 @@
                         <input type="number" step="0.01" name="amount" class="form-control" required id="input_amount" aria-label="amount" min="0">
                     </div>
                     <div class="form-group">
-                        <label>{{ _('ملاحظات') }}</label>
-                        <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500"></textarea>
+                        <label for="f_description">{{ _('ملاحظات') }}</label>
+                        <textarea name="description" class="form-control" rows="3" aria-label="description" maxlength="500" id="f_description"></textarea>
                     </div>
                     <button type="submit" class="btn btn-warning btn-block">{{ _('صرف سلفة') }}</button>
                 </form>

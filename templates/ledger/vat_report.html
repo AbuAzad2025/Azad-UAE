@@ -16,13 +16,13 @@
 
   <form class="needs-validation form-row mb-4 align-items-end" method="get">
 
-    <div class="col-md-3 mb-2"><label class="small text-muted d-block">{{ t('From') }}</label><input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}" aria-label="{{ t('From') }}"></div>
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block" for="f_date_from">{{ t('From') }}</label><input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}" aria-label="{{ t('From') }}" id="f_date_from"></div>
 
-    <div class="col-md-3 mb-2"><label class="small text-muted d-block">{{ t('To') }}</label><input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}" aria-label="{{ t('To') }}"></div>
+    <div class="col-md-3 mb-2"><label class="small text-muted d-block" for="f_date_to">{{ t('To') }}</label><input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}" aria-label="{{ t('To') }}" id="f_date_to"></div>
 
     <div class="col-md-3 mb-2">
-      <label class="small text-muted d-block">{{ t('Branch') }}</label>
-      <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+      <label class="small text-muted d-block" for="f_branch_id">{{ t('Branch') }}</label>
+      <select name="branch_id" class="form-control" aria-label="{{ t('اختر') }} {{ t('Branch') }}" id="f_branch_id">
         <option value="">-- {{ t('All') }} --</option>
         {% for branch in branches %}
         <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>

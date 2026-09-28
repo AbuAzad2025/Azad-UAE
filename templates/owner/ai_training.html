@@ -19,7 +19,7 @@
         <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
         {% endfor %}
       </select>
-      <input type="text" name="q" class="form-control mr-2" placeholder="{{ t('Search') }}" value="{{ request.args.get('q', '') }}">
+      <input type="text" name="q" class="form-control mr-2" aria-label="{{ t('Search') }}" placeholder="{{ t('Search') }}" value="{{ request.args.get('q', '') }}">
       <button type="submit" class="btn btn-primary">{{ t('Show') }}</button>
     </form>
   </div>

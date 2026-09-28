@@ -71,8 +71,8 @@
   <div class="card-body">
     <form class="needs-validation form-inline" method="GET" action="" novalidate>
       <div class="form-group ml-2">
-        <label class="ml-2">{{ t('Status') }}:</label>
-        <select name="status" class="form-control" aria-label="status">
+        <label class="ml-2" for="f_status">{{ t('Status') }}:</label>
+        <select name="status" class="form-control" aria-label="status" id="f_status">
           <option value="">{{ t('None') }}</option>
           <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>{{ t('قيد') }} {{ t('Waiting') }}</option>
           <option value="deposited" {% if request.args.get('status') == 'deposited' %}selected{% endif %}>{{ t('مودع') }}</option>

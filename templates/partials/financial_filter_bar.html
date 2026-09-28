@@ -10,8 +10,8 @@
           {% endif %}
           <label class="mr-1" for="input_date_to">{{ show_date_to_label or t('To_Date') }}</label>
           <input type="date" name="date_to" class="form-control form-control-sm mr-2" value="{{ date_to or '' }}" id="input_date_to" aria-label="{{ show_date_to_label or t('To_Date') }}">
-          <label class="mr-1">{{ t('Branch') }}:</label>
-          <select name="branch_id" class="form-control form-control-sm mr-2" aria-label="{{ t('Choose') }} {{ t('Branch') }}">
+          <label class="mr-1" for="f_branch_id">{{ t('Branch') }}:</label>
+          <select name="branch_id" class="form-control form-control-sm mr-2" aria-label="{{ t('Choose') }} {{ t('Branch') }}" id="f_branch_id">
             <option value="">-- {{ t('All') }} --</option>
             {% for branch in branches %}
             <option value="{{ branch.id }}" {% if selected_branch == branch.id %}selected{% endif %}>{{ branch.name }}</option>

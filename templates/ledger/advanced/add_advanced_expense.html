@@ -16,8 +16,8 @@
           </div>
           <div class="col-md-3">
              <div class="form-group">
-               <label>{{ t('Branch') }} *</label>
-               <select name="branch_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Branch') }}">
+               <label for="f_branch_id">{{ t('Branch') }} *</label>
+               <select name="branch_id" class="form-control" required aria-label="{{ t('اختر') }} {{ t('Branch') }}" id="f_branch_id">
                  {% if current_user.is_super_admin() or current_user.is_owner %}
                     <option value="">-- {{ t('General_2') }} --</option>
                     {% for branch in branches %}
@@ -31,8 +31,8 @@
           </div>
           <div class="col-md-3">
             <div class="form-group">
-              <label>{{ t('الفئة') }} *</label>
-              <select name="category_id" class="form-control" required aria-label="{{ t('Category') }}">
+              <label for="f_category_id">{{ t('الفئة') }} *</label>
+              <select name="category_id" class="form-control" required aria-label="{{ t('Category') }}" id="f_category_id">
                 {% for cat in categories %}
                 <option value="{{ cat.id }}">{{ cat.name_ar }}</option>
                 {% endfor %}
@@ -47,8 +47,8 @@
           </div>
         </div>
         <div class="form-group">
-          <label>{{ t('Description_3') }}</label>
-          <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Description_3') }}" maxlength="500"></textarea>
+          <label for="f_description">{{ t('Description_3') }}</label>
+          <textarea name="description" class="form-control" rows="3" aria-label="{{ t('Description_3') }}" maxlength="500" id="f_description"></textarea>
         </div>
         <button type="submit" class="btn btn-success"><i class="fas fa-save" aria-hidden="true"></i> {{ t('Save') }}</button>
         {% if current_user.has_permission('view_ledger') %}

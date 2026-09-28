@@ -33,8 +33,8 @@
             <input type="text" name="id_number" class="form-control" value="{{ partner.id_number or '' }}" id="input_id_number" aria-label="id number">
           </div>
           <div class="col-md-4">
-            <label class="form-label fw-semibold">{{ _('النوع') }}</label>
-            <select name="partner_type" class="form-select" aria-label="partner type">
+            <label class="form-label fw-semibold" for="f_partner_type">{{ _('النوع') }}</label>
+            <select name="partner_type" class="form-select" aria-label="partner type" id="f_partner_type">
               <option value="investor" {% if partner.partner_type == 'investor' %}selected{% endif %}>{{ _('شريك استثماري') }}</option>
               <option value="working_partner" {% if partner.partner_type == 'working_partner' %}selected{% endif %}>{{ _('شريك عامل') }}</option>
               <option value="silent_partner" {% if partner.partner_type == 'silent_partner' %}selected{% endif %}>{{ _('شريك صامت') }}</option>
@@ -44,7 +44,7 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label fw-semibold">{{ _('مستوى الشراكة') }}</label>
+            <label class="form-label fw-semibold" for="scope_type">{{ _('مستوى الشراكة') }}</label>
             <select name="scope_type" id="scope_type" class="form-select" data-action="update-scope-options" aria-label="scope type">
               <option value="company" {% if partner.scope_type == 'company' %}selected{% endif %}>{{ _('مستوى الشركة') }}</option>
               <option value="branch" {% if partner.scope_type == 'branch' %}selected{% endif %}>{{ _('فرع محدد') }}</option>
@@ -52,7 +52,7 @@
             </select>
           </div>
           <div class="col-md-6" id="scope_id_container" {% if partner.scope_type == 'company' %}class="d-none"{% endif %}>
-            <label class="form-label fw-semibold" id="scope_id_label">
+            <label class="form-label fw-semibold" id="scope_id_label" for="scope_id">
               {% if partner.scope_type == 'branch' %}{{ _('الفرع') }}{% elif partner.scope_type == 'warehouse' %}{{ _('المستودع') }}{% else %}—{% endif %}
             </label>
             <select name="scope_id" id="scope_id" class="form-select" aria-label="scope id">
@@ -104,12 +104,12 @@
             <input type="email" name="email" class="form-control" value="{{ partner.email or '' }}" id="input_email" aria-label="email">
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold">{{ _('العنوان') }}</label>
-            <textarea name="address" class="form-control" rows="2" aria-label="address" maxlength="255">{{ partner.address or '' }}</textarea>
+            <label class="form-label fw-semibold" for="f_address">{{ _('العنوان') }}</label>
+            <textarea name="address" class="form-control" rows="2" aria-label="address" maxlength="255" id="f_address">{{ partner.address or '' }}</textarea>
           </div>
           <div class="col-12">
-            <label class="form-label fw-semibold">{{ _('ملاحظات') }}</label>
-            <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500">{{ partner.notes or '' }}</textarea>
+            <label class="form-label fw-semibold" for="f_notes">{{ _('ملاحظات') }}</label>
+            <textarea name="notes" class="form-control" rows="2" aria-label="notes" maxlength="500" id="f_notes">{{ partner.notes or '' }}</textarea>
           </div>
           <div class="col-12">
             <div class="form-check form-switch">

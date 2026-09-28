@@ -89,7 +89,7 @@
       <div class="row">
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('نوع الجهة') }}</label>
+            <label class="font-weight-bold" for="party_type">{{ _('نوع الجهة') }}</label>
             <select class="form-control" name="party_type" id="party_type" data-action="update-party-list" aria-label="party type">
               <option value="customer">{{ _('عميل/شريك/تاجر') }}</option>
               <option value="supplier">{{ _('مورد') }}</option>
@@ -98,7 +98,7 @@
         </div>
         <div class="col-md-8">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('اسم الجهة') }}</label>
+            <label class="font-weight-bold" for="party_id">{{ _('اسم الجهة') }}</label>
             <select class="form-control select2" name="party_id" id="party_id" required aria-label="party id">
               <option value="">{{ _('اختر الجهة...') }}</option>
               
@@ -122,7 +122,7 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('العملة') }}</label>
+            <label class="font-weight-bold" for="currency">{{ _('العملة') }}</label>
             {% set selected_voucher_currency = preselected_currency or tenant_default_currency or 'AED' %}
             <select class="form-control" name="currency" id="currency" aria-label="{{ _('العملة') }}">
               {% for code in ['AED','USD','EUR','GBP','SAR','QAR','KWD','BHD','OMR','ILS','JOD','EGP'] %}
@@ -133,13 +133,13 @@
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('سعر الصرف') }}</label>
+            <label class="font-weight-bold" for="exchange_rate">{{ _('سعر الصرف') }}</label>
             <input type="number" step="0.000001" min="0.000001" class="form-control" name="exchange_rate" id="exchange_rate" value="{{ preselected_exchange_rate or 1 }}" aria-label="exchange rate">
           </div>
         </div>
         <div class="col-md-4">
           <div class="form-group">
-            <label class="font-weight-bold">{{ _('طريقة الدفع') }}</label>
+            <label class="font-weight-bold" for="payment_method">{{ _('طريقة الدفع') }}</label>
             <select class="form-control" name="payment_method" id="payment_method" data-action="toggle-cheque-fields" aria-label="payment method">
               <option value="cash">{{ _('نقدي') }}</option>
               <option value="bank_transfer">{{ _('تحويل بنكي') }}</option>

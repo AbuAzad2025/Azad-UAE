@@ -24,8 +24,8 @@
               </div>
               {% else %}
               <div class="form-group">
-                <label>{{ t('Code') }}</label>
-                <input type="text" class="form-control" value="{{ method.code|default('') }}" disabled aria-label="{{ t('Code') }}">
+                <label for="f_input">{{ t('Code') }}</label>
+                <input type="text" class="form-control" value="{{ method.code|default('') }}" disabled aria-label="{{ t('Code') }}" id="f_input">
               </div>
               {% endif %}
 
@@ -42,12 +42,12 @@
 
               <div class="row">
                 <div class="col-md-6 form-group">
-                  <label>{{ t('Customer_Description_Ar') }}</label>
-                  <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar" maxlength="500">{{ method.description_ar if method else '' }}</textarea>
+                  <label for="f_description_ar">{{ t('Customer_Description_Ar') }}</label>
+                  <textarea name="description_ar" class="form-control" rows="3" aria-label="description ar" maxlength="500" id="f_description_ar">{{ method.description_ar if method else '' }}</textarea>
                 </div>
                 <div class="col-md-6 form-group">
-                  <label>{{ t('Customer_Description_En') }}</label>
-                  <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en" maxlength="500">{{ method.description_en if method else '' }}</textarea>
+                  <label for="f_description_en">{{ t('Customer_Description_En') }}</label>
+                  <textarea name="description_en" class="form-control" rows="3" dir="ltr" aria-label="description en" maxlength="500" id="f_description_en">{{ method.description_en if method else '' }}</textarea>
                 </div>
               </div>
 
@@ -86,8 +86,8 @@
                 </div>
               </div>
               <div class="form-group">
-                <label>{{ t('Wallet_Providers_Extra_Instructions') }}</label>
-                <textarea name="providers" class="form-control" rows="2" aria-label="providers">{{ cfg.get('providers') or cfg.get('instructions', '') }}</textarea>
+                <label for="f_providers">{{ t('Wallet_Providers_Extra_Instructions') }}</label>
+                <textarea name="providers" class="form-control" rows="2" aria-label="providers" id="f_providers">{{ cfg.get('providers') or cfg.get('instructions', '') }}</textarea>
               </div>
             </div>
             <div class="card-footer">

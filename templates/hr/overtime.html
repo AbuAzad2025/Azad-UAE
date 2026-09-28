@@ -8,11 +8,11 @@
     <form method="POST" action="{{ url_for('hr.create_overtime') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="row g-3 align-items-end">
-        <div class="col-md-2"><label class="form-label">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required></div>
-        <div class="col-md-2"><label class="form-label">{{ t('Date') }} *</label><input type="date" name="overtime_date" class="form-control" required></div>
-        <div class="col-md-2"><label class="form-label">{{ t('Hours') }} *</label><input type="number" step="0.5" name="hours" class="form-control" required></div>
-        <div class="col-md-2"><label class="form-label">{{ t('Type') }}</label>
-          <select name="overtime_type" class="form-select"><option value="standard">{{ t('Standard (1.25x)') }}</option><option value="weekend">{{ t('Weekend (1.5x)') }}</option><option value="holiday">{{ t('Holiday (1.5x)') }}</option></select>
+        <div class="col-md-2"><label class="form-label" for="f_user_id">{{ t('User ID') }} *</label><input type="number" name="user_id" class="form-control" required id="f_user_id"></div>
+        <div class="col-md-2"><label class="form-label" for="f_overtime_date">{{ t('Date') }} *</label><input type="date" name="overtime_date" class="form-control" required id="f_overtime_date"></div>
+        <div class="col-md-2"><label class="form-label" for="f_hours">{{ t('Hours') }} *</label><input type="number" step="0.5" name="hours" class="form-control" required id="f_hours"></div>
+        <div class="col-md-2"><label class="form-label" for="f_overtime_type">{{ t('Type') }}</label>
+          <select name="overtime_type" class="form-select" id="f_overtime_type"><option value="standard">{{ t('Standard (1.25x)') }}</option><option value="weekend">{{ t('Weekend (1.5x)') }}</option><option value="holiday">{{ t('Holiday (1.5x)') }}</option></select>
         </div>
         <div class="col-md-4"><button type="submit" class="btn btn-primary">{{ t('Create') }}</button></div>
       </div>

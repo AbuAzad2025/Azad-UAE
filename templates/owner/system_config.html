@@ -193,8 +193,8 @@
           <div class="row">
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ t('Default_Currency') }}</label>
-                <select name="default_currency" class="form-control" aria-label="default currency">
+                <label for="f_default_currency">{{ t('Default_Currency') }}</label>
+                <select name="default_currency" class="form-control" aria-label="default currency" id="f_default_currency">
                   <option value="AED" {{ 'selected' if settings.default_currency == 'AED' }}>{{ t('AED_UAE_Dirham') }}</option>
                   <option value="USD" {{ 'selected' if settings.default_currency == 'USD' }}>{{ t('USD_US_Dollar') }}</option>
                   <option value="EUR" {{ 'selected' if settings.default_currency == 'EUR' }}>EUR - {{ t('Euro') }}</option>
@@ -205,8 +205,8 @@
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ t('Default_Language') }}</label>
-                <select name="default_language" class="form-control" aria-label="default language">
+                <label for="f_default_language">{{ t('Default_Language') }}</label>
+                <select name="default_language" class="form-control" aria-label="default language" id="f_default_language">
                   <option value="ar" {{ 'selected' if settings.default_language == 'ar' }}>{{ t('Arabic') }}</option>
                   <option value="en" {{ 'selected' if settings.default_language == 'en' }}>English</option>
                 </select>
@@ -214,8 +214,8 @@
             </div>
             <div class="col-md-3">
               <div class="form-group">
-                <label>{{ t('Timezone') }}</label>
-                <select name="timezone" class="form-control" aria-label="timezone">
+                <label for="f_timezone">{{ t('Timezone') }}</label>
+                <select name="timezone" class="form-control" aria-label="timezone" id="f_timezone">
                   <option value="Asia/Dubai" {{ 'selected' if settings.timezone == 'Asia/Dubai' }}>Asia/Dubai (GST +4)</option>
                   <option value="Asia/Riyadh" {{ 'selected' if settings.timezone == 'Asia/Riyadh' }}>Asia/Riyadh (AST +3)</option>
                   <option value="Asia/Jerusalem" {{ 'selected' if settings.timezone == 'Asia/Jerusalem' }}>Asia/Jerusalem (IST +2)</option>

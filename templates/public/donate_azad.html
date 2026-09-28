@@ -28,13 +28,13 @@
             <label>{{ t('Payment_Method') }}</label>
             <div class="az-methods">
               {% if vault.bitcoin_address or vault.nowpayments_api_key %}
-              <label class="az-method"><input type="radio" name="payment_method" value="crypto" checked aria-label="payment method"> <i class="fab fa-bitcoin" aria-hidden="true"></i> Crypto</label>
+              <label class="az-method" for="f_payment_method"><input type="radio" name="payment_method" value="crypto" checked aria-label="payment method" id="f_payment_method"> <i class="fab fa-bitcoin" aria-hidden="true"></i> Crypto</label>
               {% endif %}
               {% if vault.bank_iban or vault.bank_account_number %}
-              <label class="az-method"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method"> <i class="fas fa-university" aria-hidden="true"></i> {{ t('Bank_Transfer') }}</label>
+              <label class="az-method" for="f_payment_method_2"><input type="radio" name="payment_method" value="bank_transfer" {% if not vault.bitcoin_address %}checked{% endif %} aria-label="payment method" id="f_payment_method_2"> <i class="fas fa-university" aria-hidden="true"></i> {{ t('Bank_Transfer') }}</label>
               {% endif %}
               {% if vault.paypal_business_email %}
-              <label class="az-method"><input type="radio" name="payment_method" value="paypal" aria-label="payment method"> <i class="fab fa-paypal" aria-hidden="true"></i> PayPal</label>
+              <label class="az-method" for="f_payment_method_3"><input type="radio" name="payment_method" value="paypal" aria-label="payment method" id="f_payment_method_3"> <i class="fab fa-paypal" aria-hidden="true"></i> PayPal</label>
               {% endif %}
             </div>
           </div>
@@ -56,8 +56,8 @@
             <input type="email" name="donor_email" dir="ltr" id="input_donor_email" aria-label="donor email">
           </div>
           <div class="az-field">
-            <label>{{ t('Message_Optional') }}</label>
-            <textarea name="donor_message" rows="3" aria-label="donor message"></textarea>
+            <label for="f_donor_message">{{ t('Message_Optional') }}</label>
+            <textarea name="donor_message" rows="3" aria-label="donor message" id="f_donor_message"></textarea>
           </div>
 
           <button type="submit" class="az-btn">
