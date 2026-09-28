@@ -16,8 +16,9 @@ instead of creating it.
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from flask import current_app
 
@@ -103,7 +104,7 @@ def verify_schema() -> bool:
     and silently diverges from the migration history, which turns a recoverable
     "database is behind" into a schema that no longer matches its migrations.
     """
-    if os.environ.get("SKIP_SYSTEM_INTEGRITY") or _is_migration_command():
+    if _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) or _is_migration_command():
         return True
 
     try:
@@ -209,6 +210,12 @@ def verify_seed_manifest() -> None:
     """
     from utils.seed_manifest import ALL_SEED_SETS
 
+    if _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) or _is_migration_command():
+        # During `flask db upgrade` the schema is mid-build: probing it would
+        # report every set as unmeasurable, which is noise that looks like a
+        # seeding failure. The post-migration boot is where this is measured.
+        return
+
     satisfied: list[str] = []
     violated: list[str] = []
     unmeasured: list[str] = []
@@ -243,10 +250,22 @@ def verify_seed_manifest() -> None:
             unmeasured.append(f"{seed_set.key}={actual} (no expected declared)")
             continue
 
-        if seed_set.satisfied_by(actual):
-            satisfied.append(f"{seed_set.key}={actual}")
+        has_tenants = True
+        if seed_set.scope == "tenant":
+            from utils.seed_manifest_probe import count_active_tenants
+
+            try:
+                has_tenants = count_active_tenants() > 0
+            except Exception:  # pragma: no cover - defensive
+                has_tenants = True
+
+        bucket, detail = seed_set.verdict(actual, has_tenants=has_tenants)
+        if bucket == "satisfied":
+            satisfied.append(detail)
+        elif bucket == "unmeasured":
+            unmeasured.append(detail)
         else:
-            violated.append(f"{seed_set.key}={actual} (expected {seed_set.check} {seed_set.expected})")
+            violated.append(detail)
 
     current_app.logger.info(
         "seed-manifest: %d satisfied, %d VIOLATED, %d unmeasured, %d no-probe, %d probe-unrunnable, %d broken-probe",
@@ -282,6 +301,47 @@ def _resolve(dotted: str):
         return None
 
 
+@contextmanager
+def _isolated_transaction(app: Any = None):
+    """Run a read-only reporting step so a failure cannot poison the session.
+
+    SQLAlchemy puts every statement in one session-level transaction, and
+    PostgreSQL keeps a transaction failed the moment a statement errors, for
+    good: every later command on that connection returns
+    InFailedSqlTransaction until a ROLLBACK happens. A reporting step allowed to
+    touch the database without its own transaction can therefore break work that
+    has nothing to do with it - the failure that stopped ``flask db upgrade`` on
+    a fresh database was exactly that.
+
+    Rolls back on entry and on exit. On entry because the session may already
+    be poisoned by whatever ran before this step - clearing that is the whole
+    point - and on exit so this step cannot poison what runs next. Both are only
+    read-only steps, so there is never anything to keep.
+    """
+    from sqlalchemy.orm import Session
+
+    from extensions import db
+
+    session = cast("Session", db.session)
+
+    def _clear() -> None:
+        try:
+            if session.get_transaction() is not None:
+                session.rollback()
+        except Exception as exc:  # pragma: no cover - defensive
+            # Deliberately not current_app.logger: this can run before an app
+            # context is pushed, and raising from the handler would mask the
+            # failure we were trying to report.
+            if app is not None:
+                app.logger.debug("bootstrap: rollback around integrity step failed: %s", exc)
+
+    _clear()
+    try:
+        yield
+    finally:
+        _clear()
+
+
 def run_boot_provisioning(app: Any, phase: str = "pre") -> None:
     """Single entry point called from ``create_app``. Never raises.
 
@@ -294,9 +354,18 @@ def run_boot_provisioning(app: Any, phase: str = "pre") -> None:
       state the operator actually ended up with. Running it earlier would log
       "no owner account" on every fresh boot and then immediately plant one.
     """
-    if os.environ.get("SKIP_BOOT_PROVISIONING"):
+    if _truthy(os.environ.get("SKIP_BOOT_PROVISIONING")):
         app.logger.info("bootstrap: skipped (SKIP_BOOT_PROVISIONING set)")
         return
+
+    # Integrity is a *report* of the state of the database, but it is the first
+    # thing that touches it. On a brand-new database that aborts the shared
+    # transaction and every later step - including the very migration this
+    # command exists to run - fails with InFailedSqlTransaction. Probes that
+    # legitimately cannot run (no tenant yet, table mid-migration) must not be
+    # able to do that, so the verification is isolated in its own transaction
+    # and rolled back on any failure.
+    integrity_labels = {"credentials", "seed-manifest"}
 
     steps = (
         (("storage", ensure_storage_paths), ("schema", verify_schema))
@@ -309,7 +378,10 @@ def run_boot_provisioning(app: Any, phase: str = "pre") -> None:
 
     with app.app_context():
         for label, step in steps:
+            isolate = label in integrity_labels
+            context = _isolated_transaction(app) if isolate else nullcontext()
             try:
-                step()
+                with context:
+                    step()
             except Exception as exc:  # pragma: no cover - defensive
                 app.logger.error("bootstrap: %s step failed: %s", label, exc, exc_info=True)

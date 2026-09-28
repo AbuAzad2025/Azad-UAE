@@ -195,12 +195,18 @@ def max_integration_settings_per_active_tenant() -> int:
 
 
 def max_document_sequences_per_document_type() -> int:
-    """Highest number of sequences for one (tenant, document_type) pair. Must be <= 1.
+    """Highest number of sequences for one (tenant, code) pair. Must be <= 1.
 
-    Two sequences for the same document type in one tenant means two independent
+    Two sequences for the same document code in one tenant means two independent
     counters, so concurrent documents can be issued the same number. That is a
     numbering integrity failure regardless of whether either tenant has ever
     opened the page - which is why a count-based assertion was the wrong shape.
+
+    The per-tenant discriminator on ``DocumentSequence`` is ``code`` (values like
+    "sale", "invoice"), not ``document_type``: the first version of this probe
+    grouped by a ``document_type`` attribute that the model does not have, so it
+    raised AttributeError and the set was reported as unmeasured rather than
+    checked. Found by booting against a real database, not by reading the model.
     """
     from models.document_sequence import DocumentSequence
 
@@ -208,7 +214,7 @@ def max_document_sequences_per_document_type() -> int:
         int(
             db.session.query(func.count(DocumentSequence.id))
             .filter(DocumentSequence.tenant_id == tid)
-            .group_by(DocumentSequence.document_type)
+            .group_by(DocumentSequence.code)
             .scalar()
             or 0
         )

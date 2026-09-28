@@ -44,6 +44,16 @@ def ensure_system_integrity(app):
 
         with without_tenant_scope():
             _ensure_system_integrity_inner(app)
+            # Seeding commits as it goes, so clear the session on the way out.
+            # A statement that errored earlier in the boot leaves PostgreSQL
+            # refusing every later command on that connection, and the
+            # seed-manifest verification that runs next would report every set
+            # as unmeasurable for a reason that has nothing to do with the data.
+            try:
+                if db.session.in_transaction():
+                    db.session.rollback()
+            except Exception as exc:  # pragma: no cover - defensive
+                current_app.logger.debug("SystemInit: post-seed rollback failed: %s", exc)
 
 
 def _ensure_system_integrity_inner(app):

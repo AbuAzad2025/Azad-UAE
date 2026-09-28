@@ -24,6 +24,25 @@ def _init_env():
     os.makedirs(instance_dir, exist_ok=True)
 
 
+# Load .env *before* the Config class body below is evaluated.
+#
+# The class reads os.environ directly in its body (APP_ENV, DEBUG,
+# SQLALCHEMY_DATABASE_URI, OWNER_PASSWORD, ...), and a class body runs at import
+# time. When this call only happened from create_app(), importing config built
+# Config from an environment that did not yet contain anything from .env, so
+# every one of those settings silently fell back to its default: APP_ENV
+# "production", OWNER_PASSWORD "", and whatever DATABASE_URL the shell happened
+# to carry. Nothing raised, so the app came up looking configured while ignoring
+# the operator's .env entirely - which is how a from-scratch boot ended with 168
+# tables and zero seeded rows, the owner account impossible to create, and a
+# login that no credential could satisfy.
+#
+# _init_env stays callable and is still invoked from create_app(); it is
+# idempotent (load_dotenv does not overwrite, makedirs uses exist_ok), so calling
+# it twice is harmless.
+_init_env()
+
+
 def _redis_available(host: str = "localhost", port: int = 6379, timeout: float = 0.5) -> bool:
     """Check if Redis is reachable without importing redis library."""
     try:

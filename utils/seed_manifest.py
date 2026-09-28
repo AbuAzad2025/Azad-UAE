@@ -95,6 +95,28 @@ class SeedSet:
             return actual >= self.expected
         raise ValueError(f"seed set {self.key!r} has unknown check {self.check!r}")
 
+    def verdict(self, actual: int, *, has_tenants: bool = True) -> tuple[str, str]:
+        """Classify a probe result as (bucket, detail) for the boot report.
+
+        Tenant-scoped sets are measured with a min-across-active-tenants probe,
+        and those return 0 when the platform has no tenants yet. Comparing that
+        0 against a floor of 98 reported every tenant set as VIOLATED on a
+        freshly seeded install that has simply not had its first tenant created -
+        a false alarm in the one situation an operator is most likely to be
+        staring at the log.
+
+        So "there is nothing to measure" is a distinct outcome from "measured and
+        wrong": it goes to ``unmeasured``, which states the number and declines to
+        judge it, the same honest bucket used when no expectation is declared.
+        """
+        if self.expected is None:
+            return "unmeasured", f"{self.key}={actual} (no expected declared)"
+        if not has_tenants and self.scope == "tenant":
+            return "unmeasured", f"{self.key}={actual} (no active tenant yet)"
+        if self.satisfied_by(actual):
+            return "satisfied", f"{self.key}={actual}"
+        return "violated", f"{self.key}={actual} (expected {self.check} {self.expected})"
+
 
 # ── Platform-wide, seeded at every boot ──────────────────────────────────────
 

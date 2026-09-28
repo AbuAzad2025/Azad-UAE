@@ -20,10 +20,10 @@ from flask import (
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import config
-from app.bootstrap import run_boot_provisioning
+from app.bootstrap import _truthy, run_boot_provisioning
 from app.context import register_context_processors
 from app.handlers import register_error_handlers
-from app.integrity import run_system_integrity_check
+from app.integrity import _is_migration_command, run_system_integrity_check
 from config import Config, assert_production_sanity, ensure_runtime_dirs
 from extensions import db, init_extensions
 from services.logging_core import LoggingCore
@@ -106,13 +106,16 @@ def create_app(config_class=Config) -> Flask:
         enable_profiling(app)
 
     # System integrity check
-    if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
+    if not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")):
         print("Running system integrity check...")
         run_system_integrity_check(app)
         print("System integrity check passed")
 
     # Default tenant maintenance check at startup
-    if not os.environ.get("SKIP_SYSTEM_INTEGRITY"):
+    # Also skipped for migration commands: it queries the tenants table, which
+    # does not exist yet while `flask db upgrade` is building the schema, and a
+    # failed boot there means the migration never runs at all.
+    if not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) and not _is_migration_command():
         run_default_tenant_maintenance_api = None
         try:
             from services.maintenance_service import run_default_tenant_maintenance_api  # type: ignore[assignment]

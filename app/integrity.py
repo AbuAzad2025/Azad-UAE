@@ -25,7 +25,9 @@ def _is_migration_command():
 
 def run_system_integrity_check(app):
     """Ensure essential data exists even after a full DB wipe."""
-    if os.environ.get("SKIP_SYSTEM_INTEGRITY") or _is_migration_command():
+    from app.bootstrap import _truthy
+
+    if _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) or _is_migration_command():
         return
     from utils.system_init import ensure_system_integrity
 
