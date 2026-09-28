@@ -6705,6 +6705,7 @@ TRANSLATIONS = {
     "cheque": {"ar": "الشيك", "en": "Cheque"},
     "collection": {"ar": "التحصيل", "en": "collection"},
     "compare": {"ar": "المقارنة", "en": "compare"},
+    "Condition": {"ar": "الحالة", "en": "Condition"},
     "condition": {"ar": "الحالة", "en": "condition"},
     "confirm": {"ar": "تأكيد", "en": "Confirm"},
     "confirm_cancel_order": {"ar": "تأكيد إلغاء الطلب؟", "en": "Confirm order cancellation?"},

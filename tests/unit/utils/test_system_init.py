@@ -153,10 +153,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch(
-                side_effect=RuntimeError("branch"),
-            ),
-            patch("services.logging_core.LoggingCore.log_error"),
-            patch(
                 "utils.system_init._ensure_tenant_gl_trees",
                 side_effect=RuntimeError("gl"),
             ),

@@ -128,26 +128,52 @@ class TestManifestMatchesSource:
         assert len(registry.BASE_ACCOUNTS) == 98
 
     def test_document_sequence_count(self):
-        """Count the ``defaults`` dict keys in the source, not occurrences of text.
+        """The manifest must name every document type the source can create.
 
-        The dict is a local inside ``get_or_create``, so it cannot be imported.
-        Counting ``("`` over the file over-counts badly (15 against a true 9)
-        because the same shape appears elsewhere, so the AST is parsed instead.
+        ``expected`` used to be 9, asserted against the ``defaults`` dict inside
+        ``get_or_create``. It is 1 now, and that change was correct: the set is
+        lazy, so "how many rows exist" is not a property of a correct install -
+        a tenant that has never issued an invoice legitimately has no invoice
+        sequence. ``expected`` now carries the runtime bound, which is that one
+        tenant never has two counters for the same document type.
+
+        That moved the "9" out of a machine-checked field, so it is checked here
+        instead: the note has to name exactly the document types the source
+        knows about. A new document type added to the service without being added
+        to the manifest note fails this test, which is the guarantee the old
+        assertion gave.
+
+        The ``defaults`` dict is a local inside ``get_or_create`` and cannot be
+        imported. Counting ``"`` over the file over-counts badly (15 against a
+        true 9) because the same shape appears elsewhere, so the AST is parsed.
         """
         import ast
 
         import services.document_sequence_service as dss
 
         tree = ast.parse(open(dss.__file__, encoding="utf-8").read())
-        counts = [
-            len(n.value.keys)
-            for n in ast.walk(tree)
-            if isinstance(n, ast.Assign)
-            and any(getattr(t, "id", None) == "defaults" for t in n.targets)
-            and isinstance(n.value, ast.Dict)
-        ]
-        assert counts, "could not find the defaults dict in document_sequence_service"
-        assert _seed_set("document_sequences").expected == max(counts)
+        source_keys: list[str] = []
+        for n in ast.walk(tree):
+            if (
+                isinstance(n, ast.Assign)
+                and any(getattr(t, "id", None) == "defaults" for t in n.targets)
+                and isinstance(n.value, ast.Dict)
+            ):
+                source_keys = [k.value for k in n.value.keys if isinstance(k, ast.Constant)]
+                break
+        assert source_keys, "could not find the defaults dict in document_sequence_service"
+
+        seed_set = _seed_set("document_sequences")
+        assert len(source_keys) == 9
+
+        # The runtime bound is a uniqueness bound, not a row count.
+        assert seed_set.expected == 1
+        assert seed_set.check == "at_most"
+
+        # Every source document type is named in the manifest note.
+        noted = {w.strip(" .,") for w in seed_set.note.replace(",", " ").split()}
+        missing = [k for k in source_keys if k not in noted]
+        assert not missing, f"document types missing from the manifest note: {missing}"
 
 
 class TestManifestProbesResolve:
