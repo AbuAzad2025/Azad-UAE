@@ -52,12 +52,26 @@ class SeedSet:
         scope: ``platform`` | ``tenant`` | ``lazy`` | ``deliberate``.
         seeder: Dotted path to the callable that seeds it, or ``None`` when the
             data set is not seeded at all.
-        expected: Row count when the data set is fully seeded. ``None`` when the
-            count depends on the deployment (per-tenant GL trees, for example).
+        expected: The number the probe is compared against. ``None`` means "no
+            expectation is declared for this set" and the probe result is then
+            *reported but not judged* - see ``check``.
         source: Where the data set is defined, for a reader who wants the rows.
         note: Why it is wired the way it is.
-        verify: Dotted path to a zero-argument callable returning the current row
-            count. Optional; a set without one is reported as unverified.
+        verify: Dotted path to a zero-argument callable returning a number.
+            Optional; a set without one is reported as unchecked.
+        check: How ``expected`` compares to the probe result.
+            ``"at_least"`` (default) is satisfied when ``actual >= expected`` -
+            the right shape for "this much should have been seeded".
+            ``"at_most"`` is satisfied when ``actual <= expected``, used for
+            integrity invariants on lazy data where asserting a row *count*
+            would be wrong: a tenant that has never opened the invoices page
+            legitimately has zero invoice settings, but must never have two.
+
+    ``expected=None`` is deliberately not a free pass. An earlier version of
+    ``app/bootstrap.py`` folded "no expectation" into the healthy bucket, so a
+    probe could run, its number be discarded, and the set still be reported as
+    healthy. The per-tenant GL chart of accounts - the most safety-critical set
+    in the manifest - sat in exactly that bucket.
     """
 
     key: str
@@ -68,7 +82,18 @@ class SeedSet:
     source: str
     note: str = ""
     verify: str | None = None
+    check: str = "at_least"
     tags: tuple[str, ...] = field(default_factory=tuple)
+
+    def satisfied_by(self, actual: int) -> bool:
+        """Is ``actual`` acceptable for this set? Requires ``expected``."""
+        if self.expected is None:
+            raise ValueError(f"seed set {self.key!r} declares no expected value")
+        if self.check == "at_most":
+            return actual <= self.expected
+        if self.check == "at_least":
+            return actual >= self.expected
+        raise ValueError(f"seed set {self.key!r} has unknown check {self.check!r}")
 
 
 # ── Platform-wide, seeded at every boot ──────────────────────────────────────
@@ -152,7 +177,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=None,
+        expected=98,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
         note="98 base accounts + the tenant's industry extension (49 across 13 "
         "industries) + 2 liquidity accounts per active branch. Self-healing: "
@@ -165,12 +190,13 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="GL concept to account mappings",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_gl_mappings",
-        expected=None,
+        expected=0,
+        check="at_most",
         source="services/gl_provisioning_service.py",
         note="Gated on ENABLE_DYNAMIC_GL_MAPPING. Accounts are created without "
         "mappings, so a tenant created outside the Owner panel gets accounts "
         "but no mappings.",
-        verify="utils.seed_manifest_probe.count_gl_mappings",
+        verify="utils.seed_manifest_probe.count_tenants_missing_required_gl_mappings",
         tags=("finance", "gl"),
     ),
     SeedSet(
@@ -179,6 +205,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         scope="tenant",
         seeder="models.pos_order_type.ensure_default_pos_order_types",
         expected=6,
+        verify="utils.seed_manifest_probe.min_pos_order_types_for_active_tenant",
         source="models/pos_order_type.py:DEFAULT_POS_ORDER_TYPES",
         note="Seeded at tenant creation in the Owner panel, not on every boot.",
         tags=("pos", "tenant-creation"),
@@ -192,6 +219,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         source="services/store_payment_method_service.py",
         note="cod/bank_transfer/card/e_wallet/online_pay. Only cod is enabled by "
         "default. Seeded for tenant 1 at boot; other tenants get them lazily.",
+        verify="utils.seed_manifest_probe.min_store_payment_methods_for_active_tenant",
         tags=("store",),
     ),
     SeedSet(
@@ -199,10 +227,17 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Branches",
         scope="tenant",
         seeder=None,
-        expected=None,
+        expected=1,
         source="routes/branches.py",
-        note="Operator-created. Creating one also seeds its 1110-B/1120-B "
-        "liquidity accounts via the Branch after_insert listener.",
+        note="Operator-created, so there is no seeder to name - but 'no seeder' "
+        "does not mean 'not worth checking'. A tenant with zero active branches "
+        "cannot record a sale, so this is a liveness invariant, and the probe "
+        "below asserts it. The manifest previously declared seeder=None, which "
+        "made verify_seed_manifest skip the set on its `seeder is None` branch, "
+        "leaving the one tenant set that must never be empty completely "
+        "unchecked. Creating a branch also seeds its 1110-B/1120-B liquidity "
+        "accounts via the Branch after_insert listener.",
+        verify="utils.seed_manifest_probe.min_branches_for_active_tenant",
         tags=("deliberate-empty",),
     ),
 )
@@ -216,10 +251,12 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
         label="Numbering sequences",
         scope="lazy",
         seeder="services.document_sequence_service.DocumentSequenceService.get_or_create",
-        expected=9,
+        expected=1,
+        check="at_most",
         source="services/document_sequence_service.py",
         note="sale, purchase, payment, receipt, gl_entry, cheque, invoice, "
         "return, expense. Locked with SELECT ... FOR UPDATE on first use.",
+        verify="utils.seed_manifest_probe.max_document_sequences_per_document_type",
         tags=("numbering",),
     ),
     SeedSet(
@@ -227,9 +264,11 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
         label="Tenant storefronts",
         scope="lazy",
         seeder="services.store_service.StoreService.ensure_tenant_store",
-        expected=None,
+        expected=1,
+        check="at_most",
         source="services/store_service.py",
         note="Created on first store access.",
+        verify="utils.seed_manifest_probe.max_tenant_stores_per_active_tenant",
         tags=("store",),
     ),
     SeedSet(
@@ -237,9 +276,11 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
         label="Invoice settings",
         scope="lazy",
         seeder="models.invoice_settings.InvoiceSettings.get_active",
-        expected=None,
+        expected=1,
+        check="at_most",
         source="models/invoice_settings.py",
         note="Created on first read.",
+        verify="utils.seed_manifest_probe.max_invoice_settings_per_active_tenant",
         tags=("invoicing",),
     ),
     SeedSet(
@@ -247,9 +288,11 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
         label="Integration settings",
         scope="lazy",
         seeder="models.integration_settings.IntegrationSettings.get_service_config",
-        expected=None,
+        expected=1,
+        check="at_most",
         source="models/integration_settings.py",
         note="Created on first read of a service config.",
+        verify="utils.seed_manifest_probe.max_integration_settings_per_active_tenant",
         tags=("integrations",),
     ),
 )

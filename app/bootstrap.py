@@ -181,58 +181,92 @@ def verify_seed_manifest() -> None:
     running - or a count that drifts - is reported instead of sitting in a
     Markdown file the way the old "37 perms / 8 roles / 76 industry fields"
     claim did.
+
+    Every set lands in exactly one bucket, and the buckets mean what they say:
+
+    ``satisfied``
+        An expectation is declared, the probe ran, and the comparison passed.
+    ``violated``
+        An expectation is declared, the probe ran, and the comparison failed.
+        Logged at WARNING - this is an under-seeded or corrupted install.
+    ``unmeasured``
+        The probe ran but no ``expected`` is declared, so the number is
+        reported for a human and deliberately *not* called healthy. This bucket
+        did not exist before; "no expectation" used to be folded into
+        ``satisfied``, which meant a probe could run, its result be thrown away
+        and the set still be reported as fine.
+    ``no_probe``
+        No ``verify`` callable is declared, so nothing was measured. A set with
+        ``seeder=None`` *and* no probe is skipped entirely rather than reported
+        here, because nothing about it is knowable from the database.
+    ``unrunnable``
+        The probe raised. Logged at WARNING, not debug: on a real PostgreSQL
+        install this is the signature of a missing or partial schema, and at
+        debug level it was invisible in production.
+    ``broken_probe``
+        The manifest points at a dotted path that does not resolve. That is a
+        bug in the manifest itself and is logged at ERROR.
     """
     from utils.seed_manifest import ALL_SEED_SETS
 
-    healthy: list[str] = []
-    drifted: list[str] = []
-    unverified: list[str] = []
-    missing_probe: list[str] = []
-    probe_unrunnable: list[str] = []
+    satisfied: list[str] = []
+    violated: list[str] = []
+    unmeasured: list[str] = []
+    no_probe: list[str] = []
+    unrunnable: list[str] = []
+    broken_probe: list[str] = []
 
     for seed_set in ALL_SEED_SETS:
-        if seed_set.seeder is None:
-            continue  # deliberate, or created by a human
         if seed_set.verify is None:
-            unverified.append(seed_set.key)
+            if seed_set.seeder is None:
+                # Deliberate, or created by a human. Nothing to measure and
+                # nothing to judge.
+                continue
+            no_probe.append(seed_set.key)
             continue
         probe = _resolve(seed_set.verify)
         if probe is None:
-            # The manifest points at something that does not exist. That is a bug
-            # in the manifest, so it is reported separately from a probe that
-            # simply could not run.
-            missing_probe.append(seed_set.key)
+            broken_probe.append(seed_set.key)
             continue
         try:
             actual = probe()
         except Exception as exc:
-            # Schema not there yet, or the table is absent. A different problem
-            # from a broken dotted path, and only worth debug-level output.
-            current_app.logger.debug("seed-manifest: probe for %s could not run: %s", seed_set.key, exc, exc_info=True)
-            probe_unrunnable.append(seed_set.key)
+            current_app.logger.warning(
+                "seed-manifest: probe for %s could not run: %s", seed_set.key, exc, exc_info=True
+            )
+            unrunnable.append(seed_set.key)
             continue
 
-        if seed_set.expected is None or actual >= seed_set.expected:
-            healthy.append(f"{seed_set.key}={actual}")
+        if seed_set.expected is None:
+            # Measured, but nothing to judge it against. Report the number and
+            # leave the verdict to a human instead of inventing one.
+            unmeasured.append(f"{seed_set.key}={actual} (no expected declared)")
+            continue
+
+        if seed_set.satisfied_by(actual):
+            satisfied.append(f"{seed_set.key}={actual}")
         else:
-            drifted.append(f"{seed_set.key}={actual} (expected >= {seed_set.expected})")
+            violated.append(f"{seed_set.key}={actual} (expected {seed_set.check} {seed_set.expected})")
 
     current_app.logger.info(
-        "seed-manifest: %d healthy, %d drifted, %d missing-probe, %d probe-unrunnable, %d undeclared",
-        len(healthy),
-        len(drifted),
-        len(missing_probe),
-        len(probe_unrunnable),
-        len(unverified),
+        "seed-manifest: %d satisfied, %d VIOLATED, %d unmeasured, %d no-probe, %d probe-unrunnable, %d broken-probe",
+        len(satisfied),
+        len(violated),
+        len(unmeasured),
+        len(no_probe),
+        len(unrunnable),
+        len(broken_probe),
     )
-    for item in drifted:
-        current_app.logger.warning("seed-manifest: UNDER-SEEDED -> %s", item)
-    for item in missing_probe:
+    for item in unmeasured:
+        current_app.logger.info("seed-manifest: unmeasured -> %s", item)
+    for item in no_probe:
+        current_app.logger.info("seed-manifest: no probe declared -> %s", item)
+    for item in unrunnable:
+        current_app.logger.warning("seed-manifest: NOT MEASURED (probe failed) -> %s", item)
+    for item in violated:
+        current_app.logger.warning("seed-manifest: VIOLATED -> %s", item)
+    for item in broken_probe:
         current_app.logger.error("seed-manifest: manifest points at a missing probe -> %s", item)
-    for item in probe_unrunnable:
-        current_app.logger.debug("seed-manifest: probe could not run -> %s", item)
-    for item in unverified:
-        current_app.logger.debug("seed-manifest: no probe declared -> %s", item)
 
 
 def _resolve(dotted: str):

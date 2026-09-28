@@ -61,7 +61,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_developer_role"),
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
-            patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
             patch("utils.telemetry.start_telemetry"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "false"}, clear=False),
@@ -84,7 +83,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_developer_role"),
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
-            patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "true"}, clear=False),
         ):
@@ -106,7 +104,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_developer_role"),
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
-            patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
             patch("utils.telemetry.start_telemetry") as start_telemetry,
             patch.dict("os.environ", {}, clear=False),
@@ -130,7 +127,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_developer_role"),
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
-            patch("app.runtime.branch_repair.ensure_branch_isolation_schema_and_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
             patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch(
@@ -157,7 +153,6 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch(
-                "app.runtime.branch_repair.ensure_branch_isolation_schema_and_data",
                 side_effect=RuntimeError("branch"),
             ),
             patch("services.logging_core.LoggingCore.log_error"),

@@ -30,7 +30,6 @@ BACKEND_CATEGORIES = [
     ("forms", "Forms & Validation"),
     ("app", "App & Factory"),
     ("bootstrap", "Bootstrap"),
-    ("app.runtime", "Runtime Core"),
     ("ai_knowledge", "AI & Knowledge"),
 ]
 
