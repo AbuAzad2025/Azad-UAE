@@ -10,12 +10,34 @@ from utils.db_safety import atomic_transaction
 
 
 def ensure_clean_platform(app):
-    """Bootstrap empty SaaS platform: schema metadata + owner only — no tenants."""
+    """Bootstrap an empty SaaS platform: owner and roles, no tenants.
+
+    The schema is *not* created here. Alembic is the only source of truth for
+    it, and the caller is expected to have already brought the database to head
+    (cli_commands does exactly that, running ``upgrade()`` immediately before
+    this). The ``db.create_all()`` that used to sit in this function made it a
+    second, competing definition of the schema built from model metadata: it ran
+    *after* the migration chain, so it could only ever be adding tables the
+    migrations had not created - i.e. exactly the tables that were missing
+    because the database was behind. That is a schema drift waiting to happen,
+    and it is what let a "successfully" bootstrapped platform end up with a
+    half-migrated schema.
+    """
     with app.app_context():
         from utils.tenanting import without_tenant_scope
 
         with without_tenant_scope():
-            db.create_all()
+            from sqlalchemy import inspect
+
+            from extensions import db
+
+            missing = {"users", "permissions"} - set(inspect(db.engine).get_table_names())
+            if missing:
+                raise RuntimeError(
+                    f"ensure_clean_platform: schema is not migrated "
+                    f"(missing: {', '.join(sorted(missing))}). "
+                    f"Run 'flask db upgrade' first."
+                )
             _ensure_permissions()
             owner_role = _ensure_owner_role()
             owner_user, owner_created = _ensure_owner_user(owner_role)

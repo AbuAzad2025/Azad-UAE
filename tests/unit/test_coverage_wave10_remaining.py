@@ -471,21 +471,51 @@ class TestSystemInitWave10:
     def _tenant_scope():
         yield
 
-    def test_ensure_clean_platform_bootstrap(self, clean_app):
+    def test_ensure_clean_platform_bootstrap(self, app):
+        # Uses the real app fixture rather than clean_app: the function now
+        # inspects db.engine to decide whether the schema is migrated, and a
+        # bare Flask app is not bound to the SQLAlchemy instance, so db.engine
+        # raises before the patched inspector is ever reached. Only the table
+        # list is stubbed; the db import and the call path are the real ones.
         with (
-            patch("utils.system_init.db.create_all"),
             patch("utils.system_init._ensure_permissions"),
             patch("utils.system_init._ensure_owner_role", return_value=MagicMock(slug="owner")),
-            patch("utils.system_init._ensure_owner_user", return_value=(MagicMock(), True)),
+            patch("utils.system_init._ensure_owner_user", return_value=(MagicMock(), True)) as owner_user,
             patch("utils.system_init._record_server_activation"),
             patch("utils.system_init._ensure_super_admin_role"),
             patch("utils.system_init._ensure_developer_role"),
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_platform_reference_data"),
             patch("utils.tenanting.without_tenant_scope", return_value=self._tenant_scope()),
+            # This was patch("utils.system_init.db.create_all"), which asserted
+            # the behaviour the schema consolidation removed.
+            patch("sqlalchemy.inspect") as inspect_mock,
         ):
-            system_init_module.ensure_clean_platform(clean_app)
-        clean_app.logger.info.assert_any_call("SystemInit: Clean platform bootstrap complete (no tenants seeded).")
+            inspect_mock.return_value.get_table_names.return_value = ["users", "permissions"]
+            system_init_module.ensure_clean_platform(app)
+
+        # The real app's logger is not a mock, so the assertion is on what the
+        # call actually seeded rather than on a log line. _ensure_owner_user
+        # returning a MagicMock proves the owner step ran, which is the point of
+        # the function.
+        owner_user.assert_called_once()
+
+    def test_ensure_clean_platform_refuses_an_unmigrated_database(self, app):
+        """No create_all fallback: a behind-migration database must fail loudly.
+
+        This is the behaviour that replaced create_all(). Previously an
+        unmigrated database got a schema invented from model metadata; now it
+        is refused and the operator is told to run flask db upgrade.
+        """
+        with (
+            patch("utils.system_init._ensure_permissions") as perms,
+            patch("utils.tenanting.without_tenant_scope", return_value=self._tenant_scope()),
+            patch("sqlalchemy.inspect") as inspect_mock,
+        ):
+            inspect_mock.return_value.get_table_names.return_value = ["alembic_version"]
+            with pytest.raises(RuntimeError, match="not migrated"):
+                system_init_module.ensure_clean_platform(app)
+        perms.assert_not_called()
 
     def test_permissions_skip_existing_codes(self, clean_app):
         query = MagicMock()

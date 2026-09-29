@@ -41,7 +41,31 @@ def register_context_processors(app):
         return g.csp_nonce
 
     # make t() available as a Jinja2 global so macros can use it
-    app.jinja_env.globals.setdefault("t", __import__("utils.i18n", fromlist=["t"]).t)
+    from utils.i18n import t as _t
+
+    app.jinja_env.globals.setdefault("t", _t)
+
+    # ``_()`` and ``{% trans %}`` are Jinja2's own names, and they resolve
+    # through ``environment.gettext``. Nothing in this app ever installed
+    # Babel's translator onto that hook, so the alias silently fell back to a
+    # null translator: ``{{ _('Save') }}`` returned "Save" unchanged, and
+    # ``{% trans %}`` did the same. 2022 call sites across 82 templates - every
+    # one of them a page that looks translated in the source and renders
+    # English in Arabic. The parity test could not see it either, because the
+    # key existed in the catalogue; the call simply never consulted it.
+    #
+    # Pointing both at utils.i18n.t makes every one of those call sites do what
+    # its author intended, and makes a missing key fail the new gate below
+    # rather than shipping English.
+    app.jinja_env.globals["_"] = _t
+    app.jinja_env.globals["gettext"] = _t
+    app.jinja_env.install_gettext_callables(
+        _t,
+        newstyle=False,
+        ngettext=lambda singular, plural, n: singular if n == 1 else plural,
+    )
+    app.jinja_env.policies["ext.i18n.trimmed"] = False
+    app.jinja_env.policies["ext.i18n.newstyle"] = False
 
     # The same helpers are injected per-request as callable globals below; also
     # register them as real filters so `value|format_currency` compiles too.

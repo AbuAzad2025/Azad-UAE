@@ -351,11 +351,27 @@ jobs:
       - name: Strict i18n lint (templates & Python)
         run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
 
+      # i18n regression gates. check_strict_i18n proves every string is *wrapped*
+      # in a translation call; these two prove the call actually resolves.
+      # The gap they close: {{ _('x') }} and {% trans %} resolve through
+      # environment.gettext, and with no translator installed there they returned
+      # the raw key. 2022 call sites across 82 templates rendered English to an
+      # Arabic user while passing the strict lint, because the key existed in the
+      # catalogue - the call simply never consulted it.
+      - name: Untranslated-key gate (no template call renders as its own key)
+        run: python scripts/lint/check_i18n_untranslated.py --limit 20
+
+      - name: Translation catalogue health (every key resolves to Arabic)
+        run: python scripts/lint/report_catalogue_health.py --limit 20
+
       - name: Alembic graph gate (single head, reversible chain)
         run: python scripts/lint/check_migration_head.py
 
       - name: Transaction-boundary gate (services never end a transaction)
         run: python scripts/lint/check_txn_boundaries.py
+
+      - name: Service side-effect gate (no schema/connection management in services)
+        run: python scripts/lint/check_service_side_effects.py
 
       - name: Accessibility gate (every form control has an accessible name)
         run: python scripts/lint/check_a11y_labels.py

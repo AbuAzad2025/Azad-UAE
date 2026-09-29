@@ -24,8 +24,9 @@ ADMIN_PASSWORD = "TestSuper@123456"
 
 
 def _setup():
-    # Skip startup maintenance that queries raw tables before schema exists
-    os.environ["SKIP_SYSTEM_INTEGRITY"] = "1"
+    # Seeding runs downstream of a migrated schema, so startup maintenance that
+    # queries tables does not need to be disabled any more.
+    os.environ.pop("SKIP_SYSTEM_INTEGRITY", None)
 
     from app.factory import create_app
     from config import TestConfig
@@ -33,8 +34,8 @@ def _setup():
 
     # Honor an explicitly provided DATABASE_URL (e.g. the CI e2e-tours job's
     # postgres service): seeding then lands in the SAME database the gunicorn
-    # app serves, and db.create_all() gives that database a real schema.
-    # Without it we fall back to TestConfig's throwaway in-memory SQLite.
+    # app serves. Without it we fall back to TestConfig's throwaway in-memory
+    # SQLite.
     db_uri = (os.environ.get("DATABASE_URL") or "").strip()
     if db_uri:
         TestConfig = type(
@@ -44,8 +45,30 @@ def _setup():
         )
 
     app = create_app(config_class=TestConfig)
+
+    # The schema comes from Alembic, like every other schema in this system.
+    #
+    # This used to be db.create_all(), which made this script a third source of
+    # truth for the schema: a definition built from model metadata, running
+    # alongside migrations. They drift as soon as a migration is
+    # hand-corrected or an index is added in one of the two, and create_all
+    # cannot alter an existing table - so a database that was merely behind
+    # would silently stay behind. app/bootstrap.py owns the schema step; here we
+    # just ask Flask-Migrate to bring the database up to head before seeding into
+    # it.
     with app.app_context():
-        db.create_all()
+        from flask_migrate import upgrade
+
+        upgrade()
+        # If the chain produced no tables at all, say so plainly rather than
+        # letting a confusing "relation does not exist" surface later.
+        from sqlalchemy import inspect
+
+        tables = set(inspect(db.engine).get_table_names())
+        if "users" not in tables:
+            raise RuntimeError(
+                "Alembic upgrade completed but 'users' is still missing; refusing to seed into an unmigrated database."
+            )
     return app, db
 
 
