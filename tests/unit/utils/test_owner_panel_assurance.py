@@ -245,12 +245,39 @@ class TestBuildSystemHealthSummary:
         assert summary["migration"] == "abc123"
 
     def test_migration_exception(self, app, mocker):
-        mocker.patch("flask_migrate.current", side_effect=RuntimeError("alembic"))
+        # build_system_health_summary opens its own engine on DATABASE_URL and
+        # reads alembic_version. It never calls flask_migrate.current, so
+        # patching that used to leave the real database reachable - the test
+        # only ever passed because the test schema had no alembic_version table
+        # at all. Now that the suite builds the schema with Alembic, the real
+        # head comes back and the assertion fails. Patch the thing the function
+        # actually uses, the way the test above already does.
+        mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("alembic"))
+        mocker.patch.dict("os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False)
         from utils.owner_panel import build_system_health_summary
 
         with app.app_context():
             summary = build_system_health_summary()
         assert summary["migration"] == "check alembic"
+
+    def test_migration_reports_the_real_head(self, app, mocker):
+        """The happy path, against the database rather than a stub.
+
+        Worth pinning because it is the branch that was never actually
+        exercised: every prior test here short-circuited into the exception or
+        the stubbed-engine path, so nothing asserted that a migrated database
+        reports its own revision.
+        """
+        from utils.owner_panel import build_system_health_summary
+
+        with app.app_context():
+            summary = build_system_health_summary()
+
+        # Either a real revision, or "head" when alembic_version is empty. What
+        # it must not be is the failure sentinel.
+        assert summary["migration"] not in ("unknown", "check alembic"), (
+            "a migrated test database should report its revision, not an error"
+        )
 
 
 class TestBuildCompanyDashboardContext:
