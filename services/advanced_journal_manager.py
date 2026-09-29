@@ -253,7 +253,7 @@ class AdvancedJournalEntryManager:
     def reverse_entry_advanced(entry_id, reversed_by, reason, create_reversal_entry=True):
         """عكس قيد محاسبي — creates a reversing entry."""
         entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
-        if entry.status == "reversed":
+        if entry.is_reversed:
             raise ValueError(gettext("القيد معكوس مسبقاً"))
         if entry.status != "posted":
             raise ValueError(gettext(f"لا يمكن عكس قيد بحالة: {entry.status}"))
@@ -277,13 +277,48 @@ class AdvancedJournalEntryManager:
                 entry_date=datetime.now().date(),
                 notes=gettext(f"سبب العكس: {reason}"),
                 created_by=reversed_by,
-                entry_type="reversing",
             )
+            # entry_type is set here rather than passed in.
+            # create_entry_with_validation forwards **kwargs straight to
+            # GLService.create_manual_entry, whose signature is fixed
+            # (description, lines, entry_date, notes, created_by, currency,
+            # exchange_rate, branch_id) and has no **kwargs - so passing
+            # entry_type="reversing" raised
+            #   TypeError: create_manual_entry() got an unexpected keyword
+            #   argument 'entry_type'
+            # on every call. The reversal endpoint was therefore returning 500
+            # and no reversing entry was ever created. Setting the column on the
+            # returned object is equivalent and cannot reach that signature.
+            reversal_entry.entry_type = "reversing"
             # Auto-validate and post the reversal atomically (no intermediate commits)
             AdvancedJournalEntryManager.validate_entry(reversal_entry.id, validated_by=reversed_by, commit=False)
             AdvancedJournalEntryManager.post_entry(reversal_entry.id, posted_by=reversed_by, commit=False)
 
-            AdvancedJournalEntryManager._transition(entry, "reversed", user_id=reversed_by)
+            # The original entry keeps status="posted" and is flagged via
+            # is_reversed, exactly as GLJournalEntry.reverse_entry()
+            # (models/gl.py:289) does. It used to be transitioned to
+            # status="reversed" instead, and that was a reporting bug rather
+            # than a stylistic difference.
+            #
+            # Account balances are computed over entries whose status is
+            # "posted" - models/gl.py:154 in GLAccount.get_balance(), plus
+            # gl_service.py:1244, 1483 and 1596. The model's own before-insert
+            # hook (models/gl.py:546) sets is_posted=True for BOTH "posted" and
+            # "reversed", so the two flags disagreed and the codebase split
+            # along that seam: the accounting layer read status and dropped the
+            # original, while AR/AP/inventory/bank reconciliations read
+            # is_posted and counted both.
+            #
+            # Reversing a +10,000 debit therefore made every touched account show
+            # a 10,000 *credit* on the trial balance while four reconciliation
+            # services reported zero for the same period. The individual entry
+            # is still balanced, so assert_balanced_lines cannot detect this -
+            # it is the population that is wrong.
+            #
+            # Both legs must be counted for the pair to net to zero, so the
+            # original stays "posted". See the regression test in
+            # tests/unit/services/test_advanced_journal_reversal.py.
+            entry.is_reversed = True
             entry.reversed_entry_id = reversal_entry.id
             reversal_entry.reversed_entry_id = entry.id
 
