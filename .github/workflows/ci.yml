@@ -49,6 +49,9 @@ env:
   # Minimum total line coverage enforced in coverage-report.
   # Set to 85 to enforce a meaningful floor; current coverage is ~96%.
   COVERAGE_FAIL_UNDER: '85'
+  # `flask db upgrade` needs an app factory. Also stops the Flask CLI from
+  # auto-loading ./app.py, which builds a second app instance on import.
+  FLASK_APP: 'app.factory:create_app'
 
 jobs:
   # ── Matrix engine: adapt PG version grid to Git ref ──
@@ -158,7 +161,11 @@ jobs:
       - name: Run tests
         run: |
           # Warm up: ensure DB schema exists
-          python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()" || true
+          # Schema comes from Alembic, the same source the app uses. db.create_all()
+            # built a competing definition of the tables from model metadata,
+            # and it also had to run *after* create_app() - so the boot tried to
+            # query tenants before any table existed and died first.
+            flask db upgrade || true
           # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
@@ -547,7 +554,11 @@ jobs:
           APP_ENV: testing
           DEBUG: "true"
         run: |
-          python -c "from app import create_app; from extensions import db; app = create_app(); ctx = app.app_context(); ctx.push(); db.create_all(); ctx.pop()"
+          # Schema comes from Alembic, the same source the app uses. db.create_all()
+            # built a competing definition of the tables from model metadata,
+            # and it also had to run *after* create_app() - so the boot tried to
+            # query tenants before any table existed and died first.
+            flask db upgrade
       - name: Boot app and run Schemathesis (non-blocking)
         continue-on-error: true
         env:

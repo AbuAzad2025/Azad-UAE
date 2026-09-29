@@ -59,6 +59,13 @@ def register_context_processors(app):
     # rather than shipping English.
     app.jinja_env.globals["_"] = _t
     app.jinja_env.globals["gettext"] = _t
+    if not hasattr(app.jinja_env, "install_gettext_callables"):
+        # The jinja2 i18n extension is not necessarily loaded - the Flask
+        # Jinja environment enables it only when flask-babel is initialised,
+        # and this app translates through utils.i18n instead. install_* is an
+        # attribute the extension *adds*, so calling it unguarded raised
+        # AttributeError on any environment built without the extension.
+        app.jinja_env.add_extension("jinja2.ext.i18n")
     app.jinja_env.install_gettext_callables(
         _t,
         newstyle=False,

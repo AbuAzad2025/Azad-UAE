@@ -106,16 +106,32 @@ def create_app(config_class=Config) -> Flask:
         enable_profiling(app)
 
     # System integrity check
-    if not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")):
+    #
+    # Only when the schema is actually there. run_system_integrity_check seeds
+    # permissions, roles, currencies and the GL chart, and its very first
+    # statement is a SELECT against permissions - so on a database that has not
+    # been migrated yet it raises UndefinedTable, the whole thing is caught and
+    # logged, and then "System integrity check passed" is printed anyway. That
+    # print is why this went unnoticed: it is a lie on an unmigrated database.
+    schema_ready = app.extensions.get("schema_ready", True)
+    if not schema_ready:
+        app.logger.warning(
+            "SystemInit: skipping seeding - the schema is not migrated. Run 'flask db upgrade', or set AUTO_MIGRATE=1."
+        )
+    elif not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")):
         print("Running system integrity check...")
         run_system_integrity_check(app)
         print("System integrity check passed")
 
     # Default tenant maintenance check at startup
-    # Also skipped for migration commands: it queries the tenants table, which
-    # does not exist yet while `flask db upgrade` is building the schema, and a
-    # failed boot there means the migration never runs at all.
-    if not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) and not _is_migration_command():
+    #
+    # Skipped for migration commands and when the schema is not ready. It queries
+    # the tenants table, so running it against an unmigrated database raised
+    # UndefinedTable inside create_app and killed the boot - which is how a CI
+    # step that legitimately does `create_app()` before `db.create_all()` could
+    # never reach its own create_all. It is a data repair, not a precondition:
+    # skipping it on a database with no tables loses nothing.
+    if schema_ready and not _truthy(os.environ.get("SKIP_SYSTEM_INTEGRITY")) and not _is_migration_command():
         run_default_tenant_maintenance_api = None
         try:
             from services.maintenance_service import run_default_tenant_maintenance_api  # type: ignore[assignment]
@@ -123,12 +139,17 @@ def create_app(config_class=Config) -> Flask:
             app.logger.debug("maintenance_service unavailable", exc_info=True)
 
         if run_default_tenant_maintenance_api is not None:
-            with app.app_context():
-                result = run_default_tenant_maintenance_api()
+            try:
+                with app.app_context():
+                    result = run_default_tenant_maintenance_api()
                 if result.get("action_needed"):
                     app.logger.info(f"[OK] Default tenant maintenance completed: {result}")
                 else:
                     app.logger.info("[OK] Default tenant maintenance check passed - no action needed")
+            except Exception:
+                # Never fatal: a maintenance repair failing must not stop the
+                # application from serving traffic.
+                app.logger.warning("Default tenant maintenance failed; continuing", exc_info=True)
         else:
             app.logger.info("Default tenant maintenance service not available - skipping")
 

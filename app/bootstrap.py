@@ -382,6 +382,19 @@ def run_boot_provisioning(app: Any, phase: str = "pre") -> None:
             context = _isolated_transaction(app) if isolate else nullcontext()
             try:
                 with context:
-                    step()
+                    result = step()
             except Exception as exc:  # pragma: no cover - defensive
                 app.logger.error("bootstrap: %s step failed: %s", label, exc, exc_info=True)
+                result = None
+            if label == "schema":
+                # Record the verdict on the app so the rest of the boot can act
+                # on it. verify_schema has always returned a bool, but nothing
+                # read it: the "refusing to start against an incomplete schema"
+                # error was logged and then ignored, so the very next step went
+                # on to query tables that do not exist. On a CI runner that boots
+                # the app before creating the schema - which is what
+                # `create_app(); db.create_all()` does - that turned into
+                # "relation tenants does not exist" out of
+                # run_default_tenant_maintenance_api, and the boot died there
+                # instead of reaching the create_all it was waiting for.
+                app.extensions["schema_ready"] = bool(result)

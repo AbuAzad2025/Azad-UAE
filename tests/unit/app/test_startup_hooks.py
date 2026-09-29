@@ -21,6 +21,14 @@ def _boot_with_integrity(integrity_mock):
         patch("app.factory.LoggingCore.setup"),
         patch("app.factory.LoggingCore.schedule_cleanup"),
         patch("app.factory.run_system_integrity_check", integrity_mock),
+        # These tests are about the integrity and maintenance hooks firing, so
+        # they need the boot to believe the schema is there. Without this the
+        # boot correctly refuses to seed an unmigrated database and skips both
+        # hooks - which is the behaviour, but not what is under test here.
+        patch(
+            "app.factory.run_boot_provisioning",
+            side_effect=lambda app, phase="pre": app.extensions.__setitem__("schema_ready", True),
+        ),
         patch("cli_commands.register_cli_commands"),
     ]
     for p in patches:
