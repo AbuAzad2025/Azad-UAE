@@ -160,16 +160,23 @@ jobs:
 
       - name: Run tests
         run: |
-          # Warm up: ensure DB schema exists
-          # Schema comes from Alembic, the same source the app uses. db.create_all()
-            # built a competing definition of the tables from model metadata,
-            # and it also had to run *after* create_app() - so the boot tried to
-            # query tenants before any table existed and died first.
-            flask db upgrade || true
+          # Provision the schema from Alembic, the same source the app uses.
+          # db.create_all() built a competing definition of the tables straight
+          # from model metadata, so a column could exist in the model, be absent
+          # from every migration, and still pass here while breaking any
+          # environment that actually ran the migrations.
+          #
+          # This is deliberately NOT `|| true`. With the failure swallowed, a
+          # broken migration chain just meant the tests ran against no schema
+          # and failed later with a confusing UndefinedTable instead of here.
+          flask db upgrade
+          # Now that the schema is real, prove the models agree with it.
+          python scripts/lint/check_model_schema_parity.py
           # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
             --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
+
           coverage combine 2>/dev/null || true
           ls -la .coverage 2>/dev/null || true
           cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true

@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 from datetime import UTC
+from pathlib import Path
 from unittest.mock import MagicMock, NonCallableMock
 from urllib.parse import urlparse, urlunparse
 
@@ -495,11 +496,36 @@ def app():
     _app = create_app(config_class=TestConfig)
 
     with _app.app_context():
-        # Use db.create_all() instead of flask_migrate.upgrade() — the
-        # test DB is always fresh so no migration is needed, and Alembic
-        # creates its own engine (without NullPool / connect_timeout)
-        # which can exhaust CI PostgreSQL connections.
-        db.create_all()
+        # Build the test schema with Alembic, the same source production uses.
+        #
+        # This used to be db.create_all(), on the reasoning that the test
+        # database is always fresh so no migration is needed. That reasoning is
+        # wrong in a way that mattered: create_all() builds tables from model
+        # metadata alone, so every CHECK constraint, and every data backfill,
+        # that exists only in a migration simply did not exist in the test
+        # database. The suite therefore could not have caught a constraint
+        # being too narrow - which is exactly what CI run 36606499121 hit, where
+        # ck_purchases_status rejected valid purchase statuses in a migrated
+        # environment. The tests passed locally and failed in CI, permanently
+        # and confusingly, because the two were testing different schemas.
+        #
+        # alembic.command.upgrade() is given this engine explicitly so it does
+        # not build a second one. That was the connection-exhaustion concern
+        # behind the original choice, and it is still worth honouring: CI's
+        # PostgreSQL has a low max_connections and every parallel job shares
+        # it.
+        from alembic import command as alembic_command
+        from alembic.config import Config as AlembicConfig
+
+        _migrations_dir = Path(__file__).resolve().parents[1] / "migrations"
+        _alembic_cfg = AlembicConfig(str(_migrations_dir / "alembic.ini"))
+        # migrations/alembic.ini carries no script_location of its own - the
+        # Flask-Migrate CLI supplies it - so it has to be set here or Alembic
+        # cannot find env.py.
+        _alembic_cfg.set_main_option("script_location", str(_migrations_dir))
+        _alembic_cfg.set_main_option("sqlalchemy.url", _TEST_DATABASE_URL)
+        alembic_command.upgrade(_alembic_cfg, "head")
+
         _ensure_fk_anchor_user()
         _ensure_mock_fk_anchors()
         yield _app

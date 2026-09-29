@@ -10,7 +10,23 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name or "")
+#
+# It also *replaces* the root logger's handlers, and does so with
+# disable_existing_loggers semantics taken from the ini. Under the test suite
+# that silently detached the handler pytest's caplog fixture installs, so every
+# assertion of the form `assert any("..." in r.message for r in caplog.records)`
+# started failing the moment the test database began being built with Alembic
+# instead of db.create_all() - not because the code under test stopped logging,
+# but because the records stopped travelling. Only doing this when no
+# application context is active keeps the CLI path configured as before while
+# leaving an already-configured app (and caplog) alone.
+if not current_app:
+    fileConfig(config.config_file_name or "", disable_existing_loggers=False)
+else:
+    # Still honour the ini's alembic logger levels, without touching root.
+    logging.getLogger("alembic").setLevel(logging.WARN)
+    logging.getLogger("sqlalchemy").setLevel(logging.WARN)
+
 logger = logging.getLogger("alembic.env")
 
 
