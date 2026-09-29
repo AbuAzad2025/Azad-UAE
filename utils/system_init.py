@@ -6,7 +6,7 @@ from sqlalchemy import and_
 
 from extensions import db
 from models import Permission, Role, User
-from utils.db_safety import atomic_transaction
+from utils.db_safety import atomic_transaction, release_session
 
 
 def ensure_clean_platform(app):
@@ -71,11 +71,13 @@ def ensure_system_integrity(app):
             # refusing every later command on that connection, and the
             # seed-manifest verification that runs next would report every set
             # as unmeasurable for a reason that has nothing to do with the data.
-            try:
-                if db.session.in_transaction():
-                    db.session.rollback()
-            except Exception as exc:  # pragma: no cover - defensive
-                current_app.logger.debug("SystemInit: post-seed rollback failed: %s", exc)
+            #
+            # release_session() rather than a bare db.session.rollback(): this
+            # is discarding a possibly-aborted transaction, not undoing
+            # committed work, and the Grimoire's G1-ATOMICITY rule reserves raw
+            # rollback() for utils/db_safety.py, where that distinction is
+            # readable off the function name.
+            release_session("post-seed system init")
 
 
 def _ensure_system_integrity_inner(app):

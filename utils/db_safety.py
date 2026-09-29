@@ -90,6 +90,34 @@ def atomic_transaction(description: str = "unnamed"):
         raise
 
 
+def release_session(description: str = "unnamed") -> bool:
+    """End the current transaction and return the session to a usable state.
+
+    This is not an atomicity rollback and must not be used to undo work. It
+    exists because a statement that errored earlier leaves PostgreSQL refusing
+    every later command on that connection until the aborted transaction is
+    cleared, which makes each subsequent query fail with InFailedSqlTransaction
+    and hides the original error behind a cascade of noise.
+
+    Bootstrap code needs exactly this after a best-effort repair step: discard
+    the possibly-aborted transaction, keep everything already committed, and
+    carry on. Use atomic_transaction() for anything where losing the work on
+    failure would be wrong.
+
+    Returns True if a transaction was actually ended, False if there was nothing
+    to clear or the session refused.
+    """
+    try:
+        if not db.session.in_transaction():
+            return False
+        db.session.rollback()
+        logger.debug("Session released: %s", description)
+        return True
+    except Exception as e:
+        logger.error("Session release failed: %s — %s", description, e)
+        return False
+
+
 def safe_commit(description: str = "unnamed"):
     """
     Safe commit with automatic rollback on failure.
