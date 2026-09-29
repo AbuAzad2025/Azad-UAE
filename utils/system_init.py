@@ -57,9 +57,21 @@ def ensure_system_integrity(app):
 
 
 def _ensure_system_integrity_inner(app):
-    # 1. Ensure Tables Exist
-    # This is critical if the DB file was deleted
-    db.create_all()
+    # 1. Schema.
+    #
+    # There is deliberately no db.create_all() here. Alembic is the only source
+    # of truth for the schema: create_all() builds tables from the model
+    # metadata, which is a *second* definition of the same tables, and the two
+    # drift the moment a migration is hand-corrected or an index is added in
+    # only one of them. It cannot alter an existing table either, so a database
+    # that is merely behind would come up looking fine while missing columns.
+    #
+    # app/bootstrap.py owns the schema step: it reports the core tables, and
+    # with AUTO_MIGRATE=1 it applies the migration chain. A boot that arrives
+    # here with no tables was already refused or repaired there, and a boot
+    # that arrives without permission to repair now fails loudly at the first
+    # query instead of quietly inventing a schema.
+    current_app.logger.debug("SystemInit: schema is owned by Alembic; skipping create_all.")
 
     # 2. Ensure Permissions
     _ensure_permissions()

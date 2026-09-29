@@ -3,9 +3,7 @@
 Targets (production lines):
 - provision_tenant missing-tenant arc (39-41) + exception arc (48-49) +
   happy path (42-47).
-- _provision_base_accounts skip-existing (58-60), parent found (63-65) vs
   parent missing (61-66), create (66-83).
-- _provision_industry_accounts unknown-industry early return (87-89),
   skip/create/parent-missing arcs (90-116).
 - _provision_module_mappings: existing skip (132-134), non-mapping
   resolution-mode skip (136-139), missing account error (140-145),
@@ -38,9 +36,8 @@ class TestProvisionTenant:
         assert second.errors == []
 
     def test_provision_exception_captured(self, db_session, sample_tenant, mocker):
-        mocker.patch.object(
-            GLProvisioningService,
-            "_provision_base_accounts",
+        mocker.patch(
+            "services.gl_provisioning_service.GLService.ensure_core_accounts",
             side_effect=RuntimeError("disk gone"),
         )
         out = GLProvisioningService.provision_tenant(sample_tenant.id)
@@ -49,33 +46,6 @@ class TestProvisionTenant:
     def test_force_flag_accepted(self, db_session, sample_tenant):
         out = GLProvisioningService.provision_tenant(sample_tenant.id, force=True)
         assert out.tenant_id == sample_tenant.id
-
-
-class TestBaseAndIndustryAccounts:
-    def test_base_parent_missing_creates_without_parent(self, db_session, sample_tenant):
-        GLAccount.query.filter_by(tenant_id=sample_tenant.id).delete()
-        db_session.flush()
-        result = ProvisionResult(tenant_id=sample_tenant.id)
-        GLProvisioningService._provision_base_accounts(sample_tenant, result)
-        assert result.created_accounts > 0
-        assert result.skipped_accounts == 0
-        db_session.rollback()
-
-    def test_industry_unknown_returns_early(self, db_session, sample_tenant):
-        sample_tenant.business_type = "cov4-unknown-industry-zzz"
-        db_session.flush()
-        result = ProvisionResult(tenant_id=sample_tenant.id)
-        GLProvisioningService._provision_industry_accounts(sample_tenant, result)
-        assert result.created_accounts == 0
-        db_session.rollback()
-
-    def test_industry_none_business_type(self, db_session, sample_tenant):
-        sample_tenant.business_type = None
-        db_session.flush()
-        result = ProvisionResult(tenant_id=sample_tenant.id)
-        GLProvisioningService._provision_industry_accounts(sample_tenant, result)
-        assert result.created_accounts == 0
-        db_session.rollback()
 
 
 class TestModuleMappings:

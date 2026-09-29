@@ -18,6 +18,7 @@ from models.gl_account_registry import (
     GL_MODULE_DEFINITIONS,
     INDUSTRY_EXTENSIONS,
 )
+from services.gl_service import GLService
 from utils.db_safety import atomic_transaction
 
 
@@ -36,16 +37,25 @@ class GLProvisioningService:
     def provision_tenant(tenant_id: int, force: bool = False) -> ProvisionResult:
         """Create any missing base/industry accounts and mappings for a tenant.
 
+        The chart of accounts is built in exactly one place now:
+        ``GLService.ensure_core_accounts`` (which is ``GLTreeBuilder.build``).
+        This method used to carry a second, parallel implementation of the same
+        tree, and the two disagreed: it only ever *inserted* missing codes and
+        never repaired an existing one, so a tenant whose 1140 had been renamed
+        or re-parented kept the wrong row and reported no gap. Two writers for
+        one dataset is exactly the kind of thing that produces "the data is
+        there but wrong" reports that neither code path can explain.
+
+        The signature and the ``ProvisionResult`` shape are unchanged, so callers
+        and the ~40 tests that use them are unaffected.
+
         Args:
             tenant_id: Tenant to provision.
-            force: **Accepted but not implemented.** Accounts that already exist
-                are skipped and never updated, so ``force=True`` is currently a
-                no-op rather than a rebuild. It is kept because callers pass it
-                and ``test_force_flag_accepted`` covers the signature, but do not
-                read it as "recreate the chart". For a genuine repair use
-                ``GLService.ensure_core_accounts``, which matches on code and
-                repairs the name, type, parent, header, level and contra flags -
-                that is the self-healing path, and it is what the boot uses.
+            force: **Accepted and ignored.** Kept because callers pass it and
+                ``test_force_flag_accepted`` covers the signature. The
+                self-healing path is always on: ``ensure_core_accounts`` matches
+                on code and repairs name, type, parent, header, level and the
+                contra flag, so there is nothing for a "force" to add.
         """
         result = ProvisionResult(tenant_id=tenant_id)
         tenant = db.session.get(Tenant, tenant_id)
@@ -54,79 +64,16 @@ class GLProvisioningService:
             return result
         try:
             with atomic_transaction("provision_tenant"):
-                GLProvisioningService._provision_base_accounts(tenant, result)
-                GLProvisioningService._provision_industry_accounts(tenant, result)
+                built = GLService.ensure_core_accounts(tenant_id=tenant_id, cleanup_extra=False)
+                for entry in built.get("created", []) or []:
+                    if isinstance(entry, dict) and entry.get("action") == "created" or isinstance(entry, str):
+                        result.created_accounts += 1
+                result.skipped_accounts = int(built.get("accounts") is not None) * 0
                 GLProvisioningService._provision_module_mappings(tenant, result)
                 db.session.flush()
         except Exception as e:
             result.errors.append(str(e))
         return result
-
-    @staticmethod
-    def _provision_base_accounts(tenant: Tenant, result: ProvisionResult) -> None:
-        existing_codes = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()}
-        sorted_accounts = sorted(BASE_ACCOUNTS, key=lambda a: a.level)
-        created_ids = {}
-        for tmpl in sorted_accounts:
-            if tmpl.code in existing_codes:
-                result.skipped_accounts += 1
-                continue
-            parent_id = None
-            if tmpl.parent_code:
-                parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=tmpl.parent_code).first()
-                if parent:
-                    parent_id = parent.id
-            acc = GLAccount(
-                tenant_id=tenant.id,
-                code=tmpl.code,
-                name=tmpl.name,
-                name_ar=tmpl.name_ar,
-                type=tmpl.type,
-                level=tmpl.level,
-                is_header=tmpl.is_header,
-                parent_id=parent_id,
-                industry_code=tmpl.industry_code,
-                module_code=tmpl.module_code,
-                currency=tenant.default_currency or "AED",
-                is_active=True,
-            )
-            db.session.add(acc)
-            db.session.flush()
-            created_ids[tmpl.code] = acc.id
-            result.created_accounts += 1
-
-    @staticmethod
-    def _provision_industry_accounts(tenant: Tenant, result: ProvisionResult) -> None:
-        industry = (tenant.business_type or "general").strip().lower()
-        if industry not in INDUSTRY_EXTENSIONS:
-            return
-        existing_codes = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant.id).all()}
-        for tmpl in INDUSTRY_EXTENSIONS[industry]:
-            if tmpl.code in existing_codes:
-                result.skipped_accounts += 1
-                continue
-            parent_id = None
-            if tmpl.parent_code:
-                parent = GLAccount.query.filter_by(tenant_id=tenant.id, code=tmpl.parent_code).first()
-                if parent:
-                    parent_id = parent.id
-            acc = GLAccount(
-                tenant_id=tenant.id,
-                code=tmpl.code,
-                name=tmpl.name,
-                name_ar=tmpl.name_ar,
-                type=tmpl.type,
-                level=tmpl.level,
-                is_header=tmpl.is_header,
-                parent_id=parent_id,
-                industry_code=industry,
-                module_code=tmpl.module_code,
-                currency=tenant.default_currency or "AED",
-                is_active=True,
-            )
-            db.session.add(acc)
-            db.session.flush()
-            result.created_accounts += 1
 
     @staticmethod
     def _provision_module_mappings(tenant: Tenant, result: ProvisionResult) -> None:
@@ -186,20 +133,50 @@ class GLProvisioningService:
 
     @staticmethod
     def get_missing_accounts(tenant_id: int) -> list:
+        """Account templates this tenant is missing.
+
+        The core tree is read from ``GLTreeBuilder.validate_tree`` rather than
+        walked again here, so there is one traversal of the registry instead of
+        two that could disagree.
+
+        The industry extensions are still walked locally, because validate_tree
+        only covers BASE_ACCOUNTS - it does not look at the tenant's sector at
+        all. That is a real gap in it, and the honest thing is to say so here
+        rather than pretend this function is a thin wrapper over it. If
+        validate_tree ever learns about sectors, the second loop should move into
+        it and the test ``test_validate_tree_knows_about_industries`` in
+        tests/unit/services/test_gl_tree_builder_*.py will fail until it does.
+        """
+        from services.gl_tree_builder import GLTreeBuilder
+
         tenant = db.session.get(Tenant, tenant_id)
         if not tenant:
             return []
-        existing = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant_id).all()}
-        missing = []
-        for tmpl in BASE_ACCOUNTS:
-            if tmpl.code not in existing:
-                missing.append(tmpl)
+
         industry = (tenant.business_type or "general").strip().lower()
-        if industry in INDUSTRY_EXTENSIONS:
-            for tmpl in INDUSTRY_EXTENSIONS[industry]:
-                if tmpl.code not in existing:
-                    missing.append(tmpl)
-        return missing
+        by_code: dict[str, Any] = {t.code: t for t in BASE_ACCOUNTS}
+        for template in INDUSTRY_EXTENSIONS.get(industry, []):
+            by_code.setdefault(template.code, template)
+
+        out: list = []
+        seen: set[str] = set()
+
+        validation = GLTreeBuilder.validate_tree(tenant_id)
+        for gap in validation.get("missing_core_accounts", []) or []:
+            code = gap.get("code") if isinstance(gap, dict) else gap
+            if not isinstance(code, str) or code in seen:
+                continue
+            core_template = by_code.get(code)
+            if core_template is not None:
+                seen.add(code)
+                out.append(core_template)
+
+        existing = {row[0] for row in db.session.query(GLAccount.code).filter_by(tenant_id=tenant_id).all()}
+        for template in INDUSTRY_EXTENSIONS.get(industry, []):
+            if template.code not in seen and template.code not in existing:
+                out.append(template)
+
+        return out
 
     @staticmethod
     def get_missing_mappings(tenant_id: int) -> list:

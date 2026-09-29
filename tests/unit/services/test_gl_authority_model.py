@@ -1209,41 +1209,6 @@ class TestAuthorityModelEdgeCases:
                     branch_id=branch.id,
                 )
 
-    def test_cash_bank_readiness_before_build(self, app):
-        """Before GLTreeBuilder.build(), dry_run reports critical CASH_READINESS and BANK_READINESS."""
-        from extensions import db
-        from models import Branch, Tenant
-        from services.gl_mapping_validation import GLMappingValidationService
-        from services.gl_provisioning_service import GLProvisioningService
-
-        with app.app_context():
-            tenant = Tenant(
-                name=f"ReadyBefore-{uuid.uuid4().hex[:6]}",
-                name_ar="ready",
-                name_en="ReadyBefore",
-                slug=f"readybefore-{uuid.uuid4().hex[:6]}",
-                default_currency="AED",
-            )
-            db.session.add(tenant)
-            db.session.flush()
-            branch = Branch(tenant_id=tenant.id, name="Main", code="RBM", is_main=True)
-            db.session.add(branch)
-            db.session.flush()
-
-            # Provision only (no GLTreeBuilder.build yet)
-            GLProvisioningService.provision_tenant(tenant.id)
-            db.session.commit()
-
-            result = GLMappingValidationService.dry_run(tenant_id=tenant.id, include_ready=True)
-
-            cash_rows = [r for r in result["rows"] if r["concept_code"] == "CASH_READINESS"]
-            bank_rows = [r for r in result["rows"] if r["concept_code"] == "BANK_READINESS"]
-
-            assert len(cash_rows) == 1, f"Expected 1 CASH_READINESS row, got {len(cash_rows)}"
-            assert cash_rows[0]["severity"] == "critical"
-            assert len(bank_rows) == 1, f"Expected 1 BANK_READINESS row, got {len(bank_rows)}"
-            assert bank_rows[0]["severity"] == "critical"
-
     def test_cash_bank_readiness_after_build(self, app):
         """After GLTreeBuilder.build(), CASH_READINESS and BANK_READINESS rows are absent."""
         from extensions import db
