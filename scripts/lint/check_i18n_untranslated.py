@@ -26,10 +26,7 @@ import argparse
 import os
 import re
 import sys
-import warnings
 from collections import defaultdict
-from collections.abc import Callable
-from typing import cast
 
 TEMPLATES = "templates"
 # {{ _('X') }} / {{ _('X', ...) }} and {% trans %}X{% endtrans %}
@@ -109,6 +106,20 @@ def main() -> int:
     if root not in sys.path:
         sys.path.insert(0, root)
 
+    # Import the translator directly instead of booting the app.
+    #
+    # create_app() asserts production sanity and demands SECRET_KEY, so a gate
+    # that boots the ERP fails on any runner that has no .env - which is exactly
+    # what the CI Static quality job is. And it did: the first run of this gate
+    # died with "SECRET_KEY must be set in production!" before checking a single
+    # template. The gate is about the translation catalogue, so it should not
+    # need a database, a config, or a Flask application to answer that.
+    #
+    # utils.i18n.get_current_language() reads the session and falls back to "ar"
+    # on RuntimeError, so calling t() outside a request context is Arabic by
+    # default - which is the case this gate wants to assert anyway.
+    from utils.i18n import t as translator
+
     if not os.path.isdir(TEMPLATES):
         print(f"i18n gate: {TEMPLATES}/ not found", file=sys.stderr)
         return 2
@@ -126,40 +137,28 @@ def main() -> int:
         print("i18n gate: no translation calls found - refusing to pass vacuously.")
         return 2
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
-        from flask import session
-
-        from app import create_app
-
-        app = create_app()
-        translator = cast("Callable[[str], str]", app.jinja_env.globals["t"])
-
     untranslated: dict[str, list[str]] = defaultdict(list)
     arabic_output: dict[str, list[str]] = defaultdict(list)
     checked = 0
-    with app.test_request_context("/"):
-        session["language"] = "ar"
-        for path, keys in sorted(by_file.items()):
-            for key in sorted(keys):
-                if key in ALLOW:
-                    continue
-                checked += 1
-                try:
-                    out = translator(key)
-                except Exception:
-                    out = key
-                if out == key:
-                    # Identical output. That is only a *defect* when the key was
-                    # supposed to be English. A key that is already Arabic - a
-                    # literal Arabic label someone put in the template - comes
-                    # back unchanged because there was nothing to translate, and
-                    # flagging it as missing would send someone to "translate" a
-                    # string that is already correct. So: an ASCII key that
-                    # survives is a real hole; a non-ASCII one is fine.
-                    target = untranslated if _is_ascii_ui(key) else arabic_output
-                    target[path].append(key)
+    for path, file_keys in sorted(by_file.items()):
+        for key in sorted(file_keys):
+            if key in ALLOW:
+                continue
+            checked += 1
+            try:
+                out = translator(key)
+            except Exception:
+                out = key
+            if out == key:
+                # Identical output. That is only a *defect* when the key was
+                # supposed to be English. A key that is already Arabic - a
+                # literal Arabic label someone put in the template - comes back
+                # unchanged because there was nothing to translate, and flagging
+                # it as missing would send someone to "translate" a string that is
+                # already correct. So: an ASCII key that survives is a real hole;
+                # a non-ASCII one is fine.
+                target = untranslated if _is_ascii_ui(key) else arabic_output
+                target[path].append(key)
 
     n = sum(len(v) for v in untranslated.values())
     a = sum(len(v) for v in arabic_output.values())
