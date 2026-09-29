@@ -15,6 +15,7 @@ from extensions import limiter
 from services.ai_service import AIService
 from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
+from utils.helpers import sanitize_error_message
 
 from .blueprint import ai_bp
 
@@ -30,7 +31,7 @@ def neural_status():
         status = AIService.get_neural_status()
         return success_response(data={"status": status})
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/automotive-ecu/<code>", methods=["GET"])
@@ -44,7 +45,7 @@ def automotive_ecu_code(code):
 
         return success_response(data={"diagnosis": diagnosis})
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/automotive-sensor/<sensor>", methods=["GET"])
@@ -58,7 +59,7 @@ def automotive_sensor(sensor):
 
         return success_response(data={"sensor_info": info})
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/external-sources", methods=["GET"])
@@ -79,7 +80,7 @@ def external_sources():
             },
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/ask-genius", methods=["POST"])
@@ -108,7 +109,7 @@ def ask_genius():
 
         return success_response(data={"result": result})
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/quick-calc", methods=["POST"])
@@ -139,7 +140,7 @@ def quick_calc():
             data={"success": result.get("success", False), "result": result},
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)
 
 
 @ai_bp.route("/transformers-understand", methods=["POST"])
@@ -167,4 +168,4 @@ def transformers_understand():
 
         return success_response(data={"understanding": understanding})
     except Exception as e:
-        return error_response(message=str(e), status_code=200)
+        return error_response(message=sanitize_error_message(e), status_code=500)

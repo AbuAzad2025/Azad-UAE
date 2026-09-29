@@ -245,20 +245,31 @@ class SystemIntegrator:
                 credit_limit=customer_data.get("credit_limit", 0),
             )
 
-            db.session.add(customer)
-            db.session.flush()
+            # atomic_transaction, not a bare flush. This only flushed, so the
+            # row was rolled back when the session was closed at app-context
+            # teardown - while the caller still received
+            # {"success": true, "customer": {"id": ...}}. The id in that
+            # response was never a persisted id. Every sibling AI write path
+            # (routes/ai_routes/chat.py, actions.py, assistant.py, shared.py)
+            # already commits through atomic_transaction, which is how this one
+            # was clearly meant to behave.
+            from utils.db_safety import atomic_transaction
 
-            return {
-                "success": True,
-                "customer": {
-                    "id": customer.id,
-                    "name": customer.name,
-                    "customer_type": customer.customer_type,
-                    "phone": customer.phone,
-                    "email": customer.email,
-                },
-                "message": f'تم إضافة العميل "{customer.name}" بنجاح',
-            }
+            with atomic_transaction("ai: add customer"):
+                db.session.add(customer)
+                db.session.flush()
+
+                return {
+                    "success": True,
+                    "customer": {
+                        "id": customer.id,
+                        "name": customer.name,
+                        "customer_type": customer.customer_type,
+                        "phone": customer.phone,
+                        "email": customer.email,
+                    },
+                    "message": f'تم إضافة العميل "{customer.name}" بنجاح',
+                }
 
         except Exception as e:
             return {"success": False, "error": f"خطأ في إضافة العميل: {str(e)}"}

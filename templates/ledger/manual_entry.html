@@ -212,6 +212,17 @@ const accounts = {{ accounts_json | tojson }}.map(function (a) {
   });
 });
 
+// The accounts are rendered into innerHTML below. name_ar/name_en come straight
+// off the GL account rows, so anyone with chart-of-accounts maintenance can put
+// markup in one and have it execute for every accountant who opens this page.
+// |tojson correctly escapes for the JavaScript-string context; re-injecting the
+// value as HTML is a second step that its escaping does not cover.
+function accEsc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 let lineCounter = 0;
 
 // Add new line
@@ -224,7 +235,7 @@ function addLine() {
     <td>
       <select name="line_${lineCounter}_account" class="form-control account-select" required aria-label="line ${lineCounter} account">
         <option value="">{{ t('None') }}</option>
-        ${accounts.map(acc => `<option value="${acc.code}">${acc.full_name}</option>`).join('')}
+        ${accounts.map(acc => `<option value="${accEsc(acc.code)}">${accEsc(acc.full_name)}</option>`).join('')}
       </select>
     </td>
     <td>

@@ -157,12 +157,19 @@ function updateScopeOptions() {
     if (scope === 'branch') {
       label.textContent = '{{ _('الفرع') }}';
       branchNames.forEach((name, i) => {
-        select.innerHTML += `<option value="${branches[i]}">${name}</option>`;
+        // DOM nodes, not an HTML string - see partners/create.html for why.
+        const opt = document.createElement('option');
+        opt.value = branches[i];
+        opt.textContent = name;
+        select.appendChild(opt);
       });
     } else if (scope === 'warehouse') {
       label.textContent = '{{ _('المستودع') }}';
       warehouseNames.forEach((name, i) => {
-        select.innerHTML += `<option value="${warehouses[i]}">${name}</option>`;
+        const opt = document.createElement('option');
+        opt.value = warehouses[i];
+        opt.textContent = name;
+        select.appendChild(opt);
       });
     }
   }

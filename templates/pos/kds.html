@@ -48,6 +48,24 @@
     });
   }
 
+  // Everything interpolated below reaches innerHTML, so every one of these
+  // fields has to be escaped first. o.items[].name is a product-master name and
+  // i.notes is free text from the POS cart line - both are attacker-controllable
+  // by anyone who can create or edit a product, and this screen is opened on
+  // every kitchen terminal and by every supervisor. i.quantity is a number from
+  // our own API but is escaped too rather than trusted by type.
+  // Follows the session language like every other surface, instead of a pinned
+  // 'ar-SA'. Pinning it meant an English user got Arabic-Indic digits, and in
+  // Chromium ar-SA also resolves to the islamic-umalqura calendar, so the
+  // kitchen screen could show Hijri dates regardless of the language chosen.
+  const KDS_TIME_LOCALE = (window.I18N_LANG || '{{ current_language or "ar" }}') === 'ar' ? 'ar' : 'en-GB';
+
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function renderOrders(orders) {
     const filtered = currentFilter === 'all' ? orders : orders.filter(o => o.status === currentFilter);
     if (!filtered.length) {
@@ -55,11 +73,11 @@
       return;
     }
     grid.innerHTML = filtered.map(o => `
-      <div class="kds-card ${o.status}" data-status="${o.status}">
-        <h4>#${o.order_number} <span class="badge badge-${statusBadge(o.status)} float-left">${statusLabel(o.status)}</span></h4>
-        <div class="text-muted small mb-2">${new Date(o.created_at).toLocaleTimeString('ar-SA')}</div>
+      <div class="kds-card ${esc(o.status)}" data-status="${esc(o.status)}">
+        <h4>#${esc(o.order_number)} <span class="badge badge-${statusBadge(o.status)} float-left">${esc(statusLabel(o.status))}</span></h4>
+        <div class="text-muted small mb-2">${esc(new Date(o.created_at).toLocaleTimeString(KDS_TIME_LOCALE))}</div>
         <ul class="kds-items list-unstyled mb-0">
-          ${(o.items||[]).map(i => `<li>${i.quantity} x ${i.name}${i.notes ? ' <span class="text-muted">('+i.notes+')</span>' : ''}</li>`).join('')}
+          ${(o.items||[]).map(i => `<li>${esc(i.quantity)} x ${esc(i.name)}${i.notes ? ' <span class="text-muted">('+esc(i.notes)+')</span>' : ''}</li>`).join('')}
         </ul>
         <div class="kds-actions">
           ${actionButtons(o)}
@@ -73,10 +91,13 @@
 
   function actionButtons(o) {
     const btns = [];
-    if (o.status === 'pending') btns.push('<button class="btn btn-primary btn-sm status-btn" data-id="'+o.id+'" data-status="preparing">{{ _("قيد التحضير") }}</button>');
-    if (o.status === 'preparing') btns.push('<button class="btn btn-success btn-sm status-btn" data-id="'+o.id+'" data-status="ready">{{ _("جاهز") }}</button>');
-    if (o.status === 'ready') btns.push('<button class="btn btn-secondary btn-sm status-btn" data-id="'+o.id+'" data-status="served">{{ _("تم التقديم") }}</button>');
-    if (!['served','cancelled'].includes(o.status)) btns.push('<button class="btn btn-danger btn-sm status-btn" data-id="'+o.id+'" data-status="cancelled">{{ _("ملغي") }}</button>');
+    // o.id is escaped for the same reason: it is concatenated into an attribute
+    // inside an HTML string, so an unescaped quote would break out of it.
+    const id = esc(o.id);
+    if (o.status === 'pending') btns.push('<button class="btn btn-primary btn-sm status-btn" data-id="'+id+'" data-status="preparing">{{ _("قيد التحضير") }}</button>');
+    if (o.status === 'preparing') btns.push('<button class="btn btn-success btn-sm status-btn" data-id="'+id+'" data-status="ready">{{ _("جاهز") }}</button>');
+    if (o.status === 'ready') btns.push('<button class="btn btn-secondary btn-sm status-btn" data-id="'+id+'" data-status="served">{{ _("تم التقديم") }}</button>');
+    if (!['served','cancelled'].includes(o.status)) btns.push('<button class="btn btn-danger btn-sm status-btn" data-id="'+id+'" data-status="cancelled">{{ _("ملغي") }}</button>');
     return btns.join('');
   }
 

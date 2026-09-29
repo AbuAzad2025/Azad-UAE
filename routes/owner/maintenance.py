@@ -14,17 +14,17 @@ from services.maintenance_service import (
 from utils.db_safety import atomic_transaction
 
 from .common import (
-    company_admin_required,
     current_app,
     error_response,
     owner_bp,
+    owner_required,
     request,
     success_response,
 )
 
 
 @owner_bp.route("/maintenance/fix-cost-centers", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_fix_cost_centers():
     """إصلاح فهارس مراكز التكلفة وإزالة السجلات المهجورة (NULL tenant_id)"""
     confirm = request.form.get("confirm")
@@ -58,7 +58,7 @@ def maintenance_fix_cost_centers():
 
 
 @owner_bp.route("/maintenance/rebuild-gl-tree", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_rebuild_gl_tree():
     """إعادة بناء شجرة الحسابات المحاسبية لجميع المستأجرين"""
     confirm = request.form.get("confirm")
@@ -99,7 +99,7 @@ def maintenance_rebuild_gl_tree():
 
 
 @owner_bp.route("/maintenance/fix-default-tenant", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_fix_default_tenant():
     """تصحيح بيانات المستأجر الافتراضي (patch NOT NULL columns)"""
     confirm = request.form.get("confirm")
@@ -144,7 +144,7 @@ def maintenance_fix_default_tenant():
 
 
 @owner_bp.route("/maintenance/regenerate-default-backup", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_regenerate_default_backup():
     """تجديد النسخة الاحتياطية للمستأجر الافتراضي"""
     confirm = request.form.get("confirm")
@@ -188,7 +188,7 @@ def maintenance_regenerate_default_backup():
 
 
 @owner_bp.route("/maintenance/run-default-tenant-maintenance", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_run_default_tenant_maintenance():
     """تشغيل الصيانة الكاملة للمستأجر الافتراضي (patch + backup)"""
     confirm = request.form.get("confirm")
@@ -234,7 +234,7 @@ def maintenance_run_default_tenant_maintenance():
 
 
 @owner_bp.route("/maintenance/cleanup-test-dbs", methods=["POST"])
-@company_admin_required
+@owner_required
 def maintenance_cleanup_test_dbs():
     """تنظيف قواعد البيانات الاختبارية القديمة"""
     confirm = request.form.get("confirm")
