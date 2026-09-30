@@ -75,6 +75,41 @@ def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
     return static_values, dynamic, static_total, (script_blocks, script_files)
 
 
+def _unlinked_utility_classes() -> list[tuple[str, str]]:
+    """Utility classes used in a template that loads no stylesheet.
+
+    A .p-* or .u-* class resolves to nothing if the page never links the
+    stylesheet that defines it. This is not hypothetical: the print batch
+    converted shop/order_invoice.html, which loads no <link> at all, so five
+    elements silently lost their formatting. Nothing caught it - the template
+    gate only parses, and no test renders that page, because it is rendered
+    standalone for email / direct download / PDF.
+
+    Only *full pages* are checked. A partial or a template that extends a layout
+    legitimately has no <link> of its own - it inherits the head from its
+    parent, so 77 of the templates that matched at first were false positives.
+    The distinguishing feature is that a standalone document contains its own
+    <html>, and that is also the case that breaks: shop/order_invoice.html is
+    opened directly for email / download / PDF and nothing else supplies CSS.
+
+    Self-contained is the right choice for those, so they must stay inline
+    rather than adopt classes. This function is how that gets enforced instead
+    of remembered.
+    """
+    findings: list[tuple[str, str]] = []
+    utility = re.compile(r"""class\s*=\s*["'][^"']*\b([pu]-[a-z0-9-]+)""")
+    for path in sorted(TEMPLATES.rglob("*.html")):
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if "<link" in text or "stylesheet" in text:
+            continue  # loads at least one stylesheet
+        lowered = text.lower()
+        if "<html" not in lowered and "<!doctype" not in lowered:
+            continue  # a partial; inherits its parent's head
+        for match in utility.finditer(text):
+            findings.append((path.relative_to(ROOT).as_posix(), match.group(1)))
+    return findings
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--max-static", type=int, default=None)
@@ -89,12 +124,19 @@ def main() -> int:
     args = parser.parse_args()
 
     static_values, dynamic, static_total, (script_blocks, script_files) = scan()
+    unlinked = _unlinked_utility_classes()
 
     print("Inline-style / inline-script inventory")
     print(f"  templates scanned          : {len(list(TEMPLATES.rglob('*.html')))}")
     print(f'  static  style="..."        : {static_total} occurrences, {len(static_values)} distinct')
     print(f'  dynamic style="...{{ }}"   : {len(dynamic)}')
     print(f"  inline <script> blocks     : {script_blocks} across {script_files} templates")
+    print(f"  utility classes unlinked   : {len(unlinked)}  (standalone pages only)")
+
+    if unlinked:
+        print("\n  FAIL - these templates load no stylesheet, so these classes resolve to nothing:")
+        for rel, cls in unlinked[:20]:
+            print(f"    {rel}: .{cls}")
 
     if static_values:
         print("\n  most common static values:")
@@ -110,6 +152,8 @@ def main() -> int:
             print(f"    ... and {len(dynamic) - args.top} more")
 
     failures = []
+    if unlinked:
+        failures.append(f"{len(unlinked)} utility class(es) used in template(s) that load no stylesheet")
     if args.max_static is not None and static_total > args.max_static:
         failures.append(f"static inline styles: {static_total} > budget {args.max_static}")
     if args.max_dynamic is not None and len(dynamic) > args.max_dynamic:

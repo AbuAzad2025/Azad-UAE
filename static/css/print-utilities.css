@@ -103,3 +103,51 @@
 .p-social-ig { color: #e4405f; font-size: 8px; }
 .p-social-wa { color: #25d366; font-size: 8px; }
 .p-brand-fb { color: #007bff; }
+
+/* ── batch 2: one-off composites and payroll status colours ───────────── */
+
+/* Reused across receipts/_base.html and payment_voucher.html, so it is a class
+ * rather than a one-line rule repeated twice. */
+.p-warn-heading {
+  text-align: center;
+  color: #856404;
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 9px;
+}
+
+/* Same shape as .p-warn-heading but tinted with the tenant's header colour, so
+ * it cannot be a hex rule. */
+.p-head-heading {
+  font-weight: 700;
+  font-size: 8px;
+  color: var(--header-color);
+  margin-bottom: 4px;
+}
+
+.p-note-faint { font-size: 8px; color: #999; margin: 5px 0 0; }
+.p-faint-90 { font-size: 8px; opacity: 0.9; }
+.p-center-bold { text-align: center; font-weight: 700; }
+
+/* Payroll slip status colours. Each appears once, but they are the only use of
+ * these three hues in the document family and they are a set - one green, one
+ * red, one amber - so naming them keeps the meaning instead of the number. */
+.p-status-ok { text-align: center; color: #27ae60; font-weight: 700; }
+.p-status-bad { text-align: center; color: #e74c3c; font-weight: 700; }
+.p-status-warn { text-align: center; color: #f39c12; font-weight: 700; }
+
+/* Notices carrying a right accent bar. The three variants differ only in
+ * background tint, so the shape is shared and the tone is a modifier. */
+.p-notice { margin-top: 10px; padding: 8px; border-radius: 4px; border-right: 2px solid #ffc107; }
+.p-notice-warn { background: #fff3cd; }
+.p-notice-info { background: #fff8e6; }
+.p-notice-12 { margin-top: 12px; }
+
+/* A totals row at a narrower gutter than .p-totals - expenses/print.html uses
+ * 10px where receipts use 20px. */
+.p-totals-10 {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+}

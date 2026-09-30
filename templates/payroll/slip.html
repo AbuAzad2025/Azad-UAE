@@ -44,7 +44,7 @@
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
-      <div style="font-size:8px;opacity:0.9;">
+      <divclass="p-faint-90">
         {{ settings.address_ar or tenant_address or '' }} | <i class="fas fa-phone" aria-hidden="true"></i> {{ settings.phone_1 or tenant_phone or '' }}
       </div>
     </div>
@@ -71,10 +71,10 @@
           <tr><th>#</th><th>{{ _('البند') }}</th><th>{{ _('المبلغ') }}</th></tr>
         </thead>
         <tbody>
-          <tr><td>1</td><td>{{ _('الراتب الأساسي') }}</td><td style="text-align:center;font-weight:700;">{{ format_currency(slip.basic_amount) }}</td></tr>
-          <tr><td>2</td><td>{{ _('البدلات والإضافي') }}</td><td style="text-align:center;color:#27ae60;font-weight:700;">{{ format_currency(slip.allowances) }}</td></tr>
-          <tr><td>3</td><td>{{ _('الخصومات') }}</td><td style="text-align:center;color:#e74c3c;font-weight:700;">({{ format_currency(slip.deductions) }})</td></tr>
-          <tr><td>4</td><td>{{ _('السلف المستردة') }}</td><td style="text-align:center;color:#f39c12;font-weight:700;">({{ format_currency(slip.advances_deducted) }})</td></tr>
+          <tr><td>1</td><td>{{ _('الراتب الأساسي') }}</td><tdclass="p-center-bold">{{ format_currency(slip.basic_amount) }}</td></tr>
+          <tr><td>2</td><td>{{ _('البدلات والإضافي') }}</td><tdclass="p-status-ok">{{ format_currency(slip.allowances) }}</td></tr>
+          <tr><td>3</td><td>{{ _('الخصومات') }}</td><tdclass="p-status-bad">({{ format_currency(slip.deductions) }})</td></tr>
+          <tr><td>4</td><td>{{ _('السلف المستردة') }}</td><tdclass="p-status-warn">({{ format_currency(slip.advances_deducted) }})</td></tr>
         </tbody>
         <tfoot>
           <tr class="net-row">
@@ -86,7 +86,7 @@
       </div>
 
       {% if slip.notes %}
-      <div style="margin-top:12px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+      <divclass="p-notice p-notice-12 p-notice-warn">
         <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment" aria-hidden="true"></i> {{ slip.notes }}</p>
       </div>
       {% endif %}

@@ -110,12 +110,12 @@
       </div>
 
       {% if expense.notes %}
-      <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
+      <divclass="p-notice p-notice-warn">
         <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment" aria-hidden="true"></i> {{ t('Notes') }}: {{ expense.notes }}</p>
       </div>
       {% endif %}
 
-      <div style="margin-top:15px;display:flex;justify-content:space-between;padding:0 10px;">
+      <divclass="p-totals-10">
         <div class="p-center">
           <div class="p-sig">{{ t('توقيع') }} {{ t('Exchange') }}</div>
         </div>
@@ -130,7 +130,7 @@
 
     <div class="footer">
       <p>{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
-      <p style="font-size:8px;color:#999;margin:5px 0 0;">{{ t('User') }}: {{ print_user_name or (expense.user.username if expense.user else '-') }}</p>
+      <pclass="p-note-faint">{{ t('User') }}: {{ print_user_name or (expense.user.username if expense.user else '-') }}</p>
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>

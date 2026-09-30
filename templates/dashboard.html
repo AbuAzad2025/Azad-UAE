@@ -1,5 +1,9 @@
 {% extends 'base.html' %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/dashboard-utilities.css') }}">
+{% endblock %}
+
 {% block title %}{{ _('لوحة تحكم أزاد للأنظمة الذكية') }}{% endblock %}
 
 {% block page_title %}
@@ -9,7 +13,7 @@
     <p class="text-muted az-fade-in-delay">{{ _('مرحباً بك،') }} {{ current_user.full_name or current_user.username }}</p>
   </div>
   <div class="d-none d-md-block">
-    <span class="badge badge-primary px-3 py-2" style="font-size:0.9rem">
+    <spanclass="badge badge-primary px-3 py-2 d-fs-sm">
       <i class="fas fa-calendar-alt mr-1" aria-hidden="true"></i> {{ current_date or now().strftime('%Y-%m-%d') }}
     </span>
   </div>
@@ -38,7 +42,7 @@
 <!-- Stat Cards -->
 <div class="row mb-4">
   {% if current_user.has_permission('manage_sales') %}
-  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.05s">
+  <divclass="col-lg-3 col-md-6 mb-4 az-enter d-stagger-1">
     <div class="stat-card az-stat-sales">
       <div class="stat-icon erp-stat-icon-sales az-pulse-glow">
         <i class="fas fa-shopping-cart" aria-hidden="true"></i>
@@ -59,7 +63,7 @@
   {% endif %}
 
   {% if current_user.has_permission('manage_customers') %}
-  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.1s">
+  <divclass="col-lg-3 col-md-6 mb-4 az-enter d-stagger-2">
     <div class="stat-card az-stat-customers">
       <div class="stat-icon erp-stat-icon-customers">
         <i class="fas fa-users" aria-hidden="true"></i>
@@ -77,7 +81,7 @@
   {% endif %}
 
   {% if current_user.has_permission('view_reports') %}
-  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.15s">
+  <divclass="col-lg-3 col-md-6 mb-4 az-enter d-stagger-3">
     <div class="stat-card az-stat-receivables">
       <div class="stat-icon erp-stat-icon-receivables">
         <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
@@ -95,7 +99,7 @@
   {% endif %}
 
   {% if current_user.has_permission('manage_products') %}
-  <div class="col-lg-3 col-md-6 mb-4 az-enter" style="animation-delay:0.2s">
+  <divclass="col-lg-3 col-md-6 mb-4 az-enter d-stagger-4">
     <div class="stat-card az-stat-products">
       <div class="stat-icon erp-stat-icon-products">
         <i class="fas fa-box-open" aria-hidden="true"></i>
@@ -136,12 +140,12 @@
                 {% endif %}
               </strong>
             </div>
-            <div class="progress az-progress" style="height: 8px;">
+            <divclass="progress az-progress d-bar-8">
               <div
-                class="progress-bar az-progress-bar {% if row.warn %}bg-warning{% else %}bg-success{% endif %}"
+               class="progress-bar az-progress-bar {% if row.warn %}bg-warning{% else %}bg-success{% endif %} d-bar-empty"
                 role="progressbar"
                 data-width="{{ row.percent }}"
-                style="width: 0%;"
+               
                 aria-valuenow="{{ row.percent }}"
                 aria-valuemin="0"
                 aria-valuemax="100"
@@ -160,7 +164,7 @@
 <!-- Financial Summary Cards -->
 {% if current_user.can_see_costs() and stats.cash_balance is defined %}
 <div class="row mb-4">
-  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.05s">
+  <divclass="col-md-4 mb-3 az-enter d-stagger-1">
     <div class="card glass-effect border-0 az-financial-card az-financial-cash">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
@@ -175,7 +179,7 @@
     </div>
   </div>
 
-  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.1s">
+  <divclass="col-md-4 mb-3 az-enter d-stagger-2">
     <div class="card glass-effect border-0 az-financial-card az-financial-bank">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
@@ -190,7 +194,7 @@
     </div>
   </div>
 
-  <div class="col-md-4 mb-3 az-enter" style="animation-delay:0.15s">
+  <divclass="col-md-4 mb-3 az-enter d-stagger-3">
     <div class="card glass-effect border-0 az-financial-card az-financial-inventory">
       <div class="card-body text-center">
         <div class="mb-3 az-icon-float">
@@ -216,7 +220,7 @@
         <h5 class="mb-0"><i class="fas fa-chart-line ml-2 text-primary" aria-hidden="true"></i>{{ _('اتجاه المبيعات — آخر 14 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3">
-        <div class="az-chart-wrap" style="height:280px; position:relative;">
+        <divclass="az-chart-wrap d-panel-280">
           <canvas id="salesTrendChart" role="img" aria-label="{{ _('اتجاه المبيعات') }}"></canvas>
         </div>
       </div>
@@ -230,7 +234,7 @@
         <h5 class="mb-0"><i class="fas fa-wallet ml-2 text-success" aria-hidden="true"></i>{{ _('الوضع النقدي') }}</h5>
       </div>
       <div class="card-body pt-3">
-        <div class="az-chart-wrap" style="height:260px; position:relative;">
+        <divclass="az-chart-wrap d-panel-260">
           <canvas id="cashPositionChart" role="img" aria-label="{{ _('الوضع النقدي') }}"></canvas>
         </div>
       </div>
@@ -244,7 +248,7 @@
         <h5 class="mb-0"><i class="fas fa-users ml-2 text-info" aria-hidden="true"></i>{{ _('أفضل العملاء — آخر 30 يوماً') }}</h5>
       </div>
       <div class="card-body pt-3">
-        <div class="az-chart-wrap" style="height:260px; position:relative;">
+        <divclass="az-chart-wrap d-panel-260">
           <canvas id="topCustomersChart" role="img" aria-label="{{ _('أفضل العملاء') }}"></canvas>
         </div>
       </div>
@@ -258,7 +262,7 @@
         <span class="badge badge-danger">{{ stats.low_stock_count|default(0) }} {{ _('منخفض') }} · {{ stats.out_of_stock_count|default(0) }} {{ _('منتهي') }}</span>
       </div>
       <div class="card-body pt-3">
-        <div class="az-chart-wrap" style="height:280px; position:relative;">
+        <divclass="az-chart-wrap d-panel-280">
           <canvas id="stockAlertsChart" role="img" aria-label="{{_('تنبيهات المخزون')}}"></canvas>
         </div>
       </div>
@@ -406,7 +410,7 @@
 <!-- Quick Actions -->
 <div class="row mt-4">
   {% if current_user.has_permission('manage_sales') %}
-  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.05s">
+  <divclass="col-md-3 col-sm-6 mb-3 az-enter d-stagger-1">
     <a href="{{ url_for('sales.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-sales">
@@ -419,7 +423,7 @@
   </div>
   {% endif %}
   {% if current_user.has_permission('manage_customers') %}
-  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.1s">
+  <divclass="col-md-3 col-sm-6 mb-3 az-enter d-stagger-2">
     <a href="{{ url_for('customers.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-customers">
@@ -432,7 +436,7 @@
   </div>
   {% endif %}
   {% if current_user.has_permission('manage_products') %}
-  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.15s">
+  <divclass="col-md-3 col-sm-6 mb-3 az-enter d-stagger-3">
     <a href="{{ url_for('products.create') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-products">
@@ -445,7 +449,7 @@
   </div>
   {% endif %}
   {% if current_user.has_permission('view_reports') %}
-  <div class="col-md-3 col-sm-6 mb-3 az-enter" style="animation-delay:0.2s">
+  <divclass="col-md-3 col-sm-6 mb-3 az-enter d-stagger-4">
     <a href="{{ url_for('reports.sales') }}" class="card text-center text-decoration-none hover-card az-quick-card">
       <div class="card-body">
         <div class="az-quick-icon az-quick-icon-reports">

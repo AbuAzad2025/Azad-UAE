@@ -1,0 +1,34 @@
+/* Dashboard animation and panel sizing utilities.
+ *
+ * Extracted from templates/dashboard.html. The stagger on the KPI cards was
+ * eleven separate animation-delay declarations; the delays form a 0.05s
+ * staircase, so they are named by step instead.
+ *
+ * The two loop-driven delays
+ *
+ *   animation-delay:{{ loop.index0 * 0.05 }}s
+ *   animation-delay:{{ loop.index0 * 0.04 }}s
+ *
+ * are deliberately left inline. They are computed per iteration, so there is no
+ * fixed value to put in a stylesheet; the correct end state is a custom
+ * property read from a data- attribute, which still needs one style attribute.
+ * check_inline_assets.py counts them separately for exactly that reason.
+ */
+
+/* ── stagger ──────────────────────────────────────────────────────────── */
+.d-stagger-1 { animation-delay: 0.05s; }
+.d-stagger-2 { animation-delay: 0.1s; }
+.d-stagger-3 { animation-delay: 0.15s; }
+.d-stagger-4 { animation-delay: 0.2s; }
+
+/* ── panel heights ────────────────────────────────────────────────────── */
+.d-panel-280 { height: 280px; position: relative; }
+.d-panel-260 { height: 260px; position: relative; }
+.d-bar-8 { height: 8px; }
+
+/* ── text ─────────────────────────────────────────────────────────────── */
+.d-fs-sm { font-size: 0.9rem; }
+
+/* The bar starts empty and is filled in by script; width is left inline
+ * because it is set from live data. */
+.d-bar-empty { width: 0%; }
