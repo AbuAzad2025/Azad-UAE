@@ -390,6 +390,27 @@ jobs:
       - name: Accessibility gate (every form control has an accessible name)
         run: python scripts/lint/check_a11y_labels.py
 
+      # Ratcheting budget, not a target. The template cleanup (inline styles ->
+      # stylesheets, inline script -> /static/js) is being done in stages, so this
+      # records where it currently stands and fails only on a regression. Lower
+      # the numbers as stages land; they are not meant to reach zero here.
+      #
+      #   static  281 - has a fixed value, so it can move to CSS
+      #   dynamic  21 - computed per row (stage colour, progress %, loop delay).
+      #              A CHECK-style "no inline styles" rule is unachievable for
+      #              these; the end state is a custom property read from a data-
+      #              attribute, which still needs one style attribute.
+      #   scripts 170 - inline <script> blocks, counted not yet bounded.
+      #
+      # Drop --max-dynamic and --max-inline-scripts once those stages are done.
+      - name: Inline asset budget (static styles / inline scripts)
+        run: |
+          python scripts/lint/check_inline_assets.py --top 12
+          python scripts/lint/check_inline_assets.py \
+            --max-static 281 \
+            --max-dynamic 21 \
+            --max-inline-scripts 170
+
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github

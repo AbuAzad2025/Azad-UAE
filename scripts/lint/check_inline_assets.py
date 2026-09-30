@@ -1,0 +1,131 @@
+"""Lint gate for the inline-style / inline-script cleanup.
+
+Reports, and optionally fails on, the three things the template cleanup is
+reducing:
+
+  1. static  ``style="..."``      - has a fixed value, so it belongs in a
+                                     stylesheet
+  2. dynamic ``style="..."``      - contains a Jinja expression, so it CANNOT
+                                     move to a stylesheet as-is
+  3. inline ``<script>`` blocks   - belong in /static/js
+
+It is a reporting gate by default because categories 2 and 3 are not yet zero
+and a red CI on an inventory nobody can move is noise. Pass --max-static (and
+optionally --max-dynamic / --max-inline-scripts) to turn each into a budget
+that only ratchets downward.
+
+The dynamic count is tracked separately on purpose. "Zero inline styles" is not
+achievable for it: a value computed per row - a stage colour, a progress
+percentage, an animation delay from loop.index0 - has no stylesheet to live in.
+The correct end state is a CSS custom property read from a data- attribute, which
+still needs one style attribute. Counting it as the same class of problem as
+``display:inline`` is how you end up deleting working templates.
+"""
+
+from __future__ import annotations
+
+import argparse
+import collections
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+TEMPLATES = ROOT / "templates"
+
+# style="..." anywhere, including single-quoted
+_STYLE_ATTR = re.compile(r"""\sstyle\s*=\s*(?P<q>["'])(?P<val>.*?)(?P=q)""", re.S)
+_SCRIPT_BLOCK = re.compile(r"<script(?![^>]*\bsrc\s*=)[^>]*>", re.I)
+_OPEN_JINJA = re.compile(r"\{\{|\{%")
+
+
+def _is_dynamic(value: str) -> bool:
+    return bool(_OPEN_JINJA.search(value))
+
+
+def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
+    static_values: collections.Counter = collections.Counter()
+    dynamic: list[tuple[str, str]] = []
+    static_total = 0
+    script_blocks = 0
+    script_files = 0
+
+    for path in sorted(TEMPLATES.rglob("*.html")):
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        rel = path.relative_to(ROOT).as_posix()
+
+        for match in _STYLE_ATTR.finditer(text):
+            value = " ".join(match.group("val").split())
+            if not value:
+                continue
+            if _is_dynamic(value):
+                dynamic.append((rel, value))
+            else:
+                static_values[value] += 1
+                static_total += 1
+
+        blocks = len(_SCRIPT_BLOCK.findall(text))
+        if blocks:
+            script_blocks += blocks
+            script_files += 1
+
+    return static_values, dynamic, static_total, (script_blocks, script_files)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--max-static", type=int, default=None)
+    parser.add_argument("--max-dynamic", type=int, default=None)
+    parser.add_argument("--max-inline-scripts", type=int, default=None)
+    parser.add_argument("--top", type=int, default=15)
+    parser.add_argument(
+        "--list",
+        action="store_true",
+        help="print every occurrence, not just the top values",
+    )
+    args = parser.parse_args()
+
+    static_values, dynamic, static_total, (script_blocks, script_files) = scan()
+
+    print("Inline-style / inline-script inventory")
+    print(f"  templates scanned          : {len(list(TEMPLATES.rglob('*.html')))}")
+    print(f'  static  style="..."        : {static_total} occurrences, {len(static_values)} distinct')
+    print(f'  dynamic style="...{{ }}"   : {len(dynamic)}')
+    print(f"  inline <script> blocks     : {script_blocks} across {script_files} templates")
+
+    if static_values:
+        print("\n  most common static values:")
+        for value, count in static_values.most_common(args.top):
+            print(f"    x{count:<4}{value[:66]}")
+
+    if dynamic:
+        print("\n  dynamic values cannot move to a stylesheet as-is:")
+        shown = dynamic if args.list else dynamic[: args.top]
+        for rel, value in shown:
+            print(f"    {rel}: {value[:60]}")
+        if not args.list and len(dynamic) > args.top:
+            print(f"    ... and {len(dynamic) - args.top} more")
+
+    failures = []
+    if args.max_static is not None and static_total > args.max_static:
+        failures.append(f"static inline styles: {static_total} > budget {args.max_static}")
+    if args.max_dynamic is not None and len(dynamic) > args.max_dynamic:
+        failures.append(f"dynamic inline styles: {len(dynamic)} > budget {args.max_dynamic}")
+    if args.max_inline_scripts is not None and script_blocks > args.max_inline_scripts:
+        failures.append(f"inline <script> blocks: {script_blocks} > budget {args.max_inline_scripts}")
+
+    if failures:
+        print("\nFAIL")
+        for line in failures:
+            print(f"  - {line}")
+        return 1
+
+    print("\nOK: within budget.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
