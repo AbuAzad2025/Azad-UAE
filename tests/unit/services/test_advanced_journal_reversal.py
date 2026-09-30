@@ -66,35 +66,50 @@ def _two_accounts(tenant_id):
     return debit, credit
 
 
-def _post(tenant_id, debit_row, credit_row, amount: str, description: str):
+def _post(tenant_id, debit_row, credit_row, amount: str, description: str, owner=None):
     from services.advanced_journal_manager import AdvancedJournalEntryManager
+    from utils.tenanting import set_active_tenant
 
-    entry = AdvancedJournalEntryManager.create_entry_with_validation(
-        description=description,
-        lines=[
-            {
-                "account_code": debit_row.code,
-                "debit": amount,
-                "credit": "0",
-                "description": "d",
-            },
-            {
-                "account_code": credit_row.code,
-                "debit": "0",
-                "credit": amount,
-                "description": "c",
-            },
-        ],
-        entry_date=datetime.date.today(),
-        created_by=1,
-    )
-    AdvancedJournalEntryManager.validate_entry(entry.id, validated_by=1, commit=False)
-    AdvancedJournalEntryManager.post_entry(entry.id, posted_by=1, commit=False)
-    db.session.flush()
-    return entry
+    # create_manual_entry resolves the tenant itself and refuses to guess:
+    #   ValueError: resolve_tenant_id failed: 12 active tenants found.
+    #             Auto-selecting one would post to the wrong company.
+    # That refusal is correct behaviour and it is what fails in CI, where the
+    # session-scoped test database has accumulated a dozen tenants by the time
+    # the services group runs. Locally the file runs alone against one tenant
+    # and passes, which is exactly the kind of difference a shared test database
+    # hides. The test has to name its tenant rather than inherit one.
+    # set_active_tenant rejects a tenant id without an authenticated platform owner
+    # ("Unauthenticated users cannot set tenant_id"), so the owner is threaded in.
+    set_active_tenant(tenant_id, user=owner)
+    try:
+        entry = AdvancedJournalEntryManager.create_entry_with_validation(
+            description=description,
+            lines=[
+                {
+                    "account_code": debit_row.code,
+                    "debit": amount,
+                    "credit": "0",
+                    "description": "d",
+                },
+                {
+                    "account_code": credit_row.code,
+                    "debit": "0",
+                    "credit": amount,
+                    "description": "c",
+                },
+            ],
+            entry_date=datetime.date.today(),
+            created_by=1,
+        )
+        AdvancedJournalEntryManager.validate_entry(entry.id, validated_by=1, commit=False)
+        AdvancedJournalEntryManager.post_entry(entry.id, posted_by=1, commit=False)
+        db.session.flush()
+        return entry
+    finally:
+        set_active_tenant(None)
 
 
-def test_reversal_keeps_the_original_counted(app, db_session, sample_gl_accounts):
+def test_reversal_keeps_the_original_counted(app, db_session, sample_gl_accounts, sample_owner):
     """The original must stay in the "posted" population.
 
     This is the whole bug. If status ever goes back to "reversed" here, the
@@ -105,7 +120,7 @@ def test_reversal_keeps_the_original_counted(app, db_session, sample_gl_accounts
     tenant = sample_gl_accounts
     debit_row, credit_row = _two_accounts(tenant.id)
 
-    original = _post(tenant.id, debit_row, credit_row, "10000", "reversal population test")
+    original = _post(tenant.id, debit_row, credit_row, "10000", "reversal population test", owner=sample_owner)
     db_session.flush()
 
     # Read back the account that actually received the debit line rather than
@@ -137,14 +152,14 @@ def test_reversal_keeps_the_original_counted(app, db_session, sample_gl_accounts
     assert original.is_reversed is True, "the original must still be flagged as reversed"
 
 
-def test_reversal_nets_the_account_to_zero(app, db_session, sample_gl_accounts):
+def test_reversal_nets_the_account_to_zero(app, db_session, sample_gl_accounts, sample_owner):
     """Both legs counted, so the pair nets to zero - not the negation."""
     from services.advanced_journal_manager import AdvancedJournalEntryManager
 
     tenant = sample_gl_accounts
     debit_row, credit_row = _two_accounts(tenant.id)
 
-    original = _post(tenant.id, debit_row, credit_row, "7500", "reversal zero test")
+    original = _post(tenant.id, debit_row, credit_row, "7500", "reversal zero test", owner=sample_owner)
     db_session.flush()
 
     posted = db_session.execute(
@@ -167,14 +182,14 @@ def test_reversal_nets_the_account_to_zero(app, db_session, sample_gl_accounts):
     )
 
 
-def test_reversing_twice_is_refused(app, db_session, sample_gl_accounts):
+def test_reversing_twice_is_refused(app, db_session, sample_gl_accounts, sample_owner):
     """The guard now keys off is_reversed, since status no longer changes."""
     from services.advanced_journal_manager import AdvancedJournalEntryManager
 
     tenant = sample_gl_accounts
     debit_row, credit_row = _two_accounts(tenant.id)
 
-    entry = _post(tenant.id, debit_row, credit_row, "10", "double reversal")
+    entry = _post(tenant.id, debit_row, credit_row, "10", "double reversal", owner=sample_owner)
     AdvancedJournalEntryManager.reverse_entry_advanced(entry.id, 1, "first", create_reversal_entry=True)
     db_session.flush()
 

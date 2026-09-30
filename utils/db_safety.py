@@ -108,9 +108,14 @@ def release_session(description: str = "unnamed") -> bool:
     to clear or the session refused.
     """
     try:
-        if not db.session.in_transaction():
+        # db.session is a scoped_session proxy, so the Session API is behind the
+        # call: db.session() returns the underlying Session, which is what has
+        # in_transaction()/rollback(). Reaching through the proxy instead is
+        # what mypy flagged here.
+        session = db.session()
+        if not session.in_transaction():
             return False
-        db.session.rollback()
+        session.rollback()
         logger.debug("Session released: %s", description)
         return True
     except Exception as e:

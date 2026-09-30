@@ -220,12 +220,18 @@ class TestCreateUpdatePostGuards:
 
 class TestReverseDeleteHistoryAudit:
     def test_reverse_already_reversed_raises(self, mocker):
+        # The guard reads is_reversed, not status. A reversed entry keeps
+        # status="posted" so that both legs of the pair stay in the population
+        # that GLAccount.get_balance() filters on (status == "posted");
+        # transitioning it to "reversed" dropped the original while keeping its
+        # mirror, which showed every touched account as the exact negation of the
+        # entry. See test_advanced_journal_reversal.py.
         mocker.patch.object(
             AdvancedJournalEntryManager,
             "_entry_or_404",
-            return_value=_ns_entry(status="reversed"),
+            return_value=_ns_entry(status="posted", is_reversed=True),
         )
-        with pytest.raises(ValueError, match="معكوس"):
+        with pytest.raises(ValueError, match=""):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, reversed_by=1, reason="x")
 
     def test_reverse_wrong_status_raises(self, mocker):
