@@ -1,0 +1,39 @@
+/* Width and height utilities.
+ *
+ * Extracted from 68 inline style="" declarations across the ledger reports, the
+ * owner tools, receipts and the POS customer display. Almost all of them were
+ * table column widths: width:30% appeared ten times, width:15% eight, width:40%
+ * seven, and so on - the same handful of proportions restated on every report
+ * table, which is what a utility scale is for.
+ *
+ * Only the proportions actually used are defined. This is not a general-purpose
+ * width framework; adding a .w-33 later should mean something needed it.
+ *
+ * Linked once from templates/partials/head.html so every page gets it.
+ */
+
+/* ── percentage widths ─────────────────────────────────────────────── */
+.w-0 { width: 0%; }
+.w-5 { width: 5%; }
+.w-8 { width: 8%; }
+.w-10 { width: 10%; }
+.w-12 { width: 12%; }
+.w-13 { width: 13%; }
+.w-15 { width: 15%; }
+.w-20 { width: 20%; }
+.w-25 { width: 25%; }
+.w-30 { width: 30%; }
+.w-35 { width: 35%; }
+.w-40 { width: 40%; }
+.w-50 { width: 50%; }
+.w-70 { width: 70%; }
+.w-100 { width: 100%; }
+
+/* ── fixed heights ─────────────────────────────────────────────────── */
+/* upgrade_banner.html: the 6px progress track. */
+.h-6 { height: 6px; }
+/* pos/customer_display.html: the cart row height on the customer-facing screen. */
+.h-30 { height: 30px; }
+/* Same screen: the cart starts empty and is filled by script, so the width is
+ * set from live data and stays inline. */
+.w-zero { width: 0; }

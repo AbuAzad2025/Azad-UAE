@@ -27,7 +27,7 @@
               <h4>{{ t('basic_info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th style="width: 40%">{{ t('user_name') }}</th>
+                  <thclass="w-40">{{ t('user_name') }}</th>
                   <td>{{ user.username | e }}</td>
                 </tr>
                 <tr>
@@ -68,7 +68,7 @@
               <h4>{{ t('additional_info') }}</h4>
               <div class="table-responsive"><table class="table table-bordered">
                 <tr>
-                  <th style="width: 40%">{{ t('created_date') }}</th>
+                  <thclass="w-40">{{ t('created_date') }}</th>
                   <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else '-' }}</td>
                 </tr>
                 <tr>

@@ -79,6 +79,13 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/css/adminlte.min.css') }}">
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
 
+  <!-- Width/height utilities. Extracted from 68 inline style="" declarations that
+       were table column widths repeated across the ledger reports, the owner
+       tools and a few receipts - width:30% appeared ten times, width:15% eight.
+       Linked here rather than per-template so every page picks them up once;
+       it is one extra request on a page that already loads the theme bundle. -->
+  <link rel="stylesheet" href="{{ dist_url('css/layout-utilities.css') }}">
+
   <!-- Fonts (synchronous: local woff2 files are KBs; async media=print caused
        preload-miss warnings and late font swap — determinism beats microsavings) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
