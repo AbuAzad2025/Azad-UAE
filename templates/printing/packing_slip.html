@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ _('Delivery_Note') }} #{{ delivery.number or sale.sale_number }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/print-utilities.css') }}">
   {% include 'partials/print_styles.html' %}
   <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
@@ -35,7 +36,7 @@
 </head>
 <body class="invoice-print">
 <div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
-  <div class="no-print" style="text-align:center;margin-bottom:10px;">
+  <div class="no-print p-center p-mb-10">
     <button data-action="window-print">{{ _('Print') }}</button>
     <button data-action="window-close">{{ _('Close') }}</button>
   </div>
@@ -52,7 +53,7 @@
 
     <div class="doc-title">
       <h2><i class="fas fa-box-open mr-1" aria-hidden="true"></i> {{ _('Delivery_Note') }} / {{ _('Delivery Note') }}</h2>
-      <div style="font-size:9px;color:#666;margin-top:4px;">
+      <div class="p-fs-9 p-muted p-mt-4">
         {{ _('Document_Number') }}: <strong>{{ delivery.number or sale.sale_number }}</strong> |
         {% set display_date = delivery.date if delivery.date else (sale.sale_date if sale and sale.sale_date else none) %}
         {{ _('Date') }}: <strong>{{ display_date.strftime('%Y-%m-%d') if display_date else '' }}</strong>
@@ -94,29 +95,29 @@
 
       {% if notes %}
       <div style="margin-top:10px;padding:8px;background:#fff8e6;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment mr-1" aria-hidden="true"></i> {{ notes }}</p>
+        <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment mr-1" aria-hidden="true"></i> {{ notes }}</p>
       </div>
       {% endif %}
 
       <div class="signatures">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('Recipient_Signature') }}</div>
+          <div class="p-fs-9">{{ _('Recipient_Signature') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('Representative_Signature') }}</div>
+          <div class="p-fs-9">{{ _('Representative_Signature') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('Company_Stamp') }}</div>
+          <div class="p-fs-9">{{ _('Company_Stamp') }}</div>
         </div>
       </div>
     </div>
 
     <div class="footer">
       <p>{{ _('Thank_You_For_Your_Business') }}</p>
-      <p style="font-size:8px;color:#999;">{{ _('Delivery_Note_Not_Tax_Invoice') }}</p>
+      <p class="p-fs-8 p-faint">{{ _('Delivery_Note_Not_Tax_Invoice') }}</p>
       {% include 'partials/print_developer_footer.html' %}
     </div>
   </div>

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ settings.company_name_ar if settings else tenant_name_ar or company_name_ar }} - {{ _('قسيمة راتب') }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/print-utilities.css') }}">
   {% include 'partials/print_styles.html' %}
   <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
@@ -58,7 +59,7 @@
           <p><strong>{{ _('الموظف') }}:</strong> {{ slip.employee.name if slip.employee else '—' }}</p>
           <p><strong>{{ _('القسم') }}:</strong> {{ slip.employee.department.name if slip.employee and slip.employee.department else '—' }}</p>
         </div>
-        <div style="text-align:left;">
+        <div class="p-left">
           <p><strong>{{ _('التاريخ') }}:</strong> {{ slip.payment_date }}</p>
           <p><strong>{{ _('الفترة') }}:</strong> {{ slip.month }}/{{ slip.year }}</p>
         </div>
@@ -77,8 +78,8 @@
         </tbody>
         <tfoot>
           <tr class="net-row">
-            <td colspan="2" style="text-align:center;">{{ _('صافي الراتب') }}</td>
-            <td style="text-align:center;">{{ format_currency(slip.net_salary) }} {{ tenant_currency_symbol or tenant_default_currency }}</td>
+            <td colspan="2" class="p-center">{{ _('صافي الراتب') }}</td>
+            <td class="p-center">{{ format_currency(slip.net_salary) }} {{ tenant_currency_symbol or tenant_default_currency }}</td>
           </tr>
         </tfoot>
       </table>
@@ -86,22 +87,22 @@
 
       {% if slip.notes %}
       <div style="margin-top:12px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment" aria-hidden="true"></i> {{ slip.notes }}</p>
+        <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment" aria-hidden="true"></i> {{ slip.notes }}</p>
       </div>
       {% endif %}
 
       <div class="signatures">
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('توقيع المحاسب') }}</div>
+          <div class="p-fs-9">{{ _('توقيع المحاسب') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('توقيع الموظف') }}</div>
+          <div class="p-fs-9">{{ _('توقيع الموظف') }}</div>
         </div>
         <div class="sig-box">
           <div class="sig-line"></div>
-          <div style="font-size:9px;">{{ _('الختم') }}</div>
+          <div class="p-fs-9">{{ _('الختم') }}</div>
         </div>
       </div>
     </div>

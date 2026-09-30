@@ -395,7 +395,9 @@ jobs:
       # records where it currently stands and fails only on a regression. Lower
       # the numbers as stages land; they are not meant to reach zero here.
       #
-      #   static  281 - has a fixed value, so it can move to CSS
+      #   static  224 - was 281; print/receipt family converted to
+      #              static/css/print-utilities.css. Next: public/landing (40),
+      #              dashboard animation-delay (18), ledger width utilities.
       #   dynamic  21 - computed per row (stage colour, progress %, loop delay).
       #              A CHECK-style "no inline styles" rule is unachievable for
       #              these; the end state is a custom property read from a data-
@@ -407,7 +409,7 @@ jobs:
         run: |
           python scripts/lint/check_inline_assets.py --top 12
           python scripts/lint/check_inline_assets.py \
-            --max-static 281 \
+            --max-static 224 \
             --max-dynamic 21 \
             --max-inline-scripts 170
 

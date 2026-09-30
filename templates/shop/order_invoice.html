@@ -96,9 +96,9 @@
         </tbody>
         <tfoot>
           {% if sale.discount_amount and sale.discount_amount > 0 %}
-          <tr><td colspan="4" style="text-align:left;">{{ t('coupon_discount') }}:</td><td>-{{ format_currency(sale.discount_amount) }}</td></tr>
+          <tr><td colspan="4" class="p-left">{{ t('coupon_discount') }}:</td><td>-{{ format_currency(sale.discount_amount) }}</td></tr>
           {% endif %}
-          <tr class="total-row"><td colspan="4" style="text-align:left;">{{ t('total') }}:</td><td><strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong></td></tr>
+          <tr class="total-row"><td colspan="4" class="p-left">{{ t('total') }}:</td><td><strong>{{ format_currency(sale.total_amount, sale.currency) }}</strong></td></tr>
         </tfoot>
       </table>
       </div>
@@ -113,15 +113,15 @@
         <p><strong>{{ t('status') }}:</strong> {{ status_label }}</p>
       </div>
 
-      <div style="margin-top:20px;display:flex;justify-content:space-between;padding:0 20px;">
-        <div style="text-align:center;"><div style="border-top:2px solid #333;width:150px;height:35px;margin-bottom:5px;"></div><div style="font-size:9px;">{{ t('recipient_signature') }}</div></div>
-        <div style="text-align:center;"><div style="border-top:2px solid #333;width:150px;height:35px;margin-bottom:5px;"></div><div style="font-size:9px;">{{ t('company_stamp') }}</div></div>
+      <div class="p-totals">
+        <div class="p-center"><div class="p-sig-tall"></div><div class="p-fs-9">{{ t('recipient_signature') }}</div></div>
+        <div class="p-center"><div class="p-sig-tall"></div><div class="p-fs-9">{{ t('company_stamp') }}</div></div>
       </div>
     </div>
 
     <div class="footer">
       <p>{{ t('thank_you') }}</p>
-      <p style="font-size:9px;">{{ (store.footer_text or '') | e }}</p>
+      <p class="p-fs-9">{{ (store.footer_text or '') | e }}</p>
     </div>
     {% include 'partials/print_developer_footer.html' %}
   </div>

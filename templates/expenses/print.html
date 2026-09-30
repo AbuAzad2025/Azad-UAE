@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ settings.company_name_ar or tenant_name_ar or company_name_ar }} - {{ t('Voucher_2') }} {{ t('Expense_3') }} #{{ expense.expense_number }}</title>
   <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/print-utilities.css') }}">
   {% include 'partials/print_styles.html' %}
   <style nonce="{{ csp_nonce() }}">
     body { font-family: 'Tajawal', 'Arial', sans-serif; background: #95a5a6; }
@@ -64,7 +65,7 @@
 
     <div class="doc-title">
       <h2><i class="fas fa-money-bill-wave" aria-hidden="true"></i> {{ t('Voucher_2') }} {{ t('Expense_3') }}</h2>
-      <div class="invoice-number" style="font-size:9px;color:#666;margin-top:4px;">
+      <div class="invoice-number p-fs-9 p-muted p-mt-4">
         {{ t('رقم') }} {{ t('Voucher') }}: <strong>{{ expense.expense_number }}</strong> |
         {{ t('Date') }}: <strong>{{ expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else '' }}</strong>
       </div>
@@ -102,27 +103,27 @@
       </div>
 
       <div class="amount-box">
-        <p style="margin:0;font-size:10px;"><strong>{{ t('Amount') }} {{ t('Total_3') }}:</strong> <span style="font-size:14px;color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</span></p>
+        <p class="p-m-0 p-fs-10"><strong>{{ t('Amount') }} {{ t('Total_3') }}:</strong> <span style="font-size:14px;color:{{ settings.header_color if settings else '#e74c3c' }};">{{ format_currency(expense.base_amount or expense.amount_aed) }}</span></p>
         {% if expense.amount_in_words %}
-        <p style="margin:5px 0 0;font-size:9px;color:#666;"><strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ expense.amount_in_words }}</p>
+        <p class="p-mb-5-0 p-fs-9 p-muted"><strong>{{ t('Amount') }} {{ t('بالحروف') }}:</strong> {{ expense.amount_in_words }}</p>
         {% endif %}
       </div>
 
       {% if expense.notes %}
       <div style="margin-top:10px;padding:8px;background:#fff3cd;border-radius:4px;border-right:2px solid #ffc107;">
-        <p style="font-size:9px;color:#856404;margin:0;"><i class="fas fa-comment" aria-hidden="true"></i> {{ t('Notes') }}: {{ expense.notes }}</p>
+        <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment" aria-hidden="true"></i> {{ t('Notes') }}: {{ expense.notes }}</p>
       </div>
       {% endif %}
 
       <div style="margin-top:15px;display:flex;justify-content:space-between;padding:0 10px;">
-        <div style="text-align:center;">
-          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">{{ t('توقيع') }} {{ t('Exchange') }}</div>
+        <div class="p-center">
+          <div class="p-sig">{{ t('توقيع') }} {{ t('Exchange') }}</div>
         </div>
-        <div style="text-align:center;">
-          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">{{ t('توقيع') }} {{ t('المحاسب') }}</div>
+        <div class="p-center">
+          <div class="p-sig">{{ t('توقيع') }} {{ t('المحاسب') }}</div>
         </div>
-        <div style="text-align:center;">
-          <div style="border-top:2px solid #333;width:150px;padding-top:5px;font-size:9px;">{{ t('الختم') }}</div>
+        <div class="p-center">
+          <div class="p-sig">{{ t('الختم') }}</div>
         </div>
       </div>
     </div>

@@ -1,0 +1,105 @@
+/* Print/receipt typography utilities.
+ *
+ * Extracted from inline style="" attributes across the print family:
+ * receipts/_base.html, receipts/packaging_slip.html, shop/order_invoice.html,
+ * printing/packing_slip.html, expenses/print.html, payroll/slip.html.
+ *
+ * These were 71 occurrences of 30 distinct declarations. The recurring shapes
+ * were a small type scale (8/9/10px), two alignments, a handful of margins, and
+ * a few semantic colours that were repeated as raw hex - #856404 is the
+ * warning amber and #155724/#15803d the success greens, each written out by
+ * hand in two or three places.
+ *
+ * Naming is semantic where the value was semantic (.p-warn, .p-ok, .p-muted)
+ * and literal where it was arbitrary (.p-fs-9, .p-mt-6), so nothing pretends a
+ * raw 9px is a design decision.
+ *
+ * Scoped under .p- rather than emitted bare so these cannot collide with the
+ * screen utilities in erp-theme-unified.css, which the same templates load.
+ */
+
+/* ── type scale ───────────────────────────────────────────────────────── */
+.p-fs-8 { font-size: 8px; }
+.p-fs-9 { font-size: 9px; }
+.p-fs-10 { font-size: 10px; }
+.p-bold { font-weight: 700; }
+
+/* ── alignment ────────────────────────────────────────────────────────── */
+.p-center { text-align: center; }
+.p-left { text-align: left; }
+
+/* ── spacing ──────────────────────────────────────────────────────────── */
+.p-my-2 { margin: 2px 0; }
+.p-my-6 { margin: 6px 0; }
+.p-mt-4 { margin-top: 4px; }
+.p-mt-6 { margin-top: 6px; }
+.p-mt-10 { margin-top: 10px; }
+.p-mb-4 { margin-bottom: 4px; }
+.p-mb-6 { margin-bottom: 6px; }
+.p-mb-10 { margin-bottom: 10px; }
+.p-m-0 { margin: 0; }
+.p-mb-5-0 { margin: 5px 0 0; }
+
+/* ── semantic colours ─────────────────────────────────────────────────── */
+.p-muted { color: #666; }
+.p-faint { color: #999; }
+.p-warn { color: #856404; }
+.p-warn-bold { color: #856404; font-weight: 700; }
+.p-ok { color: #155724; }
+.p-ok-bold { color: #15803d; font-weight: 700; }
+.p-rule { color: var(--header-color); }
+
+/* ── widths ───────────────────────────────────────────────────────────── */
+.p-w-full { width: 100%; }
+
+/* ── composite blocks ─────────────────────────────────────────────────── */
+/* The signature/divider line: a 2px rule, 150px wide, used to close a
+ * document. Appeared three times with two different heights. */
+.p-sig {
+  border-top: 2px solid #333;
+  width: 150px;
+  padding-top: 5px;
+  font-size: 9px;
+}
+.p-sig-tall {
+  border-top: 2px solid #333;
+  width: 150px;
+  height: 35px;
+  margin-bottom: 5px;
+}
+
+/* Notices. Two amber variants that differed only in background tint. */
+.p-alert-warn {
+  margin-top: 10px;
+  padding: 8px;
+  background: #fff3cd;
+  border-radius: 4px;
+}
+.p-alert-info {
+  margin-top: 10px;
+  padding: 8px;
+  background: #fff8e6;
+  border-radius: 4px;
+}
+
+/* A centred row of actions, used once at the foot of a slip. */
+.p-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+/* Totals row: label left, amount right. */
+.p-totals {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+/* ── brand marks ──────────────────────────────────────────────────────── */
+.p-social-fb { color: #1877f2; font-size: 8px; }
+.p-social-ig { color: #e4405f; font-size: 8px; }
+.p-social-wa { color: #25d366; font-size: 8px; }
+.p-brand-fb { color: #007bff; }
