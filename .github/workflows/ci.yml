@@ -409,7 +409,7 @@ jobs:
         run: |
           python scripts/lint/check_inline_assets.py --top 12
           python scripts/lint/check_inline_assets.py \
-            --max-static 202 \
+            --max-static 162 \
             --max-dynamic 21 \
             --max-inline-scripts 170
 

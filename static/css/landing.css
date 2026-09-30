@@ -2413,3 +2413,86 @@ html[dir="rtl"] .azad-tier-features li {
 .azad-stores-banner__go{color:#d4a017;font-weight:800;font-size:.85rem;display:flex;align-items:center;gap:6px;transition:transform .2s}
 .azad-stores-banner__card:hover .azad-stores-banner__go{transform:translateX(-4px);color:#b45309}
 .azad-stores-banner__hint{color:#94a3b8;font-size:.78rem;margin:10px 0 0;text-align:center}
+
+/* ── extracted from inline style="" on the landing page ───────────────────
+ * 40 declarations, 32 distinct, all built from the --azad-* tokens already
+ * defined above. They were near-duplicates of each other - nine tint/colour
+ * pairs that differ only in alpha - so they are grouped by role: rules,
+ * solid fills, chips, cards, gradients, icon colours.
+ * Prefixed lp- so they cannot collide with the app's own utility names.
+ */
+
+.lp-center { text-align: center; }
+.lp-mb-20 { margin: 0 0 20px; }
+.lp-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--azad-text-muted);
+  margin-bottom: 20px;
+}
+.lp-lead { font-size: 1.08rem; margin: 0 0 10px; }
+.lp-feature-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--azad-accent-light);
+}
+.lp-grid-200 { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.lp-panel-16 { margin-top: 16px; padding: 14px; }
+
+.lp-accent { color: var(--azad-accent); }
+.lp-success { color: var(--azad-success); }
+.lp-accent-head { color: var(--azad-accent-light); font-weight: 700; }
+
+.lp-rule-cyan { border-top: 4px solid var(--azad-cyan); }
+.lp-rule-accent { border-top: 4px solid var(--azad-accent); }
+.lp-rule-success { border-top: 4px solid var(--azad-success); }
+
+.lp-fill-cyan { background: var(--azad-cyan); color: #fff; }
+.lp-fill-accent { background: var(--azad-accent); color: var(--azad-primary); }
+.lp-fill-success { background: var(--azad-success); color: #fff; }
+
+.lp-chip-cyan { background: rgba(14, 165, 233, 0.1); color: var(--azad-cyan); }
+.lp-chip-cyan-strong { background: rgba(14, 165, 233, 0.15); color: var(--azad-cyan); }
+.lp-chip-success { background: rgba(16, 185, 129, 0.1); color: var(--azad-success); }
+.lp-chip-gold { background: rgba(212, 160, 23, 0.1); color: var(--azad-accent); }
+.lp-chip-gold-strong { background: rgba(212, 160, 23, 0.15); color: var(--azad-accent-light); }
+.lp-chip-amber { background: rgba(240, 180, 41, 0.1); color: var(--azad-accent); }
+.lp-chip-pink { background: rgba(236, 72, 153, 0.1); color: #ec4899; }
+
+.lp-card-cyan {
+  background: rgba(14, 165, 233, 0.06);
+  border-color: rgba(14, 165, 233, 0.15);
+  color: var(--azad-cyan);
+}
+.lp-card-success {
+  border-color: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.06);
+  color: var(--azad-success);
+}
+.lp-panel-gold {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(212, 160, 23, 0.04);
+  border: 1px solid rgba(212, 160, 23, 0.08);
+  border-radius: 12px;
+  font-size: 0.82rem;
+  color: var(--azad-text-muted);
+  text-align: center;
+}
+
+.lp-grad-top {
+  background: linear-gradient(180deg, rgba(15, 23, 36, 0.3) 0%, transparent 50%, rgba(15, 23, 36, 0.3) 100%);
+}
+.lp-grad-gold {
+  background: linear-gradient(180deg, transparent 0%, rgba(212, 160, 23, 0.02) 50%, transparent 100%);
+}
+.lp-grad-bottom { background: linear-gradient(0deg, rgba(15, 23, 36, 0.3) 0%, transparent 100%); }
+
+.lp-c-cyan { color: #0ea5e9; }
+.lp-c-purple { color: #a855f7; }
+.lp-c-amber { color: #f59e0b; }
+.lp-c-pink { color: #ec4899; }
+.lp-c-teal { color: #06b6d4; }
+.lp-c-red { color: #ef4444; }

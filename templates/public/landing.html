@@ -117,8 +117,8 @@
         <a class="azad-drawer-link" href="{{ _lang_url }}"><i class="fas fa-globe" aria-hidden="true"></i> {{ _lang_label }}</a>
     </div>
     <div class="azad-drawer-actions">
-        <a href="{{ url_for('auth.login') }}" class="btn-nav-ghost" style="text-align:center;">{{ _login }}</a>
-        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}" class="btn-nav-cta" style="text-align:center;" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _free_trial }}</a>
+        <a href="{{ url_for('auth.login') }}"class="btn-nav-ghost lp-center">{{ _login }}</a>
+        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ _wa_msg_sales | urlencode }}"class="btn-nav-cta lp-center" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _free_trial }}</a>
     </div>
 </aside>
 
@@ -146,7 +146,7 @@
                     <a href="{{ url_for('public.features') }}#ai"><i class="fas fa-robot" aria-hidden="true"></i> {{ _('AI Assistant') }}</a>
                     <a href="{{ url_for('public.features') }}#store"><i class="fas fa-store" aria-hidden="true"></i> {{ _('Online Store') }}</a>
                     <div class="azad-dropdown-divider"></div>
-                    <a href="{{ url_for('public.features') }}" style="color:var(--azad-accent-light);font-weight:700;"><i class="fas fa-th" aria-hidden="true"></i> {{ _('All features') }}</a>
+                    <a href="{{ url_for('public.features') }}"class="lp-accent-head"><i class="fas fa-th" aria-hidden="true"></i> {{ _('All features') }}</a>
                 </div>
             </div>
             <a href="#pricing">{{ _pricing_label }}</a>
@@ -234,36 +234,36 @@
 <section class="azad-section" id="whats-new">
     <div class="azad-section-inner">
         <div class="azad-section-center">
-            <div class="azad-section-tag" style="background:rgba(14,165,233,0.06);border-color:rgba(14,165,233,0.15);color:var(--azad-cyan);"><i class="fas fa-sparkles" aria-hidden="true"></i> {{ _('What\'s New 2026') }}</div>
+            <divclass="azad-section-tag lp-card-cyan"><i class="fas fa-sparkles" aria-hidden="true"></i> {{ _('What\'s New 2026') }}</div>
             <h2 class="azad-section-title">{{ _('Brand New Features') }}</h2>
             <p class="azad-section-desc">{{ _('New powerful modules: Arabic AI, integrated online store, and multi-warehouse management.') }}</p>
         </div>
         <div class="azad-whatsnew-grid">
-            <div class="azad-new-card" style="border-top:4px solid var(--azad-cyan);">
-                <span class="azad-new-badge" style="background:var(--azad-cyan);color:#fff;">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-robot" aria-hidden="true"></i></div>
+            <divclass="azad-new-card lp-rule-cyan">
+                <spanclass="azad-new-badge lp-fill-cyan">NEW</span>
+                <divclass="azad-new-icon lp-chip-cyan"><i class="fas fa-robot" aria-hidden="true"></i></div>
                 <h3>{{ _('Arabic AI Assistant') }}</h3>
                 <p>{{ _('Built-in Groq AI understands Arabic: creates customers, records invoices, generates reports, detects anomalies. No ChatGPT subscription needed.') }}</p>
             </div>
-            <div class="azad-new-card" style="border-top:4px solid var(--azad-accent);">
-                <span class="azad-new-badge" style="background:var(--azad-accent);color:var(--azad-primary);">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(212,160,23,0.1);color:var(--azad-accent);"><i class="fas fa-store" aria-hidden="true"></i></div>
+            <divclass="azad-new-card lp-rule-accent">
+                <spanclass="azad-new-badge lp-fill-accent">NEW</span>
+                <divclass="azad-new-icon lp-chip-gold"><i class="fas fa-store" aria-hidden="true"></i></div>
                 <h3>{{ _('Online Storefront') }}</h3>
                 <p>{{ _('Store linked to inventory & accounting. Cart, reviews, wishlist, loyalty, coupons, bookings. Launches with your live data.') }}</p>
             </div>
-            <div class="azad-new-card" style="border-top:4px solid var(--azad-success);">
-                <span class="azad-new-badge" style="background:var(--azad-success);color:#fff;">NEW</span>
-                <div class="azad-new-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
+            <divclass="azad-new-card lp-rule-success">
+                <spanclass="azad-new-badge lp-fill-success">NEW</span>
+                <divclass="azad-new-icon lp-chip-success"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
                 <h3>{{ _('Advanced Warehouses') }}</h3>
                 <p>{{ _('Unlimited warehouses, transfers, barcode inventory, batch/serial tracking, expiry alerts, smart reorder suggestions.') }}</p>
             </div>
         </div>
         <div class="azad-mini-grid">
-            <div class="azad-mini-item"><i class="fas fa-share-nodes" style="color:#0ea5e9;" aria-hidden="true"></i><span>{{ _('CRM Integration') }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-calculator" style="color:#a855f7;" aria-hidden="true"></i><span>{{ _('Double-Entry GL') }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-cash-register" style="color:#f59e0b;" aria-hidden="true"></i><span>{{ _('Point of Sale') }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-users-gear" style="color:#ec4899;" aria-hidden="true"></i><span>{{ _('HR & Payroll') }}</span></div>
-            <div class="azad-mini-item"><i class="fas fa-chart-pie" style="color:#06b6d4;" aria-hidden="true"></i><span>{{ _('Smart Reports') }}</span></div>
+            <div class="azad-mini-item"><iclass="fas fa-share-nodes lp-c-cyan" aria-hidden="true"></i><span>{{ _('CRM Integration') }}</span></div>
+            <div class="azad-mini-item"><iclass="fas fa-calculator lp-c-purple" aria-hidden="true"></i><span>{{ _('Double-Entry GL') }}</span></div>
+            <div class="azad-mini-item"><iclass="fas fa-cash-register lp-c-amber" aria-hidden="true"></i><span>{{ _('Point of Sale') }}</span></div>
+            <div class="azad-mini-item"><iclass="fas fa-users-gear lp-c-pink" aria-hidden="true"></i><span>{{ _('HR & Payroll') }}</span></div>
+            <div class="azad-mini-item"><iclass="fas fa-chart-pie lp-c-teal" aria-hidden="true"></i><span>{{ _('Smart Reports') }}</span></div>
         </div>
     </div>
 </section>
@@ -271,7 +271,7 @@
 {# ──────────────────────────────────────────────── #}
 {# 4 CORE PILLARS (Bento)                           #}
 {# ──────────────────────────────────────────────── #}
-<section class="azad-section" id="features" style="background:linear-gradient(180deg, rgba(15,23,36,0.3) 0%, transparent 50%, rgba(15,23,36,0.3) 100%);">
+<sectionclass="azad-section lp-grad-top" id="features">
     <div class="azad-section-inner">
         <div class="azad-section-center">
             <div class="azad-section-tag"><i class="fas fa-cube" aria-hidden="true"></i> {{ _('Core Platform') }}</div>
@@ -280,7 +280,7 @@
         </div>
         <div class="azad-pillars-grid">
             <div class="azad-pillar-card">
-                <div class="azad-pillar-icon" style="background:rgba(14,165,233,0.1);color:var(--azad-cyan);"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
+                <divclass="azad-pillar-icon lp-chip-cyan"><i class="fas fa-warehouse" aria-hidden="true"></i></div>
                 <h3>{{ _('Multi-Warehouse & Barcode') }}</h3>
                 <p>{{ _('Unlimited warehouse management with quantity, cost, and movement tracking.') }}</p>
                 <ul class="azad-pillar-features">
@@ -293,7 +293,7 @@
                 </ul>
             </div>
             <div class="azad-pillar-card">
-                <div class="azad-pillar-icon" style="background:rgba(240,180,41,0.1);color:var(--azad-accent);"><i class="fas fa-cash-register" aria-hidden="true"></i></div>
+                <divclass="azad-pillar-icon lp-chip-amber"><i class="fas fa-cash-register" aria-hidden="true"></i></div>
                 <h3>{{ _('POS & E-Invoicing') }}</h3>
                 <p>{{ _('Fast POS with UAE-compliant e-invoicing.') }}</p>
                 <ul class="azad-pillar-features">
@@ -306,10 +306,10 @@
                 </ul>
             </div>
             <div class="azad-pillar-card wide">
-                <div class="azad-pillar-icon" style="background:rgba(16,185,129,0.1);color:var(--azad-success);"><i class="fas fa-book" aria-hidden="true"></i></div>
+                <divclass="azad-pillar-icon lp-chip-success"><i class="fas fa-book" aria-hidden="true"></i></div>
                 <h3>{{ _('Double-Entry Accounting & Smart Reports') }}</h3>
                 <p>{{ _('Full double-entry accounting cycle: from journal entries to balance sheet.') }}</p>
-                <ul class="azad-pillar-features" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                <ulclass="azad-pillar-features lp-grid-200">
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('General ledger') }}</li>
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Trial balance') }}</li>
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Balance sheet') }}</li>
@@ -323,10 +323,10 @@
                 </ul>
             </div>
             <div class="azad-pillar-card wide">
-                <div class="azad-pillar-icon" style="background:rgba(236,72,153,0.1);color:#ec4899;"><i class="fas fa-users-gear" aria-hidden="true"></i></div>
+                <divclass="azad-pillar-icon lp-chip-pink"><i class="fas fa-users-gear" aria-hidden="true"></i></div>
                 <h3>{{ _('HR, Payroll & Permissions') }}</h3>
                 <p>{{ _('Full employee management: contracts, attendance, payroll, leaves, granular permissions.') }}</p>
-                <ul class="azad-pillar-features" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                <ulclass="azad-pillar-features lp-grid-200">
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Employee profile') }}</li>
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Attendance (ZKTeco)') }}</li>
                     <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Payroll processing') }}</li>
@@ -344,7 +344,7 @@
 {# ──────────────────────────────────────────────── #}
 {# PRICING — 3-TIER PACKAGE SELECTOR               #}
 {# ──────────────────────────────────────────────── #}
-<section class="azad-section" id="pricing" style="background:linear-gradient(180deg, transparent 0%, rgba(212,160,23,0.02) 50%, transparent 100%);">
+<sectionclass="azad-section lp-grad-gold" id="pricing">
     <div class="azad-section-inner">
         <div class="azad-section-center">
             <div class="azad-section-tag"><i class="fas fa-tags" aria-hidden="true"></i> {{ _('Transparent Pricing') }}</div>
@@ -373,7 +373,7 @@
                 </div>
                 <label for="tierSlider" class="sr-only">{{ _('Select plan') }}</label>
                 <input type="range" class="azad-tier-slider" id="tierSlider" min="0" max="2" value="0" step="1">
-                <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--azad-text-muted);margin-bottom:20px;">
+                <divclass="lp-meta-row">
                     <span>{{ _('Starter') }}</span>
                     <span>{{ _('Pro') }}</span>
                     <span>{{ _('Enterprise') }}</span>
@@ -390,7 +390,7 @@
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('E-invoices + printing') }}</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Basic reports') }}</li>
                             <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('WhatsApp support') }}</li>
-                            <li><i class="fas fa-times" style="color:#ef4444;" aria-hidden="true"></i> {{ _('No online storefront') }}</li>
+                            <li><iclass="fas fa-times lp-c-red" aria-hidden="true"></i> {{ _('No online storefront') }}</li>
                         </ul>
                         {% set wa_msg_starter = 'مرحباً، أرغب في الاشتراك في الباقة الأساسية - شهرياً' %}
                         <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_starter | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}</a>
@@ -435,7 +435,7 @@
                 </div>
             </div>
             <div>
-                <div style="font-size:0.88rem;font-weight:700;margin-bottom:14px;color:var(--azad-accent-light);"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ _('Add-on Modules (Flat fee)') }}</div>
+                <divclass="lp-feature-title"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ _('Add-on Modules (Flat fee)') }}</div>
                 <div class="azad-addon-grid">
                     <div class="azad-addon-item">
                         <input type="checkbox" id="addonPOS" aria-label="{{ _('Point of Sale') }}">
@@ -468,7 +468,7 @@
                         <span class="price-tag">+$12</span>
                     </div>
                 </div>
-                <div style="margin-top:16px;padding:14px;background:rgba(212,160,23,0.04);border:1px solid rgba(212,160,23,0.08);border-radius:12px;font-size:0.82rem;color:var(--azad-text-muted);text-align:center;">
+                <divclass="lp-panel-gold">
                     {% if not is_en %}
                     جميع الموديولات الأساسية (محاسبة، مخزون، فواتير، عملات، شيكات، تقارير، أصول) <strong>مشمولة في جميع الباقات</strong>.
                     {% else %}
@@ -487,9 +487,9 @@
     <div class="azad-section-inner">
         <div class="azad-ai-grid">
             <div>
-                <div class="azad-section-tag" style="color:var(--azad-success);border-color:rgba(16,185,129,0.15);background:rgba(16,185,129,0.06);"><i class="fas fa-robot" aria-hidden="true"></i> {{ _('AI Assistant') }}</div>
+                <divclass="azad-section-tag lp-card-success"><i class="fas fa-robot" aria-hidden="true"></i> {{ _('AI Assistant') }}</div>
                 <h2 class="azad-section-title">{{ _('AI That Speaks Your Language') }}</h2>
-                <p class="azad-section-desc" style="margin:0 0 20px;">
+                <pclass="azad-section-desc lp-mb-20">
                     {% if not is_en %}
                     مساعد Groq المدمج في المنصة — يفهم العربية وينفذ أوامرك الفعلية. بدون الحاجة لاشتراك ChatGPT.
                     {% else %}
@@ -503,10 +503,10 @@
                 </ul>
             </div>
             <div class="azad-ai-chat">
-                <div class="azad-ai-bubble user"><span class="sender" style="color:var(--azad-accent);">👤 {{ _('You') }}</span>{{ _('Create new customer: Ahmed Mohamed, phone 0501234567') }}</div>
-                <div class="azad-ai-bubble bot"><span class="sender" style="color:var(--azad-success);">🤖 AI</span>{{ _('Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?') }}</div>
-                <div class="azad-ai-bubble user"><span class="sender" style="color:var(--azad-accent);">👤 {{ _('You') }}</span>{{ _('What is the stock of Toyota spare parts?') }}</div>
-                <div class="azad-ai-bubble bot"><span class="sender" style="color:var(--azad-success);">🤖 AI</span>{{ 'Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?' }}</div>
+                <div class="azad-ai-bubble user"><spanclass="sender lp-accent">👤 {{ _('You') }}</span>{{ _('Create new customer: Ahmed Mohamed, phone 0501234567') }}</div>
+                <div class="azad-ai-bubble bot"><spanclass="sender lp-success">🤖 AI</span>{{ _('Customer Ahmed Mohamed created successfully. ID: CUS-2026-0421. Would you like to open his profile or create an invoice?') }}</div>
+                <div class="azad-ai-bubble user"><spanclass="sender lp-accent">👤 {{ _('You') }}</span>{{ _('What is the stock of Toyota spare parts?') }}</div>
+                <div class="azad-ai-bubble bot"><spanclass="sender lp-success">🤖 AI</span>{{ 'Main warehouse — Toyota parts: 1,247 items worth AED 89,500. 38 items below reorder threshold. Print report?' }}</div>
             </div>
         </div>
     </div>
@@ -532,7 +532,7 @@
                 <div class="azad-testi-stars"><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i></div>
                 <div class="azad-testi-text">{{ _('"An integrated and very convenient system. Inventory and sales management became much easier. Fast and understanding support."') }}</div>
                 <div class="azad-testi-author">
-                    <div class="azad-testi-avatar" style="background:rgba(212,160,23,0.15);color:var(--azad-accent-light);">أ</div>
+                    <divclass="azad-testi-avatar lp-chip-gold-strong">أ</div>
                     <div><div class="azad-testi-name">{{ _('Ahmed Al Sayed') }}</div><div class="azad-testi-role">{{ _('Auto parts shop owner - Dubai') }}</div></div>
                 </div>
             </div>
@@ -540,7 +540,7 @@
                 <div class="azad-testi-stars"><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i><i class="fas fa-star" aria-hidden="true"></i></div>
                 <div class="azad-testi-text">{{ _('"Financial reports and double-entry accounting helped us organize our accounts accurately. Highly recommended."') }}</div>
                 <div class="azad-testi-author">
-                    <div class="azad-testi-avatar" style="background:rgba(14,165,233,0.15);color:var(--azad-cyan);">س</div>
+                    <divclass="azad-testi-avatar lp-chip-cyan-strong">س</div>
                     <div><div class="azad-testi-name">{{ _('Sara Al Mansouri') }}</div><div class="azad-testi-role">{{ _('Accountant - Trading co. - Abu Dhabi') }}</div></div>
                 </div>
             </div>
@@ -551,7 +551,7 @@
 {# ──────────────────────────────────────────────── #}
 {# FAQ                                              #}
 {# ──────────────────────────────────────────────── #}
-<section class="azad-section" id="faq" style="background:linear-gradient(0deg, rgba(15,23,36,0.3) 0%, transparent 100%);">
+<sectionclass="azad-section lp-grad-bottom" id="faq">
     <div class="azad-section-inner">
         <div class="azad-section-center">
             <div class="azad-section-tag"><i class="fas fa-question-circle" aria-hidden="true"></i> {{ _('FAQ') }}</div>
@@ -669,7 +669,7 @@
         <div class="azad-footer-grid">
             <div class="azad-footer-brand">
                 <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
-                <h4 class="footer-gradient-text" style="font-size:1.08rem;margin:0 0 10px;">{{ _company_name }}</h4>
+                <h4class="footer-gradient-text lp-lead">{{ _company_name }}</h4>
                 <p>{{ _('Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.') }}</p>
                 <div class="azad-footer-social">
                     {% if _footer_whatsapp %}<a class="whatsapp-bg" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
