@@ -592,14 +592,27 @@ class TestWacAndRetrospective:
         )
         assert result < Decimal("0")
 
-    def test_post_retrospective_post_failure_logged(
+    def test_post_retrospective_post_failure_aborts(
         self, db_session, sample_tenant, sample_product, sample_warehouse, mocker, app
     ):
+        """A failed GL post must roll the movement back, not warn and continue.
+
+        This used to assert `result > 0` with post_or_fail raising - i.e. it
+        encoded the defect. The function caught Exception, logged a warning, and
+        returned the variance as though it had posted. The caller at :1042 ignores
+        the return value, so the warning was the only signal, and the receiving
+        transaction committed anyway: the receipt and its
+        ProductWarehouseCost update went through while account 1140 was never
+        credited and 5150 never debited. The inventory sub-ledger and the GL
+        control account then diverged by the variance permanently, with nothing
+        recording that the post had failed, and it repeated on every
+        negative-stock receipt.
+        """
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
         mocker.patch("services.gl_posting.post_or_fail", side_effect=RuntimeError("gl fail"))
-        with app.app_context():
-            result = StockService._post_retrospective_cost_adjustment(
+        with app.app_context(), pytest.raises(RuntimeError, match="gl fail"):
+            StockService._post_retrospective_cost_adjustment(
                 tenant_id=sample_tenant.id,
                 product_id=sample_product.id,
                 warehouse_id=sample_warehouse.id,
@@ -610,7 +623,6 @@ class TestWacAndRetrospective:
                 reference_type=GLRef.PURCHASE,
                 reference_id=5,
             )
-        assert result > Decimal("0")
 
 
 class TestReverseOperations:

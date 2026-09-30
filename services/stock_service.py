@@ -979,28 +979,38 @@ class StockService:
             ]
             description = f"Retrospective Cost Adjustment (Gain) — {product_name}"
 
-        try:
-            post_or_fail(
-                lines=lines,
-                description=description,
-                reference_type=reference_type,
-                reference_id=reference_id,
-                branch_id=branch_id,
-                tenant_id=tenant_id,
-            )
-            current_app.logger.info(
-                "Retrospective cost adjustment posted for product %s, warehouse %s: variance=%s",
-                product_id,
-                warehouse_id,
-                variance,
-            )
-        except Exception as e:
-            current_app.logger.warning(
-                "Failed to post retrospective cost adjustment for product %s, warehouse %s: %s",
-                product_id,
-                warehouse_id,
-                e,
-            )
+        # Fail loud. post_or_fail exists to be loud - it raises GlPostingError on
+        # any failure, including the fail-fast GLMappingError that
+        # _resolve_gl_concept_account raises on dynamic-mapping failure, which
+        # is the most likely error to occur here.
+        #
+        # This used to catch Exception, log a warning, and then return `variance`
+        # as though it had posted. The caller at :1042 ignores the return value,
+        # so the log line was the only signal, and the receiving transaction
+        # committed regardless: the receipt and its ProductWarehouseCost update
+        # went through while account 1140 was never credited and 5150 never
+        # debited. The inventory sub-ledger and the GL control account then
+        # diverged by `variance` permanently, with no field anywhere recording
+        # that the post had failed, and it repeated on every negative-stock
+        # receipt.
+        #
+        # Raising rolls the enclosing atomic_transaction back, so a movement is
+        # never committed with its GL side missing. That is the same contract
+        # every other post_or_fail caller in the codebase already honours.
+        post_or_fail(
+            lines=lines,
+            description=description,
+            reference_type=reference_type,
+            reference_id=reference_id,
+            branch_id=branch_id,
+            tenant_id=tenant_id,
+        )
+        current_app.logger.info(
+            "Retrospective cost adjustment posted for product %s, warehouse %s: variance=%s",
+            product_id,
+            warehouse_id,
+            variance,
+        )
 
         return variance
 

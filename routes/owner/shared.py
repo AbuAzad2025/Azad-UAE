@@ -113,6 +113,38 @@ _FORBIDDEN_SQL_KEYWORDS = (
     "UNION ALL ",
 )
 
+# PostgreSQL system relations and server-side file functions.
+#
+# _BLOCKED_SQL_TABLES is built from db.metadata, which contains no PostgreSQL
+# system relation, so without this list the console could read anything the
+# server can see. See _references_system_relation for the full reasoning.
+#
+# information_schema is deliberately NOT here: the schema browser and every
+# "list the tables" helper reads it, and it exposes no row data.
+_FORBIDDEN_SYSTEM_SQL = (
+    "PG_AUTHID",
+    "PG_SHADOW",
+    "PG_USER",
+    "PG_AUTHID ",
+    "PG_ROLES",
+    "PG_STAT_ACTIVITY",
+    "PG_STAT_STATEMENTS",
+    "PG_STAT_USER_TABLES",
+    "PG_CATALOG.",
+    "PG_TOAST.",
+    "PG_READ_FILE",
+    "PG_READ_BINARY_FILE",
+    "PG_LS_DIR",
+    "PG_STAT_FILE",
+    "LO_IMPORT",
+    "LO_EXPORT",
+    "PG_FILE_READ",
+    "PG_FILE_WRITE",
+    "PG_SLEEP",
+    "SET_CONFIG",
+    "PG_READ_FILE(",
+)
+
 _EXPORT_FORMATS = frozenset({"sql", "json"})
 
 
@@ -273,6 +305,33 @@ def _sql_references_blocked_table(sql_query: str) -> str | None:
     return None
 
 
+def _references_system_relation(sql_upper: str) -> bool:
+    """Block PostgreSQL system catalogs and server-side file functions.
+
+    The tenant-table blocklist is derived from db.metadata plus a hand-written
+    list, and db.metadata contains no PostgreSQL system relation. So while the
+    module's own comment claims "the platform plane cannot reach tenant business
+    data", the console would happily run:
+
+        SELECT usename, passwd FROM pg_authid            -- every password hash
+        SELECT query FROM pg_stat_activity              -- other tenants' live SQL
+        SELECT pg_read_file('/etc/passwd')              -- server filesystem
+        SELECT lo_import('/etc/shadow')                 -- a write, from a
+                                                          -- "read-only" console
+
+    None of those are tenant business tables, so none were blocked. The comment
+    at :24-26 and the one at routes/owner/core.py:146 are both stated as
+    invariants; this is what makes them true.
+
+    Matched on the name as it appears in the statement, after upper-casing, so
+    pg_catalog.pg_authid and a bare pg_authid are both caught. The
+    information_schema schema is allowed through deliberately - the console's
+    own schema browser and every "show me the tables" helper need it, and it
+    exposes no row data.
+    """
+    return any(needle in sql_upper for needle in _FORBIDDEN_SYSTEM_SQL)
+
+
 def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
     """Allow a single read-only SELECT that references no blocked tenant table."""
     if not sql_query or not sql_query.strip():
@@ -285,6 +344,8 @@ def _validate_select_only_sql(sql_query: str) -> tuple[bool, str | None]:
         return False, gettext("❌ مسموح باستعلامات SELECT للقراءة فقط.")
     if any(kw in sql_upper for kw in _FORBIDDEN_SQL_KEYWORDS):
         return False, gettext("❌ استعلام غير مسموح — قراءة فقط (SELECT).")
+    if _references_system_relation(sql_upper):
+        return False, gettext("❌ استعلام محظور — لا يمكن الوصول إلى كتالوج النظام أو relations الخاصة بـ PostgreSQL.")
     blocked = _sql_references_blocked_table(sql_query)
     if blocked:
         return (

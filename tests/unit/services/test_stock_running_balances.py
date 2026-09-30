@@ -72,10 +72,10 @@ class TestGetMovementRunningBalances:
     def test_signed_sequence_before_after_per_movement(
         self, db_session, sample_tenant, sample_product, sample_warehouse
     ):
-        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 10, 0)
-        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "out", -3, 1)
-        m3 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 5, 2)
-        m4 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "out", -2, 3)
+        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 10, 0)
+        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "sale", -3, 1)
+        m3 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 5, 2)
+        m4 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "sale", -2, 3)
 
         balances = StockService.get_movement_running_balances([m1, m2, m3, m4], sample_tenant.id)
 
@@ -85,9 +85,9 @@ class TestGetMovementRunningBalances:
         assert balances[m4.id] == (Decimal("12"), Decimal("10"))
 
     def test_window_spans_full_history_not_just_page(self, db_session, sample_tenant, sample_product, sample_warehouse):
-        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 10, 0)
-        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "out", -3, 1)
-        m3 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 5, 2)
+        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 10, 0)
+        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "sale", -3, 1)
+        m3 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 5, 2)
 
         balances = StockService.get_movement_running_balances([m3], sample_tenant.id)
 
@@ -101,10 +101,10 @@ class TestGetMovementRunningBalances:
         other_product = _add_product(db_session, sample_tenant.id, "Second Product")
         other_warehouse = _add_warehouse(db_session, sample_tenant.id, sample_branch.id, "Second Warehouse")
 
-        a1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 10, 0)
-        b1 = _add_movement(db_session, sample_tenant.id, other_product.id, other_warehouse.id, "in", 100, 1)
-        a2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "out", -3, 2)
-        b2 = _add_movement(db_session, sample_tenant.id, other_product.id, other_warehouse.id, "out", -50, 3)
+        a1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 10, 0)
+        b1 = _add_movement(db_session, sample_tenant.id, other_product.id, other_warehouse.id, "purchase", 100, 1)
+        a2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "sale", -3, 2)
+        b2 = _add_movement(db_session, sample_tenant.id, other_product.id, other_warehouse.id, "sale", -50, 3)
 
         balances = StockService.get_movement_running_balances([a1, b1, a2, b2], sample_tenant.id)
 
@@ -115,9 +115,9 @@ class TestGetMovementRunningBalances:
 
     def test_tenant_isolation_excludes_foreign_rows(self, db_session, sample_tenant, sample_product, sample_warehouse):
         other_tenant = _add_tenant(db_session)
-        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "in", 10, 0)
-        rogue = _add_movement(db_session, other_tenant.id, sample_product.id, sample_warehouse.id, "in", 1000, 1)
-        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "out", -3, 2)
+        m1 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 10, 0)
+        rogue = _add_movement(db_session, other_tenant.id, sample_product.id, sample_warehouse.id, "purchase", 1000, 1)
+        m2 = _add_movement(db_session, sample_tenant.id, sample_product.id, sample_warehouse.id, "sale", -3, 2)
 
         balances = StockService.get_movement_running_balances([m1, m2], sample_tenant.id)
 

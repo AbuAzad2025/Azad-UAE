@@ -405,17 +405,31 @@ class ReturnService:
                                     movement_unit_cost=cost_unit,
                                 )
                                 db.session.add(pch)
-                        except Exception as exc:
-                            # Re-raise OperationalError (lock failure) — never silently drop the lock.
-                            from sqlalchemy.exc import OperationalError
-
-                            if isinstance(exc, OperationalError):
-                                raise
+                        except Exception:
+                            # Fail loud. The COGS reversal post_or_fail sits
+                            # above this block, outside the try, so the GL side is
+                            # already guaranteed to have posted by the time we
+                            # get here. Only the inventory-cost side is inside.
+                            #
+                            # This used to swallow everything except
+                            # OperationalError and carry on, so the return
+                            # committed with its GL reversal applied while
+                            # ProductWarehouseCost kept the pre-return quantity
+                            # and value, and no ProductCostHistory row existed to
+                            # show it. Average cost then stayed wrong for every
+                            # later sale of that product, and the audit trail had
+                            # a permanent invisible hole.
+                            #
+                            # The OperationalError re-raise is kept but is now
+                            # redundant rather than special: every failure here
+                            # rolls back, including the lock failure it existed to
+                            # protect.
                             current_app.logger.exception(
                                 "MWAC update failed during return %s for product %s",
                                 getattr(product_return, "id", None),
                                 sale_line.product_id,
                             )
+                            raise
 
             if lines_added == 0:
                 raise ValueError("At least one returned item is required.")

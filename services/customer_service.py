@@ -36,7 +36,15 @@ class CustomerService:
             name_ar=name_ar or "",
             phone=phone or "",
             address=address or "",
-            email=email or "",
+            # NULL, not "". There is a UNIQUE (tenant_id, email) constraint, and
+            # PostgreSQL treats every NULL as distinct but "" == "". Coercing a
+            # missing email to the empty string meant the second customer created
+            # without one in a tenant hit
+            #   UniqueViolation: duplicate key value violates unique constraint
+            #   "uq_customers_tenant_email"
+            # The column is nullable, so None is both correct and what the
+            # constraint is designed to allow.
+            email=email or None,
             tax_number=tax_number or "",
             preferred_currency=preferred_currency,
             customer_type=customer_type,

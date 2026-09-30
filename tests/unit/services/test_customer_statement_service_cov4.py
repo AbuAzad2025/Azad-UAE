@@ -278,7 +278,13 @@ def test_sale_with_payments_populates_payments_data(
         total_amount=Decimal("100"),
         amount=Decimal("100"),
         amount_aed=Decimal("100"),
-        payment_status="partially_paid",
+        # "partial", not "partially_paid". Sale.recalculate_payment_status
+        # (models/sale.py:329-343) only ever assigns paid / pending_cheque /
+        # partial / unpaid, and ck_sales_payment_status allows exactly those
+        # four. "partially_paid" appears nowhere else in the codebase, so this
+        # was a value no code path can produce and the database correctly
+        # refused it.
+        payment_status="partial",
     )
     db_session.add(sale)
     db_session.flush()

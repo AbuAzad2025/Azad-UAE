@@ -327,19 +327,22 @@ class PayrollService:
 
         transaction.gl_entry_id = gl_entry.id
 
-        # Post monthly accruals (end-of-service provision + leave accrual)
-        try:
-            PayrollService.post_payroll_accruals(employee, month, year, user_id)
-        except Exception as accrual_err:
-            from flask import current_app
-
-            current_app.logger.warning(
-                "Payroll accrual posting failed for employee %s %s/%s: %s",
-                employee.name,
-                month,
-                year,
-                accrual_err,
-            )
+        # Post monthly accruals (end-of-service provision + leave accrual).
+        #
+        # Fail loud. This used to catch Exception, warn, and return the payroll
+        # as successful. The salary entry had already posted at :318 and
+        # transaction.gl_entry_id was set at :328, so the only remaining GL work
+        # was the accrual - Dr 6190 / Cr 2140 for end of service, Dr 6220 / Cr
+        # 2160 for leave. On failure the payroll expense hit the P&L with no
+        # matching liability, and because nothing on PayrollTransaction records
+        # that the accrual was skipped, the under-accrual repeated every month
+        # for the same employee and was indistinguishable from a correct run.
+        #
+        # It also quietly undid the D-C4 fix that moved payroll advances from
+        # 1160 to 1170. Raising rolls the payroll transaction back, so an
+        # employee is never paid without the provisions that make the balance
+        # sheet honest.
+        PayrollService.post_payroll_accruals(employee, month, year, user_id)
 
         try:
             db.session.flush()

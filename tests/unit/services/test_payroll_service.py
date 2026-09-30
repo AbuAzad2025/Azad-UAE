@@ -431,7 +431,7 @@ class TestProcessPayroll:
         ):
             PayrollService.process_payroll(emp.id, 9, 2026, 0, 0, 0, user_id=1)
 
-    def test_process_accrual_warning_logged(self, db_session, sample_branch, sample_tenant, app):
+    def test_process_accrual_failure_aborts_payroll(self, db_session, sample_branch, sample_tenant, app):
         emp = _employee(db_session, sample_branch, sample_tenant)
         gl_entry = MagicMock(id=5)
         with (
@@ -451,8 +451,18 @@ class TestProcessPayroll:
             ),
             patch("services.payroll_service.db.session.flush"),
         ):
-            txn = PayrollService.process_payroll(emp.id, 5, 2026, 0, 0, 0, user_id=1)
-        assert txn.gl_entry_id == 5
+            # A failed accrual must abort the payroll, not warn and carry on.
+            #
+            # This used to assert the opposite - that process_payroll still
+            # returned a transaction with gl_entry_id set after the accrual
+            # raised. That encoded the defect: the salary entry had posted at
+            # :318 and gl_entry_id was assigned at :328, so on accrual failure
+            # payroll expense hit the P&L with no matching liability for
+            # end-of-service or leave, nothing on the transaction recorded that
+            # the accrual was skipped, and the under-accrual repeated monthly
+            # for the same employee while looking like a correct run.
+            with pytest.raises(RuntimeError, match="accrual"):
+                PayrollService.process_payroll(emp.id, 5, 2026, 0, 0, 0, user_id=1)
 
 
 class TestAccrualCalculations:
