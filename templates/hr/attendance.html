@@ -14,11 +14,11 @@
     <div class="tab-pane {% if tab != 'departments' %}active{% endif %}" id="attendance">
       <div class="row mb-3">
         <div class="col">
-          <form method="POST" action="{{ url_for('hr.clock_in') }}" style="display:inline">
+          <form method="POST" action="{{ url_for('hr.clock_in') }}"class="d-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-success"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> {{ t('تسجيل') }} {{ t('Sign In') }}</button>
           </form>
-          <form method="POST" action="{{ url_for('hr.clock_out') }}" style="display:inline">
+          <form method="POST" action="{{ url_for('hr.clock_out') }}"class="d-inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-danger"><i class="fas fa-sign-out-alt" aria-hidden="true"></i> {{ t('تسجيل') }} {{ t('خروج') }}</button>
           </form>

@@ -50,7 +50,7 @@
   {% if not is_shop_logged_in %}
   <div class="ps-guest-banner"><i class="fas fa-eye" aria-hidden="true"></i> {{ t('guest_browse') }}</div>
   {% endif %}
-  <div id="ps-install-banner" class="ps-install-banner" style="display:none">
+  <div id="ps-install-banner"class="ps-install-banner d-none">
     <span>{{ t('install_app') }}</span>
     <button data-action="pwa-install" class="ps-btn ps-btn-primary ps-btn-sm">{{ t('install') }}</button>
     <button data-action="dismiss-banner" data-target=".ps-install-banner" class="ps-btn ps-btn-ghost ps-btn-sm">✕</button>
@@ -213,7 +213,7 @@
   <script src="{{ dist_url('js/shop-gallery.js') }}" defer></script>
   <script src="{{ dist_url('js/shop-quickview.js') }}" defer></script>
   {% block extra_js %}{% endblock %}
-<div id="ps-cookie-banner" class="ps-cookie-banner" style="display:none">
+<div id="ps-cookie-banner"class="ps-cookie-banner d-none">
   <p>{{ t('cookie_notice') }}</p>
   <button data-action="accept-cookies" data-banner="ps-cookie-banner" class="ps-btn ps-btn-sm">{{ t('cookie_accept') }}</button>
 </div>

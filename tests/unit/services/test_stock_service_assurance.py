@@ -1201,7 +1201,7 @@ class TestPostRetrospectiveCostAdjustment:
         )
         assert result < Decimal("0")
 
-    def test_post_failure_logged(self, mocker, app):
+    def test_post_failure_aborts(self, mocker, app):
         product = _product()
         warehouse = _warehouse()
         session = mocker.patch("services.stock_service.db.session")
@@ -1212,8 +1212,20 @@ class TestPostRetrospectiveCostAdjustment:
         mock_logger = mocker.patch("services.stock_service.current_app.logger")
         from services.stock_service import StockService
 
-        with app.app_context():
-            result = StockService._post_retrospective_cost_adjustment(
+        # A failed GL post must abort, not warn and carry on.
+        #
+        # This asserted `result > Decimal("0")` plus
+        # mock_logger.warning.assert_called_once() - it encoded the defect. The
+        # function caught Exception, logged a warning and returned the variance
+        # as though it had posted, while the caller at :1042 ignores the return
+        # value. So the receiving transaction committed: the receipt and its
+        # ProductWarehouseCost update went through, account 1140 was never
+        # credited and 5150 never debited, and the inventory sub-ledger diverged
+        # from the GL control account by the variance permanently with nothing
+        # recording that the post had failed. Failing loud rolls the enclosing
+        # transaction back instead.
+        with app.app_context(), pytest.raises(RuntimeError, match="gl fail"):
+            StockService._post_retrospective_cost_adjustment(
                 1,
                 1,
                 5,
@@ -1224,8 +1236,7 @@ class TestPostRetrospectiveCostAdjustment:
                 GLRef.PURCHASE,
                 5,
             )
-        assert result > Decimal("0")
-        mock_logger.warning.assert_called_once()
+        mock_logger.warning.assert_not_called()
 
 
 class TestReverseSale:

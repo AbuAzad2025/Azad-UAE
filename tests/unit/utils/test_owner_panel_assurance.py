@@ -228,16 +228,19 @@ class TestBuildSystemHealthSummary:
         assert "migration" in summary
 
     def test_migration_with_app(self, app, mocker):
-        fake_conn = MagicMock()
-        fake_conn.__enter__ = MagicMock(return_value=fake_conn)
-        fake_conn.__exit__ = MagicMock(return_value=False)
-        fake_result = MagicMock()
-        fake_result.scalar.return_value = "abc123"
-        fake_conn.execute.return_value = fake_result
-        fake_engine = MagicMock()
-        fake_engine.connect.return_value = fake_conn
-        mocker.patch("sqlalchemy.create_engine", return_value=fake_engine)
-        mocker.patch.dict("os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False)
+        # The function now reads through db.session rather than opening its own
+        # engine, because that leaked a connection pool per call. Stub the
+        # session's execute instead of create_engine.
+        #
+        # The probe SELECT 1 is issued first, so execute() has to answer twice:
+        # 1 for the liveness check and 1 for alembic_version.
+        from extensions import db
+
+        ok = MagicMock()
+        ok.scalar.return_value = 1
+        rev = MagicMock()
+        rev.scalar.return_value = "abc123"
+        mocker.patch.object(db.session, "execute", side_effect=[ok, rev])
         from utils.owner_panel import build_system_health_summary
 
         with app.app_context():
@@ -245,15 +248,20 @@ class TestBuildSystemHealthSummary:
         assert summary["migration"] == "abc123"
 
     def test_migration_exception(self, app, mocker):
-        # build_system_health_summary opens its own engine on DATABASE_URL and
-        # reads alembic_version. It never calls flask_migrate.current, so
-        # patching that used to leave the real database reachable - the test
-        # only ever passed because the test schema had no alembic_version table
-        # at all. Now that the suite builds the schema with Alembic, the real
-        # head comes back and the assertion fails. Patch the thing the function
-        # actually uses, the way the test above already does.
-        mocker.patch("sqlalchemy.create_engine", side_effect=RuntimeError("alembic"))
-        mocker.patch.dict("os.environ", {"DATABASE_URL": "postgresql://test/test"}, clear=False)
+        # build_system_health_summary reads alembic_version through db.session.
+        #
+        # It used to patch sqlalchemy.create_engine, which this test's own
+        # comment admits was never what the function called - the test passed
+        # only because the test schema had no alembic_version table. Building the
+        # schema with Alembic gave it a row, and the real head came back.
+        #
+        # It also opened its own engine per call and never disposed it, leaking
+        # a connection pool per render. Under a large run that exhausts
+        # max_connections and surfaces as unrelated order-dependent failures.
+        # Now it uses db.session, so this patches db.session.execute.
+        from extensions import db
+
+        mocker.patch.object(db.session, "execute", side_effect=RuntimeError("alembic"))
         from utils.owner_panel import build_system_health_summary
 
         with app.app_context():

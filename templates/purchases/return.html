@@ -21,7 +21,7 @@
             <table class="table table-hover">
               <thead>
                 <tr>
-                  <th style="width:40px"><input type="checkbox" id="selectAll" aria-label="{{ t('Select') }} {{ t('All') }}"></th>
+                  <thclass="w-40px"><input type="checkbox" id="selectAll" aria-label="{{ t('Select') }} {{ t('All') }}"></th>
                   <th>{{ t('Product') }}</th>
                   <th>{{ t('Purchased_Quantity') }}</th>
                   <th>{{ t('Quantity') }} {{ t('Return') }}</th>
@@ -36,7 +36,7 @@
                   <td>{{ line.product.name if line.product else '—' }}</td>
                   <td>{{ line.quantity }}</td>
                   <td>
-                    <input type="number" name="return_qty_{{ line.id }}" class="form-control form-control-sm return-qty" min="0" step="1" max="{{ line.quantity }}" value="{{ line.quantity }}" disabled style="width:90px" aria-label="{{ t('Quantity') }} {{ t('Return') }}">
+                    <input type="number" name="return_qty_{{ line.id }}"class="form-control form-control-sm return-qty w-90px" min="0" step="1" max="{{ line.quantity }}" value="{{ line.quantity }}" disabled aria-label="{{ t('Quantity') }} {{ t('Return') }}">
                   </td>
                   <td>{{ line.unit_cost }}</td>
                   <td class="line-total">{{ line.line_total }}</td>

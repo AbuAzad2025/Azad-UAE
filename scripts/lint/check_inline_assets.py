@@ -57,7 +57,11 @@ def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
             continue
         rel = path.relative_to(ROOT).as_posix()
 
+        scripts = _script_ranges(text)
         for match in _STYLE_ATTR.finditer(text):
+            if _in_ranges(scripts, match.start()):
+                # JavaScript building a style string, not a template attribute.
+                continue
             value = " ".join(match.group("val").split())
             if not value:
                 continue
@@ -73,6 +77,26 @@ def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
             script_files += 1
 
     return static_values, dynamic, static_total, (script_blocks, script_files)
+
+
+_SCRIPT_BODY = re.compile(r"<script(?![^>]*\bsrc\s*=)[^>]*>(.*?)</script>", re.S | re.I)
+
+
+def _script_ranges(text: str) -> list[tuple[int, int]]:
+    """Byte ranges covered by inline <script> bodies.
+
+    Without this the style regex matches JavaScript source, because JS assigns
+    to element.style and builds style strings by concatenation. Two hits in
+    partials/upgrade_banner.html were exactly that - "animation-delay:' + (...)"
+    is a string being built, not an attribute - and they were being counted as
+    inline styles and would have been "converted" by a mapper that treated them
+    as real.
+    """
+    return [(m.start(1), m.end(1)) for m in _SCRIPT_BODY.finditer(text)]
+
+
+def _in_ranges(ranges: list[tuple[int, int]], pos: int) -> bool:
+    return any(start <= pos < end for start, end in ranges)
 
 
 def _unlinked_utility_classes() -> list[tuple[str, str]]:

@@ -65,7 +65,7 @@
             </select>
             <small class="form-text text-muted">{{ t('select_sale_for_return') }}</small>
           </div>
-          <div class="form-group" id="returnLinesContainer" style="display:none;">
+          <divclass="form-group d-none" id="returnLinesContainer">
             <label>{{ t('return_items') }} <span class="text-danger">*</span></label>
             <table class="table table-sm" id="returnLinesTable">
               <thead>
@@ -84,7 +84,7 @@
             <label for="returnNotes">{{ t('notes') }}</label>
             <textarea name="notes" id="returnNotes" class="form-control" rows="2" placeholder="{{ t('notes_placeholder') }}"></textarea>
           </div>
-          <div class="alert alert-info" id="returnSummary" style="display:none;">
+          <divclass="alert alert-info d-none" id="returnSummary">
             <strong>{{ t('refund_amount') }}:</strong> <span id="returnTotalAmount">0.00</span> {{ tenant_default_currency or 'AED' }}
           </div>
         </div>

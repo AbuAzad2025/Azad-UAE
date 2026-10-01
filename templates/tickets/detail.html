@@ -54,19 +54,19 @@
       </form>
       <div class="mt-2">
         {% if ticket.status == 'open' or ticket.status == 'waiting' %}
-        <form method="POST" action="{{ url_for('tickets.resolve_ticket', ticket_id=ticket.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('tickets.resolve_ticket', ticket_id=ticket.id) }}"class="d-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check" aria-hidden="true"></i> {{ t('resolve') }}</button>
         </form>
         {% endif %}
         {% if ticket.status != 'closed' %}
-        <form method="POST" action="{{ url_for('tickets.close_ticket', ticket_id=ticket.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('tickets.close_ticket', ticket_id=ticket.id) }}"class="d-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-times" aria-hidden="true"></i> {{ t('close') }}</button>
         </form>
         {% endif %}
         {% if ticket.status == 'resolved' or ticket.status == 'closed' %}
-        <form method="POST" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}" style="display:inline">
+        <form method="POST" action="{{ url_for('tickets.reopen_ticket', ticket_id=ticket.id) }}"class="d-inline">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-sm btn-warning"><i class="fas fa-redo" aria-hidden="true"></i> {{ t('reopen') }}</button>
         </form>

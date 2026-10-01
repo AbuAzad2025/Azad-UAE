@@ -44,11 +44,11 @@
               <td>
                 {% if l.state == 'draft' %}
                 {% if current_user.has_permission('hr.manage') %}
-                <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}" style="display:inline">
+                <form method="POST" action="{{ url_for('hr.approve_leave', leave_id=l.id) }}"class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-success" aria-label="{{ t('Approve') }} {{ t('Leave') }}"><i class="fas fa-check" aria-hidden="true"></i></button>
                 </form>
-                <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}" style="display:inline">
+                <form method="POST" action="{{ url_for('hr.refuse_leave', leave_id=l.id) }}"class="d-inline">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button type="submit" class="btn btn-sm btn-danger" aria-label="{{ t('Refuse') }} {{ t('Leave') }}"><i class="fas fa-times" aria-hidden="true"></i></button>
                 </form>

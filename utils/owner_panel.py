@@ -267,14 +267,36 @@ def build_system_health_summary() -> dict:
         "predeploy_hint": "python tools/qa/predeploy_check.py --profile local",
     }
     try:
-        from sqlalchemy import create_engine, text
+        from sqlalchemy import text
 
-        url = os.environ.get("DATABASE_URL") or os.environ.get("SQLALCHEMY_DATABASE_URI")
-        if url:
-            with create_engine(url).connect() as conn:
-                rev = conn.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
-                summary["migration"] = str(rev) if rev else "head"
+        # The app's own engine, not a fresh one.
+        #
+        # This used to do `with create_engine(url).connect() as conn:`. The
+        # `with` closes the *connection*, never the *engine*, so every call left
+        # a live connection pool behind - one per owner-dashboard render. That
+        # accumulates: under the test suite it eventually exhausts PostgreSQL's
+        # max_connections, and the failures surface far away as the next query
+        # refusing to connect. Two order-dependent tests
+        # (test_owner_panel_assurance::test_migration_reports_the_real_head and
+        # test_maintenance_service::test_dry_run) failed only in large runs and
+        # passed alone, which is the signature of a pool leak rather than a
+        # logic error.
+        #
+        # A raw text() query bypasses the ORM and its tenant loader criteria
+        # either way, so db.session gives identical results without a second
+        # pool. db.session is also what the rest of this module uses.
+        from extensions import db
+
+        if db.session.execute(text("SELECT 1")).scalar() is not None:
+            rev = db.session.execute(text("SELECT version_num FROM alembic_version LIMIT 1")).scalar()
+            summary["migration"] = str(rev) if rev else "head"
     except Exception:
+        # Logged, then degrade. The dashboard should still render if the database
+        # is briefly unreachable; the log line is what makes the failure visible
+        # instead of a silent "check alembic" with no trace.
+        import logging
+
+        logging.getLogger(__name__).warning("System health summary: could not read migration state", exc_info=True)
         summary["migration"] = "check alembic"
 
     return summary

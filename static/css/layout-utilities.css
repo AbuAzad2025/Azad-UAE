@@ -37,3 +37,15 @@
 /* Same screen: the cart starts empty and is filled by script, so the width is
  * set from live data and stays inline. */
 .w-zero { width: 0; }
+
+/* ── pixel widths ──────────────────────────────────────────────────────── */
+/* ledger/account_statement.html and trial_balance.html sized numeric columns
+ * in pixels rather than percentages - a fixed-width money column, which is the
+ * right call for figures that must line up. owner/edit_table.html picked up
+ * one 200px too. */
+.w-100px { width: 100px; }
+.w-120px { width: 120px; }
+.w-150px { width: 150px; }
+.w-200px { width: 200px; }
+.w-40px { width: 40px; }
+.w-90px { width: 90px; }

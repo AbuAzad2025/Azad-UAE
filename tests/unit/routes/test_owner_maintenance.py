@@ -84,25 +84,46 @@ _CLEAN = "/owner/maintenance/cleanup-test-dbs"
 
 
 class TestCompanyAdminGuardContract:
-    """Real guard: anonymous 404, platform owner 404, seller 403, admin in."""
+    """Real guard: anonymous 404, non-owner 404, platform owner allowed in.
+
+    These endpoints are platform-global. rebuild-gl-tree rewrites the chart of
+    accounts for every active tenant, fix-cost-centers issues DDL, and
+    cleanup-test-dbs drops databases.
+
+    They were gated by @company_admin_required, which permits super_admin and
+    manager roles holding an active tenant while abort(404)-ing the actual
+    platform owner. So a single tenant manager could rewrite every tenant's
+    general ledger, and the owner could not reach their own tool. @owner_required
+    inverts that correctly, and these assertions follow.
+
+    tests/unit/routes/test_maintenance.py covers the same contract; this file
+    exists separately and previously encoded the old behaviour too.
+    """
 
     def test_anonymous_gets_404(self, client):
         assert client.post(_FIX, data={}).status_code == 404
 
-    def test_platform_owner_gets_404(self, platform_owner_client):
-        # company_admin_required explicitly rejects global owners (404).
-        assert platform_owner_client.post(_FIX, data={}).status_code == 404
+    def test_non_owner_gets_404(self, no_perm_client):
+        assert no_perm_client.post(_FIX, data={}).status_code == 404
 
-    def test_non_company_admin_gets_403(self, no_perm_client):
-        assert no_perm_client.post(_FIX, data={}).status_code == 403
-
-    def test_company_admin_passes_guard(self, auth_client, mocker):
+    def test_platform_owner_is_allowed(self, platform_owner_client, mocker):
         mocker.patch(
             "routes.owner.maintenance.fix_cost_centers_index_api",
             return_value={"dropped_index": True, "deleted_rows": 0},
         )
-        resp = auth_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
+        resp = platform_owner_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
         assert resp.status_code == 200
+
+    def test_company_admin_is_denied(self, auth_client, mocker):
+        # The regression this pins: a tenant-scoped company admin must not reach
+        # a platform-wide action.
+        called = mocker.patch(
+            "routes.owner.maintenance.fix_cost_centers_index_api",
+            return_value={"dropped_index": True, "deleted_rows": 0},
+        )
+        resp = auth_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
+        assert resp.status_code == 404
+        called.assert_not_called()
 
 
 class TestConfirmStringContract:
@@ -117,62 +138,62 @@ class TestConfirmStringContract:
             (_CLEAN, "CLEANUP_TEST_DBS"),
         ],
     )
-    def test_missing_or_wrong_confirm_returns_400(self, auth_client, url, confirm):
-        assert auth_client.post(url, data={}).status_code == 400
-        resp = auth_client.post(url, data={"confirm": f"{confirm}_WRONG"})
+    def test_missing_or_wrong_confirm_returns_400(self, platform_owner_client, url, confirm):
+        assert platform_owner_client.post(url, data={}).status_code == 400
+        resp = platform_owner_client.post(url, data={"confirm": f"{confirm}_WRONG"})
         assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
 
 class TestHappyPaths:
-    def test_fix_cost_centers(self, auth_client, mocker):
+    def test_fix_cost_centers(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.fix_cost_centers_index_api",
             return_value={"dropped_index": True, "deleted_rows": 2},
         )
-        resp = auth_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
+        resp = platform_owner_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
         service.assert_called_once_with()
 
-    def test_rebuild_gl_tree_passes_cleanup_flag(self, auth_client, mocker):
+    def test_rebuild_gl_tree_passes_cleanup_flag(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.rebuild_gl_tree_api",
             return_value={"tenants": [{"created": 3, "updated": 1}]},
         )
-        resp = auth_client.post(_GL, data={"confirm": "REBUILD_GL_TREE", "cleanup_extra": "on"})
+        resp = platform_owner_client.post(_GL, data={"confirm": "REBUILD_GL_TREE", "cleanup_extra": "on"})
         assert resp.status_code == 200
         data = resp.get_json()["data"]
         assert resp.get_json()["success"] is True
         assert data["result"]["tenants"][0]["created"] == 3
         service.assert_called_once_with(cleanup_extra=True)
 
-    def test_fix_default_tenant_dry_run(self, auth_client, mocker):
+    def test_fix_default_tenant_dry_run(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.fix_default_tenant_metadata_api",
             return_value={"patched": ["tenants.x"], "action_needed": True},
         )
-        resp = auth_client.post(_TENANT, data={"confirm": "FIX_DEFAULT_TENANT", "dry_run": "on"})
+        resp = platform_owner_client.post(_TENANT, data={"confirm": "FIX_DEFAULT_TENANT", "dry_run": "on"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
         service.assert_called_once_with(dry_run=True)
 
-    def test_regenerate_default_backup(self, auth_client, mocker):
+    def test_regenerate_default_backup(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.regenerate_default_backup_api",
             return_value="default_tenant.sql.gz",
         )
-        resp = auth_client.post(_BACKUP, data={"confirm": "REGENERATE_DEFAULT_BACKUP"})
+        resp = platform_owner_client.post(_BACKUP, data={"confirm": "REGENERATE_DEFAULT_BACKUP"})
         assert resp.status_code == 200
         assert resp.get_json()["success"] is True
         service.assert_called_once_with(dry_run=False)
 
-    def test_run_full_maintenance_dry_run(self, auth_client, mocker):
+    def test_run_full_maintenance_dry_run(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.run_default_tenant_maintenance_api",
             return_value={"patched": [], "backup_regenerated": None},
         )
-        resp = auth_client.post(
+        resp = platform_owner_client.post(
             _FULL,
             data={"confirm": "RUN_DEFAULT_TENANT_MAINTENANCE", "dry_run": "on"},
         )
@@ -180,12 +201,12 @@ class TestHappyPaths:
         assert resp.get_json()["success"] is True
         service.assert_called_once_with(dry_run=True)
 
-    def test_cleanup_test_dbs(self, auth_client, mocker):
+    def test_cleanup_test_dbs(self, platform_owner_client, mocker):
         service = mocker.patch(
             "routes.owner.maintenance.cleanup_test_databases_api",
             return_value={"dropped": ["azad_repro"], "failed": []},
         )
-        resp = auth_client.post(_CLEAN, data={"confirm": "CLEANUP_TEST_DBS"})
+        resp = platform_owner_client.post(_CLEAN, data={"confirm": "CLEANUP_TEST_DBS"})
         assert resp.status_code == 200
         data = resp.get_json()["data"]
         assert resp.get_json()["success"] is True
@@ -194,11 +215,11 @@ class TestHappyPaths:
 
 
 class TestFailurePath:
-    def test_service_exception_returns_500(self, auth_client, mocker):
+    def test_service_exception_returns_500(self, platform_owner_client, mocker):
         mocker.patch(
             "routes.owner.maintenance.fix_cost_centers_index_api",
             side_effect=RuntimeError("db offline"),
         )
-        resp = auth_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
+        resp = platform_owner_client.post(_FIX, data={"confirm": "FIX_COST_CENTERS"})
         assert resp.status_code == 500
         assert resp.get_json()["success"] is False

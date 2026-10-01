@@ -27,7 +27,7 @@
     <input type="search" name="q" value="{{ search or '' }}" placeholder="{{ t('search') }}" aria-label="{{ t('search') }}" data-search-autocomplete autocomplete="off">
     <button type="submit" aria-label="{{ t('search') }}"><i class="fas fa-search" aria-hidden="true"></i></button>
   </form>
-  <div class="ps-autocomplete-results" id="psAutocomplete" style="display:none"></div>
+  <divclass="ps-autocomplete-results d-none" id="psAutocomplete"></div>
   <form class="needs-validation ps-toolbar-row" method="get" action="{{ url_for('shop.catalog', slug=store.store_slug) }}">
     {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
     {% if category_id %}<input type="hidden" name="category" value="{{ category_id }}">{% endif %}

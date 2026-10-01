@@ -11,6 +11,57 @@ from sqlalchemy import MetaData, Table, create_engine, func, select, text, updat
 from utils.safe_sql import assert_known_column
 
 
+def _maintenance_engine(*, autocommit: bool = False):
+    """A short-lived engine for out-of-band maintenance DDL, disposed on exit.
+
+    These operations - drop an index, delete orphaned rows, patch the default
+    tenant, drop stale test databases - run outside the request session because
+    they issue DDL or target a different database, so they cannot borrow
+    db.engine.
+
+    Each of them used to call create_engine() inline and never dispose it.
+    ``engine.begin()`` closes the *connection*; the *pool* survives. So every
+    call left a live pool behind, and four functions invoked repeatedly
+    accumulate until PostgreSQL refuses new connections - at which point the
+    failure lands in whatever ran next rather than where it started. That is
+    the signature of an order-dependent failure, and it is why
+    test_maintenance_service.py passed alone and failed in a large selection.
+
+    Used as ``with _maintenance_engine() as engine:`` so disposal also happens on
+    the exception path.
+
+    autocommit=True additionally strips the psycopg2 driver prefix and sets
+    AUTOCOMMIT isolation. Only DROP DATABASE needs that - it cannot run inside a
+    transaction block - so only the dropdatabases path asks for it.
+
+    create_engine is resolved at module scope, not imported inside the function,
+    so that ``mocker.patch.object(maintenance_service, "create_engine")``
+    actually intercepts it. A function-local import cannot be patched that way,
+    which would leave cleanup_test_databases running its real
+    ``DROP DATABASE`` against whatever DATABASE_URL the environment carries -
+    during a test run that is the test database itself.
+    """
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _cm():
+        url = os.environ.get(
+            "DATABASE_URL",
+            "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
+        )
+        kwargs = {}
+        if autocommit:
+            url = url.replace("postgresql+psycopg2", "postgresql")
+            kwargs["isolation_level"] = "AUTOCOMMIT"
+        engine = create_engine(url, **kwargs)
+        try:
+            yield engine
+        finally:
+            engine.dispose()
+
+    return _cm()
+
+
 class MaintenanceService:
     """Database maintenance operations for owner dashboard."""
 
@@ -26,27 +77,22 @@ class MaintenanceService:
         Returns:
             dict: Result with keys 'dropped_index' (bool), 'deleted_rows' (int)
         """
-        engine = create_engine(
-            os.environ.get(
-                "DATABASE_URL",
-                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
-            )
-        )
-        result: dict = {"dropped_index": False, "deleted_rows": 0}
-        with engine.begin() as conn:
-            # Drop old unique index on code
-            try:
-                conn.execute(text("DROP INDEX IF EXISTS ix_cost_centers_code"))
-                result["dropped_index"] = True
-                print("✅ Dropped old unique index on code")
-            except Exception as e:
-                print(f"Note: {e}")
+        with _maintenance_engine() as engine:
+            result: dict = {"dropped_index": False, "deleted_rows": 0}
+            with engine.begin() as conn:
+                # Drop old unique index on code
+                try:
+                    conn.execute(text("DROP INDEX IF EXISTS ix_cost_centers_code"))
+                    result["dropped_index"] = True
+                    print("✅ Dropped old unique index on code")
+                except Exception as e:
+                    print(f"Note: {e}")
 
-            # Delete existing cost centers (they have NULL tenant_id)
-            r = conn.execute(text("DELETE FROM cost_centers WHERE tenant_id IS NULL"))
-            result["deleted_rows"] = r.rowcount
-            print("✅ Deleted old cost centers with NULL tenant_id")
-        return result
+                # Delete existing cost centers (they have NULL tenant_id)
+                r = conn.execute(text("DELETE FROM cost_centers WHERE tenant_id IS NULL"))
+                result["deleted_rows"] = r.rowcount
+                print("✅ Deleted old cost centers with NULL tenant_id")
+            return result
 
     @staticmethod
     def rebuild_gl_tree(cleanup_extra=False):
@@ -198,38 +244,39 @@ class MaintenanceService:
         Returns:
             list: List of columns that were/would be patched
         """
-        engine = create_engine(
-            os.environ.get(
-                "DATABASE_URL",
-                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
-            )
-        )
-        fixed = []
-        with engine.begin() as conn:
-            cols = conn.execute(
-                text(
-                    "SELECT column_name, data_type, column_default FROM "
-                    "information_schema.columns WHERE table_schema='public' "
-                    "AND table_name='tenants' AND is_nullable='NO'"
-                )
-            ).fetchall()
-            tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
-            for name, dtype, default in cols:
-                if default is not None and str(default).upper() != "NULL":
-                    continue  # DB will supply the default on insert/update
-                assert_known_column(engine, "tenants", name)
-                cur = conn.execute(select(tenants_tbl.c[name]).where(tenants_tbl.c.slug == "default").limit(1)).scalar()
-                if cur is None:
-                    val = MaintenanceService._default_for_type(dtype)
-                    fixed.append(f"tenants.{name} <- {val!r} ({dtype})")
-                    if not dry_run:
-                        if isinstance(val, str) and val == "now()":
-                            conn.execute(
-                                update(tenants_tbl).where(tenants_tbl.c.slug == "default").values({name: func.now()})
-                            )
-                        else:
-                            conn.execute(update(tenants_tbl).where(tenants_tbl.c.slug == "default").values({name: val}))
-        return fixed
+        with _maintenance_engine() as engine:
+            fixed = []
+            with engine.begin() as conn:
+                cols = conn.execute(
+                    text(
+                        "SELECT column_name, data_type, column_default FROM "
+                        "information_schema.columns WHERE table_schema='public' "
+                        "AND table_name='tenants' AND is_nullable='NO'"
+                    )
+                ).fetchall()
+                tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
+                for name, dtype, default in cols:
+                    if default is not None and str(default).upper() != "NULL":
+                        continue  # DB will supply the default on insert/update
+                    assert_known_column(engine, "tenants", name)
+                    cur = conn.execute(
+                        select(tenants_tbl.c[name]).where(tenants_tbl.c.slug == "default").limit(1)
+                    ).scalar()
+                    if cur is None:
+                        val = MaintenanceService._default_for_type(dtype)
+                        fixed.append(f"tenants.{name} <- {val!r} ({dtype})")
+                        if not dry_run:
+                            if isinstance(val, str) and val == "now()":
+                                conn.execute(
+                                    update(tenants_tbl)
+                                    .where(tenants_tbl.c.slug == "default")
+                                    .values({name: func.now()})
+                                )
+                            else:
+                                conn.execute(
+                                    update(tenants_tbl).where(tenants_tbl.c.slug == "default").values({name: val})
+                                )
+            return fixed
 
     @staticmethod
     def regenerate_default_backup(dry_run: bool = False) -> str:
@@ -274,39 +321,33 @@ class MaintenanceService:
                 - 'conflicts': list of conflicts
         """
 
-        engine = create_engine(
-            os.environ.get(
-                "DATABASE_URL",
-                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
-            )
-        )
+        with _maintenance_engine() as engine:
+            # Check for conflicts
+            conflicts = []
+            with engine.connect() as conn:
+                dup_slug = conn.execute(
+                    text(
+                        "SELECT count(*) FROM tenants WHERE slug = 'default' "
+                        "AND id <> (SELECT id FROM tenants WHERE slug = 'default' LIMIT 1)"
+                    )
+                ).scalar()
+                if dup_slug:
+                    conflicts.append(f"{dup_slug} other tenant(s) also use slug 'default'")
 
-        # Check for conflicts
-        conflicts = []
-        with engine.connect() as conn:
-            dup_slug = conn.execute(
-                text(
-                    "SELECT count(*) FROM tenants WHERE slug = 'default' "
-                    "AND id <> (SELECT id FROM tenants WHERE slug = 'default' LIMIT 1)"
-                )
-            ).scalar()
-            if dup_slug:
-                conflicts.append(f"{dup_slug} other tenant(s) also use slug 'default'")
+            fixed = MaintenanceService.fix_default_tenant_metadata(dry_run=dry_run)
 
-        fixed = MaintenanceService.fix_default_tenant_metadata(dry_run=dry_run)
+            backup_fn = None
+            if not dry_run:
+                backup_fn = MaintenanceService.regenerate_default_backup(dry_run=dry_run)
 
-        backup_fn = None
-        if not dry_run:
-            backup_fn = MaintenanceService.regenerate_default_backup(dry_run=dry_run)
+            return {
+                "patched": fixed,
+                "backup_regenerated": backup_fn,
+                "action_needed": len(fixed) > 0 or backup_fn is not None,
+                "conflicts": conflicts,
+            }
 
-        return {
-            "patched": fixed,
-            "backup_regenerated": backup_fn,
-            "action_needed": len(fixed) > 0 or backup_fn is not None,
-            "conflicts": conflicts,
-        }
-
-    # Test Database Cleanup
+        # Test Database Cleanup
 
     STALE_TEST_DATABASES = [
         "azadexa_dev",
@@ -335,37 +376,30 @@ class MaintenanceService:
                 - 'failed': list of (db, error) tuples
                 - 'remaining': list of remaining azad databases
         """
-        engine = create_engine(
-            os.environ.get(
-                "DATABASE_URL",
-                "postgresql+psycopg2://postgres:123@localhost:5432/azad_uae",
-            ).replace("postgresql+psycopg2", "postgresql"),
-            isolation_level="AUTOCOMMIT",
-        )
-        dropped = []
-        failed = []
+        with _maintenance_engine(autocommit=True) as engine:
+            dropped = []
+            failed = []
 
-        with engine.connect() as conn:
-            for db in MaintenanceService.STALE_TEST_DATABASES:
-                try:
-                    if not dry_run:
-                        conn.execute(text(f"DROP DATABASE IF EXISTS {db} WITH (FORCE)"))
-                    dropped.append(db)
-                except Exception as e:
-                    failed.append((db, str(e)))
+            with engine.connect() as conn:
+                for db in MaintenanceService.STALE_TEST_DATABASES:
+                    try:
+                        if not dry_run:
+                            conn.execute(text(f"DROP DATABASE IF EXISTS {db} WITH (FORCE)"))
+                        dropped.append(db)
+                    except Exception as e:
+                        failed.append((db, str(e)))
 
-            # List remaining azad databases
-            result = conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")).fetchall()
-            remaining = [r[0] for r in result]
+                # List remaining azad databases
+                result = conn.execute(text("SELECT datname FROM pg_database WHERE datname LIKE '%azad%'")).fetchall()
+                remaining = [r[0] for r in result]
 
-        return {
-            "dropped": dropped,
-            "failed": failed,
-            "remaining": remaining,
-        }
+            return {
+                "dropped": dropped,
+                "failed": failed,
+                "remaining": remaining,
+            }
 
-
-# Entry points for dashboard API
+    # Entry points for dashboard API
 
 
 def fix_cost_centers_index_api():
