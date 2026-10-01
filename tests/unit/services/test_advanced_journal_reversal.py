@@ -33,6 +33,26 @@ from sqlalchemy import text
 from extensions import db
 
 
+@pytest.fixture(autouse=True)
+def _hold_active_tenant(sample_gl_accounts, sample_owner, mocker):
+    """Pin the tenant for the whole test.
+
+    Three separate call sites each resolve it independently - create_manual_entry,
+    advanced_journal_manager._entry_or_404 via active_tenant_id(), and
+    post_or_fail via gl_helpers.resolve_tenant_id(). resolve_tenant_id correctly
+    refuses to guess when more than one active tenant exists, which is always the
+    case in a shared test database, so without this the tests fail on a count of
+    ambient tenants rather than on anything they assert.
+
+    Patching the two resolvers is more robust than set_active_tenant(), which
+    writes to the session and is not visible from a bare app_context.
+    """
+    tenant = sample_gl_accounts
+    mocker.patch("services.gl_service.gl_helpers.resolve_tenant_id", return_value=tenant.id)
+    mocker.patch("utils.gl_tenant.active_tenant_id", return_value=tenant.id)
+    yield
+
+
 def _balance(account_id):
     """Account balance via the real code path that filters status == 'posted'."""
     from models.gl import GLAccount
@@ -68,7 +88,6 @@ def _two_accounts(tenant_id):
 
 def _post(tenant_id, debit_row, credit_row, amount: str, description: str, owner=None):
     from services.advanced_journal_manager import AdvancedJournalEntryManager
-    from utils.tenanting import set_active_tenant
 
     # create_manual_entry resolves the tenant itself and refuses to guess:
     #   ValueError: resolve_tenant_id failed: 12 active tenants found.
@@ -80,8 +99,7 @@ def _post(tenant_id, debit_row, credit_row, amount: str, description: str, owner
     # hides. The test has to name its tenant rather than inherit one.
     # set_active_tenant rejects a tenant id without an authenticated platform owner
     # ("Unauthenticated users cannot set tenant_id"), so the owner is threaded in.
-    set_active_tenant(tenant_id, user=owner)
-    try:
+    if True:
         entry = AdvancedJournalEntryManager.create_entry_with_validation(
             description=description,
             lines=[
@@ -105,8 +123,6 @@ def _post(tenant_id, debit_row, credit_row, amount: str, description: str, owner
         AdvancedJournalEntryManager.post_entry(entry.id, posted_by=1, commit=False)
         db.session.flush()
         return entry
-    finally:
-        set_active_tenant(None)
 
 
 def test_reversal_keeps_the_original_counted(app, db_session, sample_gl_accounts, sample_owner):

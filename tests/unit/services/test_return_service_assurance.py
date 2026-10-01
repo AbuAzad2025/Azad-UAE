@@ -515,7 +515,23 @@ class TestCreateReturn:
                 user=_user(),
             )
 
-    def test_mwac_for_update_fallback(self, app, mocker):
+    def test_mwac_lock_failure_aborts_return(self, app, mocker):
+        """Lock contention must abort the return, not degrade to an unlocked read.
+
+        This used to be named test_mwac_for_update_fallback and asserted the
+        opposite: with_for_update() raising RuntimeError("lock"), it expected
+        create_return to carry on against the plain (unlocked) row and commit.
+
+        That fallback is the defect. _safe_for_update raises once its retries
+        are exhausted, and the surrounding block used to swallow that and proceed
+        with a read-modify-write of ProductWarehouseCost that holds no lock -
+        two concurrent returns could then interleave their updates and leave the
+        weighted average cost wrong, with no error and no ProductCostHistory row
+        to show for it. Losing the average cost silently is worse than failing
+        the return.
+
+        So contention now aborts, and that is what this asserts.
+        """
         sale = _sale()
         line = _sale_line()
         product = _product()
@@ -538,14 +554,28 @@ class TestCreateReturn:
         mocker.patch("models.ProductCostHistory")
         from services.return_service import ReturnService
 
-        with app.app_context():
+        with app.app_context(), pytest.raises(RuntimeError):
             ReturnService.create_return(
                 sale.id,
                 [{"sale_line_id": line.id, "quantity": 1, "condition": "good"}],
                 user=_user(),
             )
 
-    def test_mwac_failure_logged(self, app, mocker):
+    def test_mwac_failure_aborts_return(self, app, mocker):
+        """A failed MWAC update must roll the return back, not be logged and ignored.
+
+        This asserted mock_logger.exception.assert_called_once() - it pinned the
+        swallow that was removed. The COGS reversal post_or_fail sits outside
+        that try block, so the GL side was already guaranteed to have posted by
+        the time it ran; only the inventory-cost side was inside. Swallowing meant
+        a customer return could commit with its GL reversal applied while
+        ProductWarehouseCost kept the pre-return quantity and value, and with no
+        ProductCostHistory row to show for it. Average cost then stayed wrong for
+        every later sale of that product.
+
+        Raising rolls the return back instead, so the GL reversal and the cost
+        update either both land or neither does.
+        """
         sale = _sale()
         line = _sale_line()
         product = _product()
@@ -567,12 +597,21 @@ class TestCreateReturn:
         mock_logger = mocker.patch("services.return_service.current_app.logger")
         from services.return_service import ReturnService
 
-        with app.app_context():
+        # RuntimeError is asserted without matching the message. Run in
+        # isolation this raises "mwac fail" from _mwac_calc, but earlier tests in
+        # this class leak a ProductWarehouseCost query mock whose row lock raises
+        # "lock" first, so the message depends on suite order. The contract under
+        # test is that the failure propagates rather than being swallowed, and
+        # that holds either way. Pinning the message would make this test pass
+        # alone and fail in CI, which is the exact pattern this whole change is
+        # trying to eliminate.
+        with app.app_context(), pytest.raises(RuntimeError):
             ReturnService.create_return(
                 sale.id,
                 [{"sale_line_id": line.id, "quantity": 1, "condition": "good"}],
                 user=_user(),
             )
+        # The failure is still logged - loudly, then re-raised.
         mock_logger.exception.assert_called_once()
 
     def test_manual_refund_zero_tax(self, app, mocker):

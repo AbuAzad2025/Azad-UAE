@@ -43,7 +43,7 @@ def _is_dynamic(value: str) -> bool:
     return bool(_OPEN_JINJA.search(value))
 
 
-def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
+def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int, int]:
     static_values: collections.Counter = collections.Counter()
     dynamic: list[tuple[str, str]] = []
     static_total = 0
@@ -71,12 +71,14 @@ def scan() -> tuple[collections.Counter, list[tuple[str, str]], int, int]:
                 static_values[value] += 1
                 static_total += 1
 
-        blocks = len(_SCRIPT_BLOCK.findall(text))
-        if blocks:
-            script_blocks += blocks
+        # One count per inline <script> block, and one file per template that
+        # has any. _script_ranges yields one entry per block.
+        script_ranges = _script_ranges(text)
+        if script_ranges:
+            script_blocks += len(script_ranges)
             script_files += 1
 
-    return static_values, dynamic, static_total, (script_blocks, script_files)
+    return static_values, dynamic, static_total, script_blocks, script_files
 
 
 _SCRIPT_BODY = re.compile(r"<script(?![^>]*\bsrc\s*=)[^>]*>(.*?)</script>", re.S | re.I)
@@ -147,7 +149,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    static_values, dynamic, static_total, (script_blocks, script_files) = scan()
+    static_values, dynamic, static_total, script_blocks, script_files = scan()
     unlinked = _unlinked_utility_classes()
 
     print("Inline-style / inline-script inventory")
