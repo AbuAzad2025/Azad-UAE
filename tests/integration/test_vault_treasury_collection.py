@@ -225,4 +225,14 @@ class TestVaultDashboardSplitReal:
             resp = client.get("/payment-vault/dashboard")
             assert resp.status_code == 200
             body = resp.data.decode("utf-8", "replace")
-            assert "Accrued vs Collected" in body
+
+            # Assert through the catalogue rather than against a literal. The
+            # heading is `_('Platform Treasury — Accrued vs Collected')`, so
+            # under the Arabic session this suite runs in, the rendered page
+            # correctly contains the Arabic string and not the English one.
+            # Asserting the raw English phrase tested the locale, not the
+            # feature - it fails in CI, and would pass locally whenever a local
+            # run happened to default to English.
+            from utils.i18n import t
+
+            assert t("Platform Treasury — Accrued vs Collected") in body
