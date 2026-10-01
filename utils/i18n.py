@@ -44,6 +44,13 @@ def is_rtl():
 
 
 TRANSLATIONS = {
+    # Login brand strapline. It sat hardcoded in English directly beneath an
+    # already-translated Arabic brand title, so the Arabic page showed one line
+    # of English between two Arabic ones.
+    "AZAD Company — Smart Systems & ERP": {
+        "ar": "شركة أزاد — أنظمة ذكية وإدارة موارد",
+        "en": "AZAD Company — Smart Systems & ERP",
+    },
     "Back to Customers": {"ar": "العودة للعملاء", "en": "Back to Customers"},
     "Accounts Tree": {"ar": "شجرة الحسابات", "en": "Accounts Tree"},
     "Page Not Found": {"ar": "الصفحة غير موجودة", "en": "Page Not Found"},
