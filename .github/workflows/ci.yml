@@ -387,6 +387,9 @@ jobs:
       - name: Service side-effect gate (no schema/connection management in services)
         run: python scripts/lint/check_service_side_effects.py
 
+      - name: Tag shape gate (no <pclass= / <tdclass= mangling)
+        run: python scripts/lint/check_tag_shape.py
+
       - name: Accessibility gate (every form control has an accessible name)
         run: python scripts/lint/check_a11y_labels.py
 

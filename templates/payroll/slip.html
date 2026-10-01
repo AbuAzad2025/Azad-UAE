@@ -44,7 +44,7 @@
     <div class="header">
       {% include 'partials/print_tenant_logo.html' %}
       <div class="company-name">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
-      <divclass="p-faint-90">
+      <div class="p-faint-90">
         {{ settings.address_ar or tenant_address or '' }} | <i class="fas fa-phone" aria-hidden="true"></i> {{ settings.phone_1 or tenant_phone or '' }}
       </div>
     </div>
@@ -71,10 +71,10 @@
           <tr><th>#</th><th>{{ _('البند') }}</th><th>{{ _('المبلغ') }}</th></tr>
         </thead>
         <tbody>
-          <tr><td>1</td><td>{{ _('الراتب الأساسي') }}</td><tdclass="p-center-bold">{{ format_currency(slip.basic_amount) }}</td></tr>
-          <tr><td>2</td><td>{{ _('البدلات والإضافي') }}</td><tdclass="p-status-ok">{{ format_currency(slip.allowances) }}</td></tr>
-          <tr><td>3</td><td>{{ _('الخصومات') }}</td><tdclass="p-status-bad">({{ format_currency(slip.deductions) }})</td></tr>
-          <tr><td>4</td><td>{{ _('السلف المستردة') }}</td><tdclass="p-status-warn">({{ format_currency(slip.advances_deducted) }})</td></tr>
+          <tr><td>1</td><td>{{ _('الراتب الأساسي') }}</td><td class="p-center-bold">{{ format_currency(slip.basic_amount) }}</td></tr>
+          <tr><td>2</td><td>{{ _('البدلات والإضافي') }}</td><td class="p-status-ok">{{ format_currency(slip.allowances) }}</td></tr>
+          <tr><td>3</td><td>{{ _('الخصومات') }}</td><td class="p-status-bad">({{ format_currency(slip.deductions) }})</td></tr>
+          <tr><td>4</td><td>{{ _('السلف المستردة') }}</td><td class="p-status-warn">({{ format_currency(slip.advances_deducted) }})</td></tr>
         </tbody>
         <tfoot>
           <tr class="net-row">
@@ -86,7 +86,7 @@
       </div>
 
       {% if slip.notes %}
-      <divclass="p-notice p-notice-12 p-notice-warn">
+      <div class="p-notice p-notice-12 p-notice-warn">
         <p class="p-fs-9 p-warn p-m-0"><i class="fas fa-comment" aria-hidden="true"></i> {{ slip.notes }}</p>
       </div>
       {% endif %}

@@ -33,7 +33,7 @@
       const barClass = u.percent >= 100 ? 'bg-danger' : (u.percent >= 90 ? 'bg-warning' : 'bg-info');
       html += '<div class="col-md-4 col-sm-6 mb-1 az-enter" style="animation-delay:' + (Object.keys(usage).indexOf(key) * 0.05) + 's">' +
         '<small class="text-muted">' + key + ': ' + u.current + '/' + u.max + '</small>' +
-        '<divclass="progress h-6">' +
+        '<div class="progress h-6">' +
         '<div class="progress-bar ' + barClass + '" style="width:' + u.percent + '%;transition:width 1s ease-out"></div>' +
         '</div></div>';
     }
