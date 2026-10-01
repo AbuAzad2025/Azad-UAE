@@ -2424,6 +2424,7 @@ html[dir="rtl"] .azad-tier-features li {
 
 .lp-center { text-align: center; }
 .lp-mb-20 { margin: 0 0 20px; }
+
 .lp-meta-row {
   display: flex;
   justify-content: space-between;
@@ -2432,6 +2433,7 @@ html[dir="rtl"] .azad-tier-features li {
   margin-bottom: 20px;
 }
 .lp-lead { font-size: 1.08rem; margin: 0 0 10px; }
+
 .lp-feature-title {
   font-size: 0.88rem;
   font-weight: 700;
@@ -2466,11 +2468,13 @@ html[dir="rtl"] .azad-tier-features li {
   border-color: rgba(14, 165, 233, 0.15);
   color: var(--azad-cyan);
 }
+
 .lp-card-success {
   border-color: rgba(16, 185, 129, 0.15);
   background: rgba(16, 185, 129, 0.06);
   color: var(--azad-success);
 }
+
 .lp-panel-gold {
   margin-top: 16px;
   padding: 14px;
@@ -2485,6 +2489,7 @@ html[dir="rtl"] .azad-tier-features li {
 .lp-grad-top {
   background: linear-gradient(180deg, rgba(15, 23, 36, 0.3) 0%, transparent 50%, rgba(15, 23, 36, 0.3) 100%);
 }
+
 .lp-grad-gold {
   background: linear-gradient(180deg, transparent 0%, rgba(212, 160, 23, 0.02) 50%, transparent 100%);
 }

@@ -531,7 +531,13 @@ jobs:
           output: 'trivy-results.sarif'
           severity: 'HIGH,CRITICAL'
           exit-code: '1'
+      # `if: always()` is load-bearing. exit-code: '1' above fails the step, which
+      # aborts the job, so with the default `if: success()` this upload never ran
+      # and the scan destroyed its own findings. Run 36824832100 failed repo-security
+      # with no retrievable SARIF for exactly that reason - a security gate that
+      # cannot tell you what it found.
       - name: Upload Trivy results to GitHub Security
+        if: always()
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'

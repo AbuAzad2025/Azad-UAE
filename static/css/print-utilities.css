@@ -53,6 +53,7 @@
 .p-w-full { width: 100%; }
 
 /* ── composite blocks ─────────────────────────────────────────────────── */
+
 /* The signature/divider line: a 2px rule, 150px wide, used to close a
  * document. Appeared three times with two different heights. */
 .p-sig {
@@ -61,6 +62,7 @@
   padding-top: 5px;
   font-size: 9px;
 }
+
 .p-sig-tall {
   border-top: 2px solid #333;
   width: 150px;
@@ -75,6 +77,7 @@
   background: #fff3cd;
   border-radius: 4px;
 }
+
 .p-alert-info {
   margin-top: 10px;
   padding: 8px;

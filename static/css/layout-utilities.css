@@ -30,15 +30,19 @@
 .w-100 { width: 100%; }
 
 /* ── fixed heights ─────────────────────────────────────────────────── */
+
 /* upgrade_banner.html: the 6px progress track. */
 .h-6 { height: 6px; }
+
 /* pos/customer_display.html: the cart row height on the customer-facing screen. */
 .h-30 { height: 30px; }
+
 /* Same screen: the cart starts empty and is filled by script, so the width is
  * set from live data and stays inline. */
 .w-zero { width: 0; }
 
 /* ── pixel widths ──────────────────────────────────────────────────────── */
+
 /* ledger/account_statement.html and trial_balance.html sized numeric columns
  * in pixels rather than percentages - a fixed-width money column, which is the
  * right call for figures that must line up. owner/edit_table.html picked up
