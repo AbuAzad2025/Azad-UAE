@@ -118,7 +118,7 @@ psutil>=5.9.8,<8
 # Misc
 packaging>=26.3,<27
 certifi==2026.7.22
-urllib3==2.7.0
+urllib3==2.8.0
 six==1.17.0
 
 # AI native tool-calling argument validation (ai_knowledge/tool_schemas.py)
