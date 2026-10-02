@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import pathlib
-import sys
+import re
 
 REPORT_DIR = pathlib.Path(".lighthouseci")
 CONFIG = pathlib.Path("scripts/lighthouserc.json")
@@ -25,22 +25,106 @@ CONFIG = pathlib.Path("scripts/lighthouserc.json")
 SANITY_FLOOR = 0.5
 
 
-def _gate_thresholds() -> dict[str, float]:
-    """Pull minScore per category from the lhci assert config."""
+def _gate_thresholds() -> tuple[list[tuple[str, dict[str, float]]], str]:
+    """Read minScore per category from the lhci assert config.
+
+    Returns (per-url-pattern thresholds, default pattern). lhci supports either a
+    flat `assertions` map or a `matrix` keyed by matchingUrlPattern; this reads
+    both so the printed gates are always the enforced ones.
+    """
     try:
         raw = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
-        assertions = raw["ci"]["assert"]["assertions"]
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        print(f"FAIL: cannot read {CONFIG}: {exc}", file=sys.stderr)
-        return {}
-    floors: dict[str, float] = {}
-    for key, spec in assertions.items():
-        if not key.startswith("categories:"):
+        assert_cfg = raw["ci"]["assert"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return [], ".*"
+
+    def parse(spec: object) -> dict[str, float]:
+        floors: dict[str, float] = {}
+        if not isinstance(spec, dict):
+            return floors
+        for key, rule in spec.items():
+            if not key.startswith("categories:"):
+                continue
+            if isinstance(rule, list) and len(rule) == 2 and isinstance(rule[1], dict):
+                floors[key.split(":", 1)[1]] = float(rule[1].get("minScore", SANITY_FLOOR))
+        return floors
+
+    matrix = assert_cfg.get("matrix")
+    if isinstance(matrix, list) and matrix:
+        entries: list[tuple[str, dict[str, float]]] = []
+        default: dict[str, float] = {}
+        for item in matrix:
+            if not isinstance(item, dict):
+                continue
+            pattern = str(item.get("matchingUrlPattern", ".*"))
+            floors = parse(item.get("assertions"))
+            if pattern == ".*":
+                default = floors
+            else:
+                entries.append((pattern, floors))
+        if default:
+            entries.append((".*", default))
+        return entries, ".*"
+
+    floors = parse(assert_cfg.get("assertions"))
+    return ([(".*", floors)] if floors else []), ".*"
+
+
+def _thresholds_for(url: str, entries: list[tuple[str, dict[str, float]]], default: str) -> dict[str, float]:
+    """Most specific matching pattern wins; falls back to the default entry.
+
+    lhci's matchingUrlPattern is a regular expression, not a glob - fnmatch is
+    wrong twice over: it mis-globs, and on Windows normcase rewrites the "/" in a
+    URL to "\" so no URL ever matches.
+    """
+    best: dict[str, float] = {}
+    best_len = -1
+    for pattern, floors in entries:
+        try:
+            hit = re.search(pattern, url) is not None
+        except re.error:
+            hit = False
+        if hit and len(pattern) > best_len:
+            best, best_len = floors, len(pattern)
+    return best
+
+
+def _dedupe(reports: list[dict]) -> tuple[list[dict], list[str]]:
+    """One entry per URL, keeping the worst score seen.
+
+    collect writes .lighthouseci/ and the filesystem upload copies into the same
+    directory, so a page legitimately arrives more than once with identical
+    numbers. Those collapse silently. Reports that *disagree* are a different
+    thing: picking either one silently is how a regression gets approved by a
+    lucky copy, so the conflict is returned as a failure and the lower score is
+    used.
+    """
+    grouped: dict[str, list[dict]] = {}
+    for report in reports:
+        url = report.get("finalDisplayedUrl") or report.get("requestedUrl") or "?"
+        grouped.setdefault(url, []).append(report)
+
+    collapsed: list[dict] = []
+    conflicts: list[str] = []
+    for url, items in grouped.items():
+        if len(items) == 1:
+            collapsed.append(items[0])
             continue
-        name = key.split(":", 1)[1]
-        if isinstance(spec, list) and len(spec) == 2 and isinstance(spec[1], dict):
-            floors[name] = float(spec[1].get("minScore", SANITY_FLOOR))
-    return floors
+
+        def scores(r: dict) -> dict[str, float]:
+            out = {}
+            for name, cat in (r.get("categories") or {}).items():
+                value = cat.get("score") if isinstance(cat, dict) else None
+                if value is not None:
+                    out[name] = float(value)
+            return out
+
+        variants = {tuple(sorted(scores(r).items())) for r in items}
+        if len(variants) > 1:
+            rendered = " vs ".join(" ".join(f"{k}={v:.2f}" for k, v in sorted(scores(r).items())) for r in items)
+            conflicts.append(f"{url}: reports disagree - {rendered}")
+        collapsed.append(min(items, key=lambda r: min(scores(r).values(), default=1.0)))
+    return collapsed, conflicts
 
 
 def _load_reports() -> tuple[list[dict], list[str]]:
@@ -62,9 +146,9 @@ def _load_reports() -> tuple[list[dict], list[str]]:
 
 
 def main() -> int:
-    thresholds = _gate_thresholds()
-    if not thresholds:
-        print("FAIL: no category thresholds found - the gate would not constrain anything.")
+    entries, default = _gate_thresholds()
+    if not entries:
+        print(f"FAIL: no category thresholds found in {CONFIG} - the gate constrains nothing.")
         return 1
 
     reports, broken = _load_reports()
@@ -82,8 +166,15 @@ def main() -> int:
 
     failures = [f"unreadable report: {item}" for item in broken]
 
-    for report in reports:
+    unique, conflicts = _dedupe(reports)
+    failures.extend(conflicts)
+    for report in unique:
         url = report.get("finalDisplayedUrl") or report.get("requestedUrl") or "?"
+        thresholds = _thresholds_for(url, entries, default)
+        if not thresholds:
+            failures.append(f"{url}: no gate matched this URL")
+            print(f"  {url}\n    NO GATE MATCHED THIS URL")
+            continue
         print(f"  {url}")
         for name, floor in thresholds.items():
             category = report.get("categories", {}).get(name)
