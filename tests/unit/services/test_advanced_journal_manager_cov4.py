@@ -231,7 +231,10 @@ class TestReverseDeleteHistoryAudit:
             "_entry_or_404",
             return_value=_ns_entry(status="posted", is_reversed=True),
         )
-        with pytest.raises(ValueError, match=""):
+        # Match the real message. match="" passes against any string, so it
+        # asserted only that *some* ValueError was raised - not that this
+        # guard, rather than the status guard below it, rejected the reversal.
+        with pytest.raises(ValueError, match="القيد معكوس مسبقاً"):
             AdvancedJournalEntryManager.reverse_entry_advanced(1, reversed_by=1, reason="x")
 
     def test_reverse_wrong_status_raises(self, mocker):
