@@ -1,7 +1,7 @@
 {
 	"ci": {
 		"collect": {
-			"url": ["http://localhost:5000/login", "http://localhost:5000/"],
+			"url": ["http://localhost:5000/auth/login", "http://localhost:5000/"],
 			"numberOfRuns": 1,
 			"settings": {
 				"preset": "desktop",

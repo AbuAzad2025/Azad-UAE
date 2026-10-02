@@ -741,20 +741,32 @@ jobs:
         run: |
           gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
           for _ in $(seq 1 60); do
-            curl -sf -o /dev/null http://localhost:5000/login && break
+            curl -sf -o /dev/null http://localhost:5000/auth/login && break
             sleep 1
           done
       - name: Verify audited URLs before measuring
         run: |
           # lhci will happily audit an error page and report a score for it.
-          # Require a real 200 on each URL that is about to be measured.
-          for url in http://localhost:5000/login http://localhost:5000/; do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "$url" || echo 000)
-            echo "  $url -> $code"
+          # Require a real 200 on each URL that is about to be measured, after
+          # following redirects, and refuse a redirect chain: a loop or a
+          # redirect into a login prompt means the page under test is not the
+          # page we think it is.
+          #
+          # These are the canonical paths. /login is a legacy alias registered in
+          # main.py that 302s to /auth/login, so auditing it measured a redirect
+          # rather than the login form.
+          for url in http://localhost:5000/auth/login http://localhost:5000/; do
+            read -r code hops <<< "$(curl -sSL -o /dev/null \
+              -w '%{http_code} %{num_redirects}' "$url" || echo '000 99')"
+            echo "  $url -> $code after $hops redirect(s)"
             if [ "$code" != "200" ]; then
-              echo "::error::$url returned $code, not 200"
+              echo "::error::$url settled on $code, not 200"
               echo "--- gunicorn.log ---"
               cat gunicorn.log || true
+              exit 1
+            fi
+            if [ "$hops" -gt 2 ]; then
+              echo "::error::$url took $hops redirects - redirect chain, not a real page"
               exit 1
             fi
           done
