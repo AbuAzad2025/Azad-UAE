@@ -686,7 +686,17 @@ jobs:
         run: |
           pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
 
-  # ── Lighthouse CI (web vitals, non-blocking) ──
+  # ── Lighthouse CI (web vitals, BLOCKING) ──
+  # This gate measured nothing until now. Nothing in this job ran the migrations,
+  # so the azad_test database had no tables; every context processor query raised
+  # UndefinedTable and both audited URLs rendered error pages. `continue-on-error:
+  # true` then discarded lhci's non-zero exit, so the job went green while
+  # auditing a broken page. Separately, every assertion in lighthouserc.json was
+  # "warn", so even without that, no score could ever fail the build.
+  #
+  # Now: schema is provisioned first, the server is started explicitly so a boot
+  # failure surfaces its own log, both audited URLs are confirmed to return 200
+  # before lhci runs, and the assertions are "error".
   lighthouse-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -704,6 +714,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      CI: "true"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -715,16 +731,49 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt gunicorn
           npm install -g @lhci/cli
-      - name: Boot app and run Lighthouse CI (non-blocking)
-        continue-on-error: true
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          CI: "true"
+      - name: Provision schema
         run: |
-          lhci autorun --config=scripts/lighthouserc.json
+          # Deliberately NOT `|| true`. An unmigrated database is exactly the
+          # failure this gate was silently reporting as a pass.
+          flask db upgrade
+          python scripts/lint/check_model_schema_parity.py
+      - name: Start app server
+        run: |
+          gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
+          for _ in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:5000/login && break
+            sleep 1
+          done
+      - name: Verify audited URLs before measuring
+        run: |
+          # lhci will happily audit an error page and report a score for it.
+          # Require a real 200 on each URL that is about to be measured.
+          for url in http://localhost:5000/login http://localhost:5000/; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "$url" || echo 000)
+            echo "  $url -> $code"
+            if [ "$code" != "200" ]; then
+              echo "::error::$url returned $code, not 200"
+              echo "--- gunicorn.log ---"
+              cat gunicorn.log || true
+              exit 1
+            fi
+          done
+      - name: Run Lighthouse CI
+        run: |
+          # collect/assert/upload are separate on purpose: `autorun` swallows a
+          # non-zero collect when the server never came up, which is the same
+          # silence as before. Explicit steps stop at the first failure.
+          lhci collect --config=scripts/lighthouserc.json
+          lhci assert --config=scripts/lighthouserc.json
+          lhci upload --config=scripts/lighthouserc.json
+      - name: Report measured scores
+        run: python scripts/lint/report_lighthouse_scores.py
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci
 
   # ── E2E business flow tours (Playwright, BLOCKING) ──
   # Tours are BLOCKING: any failure fails the CI job (no continue-on-error).
