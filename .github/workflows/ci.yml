@@ -801,6 +801,11 @@ jobs:
         with:
           name: lighthouse-reports
           path: .lighthouseci
+          # upload-artifact@v4 skips dotfiles unless told otherwise, and
+          # .lighthouseci is a dotfile. Without this the step warns "No files were
+          # found with the provided path" and the run carries no evidence at all,
+          # while still reporting success.
+          include-hidden-files: true
 
   # ── E2E business flow tours (Playwright, BLOCKING) ──
   # Tours are BLOCKING: any failure fails the CI job (no continue-on-error).
