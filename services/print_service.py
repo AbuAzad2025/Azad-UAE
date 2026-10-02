@@ -214,7 +214,21 @@ class PrintService:
                     rf"\1{root_uri}/static/",
                     html,
                 )
-            except Exception:
+            except Exception as exc:
+                # WeasyPrint resolves URLs in `string=` mode against a base that
+                # is not the app root, so the /static/ rewrite above is the only
+                # thing making linked stylesheets and images resolve. If it fails
+                # we still hand the raw HTML to WeasyPrint, which then silently
+                # drops every linked stylesheet and produces a correctly-shaped
+                # PDF with none of its formatting. That failure is invisible in the
+                # response and in write_pdf's exit status, so it was previously
+                # swallowed with no log line at all. Log it where it can be found;
+                # do not raise, because callers rely on getting bytes back.
+                logger.error(
+                    "PDF stylesheet/asset URI rewrite failed (%s); linked /static/ "
+                    "resources will be MISSING from the PDF output",
+                    exc,
+                )
                 html_ready = html
 
             pdf_bytes = weasyprint.HTML(string=html_ready).write_pdf()
