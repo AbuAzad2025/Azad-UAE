@@ -408,7 +408,7 @@ class TestCustomersStatement:
 
         customer = test_factory.create_customer(
             name="Out of Scope",
-            email="oos@example.com",
+            email="oos-statement@example.com",
             customer_type="regular",
             phone="0505555555",
             tenant_id=9999,
