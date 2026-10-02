@@ -697,6 +697,15 @@ jobs:
   # Now: schema is provisioned first, the server is started explicitly so a boot
   # failure surfaces its own log, both audited URLs are confirmed to return 200
   # before lhci runs, and the assertions are "error".
+  #
+  # On the SEO floor: /auth/login is deliberately `noindex, nofollow`, which is
+  # correct for a login page and makes Lighthouse's is-crawlable audit fail. Its
+  # measured SEO was 0.66 against a 0.90 floor, so a 0.90 gate here punishes the
+  # app for being right about not indexing credentials. The floor is 0.70 and is
+  # PROVISIONAL - set from one measurement, not a principle. The principled fix is
+  # to apply the SEO budget only to / (which should be indexable) using an
+  # assert matrix, and that needs the measured baseline first. Ratchet it from
+  # real numbers, not from optimism.
   lighthouse-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -776,10 +785,16 @@ jobs:
           # non-zero collect when the server never came up, which is the same
           # silence as before. Explicit steps stop at the first failure.
           lhci collect --config=scripts/lighthouserc.json
-          lhci assert --config=scripts/lighthouserc.json
+          # Persist before asserting. With upload after assert, a failing gate
+          # skipped it, so `.lighthouseci/` was empty, the artifact was empty,
+          # and the reports that explain the failure were the one thing thrown
+          # away. Evidence first, verdict second.
           lhci upload --config=scripts/lighthouserc.json
       - name: Report measured scores
+        if: always()
         run: python scripts/lint/report_lighthouse_scores.py
+      - name: Assert Lighthouse budgets
+        run: lhci assert --config=scripts/lighthouserc.json
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4

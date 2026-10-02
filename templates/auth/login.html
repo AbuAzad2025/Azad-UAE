@@ -6,6 +6,11 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="{{ _('تسجيل الدخول الآمن إلى نظام ازاد للأنظمة الذكية') }}">
   <title>{{ _('شركة ازاد للأنظمة الذكية — دخول آمن') }}</title>
+  <!-- Lighthouse's SEO category audits canonical. Three other templates in this
+       repo already declare one; login.html was the outlier. Built with url_for
+       rather than request.base_url, because base_url is not the site root under
+       this app's script-root config and produced /auth/loginlogin. -->
+  <link rel="canonical" href="{{ url_for('auth.login', _external=True) }}">
   <link rel="icon" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}" type="image/png">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
