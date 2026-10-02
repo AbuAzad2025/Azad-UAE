@@ -411,8 +411,14 @@ jobs:
       - name: Inline asset budget (static styles / inline scripts)
         run: |
           python scripts/lint/check_inline_assets.py --top 12
+          # The static budget was 94 while the actual count is 55, so the gate
+          # permitted re-adding 39 of the very declarations Track 1 had already
+          # removed - it could not fail on a regression it had budgeted for. A
+          # ratchet has to sit at the measured number to hold anything; it is set
+          # to the count, not above it. Lower it in the same commit that removes
+          # declarations, never ahead of them.
           python scripts/lint/check_inline_assets.py \
-            --max-static 94 \
+            --max-static 55 \
             --max-dynamic 21 \
             --max-inline-scripts 170
 
