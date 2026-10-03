@@ -428,6 +428,14 @@ jobs:
           # would have caught layout-utilities.css being referenced by 30
           # templates while linked from no layout at all.
           python scripts/lint/check_utility_reachability.py
+          # A class defined twice at the same scope is not two rules: the second
+          # silently replaces the first for every consumer. @media-aware, so a
+          # legitimate responsive override is not mistaken for a collision - a
+          # naive scan flags 110 classes across four sheets and every one of them
+          # is correct. Currently 7 known collisions in shop-utilities.css are
+          # baselined with their identity pinned; see
+          # docs/shop_utilities_collision.md. Any new one fails.
+          python scripts/lint/check_css_class_collisions.py
 
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
