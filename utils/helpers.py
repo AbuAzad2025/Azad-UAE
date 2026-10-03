@@ -9,6 +9,7 @@ from flask import current_app, request
 from werkzeug.utils import secure_filename
 
 from extensions import db
+from utils.validators import validate_file_signature
 
 logger = logging.getLogger(__name__)
 
@@ -340,7 +341,16 @@ def allowed_file(filename, allowed_extensions=None):
                 if isinstance(ext_set, set):
                     allowed_extensions.update(ext_set)
 
-    return "." in filename and "." + filename.rsplit(".", 1)[1].lower() in allowed_extensions
+    if "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    # Accept both "png" and ".png". Callers in routes/warehouse.py and
+    # routes/store.py pass the undotted form, which never matched the dotted
+    # form below - so every product-image and store-logo upload was rejected
+    # with "File type not allowed" and returned 400.
+    # Normalise the allowlist too, so {".PNG"} and {"png"} behave the same.
+    normalised = {str(e).lstrip(".").lower() for e in allowed_extensions}
+    return ext in normalised
 
 
 def save_uploaded_file(file, upload_folder="uploads", allowed_extensions=None):
@@ -364,6 +374,12 @@ def save_uploaded_file(file, upload_folder="uploads", allowed_extensions=None):
 
     if file_header.startswith(b"MZ") or file_header.startswith(b"\x7fELF"):
         raise ValueError("Executable files are not allowed")
+
+    # The MZ/ELF check above only covers two executable families. The extension
+    # allowlist is not a content check, so a .png containing HTML is served back
+    # as text and executes as stored XSS. Verify the bytes actually match the
+    # declared type before anything is written to disk.
+    validate_file_signature(file.filename or "", file_header)
 
     filename = secure_filename(file.filename)
     name, ext = os.path.splitext(filename)
