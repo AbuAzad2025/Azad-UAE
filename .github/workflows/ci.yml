@@ -394,20 +394,21 @@ jobs:
         run: python scripts/lint/check_a11y_labels.py
 
       # Ratcheting budget, not a target. The template cleanup (inline styles ->
-      # stylesheets, inline script -> /static/js) is being done in stages, so this
-      # records where it currently stands and fails only on a regression. Lower
-      # the numbers as stages land; they are not meant to reach zero here.
-      #
-      #   static  224 - was 281; print/receipt family converted to
-      #              static/css/print-utilities.css. Next: public/landing (40),
-      #              dashboard animation-delay (18), ledger width utilities.
-      #   dynamic  21 - computed per row (stage colour, progress %, loop delay).
-      #              A CHECK-style "no inline styles" rule is unachievable for
-      #              these; the end state is a custom property read from a data-
-      #              attribute, which still needs one style attribute.
-      #   scripts 170 - inline <script> blocks, counted not yet bounded.
-      #
-      # Drop --max-dynamic and --max-inline-scripts once those stages are done.
+#   static  50  - was 281. print/receipt family -> print-utilities.css,
+#              invoices -> print-utilities.css, width utilities ->
+#              layout-utilities.css.
+#   dynamic 21  - computed per row (stage colour, progress %, loop delay).
+#              A CHECK-style "no inline styles" rule is unachievable for
+#              these; the end state is a custom property read from a data-
+#              attribute, which still needs one style attribute.
+#   scripts 170 - inline <script> blocks, bounded (Track 3, not started).
+#
+# Headroom is zero on static and scripts by design: the budget is the measured
+# count. Lower it in the commit that removes declarations, never ahead of one.
+#
+# Remaining 50 static: 16 on the WeasyPrint path (print templates link no
+# stylesheet at all), 10 in shop/order_invoice.html which is deliberately
+# self-contained for email/download, 24 in browser pages.
       - name: Inline asset budget (static styles / inline scripts)
         run: |
           python scripts/lint/check_inline_assets.py --top 12
@@ -432,9 +433,9 @@ jobs:
           # silently replaces the first for every consumer. @media-aware, so a
           # legitimate responsive override is not mistaken for a collision - a
           # naive scan flags 110 classes across four sheets and every one of them
-          # is correct. Currently 7 known collisions in shop-utilities.css are
-          # baselined with their identity pinned; see
-          # docs/shop_utilities_collision.md. Any new one fails.
+          # is correct. The shop-utilities.css ic-* collisions were namespaced per
+          # page and the baseline is now empty, so there is no allowance left; see
+          # docs/shop_utilities_collision.md.
           python scripts/lint/check_css_class_collisions.py
 
       # ── JavaScript ──

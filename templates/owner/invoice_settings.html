@@ -590,7 +590,7 @@
                 </div>
                 
                 <div class="table-responsive"><table class="table table-sm table-bordered mt-3 ic-12">
-                  <thead class="ic-13">
+                  <thead>
                     <tr>
                       <th>{{ t('Product') }}</th>
                       <th>{{ t('Quantity') }}</th>
@@ -615,11 +615,11 @@
                 {% if settings.enable_qr_code|default(false) %}
                 <div class="qr-code mt-3">
                   <i class="fas fa-qrcode fa-3x text-muted" aria-hidden="true"></i>
-                  <p class="ic-14">QR Code</p>
+                  <p>QR Code</p>
                 </div>
                 {% endif %}
                 
-                <div class="footer mt-3 ic-15">
+                <div class="footer mt-3">
                   {{ settings.footer_text_ar|default('') or t('Thank_You_For_Your_Business') }}
                 </div>
               </div>

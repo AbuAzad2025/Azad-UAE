@@ -80,18 +80,21 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 
 ## Work State (2026-09-02)
 
-### CI — GREEN (fully passing)
-- Latest CI run: `33559818256` (commit `3a35c6b3`) — ✅ **success** (all 20 jobs)
-  - Static quality (ruff/mypy/jinja/biome/cspell/yamllint/actionlint) ✅
-  - repo-security (gitleaks+Trivy), security-scan (bandit), verify-boot ✅
-  - routes PG15/16/17, services, models, utils, core, ai_knowledge ✅
-  - integration PG15, e2e, e2e-tours (JS+Playwright), api-fuzz, lighthouse ✅
-  - tenant-isolation-fuzzer, docker-infra-audit, coverage-report ✅
-- Alembic Round-Trip: `33559818099` — ✅ **success** (upgrade→downgrade→upgrade full chain)
-- Kept only the latest 2 runs per workflow (CI, Alembic Round-Trip)
+### CI — gates that are actually enforced
+- Authoritative status lives in the Actions tab; a run id recorded here goes stale
+  the moment anything is pushed, so it is deliberately not cited here.
+- `python scripts/lint/check_migration_head.py` → single head, chain len 52.
+- Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 170`
+  (measured 50 / 21 / 170 — zero headroom by design; lower a budget only in the
+  commit that removes declarations).
+- `check_utility_reachability.py` — fails when a page uses a utility class no
+  stylesheet in its extends/include chain defines.
+- `check_css_class_collisions.py` — @media-aware; fails when one bare class is
+  defined twice at the same scope with disagreeing bodies. Baseline is empty.
+- Coverage floor: `COVERAGE_FAIL_UNDER: 85`.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → b1f4c7a92d60`
+- **Migration chain (single head):** `squash_001 → … → a3d7f1b9c6e2`
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
@@ -100,7 +103,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   - `cdefc18af945` + `1c2195e00e66` F-08: gl_accounts.is_contra (1190/3300/5201 prime), 2122→asset/1100, +2999 Suspense
   - `5542ed4cd59f` D-L1-01: money precision 15,2→15,3 (card_payments/donations/payment_vault/wallets)
   - `dd28ea3aa6cc` D-C3: gl_journal_lines.explicit_account_allowed (honored by validate_entry)
-  - `52693a51` integrations: nullable platform tenant on integration settings
+  - `e2f7a5b3c9d4` integrations: nullable platform tenant on integration settings
   - `b1f4c7a92d60` Phase 1: 41 composite `(tenant_id, status|created_at|code)` indexes on the
     tables the query layer actually filters on — CONCURRENTLY, idempotent, schema-aware
     (skips a table whose shape does not match the models rather than aborting a deploy)

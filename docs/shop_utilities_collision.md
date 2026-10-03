@@ -2,7 +2,7 @@
 
 ## Finding
 
-`static/css/shop-utilities.css` (724 lines) defines the same bare class names
+`static/css/shop-utilities.css` defines the same bare class names
 in seven separate sections. Every one of these definitions is at **top level** —
 verified by walking the file with `@media` nesting tracked, so none of them are
 responsive overrides and "last one wins" applies globally.
@@ -94,11 +94,11 @@ once in the One-Page Checkout section. Those sit in different `@media` contexts,
 which is a legitimate override, so the collision gate correctly passes them. They
 are left alone deliberately rather than folded into this change.
 
-## Interim risk
+## Interim risk (resolved)
 
-The single highest-value, lowest-ambiguity change is L248 `.ic-2 { display: none }`:
-no generic layout utility should hide content, and it is the rule that makes
-`.ic-2` invisible across every page that uses it. Removing or scoping that one
-declaration needs no template changes and no intent attribution. It is called
-out here rather than applied, because it is still a visual change on shop pages
-and should be reviewed by someone who can look at the rendered pages.
+The postmortem originally recommended scoping the L248 `.ic-2 { display: none }`
+declaration as the lowest-ambiguity fix. That is no longer outstanding: the whole
+rename landed, so that declaration is now `.sb-2 { display: none; }` and applies
+only to `templates/shop/base.html`. The generic `.ic-2` resolves to
+`height:100%; display:grid; place-items:center`, which is what the D6 base set has
+always said.

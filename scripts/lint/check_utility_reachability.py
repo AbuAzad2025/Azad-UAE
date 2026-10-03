@@ -16,7 +16,8 @@ stylesheet the chain links, and compare that against the classes the template
 actually uses. Partials are skipped - a partial legitimately has no chain of its
 own and resolves its classes in the including page.
 
-Adding a class whose sheet is not linked is allowed. This only reports.
+This is a gate, not a report: it exits non-zero when a page uses a class it
+cannot reach.
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ UTILITY_PREFIXES = ("p-", "u-", "w-", "h-", "d-panel", "d-fs", "d-bar", "d-stagg
 
 _SHEET_REF = re.compile(r"""(?:static/)?css/([A-Za-z0-9_.-]+\.css)""")
 _EXTENDS = re.compile(r"""\{%-?\s*extends\s+["']([^"']+)["']""")
+_INCLUDE = re.compile(r"""\{%-?\s*include\s+["']([^"']+)["']""")
 _CLASS_ATTR = re.compile(r"""class\s*=\s*["']([^"']*)["']""")
 
 
@@ -55,7 +57,13 @@ def _linked_sheets(text: str) -> set[str]:
 
 
 def _chain(path: pathlib.Path, seen: set[str] | None = None) -> list[pathlib.Path]:
-    """The template and every layout it extends, transitively."""
+    """The template, every layout it extends, and every partial it includes.
+
+    Includes matter as much as extends here: templates/base.html pulls in
+    partials/head.html, and that partial is where layout-utilities.css is
+    actually linked. Following extends alone made the gate demand a second,
+    duplicate <link> on every page that already had one.
+    """
     seen = seen if seen is not None else set()
     if path.as_posix() in seen:
         return []
@@ -67,6 +75,10 @@ def _chain(path: pathlib.Path, seen: set[str] | None = None) -> list[pathlib.Pat
         parent = _resolve(match.group(1))
         if parent is not None:
             chain.extend(_chain(parent, seen))
+    for inc in _INCLUDE.findall(text):
+        partial = _resolve(inc)
+        if partial is not None:
+            chain.extend(_chain(partial, seen))
     return chain
 
 
