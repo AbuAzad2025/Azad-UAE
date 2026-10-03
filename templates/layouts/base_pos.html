@@ -12,6 +12,10 @@
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
     <link rel="stylesheet" href="{{ dist_url('css/pos.css') }}">
+{# w-* classes are used by pos/index.html and pos/held_carts.html under this
+   layout; layout-utilities.css was not linked from any layout, so they were
+   rendering unstyled. #}
+<link rel="stylesheet" href="{{ dist_url('css/layout-utilities.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="pos-layout{% block body_class %}{% endblock %}">

@@ -421,6 +421,13 @@ jobs:
             --max-static 55 \
             --max-dynamic 21 \
             --max-inline-scripts 170
+          # A utility class whose stylesheet is linked nowhere resolves to nothing:
+          # the page still renders, still parses, still passes every test, and the
+          # element is simply unstyled. This resolves each page's extends-chain
+          # and fails when a class it uses cannot be reached. It is the check that
+          # would have caught layout-utilities.css being referenced by 30
+          # templates while linked from no layout at all.
+          python scripts/lint/check_utility_reachability.py
 
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)

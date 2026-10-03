@@ -6,6 +6,9 @@
   <title>{{ tenant.name_ar or tenant.name }} — معلومات الشركة</title>
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap/css/bootstrap5.rtl.min.css') }}" rel="stylesheet">
   <link href="{{ url_for('static', filename='adminlte/plugins/bootstrap-icons/bootstrap-icons.min.css') }}" rel="stylesheet">
+      {# This is a standalone public page: it extends no layout, so the only way
+         .w-100 resolves is by linking the sheet here. #}
+      <link rel="stylesheet" href="{{ dist_url('css/layout-utilities.css') }}">
   <style nonce="{{ csp_nonce() }}">
     :root {
       --primary: {{ tenant.brand_color_primary or '#1B7A4E' }};
