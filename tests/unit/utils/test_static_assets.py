@@ -10,9 +10,22 @@ from utils.static_assets import dist_url, static_hash, static_v
 
 
 @pytest.fixture
-def static_dir(app):
-    """Expose the configured static folder for the test app."""
-    return app.static_folder
+def static_dir(app, tmp_path):
+    """An isolated static folder for the test app.
+
+    These tests have to write real files, because static_hash() and dist_url()
+    read whatever folder the app is configured to serve - but it must not be the
+    repository's. Pointed at the real static/, this module overwrote
+    static/js/app.js with the 8-byte string "original", truncating a tracked
+    production asset to 8 bytes, and left four untracked fixtures behind. That is
+    why app.js kept showing as modified in git status after a local run and why
+    test_no_orphaned_static_files failed locally while passing on a clean CI
+    checkout. tmp_path removes both failure modes; nothing is written outside it.
+    """
+    isolated = tmp_path / "static"
+    isolated.mkdir(parents=True, exist_ok=True)
+    app.static_folder = str(isolated)
+    return isolated
 
 
 def _write(relative_path: str, content: str, static_dir: str) -> Path:
