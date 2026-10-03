@@ -154,3 +154,12 @@
   justify-content: space-between;
   padding: 0 10px;
 }
+
+/* ── Invoice base (templates/invoices/_base.html) ────────────────────────
+   Extracted from 5 inline style attributes. Values are preserved exactly,
+   including the hard-coded green: p-rule resolves var(--header_color), which
+   would have changed the rendered colour rather than preserved it. */
+.p-amount-green { color: #15803d; }
+.p-amount-green-strong { color: #15803d; font-weight: 700; }
+.p-my-8 { margin: 8px 0; }
+.p-note-divider { margin-top: 8px; border-top: 1px dashed #ccc; padding-top: 5px; }

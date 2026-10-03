@@ -418,7 +418,7 @@ jobs:
           # to the count, not above it. Lower it in the same commit that removes
           # declarations, never ahead of them.
           python scripts/lint/check_inline_assets.py \
-            --max-static 55 \
+            --max-static 50 \
             --max-dynamic 21 \
             --max-inline-scripts 170
           # A utility class whose stylesheet is linked nowhere resolves to nothing:

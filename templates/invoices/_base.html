@@ -121,7 +121,7 @@
   {% if sale.discount_amount and sale.discount_amount > 0 %}
   <div class="total-row">
     <span>{{ t('Discount') }}:</span>
-    <strong class="amount" style="color:#15803d;">- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
+    <strong class="amount p-amount-green">- {{ format_currency(sale.discount_amount, sale.currency) }}</strong>
   </div>
   {% endif %}
   {% if sale.shipping_cost and sale.shipping_cost > 0 %}
@@ -171,7 +171,7 @@
       <tr>
         <td class="code">{{ payment.payment_number }}</td>
         <td>{{ payment.payment_date.strftime('%Y-%m-%d') if payment.payment_date else '-' }}</td>
-        <td class="amount-cell" style="color:#15803d;font-weight:700;">{{ format_currency(payment.amount_aed, tenant_default_currency) }}</td>
+        <td class="amount-cell p-amount-green-strong">{{ format_currency(payment.amount_aed, tenant_default_currency) }}</td>
         <td>
           {% if payment.payment_method == 'cash' %}{{ t('Cash_2') }}
           {% elif payment.payment_method == 'card' %}{{ t('Card') }}
@@ -218,7 +218,7 @@
   {% endif %}
 
   {% if settings and ((settings.commercial_register and settings.commercial_register != 'None') or (settings.license_number and settings.license_number != 'None')) %}
-  <p style="margin:8px 0;">
+  <p class="p-my-8">
     {% if settings.commercial_register and settings.commercial_register != 'None' %}{{ t('Log_2') }} {{ t('التجاري') }}: {{ settings.commercial_register }}{% endif %}
     {% if settings.commercial_register and settings.license_number %} | {% endif %}
     {% if settings.license_number and settings.license_number != 'None' %}{{ t('الرخصة') }}: {{ settings.license_number }}{% endif %}
@@ -226,10 +226,10 @@
   {% endif %}
 
   {% if settings and settings.default_invoice_note_ar and settings.default_invoice_note_ar != 'None' %}
-  <p style="font-size:8px;color:#666;">💬 {{ settings.default_invoice_note_ar }}</p>
+  <p class="p-fs-8 p-muted">💬 {{ settings.default_invoice_note_ar }}</p>
   {% endif %}
 
-  <p style="margin-top:8px;border-top:1px dashed #ccc;padding-top:5px;">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+  <p class="p-note-divider">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
 
   {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
   <div class="social-links">
