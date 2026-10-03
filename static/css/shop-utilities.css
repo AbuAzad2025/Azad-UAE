@@ -58,130 +58,140 @@
 	margin-top: 0.75rem;
 }
 
-/* checkout */
-.ic-1 {
+/* ── templates/shop/checkout.html ── namespaced from this sheet's former global 'checkout'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.ck-1 {
 	margin: 0 0 1.25rem;
 	font-weight: 800;
 }
 
-.ic-2 {
+.ck-2 {
 	margin: 0 0 1rem;
 	font-size: 0.88rem;
 	color: var(--ps-muted);
 }
 
-.ic-3 {
+.ck-3 {
 	display: none;
 }
 
-.ic-4 {
+.ck-4 {
 	font-size: 0.82rem;
 	color: var(--ps-muted);
 	margin-bottom: 1rem;
 }
 
-.ic-5 {
+.ck-5 {
 	padding: 0.9rem;
 }
 
-.ic-6 {
+.ck-6 {
 	font-size: 0.82rem;
 	color: var(--ps-muted);
 	margin-top: 0.75rem;
 }
 
-/* order_success */
-.ic-1 {
+/* ── templates/shop/order_success.html ── namespaced from this sheet's former global 'order_success'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.os-1 {
 	max-width: 520px;
 	margin: 2rem auto;
 	text-align: center;
 }
 
-.ic-2 {
+.os-2 {
 	margin: 0 0 0.5rem;
 	font-weight: 800;
 }
 
-.ic-3 {
+.os-3 {
 	color: var(--ps-muted);
 	margin-bottom: 1.25rem;
 }
 
-.ic-4 {
+.os-4 {
 	justify-content: center;
 	gap: 1rem;
 	border: none;
 }
 
-.ic-5 {
+.os-5 {
 	margin: 1rem 0;
 	display: inline-flex;
 }
 
-.ic-6 {
+.os-6 {
 	font-size: 0.88rem;
 	color: var(--ps-muted);
 }
 
-.ic-7 {
+.os-7 {
 	margin-top: 1rem;
 }
 
-.ic-8 {
+.os-8 {
 	margin-top: 1.25rem;
 }
 
-/* account_login */
-.ic-1 {
+/* ── templates/shop/account_login.html ── namespaced from this sheet's former global 'account_login'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.al-1 {
 	max-width: 420px;
 	margin: 2rem auto;
 }
 
-.ic-2 {
+.al-2 {
 	margin: 0 0 1rem;
 	font-weight: 800;
 }
 
-.ic-3 {
+.al-3 {
 	margin-top: 0.75rem;
 	text-align: center;
 	font-size: 0.85rem;
 }
 
-.ic-4 {
+.al-4 {
 	margin-top: 0.75rem;
 	text-align: center;
 	font-size: 0.9rem;
 }
 
-.ic-5 {
+.al-5 {
 	color: var(--ps-green-dark);
 	font-weight: 700;
 }
 
-/* account_register */
-.ic-1 {
+/* ── templates/shop/account_register.html ── namespaced from this sheet's former global 'account_register'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.ar-1 {
 	max-width: 480px;
 	margin: 2rem auto;
 }
 
-.ic-2 {
+.ar-2 {
 	margin: 0 0 1rem;
 	font-weight: 800;
 }
 
-.ic-3 {
+.ar-3 {
 	margin-top: 1rem;
 	text-align: center;
 }
 
-/* product */
-.ic-1 {
+/* ── templates/shop/product.html ── namespaced from this sheet's former global 'product'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.pr-1 {
 	margin-bottom: 1rem;
 	display: inline-flex;
 }
 
-.ic-2 {
+.pr-2 {
 	height: 100%;
 	display: grid;
 	place-items: center;
@@ -190,64 +200,66 @@
 	opacity: 0.3;
 }
 
-.ic-3 {
+.pr-3 {
 	margin: 0 0 0.5rem;
 	font-size: 1.6rem;
 	font-weight: 800;
 }
 
-.ic-4 {
+.pr-4 {
 	font-size: 1.5rem;
 	margin: 1rem 0;
 }
 
-.ic-5 {
+.pr-5 {
 	margin: 1.25rem 0;
 	color: var(--ps-muted);
 	font-size: 0.92rem;
 	line-height: 1.7;
 }
 
-.ic-6 {
+.pr-6 {
 	margin-top: 1.5rem;
 }
 
-.ic-7 {
+.pr-7 {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
 	max-width: 160px;
 }
 
-.ic-8 {
+.pr-8 {
 	padding: 0.4rem 0.65rem;
 }
 
-.ic-9 {
+.pr-9 {
 	flex: 1;
 }
 
-.ic-10 {
+.pr-10 {
 	margin-top: 0.5rem;
 	padding: 0.85rem;
 }
 
-.ic-11 {
+.pr-11 {
 	margin-top: 1.5rem;
 	padding: 0.95rem;
 	font-size: 1rem;
 }
 
-.ic-12 {
+.pr-12 {
 	margin-top: 0.75rem;
 }
 
-/* base */
-.ic-1 {
+/* ── templates/shop/base.html ── namespaced from this sheet's former global 'base'
+   section; ic-N here meant this page only and collided with the
+   generic set above and with the other page sections. Bodies unchanged. */
+.sb-1 {
 	display: inline;
 }
 
-.ic-2 {
+.sb-2 {
 	display: none;
 }
 

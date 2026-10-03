@@ -27,21 +27,19 @@ import sys
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 CSS = ROOT / "static" / "css"
 
-# Known, diagnosed collisions in shop-utilities.css, where seven sections reused
-# the same ic-* names in the global scope. Tracked rather than fixed: renaming
-# needs to know which definition each of ~45 usages was written against, and
-# nothing in the repo records that - see docs/shop_utilities_collision.md. The
-# baseline is pinned by exact identity so a NEW collision anywhere, or an extra
-# one in this file, still fails the build.
-KNOWN_COLLISIONS = {
-    ("static/css/shop-utilities.css", "ic-2"),
-    ("static/css/shop-utilities.css", "ic-3"),
-    ("static/css/shop-utilities.css", "ic-4"),
-    ("static/css/shop-utilities.css", "ic-5"),
-    ("static/css/shop-utilities.css", "ic-6"),
-    ("static/css/shop-utilities.css", "ic-7"),
-    ("static/css/shop-utilities.css", "ic-8"),
-}
+# Collisions that are diagnosed but deliberately not yet fixed.
+#
+# Was: the seven ic-N classes in shop-utilities.css, all defined at top level
+# with conflicting bodies. Root cause was 889b9657, which emptied six
+# per-template <style> blocks into one shared sheet, so six page-specific rule
+# sets collided with the generic set and with each other - and .ic-2 ended on
+# `display: none`, applied globally.
+#
+# Fixed by namespacing each section to its own page (ck-, os-, al-, ar-, pr-,
+# sb-) and rewriting only those six templates' markup. Bodies were left byte for
+# byte as they were, so each page renders what its own stylesheet always said.
+# See docs/shop_utilities_collision.md.
+KNOWN_COLLISIONS: set[tuple[str, str]] = set()
 
 _AT_RULE = re.compile(r"@[A-Za-z-]+[^{]*\{")
 _RULE = re.compile(r"([^{}]+)\{([^{}]*)\}")

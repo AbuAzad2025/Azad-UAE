@@ -1,4 +1,4 @@
-# shop-utilities.css — global class-name collision (P0, diagnosed, NOT auto-fixed)
+# shop-utilities.css — global class-name collision (P0, FIXED)
 
 ## Finding
 
@@ -58,43 +58,41 @@ namespaced.
 Because the base set was written first and the per-page sections later, the
 per-page definitions are currently overriding the base styling on those pages.
 
-## Why this was not auto-fixed
+## Fix applied
 
-Renaming requires knowing **which definition each usage was written against**.
-For the ~40 templates that only ever wanted the base set, the fix is to leave
-their markup alone and namespace the six page sections. But for the five shop
-templates that have a matching section — `shop/checkout.html`,
-`shop/order_success.html`, `shop/account_login.html`,
-`shop/account_register.html`, `shop/product.html` — each one uses the same
-`ic-N` tokens for both intents, and nothing in the repository records which
-section an individual usage came from.
+Root cause, from `git log`: commit `889b9657` ("Phase 1 shop transformation — CSS
+extract") emptied six per-template `<style>` blocks into this one shared sheet.
+The six page-specific rule sets then competed with the generic D6 set and with
+each other in the global scope, and `.ic-2` ended on `display: none`.
 
-Renaming those five mechanically would either
+The sections already carried each page's correct declarations, so the fix was to
+stop the names colliding rather than to invent anything:
 
-* leave them on the generic set and lose their page-specific spacing, or
-* move them to the section set and change spacing on a customer-facing page,
+| section | prefix | rules | template rewritten |
+|---|---|---|---|
+| checkout | `ck-` | 6 | shop/checkout.html (5 tokens) |
+| order_success | `os-` | 8 | shop/order_success.html (9) |
+| account_login | `al-` | 5 | shop/account_login.html (10) |
+| account_register | `ar-` | 3 | shop/account_register.html (6) |
+| product | `pr-` | 12 | shop/product.html (12) |
+| base | `sb-` | 2 | shop/base.html (2) |
 
-and neither can be verified from tests, because no test renders these pages and
-no screenshot exists in the repo. These are shop checkout and login pages, so a
-wrong guess is visible to customers.
+Rule bodies were left byte for byte as they were, so each page renders what its
+own stylesheet always said. Only the class *names* moved; no declaration changed
+and no markup other than the class token was touched. The generic `ic-*` set is
+untouched and still serves the ~44 templates that were always meant to use it.
 
-## Remediation plan
+Verified: 36 prefixed classes, each defined exactly once, each body traceable to
+a rule that existed before the rename. `check_css_class_collisions.py` reports 0
+globally-conflicting classes and its baseline is now empty, so there is no
+allowance left anywhere.
 
-1. Prefix each per-page section and rewrite only its own template:
-   `checkout -> ck-`, `order_success -> os-`, `account_login -> al-`,
-   `account_register -> ar-`, `product -> pr-`, `base (L245) -> sb-`.
-2. For each of the five shop templates, decide per usage which intent it was,
-   using git history of the extraction commits (`git log -S'ic-2' -- <file>`)
-   to attribute each class to the commit that introduced it. That attribution is
-   the only evidence available; it must not be guessed.
-3. Add a gate that fails when one CSS file defines the same bare class twice with
-   different bodies at top level, so this cannot recur. It must be
-   `@media`-aware or it will flag every legitimate responsive override —
-   a naive version of this check flags 41 classes in `erp-theme-unified.css` and
-   42 in `landing.css`, which are almost certainly media-query overrides, not
-   defects.
-4. Re-verify with `check_utility_reachability.py`, `test_no_duplicate_static_assets`
-   and the inline budget.
+## Follow-ups this does not cover
+
+`ps-grid`, `ps-checkout-grid` and `ps-checkout-right` are each defined more than
+once in the One-Page Checkout section. Those sit in different `@media` contexts,
+which is a legitimate override, so the collision gate correctly passes them. They
+are left alone deliberately rather than folded into this change.
 
 ## Interim risk
 

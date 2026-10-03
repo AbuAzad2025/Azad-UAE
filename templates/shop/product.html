@@ -43,7 +43,7 @@
 {% with current_page_name = product.get_display_name(lang) %}
 {% include 'shop/partials/breadcrumbs.html' with context %}
 {% endwith %}
-<a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline ic-1"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}" aria-hidden="true"></i> {{ t('continue_shopping') }}</a>
+<a href="{{ url_for('shop.catalog', slug=store.store_slug) }}" class="ps-btn ps-btn-outline pr-1"><i class="fas fa-arrow-{{ 'right' if is_rtl else 'left' }}" aria-hidden="true"></i> {{ t('continue_shopping') }}</a>
 
 <div class="ps-product-detail">
   <div class="ps-product-gallery">
@@ -52,19 +52,19 @@
       <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}" data-zoom>
     </div>
     {% else %}
-    <div class="ps-placeholder ic-2"><i class="fas fa-box-open" aria-hidden="true"></i></div>
+    <div class="ps-placeholder pr-2"><i class="fas fa-box-open" aria-hidden="true"></i></div>
     {% endif %}
   </div>
   <div>
-    <h2 class="ic-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart" aria-hidden="true"></i></button>{% endif %}</h2>
+    <h2 class="pr-3">{{ product.get_display_name(lang) }}{% if is_shop_logged_in %} <button class="ps-wishlist-btn" data-wishlist-toggle data-product-id="{{ product.id }}" aria-label="{{ t('wishlist') }}"><i class="far fa-heart" aria-hidden="true"></i></button>{% endif %}</h2>
     {% if product.sku %}<p class="ps-card-meta">{{ product.sku }}</p>{% endif %}
-    <p class="ps-price ic-4">{{ format_currency(display_price, currency=store_currency) }}</p>
+    <p class="ps-price pr-4">{{ format_currency(display_price, currency=store_currency) }}</p>
     {% if is_shop_logged_in %}
     <small class="ps-loyalty-earn"><i class="fas fa-gem" aria-hidden="true"></i> {{ t('earn_points') }} {{ display_price|int }}</small>
     {% endif %}
     <p class="ps-stock-ok"><i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('in_stock') }} — {{ available|int }}</p>
     {% if product.description %}
-    <div class="ic-5">{{ product.description | e }}</div>
+    <div class="pr-5">{{ product.description | e }}</div>
     {% endif %}
 
     <form method="post" action="{{ url_for('shop.cart_add', slug=store.store_slug) }}" data-ajax-cart>
@@ -84,13 +84,13 @@
       {% endif %}
       <div class="ps-form-group">
         <label for="ps_qty">{{ t('quantity') }}</label>
-        <div class="ps-qty-wrap ic-7">
-          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-minus aria-label="{{ t('decrease_quantity') }}">−</button>
-          <input type="number" id="ps_qty" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input ic-9">
-          <button type="button" class="ps-btn ps-btn-outline ic-8" data-qty-plus aria-label="{{ t('increase_quantity') }}">+</button>
+        <div class="ps-qty-wrap pr-7">
+          <button type="button" class="ps-btn ps-btn-outline pr-8" data-qty-minus aria-label="{{ t('decrease_quantity') }}">−</button>
+          <input type="number" id="ps_qty" name="quantity" value="1" min="1" max="{{ available|int }}" step="1" class="ps-qty-input pr-9">
+          <button type="button" class="ps-btn ps-btn-outline pr-8" data-qty-plus aria-label="{{ t('increase_quantity') }}">+</button>
         </div>
       </div>
-      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block ic-10"><i class="fas fa-shopping-basket" aria-hidden="true"></i> {{ t('add_to_cart') }}</button>
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block pr-10"><i class="fas fa-shopping-basket" aria-hidden="true"></i> {{ t('add_to_cart') }}</button>
     </form>
     {% if available <= 0 %}
     <div class="ps-stock-alert">
@@ -104,8 +104,8 @@
     </div>
     {% endif %}
     {% if not is_shop_logged_in and wa_url %}
-    <a href="{{ wa_url }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-block ic-11"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('order_whatsapp') }}</a>
-    <p class="ps-card-meta ic-12">{{ t('guest_checkout') }} — <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>
+    <a href="{{ wa_url }}" target="_blank" rel="noopener" class="ps-btn ps-btn-wa ps-btn-block pr-11"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('order_whatsapp') }}</a>
+    <p class="ps-card-meta pr-12">{{ t('guest_checkout') }} — <a href="{{ url_for('shop.account_login', slug=store.store_slug) }}">{{ t('login') }}</a></p>
     {% endif %}
   </div>
 </div>

@@ -5,7 +5,7 @@
 {% with current_page_name = t('checkout') %}
 {% include 'shop/partials/breadcrumbs.html' with context %}
 {% endwith %}
-<h2 class="ic-1">{{ t('checkout') }}</h2>
+<h2 class="ck-1">{{ t('checkout') }}</h2>
 
 {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
 <div class="ps-loyalty-info">
@@ -23,7 +23,7 @@
     <div class="ps-checkout-section">
       <h3><i class="fas fa-user" aria-hidden="true"></i> {{ t('customer_details') }}</h3>
       {% if store.delivery_note %}
-      <p class="ic-2" style="margin-bottom:14px"><i class="fas fa-truck" aria-hidden="true"></i> {{ store.delivery_note }}</p>
+      <p class="ck-2" style="margin-bottom:14px"><i class="fas fa-truck" aria-hidden="true"></i> {{ store.delivery_note }}</p>
       {% endif %}
 
       <form class="needs-validation" method="post" action="{{ url_for('shop.checkout', slug=store.store_slug) }}" id="checkout-form">
@@ -69,12 +69,12 @@
           </label>
           {% endfor %}
         </div>
-        <div id="ps-pay-hint" class="ps-pay-hint ic-3"></div>
+        <div id="ps-pay-hint" class="ps-pay-hint ck-3"></div>
       </div>
 
       <div class="ps-checkout-section">
         <h3><i class="fas fa-lock" aria-hidden="true"></i> {{ t('secure_checkout') }}</h3>
-        <p class="ic-4"><i class="fas fa-bell" aria-hidden="true"></i> {{ t('whatsapp_email_notify') }}</p>
+        <p class="ck-4"><i class="fas fa-bell" aria-hidden="true"></i> {{ t('whatsapp_email_notify') }}</p>
         <button type="submit" form="checkout-form" class="ps-btn ps-btn-primary ps-btn-block ps-btn-lg">
           <i class="fas fa-check-circle" aria-hidden="true"></i> {{ t('place_order') }}
         </button>
@@ -102,7 +102,7 @@
       </div>
 
       {% if min_order and min_order > 0 %}
-      <p class="ic-6" style="margin-top:10px"><i class="fas fa-coins" aria-hidden="true"></i> {{ t('free_from') }}: {{ format_currency(conv(min_order), currency=store_currency) }}</p>
+      <p class="ck-6" style="margin-top:10px"><i class="fas fa-coins" aria-hidden="true"></i> {{ t('free_from') }}: {{ format_currency(conv(min_order), currency=store_currency) }}</p>
       {% endif %}
 
       {% if is_shop_logged_in and loyalty_points and loyalty_points > 0 %}
