@@ -76,9 +76,9 @@ def main() -> int:
         return 1
 
     class_sheet: dict[str, str] = {}
-    for sheet in CSS.glob("*.css"):
-        for name in _defined_classes(sheet.name):
-            class_sheet.setdefault(name, sheet.name)
+    for sheet_path in CSS.glob("*.css"):
+        for class_name in _defined_classes(sheet_path.name):
+            class_sheet.setdefault(class_name, sheet_path.name)
 
     findings: list[str] = []
     checked = 0

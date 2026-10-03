@@ -23,12 +23,13 @@
   <link rel="stylesheet" href="{{ dist_url('css/critical.css') }}" media="print" id="criticalCss">
   <noscript><link rel="stylesheet" href="{{ dist_url('css/critical.css') }}"></noscript>
     {# layout-utilities.css defines the w-* width/height classes and
-       dashboard-utilities.css the d-* panel/bar classes. Both are referenced by
+       and is referenced by
        templates extending this layout but were linked from nowhere, so every w-*
-       and d-* class resolved to nothing and rendered unstyled. Linked here, in
-       the same dist_url form as the rest. #}
+       class resolved to nothing and rendered unstyled. Linked here, in the same
+       dist_url form as the rest. dashboard-utilities.css is deliberately NOT added
+       here: only the dashboard uses it and that page already links it, so linking
+       it in base.html would double-load it and charge every page for it. #}
     <link rel="stylesheet" href="{{ dist_url('css/layout-utilities.css') }}">
-    <link rel="stylesheet" href="{{ dist_url('css/dashboard-utilities.css') }}">
   <script nonce="{{ csp_nonce() }}">
     (function () {
       var l = document.getElementById('criticalCss');

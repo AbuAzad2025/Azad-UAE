@@ -9,8 +9,6 @@
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/bootstrap-icons/bootstrap-icons.min.css') }}">
 <link rel="stylesheet" href="{{ dist_url('css/owner-panels.css') }}">
-{# owner/tenants_list.html uses w-* classes; the sheet was unlinked. #}
-<link rel="stylesheet" href="{{ dist_url('css/layout-utilities.css') }}">
 {% endblock %}
 
 {% block extra_js %}
