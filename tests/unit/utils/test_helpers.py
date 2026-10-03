@@ -347,7 +347,7 @@ class TestSaveUploadedFile:
         f = MagicMock()
         f.filename = "big.png"
         f.tell.side_effect = [10 * 1024 * 1024 + 1, 0]
-        f.read.return_value = b"\x89PNG"
+        f.read.return_value = b"\x89PNG\r\n\x1a\n"
         with app.app_context(), pytest.raises(ValueError, match="size"):
             h.save_uploaded_file(f, allowed_extensions={".png"})
 
@@ -363,7 +363,7 @@ class TestSaveUploadedFile:
         f = MagicMock()
         f.filename = "ok.png"
         f.tell.side_effect = [128, 0]
-        f.read.return_value = b"\x89PNG\r\n"
+        f.read.return_value = b"\x89PNG\r\n\x1a\n"
         static_dir = tmp_path / "static"
         static_dir.mkdir()
         with app.app_context():
