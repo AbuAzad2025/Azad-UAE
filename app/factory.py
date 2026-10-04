@@ -248,6 +248,12 @@ def create_app(config_class=Config) -> Flask:
         from utils.tenanting import get_active_tenant_id, get_tenant_status
 
         g.active_tenant_id = None
+        # Stamp which request the value below belongs to. `g` is scoped to the app
+        # context, and an app context outlives a single request when anything
+        # holds one open, so `g.active_tenant_id` can be read later by code that
+        # is not inside the request that set it. utils/tenant_orm.py checks this
+        # stamp before trusting the value.
+        g.active_tenant_request = id(request)
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""

@@ -1,78 +1,98 @@
-# Test isolation: the tenant guard reads `g.active_tenant_id`, not the session
+# Test isolation: the tenant guard must not trust `g` outside a request
 
 ## The failure this prevents
 
-Writing S-07 and S-09 (cash sale at the till, multi-tender) failed with:
+Writing S-07 (cash sale at the till) and S-09 (multi-tender) failed at fixture
+setup, on fixtures that have nothing to do with a sale:
 
     utils.tenant_orm.TenantIsolationError: Cross-tenant INSERT on Branch:
     obj.tenant_id=3 != active_tenant=1
 
-on fixtures that have nothing to do with a sale. `sample_branch` simply creates
-a branch, and it raised while being set up.
+`demo_branch` simply creates a branch for `demo_tenant` (id 3). It was rejected
+against tenant **1**, which belonged to a user created by an earlier fixture in
+the same test.
 
 ## Root cause
 
-The write guard resolves the active tenant in this order
-(`utils/tenant_orm.py:_active_tenant_for_orm`):
+`tests/conftest.py::db_session` wraps the whole test in `with app.app_context():`
 
-1. `g.active_tenant_id` if set
-2. otherwise `utils.tenanting.get_active_tenant_id()` with **no argument**
+    @pytest.fixture
+    def db_session(app):
+        with app.app_context():
+            ...
+            yield session
+            ...
 
-Step 2 is the problem. Called with no argument, `get_active_tenant_id` does
-`_resolve_user(None)`, which reaches for `current_user`. That is a Flask
-LocalProxy. **Outside a request context it does not evaluate to `None` - it
-reaches whatever the proxy was last bound to**, and `_resolve_user` passes that
-value on. The branch of the function that returns `None` for an unauthenticated
-user is never reached, because a stale bound value looks authenticated.
+Flask's `RequestContext.push()` **reuses an already-pushed app context** for the
+same app instead of pushing a fresh one:
 
-So a tenant id left over from a previous request is used to validate a write
-that happens in a fixture, outside any request. The comparison is against a
-tenant that has nothing to do with the row being written, and it fails.
+    app_ctx = _cv_app.get(None)
+    if app_ctx is None or app_ctx.app is not self.app:
+        app_ctx = self.app.app_context()
+        app_ctx.push()
 
-`tests/conftest.py:client` is already function-scoped and clears
-`session_transaction()` on teardown, so the Flask cookie session is not the
-carrier. The leak is in the unbound `current_user` proxy, not in the session
-cookie - which is why clearing cookies in a fixture did not help, and why the
-failure depended on test order rather than reproducing in isolation.
+So while `db_session` is alive, every `client.get(...)` / `client.post(...)` in
+the test reuses that one app context, and therefore the same `g`. The factory's
+`before_request` sets `g.active_tenant_id = get_active_tenant_id(_cu)` per
+request, but because `g` is shared across those requests, the value from the
+login performed in `pos_cashier` was still on `g` when `stocked_product` went on
+to build the demo tenant's rows.
+
+`utils/tenant_orm.py::_active_tenant_for_orm` read `g.active_tenant_id`
+unconditionally, so the write guard validated against a tenant from a request that
+had already ended. Hence 3 vs 1, and hence the order dependence.
+
+Two things had been ruled out first, and it is worth recording why, because both
+look plausible and cost time:
+
+- **The Flask cookie session.** `client` is function-scoped and already clears
+  `session_transaction()` on teardown, so the session was not the carrier.
+  Clearing cookies again changed nothing.
+- **An unbound `current_user` proxy.** `utils/tenanting.py::_resolve_user` wraps
+  the lookup in `try/except RuntimeError` and returns `None`, so outside a request
+  it degrades correctly. An earlier hypothesis blamed this; it was wrong.
 
 ## The fix
 
-Make the no-argument path honest about having no request context, so it returns
-`None` instead of a stale proxy value:
+Gate the `g` lookup on it belonging to the request in flight.
 
-    # utils/tenanting.py, at the top of get_active_tenant_id, before
-    # _resolve_user is called with nothing:
-    if user is None and not has_request_context():
-        return None
+    # utils/tenant_orm.py::_active_tenant_for_orm
+    from flask import g, has_request_context
 
-There is no legitimate caller that wants a tenant id outside a request: every
-real path either passes a user explicitly or runs inside a request. A fixture
-that genuinely needs to write cross-tenant rows already has
-`without_tenant_scope()` for that, which is the documented mechanism.
+    if has_request_context():
+        g_tid = getattr(g, "active_tenant_id", None)
+        if g_tid is not None:
+            return int(g_tid)
 
-## Why it belongs in production code and not only in the tests
+    from utils.tenanting import get_active_tenant_id
 
-`get_active_tenant_id()` is called from the ORM event listeners on every flush.
-Making it return `None` when there is no request means:
+    return get_active_tenant_id()
 
-- writes made outside a request (CLI commands, migrations, background jobs,
-  test fixtures) are no longer validated against a phantom tenant
-- the existing `without_tenant_scope()` escape hatch remains the explicit,
-  auditable way to bypass the guard
+Why this is safe and not a loosening:
 
-Without this, any code path that writes tenant-scoped rows outside a request -
-a management command, a data migration, a fixture - either fails spuriously
-against whatever tenant was last active or, worse, silently passes because the
-stale value happened to match.
+- **In production nothing changes.** Every ORM flush happens inside a request, so
+  `has_request_context()` is `True` and `g` is still used. The reason `g` was
+  preferred in the first place - re-resolving `current_user` at execute time can
+  return `None` for lazy loads and nested queries, which used to inject
+  `tenant_id < 0` and silently empty tenant-scoped lists - is a concern that only
+  arises *within* a request. That protection is fully preserved.
+- **Outside a request there is nothing to enforce.** No request means no active
+  tenant, so the guard must not invent one. `get_active_tenant_id()` resolves to
+  `None` there via `_resolve_user`'s `RuntimeError` handling.
+- **The escape hatch is unchanged.** Code that genuinely writes cross-tenant
+  outside a request (provisioning, migrations, imports) still uses the documented
+  `without_tenant_scope()`.
 
-## Not yet verified
+The same defect applied beyond the test harness. A CLI command or a background job
+that holds an app context open while running several tenants' work would have had
+the first tenant's id pinned onto `g` and enforced for all of them.
 
-The one-line change above is the diagnosis reached by reading the resolution
-order. It has **not** been applied and its effect has not been measured, because
-it was identified at the point this session ran out of budget. Applying it should
-make S-07 and S-09 collectable; that is the first thing to check, not an
-assumption.
+## Regression coverage
 
-A regression guard belongs with it: a test that writes a tenant-scoped row with
-no request context and asserts it is not rejected against a stale tenant, and a
-second that asserts `get_active_tenant_id()` returns `None` outside a request.
+`tests/unit/utils/test_tenant_orm_active_tenant.py`:
+
+- a `g.active_tenant_id` left over from an earlier request is ignored once that
+  request has ended, so a write for a different tenant is not rejected against it
+- `g.active_tenant_id` is still honoured inside a live request context, so the
+  in-request lazy-load protection is unchanged
+- `get_active_tenant_id()` returns `None` with an app context open but no request

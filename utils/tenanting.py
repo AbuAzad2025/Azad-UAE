@@ -41,6 +41,52 @@ def is_global_tenant_user(user=None) -> bool:
     return is_platform_owner(user)
 
 
+def _current_request_id():
+    """Identity of the request in flight, or None when there is not one.
+
+    Unwraps the ``request`` proxy to the object it is bound to. If the proxy is
+    unbound, or bound to something that is not a request (a stale context-local
+    left behind by a finished request), this returns None so callers treat a
+    stamped value as stale.
+    """
+    try:
+        from flask import request
+
+        target = request._get_current_object()
+    except Exception:
+        return None
+    if target is None or not hasattr(target, "environ"):
+        return None
+    return id(target)
+
+
+def g_active_tenant_is_current():
+    """True only when ``g.active_tenant_id`` was stamped for the request in flight.
+
+    ``has_request_context()`` is not a substitute. ``g`` is scoped to the app
+    context and an app context outlives a single request whenever something holds
+    one open - a test fixture wrapping its work in ``with app.app_context()``, a
+    CLI command, a background job - and Flask reuses an already-pushed app
+    context rather than pushing a new one. The finished request's tenant then
+    stays readable, and ``has_request_context()`` keeps reporting True because
+    the context-local that ``g`` belongs to has not been unwound.
+
+    The factory stamps ``g.active_tenant_request`` alongside the tenant id, so
+    comparing identities is what actually establishes that the value belongs to
+    the request being served now.
+    """
+    try:
+        from flask import g
+
+        stamped = getattr(g, "active_tenant_request", None)
+        if stamped is None:
+            return False
+        current = _current_request_id()
+        return current is not None and stamped == current
+    except Exception:
+        return False
+
+
 def get_active_tenant_id(user=None) -> int | None:
     """
     Resolve tenant for the current request.
@@ -53,8 +99,12 @@ def get_active_tenant_id(user=None) -> int | None:
         # for the whole request and avoids resolving current_user again at
         # query-execution time (which can otherwise yield None and silently
         # empty every tenant-scoped list).
+        #
+        # Only honoured when that value belongs to the request being served -
+        # see g_active_tenant_is_current(). Trusting it merely because a request
+        # context is visible would re-enforce a previous request's tenant.
         try:
-            if has_request_context():
+            if g_active_tenant_is_current():
                 from flask import g
 
                 g_tid = getattr(g, "active_tenant_id", None)
@@ -68,8 +118,11 @@ def get_active_tenant_id(user=None) -> int | None:
         tid = user.tenant_id if user is not None else None
         return int(tid or 0) if tid else None
 
-    if has_request_context():
-        raw = session.get(ACTIVE_TENANT_SESSION_KEY)
+    if g_active_tenant_is_current():
+        try:
+            raw = session.get(ACTIVE_TENANT_SESSION_KEY)
+        except Exception:
+            raw = None
         if raw is not None and raw != "":
             try:
                 return int(raw)

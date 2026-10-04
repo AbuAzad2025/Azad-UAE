@@ -88,6 +88,7 @@ from sqlalchemy import true as sql_true
 from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
+from utils.tenanting import g_active_tenant_is_current
 
 logger = logging.getLogger(__name__)
 
@@ -236,11 +237,27 @@ def _active_tenant_for_orm() -> int | None:
     # current_user at ORM-execute time can return None for lazy loads / nested
     # queries, which previously made the listener inject `tenant_id < 0`
     # (i.e. WHERE false) and emptied every tenant-scoped list.
+    #
+    # `g` is only trustworthy for the request that stamped it. An app context can
+    # outlive a request - Flask reuses an already-pushed app context instead of
+    # pushing a new one, so anything holding an app context open (a test fixture
+    # wrapping its work in `with app.app_context()`, a CLI command, a background
+    # job) leaves the finished request's active tenant on `g`, where
+    # has_request_context() still reports True. Reading the stale value is how a
+    # fixture that merely creates a Branch got rejected with
+    # "obj.tenant_id=3 != active_tenant=1", the 1 belonging to an earlier login.
+    #
+    # Outside a stamped request there is no active tenant to enforce, so fall
+    # through to get_active_tenant_id(), which returns None there. Code that
+    # genuinely writes cross-tenant outside a request keeps using the documented
+    # without_tenant_scope() escape hatch.
     try:
         from flask import g
 
-        if getattr(g, "active_tenant_id", None) is not None:
-            return int(g.active_tenant_id)
+        if g_active_tenant_is_current():
+            g_tid = getattr(g, "active_tenant_id", None)
+            if g_tid is not None:
+                return int(g_tid)
     except Exception:
         logger.debug("Failed to resolve active tenant ID from g context", exc_info=True)
 
