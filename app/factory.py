@@ -245,7 +245,7 @@ def create_app(config_class=Config) -> Flask:
         from flask_login import current_user as _cu
 
         from utils.auth_helpers import is_global_owner_user
-        from utils.tenanting import get_active_tenant_id, get_tenant_status
+        from utils.tenanting import _current_request_id, get_active_tenant_id, get_tenant_status
 
         g.active_tenant_id = None
         # Stamp which request the value below belongs to. `g` is scoped to the app
@@ -253,7 +253,11 @@ def create_app(config_class=Config) -> Flask:
         # holds one open, so `g.active_tenant_id` can be read later by code that
         # is not inside the request that set it. utils/tenant_orm.py checks this
         # stamp before trusting the value.
-        g.active_tenant_request = id(request)
+        #
+        # Must be the identity of the underlying request, not of the `request`
+        # proxy: id() on a LocalProxy returns the id of the proxy instance, which
+        # never matches what utils.tenanting._current_request_id() computes.
+        g.active_tenant_request = _current_request_id()
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""

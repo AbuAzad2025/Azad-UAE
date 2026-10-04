@@ -71,6 +71,25 @@ def scenario_owner(db_session, client):
 
 
 @pytest.fixture
+def pos_subfeatures_on(db_session, demo_tenant):
+    """Turn the POS sub-features the scenarios need on for the demo tenant.
+
+    Split tenders are a paid sub-feature: utils/pos_features.pos_feature_enabled
+    reads the tenant's ``enable_pos_multi_tender`` column first and otherwise
+    falls back to the plan default, which for a bare test tenant is the basic
+    tier, so checkout is refused with 403 before any money is handled.
+
+    Set through the columns rather than by faking a subscription, because these
+    scenarios are about the split-tender accounting, not about plan resolution -
+    plan defaulting has its own coverage.
+    """
+    demo_tenant.enable_pos_multi_tender = True
+    demo_tenant.enable_pos_promotions = True
+    db_session.flush()
+    return demo_tenant
+
+
+@pytest.fixture
 def ledger(db_session):
     """Read-only view of what the ledger says, for verification.
 

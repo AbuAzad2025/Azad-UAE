@@ -20,6 +20,7 @@ the receipt-splitting scenarios live here rather than in the sales-desk wave.
 from __future__ import annotations
 
 import uuid
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -85,7 +86,7 @@ def pos_cashier(client, db_session, demo_tenant, demo_branch):
 
 
 @pytest.fixture
-def till_open(db_session, pos_cashier, demo_tenant, demo_branch):
+def till_open(db_session, pos_cashier, demo_tenant, demo_branch, pos_subfeatures_on):
     """An open POS session owned by the cashier who is actually signed in.
 
     Without this, /pos/api/checkout refuses to ring up: the route resolves the
@@ -159,23 +160,46 @@ def stocked_product(db_session, demo_tenant, demo_branch, demo_warehouse, ledger
 
 @pytest.fixture
 def scenario_customer(client, db_session, demo_tenant):
-    """A customer created over HTTP, not through a factory."""
+    """A customer created over HTTP, not through a factory.
+
+    Creating it through the form rather than a factory is the point: the sale
+    scenarios should be able to attribute a sale to a customer the tenant
+    actually created, and the response is asserted rather than assumed.
+    """
     from models import Customer
 
     unique = str(uuid.uuid4())[:8]
+    name = f"Walk In Customer {unique}"
     resp = client.post(
         "/customers/create",
         data={
-            "name": f"Walk In Customer {unique}",
+            "name": name,
             "customer_type": "regular",
-            "phone": f"050{unique[:7]}",
+            # Digits only: normalize_phone_optional rejects letters, and a uuid
+            # slice is hex, so "050" + uuid[:7] fails about half the time.
+            "phone": "050" + "".join(ch for ch in unique if ch.isdigit())[:7].ljust(7, "0"),
             "email": f"cust-{unique}@example.com",
         },
         follow_redirects=True,
     )
-    assert resp.status_code in (200, 302)
+    assert resp.status_code in (200, 302), resp.get_data(as_text=True)[:300]
 
-    customer = Customer.query.filter_by(tenant_id=demo_tenant.id, name=f"Walk In Customer {unique}").one()
+    # Read back inside without_tenant_scope: this fixture runs outside a request,
+    # so the ORM's automatic scoping has no active tenant to scope to and would
+    # filter the row away. The sale path reads it from inside the request, which
+    # is why the create has to have gone through HTTP rather than a factory.
+    from utils.tenanting import without_tenant_scope
+
+    with without_tenant_scope():
+        customer = db_session.query(Customer).filter_by(tenant_id=demo_tenant.id, name=name).one()
+
+    # Created customers land inactive, and SaleService.create_sale refuses an
+    # inactive customer outright ("العميل غير صالح أو غير نشط"). Activating is
+    # done here rather than by patching the service, so the sale is exercised
+    # through the same validation every real sale goes through.
+    if not customer.is_active:
+        customer.is_active = True
+        db_session.flush()
     return customer
 
 
@@ -216,13 +240,12 @@ class TestS07CashSale:
         matters. So stock, the cash movement and the revenue side are each
         checked against their before/after balance.
         """
-        from models import GLAccount, Sale, StockMovement
+        from models import Payment, Sale, StockMovement
 
         product = stocked_product["product"]
         warehouse = stocked_product["warehouse"]
 
         before_stock = StockMovement.query.filter_by(product_id=product.id, movement_type="sale").count()
-        before_cash = ledger.balance("1110", demo_tenant.id)
         before_revenue = ledger.balance("4100", demo_tenant.id)
         before_cogs = ledger.balance("5100", demo_tenant.id)
 
@@ -245,20 +268,58 @@ class TestS07CashSale:
 
         sale = Sale.query.filter_by(tenant_id=demo_tenant.id, id=body["data"]["sale_id"]).one()
         assert sale.status != "draft"
-        assert Decimal(str(sale.total)) == Decimal("50.000")
+        # total_amount, not total - Sale has no `total` attribute.
+        assert Decimal(str(sale.total_amount)) == Decimal("50.000"), (
+            f"sale total is {sale.total_amount}, expected the 50 rung up"
+        )
 
         # The shelf.
         after_stock = StockMovement.query.filter_by(product_id=product.id, movement_type="sale").count()
         assert after_stock == before_stock + 1, "the sale posted no stock movement"
 
-        # The ledger: cash in on 1110, revenue and cost of sales recognised.
-        after_cash = ledger.balance("1110", demo_tenant.id)
-        assert after_cash - before_cash == Decimal("50.0"), (
-            f"cash account 1110 moved {after_cash - before_cash}, expected 50"
-        )
+        # The ledger. Which cash account a till posts to is the chart of accounts'
+        # business - 1110 is a header over the 1111/1112 cash boxes, and hardcoding
+        # one of them here would break the moment the registry resolves a different
+        # box. So the cash account is discovered from the journal entry this sale
+        # actually wrote, exactly as S-09 does for its tenders.
+        from models import GLAccount, GLJournalEntry, GLJournalLine
+        from utils.gl_reference_types import GLRef, filter_entries_by_ref
 
-        gl = GLAccount.query.filter_by(tenant_id=demo_tenant.id, code="1110").one()
-        assert gl.is_active, "1110 must be a postable account for a cash sale to land"
+        payment_ids = [p.id for p in db_session.query(Payment).filter_by(tenant_id=demo_tenant.id).all()]
+        pay_entry_ids = [
+            e.id
+            for e in filter_entries_by_ref(db_session.query(GLJournalEntry), GLRef.PAYMENT)
+            .filter(GLJournalEntry.reference_id.in_(payment_ids), GLJournalEntry.status == "posted")
+            .all()
+        ]
+        assert pay_entry_ids, "the cash sale posted no payment journal entry"
+
+        cash_lines = [
+            line
+            for line in db_session.query(GLJournalLine).filter(GLJournalLine.entry_id.in_(pay_entry_ids)).all()
+            if line.debit and float(line.debit) > 0
+        ]
+        assert cash_lines, "the cash tender debited nothing"
+
+        cash_total = sum(float(line.debit) for line in cash_lines)
+        assert cash_total == pytest.approx(50.0), f"the cash tender landed {cash_total}, expected the 50 rung up"
+        cash_codes = {db_session.query(GLAccount).get(line.account_id).code for line in cash_lines}
+        for code in cash_codes:
+            assert db_session.query(GLAccount).filter_by(tenant_id=demo_tenant.id, code=code).one().is_active
+
+        # Revenue and cost of sales are recognised on the sale entry, which the
+        # payment entries above do not carry. Asserting them closes the loop: a
+        # sale that moves cash and stock but never recognises revenue would pass
+        # every other check in this test.
+        revenue = ledger.balance("4100", demo_tenant.id) - before_revenue
+        cogs = ledger.balance("5100", demo_tenant.id) - before_cogs
+        # ledger.balance is debit-minus-credit, so revenue recognised as a credit
+        # reads as a decrease. The sale entry is Dr 1130 / Cr 4100.
+        assert revenue == pytest.approx(-50.0), f"revenue moved {revenue}, expected a 50 credit on 4100"
+        # Cost of sales is the cost of the two units at cost price 10, not the 25
+        # they were rung up at - the gross margin is real money the ledger must
+        # not lose.
+        assert cogs == pytest.approx(20.0), f"cost of sales moved {cogs}, expected 2 x cost 10"
 
     def test_cash_sale_is_idempotent_under_a_repeated_key(
         self, client, db_session, pos_cashier, till_open, stocked_product, ledger, demo_tenant
@@ -306,12 +367,29 @@ class TestS09MultiTender:
         everything on cash would still total correctly and still look fine on a
         till, which is exactly how it would reach production unnoticed.
         """
-        from models import GLAccount, Payment
+        from models import Payment
 
         product = stocked_product["product"]
+        cheque_no = f"CHQ-{uuid.uuid4().hex[:10].upper()}"
+        # A cheque is only accepted with a complete instrument:
+        # SaleService.create_payment_for_sale requires number, due date and the
+        # drawing bank, and SaleService._prepare_split_payments passes all three
+        # through from the chunk. Asserting the cheque survives with its
+        # reference intact is what makes the tender reconcilable later.
+        due_date = (date.today() + timedelta(days=30)).isoformat()
         amounts = {"cash": 10, "card": 15, "cheque": 20, "bank_transfer": 5}
-
-        before = {code: ledger.balance(code, demo_tenant.id) for code in ("1110", "1120", "1130", "1140")}
+        tenders = [
+            {"method": "cash", "amount": 10},
+            {"method": "card", "amount": 15},
+            {
+                "method": "cheque",
+                "amount": 20,
+                "cheque_number": cheque_no,
+                "cheque_date": due_date,
+                "bank_name": "Bank Al-Yusr",
+            },
+            {"method": "bank_transfer", "amount": 5},
+        ]
 
         resp = client.post(
             "/pos/api/checkout",
@@ -321,7 +399,7 @@ class TestS09MultiTender:
                 "currency": "ILS",
                 "exchange_rate": 1,
                 "lines": [{"product_id": product.id, "quantity": 2, "unit_price": 25}],
-                "payments": [{"method": m, "amount": a} for m, a in amounts.items()],
+                "payments": tenders,
                 "payment_method": "cash",
                 "paid_amount": sum(amounts.values()),
             },
@@ -329,24 +407,63 @@ class TestS09MultiTender:
         )
         assert resp.status_code == 200, resp.get_data(as_text=True)[:400]
 
-        after = {code: ledger.balance(code, demo_tenant.id) for code in before}
-        deltas = {code: after[code] - before[code] for code in before}
-
-        # Each tender must move its own account by its own amount. Asserted as a
-        # set of non-zero movements rather than exact totals, because the
-        # receivable accounts clear through a settlement entry whose timing is not
-        # what this scenario is about.
-        moved = {code: d for code, d in deltas.items() if d != 0}
-        assert moved, f"no tender account moved at all: {deltas}"
-
-        # Cash is the one amount that must be exact - it is the till drawer.
-        assert deltas["1110"] == Decimal(str(amounts["cash"])), (
-            f"cash drawer moved {deltas['1110']}, expected {amounts['cash']}"
-        )
-
         payments = Payment.query.filter_by(tenant_id=demo_tenant.id).all()
         methods = {getattr(p, "payment_method", None) or getattr(p, "method", None) for p in payments}
         assert len(methods) >= 3, f"expected several tender methods recorded, saw {methods}"
 
-        for code in before:
-            GLAccount.query.filter_by(tenant_id=demo_tenant.id, code=code).one()
+        # The amounts must add up to the sale, and the cheque must have kept its
+        # instrument number - a split that lost the cheque reference would leave
+        # an amount on the cheques-under-collection account that nobody can ever
+        # reconcile.
+        from models import Cheque
+
+        recorded = sum(Decimal(str(p.amount)) for p in payments)
+        assert recorded == Decimal("50"), f"tendered {recorded}, expected the 50 sale total"
+
+        cheque = Cheque.query.filter_by(tenant_id=demo_tenant.id, cheque_number=cheque_no).first()
+        assert cheque is not None, f"cheque {cheque_no} was not recorded"
+        assert Decimal(str(cheque.amount)) == Decimal("20"), f"cheque amount is {cheque.amount}, expected 20"
+        # The real invariant: each tender reaches a different account.
+        #
+        # The sale entry itself carries only the revenue side (4100). Each tender
+        # posts its own payment entry, keyed on GLRef.PAYMENT against the Payment
+        # row, so the accounts are read per payment. Filtering on the sale entry
+        # would show just the revenue credit and hide pooling completely - which
+        # is how "assert >= 3 accounts" first reported only {'4100': 50.0}.
+        #
+        # Which cash box or collection account a tender uses is the chart of
+        # accounts' business, not this test's - see models/gl_account_registry.py -
+        # so the codes are discovered from the journal rather than hardcoded.
+        from models import GLAccount, GLJournalEntry, GLJournalLine
+        from utils.gl_reference_types import GLRef, filter_entries_by_ref
+
+        pay_entry_ids = [
+            e.id
+            for e in filter_entries_by_ref(db_session.query(GLJournalEntry), GLRef.PAYMENT)
+            .filter(
+                GLJournalEntry.reference_id.in_([p.id for p in payments]),
+                GLJournalEntry.status == "posted",
+            )
+            .all()
+        ]
+        assert pay_entry_ids, "no tender posted a payment journal entry"
+
+        # The tender entries credit the customer receivable (1130) as it is
+        # settled; where the money physically lands is the debit side. Asserting
+        # credits would only ever show 1130 once, for every tender combined.
+        landed: dict[str, float] = {}
+        for line in db_session.query(GLJournalLine).filter(GLJournalLine.entry_id.in_(pay_entry_ids)).all():
+            if not line.debit or float(line.debit) <= 0:
+                continue
+            code = db_session.query(GLAccount).get(line.account_id).code
+            landed[code] = landed.get(code, 0.0) + float(line.debit)
+
+        # Four tenders across cash, card, cheque and bank transfer. Pooling them
+        # would collapse these into one account while still totalling correctly,
+        # which is exactly the bug being asserted against.
+        assert len(landed) >= 3, f"tenders were pooled onto too few accounts: {landed}"
+
+        total_landed = sum(landed.values())
+        assert total_landed == pytest.approx(50.0), (
+            f"tenders landed {total_landed} across {landed}, expected the 50 collected"
+        )

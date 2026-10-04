@@ -17,8 +17,7 @@ login manager to exist at all.
 from flask import g
 
 from utils.tenant_orm import _active_tenant_for_orm
-from utils.tenanting import _current_request_id
-from utils.tenanting import get_active_tenant_id, without_tenant_scope
+from utils.tenanting import _current_request_id, get_active_tenant_id, without_tenant_scope
 
 
 def test_flask_reuses_the_pushed_app_context_for_requests(app):
@@ -91,6 +90,45 @@ def test_without_tenant_scope_remains_the_documented_bypass(app):
     with app.app_context():
         with without_tenant_scope():
             assert _active_tenant_for_orm() is None
+
+
+def test_platform_owner_can_still_switch_tenants_within_a_request(app):
+    """The stamp must not break a platform owner's tenant switch.
+
+    Regression guard. ``g.active_tenant_request`` is stamped in before_request and
+    read back by get_active_tenant_id to reach the owner's session-selected
+    tenant. Stamping ``id(request)`` - the id of the LocalProxy - instead of the
+    underlying request made the stamp permanently unmatched, so the session
+    lookup was skipped, get_active_tenant_id returned None for a platform owner,
+    and every owner route that needs an active tenant redirected instead.
+
+    This failed as two confusing wave 0 scenario failures ("expected 2 branches,
+    got 0") before the actual cause was found, so it is asserted directly.
+    """
+    from utils.tenanting import ACTIVE_TENANT_SESSION_KEY, get_active_tenant_id
+
+    class FakeOwner:
+        is_authenticated = True
+        # is_platform_owner() reads `is_owner`; there is no is_platform_owner
+        # attribute on a User, so naming the flag that way here would silently
+        # make this a company user and test nothing.
+        is_owner = True
+        tenant_id = None
+
+    with app.test_request_context("/") as ctx:
+        from flask import g, session
+
+        from utils.tenanting import _current_request_id
+
+        g.active_tenant_request = _current_request_id()
+        session[ACTIVE_TENANT_SESSION_KEY] = 42
+        assert get_active_tenant_id(FakeOwner()) == 42
+
+        # And the stamp really is the underlying request, not the proxy: taking
+        # id() of the proxy would make this comparison vacuously false.
+
+        assert _current_request_id() == id(ctx.request), "stamp compares the proxy, not the request"
+
 
 def test_unstamped_g_is_not_trusted(app):
     """A g that was never stamped by before_request carries no authority.

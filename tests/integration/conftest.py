@@ -22,6 +22,32 @@ from tests.factories import (
 )
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _seed_permissions(app):
+    """Make the real permission table available to integration tests.
+
+    tests/conftest.py creates the app with SKIP_SYSTEM_INTEGRITY=1, which is
+    right for speed but leaves the permissions table empty. That is invisible
+    until a test hits a route behind ``@permission_required``: the guard denies
+    it and the failure looks like a product bug rather than a missing fixture
+    row - a 403 on /pos/api/checkout because ``manage_sales`` was never created.
+
+    The seeder is the same one production boot uses, sourced from
+    utils.constants, and it is idempotent. It runs per session, outside any
+    per-test savepoint, because permissions are reference data rather than test
+    state.
+    """
+    from models import Permission
+    from utils.system_init import _ensure_permissions
+
+    with app.app_context():
+        if Permission.query.first() is None:
+            _ensure_permissions()
+        assert Permission.query.filter_by(code="manage_sales").first() is not None, (
+            "permission seeding did not produce manage_sales"
+        )
+
+
 @pytest.fixture
 def demo_tenant(db_session):
     """A fresh tenant created through the factory."""
