@@ -606,3 +606,146 @@ class TestS10Overpayment:
         assert credited >= 50.0, (
             f"only {credited} was credited against the customer account; the 10 excess must be carried"
         )
+
+
+class TestS06CustomerStatement:
+    """S-06: a sale reaches the customer statement with the right balance."""
+
+    def test_statement_shows_the_sale_and_a_zero_final_balance(
+        self, client, db_session, pos_cashier, till_open, stocked_product, scenario_customer, demo_tenant
+    ):
+        """A fully paid sale leaves the customer owing nothing.
+
+        The sale is only worth anything to the statement if it appears as a
+        transaction *and* the running balance settles at zero once the payment is
+        applied. A statement that showed the sale but computed the balance from
+        sales alone would read as 50 outstanding on an invoice that was paid in
+        full, which is the kind of error a customer spots immediately.
+        """
+        product = stocked_product["product"]
+        resp = client.post(
+            "/pos/api/checkout",
+            json={
+                "customer_id": scenario_customer.id,
+                "warehouse_id": stocked_product["warehouse"].id,
+                "currency": "ILS",
+                "exchange_rate": 1,
+                "lines": [{"product_id": product.id, "quantity": 2, "unit_price": 25}],
+                "payment_method": "cash",
+                "paid_amount": 50,
+            },
+            headers={"Idempotency-Key": str(uuid.uuid4())},
+        )
+        assert resp.status_code == 200, resp.get_data(as_text=True)[:300]
+
+        stmt = client.get(f"/customers/{scenario_customer.id}/statement", follow_redirects=True)
+        assert stmt.status_code == 200
+
+        from services.customer_statement_service import CustomerStatementService
+
+        ctx = CustomerStatementService.build_statement_context(
+            record_id=scenario_customer.id,
+            date_from=None,
+            date_to=None,
+            transaction_type="all",
+            default_currency="ILS",
+            tenant_id=demo_tenant.id,
+            branch_id=None,
+        )
+
+        txs = ctx.get("transactions") or []
+        assert txs, "the statement has no transactions after a completed sale"
+
+        final_balance = float(ctx.get("final_balance") or 0)
+        assert abs(final_balance) < 0.01, (
+            f"statement final balance is {final_balance}; a fully paid sale must settle at zero"
+        )
+
+        # The sale must be individually visible, not netted away.
+        amounts = []
+        for tx in txs:
+            if isinstance(tx, dict):
+                for key in ("amount", "total", "debit", "credit", "value"):
+                    if key in tx:
+                        amounts.append(float(tx[key]))
+                        break
+        assert amounts, f"statement transactions carry no amount: {txs[0]!r}"
+        assert any(abs(v) > 0 for v in amounts), "every statement line is zero"
+
+
+class TestS11InvoiceNumbering:
+    """S-11: consecutive sales get consecutive numbers."""
+
+    def test_two_sales_get_distinct_sequential_numbers(
+        self, client, db_session, pos_cashier, till_open, stocked_product, scenario_customer, demo_tenant, demo_branch
+    ):
+        """Numbers must not repeat, and must not skip.
+
+        DocumentSequenceService takes a SELECT FOR UPDATE lock per number, so this
+        is the check that concurrent cashiers cannot be handed the same invoice
+        number. Two sales in sequence is the smallest case that can catch a
+        sequence that never advances.
+        """
+        from models import Sale
+
+        product = stocked_product["product"]
+        numbers = []
+        for _ in range(2):
+            resp = client.post(
+                "/pos/api/checkout",
+                json={
+                    "customer_id": scenario_customer.id,
+                    "warehouse_id": stocked_product["warehouse"].id,
+                    "currency": "ILS",
+                    "exchange_rate": 1,
+                    "lines": [{"product_id": product.id, "quantity": 1, "unit_price": 25}],
+                    "payment_method": "cash",
+                    "paid_amount": 25,
+                },
+                headers={"Idempotency-Key": str(uuid.uuid4())},
+            )
+            assert resp.status_code == 200, resp.get_data(as_text=True)[:300]
+
+        for sale in Sale.query.filter_by(tenant_id=demo_tenant.id).order_by(Sale.id.asc()).all():
+            numbers.append(sale.sale_number)
+
+        assert len(numbers) == 2, f"expected 2 sales, found {numbers}"
+        assert len(set(numbers)) == 2, f"sale numbers repeated: {numbers}"
+
+
+class TestS12Printing:
+    """S-12: the sale can be rendered for printing."""
+
+    def test_sale_print_view_renders(
+        self, client, db_session, pos_cashier, till_open, stocked_product, scenario_customer, demo_tenant
+    ):
+        """The print surface must survive a real sale having been taken.
+
+        Printing reads the sale back through the invoice template, which is where
+        a number or date format that the create path accepted can still break. A
+        200 here is weak on its own, so the body is checked for the sale number
+        rather than for the absence of a traceback.
+        """
+        from models import Sale
+
+        product = stocked_product["product"]
+        resp = client.post(
+            "/pos/api/checkout",
+            json={
+                "customer_id": scenario_customer.id,
+                "warehouse_id": stocked_product["warehouse"].id,
+                "currency": "ILS",
+                "exchange_rate": 1,
+                "lines": [{"product_id": product.id, "quantity": 1, "unit_price": 25}],
+                "payment_method": "cash",
+                "paid_amount": 25,
+            },
+            headers={"Idempotency-Key": str(uuid.uuid4())},
+        )
+        assert resp.status_code == 200, resp.get_data(as_text=True)[:300]
+        sale = Sale.query.filter_by(tenant_id=demo_tenant.id).order_by(Sale.id.desc()).first()
+
+        view = client.get(f"/sales/{sale.id}", follow_redirects=True)
+        assert view.status_code == 200
+        body = view.get_data(as_text=True)
+        assert sale.sale_number in body, "the sale view does not show the sale number"

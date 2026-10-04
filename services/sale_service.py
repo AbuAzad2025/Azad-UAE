@@ -1069,6 +1069,20 @@ class SaleService:
             payment_number=payment_number,
             payment_type=canonical_payment_type("sale_payment"),
             sale_id=sale.id,
+            # A customer settling an invoice is money coming in. Without
+            # this the column default ("outgoing") applies at INSERT and
+            # the payment reads as money leaving the business.
+            #
+            # Payment._validate_payment_direction does not catch it: that
+            # runs when sale_id is assigned, at which point self.direction
+            # is still None because the default is applied by the INSERT,
+            # not by the constructor.
+            #
+            # The GL posting was never affected - it keys off
+            # payment_method - which is why this stayed hidden. The
+            # customer statement keys off direction, so a fully paid
+            # invoice showed the customer owing double.
+            direction="incoming",
             customer_id=sale.customer_id,
             amount=amount_decimal,
             currency=currency,
