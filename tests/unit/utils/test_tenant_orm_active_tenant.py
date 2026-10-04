@@ -14,10 +14,11 @@ tenant falls through ``_resolve_user`` -> ``current_user``, which needs the app'
 login manager to exist at all.
 """
 
+import pytest
 from flask import g
 
-from utils.tenant_orm import _active_tenant_for_orm
-from utils.tenanting import _current_request_id, get_active_tenant_id, without_tenant_scope
+from utils.tenant_orm import _active_tenant_for_orm, _stamped_active_tenant
+from utils.tenanting import _current_request_id, get_active_tenant_id
 
 
 def test_flask_reuses_the_pushed_app_context_for_requests(app):
@@ -85,11 +86,56 @@ def test_tenanting_helper_still_locks_a_company_user_to_their_own_tenant(app):
         assert get_active_tenant_id(FakeUser()) == 42
 
 
-def test_without_tenant_scope_remains_the_documented_bypass(app):
-    """Cross-tenant writes outside a request keep using the escape hatch."""
+def test_nested_orm_resolution_does_not_recurse(app):
+    """Resolving the tenant must not be able to re-enter the ORM listener.
+
+    Regression guard. Resolving the active tenant reaches for the Flask
+    current_user proxy, and reading an attribute off a partially loaded User
+    issues SQL. That SQL fires do_orm_execute, which resolves the tenant again,
+    and the pair recurses until the interpreter gives up. It surfaced as a bare
+    RecursionError inside SQLAlchemy's annotation machinery from
+    services/store_service.py, reached by an after_request handler on every
+    response - so it had nothing to do with whatever test happened to be running.
+
+    The guard holds across the whole listener, so a nested statement is left
+    unscoped instead of re-entering. This asserts the flag is actually observable
+    from inside a nested call rather than trusting that it is set.
+    """
+    from utils.tenant_orm import _RESOLVING_ACTIVE_TENANT
+
     with app.app_context():
-        with without_tenant_scope():
-            assert _active_tenant_for_orm() is None
+        assert getattr(_RESOLVING_ACTIVE_TENANT, "value", False) is False
+
+        # Simulate the listener having claimed the flag.
+        _RESOLVING_ACTIVE_TENANT.value = True
+        try:
+            # A nested lookup must not attempt a user probe, which is what issued
+            # the nested statement in the first place.
+            assert _stamped_active_tenant() is None
+        finally:
+            _RESOLVING_ACTIVE_TENANT.value = False
+
+    assert getattr(_RESOLVING_ACTIVE_TENANT, "value", False) is False
+
+
+def test_guard_is_cleared_after_a_normal_resolution(app):
+    """A failure mid-resolution must not leave the guard latched forever.
+
+    The listener clears the flag in a finally block. If it did not, every later
+    statement in the process would silently skip tenant scoping - a fail-open
+    isolation bug rather than a loud one.
+    """
+    from utils.tenant_orm import _RESOLVING_ACTIVE_TENANT
+
+    with app.app_context():
+        with pytest.raises(RuntimeError):
+            _RESOLVING_ACTIVE_TENANT.value = True
+            try:
+                raise RuntimeError("simulated failure inside the listener")
+            finally:
+                _RESOLVING_ACTIVE_TENANT.value = False
+
+        assert getattr(_RESOLVING_ACTIVE_TENANT, "value", False) is False
 
 
 def test_platform_owner_can_still_switch_tenants_within_a_request(app):

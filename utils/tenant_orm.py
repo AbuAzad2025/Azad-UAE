@@ -79,6 +79,7 @@ platform-owner operations).
 from __future__ import annotations
 
 import logging
+import threading
 from typing import Any, cast
 
 from flask import g, has_request_context, request
@@ -89,6 +90,10 @@ from sqlalchemy.orm import Session, with_loader_criteria
 
 from extensions import db
 from utils.tenanting import g_active_tenant_is_current
+
+# Re-entrancy flag for _active_tenant_for_orm. Per-thread because the ORM events
+# fire on whichever thread is executing, and background workers resolve their own.
+_RESOLVING_ACTIVE_TENANT = threading.local()
 
 logger = logging.getLogger(__name__)
 
@@ -232,25 +237,59 @@ def tenant_scope_enabled() -> bool:
 
 
 def _active_tenant_for_orm() -> int | None:
-    # Prefer the per-request value set by the factory's before_request
-    # (g.active_tenant_id), which is stable for the whole request. Re-resolving
-    # current_user at ORM-execute time can return None for lazy loads / nested
-    # queries, which previously made the listener inject `tenant_id < 0`
-    # (i.e. WHERE false) and emptied every tenant-scoped list.
+    # Re-entrancy guard. Resolving the active tenant can itself touch the database:
+    # get_active_tenant_id() falls back to _resolve_user(None), which reaches for
+    # the Flask current_user proxy, and reading an attribute off a partially loaded
+    # User issues SQL. That SQL fires this same listener again, which resolves the
+    # tenant again, and the pair recurses until the interpreter gives up.
     #
-    # `g` is only trustworthy for the request that stamped it. An app context can
-    # outlive a request - Flask reuses an already-pushed app context instead of
-    # pushing a new one, so anything holding an app context open (a test fixture
-    # wrapping its work in `with app.app_context()`, a CLI command, a background
-    # job) leaves the finished request's active tenant on `g`, where
-    # has_request_context() still reports True. Reading the stale value is how a
-    # fixture that merely creates a Branch got rejected with
-    # "obj.tenant_id=3 != active_tenant=1", the 1 belonging to an earlier login.
+    # tests/integration/test_stress_atomicity.py::
+    # TestPurchaseDeleteAtomicity::test_purchase_delete_rolls_back_on_gl_failure
+    # reached exactly that through services/store_service.py, surfacing as a bare
+    # RecursionError inside SQLAlchemy's annotation machinery rather than as
+    # anything to do with atomicity.
     #
-    # Outside a stamped request there is no active tenant to enforce, so fall
-    # through to get_active_tenant_id(), which returns None there. Code that
-    # genuinely writes cross-tenant outside a request keeps using the documented
-    # without_tenant_scope() escape hatch.
+    # While already resolving, report only what the request stamped and nothing
+    # else. No tenant is the safe answer for a nested lookup: it cannot invent a
+    # cross-tenant match, and the outer resolution still returns the real value.
+    if getattr(_RESOLVING_ACTIVE_TENANT, "value", False):
+        return _stamped_active_tenant()
+
+    _RESOLVING_ACTIVE_TENANT.value = True
+    try:
+        # Prefer the per-request value set by the factory's before_request
+        # (g.active_tenant_id), which is stable for the whole request. Re-resolving
+        # current_user at ORM-execute time can return None for lazy loads / nested
+        # queries, which previously made the listener inject `tenant_id < 0`
+        # (i.e. WHERE false) and emptied every tenant-scoped list.
+        #
+        # `g` is only trustworthy for the request that stamped it. An app context
+        # can outlive a request - Flask reuses an already-pushed app context
+        # instead of pushing a new one, so anything holding an app context open
+        # (a test fixture wrapping its work in `with app.app_context()`, a CLI
+        # command, a background job) leaves the finished request's active tenant
+        # on `g`, where has_request_context() still reports True. Reading the
+        # stale value is how a fixture that merely creates a Branch got rejected
+        # with "obj.tenant_id=3 != active_tenant=1", the 1 belonging to an earlier
+        # login.
+        #
+        # Outside a stamped request there is no active tenant to enforce, so fall
+        # through to get_active_tenant_id(), which returns None there. Code that
+        # genuinely writes cross-tenant outside a request keeps using the
+        # documented without_tenant_scope() escape hatch.
+        from utils.tenanting import get_active_tenant_id
+
+        stamped = _stamped_active_tenant()
+        if stamped is not None:
+            return stamped
+
+        return get_active_tenant_id()
+    finally:
+        _RESOLVING_ACTIVE_TENANT.value = False
+
+
+def _stamped_active_tenant():
+    """The tenant the in-flight request stamped, or None."""
     try:
         from flask import g
 
@@ -260,10 +299,7 @@ def _active_tenant_for_orm() -> int | None:
                 return int(g_tid)
     except Exception:
         logger.debug("Failed to resolve active tenant ID from g context", exc_info=True)
-
-    from utils.tenanting import get_active_tenant_id
-
-    return get_active_tenant_id()
+    return None
 
 
 def _criteria_for_model(tid: int | None):
@@ -385,22 +421,33 @@ def _inject_tenant_criteria(execute_state):
     if execute_state.execution_options.get("tenant_criteria_applied"):
         return
 
-    tid = _active_tenant_for_orm()
-    criteria = _get_criteria(tid)
-    statement = execute_state.statement
+    # A statement issued while this listener is already running is a nested one -
+    # most often a lazy load triggered by resolving current_user. Probing the user
+    # again would issue another statement and recurse, so the nested statement is
+    # left unscoped rather than re-entering the resolution.
+    if getattr(_RESOLVING_ACTIVE_TENANT, "value", False):
+        return
 
-    for model_cls in _discover_tenant_models():
-        if model_cls.__name__ in _ORM_EXEMPT_MODELS:
-            continue
-        statement = statement.options(
-            with_loader_criteria(
-                model_cls,
-                criteria,
-                include_aliases=True,
+    _RESOLVING_ACTIVE_TENANT.value = True
+    try:
+        tid = _active_tenant_for_orm()
+        criteria = _get_criteria(tid)
+        statement = execute_state.statement
+
+        for model_cls in _discover_tenant_models():
+            if model_cls.__name__ in _ORM_EXEMPT_MODELS:
+                continue
+            statement = statement.options(
+                with_loader_criteria(
+                    model_cls,
+                    criteria,
+                    include_aliases=True,
+                )
             )
-        )
 
-    execute_state.statement = statement
+        execute_state.statement = statement
+    finally:
+        _RESOLVING_ACTIVE_TENANT.value = False
 
 
 # ── Write-path guard (INSERT / UPDATE / DELETE) ─────────────────────────
