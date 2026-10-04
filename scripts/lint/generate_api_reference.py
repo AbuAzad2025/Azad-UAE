@@ -63,13 +63,22 @@ _RENDER = re.compile(r"render_template\(|render_template_string\(")
 
 
 def _app():
-    os.environ.setdefault("SECRET_APP_SECRET", "x")
-    os.environ.setdefault("FLASK_APP", "app.factory:create_app")
-    os.environ.setdefault("SECRET_KEY", "api-doc-generator")
-    os.environ.setdefault("CACHE_TYPE", "null")
-    os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
-    os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
-    os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
+    # These are forced, not defaulted. On a CI runner APP_ENV is "production" and
+    # DEBUG is unset, which makes config.assert_production_sanity demand
+    # CARD_ENCRYPTION_KEY and a strong OWNER_PASSWORD before the app can even be
+    # built - and the whole point here is to introspect the URL map, not to serve
+    # requests. Forcing a non-production config makes the generator independent of
+    # whatever the surrounding environment happens to be, which is what failed the
+    # first CI run of this gate.
+    os.environ["FLASK_APP"] = "app.factory:create_app"
+    os.environ["APP_ENV"] = "testing"
+    os.environ["DEBUG"] = "0"
+    os.environ["SECRET_KEY"] = "api-doc-generator-not-a-real-secret"
+    os.environ["CACHE_TYPE"] = "null"
+    os.environ["RATELIMIT_STORAGE_URI"] = "memory://"
+    os.environ["DATABASE_URL"] = "sqlite:///:memory:"
+    os.environ["SKIP_SYSTEM_INTEGRITY"] = "1"
+    os.environ["AUTO_MIGRATE"] = "0"
     # Import here so the environment above is in place first. sys.path is
     # extended explicitly: scripts/lint/ is run as a script, not a package, so
     # the repo root is not importable without this.

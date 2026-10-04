@@ -249,16 +249,38 @@ def tenant_create():
                 db.session.flush()
                 from models import ensure_default_pos_order_types
 
-                ensure_default_pos_order_types(tenant.id)
+                # Provisioning writes rows for the tenant being created, but the
+                # request is still authenticated as the platform owner, whose
+                # active tenant is a different one. The ORM write guard reads the
+                # active tenant and raised TenantIsolationError on the first
+                # PosOrderType row, which rolled the whole transaction back - so
+                # the tenant row never landed and no tenant could be onboarded
+                # through this endpoint at all. Seeding a brand new tenant is
+                # necessarily cross-tenant relative to the current session, which
+                # is exactly what without_tenant_scope() exists for.
+                from utils.tenanting import without_tenant_scope
+
+                with without_tenant_scope():
+                    ensure_default_pos_order_types(tenant.id)
             from services.gl_service import GLService
 
             with atomic_transaction("tenant_gl_setup"):
-                GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
+                # Same cross-tenant condition as the order types above: the
+                # chart of accounts and the concept mappings are being written
+                # for the new tenant while the session still belongs to the
+                # platform owner. Without the scope bypass the first GLAccount
+                # insert raised TenantIsolationError and rolled the whole GL
+                # setup back, leaving the tenant with an empty chart of accounts
+                # and therefore unable to post anything.
+                with without_tenant_scope():
+                    GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
                 # Explicitly ensure GL concept -> account mappings exist.
                 # This guarantees that OPENING_BALANCE_EQUITY->3130 (and all
                 # other required mappings) are persisted immediately, preventing
                 # failures when products are later created with opening balances.
-                GLService.ensure_gl_mappings(tenant_id=tenant.id)
+                # In the same cross-tenant situation as above.
+                with without_tenant_scope():
+                    GLService.ensure_gl_mappings(tenant_id=tenant.id)
 
             # Optional subscription scenario: activate a purchased package
             # (applies the plan label, duration window, and the package's
