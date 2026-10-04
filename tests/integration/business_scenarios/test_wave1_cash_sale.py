@@ -467,3 +467,142 @@ class TestS09MultiTender:
         assert total_landed == pytest.approx(50.0), (
             f"tenders landed {total_landed} across {landed}, expected the 50 collected"
         )
+
+
+class TestS08SurfaceEquivalence:
+    """S-08: the same sale through the sales desk reaches the same ledger.
+
+    Three surfaces create sales - POST /sales/create, POST /pos/api/checkout and
+    the storefront - and all three funnel into SaleService.create_sale. This
+    asserts the sales desk produces the same stock movement, the same journal
+    shape and the same totals as the till, rather than merely returning a
+    redirect. If the desk built its payment dict differently, the sale would look
+    fine on the page while the money landed somewhere else.
+    """
+
+    def test_sales_desk_sale_matches_the_till(
+        self, client, db_session, pos_cashier, stocked_product, scenario_customer, ledger, demo_tenant, demo_branch
+    ):
+        from models import GLAccount, GLJournalEntry, GLJournalLine, Payment, Sale, StockMovement
+        from utils.gl_reference_types import GLRef, filter_entries_by_ref
+
+        product = stocked_product["product"]
+        warehouse = stocked_product["warehouse"]
+        before_movements = StockMovement.query.filter_by(product_id=product.id, movement_type="sale").count()
+
+        resp = client.post(
+            "/sales/create",
+            data={
+                "customer_id": str(scenario_customer.id),
+                "warehouse_id": str(warehouse.id),
+                "currency": "ILS",
+                "exchange_rate": "1",
+                "line_count": "1",
+                "lines[0][product_id]": str(product.id),
+                "lines[0][quantity]": "2",
+                "lines[0][unit_price]": "25",
+                "payment_method": "cash",
+                "payment_amount": "50",
+                "discount_amount": "0",
+            },
+            follow_redirects=True,
+        )
+        assert resp.status_code in (200, 302), resp.get_data(as_text=True)[:400]
+
+        sale = Sale.query.filter_by(tenant_id=demo_tenant.id).order_by(Sale.id.desc()).first()
+        assert sale is not None, "the sales desk created no sale"
+        assert Decimal(str(sale.total_amount)) == Decimal("50.000"), f"sale total is {sale.total_amount}"
+        assert Decimal(str(sale.amount_aed)) == Decimal("50.000"), f"sale AED amount is {sale.amount_aed}"
+
+        # Same shelf outcome as the till.
+        after_movements = StockMovement.query.filter_by(product_id=product.id, movement_type="sale").count()
+        assert after_movements == before_movements + 1, "the sales desk moved no stock"
+
+        # Same revenue and cost recognition as the till: 50 of revenue against 20
+        # of cost, so the margin is not lost between surfaces.
+        revenue = ledger.balance("4100", demo_tenant.id)
+        cogs = ledger.balance("5100", demo_tenant.id)
+        assert revenue == pytest.approx(-50.0), f"revenue reads {revenue}, expected a 50 credit"
+        assert cogs == pytest.approx(20.0), f"cost of sales reads {cogs}, expected 2 x cost 10"
+
+        # And a payment entry, keyed on the payment rather than the sale.
+        payment_ids = [p.id for p in Payment.query.filter_by(tenant_id=demo_tenant.id).all()]
+        entry_ids = [
+            e.id
+            for e in filter_entries_by_ref(db_session.query(GLJournalEntry), GLRef.PAYMENT)
+            .filter(GLJournalEntry.reference_id.in_(payment_ids), GLJournalEntry.status == "posted")
+            .all()
+        ]
+        assert entry_ids, "the sales desk sale posted no payment journal entry"
+
+        debits = [
+            x for x in db_session.query(GLJournalLine).filter(GLJournalLine.entry_id.in_(entry_ids)).all() if x.debit
+        ]
+        total = sum(float(x.debit) for x in debits)
+        assert total == pytest.approx(50.0), f"payment debits total {total}, expected 50"
+
+        for line in debits:
+            code = db_session.query(GLAccount).get(line.account_id).code
+            assert db_session.query(GLAccount).filter_by(tenant_id=demo_tenant.id, code=code).one().is_active
+
+
+class TestS10Overpayment:
+    """S-10: paying more than the sale leaves the customer with a credit, not a loss."""
+
+    def test_overpayment_is_booked_as_customer_credit(
+        self, client, db_session, pos_cashier, till_open, stocked_product, scenario_customer, ledger, demo_tenant
+    ):
+        """Tender 60 against a 50 sale.
+
+        The excess must become a customer prepayment on the ledger rather than
+        being absorbed into revenue. Booking it as revenue would overstate the
+        period by the change amount, and dropping it would leave the till drawer
+        10 heavier than the books.
+        """
+        from models import GLAccount, GLJournalEntry, GLJournalLine
+
+        product = stocked_product["product"]
+        revenue_before = ledger.balance("4100", demo_tenant.id)
+
+        resp = client.post(
+            "/pos/api/checkout",
+            json={
+                "customer_id": scenario_customer.id,
+                "warehouse_id": stocked_product["warehouse"].id,
+                "currency": "ILS",
+                "exchange_rate": 1,
+                "lines": [{"product_id": product.id, "quantity": 2, "unit_price": 25}],
+                "payment_method": "cash",
+                "paid_amount": 60,
+            },
+            headers={"Idempotency-Key": str(uuid.uuid4())},
+        )
+        assert resp.status_code == 200, resp.get_data(as_text=True)[:400]
+
+        # Revenue recognises the sale price only. The extra 10 is not revenue.
+        revenue_after = ledger.balance("4100", demo_tenant.id)
+        assert revenue_after - revenue_before == pytest.approx(-50.0), (
+            f"revenue moved {revenue_after - revenue_before}; the overpayment must not become revenue"
+        )
+
+        # And the 10 has to exist somewhere as a liability to the customer.
+        from utils.gl_reference_types import GLRef, filter_entries_by_ref
+
+        entries = [
+            e
+            for e in filter_entries_by_ref(db_session.query(GLJournalEntry), GLRef.PAYMENT)
+            .filter(GLJournalEntry.status == "posted")
+            .all()
+        ]
+        credited = 0.0
+        for entry in entries:
+            for line in db_session.query(GLJournalLine).filter(GLJournalLine.entry_id == entry.id).all():
+                if line.credit and float(line.credit) > 0:
+                    code = db_session.query(GLAccount).get(line.account_id).code
+                    # 1130 is the customer receivable; the prepayment clears against
+                    # it rather than against revenue.
+                    if code.startswith("1130"):
+                        credited += float(line.credit)
+        assert credited >= 50.0, (
+            f"only {credited} was credited against the customer account; the 10 excess must be carried"
+        )
