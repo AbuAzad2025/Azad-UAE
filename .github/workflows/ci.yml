@@ -437,6 +437,13 @@ jobs:
           # page and the baseline is now empty, so there is no allowance left; see
           # docs/shop_utilities_collision.md.
           python scripts/lint/check_css_class_collisions.py
+          # docs/API_REFERENCE.md is generated from the live url_map. This compares
+          # the committed file against what the code actually exposes, so a
+          # hand-written endpoint that does not exist fails the build. The previous
+          # reference documented /api/webhooks/subscribe, X-Webhook-Signature,
+          # per-plan rate limits and POST /api/sales; none of those exist, and
+          # nothing compared the document to the code, so it survived.
+          python scripts/lint/check_api_docs.py
 
       # ── JavaScript ──
       - name: Biome check (JS lint+format, scope from biome.json)
