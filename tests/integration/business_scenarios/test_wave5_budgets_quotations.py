@@ -91,35 +91,26 @@ def budget(client, db_session, pos_cashier, demo_tenant, demo_gl_accounts):
     return row
 
 
-# S-22 and S-23 are blocked on an unresolved defect and are not shipped green.
+# S-22 and S-23 remain blocked. The 500 is fixed; a residual 403 is not.
 #
-# Writing them found two real defects, both fixed in this change:
+# Fixed in this change: routes/budget.py passed user=None into
+# BudgetService.create_budget and approve_budget, which stamp created_by=user.id
+# and approved_by=user.id. That raised AttributeError, which the route's
+# except (ValueError, KeyError) does not catch - so every create answered 500
+# instead of the validation message it had already prepared. Verified: the same
+# POST with the same fixtures returns 302 when run on its own.
 #
-#   1. routes/budget.py gates routes behind permission_required("budget:create")
-#      and ("budget:approve"). Neither code was listed in utils/constants.py, so
-#      no Permission row was ever created for either. Every budget route answered
-#      403 for every user, including platform owners viewing a company tenant.
-#      The whole budgeting module was unreachable.
+# Still open: in a full-file run POST /budgets/create answers 403. It is not
+# permission_required - the cashier holds budget:create and
+# has_permission("budget:create") is True in the same test, printed from inside
+# the fixture. There is no feature gate on budget_bp. The remaining candidate is
+# the factory before_request, which aborts 403 for a non-owner whose
+# g.active_tenant_id is None, but that was not confirmed and is not claimed here.
 #
-#   2. routes/quotations.py called url_for("sales.detail"), which does not exist -
-#      the only reference to it in the codebase. Converting a quotation raised
-#      BuildError *after* convert_to_sale had already committed, so the sale
-#      existed and the shop got a 500 on a conversion that had worked.
-#
-# What remains open: POST /budgets/create still returns 500 even with valid leaf
-# accounts present (6220 confirmed existing). BudgetService.create_budget called
-# directly with the same payload succeeds, so the failure is in the route or its
-# template rather than the service. Notably the route catches (ValueError,
-# KeyError) and flashes a friendly message, then falls through to
-# render_template("financials/budget/form.html", budget=None) - which is passed
-# none of the context the GET path builds. If that render is what raises, then
-# every rejected budget submission 500s instead of showing the error, which is
-# worth confirming.
-#
-# Not verified, therefore marked skip rather than passed.
+# Marked skip rather than passed.
 _BUDGET_BLOCKED = pytest.mark.skip(
-    reason="POST /budgets/create returns 500; service layer verified good, "
-    "route/template path unresolved. See the comment above."
+    reason="POST /budgets/create returns 403 in a full-file run while the user "
+    "holds the permission; the 500 it used to return is fixed. See above."
 )
 
 

@@ -2,7 +2,7 @@ from datetime import date
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
-from flask_login import login_required
+from flask_login import current_user, login_required
 
 from services.budget_service import BudgetService
 from utils.api_response import error_response, success_response
@@ -27,7 +27,14 @@ def create():
     if request.method == "POST":
         try:
             data = _parse_budget_form(request.form)
-            budget = BudgetService.create_budget(data, None)
+            # current_user, not None. BudgetService.create_budget stamps
+            # created_by=user.id and approve_budget stamps approved_by=user.id, so
+            # passing None raised AttributeError inside the service - which the
+            # except clause below does not catch, because it only handles
+            # ValueError and KeyError. That is why POST /budgets/create answered
+            # 500 instead of showing the validation message the route had already
+            # prepared for it.
+            budget = BudgetService.create_budget(data, current_user)
             flash(gettext("تم إنشاء الميزانية"), "success")
             return redirect(url_for("budget.detail", budget_id=budget.id))
         except (ValueError, KeyError) as e:
@@ -65,7 +72,7 @@ def edit(budget_id):
 def approve(budget_id):
     budget = BudgetService.get_budget(budget_id, None)
     try:
-        BudgetService.approve_budget(budget, None)
+        BudgetService.approve_budget(budget, current_user)
         flash(gettext("تمت الموافقة على الميزانية"), "success")
     except ValueError as e:
         flash(str(e), "danger")
@@ -125,7 +132,7 @@ def variance(budget_id):
 def api_create():
     data = request.get_json(silent=True) or {}
     try:
-        budget = BudgetService.create_budget(data, None)
+        budget = BudgetService.create_budget(data, current_user)
         return success_response(
             data={"id": budget.id, "budget_number": budget.budget_number},
             message=gettext("تم إنشاء الميزانية"),

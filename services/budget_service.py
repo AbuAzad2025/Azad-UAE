@@ -18,6 +18,19 @@ class BudgetService:
     def _tid(user):
         return get_active_tenant_id(user)
 
+    @staticmethod
+    def _user_id(user):
+        """The acting user's id, or None when there is no acting user.
+
+        Guards created_by / approved_by against a None user. Every caller in
+        routes/budget.py now passes current_user, but these columns were being
+        stamped as ``user.id`` with no check, so a caller passing None produced an
+        AttributeError that surfaced as a 500 rather than as a rejected request.
+        Returning None lets the audit columns stay empty and the rest of the call
+        proceed, which is the honest outcome for an unattributed write.
+        """
+        return getattr(user, "id", None)
+
     @classmethod
     def create_budget(cls, data, user):
         tid = cls._tid(user)
@@ -33,7 +46,7 @@ class BudgetService:
             enforcement=data.get("enforcement", "warn"),
             branch_id=int(data["branch_id"]) if data.get("branch_id") else None,
             notes=data.get("notes"),
-            created_by=user.id,
+            created_by=cls._user_id(user),
             status="draft",
         )
         db.session.add(budget)
@@ -99,7 +112,7 @@ class BudgetService:
         if budget.status != "draft":
             raise ValueError(gettext("فقط المسودات يمكن الموافقة عليها."))
         budget.status = "approved"
-        budget.approved_by = user.id
+        budget.approved_by = cls._user_id(user)
         budget.approved_at = datetime.now(UTC)
         db.session.flush()
         return budget

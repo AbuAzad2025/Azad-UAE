@@ -41,11 +41,25 @@ def _seed_permissions(app):
     from utils.system_init import _ensure_permissions
 
     with app.app_context():
-        if Permission.query.first() is None:
+        # Seeded when any of the required codes is missing, rather than only when
+        # the table is empty.
+        #
+        # Guarding on "table is empty" is what let budget:create and
+        # budget:approve stay absent from the test database even after being added
+        # to utils/constants.py: a database that already held permissions skipped
+        # the seeder entirely.
+        #
+        # The condition is per-code for the same reason, and deliberately not an
+        # unconditional _ensure_permissions() - that runs inside atomic_transaction
+        # and commits, which escapes the per-test savepoint and broke the
+        # isolation wave 1 depends on.
+        required = ("manage_sales", "budget:create", "budget:approve")
+        if any(Permission.query.filter_by(code=code).first() is None for code in required):
             _ensure_permissions()
-        assert Permission.query.filter_by(code="manage_sales").first() is not None, (
-            "permission seeding did not produce manage_sales"
-        )
+        for code in required:
+            assert Permission.query.filter_by(code=code).first() is not None, (
+                f"permission seeding did not produce {code}"
+            )
 
 
 @pytest.fixture
