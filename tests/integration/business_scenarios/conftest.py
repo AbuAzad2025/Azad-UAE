@@ -199,6 +199,10 @@ def pos_cashier(client, db_session, demo_tenant, demo_branch):
                 "view_returns",
                 "manage_accounting",
                 "view_reports",
+                # Wave 3's store admin routes - settings, orders, confirm and
+                # cancel - are all behind manage_store.
+                "manage_store",
+                "view_store",
             ]
         )
     ).all()
