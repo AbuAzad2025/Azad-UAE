@@ -203,6 +203,12 @@ def pos_cashier(client, db_session, demo_tenant, demo_branch):
                 # cancel - are all behind manage_store.
                 "manage_store",
                 "view_store",
+                # Wave 4 is the cost side: buying from suppliers and moving
+                # stock between warehouses.
+                "manage_purchases",
+                "view_purchases",
+                "manage_warehouse",
+                "view_warehouse",
             ]
         )
     ).all()
