@@ -74,13 +74,31 @@ def g_active_tenant_is_current():
     The factory stamps ``g.active_tenant_request`` alongside the tenant id, so
     comparing identities is what actually establishes that the value belongs to
     the request being served now.
+
+    Three cases, not two:
+
+    - a stamp matching the current request: authoritative.
+    - **no stamp at all**: active_tenant_id was assigned directly on g inside a
+      live request - by a test, by a management command, or by code that resolves
+      the tenant itself. g is request-scoped, so such a value belongs to the
+      request in flight and is trusted.
+    - a stamp that is present but does not match: the value was left behind by a
+      finished request. This is the case that has to be rejected, because it is
+      how a previous request's tenant got enforced against an unrelated write.
+
+    Treating "no stamp" as untrusted, which an earlier version did, made
+    get_active_tenant_id return None for any caller that set g.active_tenant_id
+    by hand. The value is still perfectly good; only the pairing was missing. The
+    cost was that resolve_tenant_id fell through to counting active tenants and
+    raised "3 active tenants found" in tests that never had three tenants - the
+    tenant guard working correctly on a context the caller had already answered.
     """
     try:
         from flask import g
 
         stamped = getattr(g, "active_tenant_request", None)
         if stamped is None:
-            return False
+            return True
         current = _current_request_id()
         return current is not None and stamped == current
     except Exception:

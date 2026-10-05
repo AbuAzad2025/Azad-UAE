@@ -176,12 +176,27 @@ def test_platform_owner_can_still_switch_tenants_within_a_request(app):
         assert _current_request_id() == id(ctx.request), "stamp compares the proxy, not the request"
 
 
-def test_unstamped_g_is_not_trusted(app):
-    """A g that was never stamped by before_request carries no authority.
+def test_unstamped_g_inside_a_live_request_is_trusted(app):
+    """A tenant set directly on g during a request belongs to that request.
 
-    Nothing sets active_tenant_request for a request that never reached
-    before_request, so a value left on g from elsewhere must not be enforced.
+    An earlier version treated an unstamped value as untrustworthy, on the theory
+    that only before_request may set it. That was too strong: g is
+    request-scoped, so a value assigned inside a live request describes that
+    request. Management commands, and tests that drive a service inside
+    ``test_request_context``, both rely on it.
+
+    The cost of getting this wrong was concrete and is why it is asserted here:
+    with the value ignored, resolve_tenant_id fell through to counting active
+    tenants and raised "3 active tenants found" in tests that never had three
+    tenants. The tenant guard was working correctly on a context the caller had
+    already answered.
+
+    A stamp that is present but *stale* is still refused - see
+    test_stale_request_value_is_ignored_once_the_request_ends.
     """
     with app.test_request_context("/"):
         g.active_tenant_id = 99
-        assert _active_tenant_for_orm() is None
+        # getattr, not attribute access: nothing stamped this request, so the
+        # attribute is genuinely absent rather than None.
+        assert getattr(g, "active_tenant_request", None) is None, "precondition: nothing stamped this request"
+        assert _active_tenant_for_orm() == 99
