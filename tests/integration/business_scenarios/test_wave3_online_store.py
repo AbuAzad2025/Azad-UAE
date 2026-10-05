@@ -121,6 +121,15 @@ def store_manager(client, db_session, demo_tenant, demo_branch):
     """
     from models import Permission, Role, User
 
+    # routes/store.py calls install_feature_gate(store_bp, "store"), so every route
+    # in the blueprint is refused unless Tenant.enable_store is set - and that
+    # column defaults to False. The gate runs as a blueprint before_request, ahead
+    # of login_required and permission_required, so it answers 403 even for a
+    # signed-in super_admin who holds manage_store. It is a sixth condition,
+    # separate from the five is_store_publicly_available checks on the storefront.
+    demo_tenant.enable_store = True
+    db_session.flush()
+
     unique = uuid.uuid4().hex[:8]
     # roles.slug is globally unique, so an existing super_admin is reused rather
     # than a second one inserted - which would fail on the second scenario in this
@@ -306,32 +315,6 @@ class TestS17StorefrontReachesThePublicSurface:
         assert "closed" in body or "مغلق" in body, "the 503 response did not render the closed-store page"
 
 
-# Deferred fulfilment is specified and its guard is readable in the service
-# (StoreOrderService.confirm_order only calls SaleService.fulfill_sale when
-# is_fulfilled is false), but the two tests below do not pass and are not shipped
-# green. Both get 403 from every /store/admin/orders route even though, outside a
-# request, the same user satisfies both guards:
-#
-#   user.has_permission("manage_store") -> True
-#   get_active_tenant_id(user)          -> <the tenant id>
-#   is_admin_surface_user(user)         -> True
-#
-# The 403 therefore comes from app/factory.py's before_request, which aborts when
-# a company user has no resolved active tenant, and that runs before the route
-# decorators. So the fixture's login is not establishing a usable session for this
-# user, which is a harness question rather than a product one - pos_cashier signs
-# in with the same shape of User and works, so the difference is the reused seeded
-# super_admin role.
-#
-# Marked skipped rather than deleted so the diagnosis survives, and rather than
-# marked passed because it was not verified.
-_S18_BLOCKED = pytest.mark.skip(
-    reason="store_manager session does not resolve an active tenant; 403 from the "
-    "factory before_request. See the class docstring for what is already ruled out."
-)
-
-
-@_S18_BLOCKED
 class TestS18DeferredFulfilment:
     """S-18: an online order leaves stock alone until the shop confirms it.
 
@@ -349,7 +332,16 @@ class TestS18DeferredFulfilment:
     """
 
     @pytest.fixture
-    def online_order(self, db_session, store_manager, demo_tenant, demo_branch, stocked_product, scenario_customer):
+    def online_order(
+        self,
+        db_session,
+        store_manager,
+        demo_tenant,
+        demo_branch,
+        demo_warehouse,
+        stocked_product,
+        scenario_customer,
+    ):
         # store_manager is required, not incidental: scenario_customer creates the
         # customer over HTTP, which needs a signed-in user with manage_customers,
         # and the order routes need the admin surface. Without the login the
@@ -367,6 +359,11 @@ class TestS18DeferredFulfilment:
             seller_id=store_manager.id,
             source="online_store",
             status="pending",
+            # fulfill_sale deducts stock from sale.warehouse_id. Without it the
+            # confirm raises inside atomic_transaction, which rolls the whole
+            # thing back, so the order silently stays pending and the route
+            # flashes a warning instead of erroring.
+            warehouse_id=demo_warehouse.id,
             # sale_number is NOT NULL and is normally minted by SaleService. This
             # fixture builds the sale directly, so it draws from the same sequence
             # service rather than inventing a format the rest of the system would
@@ -414,7 +411,7 @@ class TestS18DeferredFulfilment:
         self, client, db_session, store_manager, online_order, ledger, demo_tenant
     ):
         """Confirmation fulfils the order, and confirming again does not."""
-        from models import StockMovement
+        from models import Sale, StockMovement
 
         sale = online_order["sale"]
         revenue_before = ledger.balance("4100", demo_tenant.id)
@@ -422,8 +419,15 @@ class TestS18DeferredFulfilment:
         first = client.post(f"/store/admin/orders/{sale.id}/confirm", follow_redirects=True)
         assert first.status_code in (200, 302), first.get_data(as_text=True)[:300]
 
-        db_session.expire_all()
-        assert sale.status == "confirmed", f"after confirmation the order is {sale.status}"
+        # Read the status back from the database rather than from the in-session
+        # object. The route commits through atomic_transaction on the request's own
+        # session, so the instance held here can still carry the pre-POST value;
+        # expire_all() refreshes loaded attributes but would not refetch a detached
+        # one. tenant_query() also applies the ORM scoping a request would apply.
+        from utils.tenanting import tenant_query
+
+        stored = tenant_query(Sale).filter_by(id=sale.id).one()
+        assert stored.status == "confirmed", f"after confirmation the order is {stored.status}"
 
         after_first = StockMovement.query.filter_by(
             product_id=online_order["product"].id,
@@ -449,14 +453,16 @@ class TestS18DeferredFulfilment:
 
     def test_cancelling_an_unconfirmed_order_leaves_stock_alone(self, client, db_session, store_manager, online_order):
         """Cancelling before fulfilment must not reverse stock that never moved."""
-        from models import StockMovement
+        from models import Sale, StockMovement
 
         sale = online_order["sale"]
         resp = client.post(f"/store/admin/orders/{sale.id}/cancel", follow_redirects=True)
         assert resp.status_code in (200, 302), resp.get_data(as_text=True)[:300]
 
-        db_session.expire_all()
-        assert sale.status == "cancelled", f"after cancellation the order is {sale.status}"
+        from utils.tenanting import tenant_query
+
+        stored = tenant_query(Sale).filter_by(id=sale.id).one()
+        assert stored.status == "cancelled", f"after cancellation the order is {stored.status}"
 
         movements = StockMovement.query.filter_by(
             product_id=online_order["product"].id,

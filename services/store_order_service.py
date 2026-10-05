@@ -181,7 +181,33 @@ class StoreOrderService:
         # (offline channels gated by SystemSettings.azad_platform_fee_include_offline)
         from services.azad_platform_fee_service import AzadPlatformFeeService
 
-        AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
+        # The fee must not be able to roll back the tenant's order.
+        #
+        # record_store_online_fee deliberately raises when the platform vault is
+        # missing ("Platform vault does not exist"), which is right for its direct
+        # callers - a settlement that cannot find the vault must not report
+        # success. But here it runs inside the confirm_order transaction, and the
+        # vault is platform-side configuration the tenant cannot see or change.
+        # Before this guard, a deployment without a platform vault made every
+        # online-store order impossible to confirm: the exception propagated out of
+        # atomic_transaction, the whole confirmation rolled back, and the route
+        # flashed a warning while the order silently stayed pending. The shop could
+        # not fulfil anything and nothing in the UI said why.
+        #
+        # So the failure is logged at ERROR with the sale number and re-surfaced by
+        # monitoring, and the tenant's order still completes. The fee is then owed
+        # and can be accrued separately; losing it silently would be worse, which
+        # is why this logs rather than returns quietly.
+        try:
+            AzadPlatformFeeService.record_store_online_fee(sale, payment=payment)
+        except Exception:
+            current_app.logger.error(
+                "Platform fee accrual failed for online order %s (id %s); the order is "
+                "confirmed but the platform fee is unaccrued and must be booked separately.",
+                getattr(sale, "sale_number", None),
+                getattr(sale, "id", None),
+                exc_info=True,
+            )
 
         try:
             db.session.flush()
