@@ -113,6 +113,8 @@ PERMISSION_CODES = [
     "manage_store",
     "view_ledger",
     "manage_ledger",
+    "budget:create",
+    "budget:approve",
     "admin",
     "manage_users",
     "manage_backups",
@@ -191,6 +193,16 @@ PERMISSIONS = {
     "manage_store": {"ar": "إدارة المتجر الإلكتروني", "en": "Manage Online Store"},
     "view_ledger": {"ar": "عرض دفتر الأستاذ", "en": "View Ledger"},
     "manage_ledger": {"ar": "إدارة دفتر الأستاذ", "en": "Manage Ledger"},
+    # Budget permissions. routes/budget.py gates create/edit/delete behind
+    # "budget:create" and approve/activate/close behind "budget:approve", but
+    # neither code was ever listed here, so no Permission row was created for
+    # them and no user could satisfy those guards. Every budget route - create,
+    # edit, approve, activate, close, delete, variance - answered 403 for
+    # everyone, including platform owners on a company tenant. Seeding them keeps
+    # create and approve as separate authorities, which is the point of having
+    # two codes rather than reusing manage_ledger for both.
+    "budget:create": {"ar": "إنشاء الميزانيات", "en": "Create Budgets"},
+    "budget:approve": {"ar": "اعتماد الميزانيات", "en": "Approve Budgets"},
     "admin": {"ar": "لوحة التحكم الإدارية", "en": "Admin Dashboard"},
     "manage_users": {"ar": "إدارة المستخدمين", "en": "Manage Users"},
     "manage_backups": {"ar": "إدارة النسخ الاحتياطي", "en": "Manage Backups"},

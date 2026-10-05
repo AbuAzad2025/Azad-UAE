@@ -209,6 +209,13 @@ def pos_cashier(client, db_session, demo_tenant, demo_branch):
                 "view_purchases",
                 "manage_warehouse",
                 "view_warehouse",
+                # Wave 5. Budget permissions are colon-named, unlike every other
+                # wave's underscore-named codes - easy to miss and it shows as a
+                # 403 with no hint about which permission is missing.
+                "budget:create",
+                "budget:approve",
+                "manage_quotations",
+                "view_quotations",
             ]
         )
     ).all()

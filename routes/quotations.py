@@ -110,7 +110,17 @@ def convert(quotation_id):
         with atomic_transaction("quotation_convert_to_sale"):
             sale = QuotationService.convert_to_sale(q, current_user)
         flash(gettext("تم تحويل العرض إلى فاتورة"), "success")
-        return redirect(url_for("sales.detail", id=sale.id))
+        # sales.detail does not exist. routes/sales.py names its read view
+        # `view`, and this was the only reference to sales.detail anywhere in the
+        # codebase, so the endpoint never resolved.
+        #
+        # The failure was nastier than a plain broken link: convert_to_sale had
+        # already committed inside its own atomic_transaction, so the sale
+        # existed, and only the redirect afterwards raised. The shop saw a 500 on
+        # a conversion that had actually worked - and the obvious response to a
+        # 500 is to press the button again, which converts the same quotation a
+        # second time.
+        return redirect(url_for("sales.view", id=sale.id))
     except ValueError as e:
         flash(str(e), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
