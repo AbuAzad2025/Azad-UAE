@@ -91,30 +91,6 @@ def budget(client, db_session, pos_cashier, demo_tenant, demo_gl_accounts):
     return row
 
 
-# S-22 and S-23 remain blocked. The 500 is fixed; a residual 403 is not.
-#
-# Fixed in this change: routes/budget.py passed user=None into
-# BudgetService.create_budget and approve_budget, which stamp created_by=user.id
-# and approved_by=user.id. That raised AttributeError, which the route's
-# except (ValueError, KeyError) does not catch - so every create answered 500
-# instead of the validation message it had already prepared. Verified: the same
-# POST with the same fixtures returns 302 when run on its own.
-#
-# Still open: in a full-file run POST /budgets/create answers 403. It is not
-# permission_required - the cashier holds budget:create and
-# has_permission("budget:create") is True in the same test, printed from inside
-# the fixture. There is no feature gate on budget_bp. The remaining candidate is
-# the factory before_request, which aborts 403 for a non-owner whose
-# g.active_tenant_id is None, but that was not confirmed and is not claimed here.
-#
-# Marked skip rather than passed.
-_BUDGET_BLOCKED = pytest.mark.skip(
-    reason="POST /budgets/create returns 403 in a full-file run while the user "
-    "holds the permission; the 500 it used to return is fixed. See above."
-)
-
-
-@_BUDGET_BLOCKED
 class TestS22BudgetLifecycle:
     """S-22: a draft budget is not yet a control."""
 
@@ -171,10 +147,17 @@ class TestS22BudgetLifecycle:
         assert len(budget.lines) == 1, f"expected one budget line, got {len(budget.lines)}"
         line = budget.lines[0]
         assert Decimal(str(line.budgeted_amount)) == Decimal("1000"), f"budgeted amount is {line.budgeted_amount}"
-        assert line.account_code == "6220", f"line is against account {line.account_code}"
+        # The line links to the account by id, not by code - a budget resolves to a
+        # GLAccount row, which is what stops a ceiling being attached to a code
+        # that does not exist.
+        assert line.account_id is not None, "the budget line is not attached to a GL account"
+        from models import GLAccount
+
+        assert db_session.query(GLAccount).get(line.account_id).code == "6220", (
+            f"the line resolves to account {db_session.query(GLAccount).get(line.account_id).code}"
+        )
 
 
-@_BUDGET_BLOCKED
 class TestS23BudgetEnforcement:
     """S-23: warn and block are different behaviours."""
 

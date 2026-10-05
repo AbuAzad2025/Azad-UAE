@@ -199,6 +199,12 @@ def pos_cashier(client, db_session, demo_tenant, demo_branch):
                 "view_returns",
                 "manage_accounting",
                 "view_reports",
+                # budget.index and budget.detail sit behind view_ledger. Without it
+                # POST /budgets/create still succeeded - 302 to the detail page -
+                # and the followed GET answered 403, which read as the create being
+                # denied. The create was never the problem.
+                "view_ledger",
+                "manage_ledger",
                 # Wave 3's store admin routes - settings, orders, confirm and
                 # cancel - are all behind manage_store.
                 "manage_store",
