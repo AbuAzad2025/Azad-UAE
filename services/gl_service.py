@@ -362,11 +362,11 @@ class GLService:
         if account is None:
             if missing_ok:
                 return None
-            raise ValueError(f"GL account {account_code} not found")
+            raise ValueError(gettext(f"الحساب {account_code} غير موجود"))
         if getattr(account, "is_header", False) and not line.get("explicit_account_allowed"):
-            raise ValueError(f"Cannot post to header GL account {account_code}")
+            raise ValueError(gettext(f"لا يمكن الترحيل إلى حساب رئيسي {account_code}"))
         if not getattr(account, "is_active", True):
-            raise ValueError(f"GL account {account_code} is inactive")
+            raise ValueError(gettext(f"الحساب {account_code} غير نشط"))
         return account
 
     @staticmethod
