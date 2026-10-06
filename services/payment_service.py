@@ -542,6 +542,21 @@ class PaymentService:
         cheque_number = payment_data.get("cheque_number")
         cheque_date = payment_data.get("cheque_date")
         bank_name = payment_data.get("bank_name") or "Bank"
+
+        # A cheque receipt must carry the instrument, the same rule
+        # SaleService.create_payment_for_sale already enforces for a sale payment.
+        #
+        # Without this the voucher form accepts payment_method=cheque with no
+        # cheque_number, cheque_date or bank_name and the Receipt is written with a
+        # null cheque number - money booked against an instrument nobody can ever
+        # trace to a bank. An unreconcilable instrument is worse than a missing one.
+        if payment_method == "cheque" and not cheque_number:
+            raise ValueError(
+                gettext("رقم الشيك مطلوب لسند القبض بشيك. أدخل رقم الشيك وتاريخ الاستحقاق واسم البنك.")
+            )
+        if payment_method == "cheque" and not cheque_date:
+            raise ValueError(gettext("تاريخ استحقاق الشيك مطلوب لسند القبض بشيك."))
+
         allocate_to_sales = payment_data.get("allocate_to_sales")
         source_sale = None
 
