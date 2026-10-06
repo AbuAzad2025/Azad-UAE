@@ -387,16 +387,33 @@ def tenant_edit(tenant_id):
                     return False
                 return current
 
+            def _text(name, current):
+                """A submitted-but-blank field keeps its current value.
+
+                name and slug are both NOT NULL and UNIQUE, and form.get's fallback
+                argument only helps when a field is *absent* - not when it is
+                present and empty, which is exactly what an emptied <input>
+                posts. Writing "" into either one erases the tenant's identity
+                from every list and breadcrumb that renders it, and the second
+                tenant blanked the same way collides on the unique index. The
+                nullable columns below deliberately keep their "or None" behaviour;
+                these four do not.
+                """
+                raw = request.form.get(name)
+                if raw is None:
+                    return current
+                return raw.strip() or current
+
             with atomic_transaction("tenant_edit"):
-                tenant.name = request.form.get("name_ar", tenant.name).strip()
-                tenant.name_ar = request.form.get("name_ar", tenant.name_ar).strip()
-                tenant.name_en = request.form.get("name_en", tenant.name_en).strip()
-                tenant.slug = request.form.get("slug", tenant.slug).strip()
-                tenant.business_type = request.form.get("business_type", tenant.business_type).strip()
-                tenant.phone_1 = request.form.get("phone_1", tenant.phone_1).strip() or None
-                tenant.phone_2 = request.form.get("phone_2", tenant.phone_2).strip() or None
-                tenant.email = request.form.get("email", tenant.email).strip() or None
-                tenant.address_ar = request.form.get("address_ar", tenant.address_ar).strip() or None
+                tenant.name = _text("name_ar", tenant.name)
+                tenant.name_ar = _text("name_ar", tenant.name_ar)
+                tenant.name_en = _text("name_en", tenant.name_en)
+                tenant.slug = _text("slug", tenant.slug)
+                tenant.business_type = _text("business_type", tenant.business_type)
+                tenant.phone_1 = (request.form.get("phone_1") or tenant.phone_1 or "").strip() or None
+                tenant.phone_2 = (request.form.get("phone_2") or tenant.phone_2 or "").strip() or None
+                tenant.email = (request.form.get("email") or tenant.email or "").strip() or None
+                tenant.address_ar = (request.form.get("address_ar") or tenant.address_ar or "").strip() or None
                 tenant.default_currency = (
                     request.form.get("default_currency", tenant.default_currency).strip()
                     or get_system_default_currency()
