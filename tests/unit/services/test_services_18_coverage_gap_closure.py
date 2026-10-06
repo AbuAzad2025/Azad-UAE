@@ -379,11 +379,20 @@ class TestArchiveServiceGaps:
 
 class TestBackupExecGaps:
     def test_run_repo_python_script_success(self, mocker, tmp_path):
-        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-        script_rel = "scripts/measure_18_services_coverage.py"
+        root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        # scripts/measure_18_services_coverage.py, which this test used to name,
+        # is not in the repo. The script's identity was never the subject - the
+        # subject is run_repo_python_script resolving a repo-relative path and
+        # handing it to the subprocess layer - so it points at a script that
+        # exists. A guard would be wrong here: if the script is later deleted the
+        # test must fail, not quietly stop running.
+        #
+        # The root also needed a third "..": at tests/unit/services, two levels
+        # up is tests/, which is why this only surfaced once the skip became an
+        # assertion.
+        script_rel = "scripts/coverage_report.py"
         script_abs = os.path.join(root, script_rel.replace("/", os.sep))
-        if not os.path.isfile(script_abs):
-            pytest.skip("script missing")
+        assert os.path.isfile(script_abs), f"fixture script missing from the repo: {script_rel}"
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
         mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
         from services.backup_exec import run_repo_python_script

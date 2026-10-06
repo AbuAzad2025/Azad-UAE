@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from flask import has_request_context
+
 from services.logging_core import (
     LoggingCore,
     _get_request_context,
@@ -61,17 +63,26 @@ class TestRequestHelpers:
             g.request_id = "fixed-id"
             assert _get_request_id() == "fixed-id"
 
-    def test_request_context_no_request(self):
-        import pytest
-        from flask import has_request_context
+    def test_request_context_no_request(self, app):
+        """With no request bound, the logger must not invent one.
 
-        # This test should run without any request context active
-        # If there's a lingering context from other tests, skip the assertion
-        if has_request_context():
-            pytest.skip("Request context active from other tests")
-        ctx = _get_request_context()
-        assert ctx["url"] is None
-        assert ctx["method"] is None
+        This used to skip whenever ``has_request_context()`` was true, which meant
+        a request context leaking from an earlier test silently disarmed the check
+        instead of failing it. A leaked context is now cleared for the duration of
+        the assertion and restored afterwards - setting the ContextVar to None for
+        good would break every later test that touches flask.request, which is
+        exactly the kind of damage a test must not leave behind.
+        """
+        from flask.globals import _cv_request
+
+        token = _cv_request.set(None) if has_request_context() else None
+        try:
+            ctx = _get_request_context()
+            assert ctx["url"] is None
+            assert ctx["method"] is None
+        finally:
+            if token is not None:
+                _cv_request.reset(token)
 
     def test_request_context_with_request(self, app):
         with app.test_request_context("/hello", method="POST", headers={"User-Agent": "UA"}):

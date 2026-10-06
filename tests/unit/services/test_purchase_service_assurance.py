@@ -306,10 +306,21 @@ class TestCreatePurchaseCurrency:
             )
         assert result.currency == "EUR"
 
-    @pytest.mark.skip(reason="Pre-existing test issue: mock setup incompatible with PostgreSQL")
     def test_tenant_currency_fallback_on_exception(self, app, mocker):
+        """A tenant-currency lookup that blows up must not lose the purchase.
+
+        This was marked skip with "mock setup incompatible with PostgreSQL", which
+        was not the cause: resolve_default_currency was left unmocked, so it
+        returned a MagicMock, ``(currency or "").strip()`` was truthy, and the
+        system-default branch at purchase_service.py:88 was never reached. Making
+        the resolver raise is what the test name says, and it exercises the
+        except branch that actually does the fallback.
+        """
         _patch_create_common(mocker)
-        mocker.patch("services.purchase_service.Tenant.query.get", return_value=None)
+        mocker.patch(
+            "services.purchase_service.resolve_default_currency",
+            side_effect=RuntimeError("tenant row unreadable"),
+        )
         mocker.patch("services.purchase_service.get_system_default_currency", return_value="AED")
         from services.purchase_service import PurchaseService
 

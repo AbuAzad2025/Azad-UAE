@@ -551,9 +551,7 @@ class PaymentService:
         # null cheque number - money booked against an instrument nobody can ever
         # trace to a bank. An unreconcilable instrument is worse than a missing one.
         if payment_method == "cheque" and not cheque_number:
-            raise ValueError(
-                gettext("رقم الشيك مطلوب لسند القبض بشيك. أدخل رقم الشيك وتاريخ الاستحقاق واسم البنك.")
-            )
+            raise ValueError(gettext("رقم الشيك مطلوب لسند القبض بشيك. أدخل رقم الشيك وتاريخ الاستحقاق واسم البنك."))
         if payment_method == "cheque" and not cheque_date:
             raise ValueError(gettext("تاريخ استحقاق الشيك مطلوب لسند القبض بشيك."))
 

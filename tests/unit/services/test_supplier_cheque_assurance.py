@@ -3,6 +3,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
+from sqlalchemy import event
 
 # Supplier Ageing Bucket Partitions
 
@@ -465,35 +466,63 @@ class TestChequeStateTransitions:
 
 class TestChequeEventListeners:
     def test_overdue_warning_and_status_log(self, mocker):
+        """The overdue warning and the status-change log both fire, and neither raises.
+
+        Registration used to be read back out of
+        ``sqlalchemy.event.registry._key_to_collection`` with a two-tuple key, and
+        SQLAlchemy 2.x keys that registry by ``(id(target), identifier, id(fn))``.
+        The lookup therefore never matched, ``before`` came back empty, and the
+        test skipped - while the listeners it was checking were registered the
+        whole time. Rather than reach into that private registry again (and get
+        the key shape wrong a third time), this captures the listeners as they
+        register and calls them directly. That also lets the test assert the
+        handler survives a broken due_date instead of only the happy paths.
+        """
         import importlib
 
         import services.cheque_service as cs
 
         importlib.reload(cs)
         warn = mocker.patch.object(cs.logger, "warning")
-        info = mocker.patch.object(cs.logger, "info", side_effect=[None, RuntimeError("log fail")])
+        info = mocker.patch.object(cs.logger, "info", side_effect=[None, RuntimeError("log failure")])
         err = mocker.patch.object(cs.logger, "error")
+
+        registered: dict[str, list] = {}
+
+        real_listens_for = event.listens_for
+
+        def spy(target, identifier, *args, **kwargs):
+            def decorate(fn):
+                registered.setdefault(identifier, []).append(fn)
+                return real_listens_for(target, identifier, *args, **kwargs)(fn)
+
+            return decorate
+
+        mocker.patch.object(event, "listens_for", side_effect=spy)
         cs.register_cheque_event_listeners()
-        from sqlalchemy import event
 
-        from models import Cheque
+        assert "before_insert" in registered, f"no before_insert listener registered: {sorted(registered)}"
+        assert "after_update" in registered, f"no after_update listener registered: {sorted(registered)}"
 
-        before = list(event.registry._key_to_collection.get((Cheque, "before_insert"), []))
-        after = list(event.registry._key_to_collection.get((Cheque, "after_update"), []))
-        if not before:
-            pytest.skip("cheque listeners not registered")
         overdue = MagicMock(
             cheque_number="CH-1",
             status="pending",
             due_date=date.today() - timedelta(days=30),
         )
-        for fn in before:
+        for fn in registered["before_insert"]:
             fn(None, None, overdue)
-        for fn in after:
+        assert warn.called, "an overdue cheque produced no warning"
+
+        for fn in registered["after_update"]:
             fn(None, None, MagicMock(cheque_number="CH-2", status="cleared"))
+        assert info.called, "a cleared cheque produced no status log"
+
+        # A handler that raises on bad data rolls back the write that triggered it,
+        # so both failure shapes have to be logged instead: the logger itself
+        # failing, and a malformed due_date.
+        for fn in registered["after_update"]:
+            fn(None, None, MagicMock(cheque_number="CH-2b", status="cleared"))
         broken = MagicMock(cheque_number="CH-3", status="pending", due_date=object())
-        for fn in before:
+        for fn in registered["before_insert"]:
             fn(None, None, broken)
-        assert warn.called
-        assert info.called
-        assert err.call_count >= 2
+        assert err.call_count >= 2, f"expected both failure shapes logged, got {err.call_count}"

@@ -88,10 +88,13 @@ class TestRunRepoPythonScript:
 
     def test_runs_existing_script_under_repo(self, mocker, tmp_path):
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-        script_rel = "scripts/verify_backup.py"
+        # Both verify_backup.py and check_dbs.py were named here at various points;
+        # verify_backup.py is not in the repo, so this skipped. The behaviour under
+        # test is the repo-relative path resolution, so it points at a script that
+        # exists - and asserts, rather than skips, so a future deletion fails loudly.
+        script_rel = "scripts/check_dbs.py"
         script_abs = os.path.join(root, script_rel.replace("/", os.sep))
-        if not os.path.isfile(script_abs):
-            pytest.skip("verify_backup.py not in repo")
+        assert os.path.isfile(script_abs), f"fixture script missing from the repo: {script_rel}"
 
         completed = subprocess.CompletedProcess([], 0, stdout="", stderr="")
         mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
@@ -139,14 +142,14 @@ class TestRunPythonModule:
 
     def test_repo_script_passes_env_and_cwd(self, mocker, tmp_path):
         root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-        script_rel = "scripts/verify_backup.py"
-        script_abs = os.path.join(root, script_rel.replace("/", os.sep))
-        if not os.path.isfile(script_abs):
-            script_abs = os.path.join(root, "tests", ".pytest-temp", "tmp_script.py")
-            os.makedirs(os.path.dirname(script_abs), exist_ok=True)
-            with open(script_abs, "w", encoding="utf-8") as fh:
-                fh.write('print("ok")\n')
-            script_rel = os.path.relpath(script_abs, root).replace("\\", "/")
+        # Written into tests/.pytest-temp/ inside the repository before, because the
+        # named script was missing. run_repo_python_script only accepts paths under
+        # the repo root, so the fixture has to live there too - but the fixture
+        # belongs in tmp_path, and only its *relative* form is derived here.
+        script_abs = os.path.join(str(tmp_path), "tmp_script.py")
+        with open(script_abs, "w", encoding="utf-8") as fh:
+            fh.write('print("ok")\n')
+        script_rel = os.path.relpath(script_abs, root).replace("\\", "/")
         completed = subprocess.CompletedProcess([], 0, stdout="ok", stderr="")
         mock_run = mocker.patch("utils.secure_subprocess.subprocess.run", return_value=completed)
         from services.backup_exec import run_repo_python_script

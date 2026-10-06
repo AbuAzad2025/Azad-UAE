@@ -248,13 +248,30 @@ class TestS04RolePermissionBoundary:
     """S-04: the same operation, two roles, different outcomes."""
 
     def test_cashier_denied_and_admin_allowed_on_the_same_route(self, db_session, client, sample_tenant, sample_branch):
-        from models import Role, User
+        from models import Permission, Role, User
 
-        def make(slug, username):
-            role = Role.query.filter_by(slug=slug).first()
-            if role is None:
-                pytest.skip(f"seeded role {slug} missing")
+        def make(username, permission_codes):
+            """Build a role carrying exactly the permissions under test.
+
+            The roles are constructed here rather than looked up by slug. Both the
+            seeder's `cashier` and its `accountant` are tenant-scoped seed data, so
+            depending on them made this test report "not applicable" whenever the
+            test database had not been through system_init - and the permission
+            boundary went unasserted exactly when the environment was least
+            trustworthy.
+
+            Naming the deciding permission is also what makes the assertion
+            readable: the only difference between the two users is view_ledger.
+            """
             unique = str(uuid.uuid4())[:8]
+            role = Role(name=f"BN {username} {unique}", slug=f"bn-{username}-{unique}", is_active=True)
+            role.permissions = Permission.query.filter(Permission.code.in_(permission_codes)).all()
+            assert role.permissions, f"these permissions are not in the DB: {permission_codes}"
+            # The role has to be in the session before the cascade to permissions
+            # and to the user below means anything; a bare constructor leaves
+            # role_id NULL behind and the permission check then denies everyone.
+            db_session.add(role)
+            db_session.flush()
             user = User(
                 username=f"{username}-{unique}",
                 email=f"{username}-{unique}@example.com",
@@ -268,21 +285,22 @@ class TestS04RolePermissionBoundary:
             db_session.commit()
             return user
 
-        cashier = make("cashier", "bn-cash")
+        # Sales-side permissions, deliberately no view_ledger.
+        cashier = make("bn-cash", ["manage_sales", "view_sales", "view_products"])
         client.post(
             "/auth/login",
             data={"username": cashier.username, "password": "Str0ng!Pass99"},
             follow_redirects=True,
         )
         denied = client.get("/ledger/")
-        assert denied.status_code == 403
+        assert denied.status_code == 403, f"a role without view_ledger reached the ledger ({denied.status_code})"
 
         client.get("/auth/logout", follow_redirects=True)
-        admin = make("accountant", "bn-acc")
+        admin = make("bn-acc", ["view_ledger", "manage_ledger", "manage_accounting"])
         client.post(
             "/auth/login",
             data={"username": admin.username, "password": "Str0ng!Pass99"},
             follow_redirects=True,
         )
         allowed = client.get("/ledger/")
-        assert allowed.status_code == 200, f"accountant denied the ledger ({allowed.status_code})"
+        assert allowed.status_code == 200, f"view_ledger still denied the ledger ({allowed.status_code})"

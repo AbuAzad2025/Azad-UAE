@@ -1338,17 +1338,37 @@ class TestProductsRemainingCoverage:
             )
         assert resp.status_code == 200
 
-    @pytest.mark.skip(reason="Pre-existing: requires translation files that don't exist in test env")
-    def test_import_creates_new_category_on_the_fly(self, products_import_app):
+    def test_import_creates_new_category_on_the_fly(self, product_client_upload):
+        """An unknown category name becomes a category rather than a failed row.
+
+        Marked skip with "requires translation files that don't exist in test env",
+        which was not the cause. The test was driving the route through
+        ``products_import_app`` without the patches its passing siblings use, so the
+        import never got past reading the file and no category was ever considered.
+        It now mirrors ``test_import_existing_category_reuse`` - same client
+        fixture, same warehouse and dataframe patches - and asserts the creation
+        rather than merely that the request redirected.
+        """
         df = _import_dataframe({"name": ["CatItem"], "price": [11.0], "category": ["FlyCat"]})
         new_cat = _category(20, name="FlyCat")
-        pc_cls = MagicMock()
-        pc_cls.query.filter_by.return_value.filter.return_value.first.return_value = None
-        pc_cls.return_value = new_cat
-        with patch("services.product_service.ProductCategory", pc_cls):
-            resp = _run_import_post(products_import_app, df)
-        _assert_import_index_redirect(resp)
-        pc_cls.assert_called_once()
+        with (
+            _products_patches() as ctx,
+            patch("models.Warehouse.query", _warehouse_query_mock()),
+            patch("routes.products._read_import_dataframe", return_value=df),
+            patch("routes.products.ProductService.create_category", return_value=new_cat) as create_category,
+            patch("routes.products.ProductService.find_category_by_name", return_value=None),
+        ):
+            inner = ctx["product_query"].filter.return_value
+            inner.filter.return_value = inner
+            inner.first.return_value = None
+            resp = product_client_upload.post(
+                "/products/import",
+                data={"file": (BytesIO(b"x"), "products.xlsx")},
+                content_type="multipart/form-data",
+            )
+        assert resp.status_code == 302
+        create_category.assert_called_once()
+        assert create_category.call_args.kwargs["name"] == "FlyCat"
 
     def test_edit_rejects_partners_without_tenant(self, product_client, bypass_product_auth):
         bypass_product_auth.can_see_costs.return_value = False

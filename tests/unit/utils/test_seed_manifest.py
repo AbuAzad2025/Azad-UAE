@@ -177,17 +177,28 @@ class TestManifestMatchesSource:
 
 
 class TestManifestProbesResolve:
-    @pytest.mark.parametrize("seed_set", manifest.ALL_SEED_SETS, ids=lambda s: s.key)
+    """Parametrised over the sets the assertion actually applies to.
+
+    These two used to walk all 29 entries and skip on a missing seeder or probe,
+    which produced 29 skips that said nothing. A deliberately unseeded set cannot
+    have a working probe - there is nothing to count - so asking it to was a dead
+    branch dressed as a check. Narrowing the parametrisation to the seeded sets
+    removes the noise, and `TestDeliberateSetsAreJustified` below turns the
+    "deliberately not seeded" claim into an assertion instead of a skip.
+    """
+
+    SEEDED = [s for s in manifest.ALL_SEED_SETS if s.seeder is not None]
+
+    @pytest.mark.parametrize("seed_set", SEEDED, ids=lambda s: s.key)
     def test_probe_imports(self, seed_set):
         """A dotted path that does not resolve is a silent hole in the manifest."""
-        if seed_set.verify is None:
-            pytest.skip("no probe declared")
+        assert seed_set.verify is not None, f"{seed_set.key} is seeded but declares no probe"
         module_path, _, attr = seed_set.verify.rpartition(".")
         assert module_path and attr
         module = importlib.import_module(module_path)
         assert callable(getattr(module, attr)), f"{seed_set.verify} is not callable"
 
-    @pytest.mark.parametrize("seed_set", manifest.ALL_SEED_SETS, ids=lambda s: s.key)
+    @pytest.mark.parametrize("seed_set", SEEDED, ids=lambda s: s.key)
     def test_seeder_path_is_plausible(self, seed_set):
         """Flag an obviously broken seeder reference early.
 
@@ -195,8 +206,6 @@ class TestManifestProbesResolve:
         (e.g. ``_ensure_owner_role/_ensure_super_admin_role``), so this checks
         only the first segment resolves - a full resolution would be wrong.
         """
-        if seed_set.seeder is None:
-            pytest.skip("deliberately unseeded")
         first = seed_set.seeder.split("/")[0].split(".")[0]
         assert first  # sanity
 
@@ -206,3 +215,43 @@ class TestManifestProbesResolve:
             if s.seeder is None:
                 continue
             assert s.verify is not None, f"{s.key} is seeded at boot but has no probe"
+
+
+class TestDeliberateSetsAreJustified:
+    """The replacement for 29 skips.
+
+    "We do not seed this" is a claim, and like any other claim in this repository
+    it can rot. An operator reading the manifest cannot tell a considered
+    decision from an entry someone forgot, so each deliberate or seeder-less set
+    has to say which it is.
+    """
+
+    DELIBERATE = [s for s in manifest.ALL_SEED_SETS if s.scope == "deliberate"]
+
+    def test_manifest_has_deliberate_entries(self):
+        """Guards the guard: if this list empties, the class tests nothing."""
+        assert len(self.DELIBERATE) >= 10, "the deliberate set shrank - check whether that was intended"
+
+    @pytest.mark.parametrize("seed_set", DELIBERATE, ids=lambda s: s.key)
+    def test_deliberate_entry_is_never_seeded(self, seed_set):
+        """scope=deliberate and seeder=set would mean it is seeded after all."""
+        assert seed_set.seeder is None, f"{seed_set.key} is marked deliberate but names a seeder"
+
+    @pytest.mark.parametrize("seed_set", DELIBERATE, ids=lambda s: s.key)
+    def test_deliberate_entry_states_why(self, seed_set):
+        """A deliberate entry must record the reason, not just the refusal."""
+        note = (seed_set.note or "").strip()
+        assert len(note) > 30, f"{seed_set.key} is deliberately unseeded with no stated reason"
+
+    @pytest.mark.parametrize(
+        "seed_set",
+        [s for s in manifest.ALL_SEED_SETS if s.seeder is None and s.scope != "deliberate"],
+        ids=lambda s: s.key,
+    )
+    def test_seeder_less_entry_is_still_measured(self, seed_set):
+        """No seeder does not mean not worth checking - `branches` is the case.
+
+        Operator-created rows like branches have no seeder to name, but a tenant
+        with zero active branches cannot trade, so the manifest still probes them.
+        """
+        assert seed_set.verify is not None, f"{seed_set.key} has no seeder and no probe - it is untracked"
