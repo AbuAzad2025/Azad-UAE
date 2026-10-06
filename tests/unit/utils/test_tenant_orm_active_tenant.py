@@ -44,7 +44,7 @@ def test_live_request_context_is_honoured(app):
     used to inject `tenant_id < 0` and silently empty every tenant-scoped list.
     It must not regress.
     """
-    with app.test_request_context("/") as ctx:
+    with app.test_request_context("/"):
         g.active_tenant_request = _current_request_id()
         g.active_tenant_id = 7
         assert _active_tenant_for_orm() == 7

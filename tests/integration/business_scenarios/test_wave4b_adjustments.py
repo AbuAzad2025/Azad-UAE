@@ -25,6 +25,7 @@ than assumed, because it is exactly the shape of defect this file is for.
 
 from __future__ import annotations
 
+import contextlib
 import uuid
 from decimal import Decimal
 
@@ -251,12 +252,17 @@ class TestS26StockAdjustment:
         from services.stock_service import StockService
 
         product = counted_product["product"]
-        try:
+        # The adjustment is expected to be refused; the point is what it must not
+        # leave behind. Suppressed rather than asserted-on, because whether the
+        # guard raises or clamps is the service's business - a shelf that cannot
+        # go negative is the property being checked either way.
+        with contextlib.suppress(Exception):
             StockService.adjust_stock(
-                product.id, Decimal("-9999"), notes="impossible", warehouse_id=counted_product["warehouse"].id
+                product.id,
+                Decimal("-9999"),
+                notes="impossible",
+                warehouse_id=counted_product["warehouse"].id,
             )
-        except Exception:
-            pass
         db_session.rollback()
 
         remaining = Decimal(
