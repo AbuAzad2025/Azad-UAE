@@ -65,9 +65,7 @@ def unpaid_sale(client, db_session, pos_cashier, till_open, stocked_product, sce
         # sale_number is NOT NULL and is normally minted by SaleService. Drawn from
         # the same sequence rather than invented, so the receipt under test is
         # allocated to a document the rest of the system would recognise.
-        sale_number=DocumentSequenceService.next_number(
-            demo_tenant.id, "sale", branch_code="CRD"
-        ),
+        sale_number=DocumentSequenceService.next_number(demo_tenant.id, "sale", branch_code="CRD"),
         currency="ILS",
         exchange_rate=1,
         subtotal=Decimal("50"),
@@ -149,18 +147,13 @@ def _submit_receipt(client, customer_id, amount, payment_method="cash", allocate
     )
 
 
-
 def _accounts(sale, customer, tenant_id):
     """The two accounts a receipt actually posts to, resolved rather than guessed."""
     from services.gl_service import GLService
 
     return (
-        GLService.get_payment_debit_account(
-            "cash", branch_id=sale.branch_id, tenant_id=tenant_id
-        ),
-        GLService.get_customer_credit_account(
-            customer, branch_id=sale.branch_id, tenant_id=tenant_id
-        ),
+        GLService.get_payment_debit_account("cash", branch_id=sale.branch_id, tenant_id=tenant_id),
+        GLService.get_customer_credit_account(customer, branch_id=sale.branch_id, tenant_id=tenant_id),
     )
 
 
@@ -312,9 +305,7 @@ class TestS25ReceiptVoucher:
             # is a legitimate outcome - but it must not be driven past the amount
             # actually taken.
             swing = abs(receivable_before - receivable_after)
-            assert swing <= 501, (
-                f"the receivable moved by {swing}, more than the 500 that was collected"
-            )
+            assert swing <= 501, f"the receivable moved by {swing}, more than the 500 that was collected"
 
     def test_archiving_a_receipt_keeps_it_recorded(self, client, db_session, pos_cashier, unpaid_sale, demo_tenant):
         """Archive must not delete: the audit trail is the point of a voucher."""

@@ -157,8 +157,27 @@ class StockService:
         from services.gl_service import GLService
 
         product = db.session.get(Product, movement.product_id)
-        if not product or not product.cost_price:
-            return
+        if not product:
+            # The product is gone, so there is nothing to value the movement
+            # against. Refuse rather than silently leaving the ledger behind.
+            raise ValueError(gettext(f"لا يمكن تسوية مخزون منتج غير موجود: {movement.product_id}"))
+        if not product.cost_price:
+            # Previously an early return: the movement was written, the quantity
+            # changed, and no journal entry was created - with no exception, no
+            # log, and no sign anywhere that the books had been left out of step
+            # with the shelf. adjust_stock reported success.
+            #
+            # An adjustment cannot be valued without a cost, and posting zero is
+            # worse than refusing: it would move the quantity and leave the
+            # inventory asset untouched, which reads as agreement in a trial
+            # balance and is not. The stocktake operator is the only person who
+            # can supply the missing cost, so the adjustment is refused and they
+            # are told which product needs it.
+            raise ValueError(
+                gettext(
+                    f"لا يمكن تسوية مخزون منتج بدون سعر تكلفة: {product.name}. أدخل سعر التكلفة أولاً ثم أعد التسوية."
+                )
+            )
         cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
         if cost_value <= 0:
             return

@@ -306,7 +306,7 @@ class TestAdjustAndOpeningStock:
         with pytest.raises(RuntimeError), app.app_context():
             StockService.adjust_stock(sample_product.id, Decimal("1"))
 
-    def test_post_adjustment_gl_skips_no_cost(self, db_session, sample_tenant, sample_warehouse):
+    def test_post_adjustment_gl_refuses_no_cost(self, db_session, sample_tenant, sample_warehouse):
         product = Product(
             tenant_id=sample_tenant.id,
             name="No Cost",
@@ -322,7 +322,12 @@ class TestAdjustAndOpeningStock:
             quantity=Decimal("1"),
             warehouse_id=sample_warehouse.id,
         )
-        StockService._post_adjustment_gl(movement)
+        # Refuses rather than silently returning: an adjustment cannot be valued
+        # without a cost, and posting zero would move the quantity while leaving
+        # the inventory asset untouched - which reads as agreement in a trial
+        # balance and is not.
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(movement)
 
     def test_add_opening_stock_with_gl(self, db_session, sample_product, sample_warehouse, mocker):
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
@@ -836,9 +841,11 @@ class TestAdditionalStockCoverage:
             id=1,
             tenant_id=sample_product.tenant_id,
         )
+        # A product with a cost must still post - the refusal is only for a
+        # missing cost.
         StockService._post_adjustment_gl(movement)
 
-    def test_post_adjustment_gl_zero_cost_value(self, db_session, sample_tenant, sample_warehouse):
+    def test_post_adjustment_gl_refuses_zero_cost(self, db_session, sample_tenant, sample_warehouse):
         product = Product(
             tenant_id=sample_tenant.id,
             name="Zero Cost",
@@ -854,7 +861,12 @@ class TestAdditionalStockCoverage:
             quantity=Decimal("1"),
             warehouse_id=sample_warehouse.id,
         )
-        StockService._post_adjustment_gl(movement)
+        # Refuses rather than silently returning: an adjustment cannot be valued
+        # without a cost, and posting zero would move the quantity while leaving
+        # the inventory asset untouched - which reads as agreement in a trial
+        # balance and is not.
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(movement)
 
     def test_calculate_sale_cogs_mwac_positive_stock(
         self, db_session, sample_tenant, sample_product, sample_warehouse, enable_mwac

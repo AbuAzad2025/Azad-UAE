@@ -288,25 +288,32 @@ class TestAdjustStock:
 
 
 class TestPostAdjustmentGl:
-    def test_skips_missing_product(self, mocker):
+    def test_refuses_missing_product(self, mocker):
         mocker.patch("services.stock_service.db.session").get.return_value = None
         from services.stock_service import StockService
 
-        StockService._post_adjustment_gl(MagicMock(product_id=1))
+        # Refuses. A movement against a product that no longer exists cannot be
+        # valued, and returning quietly would move stock with no ledger entry.
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(MagicMock(product_id=1))
 
-    def test_skips_no_cost_price(self, mocker):
+    def test_refuses_no_cost_price(self, mocker):
         product = _product(cost_price=None)
         mocker.patch("services.stock_service.db.session").get.return_value = product
         from services.stock_service import StockService
 
-        StockService._post_adjustment_gl(MagicMock(product_id=1, quantity=Decimal("1")))
+        # Refuses. An adjustment cannot be valued without a cost; posting zero
+        # would move the quantity and leave the inventory asset untouched.
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(MagicMock(product_id=1, quantity=Decimal("1")))
 
-    def test_skips_zero_cost_price(self, mocker):
+    def test_refuses_zero_cost_price(self, mocker):
         product = _product(cost_price=Decimal("0"))
         mocker.patch("services.stock_service.db.session").get.return_value = product
         from services.stock_service import StockService
 
-        StockService._post_adjustment_gl(MagicMock(product_id=1, quantity=Decimal("1")))
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(MagicMock(product_id=1, quantity=Decimal("1")))
 
     def test_skips_zero_quantity_movement(self, mocker):
         product = _product(cost_price=Decimal("10"))

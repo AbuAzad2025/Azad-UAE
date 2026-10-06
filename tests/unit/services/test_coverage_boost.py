@@ -1060,13 +1060,15 @@ class TestStockCoverage:
             with pytest.raises(ValueError, match="المنتج غير موجود"):
                 StockService.create_movement(product_id=99999, quantity=10, movement_type="purchase", warehouse_id=1)
 
-    def test_post_adjustment_gl_no_product_returns(self, mocker):
+    def test_post_adjustment_gl_refuses_missing_product(self, mocker):
         mocker.patch("extensions.db.session.get", return_value=None)
         movement = MagicMock()
         movement.product_id = 1
         movement.quantity = Decimal("5")
-        # Should return early without posting
-        StockService._post_adjustment_gl(movement)  # no exception
+        # Refuses: a movement against a product that no longer exists cannot be
+        # valued, and returning quietly would move stock with no ledger entry.
+        with pytest.raises(ValueError):
+            StockService._post_adjustment_gl(movement)
 
     def test_sync_current_stock_sums_pws(self, mocker):
         product = MagicMock()
