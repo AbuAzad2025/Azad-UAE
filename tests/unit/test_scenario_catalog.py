@@ -108,6 +108,23 @@ def _id_in_markers(node) -> str | None:
     return None
 
 
+def _live_routes() -> dict[str, int]:
+    """Route counts keyed by path under routes/, e.g. ``owner/tenants``.
+
+    Keyed by path, never by module stem. ``routes/tenants.py`` and
+    ``routes/owner/tenants.py`` are separate surfaces - one is a tenant switching
+    into itself, the other is the platform owner managing every tenant - and a
+    stem-keyed inventory collapsed them into a single entry, hiding 23 routes.
+    """
+    out: dict[str, int] = {}
+    root = pathlib.Path.cwd() / "routes"
+    for path in sorted(root.rglob("*.py")):
+        n = len(re.findall(r"@\w+\.route\(", path.read_text(encoding="utf-8", errors="replace")))
+        if n:
+            out[path.relative_to(root).as_posix()[: -len(".py")]] = n
+    return out
+
+
 class TestCatalogueIntegrity:
     def test_prefixes_are_unique(self):
         dupes = [p for p, n in collections.Counter(d.prefix for d in catalog.ALL_DOMAINS).items() if n > 1]
@@ -115,11 +132,7 @@ class TestCatalogueIntegrity:
 
     def test_no_blueprint_is_left_out(self):
         """A routes/ blueprint with no catalogued domain is an untested system."""
-        live: dict[str, int] = {}
-        for path in sorted((pathlib.Path.cwd() / "routes").rglob("*.py")):
-            n = len(re.findall(r"@\w+\.route\(", path.read_text(encoding="utf-8", errors="replace")))
-            if n:
-                live[path.stem] = n
+        live = _live_routes()
         covered = {b for d in catalog.ALL_DOMAINS for b in d.blueprints}
         missing = {k: v for k, v in live.items() if k not in covered}
         assert not missing, f"blueprints with no catalogued domain: {missing}"
@@ -134,11 +147,7 @@ class TestCatalogueIntegrity:
 
     def test_route_inventory_matches_the_tree(self):
         """The budgets are derived from measured route counts; if those drift, so must this."""
-        live: dict[str, int] = {}
-        for path in sorted((pathlib.Path.cwd() / "routes").rglob("*.py")):
-            n = len(re.findall(r"@\w+\.route\(", path.read_text(encoding="utf-8", errors="replace")))
-            if n:
-                live[path.stem] = n
+        live = _live_routes()
         stale = {k: (v, catalog._ROUTE_COUNTS.get(k)) for k, v in live.items() if catalog._ROUTE_COUNTS.get(k) != v}
         assert not stale, f"routes/ changed but the catalogue inventory did not: {stale}"
 

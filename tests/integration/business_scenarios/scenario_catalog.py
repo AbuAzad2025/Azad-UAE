@@ -27,7 +27,7 @@ read out of their docstrings instead, so those files stay untouched.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -73,41 +73,51 @@ class Wave:
         return derived + self.fixed_scenarios
 
 
-# ── measured route inventory, refreshed by scripts/lint/measure_scenario_surface ──
+# ── measured route inventory, keyed by path under routes/ ──
+#
+# Keyed by path, not by module stem: routes/tenants.py and routes/owner/tenants.py
+# are different surfaces that a stem-keyed inventory silently collapsed into one,
+# which is how 23 routes went missing from the first version of this table.
 _ROUTE_COUNTS: dict[str, int] = {
     "admin_ledger": 16,
     "advanced_ledger": 22,
-    "ai_training": 4,
-    "ai_training_advanced": 8,
-    "analytics": 10,
+    "ai_routes/analytics": 10,
+    "ai_routes/assistant": 3,
+    "ai_routes/chat": 7,
+    "ai_routes/knowledge": 14,
+    "ai_routes/specialized": 7,
+    "ai_routes/system": 9,
     "api": 20,
     "api_analytics": 5,
     "api_docs": 3,
     "api_enhanced": 6,
     "assets": 7,
-    "assistant": 3,
     "auth": 12,
-    "backups": 10,
     "billing_webhooks": 3,
     "branches": 4,
     "budget": 10,
-    "chat": 7,
     "cheques": 16,
-    "core": 8,
     "crm": 8,
     "customers": 11,
-    "database": 16,
     "email_marketing": 8,
     "expenses": 12,
     "gamification": 3,
     "graphql": 2,
     "hr": 17,
-    "knowledge": 14,
     "language": 1,
     "ledger": 32,
     "main": 10,
-    "maintenance": 6,
-    "monitoring": 14,
+    "monitoring": 3,
+    "owner/ai_training": 4,
+    "owner/ai_training_advanced": 8,
+    "owner/backups": 10,
+    "owner/core": 8,
+    "owner/database": 16,
+    "owner/maintenance": 6,
+    "owner/monitoring": 14,
+    "owner/settings": 26,
+    "owner/tenants": 14,
+    "owner/users": 6,
     "owner_admin": 3,
     "partners": 11,
     "payment_vault": 42,
@@ -123,14 +133,11 @@ _ROUTE_COUNTS: dict[str, int] = {
     "reports": 20,
     "returns": 5,
     "sales": 12,
-    "settings": 26,
     "shipments": 10,
     "shop": 37,
-    "specialized": 7,
     "stock_sync": 2,
     "store": 11,
     "suppliers": 8,
-    "system": 9,
     "tenant_backups": 5,
     "tenants": 1,
     "tickets": 8,
@@ -141,7 +148,6 @@ _ROUTE_COUNTS: dict[str, int] = {
     "warehouse": 14,
     "whatsapp": 3,
 }
-
 ORIGINAL_SCENARIO_COUNT = 76
 TARGET_SCENARIO_COUNT = 1000
 
@@ -196,7 +202,7 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "OWN",
                 "Owner panel and platform administration",
-                ("owner_admin", "tenants", "maintenance", "system", "core"),
+                ("owner/tenants", "owner/core", "owner/maintenance", "owner_admin", "tenants"),
                 3.0,
                 "owner-only reachability and the blast radius of a platform action",
             ),
@@ -210,14 +216,14 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "BAK",
                 "Backups, restore and tenant data portability",
-                ("backups", "tenant_backups", "database"),
+                ("owner/backups", "owner/database", "tenant_backups"),
                 2.2,
                 "a restore that is not byte-exact is not a backup",
             ),
             Domain(
                 "MON",
                 "Monitoring, health and maintenance windows",
-                ("monitoring",),
+                ("owner/monitoring", "monitoring"),
                 2.2,
                 "health endpoints must not leak internals to an unauthenticated caller",
             ),
@@ -237,7 +243,7 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "ADV",
                 "Advanced ledger - consolidation, FX, revaluation, budgets",
-                ("advanced_ledger", "treasury", "specialized"),
+                ("advanced_ledger", "treasury"),
                 2.2,
                 "the paths where a wrong account is still arithmetically balanced",
             ),
@@ -251,7 +257,7 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "RPT",
                 "Financial and operational reporting",
-                ("reports", "analytics", "api_analytics"),
+                ("reports", "api_analytics"),
                 1.5,
                 "a report that aggregates across tenants is a data breach",
             ),
@@ -385,7 +391,16 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "AI",
                 "AI training, assistant, chat and knowledge base",
-                ("ai_training", "ai_training_advanced", "assistant", "chat", "knowledge"),
+                (
+                    "ai_routes/system",
+                    "ai_routes/assistant",
+                    "ai_routes/chat",
+                    "ai_routes/knowledge",
+                    "ai_routes/specialized",
+                    "ai_routes/analytics",
+                    "owner/ai_training",
+                    "owner/ai_training_advanced",
+                ),
                 1.6,
                 "AI output must never bypass the permission model",
             ),
@@ -425,14 +440,14 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "SET",
                 "Tenant settings and configuration",
-                ("settings",),
+                ("owner/settings",),
                 1.8,
                 "a setting that changes money handling is not a preference",
             ),
             Domain(
                 "USR",
                 "Users, roles and permissions",
-                ("users", "branches", "language"),
+                ("owner/users", "users", "branches", "language"),
                 2.2,
                 "privilege escalation through a role edit",
             ),
