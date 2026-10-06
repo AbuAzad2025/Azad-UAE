@@ -29,8 +29,8 @@ SCENARIO_DIR = pathlib.Path(__file__).resolve().parent.parent / "integration" / 
 
 #: ``@scenario("POS-07", "a held drawer must not close negative")``
 _MARKER_NAME = "scenario"
-#: ``"""S-07: the same operation, two roles, different outcomes."""``
-_DOC_ID_RE = re.compile(r"\bS-(\d{2})\b")
+#: ``"""S-07: ..."""`` or ``"""OWN-03. is_owner with a tenant is not an owner"""``
+_DOC_ID_RE = re.compile(r"\b((?:S-\d{2}|[A-Z]{2,4}-\d{2,3}))\b")
 
 
 def _id_of(func: ast.FunctionDef) -> str | None:
@@ -52,7 +52,7 @@ def _id_of(func: ast.FunctionDef) -> str | None:
                     return first.value
     doc = ast.get_docstring(func) or ""
     found = _DOC_ID_RE.search(doc)
-    return f"S-{found.group(1)}" if found else None
+    return found.group(1) if found else None
 
 
 def _declared_ids() -> tuple[dict[str, list[str]], dict[str, list[str]]]:
@@ -94,7 +94,7 @@ def _declared_ids() -> tuple[dict[str, list[str]], dict[str, list[str]]]:
 
 def _id_in_doc(node) -> str | None:
     found = _DOC_ID_RE.search(ast.get_docstring(node) or "")
-    return f"S-{found.group(1)}" if found else None
+    return found.group(1) if found else None
 
 
 def _id_in_markers(node) -> str | None:
