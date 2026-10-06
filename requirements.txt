@@ -8,7 +8,10 @@
 
 # Core Framework
 Flask==3.1.3
-Werkzeug==3.1.8
+# 3.1.9 clears CVE-2026-102598: safe_join accepted Windows device names
+# (CON, NUL, ...) as path segments, which is a path-traversal primitive on
+# any Windows-hosted deployment. Found by the Trivy fs gate in CI.
+Werkzeug==3.1.9
 Jinja2==3.1.6
 click==8.5.0
 itsdangerous==2.2.0
