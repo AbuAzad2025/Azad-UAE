@@ -1886,7 +1886,6 @@ def export_cards():
 @owner_only
 def export_report_pdf():
     """تصدير تقرير PDF"""
-    from services.export_service import ExportService
 
     tid = None
     purchases = VaultQueryService.list_all_purchases()
@@ -1914,14 +1913,33 @@ def export_report_pdf():
         ],
     ]
 
-    html = ExportService.generate_pdf_report(
-        gettext("تقرير الخزينة السرية الشامل"),
-        {"stats": stats, "table_headers": table_headers, "table_data": table_data},
-    )
+    # generate_pdf_report renders HTML despite its name, and this route used to
+    # return that markup as text/html - so a client trusting the /report-pdf
+    # filename downloaded a .pdf containing a web page. Rendered through
+    # PrintService.render_pdf instead, which is the existing WeasyPrint path
+    # (with the /static/ rewrite that keeps linked stylesheets from being
+    # silently dropped).
+    from services.print_service import PrintService
 
+    pdf_bytes = PrintService.render_pdf(
+        "payment_vault/report_pdf.html",
+        extra_context={
+            "report": {
+                "title": gettext("تقرير الخزينة السرية الشامل"),
+                "stats": stats,
+                "table_headers": table_headers,
+                "table_data": table_data,
+            }
+        },
+        filename="vault-report.pdf",
+    )
     from flask import Response
 
-    return Response(html, mimetype="text/html")
+    return Response(
+        pdf_bytes,
+        mimetype="application/pdf",
+        headers={"Content-Disposition": 'inline; filename="vault-report.pdf"'},
+    )
 
 
 @payment_vault_bp.route("/webhook/nowpayments", methods=["POST"])

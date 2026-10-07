@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{# Owner-only PDF export of the payment vault.
+
+   PrintService.render_pdf renders this through WeasyPrint, which needs a real
+   template rather than a string. The vault summary is passed in as `report`.
+   Everything shown here is platform-level: purchases and donations across all
+   tenants, visible only to the platform owner.
+#}
+{% block title %}{{ _('تقرير الخزينة السرية') }}{% endblock %}
+
+{% block content %}
+<div class="vault-report">
+    <h1>{{ report.title }}</h1>
+
+    <table class="report-stats">
+        <tbody>
+        {% for label, value in report.stats.items() %}
+            <tr>
+                <th scope="row">{{ label }}</th>
+                <td>{{ value }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="report-table">
+        <thead>
+            <tr>
+                {% for header in report.table_headers %}
+                    <th scope="col">{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in report.table_data %}
+            <tr>
+                {% for cell in row %}
+                    <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
