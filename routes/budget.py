@@ -122,7 +122,15 @@ def delete(budget_id):
 @login_required
 @permission_required("view_ledger")
 def variance(budget_id):
-    report = BudgetService.variance_report(budget_id, None)
+    # BudgetService.get_budget raises ValueError rather than returning None for a
+    # missing id, and variance_report does not catch it, so a stale link - or
+    # simply budget 1 not existing - answered 500. The ValueError is the service's
+    # documented behaviour and other routes rely on it, so it is handled here.
+    try:
+        report = BudgetService.variance_report(budget_id, None)
+    except ValueError:
+        flash(gettext("الميزانية غير موجودة."), "warning")
+        return redirect(url_for("budget.index"))
     return render_template("financials/budget/variance.html", report=report)
 
 
