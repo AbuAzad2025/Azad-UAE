@@ -1,5 +1,7 @@
 """Monitoring, API keys, and error audit routes for the owner blueprint."""
 
+import ipaddress
+import json
 import logging
 from datetime import UTC, datetime
 
@@ -138,16 +140,51 @@ def resolve_alert(**kwargs):
 @owner_required
 def ip_whitelist():
     if request.method == "POST":
-        ip_address = request.form.get("ip_address")
-        description = request.form.get("description")
+        ip_address = (request.form.get("ip_address") or "").strip()
+        description = (request.form.get("description") or "").strip()
+
+        # Validate before storing. This list is the owner's own IP gate, so a
+        # junk entry is worse than a missing one: it reads as protection in the
+        # UI while matching nothing, and a blank submission was previously stored
+        # as {"ip": null}, leaving a permanent phantom row that shifts every
+        # index-based delete after it.
+        if not ip_address:
+            flash(gettext("❌ عنوان IP مطلوب"), "danger")
+            return redirect(url_for("owner.ip_whitelist"))
+        try:
+            ipaddress.ip_address(ip_address)
+        except ValueError:
+            flash(gettext("❌ عنوان IP غير صالح"), "danger")
+            return redirect(url_for("owner.ip_whitelist"))
 
         settings = SystemSettings.get_current()
-        whitelist = settings.owner_whitelist_ips or []
+        raw = settings.owner_whitelist_ips
+        # The column is db.Text, not db.JSON - the same shape this table uses for
+        # custom_settings and notification_templates. Assigning a Python list of
+        # dicts to it raised "can't adapt type 'dict'" inside the transaction, so
+        # the row was rolled back and the owner was shown "added successfully"
+        # for an entry that was never stored. The IP allowlist therefore did not
+        # work at all. Serialise explicitly, and read defensively, since a
+        # pre-existing row may hold anything.
+        if isinstance(raw, list):
+            whitelist = [e for e in raw if isinstance(e, dict)]
+        elif raw:
+            try:
+                parsed = json.loads(raw)
+                whitelist = [e for e in parsed if isinstance(e, dict)] if isinstance(parsed, list) else []
+            except (TypeError, ValueError):
+                whitelist = []
+        else:
+            whitelist = []
+
+        if any(str(entry.get("ip", "")).strip() == ip_address for entry in whitelist):
+            flash(gettext("❌ العنوان موجود في القائمة بالفعل"), "warning")
+            return redirect(url_for("owner.ip_whitelist"))
 
         try:
             with atomic_transaction("add_ip_whitelist"):
                 whitelist.append({"ip": ip_address, "description": description})
-                settings.owner_whitelist_ips = whitelist
+                settings.owner_whitelist_ips = json.dumps(whitelist, ensure_ascii=False)
         except Exception as e:
             flash(gettext(f"❌ خطأ في إضافة IP: {str(e)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
@@ -165,13 +202,27 @@ def ip_whitelist():
 @owner_required
 def delete_ip_whitelist(index):
     settings = SystemSettings.get_current()
-    whitelist = settings.owner_whitelist_ips or []
+    raw = settings.owner_whitelist_ips
+
+    # Same Text-column shape as the add path: a list here meant pop() then
+    # assigning a list to a Text column, which raised and rolled back, so a
+    # delete never removed anything either.
+    if isinstance(raw, list):
+        whitelist = [e for e in raw if isinstance(e, dict)]
+    elif raw:
+        try:
+            parsed = json.loads(raw)
+            whitelist = [e for e in parsed if isinstance(e, dict)] if isinstance(parsed, list) else []
+        except (TypeError, ValueError):
+            whitelist = []
+    else:
+        whitelist = []
 
     if 0 <= index < len(whitelist):
         try:
             with atomic_transaction("delete_ip_whitelist"):
                 whitelist.pop(index)
-                settings.owner_whitelist_ips = whitelist
+                settings.owner_whitelist_ips = json.dumps(whitelist, ensure_ascii=False)
         except Exception as e:
             flash(gettext(f"❌ خطأ في حذف IP: {str(e)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
@@ -185,8 +236,20 @@ def delete_ip_whitelist(index):
 @owner_required
 def api_keys():
     if request.method == "POST":
-        name = request.form.get("name")
-        service = request.form.get("service")
+        name = (request.form.get("name") or "").strip()
+        service = (request.form.get("service") or "").strip()
+
+        # Both fields identify the credential later. A key stored with neither is
+        # unattributable in the audit log and unrecognisable in the listing, which
+        # is how credentials end up alive long after the thing they were for is
+        # gone. Refused rather than defaulted, because a made-up service name is
+        # worse than none - it reads as a real classification.
+        if not name:
+            flash(gettext("❌ اسم المفتاح مطلوب"), "danger")
+            return redirect(url_for("owner.api_keys"))
+        if not service:
+            flash(gettext("❌ الخدمة مطلوبة"), "danger")
+            return redirect(url_for("owner.api_keys"))
 
         key = APIKey(
             name=name,

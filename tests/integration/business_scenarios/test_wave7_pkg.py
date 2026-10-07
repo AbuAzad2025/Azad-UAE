@@ -673,3 +673,226 @@ class TestPKG05ExportsAndWebhooks:
         for path in ("/payment-vault/", "/payment-vault/dashboard", "/payment-vault/packages-management"):
             resp = client.get(path)
             assert resp.status_code in (302, 401, 403, 404), f"{path} answered {resp.status_code} anonymously"
+
+
+class TestPKG06VaultLifecycle:
+    """PKG-41 to PKG-50: the vault's own lock, settings and password.
+
+    Everything here sits behind ``is_vault_accessible()``. That is the second
+    gate after the owner check, and it is the one that makes the vault a vault:
+    being signed in as the owner is not enough, the vault has to be open too.
+    """
+
+    def test_the_dashboard_opens_with_the_vault_unlocked(self, client, scenario_owner):
+        """PKG-41."""
+        _unlock(client)
+        assert client.get("/payment-vault/dashboard").status_code == 200
+
+    def test_the_dashboard_locks_with_the_vault_closed(self, client, scenario_owner, db_session):
+        """PKG-42. Owner and unlocked are two separate requirements."""
+        from models import PaymentVault
+
+        _unlock(client)
+        PaymentVault.get_platform_vault().lock_vault()
+        db_session.commit()
+        resp = client.get("/payment-vault/dashboard")
+        assert resp.status_code == 302, f"the dashboard served a locked vault ({resp.status_code})"
+        assert "/payment-vault/unlock" in resp.headers.get("Location", "")
+
+    def test_settings_are_gated_by_the_vault(self, client, scenario_owner, db_session):
+        """PKG-43. Settings hold the gateway keys, so they follow the lock."""
+        from models import PaymentVault
+
+        _unlock(client)
+        PaymentVault.get_platform_vault().lock_vault()
+        db_session.commit()
+        resp = client.get("/payment-vault/settings")
+        assert resp.status_code == 302, f"settings served a locked vault ({resp.status_code})"
+
+    def test_settings_render_when_open(self, client, scenario_owner):
+        """PKG-44."""
+        _unlock(client)
+        assert client.get("/payment-vault/settings").status_code == 200
+
+    def test_changing_the_password_requires_the_current_one(self, client, scenario_owner, db_session):
+        """PKG-45. A wrong current password does not change anything.
+
+        Without this, any owner session could rotate the password and lock the
+        real owner out of the vault they own.
+        """
+        from models import PaymentVault
+
+        _unlock(client)
+        before = PaymentVault.get_platform_vault().vault_password_hash
+        client.post(
+            "/payment-vault/change-password",
+            data={"current_password": "wrong", "new_password": "New-Pass-1", "confirm_password": "New-Pass-1"},
+            follow_redirects=True,
+        )
+        db_session.expire_all()
+        assert PaymentVault.get_platform_vault().vault_password_hash == before, (
+            "the vault password changed with the wrong current password"
+        )
+
+    def test_changing_the_password_requires_a_matching_confirmation(self, client, scenario_owner, db_session):
+        """PKG-46."""
+        from models import PaymentVault
+
+        _unlock(client)
+        before = PaymentVault.get_platform_vault().vault_password_hash
+        client.post(
+            "/payment-vault/change-password",
+            data={
+                "current_password": "Vault-Pass-123",
+                "new_password": "New-Pass-1",
+                "confirm_password": "Something-Else",
+            },
+            follow_redirects=True,
+        )
+        db_session.expire_all()
+        assert PaymentVault.get_platform_vault().vault_password_hash == before, (
+            "a mismatched confirmation still changed the password"
+        )
+
+    def test_the_password_can_be_changed_with_the_right_current_one(self, client, scenario_owner, db_session):
+        """PKG-47. The success path, so the two above are not the only outcome."""
+        from models import PaymentVault
+
+        _unlock(client)
+        before = PaymentVault.get_platform_vault().vault_password_hash
+        client.post(
+            "/payment-vault/change-password",
+            data={
+                "current_password": "Vault-Pass-123",
+                "new_password": "Rotated-Pass-2",
+                "confirm_password": "Rotated-Pass-2",
+            },
+            follow_redirects=True,
+        )
+        db_session.expire_all()
+        assert PaymentVault.get_platform_vault().vault_password_hash != before, "the password did not change"
+
+    def test_locking_the_vault_closes_it_again(self, client, scenario_owner, db_session):
+        """PKG-48. The round trip, so PKG-42 is not a one-way door."""
+        from models import PaymentVault
+
+        _unlock(client)
+        assert client.post("/payment-vault/lock", follow_redirects=True).status_code in (200, 302)
+        db_session.expire_all()
+        assert PaymentVault.get_platform_vault().is_locked is True
+
+    def test_unlocking_with_a_wrong_password_leaves_it_locked(self, client, scenario_owner, db_session):
+        """PKG-49. The lock is not a speed bump."""
+        from models import PaymentVault
+
+        _unlock(client)
+        client.post("/payment-vault/lock", follow_redirects=True)
+        client.post("/payment-vault/unlock", data={"vault_password": "definitely-wrong"}, follow_redirects=True)
+        db_session.expire_all()
+        vault = PaymentVault.get_platform_vault()
+        assert vault.is_locked is True, "a wrong password opened the vault"
+
+
+class TestPKG07PurchaseRecords:
+    """PKG-52 to PKG-59: the owner's view of a purchase."""
+
+    def _purchase(self, client, db_session, **over):
+        """A purchase row hanging off a real package.
+
+        package_id is NOT NULL on package_purchases, so the fixture has to own a
+        package first - the purchase record has no meaning without one, and the
+        activation it records is an activation *of that package*.
+        """
+        from models import PackagePurchase
+
+        pkg = _create(client, db_session)
+        fields = {
+            "package_id": pkg.id,
+            "customer_name": "Buyer",
+            "customer_email": "buyer@example.com",
+            "payment_method": "card",
+            "payment_status": "pending",
+            "amount_paid": Decimal("99.00"),
+            "currency": "AED",
+            "activation_status": "pending",
+        }
+        fields.update(over)
+        row = PackagePurchase(**fields)
+        db_session.add(row)
+        db_session.commit()
+        return row
+
+    def test_the_purchase_list_renders(self, client, scenario_owner):
+        """PKG-52."""
+        _unlock(client)
+        assert client.get("/payment-vault/purchases").status_code == 200
+
+    def test_activating_a_purchase_marks_it_completed(self, client, scenario_owner, db_session):
+        """PKG-53. Both fields move together.
+
+        activation_status alone would leave payment_status as pending, so the
+        record would read as paid-but-not-activated in every report that filters
+        on payment_status.
+        """
+        from models import PackagePurchase
+
+        _unlock(client)
+        row = self._purchase(client, db_session)
+        rid = row.id
+        client.post(f"/payment-vault/purchase/{rid}/activate", follow_redirects=True)
+        db_session.expire_all()
+        after = db_session.get(PackagePurchase, rid)
+        assert after.activation_status == "activated", f"activation_status is {after.activation_status!r}"
+        assert after.payment_status == "completed", f"payment_status is {after.payment_status!r}"
+        assert after.activation_date is not None, "activation recorded no date"
+
+    def test_activating_twice_is_idempotent(self, client, scenario_owner, db_session):
+        """PKG-54. Re-activating must not move the activation date."""
+        from models import PackagePurchase
+
+        _unlock(client)
+        row = self._purchase(client, db_session)
+        rid = row.id
+        client.post(f"/payment-vault/purchase/{rid}/activate", follow_redirects=True)
+        db_session.expire_all()
+        first_date = db_session.get(PackagePurchase, rid).activation_date
+
+        client.post(f"/payment-vault/purchase/{rid}/activate", follow_redirects=True)
+        db_session.expire_all()
+        assert db_session.get(PackagePurchase, rid).activation_date == first_date, (
+            "a second activation moved the activation date"
+        )
+
+    def test_activating_a_missing_purchase_is_refused(self, client, scenario_owner):
+        """PKG-55."""
+        _unlock(client)
+        resp = client.post("/payment-vault/purchase/99999999/activate", follow_redirects=True)
+        assert resp.status_code in (302, 404), f"a missing purchase answered {resp.status_code}"
+
+    def test_the_purchase_detail_renders(self, client, scenario_owner, db_session):
+        """PKG-56."""
+        _unlock(client)
+        row = self._purchase(client, db_session)
+        assert client.get(f"/payment-vault/purchase/{row.id}").status_code == 200
+
+    def test_the_v2_purchase_api_paginates(self, client, scenario_owner):
+        """PKG-57. The endpoint the dashboard actually calls."""
+        _unlock(client)
+        resp = client.get("/payment-vault/api/v2/purchases?page=1&per_page=5")
+        assert resp.status_code == 200, f"api/v2/purchases answered {resp.status_code}"
+        body = resp.get_json()
+        assert body is not None and "success" in body, f"unexpected body: {body}"
+
+    def test_a_nonsensical_page_number_does_not_crash(self, client, scenario_owner):
+        """PKG-58. Pagination arguments arrive from a URL, so they are untrusted."""
+        _unlock(client)
+        for query in ("page=0", "page=-1", "page=abc", "per_page=0", "per_page=-5"):
+            resp = client.get(f"/payment-vault/api/v2/purchases?{query}")
+            assert resp.status_code in (200, 400), f"?{query} answered {resp.status_code}"
+
+    def test_the_v2_stats_endpoint_answers(self, client, scenario_owner):
+        """PKG-59."""
+        _unlock(client)
+        resp = client.get("/payment-vault/api/v2/stats")
+        assert resp.status_code == 200, f"api/v2/stats answered {resp.status_code}"
+        assert "success" in (resp.get_json() or {})

@@ -1549,13 +1549,21 @@ def activate_purchase(**kwargs):
     purchase = VaultQueryService.get_purchase_or_404(record_id)
 
     try:
+        # activation_date records when the package was first activated. Writing it
+        # unconditionally meant a second activation - a double click, a retry, a
+        # support agent re-running it - silently moved the date, and the expiry is
+        # computed from it. The status fields are idempotent, so re-running is
+        # harmless; the date is not, so it is written once.
+        already_activated = purchase.activation_status == "activated" and purchase.activation_date is not None
+
         purchase.activation_status = "activated"
-        purchase.activation_date = datetime.now(UTC)
         purchase.payment_status = "completed"
+        if not already_activated:
+            purchase.activation_date = datetime.now(UTC)
 
         tid = None
         donation = VaultQueryService.find_purchase_donation_by_email(purchase.customer_email, tid)
-        if donation:
+        if donation and not (already_activated and donation.status == "completed"):
             donation.status = "completed"
             donation.completed_at = datetime.now(UTC)
 
