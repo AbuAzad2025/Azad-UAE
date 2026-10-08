@@ -36,13 +36,16 @@ def quotations_client(app_factory, bypass_permission_auth):
     from routes.quotations import quotations_bp
 
     app = app_factory(quotations_bp)
-    # need sales blueprint for redirect target sales.detail; register dummy
+    # The convert route redirects to url_for("sales.view", id=...). routes/sales.py
+    # names its read view `view`, so the dummy has to be registered under that name
+    # too - a function called `detail` registers the endpoint sales.detail, which
+    # is not what production builds, and the redirect raises BuildError.
     from flask import Blueprint
 
     sales_bp = Blueprint("sales", __name__)
 
     @sales_bp.route("/sales/<int:id>")
-    def detail(id):
+    def view(id):
         return "ok"
 
     app.register_blueprint(sales_bp)
