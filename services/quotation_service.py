@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from flask import abort
 from flask_babel import gettext
 
 from extensions import db
@@ -228,11 +229,18 @@ class QuotationService:
 
     @classmethod
     def get_quotation(cls, quotation_id, tenant_id=None):
+        # A quotation that does not exist - or belongs to another tenant - is a
+        # 404, not a ValueError. Every route in routes/quotations.py calls this
+        # *outside* its try block, because the redirect afterwards needs q.id, so
+        # raising ValueError here escaped every one of them as a 500. The routes
+        # catch ValueError for form validation and would have swallowed a 404
+        # anyway, hence abort() rather than NotFound: HTTPException is not a
+        # ValueError, so it propagates as a clean 404.
         q = db.session.get(Quotation, quotation_id)
         if not q:
-            raise ValueError(gettext("عرض الأسعار غير موجود."))
+            abort(404, description=gettext("عرض السعر غير موجود."))
         if tenant_id and q.tenant_id != tenant_id:
-            raise ValueError(gettext("غير مصرح."))
+            abort(404, description=gettext("عرض السعر غير موجود."))
         return q
 
     @classmethod
