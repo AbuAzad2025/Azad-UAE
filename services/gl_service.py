@@ -386,6 +386,15 @@ class GLService:
         """Standardized GL Entry Creation"""
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id, user_id=user_id)
+
+        # An entry with no lines is not a balanced entry - it is not an entry.
+        # post_or_fail has always refused this, but create_manual_entry reaches the
+        # ledger through post_entry and so skipped that guard, which let an empty
+        # manual-entry form write a real row with nothing in it. Every posting path
+        # funnels through here, so the check belongs here rather than at each caller.
+        if not lines:
+            raise ValueError(gettext(f'لا يمكن ترحيل "{description}" بدون سطور قيد.'))
+
         gl_helpers.assert_period_open(date, tenant_id)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
 

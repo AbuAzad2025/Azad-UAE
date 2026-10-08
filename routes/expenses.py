@@ -59,14 +59,17 @@ def _resolve_transaction_rate(currency, user_rate=None):
 
 
 def _build_expense_gl_lines(expense, tenant_id):
+    from services.gl_service import GL_ACCOUNTS
+
+    misc_expense_account = GL_ACCOUNTS["misc_expense"]
     category = expense.category
-    expense_account = category.gl_account_code if category and category.gl_account_code else "6990"
+    expense_account = category.gl_account_code if category and category.gl_account_code else misc_expense_account
     expense_concept = None if category and category.gl_account_code else "MISC_EXPENSE"
 
     tid = tenant_id
     acc_check = ExpenseService.find_gl_account(expense_account, tid)
     if acc_check and acc_check.is_header:
-        expense_account = "6990"
+        expense_account = misc_expense_account
         expense_concept = "MISC_EXPENSE"
     if expense.payment_method == "cheque":
         payment_account = "2120"
@@ -537,6 +540,8 @@ def categories():
 
 def _validate_gl_account_code(gl_account_code, tenant_id):
     """التحقق من صحة حساب الأستاذ لفئة المصروف"""
+    from services.gl_service import GL_ACCOUNTS
+
     if not gl_account_code:
         return True
 
@@ -553,7 +558,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
     restricted_codes = ["1130", "1150", "1160", "2110", "2120", "2140", "3130", "3350"]
     if code_str in restricted_codes:
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'))
-    if first_digit in restricted_prefixes and code_str != "6990":
+    if first_digit in restricted_prefixes and code_str != GL_ACCOUNTS["misc_expense"]:
         raise ValueError(
             gettext(
                 f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'

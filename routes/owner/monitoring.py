@@ -193,7 +193,23 @@ def ip_whitelist():
         return redirect(url_for("owner.ip_whitelist"))
 
     settings = SystemSettings.get_current()
-    whitelist = settings.owner_whitelist_ips or []
+    # Mirror of the write path: it stores json.dumps(...) because the column is
+    # db.Text, so reading it back has to parse rather than hand the raw string to
+    # the template. Iterating the string yields one character per "item", so
+    # item.ip was undefined and the owner saw a table of blank rows - the gate
+    # was enforcing entries they could not see or delete. Same defensive parse as
+    # the add path, since a pre-existing row may hold anything.
+    raw = settings.owner_whitelist_ips
+    if isinstance(raw, list):
+        whitelist = [e for e in raw if isinstance(e, dict)]
+    elif raw:
+        try:
+            parsed = json.loads(raw)
+            whitelist = [e for e in parsed if isinstance(e, dict)] if isinstance(parsed, list) else []
+        except (TypeError, ValueError):
+            whitelist = []
+    else:
+        whitelist = []
 
     return render_template("owner/ip_whitelist.html", whitelist=whitelist)
 

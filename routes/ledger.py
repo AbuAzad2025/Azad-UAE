@@ -310,6 +310,14 @@ def account_statement(account_id):
     date_to = request.args.get("date_to", type=str)
     branch_id = _effective_branch_id()
     statement = GLService.get_account_statement(account_id, date_from, date_to, branch_id)
+    if statement is None:
+        # get_account_statement answers None for an account that does not exist.
+        # Rendering it anyway handed the template a None and every statement page
+        # opened on a stale id died with 'None' has no attribute 'account' - a 500
+        # where the id simply does not resolve. Resolve the account first so the
+        # tenant scoping is the same one account_ledger uses.
+        GLService.get_scoped_account_or_404(account_id)
+        abort(404)
     branches = get_accessible_branches(current_user)
     return render_template(
         "ledger/account_statement.html",
