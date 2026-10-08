@@ -273,9 +273,10 @@ class TestOWN02TenantLifecycle:
         from models import GLAccount, GLJournalEntry, GLJournalLine, Tenant
 
         slug = _slug("w7new")
+        name_ar = f"مستأجر جديد {uuid.uuid4().hex[:6]}"
         resp = client.post(
             "/owner/tenants/create",
-            data={"name_ar": "مستأجر جديد", "name_en": "New Tenant", "slug": slug, "default_currency": "AED"},
+            data={"name_ar": name_ar, "name_en": "New Tenant", "slug": slug, "default_currency": "AED"},
             follow_redirects=True,
         )
         assert resp.status_code == 200
@@ -437,10 +438,11 @@ class TestOWN04TenantEdit:
         """OWN-20. A normal save sticks."""
         target = _new_tenant(db_session)
         tid = target.id
+        new_name = f"الاسم الجديد {uuid.uuid4().hex[:6]}"
         client.post(
             f"/owner/tenants/{tid}/edit",
             data={
-                "name_ar": "الاسم الجديد",
+                "name_ar": new_name,
                 "name_en": target.name_en,
                 "slug": target.slug,
                 "business_type": target.business_type or "",
@@ -460,7 +462,7 @@ class TestOWN04TenantEdit:
         )
         db_session.expire_all()
         after = db_session.get(type(target), tid)
-        assert after.name_ar == "الاسم الجديد"
+        assert after.name_ar == new_name
 
     @pytest.mark.parametrize("field", ["name_ar", "slug"])
     def test_a_blanked_required_field_keeps_its_value(self, client, scenario_owner, db_session, field):
@@ -552,10 +554,11 @@ class TestOWN04TenantEdit:
         """
         target = _new_tenant(db_session)
         tid = target.id
+        tri_name = f"ثلاثي {uuid.uuid4().hex[:6]}"
         client.post(
             f"/owner/tenants/{tid}/edit",
             data={
-                "name_ar": "ثلاثي",
+                "name_ar": tri_name,
                 "name_en": target.name_en,
                 "slug": target.slug,
                 "business_type": target.business_type or "",
@@ -580,7 +583,7 @@ class TestOWN04TenantEdit:
         client.post(
             f"/owner/tenants/{tid}/edit",
             data={
-                "name_ar": "ثلاثي",
+                "name_ar": tri_name,
                 "name_en": target.name_en,
                 "slug": target.slug,
                 "business_type": target.business_type or "",
@@ -607,10 +610,11 @@ class TestOWN04TenantEdit:
         """OWN-24. max_users is guarded by _form_int, so junk leaves it alone."""
         target = _new_tenant(db_session)
         tid = target.id
+        num_name = f"أرقام {uuid.uuid4().hex[:6]}"
         client.post(
             f"/owner/tenants/{tid}/edit",
             data={
-                "name_ar": "أرقام",
+                "name_ar": num_name,
                 "slug": target.slug,
                 "default_currency": "AED",
                 "max_users": "7",
@@ -623,7 +627,7 @@ class TestOWN04TenantEdit:
         client.post(
             f"/owner/tenants/{tid}/edit",
             data={
-                "name_ar": "أرقام",
+                "name_ar": num_name,
                 "slug": target.slug,
                 "default_currency": "AED",
                 "max_users": "not-a-number",

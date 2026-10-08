@@ -25,6 +25,7 @@ cannot tell a correct posting from a wrong one.
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -167,7 +168,7 @@ def _entry(db_session, tenant, debit, credit, amount="100.00", branch=None):
 
     entry = GLJournalEntry(
         tenant_id=tenant.id,
-        entry_date=__import__("datetime").datetime.now(__import__("datetime").UTC),
+        entry_date=datetime.now(UTC),
         entry_number=f"LED-{uuid.uuid4().hex[:10]}",
         entry_type="manual",
         branch_id=branch.id if branch is not None else None,

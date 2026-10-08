@@ -243,9 +243,16 @@ WAVES: tuple[Wave, ...] = (
             Domain(
                 "ADV",
                 "Advanced ledger - consolidation, FX, revaluation, budgets",
-                ("advanced_ledger", "treasury"),
+                ("advanced_ledger",),
                 2.2,
                 "the paths where a wrong account is still arithmetically balanced",
+            ),
+            Domain(
+                "TRE",
+                "Treasury, VAT return and the WPS payroll export",
+                ("treasury",),
+                2.2,
+                "the exports that leave the system - treasury position and WPS payroll",
             ),
             Domain(
                 "EXP",
