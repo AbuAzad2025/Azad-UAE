@@ -211,7 +211,12 @@ class TestReturnsGetSaleLines:
             line.id = ld["id"]
             line.quantity = ld["quantity"]
             line.unit_price = ld.get("unit_price", Decimal("10"))
-            line.variant_name = ld.get("variant_name", "")
+            # SaleLine has no variant_name column - the route read one anyway and
+            # raised AttributeError, so /returns/api/get_sale_lines answered 500 for
+            # every sale with a line. It now reads `notes`, the per-line free-text
+            # field, so the mock follows the model rather than a column that never
+            # existed.
+            line.notes = ld.get("notes", "")
             product = MagicMock()
             product.name = ld.get("product_name", "Product")
             line.product = product if ld.get("has_product", True) else None
@@ -288,7 +293,7 @@ class TestReturnsGetSaleLines:
         assert resp.get_json()["data"]["lines"][0]["available_qty"] == 3
 
     def test_sale_lines_product_none_fallback(self, returns_client):
-        sale = self._make_sale([{"id": 7, "quantity": 1, "has_product": False, "variant_name": "Red"}])
+        sale = self._make_sale([{"id": 7, "quantity": 1, "has_product": False, "notes": "Red"}])
         # product is None => line.product fallback to "—"
         sale.lines[0].product = None
         with _returns_patches(), patch("routes.returns.tenant_get_or_404", return_value=sale):
@@ -299,8 +304,8 @@ class TestReturnsGetSaleLines:
         assert lines[0]["variant"] == "Red"
 
     def test_sale_lines_variant_none(self, returns_client):
-        sale = self._make_sale([{"id": 8, "quantity": 2, "variant_name": None}])
-        sale.lines[0].variant_name = None
+        sale = self._make_sale([{"id": 8, "quantity": 2, "notes": None}])
+        sale.lines[0].notes = None
         with _returns_patches(), patch("routes.returns.tenant_get_or_404", return_value=sale):
             resp = returns_client.get("/returns/api/get_sale_lines?sale_id=100")
         assert resp.status_code == 200

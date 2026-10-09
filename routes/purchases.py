@@ -467,7 +467,16 @@ def api_calculate_purchase_totals():
         tax_rate = Decimal(str(data.get("tax_rate", 0)))
         from utils.tax_settings import normalize_tax_rate
 
-        tax_rate = normalize_tax_rate(tax_rate)
+        # Name the tenant explicitly - see the same fix in routes/sales.py. Omitting
+        # it resolves through Tenant.get_current() rather than the row, so a tenant
+        # with VAT on still read as tax-disabled and the form showed zero tax.
+        # Wrapped because the tenant is a *display* concern here: if it cannot be
+        # resolved the helper should fall back to its own default rather than turn
+        # the whole basket calculation into a 500.
+        try:
+            tax_rate = normalize_tax_rate(tax_rate, get_active_tenant_id(current_user))
+        except (LookupError, AttributeError, TypeError, ValueError):
+            tax_rate = normalize_tax_rate(tax_rate)
 
         subtotal = Decimal("0")
         for line in lines:

@@ -721,7 +721,18 @@ def api_calculate_sale_totals():
         prices_include_vat = bool(data.get("prices_include_vat", False))
         from utils.tax_settings import normalize_tax_rate
 
-        tax_rate = normalize_tax_rate(tax_rate)
+        # The tenant has to be named. normalize_tax_rate falls back to
+        # Tenant.get_current() when tenant_id is omitted, which resolves through
+        # the request's active-tenant context rather than the row, so a tenant
+        # with VAT switched on still came back as "tax disabled" and the basket
+        # showed zero tax. Both services already pass tenant_id; this call site
+        # was the odd one out. Wrapped for the same reason as purchases: the
+        # tenant is a display concern here, so failing to resolve it must not turn
+        # the whole basket calculation into a 500.
+        try:
+            tax_rate = normalize_tax_rate(tax_rate, get_active_tenant_id(current_user))
+        except (LookupError, AttributeError, TypeError, ValueError):
+            tax_rate = normalize_tax_rate(tax_rate)
 
         subtotal = Decimal("0")
         for line in lines:

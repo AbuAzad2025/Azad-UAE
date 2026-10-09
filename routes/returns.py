@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, current_app, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from werkzeug.exceptions import NotFound
 
 from extensions import limiter
 from models import ProductReturn, Sale
@@ -95,6 +96,12 @@ def api_create_return():
 
     except ValueError:
         return error_response(message=gettext("بيانات المرتجع غير صالحة"), status_code=400)
+    except NotFound:
+        # tenant_get_or_404 raises NotFound, which is an HTTPException rather than
+        # a ValueError, so the broad handler below used to swallow it and answer
+        # 500 "Internal server error" for a sale id that simply does not exist.
+        # Re-raise it so Flask turns it into the 404 it was always meant to be.
+        raise
     except Exception as e:
         current_app.logger.error(f"Error creating return: {e}")
         return error_response(message="Internal server error", status_code=500)
@@ -147,7 +154,12 @@ def api_get_sale_lines():
                 "id": line.id,
                 "line_id": line.id,
                 "product_name": line.product.name if line.product else "—",
-                "variant": line.variant_name or "",
+                # SaleLine has no variant_name column - referencing it raised
+                # AttributeError, so /returns/api/get_sale_lines answered 500 for
+                # every sale that had a line, which is every sale worth returning
+                # against. `notes` is the per-line free-text field that carries
+                # this, so that is what the picker now shows.
+                "variant": line.notes or "",
                 "available_qty": available,
                 "unit_price": float(line.unit_price or 0),
             }
