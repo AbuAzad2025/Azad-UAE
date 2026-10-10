@@ -1933,7 +1933,7 @@ def export_report_pdf():
         "payment_vault/report_pdf.html",
         extra_context={
             "report": {
-                "title": gettext("تقرير الخزينة السرية الشامل"),
+                "title": gettext("Comprehensive Secret Vault Report"),
                 "stats": stats,
                 "table_headers": table_headers,
                 "table_data": table_data,

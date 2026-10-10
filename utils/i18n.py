@@ -82,6 +82,11 @@ TRANSLATIONS = {
     "Donations Management": {"ar": "إدارة التبرعات", "en": "Donations Management"},
     "Secret Vault": {"ar": "الخزينة السرية", "en": "Secret Vault"},
     "Secret Vault Purchases": {"ar": "مشتريات الخزينة السرية", "en": "Secret Vault Purchases"},
+    "Secret Vault Report": {"ar": "تقرير الخزينة السرية", "en": "Secret Vault Report"},
+    "Comprehensive Secret Vault Report": {
+        "ar": "تقرير الخزينة السرية الشامل",
+        "en": "Comprehensive Secret Vault Report",
+    },
     "Receivables Report": {"ar": "تقرير الذمم والمستحقات", "en": "Receivables Report"},
     "Top Selling Products": {"ar": "المنتجات الأكثر مبيعاً", "en": "Top Selling Products"},
     "Save": {"ar": "حفظ", "en": "Save"},
