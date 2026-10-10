@@ -866,5 +866,13 @@ class TestBuildExpenseGlLines:
         ):
             gl.query.filter_by.return_value.first.return_value = header
             lines = _build_expense_gl_lines(expense, tenant_id=1)
-        assert lines[0]["account"] == "6990"
+        # Asserted against the chart of accounts rather than a literal. The
+        # category pointed at a header account (5100), so the debit line falls
+        # back to the miscellaneous-expense account - which is whatever
+        # GL_ACCOUNTS says it is. Hard-coding the code here meant the
+        # assertion kept passing for the wrong reason while the COA moved, and
+        # then failed for a reason that had nothing to do with the fallback.
+        from services.gl_service import GL_ACCOUNTS
+
+        assert lines[0]["account"] == GL_ACCOUNTS["misc_expense"]
         assert lines[0]["concept_code"] == "MISC_EXPENSE"

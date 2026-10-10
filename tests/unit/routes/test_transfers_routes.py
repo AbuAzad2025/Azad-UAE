@@ -121,9 +121,15 @@ class TestTransfersDetail:
         assert resp.status_code == 200
 
     def test_detail_tenant_isolation_404(self, transfers_client, transfers_mocks):
-        with patch("routes.transfers.TransferService.get_transfer", side_effect=ValueError("طلب النقل غير موجود.")):
-            with pytest.raises(ValueError, match="طلب النقل غير موجود"):
-                transfers_client.get("/transfers/999")
+        # A missing (or cross-tenant) transfer is a 404, not an unhandled 500.
+        # Every route called get_transfer outside its try block because the
+        # redirect afterwards needs t.id, so the ValueError used to escape as a
+        # 500. routes._transfer_or_404 converts it to NotFound, which is an
+        # HTTPException and so passes the except ValueError those handlers
+        # install for refused transitions.
+        with patch("routes.transfers.TransferService.get_transfer", side_effect=ValueError("سجل التحويل غير موجود.")):
+            resp = transfers_client.get("/transfers/999")
+        assert resp.status_code == 404, f"a missing transfer answered {resp.status_code}"
 
 
 class TestTransfersApprove:
@@ -182,6 +188,6 @@ class TestTransfersCancel:
         assert resp.status_code == 302
 
     def test_cancel_404(self, transfers_client, transfers_mocks):
-        with patch("routes.transfers.TransferService.get_transfer", side_effect=ValueError("غير موجود")):
-            with pytest.raises(ValueError, match="غير موجود"):
-                transfers_client.post("/transfers/999/cancel", follow_redirects=False)
+        with patch("routes.transfers.TransferService.get_transfer", side_effect=ValueError("غير مسموح.")):
+            resp = transfers_client.post("/transfers/999/cancel", follow_redirects=False)
+        assert resp.status_code == 404, f"cancelling a missing transfer answered {resp.status_code}"

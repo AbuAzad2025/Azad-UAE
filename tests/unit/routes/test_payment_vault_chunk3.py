@@ -633,12 +633,18 @@ class TestVaultExports:
         q = MagicMock()
         q.filter_by.return_value.all.return_value = []
         mocker.patch("routes.payment_vault.Donation.query", q)
+        # PrintService.render_pdf is what the route calls. This used to mock
+        # ExportService.generate_pdf_report, which the route stopped calling
+        # when the export moved to the shared print pipeline - so the real
+        # renderer ran, produced a MagicMock title, and blew up inside the
+        # template rather than at the assertion.
         mocker.patch(
-            "services.export_service.ExportService.generate_pdf_report",
-            return_value="<html></html>",
+            "services.print_service.PrintService.render_pdf",
+            return_value=b"%PDF-1.4",
         )
         resp = vault_owner_client.get("/payment-vault/export/report-pdf")
         assert resp.status_code == 200
+        assert resp.mimetype == "application/pdf"
 
 
 class TestPackageFormParsing:
