@@ -71,7 +71,7 @@ PARTNER_VIEW_PATHS = [
 ]
 PARTNER_MANAGE_PATHS = ["/partners/create", "/partners/1/edit"]
 PARTNER_MANAGE_POST_PATHS = ["/partners/distributions/1/approve"]
-PARTNER_MONEY_PATHS = []
+PARTNER_MONEY_PATHS: list[str] = []
 PARTNER_MONEY_POST_PATHS = ["/partners/distributions/1/pay", "/partners/1/tx"]
 
 

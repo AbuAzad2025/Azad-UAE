@@ -207,11 +207,11 @@ class ShipmentService:
 
     @staticmethod
     def get_shipment_or_404(shipment_id):
-        from flask import abort
+        from werkzeug.exceptions import NotFound
 
         from models.shipment import Shipment
 
         shipment = db.session.get(Shipment, shipment_id)
         if not shipment:
-            abort(404)
+            raise NotFound()
         return shipment

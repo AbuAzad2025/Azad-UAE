@@ -91,11 +91,11 @@ def add_qa(question: str, answer: str, category: str, tenant_id: int) -> dict:
 
 def toggle_memory(memory_id: int, tenant_id: int, active: bool) -> dict:
     """Activate/deactivate one memory row after a tenant-ownership check."""
-    from flask import abort
+    from werkzeug.exceptions import NotFound
 
     mem = db.session.get(AiMemory, int(memory_id))
     if mem is None or int(mem.tenant_id or 0) != int(tenant_id):
-        abort(404)
+        raise NotFound()
     mem.is_active = bool(active)
     db.session.flush()
     logger.info("Owner toggled AI memory id=%s active=%s tenant=%s", mem.id, active, tenant_id)

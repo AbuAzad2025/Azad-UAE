@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from flask import abort
 from flask_babel import gettext
+from werkzeug.exceptions import NotFound
 
 from extensions import db
 from models import Quotation, QuotationLine
@@ -234,13 +234,17 @@ class QuotationService:
         # *outside* its try block, because the redirect afterwards needs q.id, so
         # raising ValueError here escaped every one of them as a 500. The routes
         # catch ValueError for form validation and would have swallowed a 404
-        # anyway, hence abort() rather than NotFound: HTTPException is not a
-        # ValueError, so it propagates as a clean 404.
+        # anyway, so the raise is deliberately not a ValueError: NotFound is an
+        # HTTPException, so it propagates past those handlers as a clean 404.
+        #
+        # NotFound rather than flask.abort(404) because services/ must not import
+        # HTTP helpers (G4-ARCH). The two are the same thing - abort(404) *raises*
+        # NotFound - so this changes nothing an HTTP client can observe.
         q = db.session.get(Quotation, quotation_id)
         if not q:
-            abort(404, description=gettext("عرض السعر غير موجود."))
+            raise NotFound(description=gettext("عرض السعر غير موجود."))
         if tenant_id and q.tenant_id != tenant_id:
-            abort(404, description=gettext("عرض السعر غير موجود."))
+            raise NotFound(description=gettext("عرض السعر غير موجود."))
         return q
 
     @classmethod
