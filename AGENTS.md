@@ -152,7 +152,31 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   default; `config.assert_production_sanity` enforces a 16+ char mixed password
   in production.
 
-### Files Modified (this session, main@3a35c6b3)
+### Scenario Waves — and the gates `ruff` does not run
+- **Wave 9 (Sales, CRM and the customer ledger) — complete.** QOT `4d0cfcc0`,
+  SAL `311ad0b2`, CUS `ef13c73d`, CRM `04024125`. 272 scenarios; the catalogue's
+  per-wave budget is enforced by `tests/unit/test_scenario_catalog.py`.
+- **`ruff check` is not the static gate.** CI's *Static quality* job also runs
+  **mypy** and ten lint scripts. Waves 8, QOT, SAL and CUS each passed the whole
+  local `business_scenarios` suite and still failed CI, every time in that job.
+  Run the full list before calling a wave done:
+  `ruff check .` · `ruff format . --check` ·
+  `mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases` ·
+  `check_templates.py` · `check_strict_i18n.py templates routes services --exclude-dirs services` ·
+  `check_i18n_untranslated.py` · `report_catalogue_health.py` · `check_migration_head.py` ·
+  `check_txn_boundaries.py` · `check_service_side_effects.py` · `check_tag_shape.py` ·
+  `check_a11y_labels.py` · `check_inline_assets.py` · `cspell` over templates + static JS.
+- Two of those gates **mask each other**: cspell and the i18n gates run *after*
+  mypy in the same job, so a mypy failure hides every later step. Fixing one gate
+  can reveal the next defect that had been queued behind it — mine did, twice.
+- `check_architecture` style gates (`test_grimoire_compliance.py`) scan only
+  **module-level** imports. `services/` twice hid `from flask import abort` inside
+  a function body, so it passed a rule it was violating. Grep for the import
+  anywhere in `services/`, not just at the top.
+- Wave 10 next: `WHS` (warehouse, transfers, unified_inventory, stock_sync),
+  `PRD` (products, assets), `PUR` (purchases).
+
+### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`
 - `models/gl_account_registry.py` (is_contra, 2122→asset, +2999)
 - `services/{gl_tree_builder,gl_service,gl_posting,advanced_journal_manager,gl_account_resolver,stock_service,sale_service,payment_service,shipment_service,payroll_service,cheque_service,fx_revaluation_service,bank_reconciliation_service,print_service}.py`
@@ -160,3 +184,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 - `migrations/versions/` 8 new revisions (see chain above)
 - `tests/unit/{routes,services,models,utils,forms,app}/` — coverage boosts + audit-adopted tests
 - `scripts/ops/first_run_{dev,prod}.py`, `.gitignore`, `.bandit.yml`
+- `tests/integration/business_scenarios/test_wave9_{quotations,sales,customers,crm}.py`
+- `services/{quotation,shipment,ai_training}_service.py` (dropped `flask.abort`)
+- `utils/i18n.py`, `templates/payment_vault/report_pdf.html`, `routes/payment_vault.py`
+- `scripts/lint/.cspell.json`
