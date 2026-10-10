@@ -152,6 +152,21 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   default; `config.assert_production_sanity` enforces a 16+ char mixed password
   in production.
 
+### Verification policy — CI is the gate, not the local machine
+- **Do not run the full local test suite.** A single unit slice takes 10-40
+  minutes here and CI runs the same slices in parallel across PG 15/16/17 in
+  about the same wall clock as one slice. Locally, a slice is strictly slower
+  than just pushing and reading the result.
+- Run locally **only** the handful of tests covering the lines just edited
+  (a single file, seconds to a couple of minutes). Everything else: push, then
+  `gh run watch`.
+- The local gates that stay worth running are the *lint* scripts, because they
+  finish in seconds and they are the ones that catch real defects:
+  ruff, mypy, the ten `scripts/lint/check_*.py`, and cspell.
+- When CI reports a failure, read the job log and fix it — do not reproduce it
+  locally first. `gh run view <id> --job <id> --log-failed` is the fastest path
+  to the actual assertion.
+
 ### Scenario Waves — and the gates `ruff` does not run
 - **Wave 9 (Sales, CRM and the customer ledger) — complete.** QOT `4d0cfcc0`,
   SAL `311ad0b2`, CUS `ef13c73d`, CRM `04024125`. 272 scenarios; the catalogue's

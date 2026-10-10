@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
+from werkzeug.exceptions import NotFound
 
 from models import Customer, Quotation
 from services.quotation_service import QuotationService
@@ -346,7 +347,11 @@ class TestQuotationLookup:
         assert QuotationService.get_quotation(q.id).id == q.id
         assert QuotationService.get_quotation(q.id, tenant_id=sample_tenant.id).id == q.id
 
-        with pytest.raises(ValueError):
+        # A missing quotation is a 404, not a ValueError: all eight routes call
+        # get_quotation outside their try block (the redirect afterwards needs
+        # q.id), so a ValueError escaped every one of them as a 500, and the
+        # routes' except ValueError would have swallowed the 404 anyway.
+        with pytest.raises(NotFound):
             QuotationService.get_quotation(99999999)
 
         from models import Tenant
@@ -371,7 +376,9 @@ class TestQuotationLookup:
         )
         db_session.add(foreign_q)
         db_session.flush()
-        with pytest.raises(ValueError):
+        # Cross-tenant read is indistinguishable from a miss, on purpose: a 404
+        # here must not confirm that the id exists under another tenant.
+        with pytest.raises(NotFound):
             QuotationService.get_quotation(foreign_q.id, tenant_id=sample_tenant.id)
 
     def test_list_filters_status_and_customer(self, db_session, sample_tenant, sample_user, sample_product):
