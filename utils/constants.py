@@ -139,6 +139,24 @@ PERMISSION_CODES = [
     "pos_authorize_override",
     "pos_view_expected",
     "pos_return",
+    # The next ten gate 34 routes and were never registered here. A
+    # @permission_required code that is not in this tuple can never be granted
+    # to a role, because the seeder builds the permissions table from it - so
+    # every route below was unreachable for every user, including the owner
+    # when they were not the platform owner. Found by auditing the routes
+    # against this tuple rather than by reading them; see
+    # tests/unit/routes/test_permission_codes_are_seeded.py, which now fails if
+    # a route asks for a code that is missing again.
+    "view_products",
+    "view_customers",
+    "view_purchases",
+    "assets:view",
+    "assets:manage",
+    "assets:depreciate",
+    "grn:manage",
+    "purchase_req:create",
+    "purchase_req:approve",
+    "hr:leave_manage",
 ]
 
 # --- Unified Enums (canonical values only) ---
@@ -227,4 +245,20 @@ PERMISSIONS = {
     "pos_authorize_override": {"ar": "تفويض تجاوزات نقطة البيع (مشرف)", "en": "POS Authorize Overrides (Supervisor)"},
     "pos_view_expected": {"ar": "عرض الرصيد المتوقع لجلسات نقطة البيع", "en": "POS View Expected Balance"},
     "pos_return": {"ar": "معالجة المرتجعات في نقطة البيع", "en": "POS Process Returns"},
+    # Same defect as budget:create above, found again and wider - ten codes
+    # gating 34 routes across /assets, /purchases/grn, /purchases/requisitions,
+    # /hr/overtime, /hr/leave-ledger, two product label routes and eight AI
+    # routes. Every one of them answered 403 for everybody, including a
+    # company admin, because a code absent from this tuple is never seeded and
+    # so can never be granted to a role.
+    "view_products": {"ar": "عرض المنتجات", "en": "View Products"},
+    "view_customers": {"ar": "عرض العملاء", "en": "View Customers"},
+    "view_purchases": {"ar": "عرض المشتريات", "en": "View Purchases"},
+    "assets:view": {"ar": "عرض الأصول", "en": "View Assets"},
+    "assets:manage": {"ar": "إدارة الأصول", "en": "Manage Assets"},
+    "assets:depreciate": {"ar": "إهلاك الأصول", "en": "Depreciate Assets"},
+    "grn:manage": {"ar": "إدارة إشعارات الاستلام", "en": "Manage GRNs"},
+    "purchase_req:create": {"ar": "إنشاء طلبات الشراء", "en": "Create Purchase Requisitions"},
+    "purchase_req:approve": {"ar": "اعتماد طلبات الشراء", "en": "Approve Purchase Requisitions"},
+    "hr:leave_manage": {"ar": "إدارة سجل الإجازات", "en": "Manage Leave Ledger"},
 }

@@ -215,7 +215,7 @@ def carry_forward_leave():
 # Overtime Management
 @hr_bp.route("/overtime")
 @login_required
-@permission_required("hr:manage")
+@permission_required("hr.manage")
 def overtime_list():
     filters = {k: v for k, v in request.args.items() if v}
     entries = OvertimeService.list_entries(current_user, filters)
@@ -226,7 +226,7 @@ def overtime_list():
 
 @hr_bp.route("/overtime/create", methods=["POST"])
 @login_required
-@permission_required("hr:manage")
+@permission_required("hr.manage")
 def create_overtime():
     try:
         data = {
@@ -247,7 +247,7 @@ def create_overtime():
 
 @hr_bp.route("/overtime/<int:entry_id>/approve", methods=["POST"])
 @login_required
-@permission_required("hr:manage")
+@permission_required("hr.manage")
 def approve_overtime(entry_id):
     from models import OvertimeEntry
 
@@ -262,7 +262,7 @@ def approve_overtime(entry_id):
 
 @hr_bp.route("/overtime/<int:entry_id>/reject", methods=["POST"])
 @login_required
-@permission_required("hr:manage")
+@permission_required("hr.manage")
 def reject_overtime(entry_id):
     from models import OvertimeEntry
 

@@ -136,7 +136,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   logs `UNDER-SEEDED` for any data set below its expected count. The manifest
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
-  **36 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
+  **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
   field definitions** (13 core + 61 across 12 industries) / 98 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
