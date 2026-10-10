@@ -1,12 +1,31 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from werkzeug.exceptions import NotFound
 
 from services.transfer_service import TransferService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 
 transfers_bp = Blueprint("transfers", __name__, url_prefix="/transfers")
+
+
+def _transfer_or_404(transfer_id):
+    """Fetch a transfer, or 404.
+
+    Every action below used to call get_transfer *outside* its try block,
+    because the redirect afterwards needs t.id. get_transfer raises
+    ValueError for a missing id, and ValueError is what those handlers
+    catch to report a refused transition - so a request for a transfer
+    that does not exist escaped as an unhandled 500 instead of a 404.
+
+    NotFound is an HTTPException, so it passes straight through the
+    except ValueError that the handlers install for transition errors.
+    """
+    try:
+        return TransferService.get_transfer(transfer_id, None)
+    except ValueError as exc:
+        raise NotFound(description=str(exc)) from exc
 
 
 @transfers_bp.route("/")
@@ -38,7 +57,7 @@ def create():
 @login_required
 @permission_required("manage_warehouse")
 def detail(transfer_id):
-    t = TransferService.get_transfer(transfer_id, None)
+    t = _transfer_or_404(transfer_id)
     return render_template("warehouse/transfer_detail.html", transfer=t)
 
 
@@ -46,7 +65,7 @@ def detail(transfer_id):
 @login_required
 @permission_required("manage_warehouse")
 def approve(transfer_id):
-    t = TransferService.get_transfer(transfer_id, None)
+    t = _transfer_or_404(transfer_id)
     try:
         with atomic_transaction("transfer_approve"):
             TransferService.approve_transfer(t, current_user)
@@ -60,7 +79,7 @@ def approve(transfer_id):
 @login_required
 @permission_required("manage_warehouse")
 def ship(transfer_id):
-    t = TransferService.get_transfer(transfer_id, None)
+    t = _transfer_or_404(transfer_id)
     try:
         with atomic_transaction("transfer_ship"):
             TransferService.ship_transfer(t)
@@ -74,7 +93,7 @@ def ship(transfer_id):
 @login_required
 @permission_required("manage_warehouse")
 def receive(transfer_id):
-    t = TransferService.get_transfer(transfer_id, None)
+    t = _transfer_or_404(transfer_id)
     try:
         with atomic_transaction("transfer_receive_complete"):
             TransferService.confirm_receive(t, current_user)
@@ -89,7 +108,7 @@ def receive(transfer_id):
 @login_required
 @permission_required("manage_warehouse")
 def cancel(transfer_id):
-    t = TransferService.get_transfer(transfer_id, None)
+    t = _transfer_or_404(transfer_id)
     try:
         with atomic_transaction("transfer_cancel"):
             TransferService.cancel_transfer(t)
