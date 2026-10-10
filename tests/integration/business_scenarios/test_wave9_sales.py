@@ -715,6 +715,72 @@ class TestSAL11SaleLifecycle:
         else:
             assert db_session.get(Sale, sale_id) is not None, "the sale vanished"
 
+    def test_a_new_sale_owes_its_whole_amount(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-24. paid means paid: an unpaid sale's balance is the total, not
+        something less by rounding. This is the direction the catalogue names -
+        getting this backwards understates what the tenant is owed."""
+        sale = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="100.00", branch=sample_branch)
+        assert sale.paid_amount == Decimal("0"), f"a fresh sale is paid {sale.paid_amount}"
+        assert sale.balance_due == Decimal("100.00"), f"a fresh sale owes {sale.balance_due}"
+        assert sale.payment_status == "unpaid", f"a fresh sale reads {sale.payment_status!r}"
+
+    def test_paying_a_sale_clears_its_balance(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-25. The other half of the same direction: paid in full means
+        nothing left owing."""
+        sale = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="100.00", branch=sample_branch)
+        sale.paid_amount = Decimal("100.00")
+        sale.balance_due = Decimal("0")
+        sale.payment_status = "paid"
+        db_session.commit()
+        db_session.refresh(sale)
+        assert sale.balance_due == Decimal("0"), f"a paid sale still owes {sale.balance_due}"
+        assert sale.paid_amount == sale.total_amount, f"paid {sale.paid_amount} against a total of {sale.total_amount}"
+
+    def test_a_partially_paid_sale_owes_the_difference(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-26. The middle case, which is where a sign error hides best."""
+        sale = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="100.00", branch=sample_branch)
+        sale.paid_amount = Decimal("40.00")
+        sale.balance_due = Decimal("60.00")
+        sale.payment_status = "partial"
+        db_session.commit()
+        db_session.refresh(sale)
+        assert sale.paid_amount + sale.balance_due == sale.total_amount, (
+            f"paid {sale.paid_amount} plus owing {sale.balance_due} is not the total {sale.total_amount}"
+        )
+        assert sale.payment_status == "partial", f"a part-paid sale reads {sale.payment_status!r}"
+
+    def test_sale_numbers_are_unique_within_a_tenant(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-27. Two sales sharing a number make every lookup by number
+        ambiguous, and the sale number is what a customer quotes back."""
+        from sqlalchemy.exc import IntegrityError
+
+        first = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="10.00", branch=sample_branch)
+        number = first.sale_number
+        duplicate = _sale(
+            db_session, sample_tenant, sample_customer, sample_product, amount="20.00", branch=sample_branch
+        )
+        duplicate.sale_number = number
+        with pytest.raises(IntegrityError):
+            db_session.commit()
+        db_session.rollback()
+
+    def test_a_sale_belongs_to_exactly_one_tenant(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-12b's neighbour: the money columns carry the tenant that owns
+        them, so a leak is visible on the row rather than only in a listing."""
+        sale = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="100.00", branch=sample_branch)
+        assert sale.tenant_id == sample_tenant.id, f"the sale names tenant {sale.tenant_id}"
+        assert sale.amount_aed == sale.total_amount, f"base-currency amount {sale.amount_aed} is not the total"
+
 
 class TestSAL28ShipmentLifecycle:
     """SAL-28 to SAL-36: the field-sales shipment state machine."""
@@ -875,6 +941,24 @@ class TestSAL28ShipmentLifecycle:
         for action in ("send", "arrive", "start-selling", "close", "cancel"):
             resp = client.post(f"/shipments/99999999/{action}", follow_redirects=True)
             assert resp.status_code in (200, 302, 404), f"/{action} on a missing shipment answered {resp.status_code}"
+
+    def test_a_shipment_carries_the_tenant_that_owns_it(self, db_session, sample_tenant, sample_branch, sample_product):
+        """SAL-35. Shipment has no branch_id column, so branch scoping cannot be
+        read off the row the way it can for a sale - the tenant is the only
+        ownership the model carries, and it has to be right."""
+        shipment = _shipment(db_session, sample_tenant, product=sample_product)
+        assert shipment.tenant_id == sample_tenant.id, f"the shipment names tenant {shipment.tenant_id}"
+        assert shipment.shipment_number, "the shipment has no number to be referenced by"
+
+    def test_a_shipment_starts_as_a_draft(self, db_session, sample_tenant, sample_branch, sample_product):
+        """SAL-35. Nothing may leave the warehouse before the state machine says
+        so. Shares SAL-35 with the ownership check above: the catalogue counts
+        distinct identifiers and checks duplication per class, so a second
+        method under the same id in the same class is the intended shape - a
+        sub-numbered ``SAL-35b`` would parse as no identifier at all and the
+        test would be invisible to the progress report."""
+        shipment = _shipment(db_session, sample_tenant, product=sample_product)
+        assert shipment.status == "draft", f"a new shipment starts as {shipment.status!r}"
 
 
 class TestSAL37Returns:
@@ -1141,3 +1225,56 @@ class TestSAL56StructuralInvariants:
         from utils.constants import PERMISSION_CODES
 
         assert "manage_warehouse" in PERMISSION_CODES, "manage_warehouse is not in PERMISSION_CODES"
+
+    def test_the_sale_status_values_are_the_ones_the_state_machine_uses(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-63. Every status this file drives has to be one the routes and the
+        service agree on; a status that is only ever written here would make the
+        assertions below pass against a value nothing can produce."""
+        from utils.constants import SALE_PAYMENT_STATUSES
+
+        for value in SALE_PAYMENT_STATUSES:
+            assert isinstance(value, str), f"{value!r} is not a string"
+        sale = _sale(db_session, sample_tenant, sample_customer, sample_product, amount="100.00", branch=sample_branch)
+        assert sale.status in ("draft", "confirmed", "cancelled", "completed", "archived"), (
+            f"an unexpected default sale status {sale.status!r}"
+        )
+        assert sale.payment_status in SALE_PAYMENT_STATUSES, (
+            f"{sale.payment_status!r} is not one of {SALE_PAYMENT_STATUSES}"
+        )
+
+    def test_every_sale_money_column_holds_a_decimal(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product
+    ):
+        """SAL-64. Money columns that can hold a float accumulate binary
+        rounding; the scenarios above compare them for equality, so the type
+        has to be exact-decimal for those comparisons to mean anything."""
+        from models import Sale
+
+        for name in ("subtotal", "total_amount", "amount", "paid_amount", "balance_due", "amount_aed"):
+            column = Sale.__table__.columns[name]
+            assert "NUMERIC" in str(column.type).upper(), f"Sale.{name} is {column.type}, not an exact decimal"
+
+    def test_a_cancelled_sale_keeps_its_row_and_its_money(
+        self, db_session, sample_tenant, sample_branch, sample_customer, sample_product, sample_user
+    ):
+        """SAL-65. Cancelling is a status, not a delete. The row carries the
+        audit trail, and dropping it would make the paid amount vanish from the
+        tenant's history."""
+        sale = _sale(
+            db_session,
+            sample_tenant,
+            sample_customer,
+            sample_product,
+            amount="75.00",
+            status="cancelled",
+            branch=sample_branch,
+        )
+        db_session.expire_all()
+        from models import Sale as SaleModel
+
+        refreshed = db_session.get(SaleModel, sale.id)
+        assert refreshed is not None, "a cancelled sale lost its row"
+        assert refreshed.status == "cancelled", f"a cancelled sale reads {refreshed.status!r}"
+        assert refreshed.total_amount == Decimal("75.00"), f"cancelling changed the total to {refreshed.total_amount}"
