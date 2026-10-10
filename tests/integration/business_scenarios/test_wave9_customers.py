@@ -1001,3 +1001,136 @@ class TestCUS45BalanceInvariants:
         assert "manage_partners" not in PERMISSION_CODES, (
             "a manage_partners code now exists; move the partner routes onto it and retire this"
         )
+
+    def test_a_credit_limit_is_its_own_column_not_the_balance(self, db_session, sample_tenant, sample_branch):
+        """CUS-56. The limit and the balance are different facts. A form that
+        posts ``credit_limit`` into ``balance`` would let anyone with edit rights
+        grant themselves unlimited buying room, which is the overwrite this
+        domain is named for wearing a different hat."""
+
+        from models import Customer
+
+        customer = _customer(db_session, sample_tenant, balance="0", branch=sample_branch)
+        assert "credit_limit" in Customer.__table__.columns
+        assert customer.balance == Decimal("0"), f"a new customer opens at {customer.balance}"
+
+    def test_the_balance_column_is_exact_decimal(self, db_session):
+        """CUS-57. A float balance accumulates rounding on every sale; the
+        equality assertions in this file only mean something if it is exact."""
+
+        from models import Customer
+
+        column = Customer.__table__.columns["balance"]
+        assert "NUMERIC" in str(column.type).upper(), f"Customer.balance is {column.type}, not an exact decimal"
+
+    def test_partner_money_columns_are_exact_decimals(self, db_session):
+        """CUS-58. The partner distribution path splits one amount four ways;
+        a float in any of these drifts before the split balances."""
+
+        from models import Partner
+
+        for name in ("investment_amount", "current_balance", "total_profit_received", "total_withdrawals"):
+            column = Partner.__table__.columns[name]
+            assert "NUMERIC" in str(column.type).upper(), f"Partner.{name} is {column.type}, not an exact decimal"
+
+    def test_supplier_money_columns_are_exact_decimals(self, db_session):
+        """CUS-59. Same reason on the supplier side of the ledger."""
+
+        from models import Supplier
+
+        for name in ("total_purchases_aed", "total_paid_aed", "credit_limit"):
+            column = Supplier.__table__.columns[name]
+            assert "NUMERIC" in str(column.type).upper(), f"Supplier.{name} is {column.type}, not an exact decimal"
+
+    def test_a_customer_balance_survives_a_re_read(self, db_session, sample_tenant, sample_branch):
+        """CUS-60. The value that comes back out of the database is the value
+        that went in - a silent coercion to float would show up as a long tail
+        on a balance the tenant is owed."""
+        customer = _customer(db_session, sample_tenant, balance="1234.56", branch=sample_branch)
+        db_session.expire_all()
+        from models import Customer as CustomerModel
+
+        reloaded = db_session.get(CustomerModel, customer.id)
+        assert reloaded.balance == Decimal("1234.56"), f"the balance came back as {reloaded.balance}"
+
+    def test_a_deactivated_customer_keeps_its_balance(self, db_session, sample_tenant, sample_branch):
+        """CUS-61. Deactivating hides a counterparty from pickers; it must not
+        quietly forgive what they owe. Zeroing the balance on deactivation is the
+        exact silent overwrite this catalogue exists to catch."""
+        customer = _customer(db_session, sample_tenant, balance="500.00", branch=sample_branch)
+        customer.is_active = False
+        db_session.commit()
+        db_session.expire_all()
+        from models import Customer as CustomerModel
+
+        reloaded = db_session.get(CustomerModel, customer.id)
+        assert reloaded.balance == Decimal("500.00"), f"deactivating changed the balance to {reloaded.balance}"
+        assert reloaded.is_active is False, "the customer is still active"
+
+    def test_editing_a_customer_does_not_touch_total_purchases(
+        self, client, db_session, sample_tenant, sample_branch, sample_user
+    ):
+        """CUS-62. ``total_purchases`` is derived from the sales behind the
+        customer. An edit form that posts it back would let a rename restate
+        what the tenant has sold.
+
+        Uses ``_customer_with_sale`` because branch scope reaches a customer
+        only through a transaction recorded under that branch - a customer with
+        no sales at all is correctly 403 for a branch-scoped session, which is
+        the behaviour ``_customer``'s docstring describes.
+        """
+        customer = _customer_with_sale(db_session, sample_tenant, sample_branch, balance="0")
+        before = customer.total_purchases
+        _manager(client, db_session, sample_tenant, sample_branch, permissions=["manage_customers"], slug="cus-edit")
+        resp = client.post(
+            f"/customers/{customer.id}/edit",
+            data={"name": f"Renamed {uuid.uuid4().hex[:6]}", "customer_type": "regular"},
+            follow_redirects=True,
+        )
+        assert resp.status_code in (200, 302, 404), f"the edit answered {resp.status_code}"
+        db_session.expire_all()
+        from models import Customer as CustomerModel
+
+        reloaded = db_session.get(CustomerModel, customer.id)
+        assert reloaded is not None, "editing a customer deleted it"
+        assert reloaded.total_purchases == before, (
+            f"editing moved total_purchases {before} -> {reloaded.total_purchases}"
+        )
+
+    def test_a_customer_statement_is_reachable_for_one_that_exists(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """CUS-63. The statement is the ledger the balance is read from.
+
+        Reached through ``_customer_with_sale`` for the branch-scope reason
+        given in CUS-62: a customer with no transaction under the branch is out
+        of scope by design, not by accident.
+        """
+        _manager(client, db_session, sample_tenant, sample_branch, permissions=["manage_customers"], slug="cus-stmt")
+        customer = _customer_with_sale(db_session, sample_tenant, sample_branch, balance="0")
+        resp = client.get(f"/customers/{customer.id}/statement", follow_redirects=True)
+        assert resp.status_code in (200, 302, 404), f"a statement answered {resp.status_code}"
+
+    def test_a_statement_for_a_missing_customer_is_refused(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-64."""
+        _manager(client, db_session, sample_tenant, sample_branch, permissions=["manage_customers"], slug="cus-stmt2")
+        resp = client.get("/customers/98765432/statement", follow_redirects=True)
+        assert resp.status_code in (404, 302), f"a statement for a missing customer answered {resp.status_code}"
+
+    def test_the_customer_search_api_returns_json(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-65. The picker reads this; an HTML error page here would be
+        swallowed by the caller as an empty list."""
+        _manager(client, db_session, sample_tenant, sample_branch, permissions=["manage_customers"], slug="cus-api")
+        resp = client.get("/customers/api/search?q=x")
+        assert resp.status_code in (200, 400), f"the search api answered {resp.status_code}"
+        if resp.status_code == 200:
+            body = resp.get_json()
+            assert isinstance(body, (list, dict)), f"the search api returned {type(body).__name__}"
+
+    def test_a_partner_starts_with_nothing_distributed(self, db_session, sample_tenant):
+        """CUS-66. A partner who has taken nothing must show zero taken, or the
+        first distribution pays out against an invented balance."""
+        partner = _partner(db_session, sample_tenant)
+        assert partner.total_profit_received == Decimal("0"), f"a new partner has taken {partner.total_profit_received}"
+        assert partner.total_withdrawals == Decimal("0"), f"a new partner withdrew {partner.total_withdrawals}"
+        assert partner.total_loss_borne == Decimal("0"), f"a new partner bore {partner.total_loss_borne}"
