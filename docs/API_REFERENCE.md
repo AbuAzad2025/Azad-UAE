@@ -395,10 +395,10 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/hr/leaves/<int:leave_id>/approve` | authenticated, permission | `hr.manage` | — | json |
 | POST | `/hr/leaves/<int:leave_id>/refuse` | authenticated, permission | `hr.manage` | — | json |
 | GET, POST | `/hr/leaves/request` | authenticated, permission | `hr.view` | — | html |
-| GET | `/hr/overtime` | authenticated, permission | `hr` | — | html |
-| POST | `/hr/overtime/<int:entry_id>/approve` | authenticated, permission | `hr` | — | json |
-| POST | `/hr/overtime/<int:entry_id>/reject` | authenticated, permission | `hr` | — | json |
-| POST | `/hr/overtime/create` | authenticated, permission | `hr` | — | json |
+| GET | `/hr/overtime` | authenticated, permission | `hr.manage` | — | html |
+| POST | `/hr/overtime/<int:entry_id>/approve` | authenticated, permission | `hr.manage` | — | json |
+| POST | `/hr/overtime/<int:entry_id>/reject` | authenticated, permission | `hr.manage` | — | json |
+| POST | `/hr/overtime/create` | authenticated, permission | `hr.manage` | — | json |
 
 ### `humans.txt` (1)
 

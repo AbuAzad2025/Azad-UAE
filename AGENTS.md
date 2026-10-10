@@ -171,16 +171,28 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 - **Wave 9 (Sales, CRM and the customer ledger) — complete.** QOT `4d0cfcc0`,
   SAL `311ad0b2`, CUS `ef13c73d`, CRM `04024125`. 272 scenarios; the catalogue's
   per-wave budget is enforced by `tests/unit/test_scenario_catalog.py`.
-- **`ruff check` is not the static gate.** CI's *Static quality* job also runs
-  **mypy** and ten lint scripts. Waves 8, QOT, SAL and CUS each passed the whole
-  local `business_scenarios` suite and still failed CI, every time in that job.
-  Run the full list before calling a wave done:
+- **`ruff check` is not the static gate.** CI's *Static quality* job runs
+  **mypy**, **fourteen** lint scripts, and a generated-docs comparison. Waves 8,
+  QOT, SAL and CUS each passed the whole local `business_scenarios` suite and
+  still failed CI, every time in that job. Run the whole list before calling a
+  wave done — the complete list, copied from `.github/workflows/ci.yml`:
   `ruff check .` · `ruff format . --check` ·
   `mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases` ·
   `check_templates.py` · `check_strict_i18n.py templates routes services --exclude-dirs services` ·
   `check_i18n_untranslated.py` · `report_catalogue_health.py` · `check_migration_head.py` ·
   `check_txn_boundaries.py` · `check_service_side_effects.py` · `check_tag_shape.py` ·
-  `check_a11y_labels.py` · `check_inline_assets.py` · `cspell` over templates + static JS.
+  `check_a11y_labels.py` · `check_inline_assets.py --max-static 50 --max-dynamic 21
+  --max-inline-scripts 170` · `check_utility_reachability.py` ·
+  `check_css_class_collisions.py` · `check_api_docs.py` · `cspell` over templates +
+  static JS.
+- **The last three are the ones that get forgotten.** They live past the point
+  where the log stops naming them, `check_api_docs.py` compares
+  `docs/API_REFERENCE.md` against the live url_map — so *changing a permission
+  string on a route* invalidates a committed document — and the first two are CSS
+  gates that never touch Python at all. Regenerate with
+  `python scripts/lint/generate_api_reference.py`.
+- **A gate list is only as good as the job it was copied from.** Read the
+  workflow rather than trusting a summary, including this one.
 - Two of those gates **mask each other**: cspell and the i18n gates run *after*
   mypy in the same job, so a mypy failure hides every later step. Fixing one gate
   can reveal the next defect that had been queued behind it — mine did, twice.
