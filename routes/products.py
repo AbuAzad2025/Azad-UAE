@@ -1519,6 +1519,16 @@ def adjust_stock(**kwargs):
             if (warehouse or scoped_branch_id is not None)
             else product.current_stock
         )
+        # Coerced here, not only at the quantity. get_product_stock already
+        # returns a Decimal, but the other branch reads product.current_stock
+        # straight off the in-memory instance - which is whatever Python value
+        # was assigned to it (a float from a fixture or a bulk adjustment, an
+        # int from the column default) until the row is reloaded from the
+        # database. Adding a Decimal to that raised
+        # "unsupported operand type(s) for +: 'float' and 'decimal.Decimal'"
+        # and the route answered 500. Decimal(str(x)) goes through the text
+        # form rather than the binary one, so 0.1 stays 0.1.
+        old_stock = Decimal(str(old_stock if old_stock is not None else 0))
 
         if adjustment_type == "add":
             new_stock = old_stock + quantity
@@ -1535,7 +1545,7 @@ def adjust_stock(**kwargs):
                     meta={
                         "insufficient": True,
                         "current_warehouse_id": warehouse.id if warehouse else None,
-                        "requested_quantity": quantity,
+                        "requested_quantity": float(quantity),
                         "available_stock": float(old_stock),
                         "alternative_locations": alternatives,
                     },
@@ -1561,9 +1571,14 @@ def adjust_stock(**kwargs):
             {"message": gettext(f"تعديل مخزون: {old_stock} → {new_stock}")},
         )
 
+        # Float in the payload, Decimal in the arithmetic. success_response
+        # hands the value straight to the JSON encoder, which renders a Decimal
+        # as a *string* - so clients reading data.new_stock got "110.0" and had
+        # to compare it as text, or to coerce it themselves. The arithmetic
+        # above stays exact; only what crosses the wire is widened.
         return success_response(
-            data={"new_stock": new_stock},
-            message=gettext(f"تم تعديل المخزون من {old_stock} إلى {new_stock}"),
+            data={"new_stock": float(new_stock)},
+            message=gettext(f"✅ تم تعديل المخزون بنجاح من {old_stock} إلى {new_stock}"),
         )
 
     except Exception:
