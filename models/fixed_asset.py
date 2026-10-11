@@ -282,16 +282,25 @@ class FixedAsset(db.Model):
                 tenant_id=getattr(self, "tenant_id", None),
             )
 
-        lines = [
-            {
-                "account": str(self.depreciation_account.code),
-                "concept_code": "ACCUMULATED_DEPRECIATION",
-                "explicit_account_allowed": True,
-                "debit": self.accumulated_depreciation,
-                "credit": 0,
-                "description": f"إقفال مجمع استهلاك - {self.name_ar}",
-            }
-        ]
+        lines = []
+
+        # The accumulated-depreciation line is only added when there is
+        # accumulated depreciation to close. Disposing an asset that has never
+        # been depreciated emitted a debit of 0, and
+        # validate_gl_line_sides rejects a line with neither debit nor credit -
+        # so "cannot have GL posting failed" was the error for disposing any
+        # freshly-created asset.
+        if self.accumulated_depreciation and self.accumulated_depreciation != 0:
+            lines.append(
+                {
+                    "account": str(self.depreciation_account.code),
+                    "concept_code": "ACCUMULATED_DEPRECIATION",
+                    "explicit_account_allowed": True,
+                    "debit": self.accumulated_depreciation,
+                    "credit": 0,
+                    "description": f"إقفال مجمع استهلاك - {self.name_ar}",
+                }
+            )
 
         if self.disposal_price > 0:
             lines.append(

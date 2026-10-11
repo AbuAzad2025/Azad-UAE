@@ -1,3 +1,4 @@
+from decimal import Decimal
 from io import BytesIO
 from typing import cast
 
@@ -318,7 +319,15 @@ def import_products():
                     )
                     return redirect(request.url)
                 filename = f"import_{uuid.uuid4().hex}{ext}"
-                filepath = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+                # config["UPLOAD_FOLDER"] was never set by any config class, so
+                # this raised KeyError and every CSV import died at the save.
+                # Config.UPLOAD_FOLDER now exists; .get keeps a deployment whose
+                # config predates it from failing at the first upload.
+                upload_folder = current_app.config.get("UPLOAD_FOLDER") or os.path.join(
+                    current_app.static_folder, "uploads"
+                )
+                os.makedirs(upload_folder, exist_ok=True)
+                filepath = os.path.join(upload_folder, filename)
                 file.save(filepath)
 
                 if filename.endswith(".csv"):
@@ -837,16 +846,22 @@ def create():
 
                 LoggingCore.log_audit("create", "products", product.id)
 
+                # warehouse is None whenever no warehouse was chosen, and
+                # product.name is fine by then - interpolating warehouse.name
+                # raised AttributeError *after* the row was created, so a
+                # successful create returned 500 and rolled itself back.
+                warehouse_name = (warehouse.name_ar or warehouse.name) if warehouse else ""
                 flash(
                     gettext(
-                        f'✓ تم إضافة المنتج "{product.name}" بنجاح إلى المستودع "{warehouse.name_ar or warehouse.name}"'
+                        f'✓ تم إضافة المنتج "{product.name}" بنجاح إلى المستودع'
+                        + (f' "{warehouse_name}"' if warehouse_name else "")
                     ),
                     "success",
                 )
                 return redirect(url_for("products.index"))
 
             except Exception as e:
-                current_app.logger.error(f"Error creating product: {str(e)}")
+                current_app.logger.exception(f"Error creating product: {e}")
                 flash(
                     gettext(
                         f"❌ فشل إضافة المنتج: {str(e)}\n💡 تأكد من:\n   • اسم المنتج فريد\n   • الأسعار صحيحة\n   • SKU غير مكرر"
@@ -1465,6 +1480,13 @@ def adjust_stock(**kwargs):
             quantity = require_float(str(request.form.get("quantity", 0)))
         except ValueError:
             return error_response(message=gettext("الكمية غير صحيحة"), status_code=422)
+        # Stock is exact-decimal everywhere else: get_product_stock returns a
+        # Decimal and Product.current_stock is Numeric. Adding this float to it
+        # raised "unsupported operand type(s) for +: 'Decimal' and 'float'", so
+        # /products/<id>/adjust-stock returned 500 on every call against a
+        # product that had stock. Decimal(str(x)) goes through the text form
+        # rather than the binary one, so 0.1 stays 0.1.
+        quantity = Decimal(str(quantity))
         reason = request.form.get("reason", "adjustment")
         notes = request.form.get("notes", "")
         warehouse_id = request.form.get("warehouse_id", type=int)

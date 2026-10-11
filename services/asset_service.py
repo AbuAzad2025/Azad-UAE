@@ -16,6 +16,13 @@ class AssetService:
     @classmethod
     def create_asset(cls, data, user):
         tid = cls._tid(user)
+        # routes/assets.py passes user=None for every call, so created_by has
+        # to come from the request context. user.id on a None user was an
+        # AttributeError that turned every asset creation into a 500.
+        if user is None:
+            from flask_login import current_user
+
+            user = current_user
         asset = FixedAsset(
             tenant_id=tid,
             asset_number=generate_number("FA", FixedAsset, "asset_number"),

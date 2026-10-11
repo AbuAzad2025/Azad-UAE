@@ -322,6 +322,14 @@ class Config:
 
     DEFAULT_PRODUCT_IMAGE = "assets/shared/placeholders/no-product.png"
 
+    # Where uploaded files land. routes/products.py reads this key directly
+    # (current_app.config["UPLOAD_FOLDER"]) when it imports a product CSV, and
+    # it was never set here - so a KeyError fired on every import and the whole
+    # write path was dead. ensure_runtime_dirs already created the directory
+    # under static/uploads; this exposes it to the routes that use it.
+    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or os.path.join(basedir, "static", "uploads")
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
     BACKUP_DIR = os.path.join(instance_dir, "backups")
     os.makedirs(BACKUP_DIR, exist_ok=True)
     BACKUP_KEEP_LAST = _int("BACKUP_KEEP_LAST", 10)
