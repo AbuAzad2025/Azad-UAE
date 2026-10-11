@@ -62,6 +62,11 @@ class Wave:
     title: str
     domains: tuple[Domain, ...]
     fixed_scenarios: int = 0
+    #: True once this wave's domains are actually written. A wave is *planned*
+    #: long before it is *delivered*, and the per-domain budget gate only
+    #: applies to delivered waves - otherwise it fails for every domain of
+    #: every future wave, which is the same as not having a gate.
+    delivered: bool = False
 
     @property
     def prefixes(self) -> tuple[str, ...]:
@@ -158,42 +163,49 @@ WAVES: tuple[Wave, ...] = (
         title="Foundations - tenant, branch, user, and the permission boundary",
         domains=(),
         fixed_scenarios=9,
+        delivered=True,
     ),
     Wave(
         number=1,
         title="Sales desk - one cash sale across every surface",
         domains=(),
         fixed_scenarios=10,
+        delivered=True,
     ),
     Wave(
         number=2,
         title="Cheques, returns and receipt vouchers",
         domains=(),
         fixed_scenarios=13,
+        delivered=True,
     ),
     Wave(
         number=3,
         title="Online store - publication gates and deferred fulfilment",
         domains=(),
         fixed_scenarios=11,
+        delivered=True,
     ),
     Wave(
         number=4,
         title="Purchasing, transfers and cost-valued adjustments",
         domains=(),
         fixed_scenarios=12,
+        delivered=True,
     ),
     Wave(
         number=5,
         title="Budgets and quotations",
         domains=(),
         fixed_scenarios=7,
+        delivered=True,
     ),
     Wave(
         number=6,
         title="Accounting spine - balance, periods, reversal",
         domains=(),
         fixed_scenarios=14,
+        delivered=True,
     ),
     Wave(
         number=7,
@@ -310,6 +322,7 @@ WAVES: tuple[Wave, ...] = (
                 "conversion is a money path that must be idempotent",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=10,
@@ -337,6 +350,7 @@ WAVES: tuple[Wave, ...] = (
                 "a purchase received twice is inventory that does not exist",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=11,
@@ -350,6 +364,7 @@ WAVES: tuple[Wave, ...] = (
                 "money in the drawer, and the two screens that disagree",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=12,

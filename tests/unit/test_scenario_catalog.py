@@ -145,6 +145,25 @@ class TestCatalogueIntegrity:
             f"{catalog.coverage_gap()} short of {catalog.TARGET_SCENARIO_COUNT}"
         )
 
+    def test_every_delivered_domain_owes_what_it_committed_to(self):
+        """The aggregate check above is satisfied by one fat domain.
+
+        ``test_plan_reaches_the_target`` only compares totals, so a domain that
+        ships a third of its scenarios can be paid for by a neighbour that
+        overshoots - which is how a wave was reported complete while a quarter
+        of its domains had never been written. Budgets are per domain, so the
+        check has to be too.
+
+        Only *delivered* waves are gated. A wave is planned several waves ahead
+        of being written, and holding the unwritten ones to their budget would
+        fail for every domain of waves 12-16 regardless of what ships.
+        """
+        owners, _ = _declared_ids()
+        declared = collections.Counter(sid.split("-")[0] for sid in owners)
+        gated = {d.prefix: catalog.domain_budget(d) for w in catalog.WAVES if w.delivered for d in w.domains}
+        short = {p: (declared.get(p, 0), b) for p, b in gated.items() if declared.get(p, 0) < b}
+        assert not short, f"delivered domains are under their own budget (declared, budget): {short}"
+
     def test_route_inventory_matches_the_tree(self):
         """The budgets are derived from measured route counts; if those drift, so must this."""
         live = _live_routes()
