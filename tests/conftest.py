@@ -1077,8 +1077,21 @@ def sample_role(db_session, sample_permissions):
             slug="super_admin",
             is_active=True,
         )
-        for p in sample_permissions:
-            role.permissions.append(p)
+        db_session.add(role)
+
+    # The permissions have to be (re)attached on every call, not only when the
+    # role is first created. This role is shared: anything that needs to satisfy
+    # admin_required has to reuse the one row that name/slug "super_admin", and
+    # a test that replaces that row's permissions - deliberately, to prove the
+    # guard reads the role and not the permission table - silently strips them
+    # from every sample_user built afterwards. That shows up far away as a 403
+    # where a 500 was expected, and only when the whole suite runs in one
+    # order. Union rather than replace, so a caller that deliberately added more
+    # does not lose them.
+    missing = [p for p in sample_permissions if p not in role.permissions]
+    if missing or not role.id:
+        for permission in missing:
+            role.permissions.append(permission)
         db_session.add(role)
         db_session.commit()
     return role

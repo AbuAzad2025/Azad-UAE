@@ -106,6 +106,21 @@ def _super_admin(client, db_session, tenant, branch, *, permissions=()):
     return user
 
 
+def _restore_permissions(db_session, role, original):
+    """Put a shared role's permissions back after a test has borrowed it.
+
+    ``super_admin`` is a singleton in practice - name and slug are both unique,
+    and ``admin_required`` only accepts a holder of that name or slug - so a
+    test that reshapes it reshapes it for every other test in the session. The
+    failure that produces shows up hundreds of lines away as a 403 where a 500
+    was expected, which is close to undebuggable from the symptom.
+    """
+    db_session.expire_all()
+    role.permissions = list(original)
+    db_session.add(role)
+    db_session.commit()
+
+
 def _chart(db_session, tenant):
     from models import GLAccount
     from services.gl_service import GLService
@@ -150,7 +165,7 @@ class TestLED64TheAdminGuardIsNotThePermissionGuard:
     """LED-64: why these scenarios cannot reuse the ledger file's helpers."""
 
     def test_a_super_admin_with_no_ledger_permissions_is_still_an_admin(
-        self, client, db_session, sample_tenant, sample_branch
+        self, client, db_session, sample_tenant, sample_branch, request
     ):
         """LED-64. ``@admin_required`` and ``permission_required`` are different.
 
@@ -168,9 +183,16 @@ class TestLED64TheAdminGuardIsNotThePermissionGuard:
             role = Role(name="Super Admin", slug="super_admin", is_active=True)
             db_session.add(role)
             db_session.commit()
+        # Emptied, and restored before the test ends. This is the one row that
+        # has to be named "super_admin" for admin_required to accept its holder,
+        # so every admin in the suite shares it - and leaving it empty strips
+        # the permissions from every sample_role built afterwards. The restore
+        # is what keeps this scenario from failing unrelated tests far away.
+        original = list(role.permissions)
         role.permissions = []
         db_session.add(role)
         db_session.commit()
+        request.addfinalizer(lambda: _restore_permissions(db_session, role, original))
 
         unique = uuid.uuid4().hex[:8]
         user = User(
