@@ -109,11 +109,21 @@ def _ensure_migration_indexes(engine):
     The test schema is built with db.create_all(), so the three migration-only
     indexes (functional LOWER + 2 GIN) are created here exactly as upgrade()
     would create them on a migrated database.
+
+    After creating the indexes, we run ANALYZE on the affected tables to
+    update the planner statistics. This is critical for the query planner to
+    make informed decisions, especially on empty tables where default
+    statistics might lead to suboptimal plan choices.
     """
     indexes, _ = _load_migration_indexes()
     with engine.begin() as conn:
         for name, table, tail in indexes:
             conn.execute(sa_text(f"CREATE INDEX IF NOT EXISTS {name} ON {table} {tail}"))
+        # Update planner statistics so the query planner can make informed
+        # decisions. This is essential for the index usage tests to pass.
+        affected_tables = {table for _, table, _ in indexes}
+        for table in affected_tables:
+            conn.execute(sa_text(f"ANALYZE {table}"))
 
 
 @pytest.fixture()
