@@ -1,4 +1,10 @@
-"""Wave 8 (part 2) - expenses, payroll and budgets, continued. Prefixes EXP, PAY, BUD.
+"""Wave 8 (part 2) - expenses, payroll and budgets, continued. Prefixes EXP, PRL, BUD.
+
+The payroll scenarios here were ``PAY-01`` to ``PAY-10`` until wave 12 needed
+the prefix. Payroll and payments are different subjects on different blueprints
+with different permissions - ``manage_payroll`` against ``manage_payments`` -
+and sharing a prefix made the catalogue unable to say which one it was counting.
+They are ``PRL-NN`` now.
 
 ``test_wave8_budget_expenses.py`` established the permission shapes: expenses are
 gated by a single ``manage_expenses`` code, payroll by ``manage_payroll``, and
@@ -745,9 +751,32 @@ class TestEXP30CategoryAccountValidation:
 
         _expense_admin(client, db_session, sample_tenant, sample_branch)
 
-        header = db_session.query(GLAccount).filter_by(tenant_id=sample_tenant.id, is_header=True).first()
+        header = (
+            db_session.query(GLAccount)
+            .filter_by(tenant_id=sample_tenant.id, is_header=True)
+            .order_by(GLAccount.code)
+            .first()
+        )
         if header is None:
-            pytest.skip("this tenant's chart has no header account to test against")
+            header = GLAccount(
+                tenant_id=sample_tenant.id,
+                code=f"9{uuid.uuid4().int % 9000 + 1000}",
+                name="Header for EXP-31",
+                name_ar="رئيسي",
+                type="expense",
+                is_header=True,
+                is_active=True,
+                level=1,
+            )
+            db_session.add(header)
+            db_session.commit()
+            db_session.expire_all()
+            header = (
+                db_session.query(GLAccount)
+                .filter_by(tenant_id=sample_tenant.id, is_header=True)
+                .order_by(GLAccount.code)
+                .first()
+            )
 
         resp = client.post(
             "/expenses/categories/create",
@@ -765,10 +794,24 @@ class TestEXP30CategoryAccountValidation:
             db_session.query(GLAccount)
             .filter_by(tenant_id=sample_tenant.id, is_header=False)
             .filter(GLAccount.code.like("6%"))
+            .order_by(GLAccount.code)
             .first()
         )
         if account is None:
-            pytest.skip("this tenant's chart has no postable 6xxx account")
+            account = GLAccount(
+                tenant_id=sample_tenant.id,
+                code=f"6{uuid.uuid4().int % 9000 + 1000}",
+                name="Expense for EXP-32",
+                name_ar="مصروف",
+                type="expense",
+                is_header=False,
+                is_active=True,
+                level=1,
+            )
+            db_session.add(account)
+            db_session.commit()
+            db_session.expire_all()
+            account = db_session.query(GLAccount).filter_by(tenant_id=sample_tenant.id, code=account.code).first()
 
         account.is_active = False
         db_session.commit()
@@ -793,10 +836,24 @@ class TestEXP30CategoryAccountValidation:
             db_session.query(GLAccount)
             .filter_by(tenant_id=sample_tenant.id, is_header=False, is_active=True)
             .filter(GLAccount.code.like("2%"))
+            .order_by(GLAccount.code)
             .first()
         )
         if account is None:
-            pytest.skip("this tenant's chart has no postable 2xxx account")
+            account = GLAccount(
+                tenant_id=sample_tenant.id,
+                code=f"2{uuid.uuid4().int % 9000 + 1000}",
+                name="Liability for EXP-33",
+                name_ar="التزام",
+                type="liability",
+                is_header=False,
+                is_active=True,
+                level=1,
+            )
+            db_session.add(account)
+            db_session.commit()
+            db_session.expire_all()
+            account = db_session.query(GLAccount).filter_by(tenant_id=sample_tenant.id, code=account.code).first()
 
         resp = client.post(
             "/expenses/categories/create",
@@ -818,10 +875,24 @@ class TestEXP30CategoryAccountValidation:
             db_session.query(GLAccount)
             .filter_by(tenant_id=sample_tenant.id, is_header=False, is_active=True)
             .filter(GLAccount.code.like("6%"))
+            .order_by(GLAccount.code)
             .first()
         )
         if account is None:
-            pytest.skip("this tenant's chart has no postable 6xxx account")
+            account = GLAccount(
+                tenant_id=sample_tenant.id,
+                code=f"6{uuid.uuid4().int % 9000 + 1000}",
+                name="Expense for EXP-34",
+                name_ar="مصروف",
+                type="expense",
+                is_header=False,
+                is_active=True,
+                level=1,
+            )
+            db_session.add(account)
+            db_session.commit()
+            db_session.expire_all()
+            account = db_session.query(GLAccount).filter_by(tenant_id=sample_tenant.id, code=account.code).first()
 
         before = db_session.query(ExpenseCategory).filter_by(tenant_id=sample_tenant.id).count()
         resp = client.post(
@@ -867,14 +938,14 @@ class TestEXP30CategoryAccountValidation:
         assert "application/json" in ctype, f"a JSON request got {ctype}"
 
 
-class TestPAY01PayrollGuards:
-    """PAY-01 to PAY-10: the payroll surface and its money guards."""
+class TestPRL01PayrollGuards:
+    """PRL-01 to PRL-10: the payroll surface and its money guards."""
 
     PAYROLL_PATHS = ["/payroll/employees", "/payroll/advances", "/payroll/process"]
 
     @pytest.mark.parametrize("path", PAYROLL_PATHS)
     def test_manage_payroll_gates_the_reads(self, client, db_session, sample_tenant, sample_branch, path):
-        """PAY-01. Same shape as expenses, one permission."""
+        """PRL-01. Same shape as expenses, one permission."""
         user = _user(db_session, sample_tenant, slug="cashier", permissions=[], branch=sample_branch)
         _login(client, user)
         resp = client.get(path)
@@ -882,7 +953,7 @@ class TestPAY01PayrollGuards:
 
     @pytest.mark.parametrize("path", ["/payroll/employees/add", "/payroll/advances", "/payroll/process"])
     def test_the_payroll_writes_are_gated(self, client, db_session, sample_tenant, sample_branch, path):
-        """PAY-02. POST, so a GET's 405 cannot stand in for the guard."""
+        """PRL-02. POST, so a GET's 405 cannot stand in for the guard."""
         user = _user(db_session, sample_tenant, slug="cashier", permissions=[], branch=sample_branch)
         _login(client, user)
         resp = client.post(path, data={})
@@ -890,17 +961,17 @@ class TestPAY01PayrollGuards:
 
     @pytest.mark.parametrize("path", PAYROLL_PATHS)
     def test_anonymous_is_refused(self, client, path):
-        """PAY-03."""
+        """PRL-03."""
         assert client.get(path).status_code in (302, 401, 403), f"{path} answered {client.get(path).status_code}"
 
     def test_manage_payroll_reaches_the_surfaces(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-04. The success side."""
+        """PRL-04. The success side."""
         _payroll_admin(client, db_session, sample_tenant, sample_branch)
         assert client.get("/payroll/employees").status_code == 200
         assert client.get("/payroll/process").status_code == 200
 
     def test_manage_payroll_does_not_grant_expense_access(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-05. The two money surfaces stay separate.
+        """PRL-05. The two money surfaces stay separate.
 
         Payroll and expenses both move money, so the temptation to share one code is
         real. This says they are not shared.
@@ -910,7 +981,7 @@ class TestPAY01PayrollGuards:
         assert client.get("/expenses/").status_code in (302, 403), "manage_payroll alone reached the expenses module"
 
     def test_an_employee_without_a_name_is_refused(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-06. The required field is genuinely required.
+        """PRL-06. The required field is genuinely required.
 
         ``add_employee`` raises before ``create_employee`` runs, so the assertion is
         that no employee appeared.
@@ -928,7 +999,7 @@ class TestPAY01PayrollGuards:
         assert after == before, "an employee was created with no name"
 
     def test_an_advance_without_an_amount_is_refused(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-07."""
+        """PRL-07."""
         from models import SalaryAdvance
 
         _payroll_admin(client, db_session, sample_tenant, sample_branch)
@@ -943,7 +1014,7 @@ class TestPAY01PayrollGuards:
         assert after == before, "an advance was created with no amount"
 
     def test_an_advance_against_an_unknown_employee_is_refused(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-08. ``_assert_employee_scope`` guards the employee before booking.
+        """PRL-08. ``_assert_employee_scope`` guards the employee before booking.
 
         A missing employee and a foreign employee take the same branch, so this
         asserts the consequence that matters either way: no advance row appears.
@@ -962,7 +1033,7 @@ class TestPAY01PayrollGuards:
         assert after == before, "an advance was booked against an employee we do not own"
 
     def test_the_salary_figure_is_not_stored_as_a_float(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-09. The same structural check as EXP-11, on payroll.
+        """PRL-09. The same structural check as EXP-11, on payroll.
 
         A float salary column rounds pennies away on every payroll run and the loss
         accumulates silently, so this checks the column type rather than one run.
@@ -981,7 +1052,7 @@ class TestPAY01PayrollGuards:
         pytest.fail(f"PayrollTransaction has no salary column: {list(columns.keys())}")
 
     def test_the_salary_slip_and_statement_need_a_real_record(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-10. A slip for an id that does not exist is not a slip."""
+        """PRL-10. A slip for an id that does not exist is not a slip."""
         _payroll_admin(client, db_session, sample_tenant, sample_branch)
         for path in ("/payroll/slip/99999999", "/payroll/statement/99999999"):
             resp = client.get(path, follow_redirects=True)

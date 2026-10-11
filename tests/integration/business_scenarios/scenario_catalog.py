@@ -496,6 +496,13 @@ WAVES: tuple[Wave, ...] = (
 ALL_DOMAINS: tuple[Domain, ...] = tuple(d for w in WAVES for d in w.domains)
 PREFIXES: frozenset[str] = frozenset(d.prefix for d in ALL_DOMAINS)
 
+# PRL is not a domain: payroll lives inside EXP's blueprints and is counted in
+# EXP's budget, but its scenarios carry their own prefix. They were PAY-01 to
+# PAY-10 until wave 12 claimed PAY for payments, which is a different blueprint
+# behind a different permission - manage_payroll against manage_payments - and
+# one prefix cannot honestly mean both.
+PREFIXES = PREFIXES | {"PRL"}
+
 
 def scenario_id(prefix: str, n: int) -> str:
     """``("POS", 7)`` -> ``"POS-07"``."""
