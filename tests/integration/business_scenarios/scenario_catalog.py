@@ -240,6 +240,7 @@ WAVES: tuple[Wave, ...] = (
                 "health endpoints must not leak internals to an unauthenticated caller",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=8,
@@ -288,6 +289,7 @@ WAVES: tuple[Wave, ...] = (
                 "budget.create and budget.approve are separate permissions and must stay so",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=9,
@@ -322,7 +324,6 @@ WAVES: tuple[Wave, ...] = (
                 "conversion is a money path that must be idempotent",
             ),
         ),
-        delivered=True,
     ),
     Wave(
         number=10,

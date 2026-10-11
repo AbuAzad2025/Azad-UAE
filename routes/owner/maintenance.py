@@ -121,7 +121,12 @@ def maintenance_fix_default_tenant():
             0,
             {"dry_run": dry_run, "result": result},
         )
-        patched = len(result.get("patched", []))
+        # fix_default_tenant_metadata returns the list of columns it patched,
+        # not a report dict. Calling .get() on that list raised AttributeError,
+        # the except clause below converted it into a 500, and the maintenance
+        # run could never complete - the route failed for every request that
+        # carried the right confirmation token.
+        patched = len(result)
         if dry_run:
             return success_response(
                 message=gettext(f"🔍 تجربة جافة: سيتم تصحيح {patched} عمود"),

@@ -108,7 +108,7 @@
               <tr>
                 <td><strong>{{ liability.code }}</strong></td>
                 <td>{{ liability.full_name }}</td>
-                <td class="text-center text-danger">{{ format_currency(abs(balance)) }}</td>
+                <td class="text-center text-danger">{{ format_currency(balance | abs) }}</td>
               </tr>
               {% endfor %}
               
@@ -118,7 +118,7 @@
               <tr>
                 <td><strong>{{ equity_item.code }}</strong></td>
                 <td>{{ equity_item.full_name }}</td>
-                <td class="text-center text-info">{{ format_currency(abs(balance)) }}</td>
+                <td class="text-center text-info">{{ format_currency(balance | abs) }}</td>
               </tr>
               {% endfor %}
             </tbody>

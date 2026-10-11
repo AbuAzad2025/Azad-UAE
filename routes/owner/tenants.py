@@ -414,8 +414,18 @@ def tenant_edit(tenant_id):
                 tenant.phone_2 = (request.form.get("phone_2") or tenant.phone_2 or "").strip() or None
                 tenant.email = (request.form.get("email") or tenant.email or "").strip() or None
                 tenant.address_ar = (request.form.get("address_ar") or tenant.address_ar or "").strip() or None
+                # Keeps the tenant's own currency when the field is submitted
+                # blank, for the reason _text gives: an emptied <input> posts as
+                # "" and form.get's fallback only helps when the field is
+                # absent. Falling back to get_system_default_currency() here
+                # silently repointed a tenant's books at the platform default
+                # (ILS) the moment an operator cleared the box - a currency
+                # change with no confirmation, no audit line and no warning,
+                # applied by an edit form whose other identity fields all
+                # preserve instead.
                 tenant.default_currency = (
-                    request.form.get("default_currency", tenant.default_currency).strip()
+                    (request.form.get("default_currency") or "").strip()
+                    or tenant.default_currency
                     or get_system_default_currency()
                 )
                 tenant.max_users = _form_int("max_users", tenant.max_users or 5)

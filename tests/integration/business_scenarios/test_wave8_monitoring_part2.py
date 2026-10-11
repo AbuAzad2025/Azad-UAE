@@ -116,6 +116,14 @@ def _tenant_admin(client, db_session, tenant, branch):
 
 
 def _login(client, user):
+    """Sign ``user`` in, replacing whatever the browser was holding before.
+
+    The logout is not optional. ``/auth/login`` short-circuits to a redirect
+    when the session is already authenticated, so a login issued after a fixture
+    has already signed in is silently ignored and the guard under test keeps
+    seeing the earlier user.
+    """
+    client.get("/auth/logout", follow_redirects=True)
     return client.post(
         "/auth/login", data={"username": user.username, "password": "Str0ng!Pass99"}, follow_redirects=True
     )
@@ -435,3 +443,25 @@ class TestMON32WhitelistPersistence:
 
         body = client.get("/owner/ip-whitelist").get_data(as_text=True)
         assert ip in body, f"the whitelist page does not show {ip}, which is stored"
+
+
+class TestMON38ApiKeyAttribution:
+    """MON-38: an API key that cannot be attributed cannot be revoked later.
+
+    The route refuses a key with no name and a key with no service, rather than
+    defaulting either. A credential stored without them is unreadable in the
+    listing and unattributable in the audit log, which is precisely how a key
+    outlives the integration it was minted for.
+    """
+
+    def test_a_key_without_a_service_is_refused(self, client, db_session):
+        """MON-38. A name alone does not identify what the key is for."""
+        from models import APIKey
+
+        _login(client, _owner_user(db_session))
+        before = db_session.query(APIKey).count()
+        resp = client.post("/owner/api-keys", data={"name": "unnamed-service", "service": ""}, follow_redirects=True)
+        assert resp.status_code == 200, f"an api-key POST answered {resp.status_code}"
+        db_session.expire_all()
+        after = db_session.query(APIKey).count()
+        assert after == before, f"a key with no service was stored anyway ({before} -> {after})"
