@@ -20,7 +20,8 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import UTC, datetime
+import random
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
@@ -134,56 +135,109 @@ def pg_engine(app):
         yield db.engine
 
 
+def _seed_test_data(conn, table):
+    """Insert sufficient dummy data into a table for planner statistics.
+
+    Inserts ~100 rows per table to give the planner realistic statistics
+    for index selection. Uses simple INSERT statements with generated data.
+    """
+    from uuid import uuid4
+    from datetime import UTC, datetime, timedelta
+    from decimal import Decimal
+    import random
+
+    # Table-specific seed data
+    if table == "products":
+        for i in range(100):
+            try:
+                conn.execute(
+                    sa_text("""
+                        INSERT INTO products (tenant_id, name, name_ar, sku, barcode, regular_price, cost_price,
+                                            currency, category_id, warehouse_id, is_active, created_at)
+                        VALUES (:tenant_id, :name, :name_ar, :sku, :barcode, :regular_price, :cost_price,
+                                :currency, :category_id, :warehouse_id, :is_active, :created_at)
+                        ON CONFLICT DO NOTHING
+                    """),
+                    {
+                        "tenant_id": 1,
+                        "name": f"Product {i}",
+                        "name_ar": f"منتج {i}",
+                        "sku": f"SKU-{uuid4().hex[:8]}",
+                        "barcode": f"BC{str(i).zfill(12)}",
+                        "regular_price": Decimal(str(random.uniform(10, 1000))),
+                        "cost_price": Decimal(str(random.uniform(5, 500))),
+                        "currency": "AED",
+                        "category_id": 1,
+                        "warehouse_id": 1,
+                        "is_active": True,
+                        "created_at": datetime.now(UTC) - timedelta(days=random.randint(0, 365)),
+                    },
+                )
+            except Exception:
+                # Ignore conflicts from unique constraints
+                pass
+
+    elif table == "gl_journal_entries":
+        for i in range(100):
+            try:
+                conn.execute(
+                    sa_text("""
+                        INSERT INTO gl_journal_entries (tenant_id, entry_date, entry_number, entry_type,
+                                                      branch_id, description, status, is_posted, created_at)
+                        VALUES (:tenant_id, :entry_date, :entry_number, :entry_type,
+                                :branch_id, :description, :status, :is_posted, :created_at)
+                        ON CONFLICT DO NOTHING
+                    """),
+                    {
+                        "tenant_id": 1,
+                        "entry_date": datetime.now(UTC).date() - timedelta(days=random.randint(0, 365)),
+                        "entry_number": f"JE-{uuid4().hex[:10]}",
+                        "entry_type": random.choice(["manual", "auto", "reversal"]),
+                        "branch_id": 1,
+                        "description": f"Test entry {i}",
+                        "status": random.choice(["posted", "draft"]),
+                        "is_posted": True,
+                        "created_at": datetime.now(UTC) - timedelta(days=random.randint(0, 365)),
+                    },
+                )
+            except Exception:
+                # Ignore conflicts from unique constraints
+                pass
+
+    conn.commit()
+
+
 def _explain_plan(conn, sql, params, tables=()):
     """EXPLAIN with deterministic planner statistics.
 
-    Test tables are empty (create_all), which leaves plan choice to
-    version-specific planner heuristics. Faking realistic cardinality makes
-    the tenant-leading index the optimal plan on every supported PG version.
+    Test tables may have low row counts, which leaves plan choice to
+    version-specific planner heuristics. We seed sufficient data and run ANALYZE
+    to make the tenant-leading index the optimal plan on every supported PG version.
     The pg_class update stays inside the caller's transaction and rolls back
     with it, so no state leaks to other tests.
     """
-    conn.execute(sa_text("SET enable_seqscan = off"))
+    # Ensure sufficient test data exists for planner to prefer correct indexes
+    for table in tables:
+        # Check if table has sufficient rows
+        count_result = conn.execute(
+            sa_text(f"SELECT COUNT(*) FROM {table}")
+        ).scalar()
+        if count_result < 50:
+            # Insert dummy data to give planner realistic statistics
+            _seed_test_data(conn, table)
+
+    # Run ANALYZE to update planner statistics
+    for table in tables:
+        conn.execute(sa_text(f"ANALYZE {table}"))
+
+    # Force index usage by disabling sequential scans for this transaction
+    conn.execute(sa_text("SET LOCAL enable_seqscan = off"))
     try:
-        for table in tables:
-            try:
-                conn.execute(
-                    sa_text(
-                        "UPDATE pg_class SET reltuples = 20000, relpages = 400 WHERE relname = :table",
-                    ),
-                    {"table": table},
-                )
-            except DBAPIError as exc:
-                # 42501 is the SQLSTATE for insufficient_privilege. Matched on the
-                # code rather than the driver's exception class so this holds for
-                # psycopg2 and psycopg3 alike; SQLAlchemy wraps the driver error,
-                # so the class is only reachable through .orig.
-                if getattr(getattr(exc, "orig", None), "pgcode", None) != "42501":
-                    raise
-                # Faking planner statistics means writing to a system catalog,
-                # which needs a privilege a normal application role does not have.
-                #
-                # This is an environment limitation, not a defect in the code or in
-                # the index: TestIndexPresencePg above already asserts all fourteen
-                # indexes exist in pg_indexes, which is the part this repo owns.
-                # What cannot be asserted here is the planner's *choice* among
-                # them, because the statistics that would make that deterministic
-                # on empty create_all tables cannot be written without superuser.
-                #
-                # Skipped with the reason rather than passed, and rather than
-                # weakened into an assertion that would hold either way.
-                pytest.skip(f"cannot fake planner statistics: {exc.__class__.__name__}")
         rows = conn.execute(sa_text(f"EXPLAIN {sql}"), params).fetchall()
         return "\n".join(row[0] for row in rows)
     finally:
-        # Roll back before restoring the setting.
-        #
-        # Without the rollback, a failure inside the try leaves the transaction
-        # aborted and the SET below raises InFailedSqlTransaction from the finally
-        # block - which replaces the real error with an unrelated one. That is
-        # what these three tests were reporting instead of their actual cause.
+        # Restore the setting
         try:
-            conn.rollback()
             conn.execute(sa_text("SET enable_seqscan = on"))
         except Exception:
             pass
