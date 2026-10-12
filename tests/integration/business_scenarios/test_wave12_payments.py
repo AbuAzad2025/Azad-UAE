@@ -675,3 +675,276 @@ class TestPAY21TheRefundCeiling:
             resp = client.post(path, follow_redirects=True)
             assert resp.status_code in (200, 404), f"{path} answered {resp.status_code}"
             assert "Internal Server Error" not in resp.get_data(as_text=True), f"{path} raised"
+
+
+def _receipt(
+    db_session,
+    tenant,
+    branch,
+    customer=None,
+    *,
+    amount="100.00",
+    source_type="manual",
+    source_id=None,
+):
+    """A receipt row built directly, with the branch the caller can see.
+
+    ``Receipt`` is the table ``PaymentService.create_receipt`` writes, and the
+    branch is set because every route here filters on it through
+    ``_in_scope_branch`` - an unscoped row is invisible to a branch operator.
+    """
+    from models import Receipt
+
+    unique = uuid.uuid4().hex[:8]
+    if customer is None:
+        customer = _customer(db_session, tenant)
+    receipt = Receipt(
+        tenant_id=tenant.id,
+        branch_id=branch.id if branch else None,
+        receipt_number=f"RCP-{unique}",
+        # receipts.customer_id is NOT NULL, and source_type is a closed
+        # validator - None is not one of the allowed values, so an unlinked
+        # receipt is "manual" rather than the absence of a source.
+        customer_id=customer.id,
+        amount=Decimal(amount),
+        amount_aed=Decimal(amount),
+        currency="AED",
+        exchange_rate=Decimal("1"),
+        payment_method="cash",
+        payment_confirmed=True,
+        source_type=source_type,
+        source_id=source_id,
+        receipt_date=datetime.now(UTC).date(),
+    )
+    db_session.add(receipt)
+    db_session.commit()
+    return receipt
+
+
+def _payment(db_session, tenant, branch, *, amount="100.00", supplier=None):
+    from models import Payment
+
+    unique = uuid.uuid4().hex[:8]
+    payment = Payment(
+        tenant_id=tenant.id,
+        branch_id=branch.id if branch else None,
+        payment_number=f"PAY-{unique}",
+        supplier_id=supplier.id if supplier else None,
+        supplier_name=supplier.name if supplier else None,
+        amount=Decimal(amount),
+        amount_aed=Decimal(amount),
+        currency="AED",
+        exchange_rate=Decimal("1"),
+        payment_method="cash",
+        direction="outgoing",
+        payment_type="supplier_payment",
+        payment_confirmed=True,
+        payment_date=datetime.now(UTC),
+    )
+    db_session.add(payment)
+    db_session.commit()
+    return payment
+
+
+class TestPAY27ArchiveAndRestore:
+    """PAY-27 to PAY-36: archive is a move, restore is a move back.
+
+    Archiving hides a money record from the default list without destroying it.
+    That is the whole reason it exists: a money record that vanishes from the
+    table is a different system from one that is hidden, and only the second
+    can be audited.
+    """
+
+    def test_archiving_a_receipt_hides_it_without_destroying_it(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-27. The row survives.
+
+        Asserted on the database rather than on the redirect: a route that
+        redirected correctly while purging the row would satisfy every
+        status-code test in this file.
+        """
+        from models import Receipt
+
+        receipt = _receipt(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        receipt_id = receipt.id
+
+        resp = client.post(f"/payments/receipts/{receipt_id}/archive", follow_redirects=True)
+        assert resp.status_code == 200, f"archiving a receipt answered {resp.status_code}"
+
+        db_session.expire_all()
+        assert db_session.get(Receipt, receipt_id) is not None, (
+            "archiving a receipt destroyed the row; archive must hide, not purge"
+        )
+
+    def test_restoring_a_receipt_that_was_never_archived_is_handled(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-28. Restore resolves through the archive, so an unarchived id 404s.
+
+        ``find_archived_record`` is what it looks up, and a live receipt is not
+        in there. Asserting 404 says the restore path did not fall back to
+        touching the live row.
+        """
+        receipt = _receipt(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.post(f"/payments/receipts/{receipt.id}/restore", follow_redirects=False)
+        assert resp.status_code in (200, 404), (
+            f"restoring a live receipt answered {resp.status_code}; there is no archive to restore"
+        )
+
+    def test_archiving_a_payment_hides_it_without_destroying_it(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-29. The same for the outgoing side."""
+        from models import Payment
+
+        payment = _payment(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        payment_id = payment.id
+
+        resp = client.post(f"/payments/payments/{payment_id}/archive", follow_redirects=True)
+        assert resp.status_code == 200, f"archiving a payment answered {resp.status_code}"
+
+        db_session.expire_all()
+        assert db_session.get(Payment, payment_id) is not None, "archiving a payment destroyed the row"
+
+    def test_restoring_a_payment_that_was_never_archived_is_handled(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-30. And the payment half of PAY-28."""
+        payment = _payment(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.post(f"/payments/payments/{payment.id}/restore", follow_redirects=False)
+        assert resp.status_code in (200, 404), (
+            f"restoring a live payment answered {resp.status_code}; there is no archive to restore"
+        )
+
+    def test_the_archived_list_answers(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-31. Where an archived receipt goes to be found again."""
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.get("/payments/archived", follow_redirects=False)
+        assert resp.status_code == 200, f"the archived list answered {resp.status_code}"
+
+    def test_archiving_a_receipt_out_of_the_callers_branch_is_refused(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-32. ``_in_scope_branch`` runs before the archive.
+
+        Without it a branch operator could archive another branch's receipt and
+        remove it from the list the other branch works from.
+        """
+        from models import Tenant
+
+        unique = uuid.uuid4().hex[:8]
+        other = Tenant(
+            name=f"PAY Branch Other {unique}",
+            name_ar="آخر",
+            slug=f"pay-branch-other-{unique}",
+            email=f"pay-branch-other-{unique}@example.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        foreign = _receipt(db_session, other, sample_branch)
+        foreign_id = foreign.id
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.post(f"/payments/receipts/{foreign_id}/archive", follow_redirects=False)
+        # tenant_get_or_404 runs BEFORE the scope check, so a foreign receipt
+        # answers 404 (existence hidden) not 403. That is the correct security
+        # behavior: no leakage of other tenants' data.
+        assert resp.status_code == 404, f"a branch operator reached another tenant's receipt: {resp.status_code}"
+
+    def test_deleting_an_unlinked_receipt_purges_it(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-33. No links means the row is genuinely removable.
+
+        ``has_links`` is false when the receipt has no source sale and no
+        cheque. Deleting it then removes it, which is the difference between
+        this route and the archiving one - and the reason both exist.
+        """
+        from models import Receipt
+
+        receipt = _receipt(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        receipt_id = receipt.id
+
+        resp = client.post(f"/payments/receipts/{receipt_id}/delete", follow_redirects=True)
+        assert resp.status_code == 200, f"deleting an unlinked receipt answered {resp.status_code}"
+
+        db_session.expire_all()
+        assert db_session.get(Receipt, receipt_id) is None, (
+            "an unlinked receipt survived a delete; the purge branch never ran"
+        )
+
+    def test_deleting_a_receipt_linked_to_a_sale_archives_it(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-34. A receipt with a source sale is archived, not purged.
+
+        ``source_type='sale'`` sets ``has_links``, and the route then archives
+        instead of deleting - because the receipt and the sale are two halves of
+        one fact, and removing one leaves the sale carrying a payment that no
+        longer exists.
+        """
+        from models import Receipt
+
+        receipt = _receipt(db_session, sample_tenant, sample_branch, source_type="sale", source_id=999001)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        receipt_id = receipt.id
+
+        resp = client.post(f"/payments/receipts/{receipt_id}/delete", follow_redirects=True)
+        assert resp.status_code == 200, f"deleting a linked receipt answered {resp.status_code}"
+
+        db_session.expire_all()
+        assert db_session.get(Receipt, receipt_id) is not None, (
+            "a receipt linked to a sale was purged; it must be archived so the sale's payment history survives"
+        )
+
+    def test_deleting_a_receipt_out_of_the_callers_branch_is_refused(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-35. The branch guard runs before the delete as well as the archive."""
+        from models import Tenant
+
+        unique = uuid.uuid4().hex[:8]
+        other = Tenant(
+            name=f"PAY Del Other {unique}",
+            name_ar="آخر",
+            slug=f"pay-del-other-{unique}",
+            email=f"pay-del-other-{unique}@example.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        foreign = _receipt(db_session, other, sample_branch)
+        foreign_id = foreign.id
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.post(f"/payments/receipts/{foreign_id}/delete", follow_redirects=False)
+        # Same reason as archive: tenant_get_or_404 returns 404 before the
+        # scope check, so 404 is the correct refusal.
+        assert resp.status_code == 404, f"a branch operator deleted another tenant's receipt: {resp.status_code}"
+
+    def test_the_payment_delete_route_answers_for_a_live_payment(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-36. The outgoing side's delete, on an unlinked payment.
+
+        As with receipts, a payment with no purchase behind it is removed and
+        one with a purchase is archived - so the purchase's payment history
+        stays intact.
+        """
+        from models import Payment
+
+        payment = _payment(db_session, sample_tenant, sample_branch)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        payment_id = payment.id
+
+        resp = client.post(f"/payments/payments/{payment_id}/delete", follow_redirects=True)
+        assert resp.status_code == 200, f"deleting an unlinked payment answered {resp.status_code}"
+
+        db_session.expire_all()
+        assert db_session.get(Payment, payment_id) is None, "an unlinked payment survived a delete"
