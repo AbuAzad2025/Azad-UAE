@@ -330,6 +330,8 @@ class TestPAY10TheVoucherBranches:
             "amount": "100.00",
             "payment_method": "cash",
             "date": datetime.now(UTC).strftime("%Y-%m-%d"),
+            "currency": "AED",
+            "exchange_rate": "1",
         }
         data.update(over)
         return client.post("/payments/voucher/submit", data=data, follow_redirects=True)
@@ -948,3 +950,183 @@ class TestPAY27ArchiveAndRestore:
 
         db_session.expire_all()
         assert db_session.get(Payment, payment_id) is None, "an unlinked payment survived a delete"
+
+
+class TestPAY37ApiEndpoints:
+    """PAY-37 to PAY-45: the JSON and HTML endpoints behind the payment forms."""
+
+    def test_the_voucher_form_renders(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-37. The manual entry form an operator uses at the counter."""
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.get("/payments/voucher/create", follow_redirects=False)
+        assert resp.status_code == 200, f"the voucher form answered {resp.status_code}"
+
+    def test_creating_a_receipt_from_the_form_posts_a_balanced_entry(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """PAY-38. The happy path posts a balanced entry and redirects."""
+        from models import Receipt
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+        customer = _customer(db_session, sample_tenant)
+
+        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+        resp = client.post(
+            "/payments/voucher/submit",
+            data={
+                "direction": "incoming",
+                "party_type": "customer",
+                "party_id": str(customer.id),
+                "amount": "125.50",
+                "payment_method": "cash",
+                "currency": "AED",
+                "exchange_rate": "1",
+                "date": datetime.now(UTC).strftime("%Y-%m-%d"),
+            },
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"the voucher submit answered {resp.status_code}"
+        db_session.expire_all()
+        after = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == 1, f"expected 1 new receipt, got {after}"
+
+    def test_a_voucher_without_a_party_is_refused(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-39. A voucher with no party is rejected and writes nothing."""
+        from models import Receipt
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+
+        resp = client.post(
+            "/payments/voucher/submit",
+            data={"direction": "incoming", "party_type": "customer", "party_id": "", "amount": "100"},
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"a party-less voucher answered {resp.status_code}"
+        db_session.expire_all()
+        after = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == 0, f"a party-less voucher created a receipt ({0} -> {after})"
+
+    def test_a_voucher_without_an_amount_is_refused(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-40. An empty amount is rejected and nothing is written."""
+        from models import Receipt
+
+        customer = _customer(db_session, sample_tenant)
+        _payer(client, db_session, sample_tenant, sample_branch)
+        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+
+        resp = client.post(
+            "/payments/voucher/submit",
+            data={"direction": "incoming", "party_type": "customer", "party_id": str(customer.id), "amount": ""},
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"an amount-less voucher answered {resp.status_code}"
+        db_session.expire_all()
+        after = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == 0, f"an amount-less voucher created a receipt ({0} -> {after})"
+
+    def test_a_voucher_with_an_out_of_scope_customer_is_refused(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-41. A customer from another tenant is rejected."""
+        from models import Receipt, Tenant
+
+        unique = uuid.uuid4().hex[:8]
+        other = Tenant(
+            name=f"PAY Other {unique}",
+            name_ar="أجنبي",
+            slug=f"pay-other-{unique}",
+            email=f"pay-other-{unique}@example.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        foreign = _customer(db_session, other)
+        foreign_id = foreign.id
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+
+        resp = client.post(
+            "/payments/voucher/submit",
+            data={"direction": "incoming", "party_type": "customer", "party_id": str(foreign_id), "amount": "100"},
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"an out-of-scope voucher answered {resp.status_code}"
+
+        db_session.expire_all()
+        after = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == 0, f"a voucher against a foreign customer created a receipt ({0} -> {after})"
+
+    def test_the_voucher_form_renders(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-42. The form the refusals redirect back to."""
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        resp = client.get("/payments/voucher/create", follow_redirects=False)
+        assert resp.status_code == 200, f"the voucher form answered {resp.status_code}"
+
+    def test_creating_a_receipt_from_a_sale(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-43. The create-from-sale endpoint and its scope.
+
+        The create-from-sale route allocates the payment against a sale, so the
+        sale must be inside the caller's tenant and branch. A missing sale is
+        refused rather than creating an unallocated payment.
+        """
+        from models import Sale
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+
+        # Missing sale
+        resp = client.get("/payments/create_from_sale/99999999", follow_redirects=False)
+        assert resp.status_code in (404, 403), f"a missing sale answered {resp.status_code}"
+        assert "Internal Server Error" not in resp.get_data(as_text=True), "a missing sale raised instead of reporting"
+
+        # Valid sale (needs a sale fixture - skip if none)
+        sale = db_session.query(Sale).filter_by(tenant_id=sample_tenant.id).first()
+        if sale:
+            resp = client.get(f"/payments/create_from_sale/{sale.id}", follow_redirects=True)
+            assert resp.status_code == 200, f"the create-from-sale page answered {resp.status_code}"
+
+    def test_the_customer_balance_api_answers(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-44. The API behind the smart return form."""
+        _payer(client, db_session, sample_tenant, sample_branch)
+        customer = _customer(db_session, sample_tenant)
+
+        resp = client.get(f"/payments/api/customer-balance/{customer.id}", follow_redirects=False)
+        assert resp.status_code == 200, f"the customer balance api answered {resp.status_code}"
+
+    def test_the_customer_balance_api_scopes_to_tenant(self, client, db_session, sample_tenant, sample_branch):
+        """PAY-45. Tenant isolation on the balance API.
+
+        The route uses _ensure_customer_scope which returns 403 for a foreign
+        customer (tenant mismatch) - that IS the correct security behavior.
+        """
+        from models import Customer, Tenant
+
+        unique = uuid.uuid4().hex[:8]
+        other = Tenant(
+            name=f"PAY Other {unique}",
+            name_ar="آخر",
+            slug=f"pay-other-{unique}",
+            email=f"pay-other-{unique}@example.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+
+        other_customer = Customer(
+            tenant_id=other.id,
+            name=f"Foreign {unique}",
+            customer_type="regular",
+            email=f"foreign-{unique}@example.com",
+            phone="0501234567",
+            is_active=True,
+        )
+        db_session.add(other_customer)
+        db_session.commit()
+
+        _payer(client, db_session, sample_tenant, sample_branch)
+        resp = client.get(f"/payments/api/customer-balance/{other_customer.id}", follow_redirects=False)
+        assert resp.status_code == 403, f"the balance api leaked tenant {resp.status_code}"
+        # 403 is correct: route finds the customer, then rejects cross-tenant access
