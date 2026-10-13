@@ -18,6 +18,7 @@ planner heuristics.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import random
@@ -28,7 +29,6 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy import text as sa_text
-from sqlalchemy.exc import DBAPIError
 
 from extensions import db
 from services.logging_core import LoggingCore
@@ -48,6 +48,11 @@ from utils.logger import (
 _REAL_LOG_ERROR = LoggingCore.log_error
 
 _MIGRATION_MODULE = "migrations.versions.i6c2e91a3d47_add_tenant_leading_indexes"
+
+# Synthetic tenant used by the EXPLAIN probes. It only ever exists inside a test
+# that seeds and then deletes its own rows, so plan assertions run against real
+# statistics instead of an empty table where the planner picks arbitrarily.
+_PLAN_TENANT_ID = 987654
 
 # Keep in sync with the migration's _BTREE_INDEXES + _PG_SPECIAL_INDEXES.
 EXPECTED_INDEX_NAMES = [
@@ -141,15 +146,15 @@ def _seed_test_data(conn, table):
     Inserts ~100 rows per table to give the planner realistic statistics
     for index selection. Uses simple INSERT statements with generated data.
     """
-    from uuid import uuid4
-    from datetime import UTC, datetime, timedelta
+    from datetime import UTC, datetime
     from decimal import Decimal
-    import random
+    from uuid import uuid4
 
     # Table-specific seed data
     if table == "products":
         for i in range(100):
-            try:
+            # Conflicts from unique constraints are expected and ignored.
+            with contextlib.suppress(Exception):
                 conn.execute(
                     sa_text("""
                         INSERT INTO products (tenant_id, name, name_ar, sku, barcode, regular_price, cost_price,
@@ -173,13 +178,13 @@ def _seed_test_data(conn, table):
                         "created_at": datetime.now(UTC) - timedelta(days=random.randint(0, 365)),
                     },
                 )
-            except Exception:
-                # Ignore conflicts from unique constraints
-                pass
+
+
+
 
     elif table == "gl_journal_entries":
         for i in range(100):
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute(
                     sa_text("""
                         INSERT INTO gl_journal_entries (tenant_id, entry_date, entry_number, entry_type,
@@ -200,9 +205,6 @@ def _seed_test_data(conn, table):
                         "created_at": datetime.now(UTC) - timedelta(days=random.randint(0, 365)),
                     },
                 )
-            except Exception:
-                # Ignore conflicts from unique constraints
-                pass
 
     conn.commit()
 
@@ -219,9 +221,7 @@ def _explain_plan(conn, sql, params, tables=()):
     # Ensure sufficient test data exists for planner to prefer correct indexes
     for table in tables:
         # Check if table has sufficient rows
-        count_result = conn.execute(
-            sa_text(f"SELECT COUNT(*) FROM {table}")
-        ).scalar()
+        count_result = conn.execute(sa_text(f"SELECT COUNT(*) FROM {table}")).scalar()
         if count_result < 50:
             # Insert dummy data to give planner realistic statistics
             _seed_test_data(conn, table)
@@ -237,10 +237,8 @@ def _explain_plan(conn, sql, params, tables=()):
         return "\n".join(row[0] for row in rows)
     finally:
         # Restore the setting
-        try:
+        with contextlib.suppress(Exception):
             conn.execute(sa_text("SET enable_seqscan = on"))
-        except Exception:
-            pass
 
 
 class TestTelemetryInterceptsUnbalancedGL:
@@ -457,15 +455,57 @@ class TestIndexUsagePg:
         assert "idx_products_tenant_lower_sku" in plan
 
     def test_journal_list_uses_tenant_date_index(self, pg_engine):
+        """The tenant journal list must be served by an index, not a seq scan + sort.
+
+        Asserting one specific index name was flaky across PostgreSQL versions:
+        on an empty table the planner has no statistics, so PG15 picked
+        ix_gl_journal_entries_tenant_status and added a Sort while PG18 picked
+        idx_gl_entries_tenant_date_status. The identical query on the identical
+        schema flipped between an Index Scan and a Seq Scan purely from running
+        ANALYZE.
+
+        So this seeds a tenant's journals, ANALYZEs, and then asserts the property
+        that actually matters: the ordering comes from an index and no explicit
+        Sort node appears. Any tenant+date-leading index satisfies that.
+        """
         _ensure_migration_indexes(pg_engine)
         with pg_engine.connect() as conn:
-            plan = _explain_plan(
-                conn,
-                "SELECT id FROM gl_journal_entries WHERE tenant_id = :t ORDER BY entry_date DESC LIMIT 50",
-                {"t": 1},
-                tables=("gl_journal_entries",),
+            conn.execute(
+                sa_text(
+                    "INSERT INTO tenants (id, name, name_ar, slug, prices_include_vat, is_active, created_at) "
+                    "SELECT :t, 'plan probe', 'probe', 'plan-probe', false, true, now() "
+                    "WHERE NOT EXISTS (SELECT 1 FROM tenants WHERE id = :t)"
+                ),
+                {"t": _PLAN_TENANT_ID},
             )
-        assert "idx_gl_entries_tenant_date" in plan
+            conn.execute(
+                sa_text(
+                    "INSERT INTO gl_journal_entries "
+                    "(tenant_id, entry_number, entry_date, status, description, currency, "
+                    "created_at, total_debit, total_credit) "
+                    "SELECT :t, g.series, now() - (g.series || ' days')::interval, 'posted', "
+                    "'seed', 'USD', now(), 0, 0 FROM generate_series(1, 500) AS g(series) "
+                    "WHERE NOT EXISTS (SELECT 1 FROM gl_journal_entries WHERE tenant_id = :t)"
+                ),
+                {"t": _PLAN_TENANT_ID},
+            )
+            conn.execute(sa_text("ANALYZE gl_journal_entries"))
+            try:
+                plan = _explain_plan(
+                    conn,
+                    "SELECT id FROM gl_journal_entries WHERE tenant_id = :t ORDER BY entry_date DESC LIMIT 50",
+                    {"t": _PLAN_TENANT_ID},
+                    tables=("gl_journal_entries",),
+                )
+            finally:
+                conn.execute(
+                    sa_text("DELETE FROM gl_journal_entries WHERE tenant_id = :t"),
+                    {"t": _PLAN_TENANT_ID},
+                )
+                conn.execute(sa_text("DELETE FROM tenants WHERE id = :t"), {"t": _PLAN_TENANT_ID})
+        assert "Index" in plan or "Bitmap" in plan, f"expected an index scan, got: {plan}"
+        assert "Seq Scan" not in plan, f"sequential scan on the tenant journal list: {plan}"
+        assert "Sort Key: entry_date" not in plan, f"ordering was not served by an index: {plan}"
 
 
 class TestAuditCliSanity:
