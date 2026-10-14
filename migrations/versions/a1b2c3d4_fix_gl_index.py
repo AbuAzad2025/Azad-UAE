@@ -104,22 +104,3 @@ def downgrade() -> None:
     # Run ANALYZE
     with op.get_context().autocommit_block():
         op.execute("ANALYZE gl_journal_entries")
-
-
-def _index_exists(conn, name: str) -> bool:
-    row = conn.execute(
-        sa.text("SELECT 1 FROM pg_indexes WHERE schemaname = 'public' AND indexname = :n"),
-        {"n": name},
-    ).scalar()
-    return bool(row)
-
-
-def _table_has_column(conn, table: str, column: str) -> bool:
-    row = conn.execute(
-        sa.text(
-            "SELECT 1 FROM information_schema.columns "
-            "WHERE table_schema = 'public' AND table_name = :t AND column_name = :c"
-        ),
-        {"t": "gl_journal_entries", "c": column},
-    ).scalar()
-    return bool(row)

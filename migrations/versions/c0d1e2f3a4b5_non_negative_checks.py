@@ -42,6 +42,8 @@ VALIDATE is retried once the legacy rows are cleaned up.
 
 from __future__ import annotations
 
+import warnings
+
 import sqlalchemy as sa
 from alembic import op
 
@@ -141,7 +143,13 @@ def upgrade() -> None:
                 continue
             bad = _violations(bind, table, column)
             if bad:
-                op.get_context().impl.warn(f"{name} left NOT VALID: {bad} existing row(s) have {column} < 0")
+                # Leave it NOT VALID rather than fail the deployment: PostgreSQL
+                # still enforces the rule on new/updated rows, and VALIDATE is
+                # retried once the offending legacy rows are cleaned up.
+                warnings.warn(
+                    f"{name} left NOT VALID: {bad} existing row(s) have {column} < 0",
+                    stacklevel=2,
+                )
                 continue
             op.execute(f'ALTER TABLE "{table}" VALIDATE CONSTRAINT "{name}"')
 
