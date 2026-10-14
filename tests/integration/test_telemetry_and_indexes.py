@@ -179,9 +179,6 @@ def _seed_test_data(conn, table):
                     },
                 )
 
-
-
-
     elif table == "gl_journal_entries":
         for i in range(100):
             with contextlib.suppress(Exception):

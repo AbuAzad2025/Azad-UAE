@@ -160,11 +160,9 @@ def _supplier(db_session, tenant, name="PAY Supplier"):
     return supplier
 
 
-
-
 def _sale(db_session, tenant, branch, *, amount="100.00", status="confirmed"):
     """Create a sale for testing."""
-    from models import Sale, Customer
+    from models import Customer, Sale
 
     customer = db_session.query(Customer).filter_by(tenant_id=tenant.id).first()
     if not customer:
@@ -992,7 +990,7 @@ class TestPAY27ArchiveAndRestore:
 class TestPAY37ApiEndpoints:
     """PAY-37 to PAY-45: the JSON and HTML endpoints behind the payment forms."""
 
-    def test_the_voucher_form_renders(self, client, db_session, sample_tenant, sample_branch):
+    def test_pay37_the_manual_voucher_form_renders(self, client, db_session, sample_tenant, sample_branch):
         """PAY-37. The manual entry form an operator uses at the counter."""
         _payer(client, db_session, sample_tenant, sample_branch)
 
@@ -1008,7 +1006,6 @@ class TestPAY37ApiEndpoints:
         _payer(client, db_session, sample_tenant, sample_branch)
         customer = _customer(db_session, sample_tenant)
 
-        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
         resp = client.post(
             "/payments/voucher/submit",
             data={
@@ -1033,7 +1030,6 @@ class TestPAY37ApiEndpoints:
         from models import Receipt
 
         _payer(client, db_session, sample_tenant, sample_branch)
-        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1051,7 +1047,6 @@ class TestPAY37ApiEndpoints:
 
         customer = _customer(db_session, sample_tenant)
         _payer(client, db_session, sample_tenant, sample_branch)
-        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1082,7 +1077,6 @@ class TestPAY37ApiEndpoints:
         foreign_id = foreign.id
 
         _payer(client, db_session, sample_tenant, sample_branch)
-        before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1095,7 +1089,7 @@ class TestPAY37ApiEndpoints:
         after = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
         assert after == 0, f"a voucher against a foreign customer created a receipt ({0} -> {after})"
 
-    def test_the_voucher_form_renders(self, client, db_session, sample_tenant, sample_branch):
+    def test_pay42_the_voucher_form_refusal_target_renders(self, client, db_session, sample_tenant, sample_branch):
         """PAY-42. The form the refusals redirect back to."""
         _payer(client, db_session, sample_tenant, sample_branch)
 
@@ -1235,7 +1229,7 @@ class TestPAY49ReceiptArchiveAndRestore:
         assert resp.status_code == 200, f"restoring answered {resp.status_code}"
         db_session.expire_all()
         row = db_session.get(Receipt, receipt_id)
-        assert row.payment_confirmed == False, f"restore did not clear archived status: {row.status!r}"
+        assert not row.payment_confirmed, f"restore did not clear archived status: {row.status!r}"
 
     def test_restoring_an_unarchived_receipt_is_handled(self, client, db_session, sample_tenant, sample_branch):
         """PAY-51. Restore on an unarchived receipt is handled gracefully."""
@@ -1286,13 +1280,12 @@ class TestPAY52ReceiptDelete:
         db_session.expire_all()
         row = db_session.get(Receipt, receipt_id)
         assert row is not None, "a linked receipt was purged instead of archived"
-        assert row.payment_confirmed == True, f"a linked receipt was {row.status!r}, expected archived"
+        assert row.payment_confirmed, f"a linked receipt was {row.status!r}, expected archived"
 
     def test_deleting_a_receipt_out_of_scope_is_refused(self, client, db_session, sample_tenant, sample_branch):
         """PAY-54. Cross-tenant receipt deletion is refused."""
         from models import Tenant
 
-        unique = uuid.uuid4().hex[:8]
         other = Tenant(
             name=f"PAY Del Other {uuid.uuid4().hex[:8]}",
             name_ar="آخر",
@@ -1313,10 +1306,10 @@ class TestPAY52ReceiptDelete:
 
 
 class TestPAY54PaymentDelete:
-    """PAY-54 to PAY-56: payment delete with archive-vs-purge logic."""
+    """PAY-78 to PAY-80: payment delete with archive-vs-purge logic."""
 
     def test_deleting_an_unlinked_payment_purges_it(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-54. An unlinked payment is purged."""
+        """PAY-78. An unlinked payment is purged."""
         from models import Payment
 
         payment = _payment(db_session, sample_tenant, sample_branch)
@@ -1330,7 +1323,7 @@ class TestPAY54PaymentDelete:
         assert db_session.get(Payment, payment_id) is None, "an unlinked payment survived a delete"
 
     def test_deleting_a_linked_payment_archives_it(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-55. A payment linked to a purchase is archived."""
+        """PAY-79. A payment linked to a purchase is archived."""
         from models import Payment, Purchase
 
         supplier = _supplier(db_session, sample_tenant)
@@ -1342,7 +1335,6 @@ class TestPAY54PaymentDelete:
             purchase_number=f"PUR-{uuid.uuid4().hex[:8]}",
             purchase_date=datetime.now(UTC),
             total_amount=Decimal("500.00"),
-            
             currency="AED",
             status="confirmed",
             exchange_rate=Decimal("1"),
@@ -1362,13 +1354,12 @@ class TestPAY54PaymentDelete:
         db_session.expire_all()
         row = db_session.get(Payment, payment_id)
         assert row is not None, "a linked payment was purged instead of archived"
-        assert row.payment_confirmed == True, f"linked payment was {row.status!r}, expected archived"
+        assert row.payment_confirmed, f"linked payment was {row.status!r}, expected archived"
 
     def test_deleting_another_tenants_payment_is_refused(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-56. Cross-tenant payment delete is refused."""
+        """PAY-80. Cross-tenant payment delete is refused."""
         from models import Tenant
 
-        unique = uuid.uuid4().hex[:8]
         other = Tenant(
             name=f"PAY Del Other {uuid.uuid4().hex[:8]}",
             name_ar="آخر",
@@ -1530,7 +1521,7 @@ class TestPAY73WhatsAppInvoice:
         """PAY-73. Duplicate guard on WhatsApp invoice."""
         _payer(client, db_session, sample_tenant, sample_branch)
         sale = _sale(db_session, sample_tenant, sample_branch)
-        resp1 = client.post(
+        client.post(  # first send: the side effect is the assertion
             f"/whatsapp/send-invoice/{sale.id}",
             headers={"X-Idempotency-Key": "test-key-1"},
             follow_redirects=False,
@@ -1551,7 +1542,7 @@ class TestPAY74WhatsAppReminder:
         _payer(client, db_session, sample_tenant, sample_branch)
         customer = _customer(db_session, sample_tenant)
 
-        resp1 = client.post(
+        client.post(  # first send: the side effect is the assertion
             f"/whatsapp/send-reminder/{customer.id}",
             json={"message": "Reminder"},
             follow_redirects=False,
