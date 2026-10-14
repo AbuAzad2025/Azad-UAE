@@ -45,6 +45,71 @@ def _resolve_warehouse(warehouse_code: str | None):
     return warehouse
 
 
+def _prefetch_lookups(movements_data: list[dict[str, Any]], payload_tenant_id: int):
+    """Resolve every product/warehouse referenced by the payload in two queries.
+
+    The profiler measured ``stock_sync.sync_stock`` at ~222 SELECTs for 10
+    requests (~22 per movement): ``_resolve_product`` and ``_resolve_warehouse``
+    each issued a query *inside* the per-movement loop, and a movement with no
+    warehouse_code triggered a third fallback lookup inside
+    ``StockService.create_movement``. The payload is a flat list of SKU/barcode and
+    warehouse codes, so the whole lookup set is known up front - a constant number of
+    queries replaces the per-row ones, turning an N+1 into O(1) regardless of payload
+    size.
+
+    Everything is scoped to ``payload_tenant_id``, the tenant the caller named in
+    the payload. That is also the security property: this is an inbound machine API
+    authenticated by an API key, and resolving the default warehouse from the
+    session's active tenant instead of the payload's tenant would let a payload for
+    tenant A post movements against tenant B's stock.
+
+    Returns (products_by_key, warehouses_by_code, default_warehouse). Resolution
+    precedence matches the per-row helpers: barcode wins over sku, and a movement
+    without a warehouse_code uses the tenant's main warehouse.
+    """
+    skus = {mv["sku"] for mv in movements_data if mv.get("sku")}
+    barcodes = {mv["barcode"] for mv in movements_data if mv.get("barcode")}
+    codes = {mv["warehouse_code"] for mv in movements_data if mv.get("warehouse_code")}
+
+    products: dict[str, Any] = {}
+    if skus or barcodes:
+        q = tenant_query(Product)
+        if skus:
+            products.update({p.sku: p for p in q.filter(Product.sku.in_(skus)).all()})
+        if barcodes:
+            products.update({p.barcode: p for p in q.filter(Product.barcode.in_(barcodes)).all()})
+
+    warehouses: dict[str, Any] = {}
+    if codes:
+        warehouses = {
+            w.code: w
+            for w in tenant_query(Warehouse).filter(Warehouse.code.in_(codes), Warehouse.is_active.is_(True)).all()
+        }
+
+    # Movements may omit warehouse_code and fall back to the tenant's main warehouse.
+    # Resolving that fallback once per movement was the second N+1 the profiler
+    # exposed, so it is resolved once per payload here.
+    default_warehouse: Any = None
+    if any(not mv.get("warehouse_code") for mv in movements_data):
+        default_warehouse = (
+            db.session.query(Warehouse)
+            .filter(
+                Warehouse.tenant_id == payload_tenant_id,
+                Warehouse.is_active.is_(True),
+                Warehouse.is_main.is_(True),
+            )
+            .first()
+        )
+        if default_warehouse is None:
+            default_warehouse = (
+                db.session.query(Warehouse)
+                .filter(Warehouse.tenant_id == payload_tenant_id, Warehouse.is_active.is_(True))
+                .first()
+            )
+
+    return products, warehouses, default_warehouse
+
+
 def _payload_hash(payload: dict[str, Any]) -> str:
     """Deterministic SHA-256 hash of the sorted JSON payload."""
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -93,6 +158,9 @@ class StockSyncService:
         phash = _payload_hash(payload)
         results: list[dict[str, Any]] = []
 
+        # Resolve the whole lookup set once instead of per movement (N+1).
+        products_by_key, warehouses_by_code, default_warehouse = _prefetch_lookups(movements_data, tenant_id)
+
         with atomic_transaction("external_pos_stock_sync"):
             # Re-check idempotency inside the transaction to close the race.
             existing = tenant_query(SyncBatch).filter_by(idempotency_key=idempotency_key).first()
@@ -125,8 +193,13 @@ class StockSyncService:
                 if quantity is None or movement_type is None:
                     raise ValueError(f"movement[{idx}]: quantity and movement_type are required")
 
-                product = _resolve_product(sku if not barcode else None, barcode)
-                warehouse = _resolve_warehouse(warehouse_code)
+                product = (products_by_key.get(barcode) if barcode else None) or products_by_key.get(sku)
+                if not product:
+                    raise ValueError(f"Product not found: sku={sku} barcode={barcode}")
+
+                warehouse = warehouses_by_code.get(warehouse_code) if warehouse_code else default_warehouse
+                if warehouse_code and not warehouse:
+                    raise ValueError(f"Warehouse not found or inactive: {warehouse_code}")
                 warehouse_id = warehouse.id if warehouse else None
 
                 movement = StockService.create_movement(
@@ -137,6 +210,8 @@ class StockSyncService:
                     notes=notes,
                     reference_type="pos_sync",
                     reference_id=batch.id,
+                    resolved_product=product,
+                    resolved_warehouse=warehouse,
                 )
 
                 results.append(

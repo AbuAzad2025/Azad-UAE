@@ -318,13 +318,23 @@ class StockService:
         reference_id=None,
         notes=None,
         warehouse_id=None,
+        resolved_product=None,
+        resolved_warehouse=None,
     ):
+        """Create a stock movement.
+
+        ``resolved_product`` / ``resolved_warehouse`` let a caller that already
+        holds these rows (a batch sync, an importer) pass them in instead of making
+        this method re-fetch them per row. They are validated the same way as the
+        fetched ones, so passing them is a pure optimisation: identity and tenant
+        checks still run, and a caller that passes nothing keeps the old behaviour.
+        """
         from utils.field_validators import validate_stock_movement_type
 
         movement_type = validate_stock_movement_type(movement_type)
         qty = Decimal(str(quantity))
         try:
-            product = db.session.get(Product, product_id)
+            product = resolved_product if resolved_product is not None else db.session.get(Product, product_id)
 
             if not product:
                 raise ValueError(
@@ -341,7 +351,11 @@ class StockService:
 
             # تحديد المستودع
             if warehouse_id:
-                warehouse = Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
+                warehouse = (
+                    resolved_warehouse
+                    if resolved_warehouse is not None
+                    else Warehouse.query.filter_by(id=warehouse_id, is_active=True).first()
+                )
                 if not warehouse:
                     raise ValueError(gettext(f"⚠️ المستودع المحدد غير موجود أو غير نشط (ID: {warehouse_id})."))
                 if (
@@ -351,9 +365,11 @@ class StockService:
                 ):
                     raise ValueError(gettext(f"⚠️ المستودع (ID: {warehouse_id}) لا ينتمي لنفس شركة المنتج."))
             else:
-                warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
-                if not warehouse:
-                    warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first()
+                warehouse = resolved_warehouse
+                if warehouse is None:
+                    warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True, is_main=True).first()
+                    if not warehouse:
+                        warehouse = Warehouse.query.filter_by(tenant_id=tenant_id, is_active=True).first()
 
                 if not warehouse:
                     warehouse = Warehouse(

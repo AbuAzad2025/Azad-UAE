@@ -226,3 +226,54 @@ class TestGetSyncStatus:
 
     def test_unknown_batch_returns_none(self, db_session):
         assert StockSyncService.get_sync_status(987654321) is None
+
+
+def test_lookup_queries_do_not_scale_with_payload_size(db_session, sample_tenant, product, warehouse):
+    """Regression: the per-movement *lookup* was an N+1 (measured ~22 SELECTs/movement).
+
+    Product and warehouse resolution now runs once for the whole payload. The
+    per-movement statements that remain are deliberate: the SELECT ... FOR UPDATE on
+    product_warehouse_stock is what stops two concurrent movements from overselling,
+    and the SUM recomputed from that locked row is derived from it. Those must stay
+    per row, so the assertion is about the lookups rather than the raw total.
+    """
+    from sqlalchemy import event
+
+    from extensions import db
+
+    counts: list[str] = []
+
+    def _count(conn, cursor, statement, parameters, context, executemany):  # noqa: ANN001, ARG001
+        head = statement.lstrip()[:6].upper()
+        if not head.startswith(("SELECT", "WITH")):
+            return
+        normalised = " ".join(statement.split())
+        upper = normalised.upper()
+        if "PRODUCT_WAREHOUSE_STOCK" in upper and "FOR UPDATE" in upper:
+            return
+        if normalised.startswith("SELECT coalesce(sum(product_warehouse_stock"):
+            return
+        counts.append(normalised)
+
+    def _run(n: int) -> list[str]:
+        counts.clear()
+        payload = _payload(product, sample_tenant.id)
+        payload["movements"] = [dict(payload["movements"][0]) for _ in range(n)]
+        event.listen(db.engine, "before_cursor_execute", _count)
+        try:
+            StockSyncService.process_sync_payload(payload)
+            db.session.commit()
+        finally:
+            event.remove(db.engine, "before_cursor_execute", _count)
+        return list(counts)
+
+    small = _run(2)
+    large = _run(20)
+    # The lookup set is resolved once per payload, so its cost is a constant:
+    # 1 idempotency check + 1 in-transaction recheck + 1 product IN() + 1 warehouse IN()
+    # (+ 2 when a movement has no warehouse code and the main warehouse is resolved).
+    assert len(small) <= 8, f"unexpected baseline lookup cost: {len(small)}\n" + "\n".join(small[:10])
+    assert len(large) == len(small), (
+        f"lookup queries scale with payload size: {len(small)} for 2 movements, "
+        f"{len(large)} for 20 - the N+1 is back:\n" + "\n".join(sorted(set(large))[:10])
+    )
