@@ -361,12 +361,17 @@ class TestCHQ11CreatingACheque:
         The type is what decides which GL concept a later clear or bounce
         posts against, so a cheque created as the wrong type is a cheque that
         posts to the wrong account when it settles.
+
+        The caller is tenant-wide: the supplier fixture has no purchase or
+        payment in any branch yet, and the create route narrows a
+        branch-scoped caller to suppliers they have transacted with - so a
+        branch payer here would be refused for a reason unrelated to the
+        outgoing type. The scope itself is asserted below, in
+        ``test_a_customer_outside_the_branch_scope_is_refused``.
         """
         from models import Supplier
 
-        _payments_user(
-            client, db_session, sample_tenant, sample_branch, slug="chq-out", permissions=["manage_payments"]
-        )
+        _payments_user(client, db_session, sample_tenant, None, slug="chq-out", permissions=["manage_payments"])
         supplier = db_session.query(Supplier).filter_by(tenant_id=sample_tenant.id).first()
         if supplier is None:
             supplier = Supplier(
@@ -395,12 +400,13 @@ class TestCHQ11CreatingACheque:
         A refund and a supplier payment look identical from the outside and
         post to completely different accounts, so the party type is the half
         that matters.
+
+        Tenant-wide payer for the same reason as CHQ-12: the customer fixture
+        has no transaction history in any branch.
         """
         from models import Customer
 
-        _payments_user(
-            client, db_session, sample_tenant, sample_branch, slug="chq-refund", permissions=["manage_payments"]
-        )
+        _payments_user(client, db_session, sample_tenant, None, slug="chq-refund", permissions=["manage_payments"])
         customer = db_session.query(Customer).filter_by(tenant_id=sample_tenant.id).first()
         if customer is None:
             customer = Customer(

@@ -125,26 +125,29 @@ def _settling_payer(client, db_session, tenant):
     )
 
 
-def _whatsapp_admin(client, db_session, tenant, branch, *, permissions=("manage_payments", "manage_sales")):
+def _whatsapp_admin(client, db_session, tenant, branch):
     """A signed-in user ``@admin_required`` accepts.
 
     ``/whatsapp/send-reminder`` and ``/whatsapp/test`` are behind
     ``admin_required``, which accepts the platform owner or a role whose slug or
     name is super_admin - never a permission code. A manage_payments holder is
-    refused there, so a scenario about the WhatsApp routes needs this. The slug
-    is distinct from conftest's ``super_admin`` so the two do not collide, and
-    the *name* is what the check matches.
-    """
-    from models import Permission, Role, User
+    refused there, so a scenario about the WhatsApp routes needs this.
 
-    role = db_session.query(Role).filter_by(slug="pay-whatsapp-admin").first()
+    The role is reused rather than created: ``roles.name`` is unique, conftest
+    already holds slug ``super_admin`` and the cheque scenarios hold name
+    ``SUPER_ADMIN``, so a third role with either key would raise
+    UniqueViolation in the full-suite run. Either existing row satisfies the
+    guard, so the user is attached to whichever one is there.
+    """
+    from models import Role, User
+
+    role = db_session.query(Role).filter_by(slug="super_admin").first()
+    if role is None:
+        role = db_session.query(Role).filter_by(name="SUPER_ADMIN").first()
     if role is None:
         role = Role(name="SUPER_ADMIN", slug="pay-whatsapp-admin", is_active=True)
         db_session.add(role)
         db_session.commit()
-    role.permissions = Permission.query.filter(Permission.code.in_(list(permissions))).all()
-    db_session.add(role)
-    db_session.commit()
 
     unique = uuid.uuid4().hex[:8]
     user = User(
