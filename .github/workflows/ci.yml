@@ -96,10 +96,11 @@ jobs:
     needs: [determine-matrix]
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
-    # The integration group runs the whole of tests/integration/ in one pytest
-    # process and needs just over 50 minutes; 45 was killing it at ~85%, which
-    # reported a cancellation instead of the failures hiding behind it.
-    timeout-minutes: 60
+    # The integration slice runs the whole of tests/integration/ in a single
+    # pytest process and consistently needs 50-55 minutes; 45 minutes kills
+    # it at ~85% (reporting cancellation instead of real failures), and 60
+    # minutes was still not enough (cancelled at 61 min). 75 gives headroom.
+    timeout-minutes: 75
     strategy:
       # Never cancel sibling groups: every directory must report, even when
       # another group fails �?" no part of the test suite may be skipped.
