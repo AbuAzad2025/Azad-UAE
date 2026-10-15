@@ -1317,6 +1317,11 @@ def delete_payment(**kwargs):
     has_links = False
     if payment.cheque_id:
         has_links = True
+    # A payment that settled a purchase is that purchase's payment history.
+    # Purging it orphans the purchase - the same reason delete_receipt archives
+    # rather than purges when the receipt is attached to a sale.
+    if payment.purchase_id:
+        has_links = True
 
     try:
         with atomic_transaction("payment_delete"):

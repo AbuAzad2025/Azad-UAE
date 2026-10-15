@@ -24,6 +24,7 @@ def _payment_stub(**kwargs):
         currency = kwargs.get("currency", "AED")
         payment_date = kwargs.get("payment_date", datetime.now(UTC))
         cheque_id = kwargs.get("cheque_id")
+        branch_id = kwargs.get("branch_id", 3)
         sale = kwargs.get("sale")
         sale_id = kwargs.get("sale_id")
 
@@ -58,6 +59,7 @@ def _receipt_stub(**kwargs):
         currency = kwargs.get("currency", "AED")
         receipt_date = kwargs.get("receipt_date", datetime.now(UTC))
         cheque_id = kwargs.get("cheque_id", 5)
+        branch_id = kwargs.get("branch_id", 3)
         customer = kwargs.get("customer", SimpleNamespace(name="Customer"))
 
         base_amount = Receipt.base_amount
@@ -125,6 +127,9 @@ class TestPayment:
         data = _payment_stub().to_dict()
         assert data["payment_number"] == "PAY-1"
         assert data["status_ar"] == "مؤكدة"
+        # The archive snapshot is built from this dict and the restore route
+        # reads the branch out of it, so branch_id cannot be dropped here.
+        assert data["branch_id"] == 3
 
 
 class TestReceipt:
@@ -196,4 +201,6 @@ class TestReceipt:
     def test_to_dict(self):
         data = _receipt_stub().to_dict()
         assert data["receipt_number"] == "RCPT-1"
+        # See TestPayment.test_to_dict: the archive snapshot comes from here.
+        assert data["branch_id"] == 3
         assert data["customer"] == "Customer"

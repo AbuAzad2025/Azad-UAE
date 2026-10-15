@@ -210,4 +210,8 @@ class Payment(db.Model):
             "payment_confirmed": self.payment_confirmed,
             "status_ar": self.status_ar,
             "cheque_id": self.cheque_id,
+            # ArchiveService snapshots to_dict() and the restore route reads the
+            # branch back out of that snapshot to scope the restore. Leaving it
+            # out made every archived payment unrestorable by a branch operator.
+            "branch_id": self.branch_id,
         }

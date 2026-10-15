@@ -125,6 +125,46 @@ def _settling_payer(client, db_session, tenant):
     )
 
 
+def _whatsapp_admin(client, db_session, tenant, branch, *, permissions=("manage_payments", "manage_sales")):
+    """A signed-in user ``@admin_required`` accepts.
+
+    ``/whatsapp/send-reminder`` and ``/whatsapp/test`` are behind
+    ``admin_required``, which accepts the platform owner or a role whose slug or
+    name is super_admin - never a permission code. A manage_payments holder is
+    refused there, so a scenario about the WhatsApp routes needs this. The slug
+    is distinct from conftest's ``super_admin`` so the two do not collide, and
+    the *name* is what the check matches.
+    """
+    from models import Permission, Role, User
+
+    role = db_session.query(Role).filter_by(slug="pay-whatsapp-admin").first()
+    if role is None:
+        role = Role(name="SUPER_ADMIN", slug="pay-whatsapp-admin", is_active=True)
+        db_session.add(role)
+        db_session.commit()
+    role.permissions = Permission.query.filter(Permission.code.in_(list(permissions))).all()
+    db_session.add(role)
+    db_session.commit()
+
+    unique = uuid.uuid4().hex[:8]
+    user = User(
+        username=f"pay-wa-admin-{unique}",
+        email=f"pay-wa-admin-{unique}@example.com",
+        full_name="PAY WhatsApp Admin",
+        tenant_id=tenant.id,
+        role_id=role.id,
+        branch_id=branch.id if branch else None,
+        is_active=True,
+    )
+    user.set_password("Str0ng!Pass99")
+    db_session.add(user)
+    db_session.commit()
+
+    client.get("/auth/logout", follow_redirects=True)
+    client.post("/auth/login", data={"username": user.username, "password": "Str0ng!Pass99"}, follow_redirects=True)
+    return user
+
+
 def _customer(db_session, tenant, name="PAY Customer"):
     from models import Customer
 
@@ -161,8 +201,17 @@ def _supplier(db_session, tenant, name="PAY Supplier"):
 
 
 def _sale(db_session, tenant, branch, *, amount="100.00", status="confirmed"):
-    """Create a sale for testing."""
-    from models import Customer, Sale
+    """Create a sale for testing.
+
+    ``sales.customer_id`` and ``sales.seller_id`` are both NOT NULL: a sale
+    names who it is for and who raised it. The seller is taken from any user in
+    the tenant, because a sale is a fact about the books rather than about the
+    caller.
+    """
+    from models import Customer, Sale, User
+
+    seller = db_session.query(User).filter_by(tenant_id=tenant.id).order_by(User.id).first()
+    assert seller is not None, f"no user in tenant {tenant.id} to sell as"
 
     customer = db_session.query(Customer).filter_by(tenant_id=tenant.id).first()
     if not customer:
@@ -180,14 +229,21 @@ def _sale(db_session, tenant, branch, *, amount="100.00", status="confirmed"):
     sale = Sale(
         tenant_id=tenant.id,
         branch_id=branch.id if branch else None,
-        customer_id=None,
+        # sales.customer_id is NOT NULL, and send-invoice refuses a sale with
+        # no customer phone - so the sale carries the customer created above.
+        customer_id=customer.id,
+        seller_id=seller.id,
         sale_number=f"SAL-{uuid.uuid4().hex[:8]}",
         sale_date=datetime.now(UTC),
-        total=Decimal("200.00"),
-        total_aed=Decimal("200.00"),
+        # The column is total_amount/amount_aed, not total/total_aed.
+        subtotal=Decimal("200.00"),
+        total_amount=Decimal("200.00"),
+        amount=Decimal("200.00"),
+        amount_aed=Decimal("200.00"),
         paid_amount=Decimal("0"),
         balance_due=Decimal("200.00"),
         currency="AED",
+        exchange_rate=Decimal("1"),
         status="confirmed",
     )
     db_session.add(sale)
@@ -493,7 +549,7 @@ class TestPAY10TheVoucherBranches:
         db_session.commit()
         foreign = _customer(db_session, other)
 
-        _payer(client, db_session, sample_tenant, sample_branch)
+        _global_payer(client, db_session, sample_tenant)
         before = db_session.query(Receipt).filter_by(tenant_id=sample_tenant.id).count()
 
         resp = self._submit(client, direction="incoming", party_type="customer", party_id=foreign.id)
@@ -1003,7 +1059,11 @@ class TestPAY37ApiEndpoints:
         """PAY-38. The happy path posts a balanced entry and redirects."""
         from models import Receipt
 
-        _payer(client, db_session, sample_tenant, sample_branch)
+        # Tenant-wide payer: the fixture customer has no sale, payment or
+        # receipt in any branch yet, so a branch-scoped operator cannot see it
+        # and the voucher would be refused for a reason unrelated to this
+        # scenario (the scope itself is asserted in PAY-09).
+        _global_payer(client, db_session, sample_tenant)
         customer = _customer(db_session, sample_tenant)
 
         resp = client.post(
@@ -1029,7 +1089,7 @@ class TestPAY37ApiEndpoints:
         """PAY-39. A voucher with no party is rejected and writes nothing."""
         from models import Receipt
 
-        _payer(client, db_session, sample_tenant, sample_branch)
+        _global_payer(client, db_session, sample_tenant)
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1046,7 +1106,7 @@ class TestPAY37ApiEndpoints:
         from models import Receipt
 
         customer = _customer(db_session, sample_tenant)
-        _payer(client, db_session, sample_tenant, sample_branch)
+        _global_payer(client, db_session, sample_tenant)
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1076,7 +1136,9 @@ class TestPAY37ApiEndpoints:
         foreign = _customer(db_session, other)
         foreign_id = foreign.id
 
-        _payer(client, db_session, sample_tenant, sample_branch)
+        # Tenant-wide payer, so the refusal asserted here is the tenant
+        # boundary on a foreign customer and not the branch scope.
+        _global_payer(client, db_session, sample_tenant)
 
         resp = client.post(
             "/payments/voucher/submit",
@@ -1119,8 +1181,13 @@ class TestPAY37ApiEndpoints:
             assert resp.status_code == 200, f"the create-from-sale page answered {resp.status_code}"
 
     def test_the_customer_balance_api_answers(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-44. The API behind the smart return form."""
-        _payer(client, db_session, sample_tenant, sample_branch)
+        """PAY-44. The API behind the smart return form.
+
+        Tenant-wide payer for the same reason as PAY-08: the fixture customer
+        has no sale or payment in any branch, so a branch-scoped caller is
+        refused by the scope - which PAY-09 and PAY-45 already assert.
+        """
+        _global_payer(client, db_session, sample_tenant)
         customer = _customer(db_session, sample_tenant)
 
         resp = client.get(f"/payments/api/customer-balance/{customer.id}", follow_redirects=False)
@@ -1199,8 +1266,14 @@ class TestPAY49ReceiptArchiveAndRestore:
     """
 
     def test_archiving_a_receipt_via_direct_route(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-49. Direct archive route works."""
-        from models import Receipt
+        """PAY-49. Direct archive route works.
+
+        ``archive_record`` writes an ``archived_records`` row and leaves the
+        receipt alone - that is what hides it from the list, via the EXISTS
+        filter on the receipts page. So "was archived" is the archive row, not a
+        column on the receipt.
+        """
+        from models import ArchivedRecord, Receipt
 
         _payer(client, db_session, sample_tenant, sample_branch)
         receipt = _receipt(db_session, sample_tenant, sample_branch)
@@ -1209,13 +1282,24 @@ class TestPAY49ReceiptArchiveAndRestore:
         resp = client.post(f"/payments/receipts/{receipt_id}/archive", follow_redirects=True)
         assert resp.status_code == 200, f"archiving via direct route answered {resp.status_code}"
         db_session.expire_all()
-        assert db_session.get(Receipt, receipt_id).status == "archived", (
-            f"the receipt was not archived: {db_session.get(Receipt, receipt_id).status!r}"
+        assert db_session.get(Receipt, receipt_id) is not None, (
+            "archiving via the direct route purged the row; archive must hide, not purge"
         )
+        archived = (
+            db_session.query(ArchivedRecord)
+            .filter_by(tenant_id=sample_tenant.id, table_name="receipts", record_id=receipt_id)
+            .first()
+        )
+        assert archived is not None, "the archive route wrote no archived_records row, so nothing was archived"
 
     def test_restoring_an_archived_receipt(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-50. Restore brings it back."""
-        from models import Receipt
+        """PAY-50. Restore brings it back.
+
+        Restore resolves the id through the archive and drops the
+        ``archived_records`` row; the receipt itself is never deleted or
+        mutated, so it must be intact and unarchived afterwards.
+        """
+        from models import ArchivedRecord, Receipt
 
         _payer(client, db_session, sample_tenant, sample_branch)
         receipt = _receipt(db_session, sample_tenant, sample_branch)
@@ -1223,23 +1307,41 @@ class TestPAY49ReceiptArchiveAndRestore:
 
         client.post(f"/payments/receipts/{receipt_id}/archive", follow_redirects=True)
         db_session.expire_all()
-        assert db_session.get(Receipt, receipt_id).status == "archived"
+        assert (
+            db_session.query(ArchivedRecord)
+            .filter_by(tenant_id=sample_tenant.id, table_name="receipts", record_id=receipt_id)
+            .first()
+            is not None
+        ), "the precondition failed: the receipt was not archived"
 
         resp = client.post(f"/payments/receipts/{receipt_id}/restore", follow_redirects=True)
         assert resp.status_code == 200, f"restoring answered {resp.status_code}"
         db_session.expire_all()
         row = db_session.get(Receipt, receipt_id)
-        assert not row.payment_confirmed, f"restore did not clear archived status: {row.status!r}"
+        assert row is not None, "restore deleted the receipt; it is a move back, not a purge"
+        assert (
+            db_session.query(ArchivedRecord)
+            .filter_by(tenant_id=sample_tenant.id, table_name="receipts", record_id=receipt_id)
+            .first()
+            is None
+        ), "restore left the archived_records row behind, so the receipt is still hidden"
 
     def test_restoring_an_unarchived_receipt_is_handled(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-51. Restore on an unarchived receipt is handled gracefully."""
+        """PAY-51. Restore on an unarchived receipt is handled gracefully.
+
+        Restore resolves the id through the archive, so there is nothing to
+        restore and the route 404s - the same reading as PAY-28 on the payment
+        side. The assertion is that it reports rather than raises.
+        """
 
         _payer(client, db_session, sample_tenant, sample_branch)
         receipt = _receipt(db_session, sample_tenant, sample_branch)
         receipt_id = receipt.id
 
         resp = client.post(f"/payments/receipts/{receipt_id}/restore", follow_redirects=True)
-        assert resp.status_code == 200, f"restoring a live receipt answered {resp.status_code}"
+        assert resp.status_code in (200, 404), (
+            f"restoring a live receipt answered {resp.status_code}; there is no archive to restore"
+        )
         assert "Internal Server Error" not in resp.get_data(as_text=True), (
             "restoring a live receipt raised instead of reporting"
         )
@@ -1268,7 +1370,7 @@ class TestPAY52ReceiptDelete:
         A receipt with a source sale is linked to history. Deleting it would
         orphan the sale's payment record, so the route archives instead.
         """
-        from models import Receipt
+        from models import ArchivedRecord, Receipt
 
         receipt = _receipt(db_session, sample_tenant, sample_branch, source_type="sale", source_id=999001)
         _payer(client, db_session, sample_tenant, sample_branch)
@@ -1280,7 +1382,12 @@ class TestPAY52ReceiptDelete:
         db_session.expire_all()
         row = db_session.get(Receipt, receipt_id)
         assert row is not None, "a linked receipt was purged instead of archived"
-        assert row.payment_confirmed, f"a linked receipt was {row.status!r}, expected archived"
+        assert (
+            db_session.query(ArchivedRecord)
+            .filter_by(tenant_id=sample_tenant.id, table_name="receipts", record_id=receipt_id)
+            .first()
+            is not None
+        ), "a linked receipt was kept but not archived, so it is still listed as live"
 
     def test_deleting_a_receipt_out_of_scope_is_refused(self, client, db_session, sample_tenant, sample_branch):
         """PAY-54. Cross-tenant receipt deletion is refused."""
@@ -1324,9 +1431,10 @@ class TestPAY54PaymentDelete:
 
     def test_deleting_a_linked_payment_archives_it(self, client, db_session, sample_tenant, sample_branch):
         """PAY-79. A payment linked to a purchase is archived."""
-        from models import Payment, Purchase
+        from models import ArchivedRecord, Payment, Purchase
 
         supplier = _supplier(db_session, sample_tenant)
+        user = _payer(client, db_session, sample_tenant, sample_branch)
         purchase = Purchase(
             tenant_id=sample_tenant.id,
             branch_id=sample_branch.id,
@@ -1334,7 +1442,14 @@ class TestPAY54PaymentDelete:
             supplier_name=supplier.name,
             purchase_number=f"PUR-{uuid.uuid4().hex[:8]}",
             purchase_date=datetime.now(UTC),
+            # purchases.user_id is NOT NULL: a purchase names who raised it.
+            user_id=user.id,
+            # amount/amount_aed/currency are NOT NULL and denormalised from the
+            # total, so the fixture carries them the way _purchase does above.
+            subtotal=Decimal("500.00"),
             total_amount=Decimal("500.00"),
+            amount=Decimal("500.00"),
+            amount_aed=Decimal("500.00"),
             currency="AED",
             status="confirmed",
             exchange_rate=Decimal("1"),
@@ -1347,14 +1462,18 @@ class TestPAY54PaymentDelete:
         db_session.commit()
         payment_id = payment.id
 
-        _payer(client, db_session, sample_tenant, sample_branch)
         resp = client.post(f"/payments/payments/{payment_id}/delete", follow_redirects=True)
         assert resp.status_code == 200, f"deleting a linked payment answered {resp.status_code}"
 
         db_session.expire_all()
         row = db_session.get(Payment, payment_id)
         assert row is not None, "a linked payment was purged instead of archived"
-        assert row.payment_confirmed, f"linked payment was {row.status!r}, expected archived"
+        assert (
+            db_session.query(ArchivedRecord)
+            .filter_by(tenant_id=sample_tenant.id, table_name="payments", record_id=payment_id)
+            .first()
+            is not None
+        ), "a linked payment was kept but not archived, so it is still listed as live"
 
     def test_deleting_another_tenants_payment_is_refused(self, client, db_session, sample_tenant, sample_branch):
         """PAY-80. Cross-tenant payment delete is refused."""
@@ -1401,20 +1520,22 @@ class TestPAY58WhatsAppInvoice:
         assert resp.status_code in (200, 302, 403), f"send invoice answered {resp.status_code}"
 
     def test_sending_payment_reminder(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-59. Send payment reminder via WhatsApp."""
-        _payer(client, db_session, sample_tenant, sample_branch)
+        """PAY-59. Send payment reminder via WhatsApp.
+
+        The route is ``/send-reminder/<customer_id>`` and takes the customer
+        from the path, not from a JSON body, and it is behind ``admin_required``.
+        """
+        _whatsapp_admin(client, db_session, sample_tenant, sample_branch)
         customer = _customer(db_session, sample_tenant)
         resp = client.post(
-            "/whatsapp/send-reminder",
-            json={"customer_id": customer.id, "message": "Payment reminder"},
-            headers={"Content-Type": "application/json"},
+            f"/whatsapp/send-reminder/{customer.id}",
             follow_redirects=False,
         )
         assert resp.status_code in (200, 400, 403), f"send reminder answered {resp.status_code}"
 
     def test_whatsapp_connection_test(self, client, db_session, sample_tenant, sample_branch):
         """PAY-60. Test WhatsApp connection."""
-        _payer(client, db_session, sample_tenant, sample_branch)
+        _whatsapp_admin(client, db_session, sample_tenant, sample_branch)
         resp = client.get("/whatsapp/test", follow_redirects=False)
         assert resp.status_code in (200, 403, 503), f"whatsapp test answered {resp.status_code}"
 
@@ -1434,7 +1555,12 @@ class TestPAY61AuthEndpoints:
         assert resp.status_code in (200, 302), f"authenticated access answered {resp.status_code}"
 
     def test_login_fails_with_wrong_password(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-62. Wrong password is rejected."""
+        """PAY-62. Wrong password is rejected.
+
+        The refusal is the login page re-rendered with the danger flash
+        ("اسم المستخدم أو كلمة المرور غير صحيحة") and, the part that matters,
+        no session: the next protected request still redirects.
+        """
         _payer(client, db_session, sample_tenant, sample_branch)
         client.get("/auth/logout", follow_redirects=True)
         resp = client.post(
@@ -1443,7 +1569,12 @@ class TestPAY61AuthEndpoints:
             follow_redirects=True,
         )
         assert resp.status_code == 200, f"wrong password answered {resp.status_code}"
-        assert "خطأ" in resp.get_data(as_text=True) or "error" in resp.get_data(as_text=True).lower()
+        body = resp.get_data(as_text=True)
+        assert "غير صحيحة" in body, "a wrong password did not render the refusal message"
+        after = client.get("/payments/", follow_redirects=False)
+        assert after.status_code in (302, 401, 403), (
+            f"a wrong password left a session behind; /payments/ answered {after.status_code}"
+        )
 
     def test_logout_works(self, client, db_session, sample_tenant, sample_branch):
         """PAY-63. Logout clears session."""
@@ -1470,10 +1601,37 @@ class TestPAY61AuthEndpoints:
         assert resp.status_code == 200, f"2FA disable answered {resp.status_code}"
 
     def test_verify_2fa_page_renders(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-66. Verify 2FA page renders."""
-        _payer(client, db_session, sample_tenant, sample_branch)
+        """PAY-66. Verify 2FA page renders.
+
+        The route only renders for a pending challenge, so it is driven through
+        the real thing: park the password-verified user in the session the way
+        login does and then ask for the page. Without a challenge it answers a
+        redirect to login, which is asserted first so the 200 below cannot be a
+        page served to anyone.
+        """
+        user = _payer(client, db_session, sample_tenant, sample_branch)
+
+        guarded = client.get("/auth/verify-2fa", follow_redirects=False)
+        assert guarded.status_code == 302, (
+            f"verify 2FA answered {guarded.status_code} with no challenge; the guard is not there"
+        )
+        assert "/auth/login" in guarded.headers.get("Location", ""), (
+            f"verify 2FA redirected to {guarded.headers.get('Location')!r}, not the login page"
+        )
+
+        with client.session_transaction() as flask_session:
+            flask_session["pending_2fa"] = {
+                "user_id": int(user.id),
+                "remember": False,
+                "access_mode": "users",
+                "tenant_id": sample_tenant.id,
+                "branch_id": sample_branch.id if sample_branch else None,
+                "issued_at": datetime.now(UTC).timestamp(),
+            }
+
         resp = client.get("/auth/verify-2fa", follow_redirects=False)
         assert resp.status_code == 200, f"verify 2FA page answered {resp.status_code}"
+        assert "Internal Server Error" not in resp.get_data(as_text=True), "the verify 2FA page raised"
 
     def test_payment_status_page_requires_valid_token(self, client, db_session, sample_tenant, sample_branch):
         """PAY-67. Payment status page requires valid token."""
@@ -1492,10 +1650,16 @@ class TestPAY61AuthEndpoints:
         assert resp.status_code == 403, f"invalid signature answered {resp.status_code}"
 
     def test_available_currencies_endpoint(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-69. Available currencies endpoint."""
+        """PAY-69. Available currencies endpoint.
+
+        The list comes from the NOWPayments gateway, which is unconfigured in
+        tests, so the honest answers are 200 with data or 400 with the reason.
+        What must not happen is an unhandled failure - a 500 with no envelope.
+        """
         _payer(client, db_session, sample_tenant, sample_branch)
         resp = client.get("/auth/payment/currencies", follow_redirects=False)
-        assert resp.status_code == 200, f"currencies endpoint answered {resp.status_code}"
+        assert resp.status_code in (200, 400), f"currencies endpoint answered {resp.status_code}"
+        assert resp.get_json() is not None, "currencies endpoint answered without a JSON envelope"
 
     def test_estimate_amount_endpoint(self, client, db_session, sample_tenant, sample_branch):
         """PAY-70. Estimate amount endpoint."""
@@ -1538,18 +1702,21 @@ class TestPAY74WhatsAppReminder:
     """PAY-74. WhatsApp reminder duplicate guard."""
 
     def test_whatsapp_reminder_duplicate_is_idempotent(self, client, db_session, sample_tenant, sample_branch):
-        """PAY-74. Duplicate reminder is idempotent."""
-        _payer(client, db_session, sample_tenant, sample_branch)
+        """PAY-74. Duplicate reminder is idempotent.
+
+        ``send-reminder`` is behind ``admin_required``, so the caller is an
+        admin here; a manage_payments holder would answer 403 on both calls and
+        the guard would never be exercised.
+        """
+        _whatsapp_admin(client, db_session, sample_tenant, sample_branch)
         customer = _customer(db_session, sample_tenant)
 
         client.post(  # first send: the side effect is the assertion
             f"/whatsapp/send-reminder/{customer.id}",
-            json={"message": "Reminder"},
             follow_redirects=False,
         )
         resp2 = client.post(
             f"/whatsapp/send-reminder/{customer.id}",
-            json={"message": "Reminder"},
             follow_redirects=False,
         )
         assert resp2.status_code in (200, 409), f"duplicate reminder answered {resp2.status_code}"

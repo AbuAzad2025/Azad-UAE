@@ -66,6 +66,10 @@ def _mock_payment(**kwargs):
     p.tenant_id = 1
     p.supplier_id = kwargs.get("supplier_id")
     p.cheque_id = kwargs.get("cheque_id")
+    # Declared explicitly: an undeclared attribute on a MagicMock is a truthy
+    # Mock, and delete_payment treats a linked purchase as "archive, do not
+    # purge" - so leaving it off would silently take the archive branch.
+    p.purchase_id = kwargs.get("purchase_id")
     p.cheque = kwargs.get("cheque")
     p.user = MagicMock(full_name="Tester", username="tester")
     p.user.get_display_name = MagicMock(return_value="Tester")
