@@ -96,11 +96,15 @@ jobs:
     needs: [determine-matrix]
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
-    # The integration slice runs the whole of tests/integration/ in a single
-    # pytest process and consistently needs 50-55 minutes; 45 minutes kills
-    # it at ~85% (reporting cancellation instead of real failures), and 60
-    # minutes was still not enough (cancelled at 61 min). 75 gives headroom.
-    timeout-minutes: 75
+    # Real work is ~50 min: interpreter setup, pip cache restore, `flask db
+    # upgrade` over 54 revisions, then 2394 tests in 0:49:45 measured on the
+    # integration slice. 120 leaves >2x headroom for a slow runner so a
+    # legitimate run is never killed on time. The job was previously reported
+    # "cancelled" repeatedly, but not by this limit - the optional Codecov
+    # upload hung retrying a tokenless upload long after pytest had passed.
+    # That step is now gated on the token and bounded; this number is the
+    # backstop, not the fix.
+    timeout-minutes: 120
     strategy:
       # Never cancel sibling groups: every directory must report, even when
       # another group fails �?" no part of the test suite may be skipped.
@@ -222,7 +226,15 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage to Codecov (optional)
-        if: always()
+        # Only when a token exists. This repo has no CODECOV_TOKEN, and a
+        # tokenless upload is rejected ("not valid tokenless upload") after
+        # retrying for ~24 minutes - which was the reason the integration job
+        # reported "cancelled" 24 minutes AFTER pytest had already passed
+        # 2394 tests. fail_ci_if_error only covers the exit code; it does not
+        # stop the retries. Bounded anyway so the step can never eat the
+        # job budget again.
+        if: always() && secrets.CODECOV_TOKEN != ''
+        timeout-minutes: 5
         uses: codecov/codecov-action@v7
         with:
           files: ./coverage-${{ matrix.cov-flag }}.xml
