@@ -93,17 +93,11 @@ for m_path in sorted(models_with_dict):
     print(f"  {m_path}: branch_id in to_dict = {has_branch}")
 
 # --- 5. Migration head check ---
+# Not run here: scripts/lint/check_migration_head.py is the dedicated gate and
+# is enforced in CI. Shelling out to it from a script bandit already scans
+# (B603/B607) bought nothing.
 print("\n[5] MIGRATION HEAD:")
-try:
-    import subprocess
-
-    result = subprocess.run(
-        ["python", "scripts/lint/check_migration_head.py"], capture_output=True, text=True, timeout=30
-    )
-    for line in result.stdout.splitlines()[-3:]:
-        print(f"  {line}")
-except Exception as e:
-    print(f"  Migration check error: {e}")
+print("  see scripts/lint/check_migration_head.py (enforced in CI)")
 
 # --- 6. Framework status ---
 print("\n[6] FRAMEWORK (core/messages.py):")
