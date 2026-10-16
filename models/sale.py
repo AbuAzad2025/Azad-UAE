@@ -386,6 +386,10 @@ class Sale(db.Model):
             "currency": self.currency,
             "payment_status": self.payment_status,
             "status": self.status,
+            "tenant_id": getattr(self, "tenant_id", None),
+            "branch_id": getattr(self, "branch_id", None),
+            "customer_id": getattr(self, "customer_id", None),
+            "sale_id": getattr(self, "sale_id", None),
         }
 
         if include_lines:

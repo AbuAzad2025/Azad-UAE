@@ -179,4 +179,6 @@ class Customer(db.Model):
             "balance_aed": float(self.get_balance_aed()),
             "total_purchases": float(self.total_purchases or 0),
             "is_active": self.is_active,
+            "tenant_id": getattr(self, "tenant_id", None),
+            "branch_id": getattr(self, "branch_id", None),
         }

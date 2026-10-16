@@ -120,4 +120,7 @@ class Expense(db.Model):
             "expense_date": self.expense_date.isoformat(),
             "payment_method": self.payment_method,
             "status": self.status,
+            "tenant_id": getattr(self, "tenant_id", None),
+            "branch_id": getattr(self, "branch_id", None),
+            "category_id": getattr(self, "category_id", None),
         }

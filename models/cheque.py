@@ -253,6 +253,8 @@ class Cheque(db.Model):
             "payee_name": self.payee_name,
             "customer_id": self.customer_id,
             "supplier_id": self.supplier_id,
+            "tenant_id": getattr(self, "tenant_id", None),
+            "branch_id": getattr(self, "branch_id", None),
         }
 
     @staticmethod

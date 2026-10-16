@@ -236,6 +236,7 @@ class Product(db.Model):
             "unit": self.unit,
             "is_active": self.is_active,
             "is_low_stock": self.is_low_stock(),
+            "tenant_id": getattr(self, "tenant_id", None),
         }
 
         if include_cost:

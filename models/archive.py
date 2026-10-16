@@ -45,4 +45,5 @@ class ArchivedRecord(db.Model):
             "record_id": self.record_id,
             "archived_at": self.archived_at.isoformat(),
             "can_restore": self.can_restore,
+            "tenant_id": getattr(self, "tenant_id", None),
         }

@@ -263,6 +263,10 @@ class Purchase(db.Model):
             "total_amount": float(self.total_amount),
             "currency": self.currency,
             "status": self.status,
+            "tenant_id": getattr(self, "tenant_id", None),
+            "branch_id": getattr(self, "branch_id", None),
+            "supplier_id": getattr(self, "supplier_id", None),
+            "user_id": getattr(self, "user_id", None),
         }
 
         if include_lines:
