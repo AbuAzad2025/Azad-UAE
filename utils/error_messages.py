@@ -1,7 +1,31 @@
 """
-Error Messages - رسائل الأخطاء الموحدة والواضحة
+Error Messages - رسائل الأخطاء الموحدة والوضيحة
 جميع الرسائل بالعربية مع hints ومساعدة
+
+Governance (see also ``report_system_error`` at the bottom of this module):
+
+* A SYSTEM failure - database error, timeout, unhandled exception - is logged
+  with its full traceback and shown to the user only as a clean, reassuring
+  sentence plus a short reference they can quote to support. The database
+  message, the SQL and the Python exception never reach the page.
+* A BUSINESS or VALIDATION failure is not a crash. It is guidance: what went
+  wrong in business terms, and what to do about it next.
 """
+
+import logging
+import uuid
+
+from flask import current_app
+
+
+class ErrorCategory:
+    """How a failure is classified, which decides who sees what."""
+
+    SYSTEM = "system"
+    BUSINESS = "business"
+    VALIDATION = "validation"
+    SECURITY = "security"
+    STATE = "state"
 
 
 class ErrorMessages:
@@ -38,8 +62,15 @@ class ErrorMessages:
         return "كلمتا المرور غير متطابقتين.\nتأكد من كتابة نفس كلمة المرور في الحقلين."
 
     @staticmethod
-    def user_update_failed(err):
-        return f"فشل تحديث بيانات المستخدم.\nالخطأ: {err}\nتحقق من البيانات المدخلة وحاول مرة أخرى."
+    def user_update_failed(err=None):
+        # ``err`` is accepted for call-site compatibility but deliberately NOT
+        # rendered: it is a raw exception, and interpolating one puts SQL,
+        # table names and constraint names on the page. The trace belongs in the
+        # log - use report_system_error() at the call site to record it.
+        return (
+            "تعذّر تحديث بيانات المستخدم.\n"
+            "تحقق من الحقول المعدّلة ثم أعد المحاولة. إن تكرّر الخطأ، تواصل مع الدعم واذكر رقم المرجع."
+        )
 
     @staticmethod
     def user_delete_self():
@@ -165,8 +196,15 @@ class ErrorMessages:
         return f"حجم الملف كبير جداً.\nالحد الأقصى: {max_size_mb}MB\nقم بضغط الملف أو اختر ملفاً أصغر."
 
     @staticmethod
-    def file_upload_failed(err):
-        return f"فشل رفع الملف.\nالسبب: {err}\nتأكد من الملف وحاول مرة أخرى."
+    def file_upload_failed(err=None):
+        # See user_update_failed(): the raw exception is not rendered. An
+        # upload failure is usually a size, type or permissions problem, so the
+        # guidance names those rather than echoing the server's error text.
+        return (
+            "فشل رفع الملف.\n"
+            "تحقق من نوع الملف وحجمه وصلاحيات المجلد، ثم أعد المحاولة. "
+            "إن تكرّر الخطأ، تواصل مع الدعم واذكر رقم المرجع."
+        )
 
     @staticmethod
     def database_error():
@@ -174,9 +212,19 @@ class ErrorMessages:
 
     @staticmethod
     def unexpected_error(error_id=None):
+        # With a reference it is actionable AND traceable: the user knows what to do
+        # next and can quote a code that ties the page to the log entry.
         if error_id:
-            return f"حدث خطأ غير متوقع. رقم المرجع: {error_id}"
-        return "حدث خطأ غير متوقع.\nإذا استمرت المشكلة، اتصل بالدعم الفني."
+            return (
+                "حدث خطأ تقني غير متوقع أثناء تنفيذ العملية.\n"
+                "لم يتم إتمام العملية، ولم يتأثر أي سجل آخر. "
+                "يرجى المحاولة مرة أخرى، وإن تكرّر الخطأ تواصل مع الدعم الفني واذكر رقم المرجع: "
+                f"{error_id}"
+            )
+        return (
+            "حدث خطأ تقني غير متوقع أثناء تنفيذ العملية.\n"
+            "لم يتم إتمام العملية. يرجى المحاولة مرة أخرى، وإن تكرّر الخطأ تواصل مع الدعم الفني."
+        )
 
     @staticmethod
     def create_failed(entity_type):
@@ -347,3 +395,54 @@ def hint(msg):
 
 def success(msg):
     return f"{msg}"
+
+
+# ── System-failure reporting ──────────────────────────────────────────────────
+#
+# The one rule: an unexpected exception is a system failure, so it is logged in
+# full and reported to the user as a calm sentence plus a reference. Call sites
+# used to build that sentence by hand - uuid4().hex[:8] passed to
+# unexpected_error() - which guaranteed nothing: the trace was often never
+# logged, and several routes interpolated str(e) straight into the flash, which
+# put "duplicate key value violates unique constraint \"uq_...\"" and similar
+# straight onto the page. report_system_error() makes both halves one call.
+
+
+def new_error_reference() -> str:
+    """A short reference a user can read out to support."""
+    return uuid.uuid4().hex[:8].upper()
+
+
+def report_system_error(
+    exception: BaseException,
+    *,
+    context: str = "",
+    logger=None,
+) -> str:
+    """Log the technical truth, return only what is safe to show a user.
+
+    The traceback and the exception repr go to the log. The returned string is
+    the clean user-facing text: no database message, no SQL, no Python
+    exception, no stack trace - just what happened and what to do next, with a
+    reference that ties the page back to the log entry.
+
+    ``context`` should name the operation ("payment archive", "delete receipt")
+    so the log entry is searchable without reading the traceback.
+    """
+    reference = new_error_reference()
+    entry = logger if logger is not None else _default_logger()
+    entry.error(
+        "system_error ref=%s context=%s",
+        reference,
+        context or "-",
+        exc_info=(type(exception), exception, exception.__traceback__),
+    )
+    return ErrorMessages.unexpected_error(reference)
+
+
+def _default_logger():
+    """The app logger inside a request, the module logger outside one."""
+    try:
+        return current_app.logger
+    except RuntimeError:
+        return logging.getLogger(__name__)

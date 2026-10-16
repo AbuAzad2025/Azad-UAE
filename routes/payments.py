@@ -29,6 +29,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency, resolve_tenant_base_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import report_system_error
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
@@ -490,8 +491,13 @@ def archive_payment(**kwargs):
             LoggingCore.log_audit("archive", "payments", payment.id)
 
     except Exception as e:
-        current_app.logger.error(f"Failed to archive payment {record_id}: {e}")
-        flash(gettext(f"فشلت الأرشفة: {str(e)}"), "danger")
+        # The trace goes to the log with a reference; the page gets the calm
+        # sentence only. str(e) here used to put constraint names and SQL on
+        # screen.
+        flash(
+            report_system_error(e, context=f"archive payment {record_id}", logger=current_app.logger),
+            "danger",
+        )
         return redirect(url_for("payments.receipts"))
 
     return redirect(url_for("payments.receipts"))
@@ -549,11 +555,15 @@ def create_from_sale(sale_id):
             try:
                 default_currency = (sale.currency or "").strip() or resolve_default_currency()
             except Exception as e:
-                import sys
-                import traceback
-
-                sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency: {e}\n")
-                traceback.print_exc()
+                # One structured log line with the traceback, instead of
+                # sys.stderr.write + traceback.print_exc() beside the same
+                # event. stderr bypasses the configured handlers, so this never
+                # reached the JSONL sink or the log rotation.
+                current_app.logger.warning(
+                    "create_from_sale: tenant default currency unavailable: %s",
+                    e,
+                    exc_info=True,
+                )
                 try:
                     LoggingCore.log_error(
                         message=str(e),
@@ -645,7 +655,7 @@ def create_from_sale(sale_id):
 
         except Exception as e:
             flash(
-                gettext(f"حدث خطأ: {str(e)}\nتحقق من البيانات المدخلة وحاول مرة أخرى."),
+                report_system_error(e, context=f"create receipt from sale {sale.id}", logger=current_app.logger),
                 "danger",
             )
 
@@ -713,11 +723,11 @@ def create_voucher_submit():
         try:
             default_currency = resolve_default_currency()
         except Exception as e:
-            import sys
-            import traceback
-
-            sys.stderr.write(f"[PAYMENTS_WARNING] Failed to get tenant default currency (voucher submit): {e}\n")
-            traceback.print_exc()
+            current_app.logger.warning(
+                "create_voucher_submit: tenant default currency unavailable: %s",
+                e,
+                exc_info=True,
+            )
             try:
                 LoggingCore.log_error(
                     message=str(e),
@@ -950,8 +960,10 @@ def create_voucher_submit():
                 return redirect(url_for("payments.receipts"))
 
     except Exception as e:
-        current_app.logger.error(f"Voucher creation error: {e}")
-        flash(gettext(f"حدث خطأ أثناء حفظ السند: {str(e)}"), "danger")
+        flash(
+            report_system_error(e, context=f"voucher submit {direction}/{party_type}", logger=current_app.logger),
+            "danger",
+        )
         return redirect(url_for("payments.create_voucher"))
 
     return redirect(url_for("payments.receipts"))
@@ -1088,11 +1100,11 @@ def print_receipt(**kwargs):
     try:
         return render_template(template_path, **ctx)
     except Exception as e:
-        import sys
-        import traceback
-
-        sys.stderr.write(f"[PAYMENTS_WARNING] Failed to render custom receipt template, falling back to modern: {e}\n")
-        traceback.print_exc()
+        current_app.logger.warning(
+            "print_receipt: custom template render failed, falling back to modern: %s",
+            e,
+            exc_info=True,
+        )
         try:
             LoggingCore.log_error(
                 message=str(e),
@@ -1295,7 +1307,10 @@ def delete_receipt(**kwargs):
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
-        flash(gettext(f"فشل الحذف: {str(e)}"), "danger")
+        flash(
+            report_system_error(e, context=f"delete receipt {record_id}", logger=current_app.logger),
+            "danger",
+        )
         return redirect(url_for("payments.view_receipt", id=record_id))
 
 
@@ -1366,7 +1381,10 @@ def delete_payment(**kwargs):
         return redirect(url_for("payments.receipts"))
 
     except Exception as e:
-        flash(gettext(f"فشل الحذف: {str(e)}"), "danger")
+        flash(
+            report_system_error(e, context=f"delete payment {record_id}", logger=current_app.logger),
+            "danger",
+        )
         return redirect(url_for("payments.view_payment", id=record_id))
 
 
@@ -1429,13 +1447,11 @@ def create_payment(purchase_id):
             try:
                 default_currency = (purchase.currency or "").strip() or resolve_default_currency()
             except Exception as e:
-                import sys
-                import traceback
-
-                sys.stderr.write(
-                    f"[PAYMENTS_WARNING] Failed to get tenant default currency (create from purchase): {e}\n"
+                current_app.logger.warning(
+                    "create_payment: tenant default currency unavailable: %s",
+                    e,
+                    exc_info=True,
                 )
-                traceback.print_exc()
                 try:
                     LoggingCore.log_error(
                         message=str(e),
@@ -1592,7 +1608,10 @@ def create_payment(purchase_id):
             return redirect(url_for("purchases.view", id=purchase_id))
 
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {str(e)}"), "danger")
+            flash(
+                report_system_error(e, context=f"create payment for purchase {purchase_id}", logger=current_app.logger),
+                "danger",
+            )
 
     return render_template(
         "payments/create_receipt.html",
