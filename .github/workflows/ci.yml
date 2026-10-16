@@ -226,14 +226,13 @@ jobs:
           retention-days: 14
 
       - name: Upload coverage to Codecov (optional)
-        # Only when a token exists. This repo has no CODECOV_TOKEN, and a
-        # tokenless upload is rejected ("not valid tokenless upload") after
-        # retrying for ~24 minutes - which was the reason the integration job
-        # reported "cancelled" 24 minutes AFTER pytest had already passed
-        # 2394 tests. fail_ci_if_error only covers the exit code; it does not
-        # stop the retries. Bounded anyway so the step can never eat the
-        # job budget again.
-        if: always() && secrets.CODECOV_TOKEN != ''
+        # This repo has no CODECOV_TOKEN, and a tokenless upload is rejected
+        # ("not valid tokenless upload") after retrying for ~24 minutes - which
+        # is why the integration job reported "cancelled" 24 minutes AFTER
+        # pytest had already passed 2394 tests. fail_ci_if_error covers the exit
+        # code, not the retries, so the step is bounded instead: the upload is
+        # optional and must never eat the job's time budget.
+        if: always()
         timeout-minutes: 5
         uses: codecov/codecov-action@v7
         with:
