@@ -6,6 +6,7 @@ from flask_babel import gettext
 
 from extensions import db
 from services.gl_service import GLService
+from utils.error_messages import ErrorMessages
 from utils.gl_reference_types import GLRef
 from utils.gl_services import (
     gl_ensure_core_accounts,
@@ -163,20 +164,54 @@ class ChequeService:
 
 
 def validate_cheque(cheque):
+    # BusinessRuleError, not ValueError: these are field validations, and the
+    # route layer must show the field name rather than treat them as a crash.
+    # It still subclasses ValueError, so any existing `except ValueError` keeps
+    # working.
+    from utils.error_messages import BusinessRuleError, ErrorCategory
+
     if not cheque.cheque_number:
-        raise ValueError(gettext("رقم الشيك مطلوب"))
+        raise BusinessRuleError(
+            gettext("رقم الشيك مطلوب. أدخل رقم الشيك ثم أعد المحاولة."),
+            category=ErrorCategory.VALIDATION,
+            field="cheque_number",
+        )
     if not cheque.cheque_bank_number:
-        raise ValueError(gettext("رقم الشيك البنكي مطلوب"))
+        raise BusinessRuleError(
+            gettext("رقم الشيك البنكي مطلوب. أدخل الرقم كما هو مدوّن على الشيك ثم أعد المحاولة."),
+            category=ErrorCategory.VALIDATION,
+            field="cheque_bank_number",
+        )
     if not cheque.bank_name:
-        raise ValueError(gettext("اسم البنك مطلوب"))
+        raise BusinessRuleError(
+            gettext("اسم البنك مطلوب. اختر البنك من القائمة أو اكتب اسمه ثم أعد المحاولة."),
+            category=ErrorCategory.VALIDATION,
+            field="bank_name",
+        )
     if not cheque.amount or cheque.amount <= 0:
-        raise ValueError(gettext("المبلغ يجب أن يكون أكبر من صفر"))
+        raise BusinessRuleError(
+            gettext("المبلغ يجب أن يكون أكبر من صفر. أدخل المبلغ الفعلي للشيك."),
+            category=ErrorCategory.VALIDATION,
+            field="amount",
+        )
     if not cheque.issue_date:
-        raise ValueError(gettext("تاريخ الإصدار مطلوب"))
+        raise BusinessRuleError(
+            gettext("تاريخ الإصدار مطلوب. اختر تاريخ الإصدار من التقويم."),
+            category=ErrorCategory.VALIDATION,
+            field="issue_date",
+        )
     if not cheque.due_date:
-        raise ValueError(gettext("تاريخ الاستحقاق مطلوب"))
+        raise BusinessRuleError(
+            gettext("تاريخ الاستحقاق مطلوب. اختر تاريخ الاستحقاق من التقويم."),
+            category=ErrorCategory.VALIDATION,
+            field="due_date",
+        )
     if cheque.cheque_type not in ("incoming", "outgoing"):
-        raise ValueError(gettext("نوع الشيك غير صحيح"))
+        raise BusinessRuleError(
+            gettext('نوع الشيك غير صحيح. اختر "وارد" أو "صادر" فقط.'),
+            category=ErrorCategory.VALIDATION,
+            field="cheque_type",
+        )
 
 
 def calculate_amount_aed(cheque):
@@ -228,8 +263,13 @@ def _existing_posted_entry(cheque, reference_type):
 
 
 def process_cheque_deposit(cheque, deposit_date=None):
+    from utils.error_messages import BusinessRuleError, ErrorCategory
+
     if cheque.status not in ["pending", "under_collection"]:
-        raise ValueError(gettext(f"لا يمكن إيداع شيك بحالة: {cheque.status_ar}"))
+        raise BusinessRuleError(
+            ErrorMessages.cheque_wrong_state("إيداع", cheque.status_ar, "قيد التحصيل أو معلق"),
+            category=ErrorCategory.STATE,
+        )
     cheque.status = "deposited"
     cheque.deposit_date = deposit_date or datetime.now().date()
 
@@ -477,8 +517,13 @@ def _create_clearing_journal_entry(cheque):
 
 
 def process_cheque_clear(cheque, clearance_date=None, clearance_exchange_rate=None):
+    from utils.error_messages import BusinessRuleError, ErrorCategory
+
     if cheque.status not in ["deposited", "pending"]:
-        raise ValueError(gettext(f"لا يمكن تأكيد صرف شيك بحالة: {cheque.status_ar}"))
+        raise BusinessRuleError(
+            ErrorMessages.cheque_wrong_state("تأكيد صرف", cheque.status_ar, "مُودع في البنك"),
+            category=ErrorCategory.STATE,
+        )
     try:
         from utils.currency_utils import resolve_tenant_base_currency
 
@@ -650,17 +695,20 @@ def _create_bounce_journal_entry(cheque):
 
 
 def process_cheque_bounce(cheque, reason, bounce_fee=None):
+    from utils.error_messages import BusinessRuleError, ErrorCategory
+
     # Enforce proper lifecycle: bounce should only happen after deposit
     # (incoming) or from pending/outgoing. Prevent direct pending→bounce for incoming.
     if cheque.cheque_type == "incoming" and cheque.status == "pending":
-        raise ValueError(
-            gettext(
-                "لا يمكن رفض شيك وارد بحالة معلق — يجب إيداعه أولاً. "
-                "Use process_cheque_deposit() before bouncing an incoming cheque."
-            )
+        raise BusinessRuleError(
+            ErrorMessages.cheque_bounce_requires_deposit(),
+            category=ErrorCategory.STATE,
         )
     if cheque.status not in ["deposited", "pending"]:
-        raise ValueError(gettext(f"لا يمكن رفض شيك بحالة: {cheque.status_ar}"))
+        raise BusinessRuleError(
+            ErrorMessages.cheque_wrong_state("رفض", cheque.status_ar, "مُودع في البنك أو معلق"),
+            category=ErrorCategory.STATE,
+        )
     try:
         cheque.status = "bounced"
         cheque.bounce_reason = reason
@@ -861,11 +909,19 @@ def _create_cancel_journal_entry(cheque):
 def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     from models import Payment
     from models.receipt import Receipt
+    from utils.error_messages import BusinessRuleError, ErrorCategory
 
     if cheque.status == "cancelled":
         return
     if cheque.status == "cleared":
-        raise ValueError(gettext("لا يمكن إلغاء شيك تم صرفه"))
+        raise BusinessRuleError(
+            gettext(
+                "لا يمكن إلغاء شيك تم صرفه وتحصيله من البنك. "
+                "الرصيد مُقيَّد بالفعل في الحسابات، والإلغاء سيُبطل قيدًا مُرحَّلًا. "
+                "استخدم قيداً عكسياً محاسبياً لتصحيحه."
+            ),
+            category=ErrorCategory.STATE,
+        )
     # A bounced cheque is already fully reversed by the bounce entry —
     # cancelling it must not post the same reversal a second time.
     skip_gl = cheque.status == "bounced"

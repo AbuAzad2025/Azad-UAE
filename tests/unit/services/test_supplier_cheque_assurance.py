@@ -179,8 +179,15 @@ class TestChequeClearanceGL:
 
         from services.cheque_service import process_cheque_clear
 
-        with pytest.raises(ValueError, match="لا يمكن تأكيد صرف شيك"):
+        # The refusal now names the action, the current state and the allowed
+        # transition, so the operator knows what to do rather than only that it
+        # failed.
+        with pytest.raises(ValueError) as excinfo:
             process_cheque_clear(cheque)
+        message = str(excinfo.value)
+        assert "تأكيد صرف" in message
+        assert "ملغي" in message, "the message must name the state that blocked the action"
+        assert "مُودع في البنك" in message, "the message must name the transition to perform first"
 
     def test_clear_missing_liquidity_account(self, mocker, app):
         self._patch_db_queries(mocker)
@@ -363,8 +370,12 @@ class TestChequeBounceGL:
 
         from services.cheque_service import process_cheque_bounce
 
-        with pytest.raises(ValueError, match="لا يمكن رفض شيك"):
+        with pytest.raises(ValueError) as excinfo:
             process_cheque_bounce(cheque, "reason")
+        message = str(excinfo.value)
+        assert "رفض" in message
+        assert "مصروف" in message, "the message must name the state that blocked the action"
+        assert "مُودع في البنك" in message, "the message must name the transition to perform first"
 
     def test_bounce_locks_state(self, mocker, app):
         self._patch_bounce_deps(mocker)
@@ -460,8 +471,11 @@ class TestChequeStateTransitions:
 
         from services.cheque_service import process_cheque_bounce
 
-        with pytest.raises(ValueError, match="لا يمكن رفض شيك"):
+        with pytest.raises(ValueError) as excinfo:
             process_cheque_bounce(cheque, "nope")
+        message = str(excinfo.value)
+        assert "رفض" in message
+        assert "مصروف" in message, "the message must name the state that blocked the action"
 
 
 class TestChequeEventListeners:

@@ -37,6 +37,11 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.error_messages import (
+    BusinessRuleError,
+    ErrorMessages,
+    report_system_error,
+)
 from utils.feature_guards import install_feature_gate
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
@@ -93,6 +98,31 @@ def _scoped_suppliers_query():
         tenant_id=get_active_tenant_id(current_user),
         branch_id=branch_scope_id(),
     )
+
+
+def _refuse(error, *, context):
+    """Flash a refusal and say which kind of failure it was.
+
+    BusinessRuleError is the service's deliberate answer - an invalid field, or
+    a state the document may not move from - so its message is shown as written
+    and nothing is logged as a crash. Every other exception is a system failure:
+    the trace goes to the log with a reference, and the page gets the calm
+    sentence from the governance layer.
+
+    The six lifecycle handlers below all raised ValueError and flashed str(e),
+    which is what put psycopg2 messages, constraint names and Python exception
+    text in front of cheque operators.
+    """
+    if isinstance(error, BusinessRuleError):
+        current_app.logger.info(
+            "cheque refusal category=%s field=%s: %s",
+            error.category,
+            error.field or "-",
+            error.message,
+        )
+        flash(error.message, "warning")
+    else:
+        flash(report_system_error(error, context=context, logger=current_app.logger), "danger")
 
 
 @cheques_bp.route("/")
@@ -233,11 +263,10 @@ def create():
             try:
                 default_currency = resolve_default_currency()
             except Exception as e:
-                import sys
-                import traceback
-
-                sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
-                traceback.print_exc()
+                # One structured log line with the traceback. stderr bypasses
+                # the configured handlers, so this never reached the JSONL
+                # sink or the log rotation.
+                current_app.logger.warning("create_cheque: tenant default currency unavailable: %s", e, exc_info=True)
                 try:
                     LoggingCore.log_error(
                         message=str(e),
@@ -325,12 +354,7 @@ def create():
             return redirect(url_for("cheques.view", id=cheque.id))
 
         except Exception as e:
-            current_app.logger.error(f"Error in cheque operation: {e}")
-            import uuid as _uuid
-
-            from utils.error_messages import ErrorMessages
-
-            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger")
+            _refuse(e, context="cheque create")
 
     try:
         default_currency = resolve_default_currency()
@@ -418,11 +442,7 @@ def edit(**kwargs):
                 try:
                     default_currency = resolve_default_currency()
                 except Exception as e:
-                    import sys
-                    import traceback
-
-                    sys.stderr.write(f"[CHEQUES_WARNING] Failed to get tenant default currency (create cheque): {e}\n")
-                    traceback.print_exc()
+                    current_app.logger.warning("edit_cheque: tenant default currency unavailable: %s", e, exc_info=True)
                     try:
                         LoggingCore.log_error(
                             message=str(e),
@@ -459,12 +479,7 @@ def edit(**kwargs):
             return redirect(url_for("cheques.view", id=record_id))
 
         except Exception as e:
-            current_app.logger.error(f"Error in cheque operation: {e}")
-            import uuid as _uuid
-
-            from utils.error_messages import ErrorMessages
-
-            flash(ErrorMessages.unexpected_error(error_id=_uuid.uuid4().hex[:8]), "danger")
+            _refuse(e, context=f"cheque update {record_id}")
 
     try:
         default_currency = resolve_default_currency()
@@ -512,10 +527,9 @@ def deposit_cheque(**kwargs):
         )
 
     except ValueError as e:
-        current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
+        _refuse(e, context=f"cheque deposit {record_id}")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque deposit {record_id}")
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -572,10 +586,9 @@ def clear_cheque(**kwargs):
         )
 
     except ValueError as e:
-        current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
+        _refuse(e, context=f"cheque clear {record_id}")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque clear {record_id}")
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -610,10 +623,9 @@ def bounce_cheque(**kwargs):
         )
 
     except ValueError as e:
-        current_app.logger.warning(f"ValueError in cheque operation: {e}")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "error")
+        _refuse(e, context=f"cheque bounce {record_id}")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque bounce {record_id}")
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -630,10 +642,7 @@ def cancel(**kwargs):
         return render_template("errors/403.html"), 403
 
     if cheque.status == "cleared":
-        flash(
-            gettext("⚠️ لا يمكن إلغاء شيك تم صرفه.\n💡 الشيك تم صرفه بالفعل. لا يمكن التراجع عنه."),
-            "danger",
-        )
+        flash(ErrorMessages.cheque_wrong_state("إلغاء", cheque.status_ar, "قيد عكسي محاسبي"), "danger")
         return redirect(url_for("cheques.view", id=record_id))
 
     try:
@@ -646,7 +655,7 @@ def cancel(**kwargs):
         flash(gettext(f"✅ تم إلغاء الشيك {cheque.cheque_bank_number}"), "success")
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque cancel {record_id}")
 
     return redirect(url_for("cheques.view", id=record_id))
 
@@ -713,7 +722,7 @@ def delete(**kwargs):
         return redirect(url_for("cheques.index"))
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque delete {record_id}")
         return redirect(url_for("cheques.view", id=record_id))
 
 
@@ -736,7 +745,7 @@ def restore(**kwargs):
         flash(gettext(f"✅ تم استعادة الشيك {cheque.cheque_bank_number}"), "success")
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."), "danger")
+        _refuse(e, context=f"cheque restore {record_id}")
 
     return redirect(url_for("cheques.view", id=record_id))
 

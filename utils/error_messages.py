@@ -210,6 +210,37 @@ class ErrorMessages:
     def database_error():
         return "خطأ في قاعدة البيانات.\nإذا استمرت المشكلة، اتصل بالدعم الفني."
 
+    # ── Cheque lifecycle ─────────────────────────────────────────────────────
+    # A cheque is a state machine: pending -> deposited -> cleared, with
+    # cancelled and bounced as terminal states. Almost every user mistake here
+    # is an illegal transition on a document that has already moved, so the
+    # message names the current state and the transition that is allowed.
+
+    @staticmethod
+    def cheque_wrong_state(action, current_status, allowed):
+        return (
+            f"لا يمكن {action} الشيك في حالته الحالية ({current_status}).\n"
+            f"الحالات التي تسمح بهذه العملية: {allowed}.\n"
+            f'راجع حالة الشيك، أو نفّذ "{allowed}" أولاً ثم أعد المحاولة.'
+        )
+
+    @staticmethod
+    def cheque_bounce_requires_deposit():
+        return (
+            "لا يمكن رفض شيك وارد ما زال قيد التحصيل.\n"
+            "يجب إيداع الشيك في البنك أولاً، ثم يمكن رفضه عند رده من البنك.\n"
+            'افتح الشيك، نفّذ "إيداع في البنك"، ثم "رفض الشيك".'
+        )
+
+    @staticmethod
+    def cheque_missing_fields(fields):
+        listed = "، ".join(fields)
+        return f"الحقول التالية مطلوبة لإتمام العملية: {listed}.\nأدخل هذه الحقول ثم أعد المحاولة."
+
+    @staticmethod
+    def cheque_invalid_value(field, expected):
+        return f'القيمة المدخلة في "{field}" غير صحيحة. المتوقع: {expected}.\nصحّح "{field}" ثم أعد المحاولة.'
+
     @staticmethod
     def unexpected_error(error_id=None):
         # With a reference it is actionable AND traceable: the user knows what to do
@@ -446,3 +477,35 @@ def _default_logger():
         return current_app.logger
     except RuntimeError:
         return logging.getLogger(__name__)
+
+
+# ── Typed business errors ─────────────────────────────────────────────────────
+
+
+class BusinessRuleError(ValueError):
+    """A refusal that is the system's answer, not a crash.
+
+    Services raise this instead of a bare ``ValueError`` so the route layer can
+    tell the two cases apart with an ``except`` clause instead of guessing from
+    the exception type. It subclasses ValueError on purpose: every existing
+    ``except ValueError`` in the routes keeps working unchanged, so adopting it
+    is additive rather than a rewrite.
+
+    ``category`` records why the operation was refused, which is what decides
+    the guidance shown. ``message`` is already written for a human - it is
+    rendered as-is, never combined with the exception repr.
+    """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        category: str = ErrorCategory.BUSINESS,
+        field: str | None = None,
+        status_code: int = 400,
+    ):
+        super().__init__(message)
+        self.message = message
+        self.category = category
+        self.field = field
+        self.status_code = status_code
