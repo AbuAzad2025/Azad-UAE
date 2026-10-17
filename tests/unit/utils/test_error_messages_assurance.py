@@ -22,7 +22,11 @@ class TestUserMessages:
         assert "غير متطابقتين" in ErrorMessages.password_mismatch()
 
     def test_user_update_failed(self):
-        assert "db fail" in ErrorMessages.user_update_failed("db fail")
+        # The raw exception is no longer echoed; the message is guidance plus a
+        # reference to quote to support.
+        msg = ErrorMessages.user_update_failed("db fail")
+        assert "تعذّر" in msg
+        assert "db fail" not in msg
 
     def test_user_delete_self(self):
         assert "حسابك الخاص" in ErrorMessages.user_delete_self()
@@ -128,7 +132,9 @@ class TestFileMessages:
         assert "10MB" in ErrorMessages.file_too_large(10)
 
     def test_file_upload_failed(self):
-        assert "disk" in ErrorMessages.file_upload_failed("disk")
+        msg = ErrorMessages.file_upload_failed("disk")
+        assert "فشل رفع الملف" in msg
+        assert "disk" not in msg
 
 
 class TestDatabaseMessages:
