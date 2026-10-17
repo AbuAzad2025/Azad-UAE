@@ -8603,6 +8603,14 @@ TRANSLATIONS = {
         "ar": "هل أنت متأكد من حذف هذا السند؟\\n\\nتنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو سيتم الحذف نهائياً إذا كان غير مرتبط.",
         "en": "Are you sure you want to delete this voucher?\\n\\nNote: the voucher will be archived if it is linked to cheques, otherwise it will be permanently deleted.",
     },
+    # Cheque lifecycle validation (Phase 3 error governance). The msgid is the
+    # Arabic sentence, matching the Arabic msgids the .po catalogues also carry;
+    # gettext() resolves through Babel only, so an Arabic msgid needs an entry
+    # here to reach the English catalogue.
+    'نوع الشيك غير صحيح. اختر "وارد" أو "صادر" فقط.': {
+        "ar": 'نوع الشيك غير صحيح. اختر "وارد" أو "صادر" فقط.',
+        "en": 'Invalid cheque type. Choose "incoming" or "outgoing" only.',
+    },
 }
 
 
