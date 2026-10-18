@@ -324,11 +324,13 @@ const i18n = {{ {
   'message': t('Message'),
   'stack_trace': t('Stack_Trace'),
   'request_data': t('Request_Data'),
-  'close': t('Close'),
+'close': t('Close'),
   'category': t('Category'),
   'level': t('Level'),
   'source': t('Source'),
-  'occurrence_count': t('Occurrence_Count')
+  'occurrence_count': t('Occurrence_Count'),
+  'show_full_trace': t('Show_Full_Trace'),
+  'hide_full_trace': t('Hide_Full_Trace')
 }|tojson }};
 
 (function() {
@@ -375,7 +377,16 @@ const i18n = {{ {
       html += '<h6>' + i18n.exception_type + '</h6><pre class="bg-light p-2 small">' + esc(data.exception_type) + '</pre>';
     }
     if (data.stack_trace) {
-      html += '<h6>' + i18n.stack_trace + '</h6><pre class="bg-light p-2 small ic-11">' + esc(data.stack_trace) + '</pre>';
+      const fullTrace = esc(data.stack_trace);
+      const preview = fullTrace.length > 500 ? fullTrace.substring(0, 500) + '...' : fullTrace;
+      const showFull = fullTrace.length > 500;
+      html += '<h6>' + i18n.stack_trace + '</h6>';
+      if (showFull) {
+        html += '<pre class="bg-light p-2 small ic-11">' + preview + '</pre>';
+        html += '<button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="toggleStackTrace(this)" data-full-trace="' + esc(fullTrace) + '">' + i18n.show_full_trace + '</button>';
+      } else {
+        html += '<pre class="bg-light p-2 small ic-11">' + preview + '</pre>';
+      }
     }
     if (data.request_data) {
       html += '<h6>' + i18n.request_data + '</h6><pre class="bg-light p-2 small">' + esc(JSON.stringify(data.request_data, null, 2)) + '</pre>';
@@ -388,6 +399,28 @@ const i18n = {{ {
     if ($('.modal.show').length === 0) {
       $('.modal-backdrop').remove();
       $('body').removeClass('modal-open').css('padding-right', '');
+    }
+  }
+
+  function cleanupModalState() {
+    $('body').removeClass('error-audit-modal-open');
+    if ($('.modal.show').length === 0) {
+      $('.modal-backdrop').remove();
+      $('body').removeClass('modal-open').css('padding-right', '');
+    }
+  }
+
+  function toggleStackTrace(btn) {
+    const $btn = window.jQuery(btn);
+    const fullTrace = $btn.data('full-trace');
+    const $pre = $btn.prev('pre');
+    if ($btn.text().indexOf('Show') !== -1) {
+      $pre.text(fullTrace);
+      $btn.text(i18n.hide_full_trace || 'Hide Full Trace');
+    } else {
+      const preview = fullTrace.length > 500 ? fullTrace.substring(0, 500) + '...' : fullTrace;
+      $pre.text(preview);
+      $btn.text(i18n.show_full_trace);
     }
   }
 

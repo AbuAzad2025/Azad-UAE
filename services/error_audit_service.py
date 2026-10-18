@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import re
 import traceback
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -477,6 +478,44 @@ class ErrorAuditService:
 
     # ── Sanitization helpers ──────────────────────────────────────
 
+    # Extended secret patterns to catch values that contain secrets
+    _SECRET_VALUE_PATTERNS = [
+        r"sk_[a-zA-Z0-9]{24,}",  # Stripe secret keys
+        r"pk_[a-zA-Z0-9]{24,}",  # Stripe publishable keys
+        r"sk_live_[a-zA-Z0-9]{24,}",  # Stripe live keys
+        r"sk_test_[a-zA-Z0-9]{24,}",  # Stripe test keys
+        r"rk_live_[a-zA-Z0-9]{24,}",  # Stripe restricted keys
+        r"rk_test_[a-zA-Z0-9]{24,}",  # Stripe test restricted keys
+        r"gh[pousr]_[a-zA-Z0-9]{36,}",  # GitHub tokens
+        r"ghu_[a-zA-Z0-9]{36,}",  # GitHub user tokens
+        r"gho_[a-zA-Z0-9]{36,}",  # GitHub OAuth tokens
+        r"ghs_[a-zA-Z0-9]{36,}",  # GitHub server tokens
+        r"ghr_[a-zA-Z0-9]{36,}",  # GitHub refresh tokens
+        r"AIza[0-9A-Za-z_-]{35}",  # Google API keys
+        r"ya29\.[a-zA-Z0-9_-]{30,}",  # Google OAuth tokens
+        r"ya29\.[a-zA-Z0-9_-]{30,}",  # Google OAuth tokens (alt)
+        r"xox[baprs]-[0-9]{11}-[0-9]{11}-[a-zA-Z0-9]{24}",  # Slack tokens
+        r"xox[baprs]-[0-9]{12}-[0-9]{12}-[a-zA-Z0-9]{24}",  # Slack tokens (new)
+        r"xapp-[0-9]{12}-[a-zA-Z0-9]{24}",  # Slack app tokens
+        r"sk-[a-zA-Z0-9]{48}",  # OpenAI API keys
+        r"sk-ant-[a-zA-Z0-9_-]{95,}",  # Anthropic API keys
+        r"Bearer\s+[a-zA-Z0-9._-]{20,}",  # Bearer tokens
+        r"Basic\s+[a-zA-Z0-9+/=]{20,}",  # Basic auth
+        r"[a-zA-Z0-9+/]{20,}={0,2}",  # Base64 encoded secrets (generic)
+    ]
+
+    @staticmethod
+    def _contains_secret_value(value: str) -> bool:
+        """Check if a string value contains patterns that look like secrets."""
+        if not isinstance(value, str):
+            return False
+        for pattern in ErrorAuditService._SECRET_VALUE_PATTERNS:
+            if re.search(pattern, value, re.IGNORECASE):
+                return True
+        return False
+
+    # ── Sanitization helpers ──────────────────────────────────────
+
     @staticmethod
     def _sanitize_dict(data: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(data, dict):
@@ -484,7 +523,23 @@ class ErrorAuditService:
         clean: dict[str, Any] = {}
         for key, value in data.items():
             k_lower = str(key).lower()
+            # Check for secret keys
             if any(sk in k_lower for sk in _SECRET_KEYS):
+                clean[key] = "***REDACTED***"
+                continue
+            # Check for sensitive headers
+            if any(
+                h in key_lower
+                for h in (
+                    "authorization",
+                    "cookie",
+                    "set-cookie",
+                    "x-csrf-token",
+                    "x-xsrf-token",
+                    "x-csrf-token",
+                    "x-requested-with",
+                )
+            ):
                 clean[key] = "***REDACTED***"
                 continue
             try:
@@ -506,6 +561,10 @@ class ErrorAuditService:
                     )
                     for v in value
                 ]
+                continue
+            # Check for secret patterns in string values
+            if isinstance(value, str) and ErrorAuditService._contains_secret_value(value):
+                clean[key] = "***REDACTED***"
                 continue
             clean[key] = value
         return clean

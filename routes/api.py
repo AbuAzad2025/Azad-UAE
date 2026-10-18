@@ -37,7 +37,7 @@ _DEV_TRUSTED_ORIGINS = frozenset(
 )
 
 _TELEMETRY_BATCH_MAX_EVENTS = 50
-_TELEMETRY_PAYLOAD_MAX_BYTES = 50 * 1024
+_TELEMETRY_PAYLOAD_MAX_BYTES = 64 * 1024
 _TELEMETRY_MAX_BREADCRUMBS = 20
 _FRONTEND_TELEMETRY_CATEGORIES = frozenset({"SOFTWARE_EXCEPTION", "HARDWARE_WARN"})
 _FRONTEND_TELEMETRY_LEVELS = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
@@ -565,22 +565,22 @@ def echo():
 
 @api_bp.route("/log-client-error", methods=["POST"])
 @csrf.exempt
-@limiter.limit("30 per minute")
+@limiter.limit("100 per minute")
 def log_client_error():
     """Receive JS errors from the browser and store them via LoggingCore.
 
     Defenses:
-    - Origin/Referer allowlist to prevent cross-site log spam.
-    - Rate limit: 30/min per user/IP.
-    - Payload capped at 50 KB (Nginx / WAF layer recommended for stricter limit).
-    - Stack trace truncated by service layer.
-    - Cookies / auth headers explicitly excluded from storage.
+        - Origin/Referer allowlist to prevent cross-site log spam.
+        - Rate limit: 100/min per user/IP.
+        - Payload capped at 64 KB (Nginx / WAF layer recommended for stricter limit).
+        - Stack trace truncated by service layer.
+        - Cookies / auth headers explicitly excluded from storage.
     """
     origin_error = _validate_public_telemetry_origin()
     if origin_error:
         return origin_error
 
-    if request.content_length and request.content_length > 50 * 1024:
+    if request.content_length and request.content_length > 64 * 1024:
         return "", 413
 
     data = request.get_json(silent=True) or {}

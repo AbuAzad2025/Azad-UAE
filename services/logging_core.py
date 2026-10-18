@@ -1166,8 +1166,22 @@ class LoggingCore:
             )
         logs = query.order_by(ErrorAuditLog.last_seen_at.desc()).all()
 
+        def _truncate_stack_trace(stack_trace: str | None, max_len: int = 500) -> str:
+            """Truncate stack trace for export, adding truncation notice if needed."""
+            if not stack_trace:
+                return ""
+            if len(stack_trace) <= 500:
+                return stack_trace
+            return stack_trace[:500] + "\n... [TRUNCATED - Full trace available in UI]"
+
         if fmt == "json":
             data = [log.to_dict() for log in logs]
+            # Truncate stack traces in JSON export
+            for item in data:
+                if item.get("stack_trace"):
+                    item["stack_trace"] = item["stack_trace"][:500] + (
+                        "... [TRUNCATED]" if len(item["stack_trace"]) > 500 else ""
+                    )
             return (
                 json.dumps(data, ensure_ascii=False, indent=2, default=str),
                 "application/json",
@@ -1184,6 +1198,8 @@ class LoggingCore:
             buf.write(f"Message: {log.message}\n")
             if log.stack_trace:
                 buf.write(f"Stack: {log.stack_trace[:500]}\n")
+                if len(log.stack_trace) > 500:
+                    buf.write("... [TRUNCATED - Full trace available in UI]\n")
             buf.write("-" * 80 + "\n\n")
         return (
             buf.getvalue().encode("utf-8"),
