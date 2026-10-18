@@ -199,7 +199,16 @@ class GLJournalEntry(db.Model):
         # restored backup, a writer that forgets the call. Without it the two
         # non-negative CHECKs still permit debit 100 / credit 50, which is money
         # created from nothing.
-        db.CheckConstraint("total_debit = total_credit", name="ck_gl_journal_entries_balanced"),
+        #
+        # The 0.001 window is not slack: it is the same tolerance
+        # is_balanced() and assert_balanced_lines() use, because money is stored
+        # to three decimals and a third of a cent is real. A strict equality
+        # here would be stricter than the helpers it backs up and would reject
+        # the legitimate splits they accept.
+        db.CheckConstraint(
+            "abs(total_debit - total_credit) <= 0.001",
+            name="ck_gl_journal_entries_balanced",
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)

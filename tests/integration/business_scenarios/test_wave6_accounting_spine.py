@@ -688,3 +688,59 @@ class TestS31DoubleEntryAtTheDatabase:
         db_session.rollback()
 
         assert "ck_gl_journal_entries_balanced" in str(excinfo.value)
+
+    def test_sub_unit_rounding_is_accepted_like_the_helpers_do(self, db_session, ledger_tenant):
+        """The constraint carries the same 0.001 window as the helpers.
+
+        GLJournalEntry.is_balanced() and assert_balanced_lines() both accept a
+        third of a cent, because money is stored to three decimals and splitting
+        100.00 three ways gives 66.667 / 33.333. A CHECK with strict equality
+        would be stricter than the service guard it backs up, and would refuse
+        exactly the entries that guard accepts - which is how a "safety"
+        constraint ends up blocking legitimate money.
+
+        This is the scenario that caught it: a fixture inserting debit 10.000 /
+        credit 10.001 was correct all along and the first version of this
+        constraint was wrong.
+        """
+        from sqlalchemy import text
+
+        entry_number = f"ROUNDING-PROBE-{uuid.uuid4().hex[:8]}"
+        db_session.execute(
+            text(
+                """
+                INSERT INTO gl_journal_entries
+                    (tenant_id, entry_number, entry_date, description, status,
+                     total_debit, total_credit, currency, created_at)
+                VALUES
+                    (:tid, :num, now(), 'third of a cent', 'posted',
+                     66.667, 66.666, 'AED', now())
+                """
+            ),
+            {"tid": ledger_tenant.id, "num": entry_number},
+        )
+        db_session.rollback()
+
+    def test_an_imbalance_beyond_the_tolerance_is_refused(self, db_session, ledger_tenant):
+        """The boundary on the other side: 0.002 is outside a 0.001 window."""
+        from sqlalchemy import text
+        from sqlalchemy.exc import IntegrityError
+
+        entry_number = f"OUTSIDE-TOLERANCE-{uuid.uuid4().hex[:8]}"
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.execute(
+                text(
+                    """
+                    INSERT INTO gl_journal_entries
+                        (tenant_id, entry_number, entry_date, description, status,
+                         total_debit, total_credit, currency, created_at)
+                    VALUES
+                        (:tid, :num, now(), 'outside tolerance', 'posted',
+                         100.000, 100.002, 'AED', now())
+                    """
+                ),
+                {"tid": ledger_tenant.id, "num": entry_number},
+            )
+        db_session.rollback()
+
+        assert "ck_gl_journal_entries_balanced" in str(excinfo.value)

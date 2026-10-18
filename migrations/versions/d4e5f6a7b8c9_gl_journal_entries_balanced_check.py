@@ -16,13 +16,25 @@ restored backup, a future writer that forgot the call.
 Why this table can hold the constraint
 --------------------------------------
 The comparison is on one row, so it is a genuine single-row CHECK rather than an
-aggregate over gl_journal_lines. The subtlety is the draft state: an entry is
-created as a draft and only becomes "posted" after validation, and the draft's
-totals are written as they are - which for the posting service means already
-balanced. The reverse-entry path swaps the two totals of a balanced entry, which
-stays balanced. Measured on the development ledger before writing this: 500
-entries, 0 with total_debit <> total_credit, 0 whose totals disagreed with their
-own lines.
+aggregate over gl_journal_lines. The subtlety is the tolerance: both existing
+definitions of "balanced" in this codebase accept a sub-unit difference, and
+the constraint has to agree with them or it refuses legal postings.
+
+  * GLJournalEntry.is_balanced()      abs(total_debit - total_credit) <= 0.001
+  * assert_balanced_lines()           per-currency tolerance, default 0.001
+
+Money is stored to three decimals, so splitting 100.00 three ways gives
+66.667 / 33.333 / 0.000 and thirds of a cent are real. A strict
+``total_debit = total_credit`` would be *stricter than the service guard it is
+meant to back up*, and would reject exactly the entries that guard accepts -
+so the CHECK carries the same 0.001 window.
+
+That still removes the defect this revision exists for: the previous pair of
+constraints permitted debit 100 / credit 50, and 0.001 excludes that by five
+orders of magnitude while admitting the rounding the domain allows.
+
+Measured on the development ledger before writing this: 500 entries, 0 with
+total_debit <> total_credit, 0 whose totals disagreed with their own lines.
 
 Locking behaviour, following c0d1e2f3a4b5:
 
@@ -52,10 +64,11 @@ depends_on = None
 CONSTRAINT = "ck_gl_journal_entries_balanced"
 TABLE = "gl_journal_entries"
 
-# Money is stored to three decimals, so the comparison is to the cent-and-part,
-# not to zero exactly: assert_balanced_lines already tolerates sub-unit dust and
-# this must not be stricter than the service guard it backs up.
-EXPRESSION = "total_debit = total_credit"
+# Money is stored to three decimals, so the comparison carries the same 0.001
+# window as GLJournalEntry.is_balanced() and assert_balanced_lines(): a strict
+# equality would be stricter than the service guard this backs up, and would
+# reject the third-of-a-cent splits that those helpers accept on purpose.
+EXPRESSION = "abs(total_debit - total_credit) <= 0.001"
 
 
 def _constraint_exists(conn) -> bool:
@@ -77,7 +90,10 @@ def _table_exists(conn) -> bool:
 
 
 def _unbalanced_rows(conn) -> int:
-    return int(conn.execute(sa.text(f'SELECT count(*) FROM "{TABLE}" WHERE total_debit <> total_credit')).scalar() or 0)
+    return int(
+        conn.execute(sa.text(f'SELECT count(*) FROM "{TABLE}" WHERE abs(total_debit - total_credit) > 0.001')).scalar()
+        or 0
+    )
 
 
 def upgrade() -> None:
