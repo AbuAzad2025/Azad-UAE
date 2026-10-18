@@ -509,10 +509,7 @@ class ErrorAuditService:
         """Check if a string value contains patterns that look like secrets."""
         if not isinstance(value, str):
             return False
-        for pattern in ErrorAuditService._SECRET_VALUE_PATTERNS:
-            if re.search(pattern, value, re.IGNORECASE):
-                return True
-        return False
+        return any(re.search(pattern, value, re.IGNORECASE) for pattern in ErrorAuditService._SECRET_VALUE_PATTERNS)
 
     # ── Sanitization helpers ──────────────────────────────────────
 
@@ -529,7 +526,7 @@ class ErrorAuditService:
                 continue
             # Check for sensitive headers
             if any(
-                h in key_lower
+                h in k_lower
                 for h in (
                     "authorization",
                     "cookie",
