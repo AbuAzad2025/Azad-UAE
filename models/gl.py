@@ -194,6 +194,12 @@ class GLJournalEntry(db.Model):
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),
         db.Index("idx_gl_entries_tenant_date", "tenant_id", "entry_date"),
+        # Double-entry, enforced by the row itself. assert_balanced_lines guards
+        # the service paths; this guards everything else - a raw insert, a
+        # restored backup, a writer that forgets the call. Without it the two
+        # non-negative CHECKs still permit debit 100 / credit 50, which is money
+        # created from nothing.
+        db.CheckConstraint("total_debit = total_credit", name="ck_gl_journal_entries_balanced"),
     )
 
     id = db.Column(db.Integer, primary_key=True)

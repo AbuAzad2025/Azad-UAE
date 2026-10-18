@@ -537,3 +537,154 @@ class TestS30AccountingLifecycle:
             f"{ledger.balance(revenue, ledger_tenant.id)}"
         )
         assert abs(ledger_balance_total(db_session, ledger_tenant.id) - period_zero) < 0.01
+
+
+class TestS31DoubleEntryAtTheDatabase:
+    """S-31: the database itself refuses an unbalanced entry.
+
+    The S-27 scenarios above prove ``assert_balanced_lines`` guards the service
+    paths. This proves the second line of defence exists at all, which is the
+    half that was missing: until revision d4e5f6a7b8c9 the only CHECKs on
+    ``gl_journal_entries`` were ``total_debit >= 0`` and ``total_credit >= 0``,
+    and those two together happily permit debit 100 / credit 50.
+
+    Every insert here is raw SQL on purpose. Going through a service would only
+    re-prove S-27 - the point is a writer that never calls the balancing check.
+    """
+
+    def test_the_balance_constraint_exists_on_the_table(self, db_session):
+        from sqlalchemy import text
+
+        row = db_session.execute(
+            text(
+                "SELECT conname, convalidated FROM pg_constraint "
+                "WHERE conrelid = 'gl_journal_entries'::regclass "
+                "AND contype = 'c' AND conname = 'ck_gl_journal_entries_balanced'"
+            )
+        ).first()
+
+        assert row is not None, (
+            "gl_journal_entries has no balance CHECK - the service guard is the only thing "
+            "standing between a bug and money created from nothing"
+        )
+        assert row.convalidated, "the constraint exists but is NOT VALID, so legacy rows were never scanned"
+
+    def test_the_model_declares_the_same_constraint(self):
+        """Parity: a constraint only in the migration never reaches create_all."""
+        from sqlalchemy import CheckConstraint
+
+        from models import GLJournalEntry
+
+        declared = {
+            c.name
+            for c in GLJournalEntry.__table__.constraints
+            # __table__.constraints also holds ForeignKeyConstraint and
+            # UniqueConstraint, which have no .name.
+            if isinstance(c, CheckConstraint)
+        }
+        assert "ck_gl_journal_entries_balanced" in declared, (
+            "the model does not declare the balance CHECK, so a database built with create_all() would not have it"
+        )
+
+    def test_the_database_refuses_an_unbalanced_entry(self, db_session, ledger_tenant):
+        from sqlalchemy import text
+        from sqlalchemy.exc import IntegrityError
+
+        entry_number = f"UNBALANCED-PROBE-{uuid.uuid4().hex[:8]}"
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.execute(
+                text(
+                    """
+                    INSERT INTO gl_journal_entries
+                        (tenant_id, entry_number, entry_date, description, status,
+                         total_debit, total_credit, currency, created_at)
+                    VALUES
+                        (:tid, :num, now(), 'deliberately unbalanced', 'posted',
+                         100.000, 50.000, 'AED', now())
+                    """
+                ),
+                {"tid": ledger_tenant.id, "num": entry_number},
+            )
+        db_session.rollback()
+
+        assert "ck_gl_journal_entries_balanced" in str(excinfo.value), (
+            f"the write failed for the wrong reason: {excinfo.value}"
+        )
+
+    def test_the_database_refuses_the_swap_that_creates_money(self, db_session, ledger_tenant):
+        """The failure mode a non-negative pair cannot catch: credit > debit."""
+        from sqlalchemy import text
+        from sqlalchemy.exc import IntegrityError
+
+        entry_number = f"UNBALANCED-SWAP-{uuid.uuid4().hex[:8]}"
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.execute(
+                text(
+                    """
+                    INSERT INTO gl_journal_entries
+                        (tenant_id, entry_number, entry_date, description, status,
+                         total_debit, total_credit, currency, created_at)
+                    VALUES
+                        (:tid, :num, now(), 'credit exceeds debit', 'posted',
+                         0.000, 250.000, 'AED', now())
+                    """
+                ),
+                {"tid": ledger_tenant.id, "num": entry_number},
+            )
+        db_session.rollback()
+
+        assert "ck_gl_journal_entries_balanced" in str(excinfo.value)
+
+    def test_a_balanced_entry_is_accepted(self, db_session, ledger_tenant):
+        """The negative control: the constraint must not refuse legitimate money."""
+        from sqlalchemy import text
+
+        entry_number = f"BALANCED-PROBE-{uuid.uuid4().hex[:8]}"
+        db_session.execute(
+            text(
+                """
+                INSERT INTO gl_journal_entries
+                    (tenant_id, entry_number, entry_date, description, status,
+                     total_debit, total_credit, currency, created_at)
+                VALUES
+                    (:tid, :num, now(), 'balanced probe', 'posted',
+                     100.000, 100.000, 'AED', now())
+                """
+            ),
+            {"tid": ledger_tenant.id, "num": entry_number},
+        )
+        db_session.rollback()
+
+    def test_updating_totals_into_an_imbalance_is_refused(self, db_session, ledger_tenant):
+        """A row that was legal must not become illegal by UPDATE either.
+
+        A CHECK that is only enforced on INSERT is enforced on UPDATE too, but a
+        posting path that adjusts an entry in place after the fact is exactly how
+        a balanced entry turns into a fabricated one.
+        """
+        from sqlalchemy import text
+        from sqlalchemy.exc import IntegrityError
+
+        entry_number = f"BALANCED-UPDATE-{uuid.uuid4().hex[:8]}"
+        db_session.execute(
+            text(
+                """
+                INSERT INTO gl_journal_entries
+                    (tenant_id, entry_number, entry_date, description, status,
+                     total_debit, total_credit, currency, created_at)
+                VALUES
+                    (:tid, :num, now(), 'update probe', 'draft',
+                     100.000, 100.000, 'AED', now())
+                """
+            ),
+            {"tid": ledger_tenant.id, "num": entry_number},
+        )
+
+        with pytest.raises(IntegrityError) as excinfo:
+            db_session.execute(
+                text("UPDATE gl_journal_entries SET total_credit = 40.000 WHERE entry_number = :num"),
+                {"num": entry_number},
+            )
+        db_session.rollback()
+
+        assert "ck_gl_journal_entries_balanced" in str(excinfo.value)
