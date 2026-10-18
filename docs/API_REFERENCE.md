@@ -155,7 +155,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/api/exchange-rates/display` | authenticated | — | — | json |
 | GET | `/api/health` | — | — | — | json |
 | GET | `/api/industry-fields` | authenticated | — | — | json |
-| POST | `/api/log-client-error` | — | — | `30 per minute` | json |
+| POST | `/api/log-client-error` | — | — | `100 per minute` | json |
 | GET | `/api/payment-fields/<payment_method>` | authenticated | — | — | json |
 | GET | `/api/products` | authenticated, permission | `view_reports` | — | json |
 | GET | `/api/products/<int:pid>/info` | authenticated, permission | `view_reports` | — | json |
