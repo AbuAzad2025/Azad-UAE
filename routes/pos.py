@@ -49,6 +49,7 @@ from utils.branching import (
 )
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.helpers import generate_number
 from utils.logger import log_hardware, log_security
 from utils.pos_checkout_helpers import _pos_standard_price, _promotion_evaluation_json
@@ -444,9 +445,9 @@ def order_type_settings():
                 else:
                     raise ValueError(gettext("إجراء غير معروف."))
         except ValueError as exc:
-            flash(str(exc), "warning")
+            refuse(exc, context="pos order type settings", category=ErrorCategory.BUSINESS)
         except Exception as exc:
-            flash(gettext(f"خطأ: {exc}"), "danger")
+            refuse(exc, context="pos order type settings")
         return redirect(url_for("pos.order_type_settings"))
 
     types = PosOrderType.for_tenant(tid, active_only=False)
@@ -539,9 +540,9 @@ def printer_settings():
                 else:
                     raise ValueError(gettext("إجراء غير معروف."))
         except ValueError as exc:
-            flash(str(exc), "warning")
+            refuse(exc, context="pos printer settings", category=ErrorCategory.BUSINESS)
         except Exception as exc:
-            flash(gettext(f"خطأ: {exc}"), "danger")
+            refuse(exc, context="pos printer settings")
         return redirect(url_for("pos.printer_settings"))
 
     printers = PosPrinter.for_tenant(tid, active_only=False)
@@ -711,7 +712,11 @@ def api_walkin_customer():
         with atomic_transaction("pos_walkin_customer"):
             customer = get_pos_walkin_customer()
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        current_app.logger.error("POS walk-in customer lookup failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(
         data={
@@ -802,7 +807,7 @@ def api_checkout():
         current_app.logger.error("POS checkout integrity error", exc_info=True)
         return error_response(message=gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
     except Exception as exc:
-        current_app.logger.error(f"POS checkout error: {exc}")
+        current_app.logger.error("POS checkout error: %s", exc, exc_info=True)
         return error_response(message=gettext("فشل إنشاء الفاتورة. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
 
     if response.get("order_type") in ("dine_in", "takeaway", "delivery"):
@@ -1161,7 +1166,12 @@ def api_session_open():
             return _idempotency_conflict_response()
         return error_response(message=gettext("تعذر فتح الجلسة. حاول مرة أخرى."), status_code=500)
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos cart set item failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(data=response, status_code=201)
 
@@ -1275,7 +1285,12 @@ def api_session_close():
             return _idempotency_conflict_response()
         return error_response(message=gettext("تعذر إغلاق الجلسة. حاول مرة أخرى."), status_code=500)
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos cart update item failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(data=response)
 
@@ -1377,7 +1392,12 @@ def api_shift_open():
             shift.status = PosShift.SHIFT_OPEN
             db.session.flush()
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos cart remove item failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(
         data={"shift": shift.to_dict(include_sensitive=_can_view_expected())},
@@ -1417,7 +1437,12 @@ def api_shift_reconcile():
             shift.reconcile(actual_cash, notes)
             db.session.flush()
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos cart discount failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(data={"shift": shift.to_dict(include_sensitive=_can_view_expected())})
 
@@ -1441,7 +1466,12 @@ def api_shift_close():
             shift.close()
             db.session.flush()
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos cart hold failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=400,
+        )
 
     return success_response(data={"shift": shift.to_dict(include_sensitive=_can_view_expected())})
 
@@ -1614,7 +1644,12 @@ def api_drawer_open():
             cashier_user_id=current_user.id,
             channel="json",
         )
-        return error_response(message=str(exc), status_code=403)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos shift close failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=403,
+        )
 
     # Best-effort hardware kick — a drawer hardware failure must not undo the
     # audit record, and must not leak internals to the client.
@@ -1931,7 +1966,7 @@ def api_pos_return_create():
     except ValueError as exc:
         return error_response(message=str(exc), status_code=400)
     except Exception as exc:
-        current_app.logger.error(f"POS return error: {exc}")
+        current_app.logger.error("POS return error: %s", exc, exc_info=True)
         return error_response(message=gettext("فشل إنشاء المرتجع. تحقق من البيانات وحاول مرة أخرى."), status_code=500)
 
     return success_response(data=response, status_code=201)
@@ -2226,7 +2261,12 @@ def hardware_print_receipt():
             message=gettext("وكيل الأجهزة غير متصل. تأكد من تشغيل pos_hardware_agent.py"), status_code=503
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos hardware agent status failed: %s", e, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )
 
 
 @pos_bp.route("/api/hardware/open-drawer", methods=["POST"])
@@ -2284,7 +2324,12 @@ def hardware_open_drawer():
             cashier_user_id=current_user.id,
             channel="hardware_agent",
         )
-        return error_response(message=str(exc), status_code=403)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos hardware session failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=403,
+        )
 
     try:
         body = request.get_data()
@@ -2307,7 +2352,12 @@ def hardware_open_drawer():
         )
         return error_response(message=gettext("وكيل الأجهزة غير متصل"), status_code=503)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("pos hardware agent call failed: %s", e, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )
 
 
 @pos_bp.route("/api/hardware/status")

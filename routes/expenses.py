@@ -27,6 +27,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import convert_and_quantize_aed, get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
+from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.feature_guards import install_feature_gate
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
@@ -270,15 +271,9 @@ def create():
             return redirect(url_for("expenses.view", id=expense.id))
 
         except ValueError as e:
-            flash(
-                gettext(f"❌ خطأ في البيانات: {str(e)}\n💡 تحقق من أن جميع الحقول المطلوبة مملوءة."),
-                "danger",
-            )
+            refuse(e, context="expense create", category=ErrorCategory.VALIDATION)
         except Exception as e:
-            flash(
-                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
-                "danger",
-            )
+            refuse(e, context="expense create")
 
     try:
         _dc = resolve_default_currency()
@@ -407,12 +402,9 @@ def edit(**kwargs):
             return redirect(url_for("expenses.view", id=record_id))
 
         except ValueError as e:
-            flash(gettext(f"❌ خطأ في البيانات: {str(e)}"), "danger")
+            refuse(e, context=f"expense edit {record_id}", category=ErrorCategory.VALIDATION)
         except Exception as e:
-            flash(
-                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
-                "danger",
-            )
+            refuse(e, context=f"expense edit {record_id}")
 
     return render_template("expenses/edit.html", expense=expense, categories=expense_categories)
 
@@ -479,8 +471,8 @@ def delete(**kwargs):
         return redirect(url_for("expenses.index"))
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ في الحذف: {str(e)}\n💡 راجع البيانات المدخلة."), "danger")
-        return redirect(url_for("expenses.view", id=record_id))
+        refuse(e, context=f"expense delete {record_id}")
+    return redirect(url_for("expenses.view", id=record_id))
 
 
 @expenses_bp.route("/<int:id>/cancel", methods=["POST"])
@@ -525,7 +517,7 @@ def cancel(**kwargs):
             "success",
         )
     except Exception as e:
-        flash(gettext(f"❌ خطأ في الإلغاء: {str(e)}"), "danger")
+        refuse(e, context=f"expense cancel {record_id}")
 
     return redirect(url_for("expenses.view", id=record_id))
 
@@ -606,12 +598,14 @@ def create_category():
 
     except Exception as e:
         if request.is_json:
-            return error_response(message=str(e), status_code=400)
+            # Governed: an untyped Exception echoed verbatim to an API client.
+            current_app.logger.error("expense api write failed: %s", e, exc_info=True)
+            return error_response(
+                message=ErrorMessages.unexpected_error(),
+                status_code=400,
+            )
 
-        flash(
-            gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
-            "danger",
-        )
+        refuse(e, context="expense category write")
         return redirect(url_for("expenses.categories"))
 
 
@@ -689,6 +683,5 @@ def restore(**kwargs):
             db.session.flush()
         LoggingCore.log_audit("restore", "expenses", record_id)
     except Exception as e:
-        flash(gettext(f"تعذر الاستعادة: {str(e)}"), "danger")
-        return redirect(url_for("expenses.archived"))
+        refuse(e, context=f"expense restore {record_id}")
     return redirect(url_for("expenses.archived"))

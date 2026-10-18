@@ -26,6 +26,7 @@ from services.store_payment_method_service import StorePaymentMethodService
 from services.store_service import StoreService
 from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
+from utils.error_messages import ErrorCategory, refuse
 from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
 from utils.shop_i18n import shop_lang, t
 
@@ -331,7 +332,7 @@ def account_login(slug):
             return _shop_redirect_after_login(next_url, store)
 
         except ValueError as exc:
-            flash(str(exc), "danger")
+            refuse(exc, context="shop login", category=ErrorCategory.VALIDATION)
 
     return render_template("shop/account_login.html", next_url=next_url, noindex=True, **ctx)
 
@@ -372,7 +373,7 @@ def account_register(slug):
             return redirect(url_for("shop.catalog", slug=store.store_slug))
 
         except ValueError as exc:
-            flash(str(exc), "danger")
+            refuse(exc, context="shop register", category=ErrorCategory.VALIDATION)
 
     return render_template("shop/account_register.html", noindex=True, **ctx)
 
@@ -1022,7 +1023,7 @@ def checkout(slug):
             return redirect(url_for("shop.order_confirmation", slug=store.store_slug, token=token))
 
         except ValueError as exc:
-            flash(str(exc), "danger")
+            refuse(exc, context="shop checkout", category=ErrorCategory.VALIDATION)
 
         except Exception:
             flash(
@@ -1204,7 +1205,7 @@ def account_forgot_password(slug):
             return redirect(url_for("shop.account_login", slug=store.store_slug))
 
         except ValueError as exc:
-            flash(str(exc), "danger")
+            refuse(exc, context="shop password reset request", category=ErrorCategory.VALIDATION)
 
     return render_template("shop/account_forgot_password.html", noindex=True, **ctx)
 
@@ -1230,7 +1231,7 @@ def account_reset_password(slug, token):
             return redirect(url_for("shop.account_login", slug=store.store_slug))
 
         except ValueError as exc:
-            flash(str(exc), "danger")
+            refuse(exc, context="shop password reset confirm", category=ErrorCategory.VALIDATION)
 
     return render_template("shop/account_reset_password.html", token=token, noindex=True, **ctx)
 

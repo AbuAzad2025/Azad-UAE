@@ -15,7 +15,7 @@ Governance (see also ``report_system_error`` at the bottom of this module):
 import logging
 import uuid
 
-from flask import current_app
+from flask import current_app, flash
 
 
 class ErrorCategory:
@@ -477,6 +477,55 @@ def _default_logger():
         return current_app.logger
     except RuntimeError:
         return logging.getLogger(__name__)
+
+
+def refuse(error, *, context: str = "", category: str | None = None) -> str:
+    """Flash the right message for this failure, and log it the right way.
+
+    The one call a route needs in an ``except`` block. It draws the line the
+    governance layer exists to enforce:
+
+    * BusinessRuleError is the system's deliberate answer - an invalid field, or
+      a state the document may not move from. Its message is written for a human
+      and is shown as-is, logged at info with its category, never dressed up as a
+      crash.
+    * Everything else is a system failure: full traceback to the log behind a
+      reference, calm sentence to the page.
+
+    ``category`` lets a caller mark a non-typed failure as a business one when it
+    knows better - a malformed date in a form, for example, is the user's
+    mistake, not ours, and showing them a reference code for it would be noise.
+
+    Returns the flash category it used, which keeps the caller honest about what
+    the user was actually told.
+    """
+    entry = current_app.logger if current_app else _default_logger()
+
+    if isinstance(error, BusinessRuleError):
+        entry.info(
+            "refusal category=%s field=%s context=%s: %s",
+            error.category,
+            error.field or "-",
+            context or "-",
+            error.message,
+        )
+        flash(error.message, "warning")
+        return "warning"
+
+    if category:
+        # A known non-crash failure from a route that does not raise a typed
+        # error. Shown as guidance, but logged so it is still traceable.
+        entry.info(
+            "refusal category=%s context=%s: %s",
+            category,
+            context or "-",
+            str(error),
+        )
+        flash(str(error), "warning")
+        return "warning"
+
+    flash(report_system_error(error, context=context, logger=entry), "danger")
+    return "danger"
 
 
 # ── Typed business errors ─────────────────────────────────────────────────────

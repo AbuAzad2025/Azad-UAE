@@ -27,6 +27,7 @@ from utils.branching import (
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import ErrorCategory, refuse
 from utils.gl_reference_types import GLRef
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
@@ -149,17 +150,9 @@ def create():
             return redirect(url_for("purchases.view", id=purchase.id))
 
         except ValueError as e:
-            flash(f"⚠️ {str(e)}", "warning")
+            refuse(e, context="purchase create", category=ErrorCategory.VALIDATION)
         except Exception as e:
-            current_app.logger.error(f"Error in purchase creation: {str(e)}")
-            current_app.logger.error(f"Error type: {type(e).__name__}")
-            import traceback
-
-            current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-            flash(
-                gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
-                "danger",
-            )
+            refuse(e, context="purchase create")
 
     try:
         from models import Tenant
@@ -270,7 +263,7 @@ def edit(**kwargs):
             return redirect(url_for("purchases.view", id=record_id))
 
         except Exception as e:
-            flash(gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات."), "danger")
+            refuse(e, context=f"purchase edit {record_id}")
 
     return render_template("purchases/edit.html", purchase=purchase)
 
@@ -364,7 +357,7 @@ def delete(**kwargs):
         return redirect(url_for("purchases.index"))
 
     except Exception as e:
-        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
+        refuse(e, context=f"purchase delete {record_id}")
         return redirect(url_for("purchases.view", id=record_id))
 
 
@@ -387,9 +380,9 @@ def cancel(**kwargs):
         LoggingCore.log_audit("cancel", "purchases", purchase.id)
         flash(gettext("✅ تم إلغاء فاتورة الشراء بنجاح!"), "success")
     except ValueError as e:
-        flash(f"❌ {str(e)}", "danger")
+        refuse(e, context=f"purchase cancel {record_id}", category=ErrorCategory.BUSINESS)
     except Exception as e:
-        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
+        refuse(e, context=f"purchase cancel {record_id}")
 
     return redirect(url_for("purchases.view", id=record_id))
 
@@ -438,10 +431,9 @@ def purchase_return(**kwargs):
             )
             return redirect(url_for("purchases.view", id=record_id))
         except ValueError as e:
-            flash(f"❌ {str(e)}", "danger")
+            refuse(e, context=f"purchase return {record_id}", category=ErrorCategory.BUSINESS)
         except Exception as e:
-            flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
-            current_app.logger.exception("Purchase return error")
+            refuse(e, context=f"purchase return {record_id}")
 
     tid = get_active_tenant_id(current_user)
     returns, return_lines = PurchaseService.get_returns_with_lines(purchase.id, tenant_id=tid)
@@ -564,7 +556,7 @@ def create_requisition():
             flash(gettext("تم إنشاء طلب الشراء"), "success")
             return redirect(url_for("purchases.requisitions_list"))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            refuse(e, context="requisition create", category=ErrorCategory.VALIDATION)
     tid = get_active_tenant_id(current_user)
     products = PurchaseService.list_active_products(tid)
     return render_template("purchasing/requisitions.html", products=products, creating=True)
@@ -582,7 +574,7 @@ def submit_requisition(pr_id):
         ProcurementService.submit_requisition(pr)
         flash(gettext("تم إرسال الطلب"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        refuse(e, context="requisition submit", category=ErrorCategory.BUSINESS)
     return redirect(url_for("purchases.requisitions_list"))
 
 
@@ -598,7 +590,7 @@ def approve_requisition(pr_id):
         ProcurementService.approve_requisition(pr, current_user)
         flash(gettext("تمت الموافقة على الطلب"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        refuse(e, context="requisition approve", category=ErrorCategory.BUSINESS)
     return redirect(url_for("purchases.requisitions_list"))
 
 
@@ -615,7 +607,7 @@ def reject_requisition(pr_id):
         ProcurementService.reject_requisition(pr, current_user, reason)
         flash(gettext("تم رفض الطلب"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        refuse(e, context="requisition reject", category=ErrorCategory.BUSINESS)
     return redirect(url_for("purchases.requisitions_list"))
 
 
@@ -643,7 +635,7 @@ def create_grn():
             flash(gettext("تم إنشاء إيصال الاستلام"), "success")
             return redirect(url_for("purchases.grn_list"))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            refuse(e, context="goods receipt create", category=ErrorCategory.VALIDATION)
     tid = get_active_tenant_id(current_user)
     pos = PurchaseService.list_receivable_purchase_orders(tid)
     return render_template("purchasing/grn.html", pos=pos, creating=True)
@@ -661,7 +653,7 @@ def confirm_grn(grn_id):
         ProcurementService.confirm_grn(grn)
         flash(gettext("تم تأكيد الاستلام"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        refuse(e, context="goods receipt confirm", category=ErrorCategory.BUSINESS)
     return redirect(url_for("purchases.grn_list"))
 
 
@@ -676,7 +668,7 @@ def match_view(po_id):
     try:
         result = ProcurementService.three_way_match(po_id, invoice_amount)
     except ValueError as e:
-        flash(str(e), "danger")
+        refuse(e, context="three-way match", category=ErrorCategory.BUSINESS)
         result = None
     return render_template("purchasing/match.html", result=result, po_id=po_id)
 

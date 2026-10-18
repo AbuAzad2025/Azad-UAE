@@ -15,6 +15,7 @@ from routes.owner.shared import (
 from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
+from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.regional_defaults import FALLBACK_CURRENCY
 
 from .common import (
@@ -115,8 +116,8 @@ def update_integration(service):
         flash(gettext(f"✅ تم حفظ إعدادات {service} بنجاح!"), "success")
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ في حفظ الإعدادات: {str(e)}"), "danger")
-        current_app.logger.error(f"Error saving integration {service}: {e}")
+        refuse(e, context="owner integrations save")
+        current_app.logger.error("owner integrations save failed: %s", e, exc_info=True)
 
     return redirect(url_for("owner.integrations"))
 
@@ -136,7 +137,12 @@ def test_integration(service):
             ok, message = IntegrationService.test_currency_api()
     except Exception as exc:
         current_app.logger.exception("Integration test failed for %s", service)
-        return error_response(message=str(exc), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("owner integration probe failed: %s", exc, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )
     return success_response(data={"success": ok, "message": message})
 
 
@@ -233,7 +239,7 @@ def company_info():
             return redirect(url_for("owner.company_info"))
 
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ المعلومات: {str(e)}"), "error")
+            refuse(e, context="owner company info save")
 
     return render_template("owner/company_info.html", tenant=tenant)
 
@@ -270,7 +276,7 @@ def developer_settings():
             flash(gettext("تم حفظ إعدادات الشركة المطورة بنجاح"), "success")
             return redirect(url_for("owner.developer_settings"))
         except Exception as e:
-            flash(gettext(f"خطأ في الحفظ: {str(e)}"), "error")
+            refuse(e, context="owner developer settings save")
     return render_template("owner/developer_settings.html", dev=dev, config=current_app.config)
 
 
@@ -348,7 +354,7 @@ def system_config():
             return redirect(url_for("owner.system_config"))
 
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ الإعدادات: {str(e)}"), "error")
+            refuse(e, context="owner system config save")
 
     return render_template("owner/system_config.html", settings=settings)
 
@@ -392,9 +398,9 @@ def store_payment_method_create():
             flash(gettext("تمت إضافة طريقة الدفع."), "success")
             return redirect(url_for("owner.store_payment_methods"))
         except ValueError as exc:
-            flash(str(exc), "warning")
+            refuse(exc, context="owner payment method create", category=ErrorCategory.BUSINESS)
         except Exception as exc:
-            flash(gettext(f"خطأ: {exc}"), "danger")
+            refuse(exc, context="owner payment method create")
     return render_template("owner/store_payment_method_form.html", method=None)
 
 
@@ -432,9 +438,9 @@ def store_payment_method_edit(method_id):
             flash(gettext("تم تحديث طريقة الدفع."), "success")
             return redirect(url_for("owner.store_payment_methods"))
         except ValueError as exc:
-            flash(str(exc), "warning")
+            refuse(exc, context="owner payment method update", category=ErrorCategory.BUSINESS)
         except Exception as exc:
-            flash(gettext(f"خطأ: {exc}"), "danger")
+            refuse(exc, context="owner payment method update")
     return render_template("owner/store_payment_method_form.html", method=method)
 
 
@@ -449,7 +455,7 @@ def store_payment_method_toggle(method_id):
         _invalidate_owner_changes()
         flash(gettext("تم تحديث حالة طريقة الدفع."), "success")
     except ValueError as exc:
-        flash(str(exc), "warning")
+        refuse(exc, context="owner payment method toggle", category=ErrorCategory.BUSINESS)
     return redirect(url_for("owner.store_payment_methods"))
 
 
@@ -463,9 +469,9 @@ def store_payment_method_delete(method_id):
         _invalidate_owner_changes()
         flash(gettext("تم حذف طريقة الدفع."), "success")
     except ValueError as exc:
-        flash(str(exc), "warning")
+        refuse(exc, context="owner payment method delete", category=ErrorCategory.BUSINESS)
     except Exception as exc:
-        flash(gettext(f"خطأ: {exc}"), "danger")
+        refuse(exc, context="owner payment method delete")
     return redirect(url_for("owner.store_payment_methods"))
 
 
@@ -597,7 +603,7 @@ def invoice_settings():
             return redirect(url_for("owner.invoice_settings"))
 
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ الإعدادات: {str(e)}"), "error")
+            refuse(e, context="owner invoice settings save")
 
     return render_template("owner/invoice_settings.html", settings=settings)
 
@@ -873,7 +879,7 @@ def tax_settings():
                 tenant.vat_number = (request.form.get("vat_number") or "").strip() or None
                 tenant.tax_number = (request.form.get("tax_number") or "").strip() or tenant.tax_number
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ إعدادات الضرائب: {str(e)}"), "danger")
+            refuse(e, context="owner tax settings save")
             return redirect(url_for("owner.tax_settings"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث إعدادات الضرائب للشركة الحالية"), "success")
@@ -908,7 +914,7 @@ def currency_settings():
                     logger.debug("tenant currency settings sync: %s", exc)
                 settings.auto_update_rates = request.form.get("auto_update_rates") == "on"
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ إعدادات العملات: {str(e)}"), "danger")
+            refuse(e, context="owner currency settings save")
             return redirect(url_for("owner.currency_settings"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث إعدادات العملات"), "success")
@@ -1028,7 +1034,7 @@ def email_settings():
                 settings.smtp_use_tls = request.form.get("smtp_use_tls") == "on"
                 settings.email_from = request.form.get("email_from")
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ إعدادات البريد: {str(e)}"), "danger")
+            refuse(e, context="owner email settings save")
             return redirect(url_for("owner.email_settings"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث إعدادات البريد الإلكتروني"), "success")
@@ -1053,7 +1059,7 @@ def sms_settings():
                 settings.sms_sender_name = request.form.get("sms_sender_name")
                 settings.sms_enabled = request.form.get("sms_enabled") == "on"
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ إعدادات الرسائل النصية: {str(e)}"), "danger")
+            refuse(e, context="owner sms settings save")
             return redirect(url_for("owner.sms_settings"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث إعدادات الرسائل النصية"), "success")
@@ -1077,7 +1083,7 @@ def whatsapp_settings():
                 settings.whatsapp_phone_number = request.form.get("whatsapp_phone_number")
                 settings.whatsapp_enabled = request.form.get("whatsapp_enabled") == "on"
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ إعدادات واتساب: {str(e)}"), "danger")
+            refuse(e, context="owner whatsapp settings save")
             return redirect(url_for("owner.whatsapp_settings"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث إعدادات واتساب"), "success")
@@ -1104,7 +1110,7 @@ def notification_templates():
 
                 settings.notification_templates = templates
         except Exception as e:
-            flash(gettext(f"خطأ في حفظ قوالب الإشعارات: {str(e)}"), "danger")
+            refuse(e, context="owner notification templates save")
             return redirect(url_for("owner.notification_templates"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم تحديث قوالب الإشعارات"), "success")
@@ -1152,7 +1158,12 @@ def api_update_tenant_settings():
         _audit_owner_db_action("api_update_tenant_settings", {"field": field, "tenant_id": tenant.id})
         return success_response(message=gettext(f"تم تحديث {field} بنجاح"))
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("owner backup run failed: %s", e, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )
 
 
 @owner_bp.route("/api/toggle-warehouse-negative", methods=["POST"])
@@ -1178,7 +1189,12 @@ def api_toggle_warehouse_negative():
         _invalidate_owner_changes()
         return success_response(data={"allow_negative_inventory": warehouse.allow_negative_inventory})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("owner backup restore failed: %s", e, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )
 
 
 @owner_bp.route("/api/supervisor-override", methods=["POST"])
@@ -1271,4 +1287,9 @@ def api_supervisor_override():
             data={"supervisor_username": supervisor.username},
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        # Governed: an untyped Exception echoed verbatim to an API client.
+        current_app.logger.error("owner backup verify failed: %s", e, exc_info=True)
+        return error_response(
+            message=ErrorMessages.unexpected_error(),
+            status_code=500,
+        )

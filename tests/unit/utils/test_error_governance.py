@@ -23,7 +23,12 @@ class TestSystemErrorReporting:
 
         ref = new_error_reference()
         assert len(ref) == 8, f"a reference the user reads aloud should be short: {ref!r}"
-        assert ref.isupper()
+        # ref == ref.upper() rather than isupper(): a hex prefix that happens
+        # to be all digits ("12345678") has no case, so str.isupper() is False
+        # for it. About 2.3% of references, which is a failing test roughly one
+        # run in forty rather than a defect.
+        assert ref == ref.upper()
+        assert all(c in "0123456789ABCDEF" for c in ref), f"not a hex reference: {ref!r}"
 
     def test_exception_text_never_reaches_the_returned_message(self):
         """The leak this whole layer exists to prevent."""

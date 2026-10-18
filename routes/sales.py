@@ -28,6 +28,7 @@ from utils.branching import (
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import enforce_resource_limit, owner_required, permission_required
+from utils.error_messages import ErrorCategory, refuse
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.qr_generator import generate_qr_data_url
@@ -173,11 +174,9 @@ def create():
             try:
                 default_currency = resolve_default_currency()
             except Exception as e:
-                import sys
-                import traceback
-
-                sys.stderr.write(f"[SALES_WARNING] Failed to get tenant default currency (create sale): {e}\n")
-                traceback.print_exc()
+                # stderr bypassed the configured handlers, so those lines never
+                # reached the JSONL sink or the log rotation.
+                current_app.logger.warning("create sale: tenant default currency unavailable: %s", e, exc_info=True)
                 try:
                     LoggingCore.log_error(
                         message=str(e),
@@ -257,19 +256,11 @@ def create():
             return redirect(url_for("sales.view", id=sale.id))
 
         except ValueError as e:
-            current_app.logger.warning(f"ValueError creating sale: {e}")
-            flash(
-                gettext(f"⚠️ {str(e)}\n💡 تحقق من الكميات المتوفرة في المخزون."),
-                "danger",
-            )
+            refuse(e, context="sale create", category=ErrorCategory.BUSINESS)
         except TenantLimitError as e:
-            current_app.logger.info(f"Tenant limit blocked sale creation: {e}")
-            flash(str(e), "warning")
+            refuse(e, context="sale create", category=ErrorCategory.BUSINESS)
         except Exception as e:
-            from utils.error_messages import ErrorMessages
-
-            current_app.logger.error(f"Error creating sale: {e}")
-            flash(ErrorMessages.database_error(), "danger")
+            refuse(e, context="sale create")
 
     tid = get_active_tenant_id(current_user)
     if tid:
@@ -480,7 +471,7 @@ def edit(**kwargs):
             return redirect(url_for("sales.view", id=record_id))
 
         except Exception as e:
-            flash(gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة."), "danger")
+            refuse(e, context=f"sale edit {record_id}")
 
     return render_template("sales/edit.html", sale=sale)
 
@@ -511,10 +502,7 @@ def cancel(**kwargs):
         flash(gettext("✅ تم إلغاء الفاتورة بنجاح!"), "success")
 
     except Exception as e:
-        flash(
-            gettext(f"❌ حدث خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
-            "danger",
-        )
+        refuse(e, context=f"sale cancel {record_id}")
 
     return redirect(url_for("sales.view", id=record_id))
 
@@ -647,8 +635,8 @@ def delete(**kwargs):
         return redirect(url_for("sales.index"))
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ في الحذف: {str(e)}"), "danger")
-        return redirect(url_for("sales.index"))
+        refuse(e, context=f"sale delete {record_id}")
+    return redirect(url_for("sales.index"))
 
 
 @sales_bp.route("/<int:id>/archive", methods=["POST"])
@@ -675,7 +663,7 @@ def archive(**kwargs):
             archive_service.archive_record("sales", sale, reason=gettext("تم أرشفة فاتورة المبيعات"))
             LoggingCore.log_audit("archive", "sales", sale.id)
     except Exception as e:
-        flash(gettext(f"❌ خطأ في الأرشفة: {str(e)}"), "danger")
+        refuse(e, context=f"sale archive {record_id}")
 
     return redirect(url_for("sales.index"))
 
@@ -697,7 +685,7 @@ def restore(**kwargs):
             db.session.delete(archived_record)
             LoggingCore.log_audit("restore", "sales", record_id)
     except Exception as e:
-        flash(gettext(f"❌ حدث خطأ في استعادة الفاتورة: {str(e)}"), "danger")
+        refuse(e, context=f"sale restore {record_id}")
 
     return redirect(url_for("sales.archived"))
 

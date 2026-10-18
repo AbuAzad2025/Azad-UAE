@@ -31,6 +31,7 @@ from utils.branching import (
 )
 from utils.db_safety import atomic_transaction
 from utils.decorators import any_permission_required, branch_scope_id, permission_required
+from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_barcode, generate_sku, save_uploaded_file
 from utils.static_asset_paths import tenant_upload_dir
@@ -461,7 +462,16 @@ def import_products():
 
                         except Exception as e:
                             error_count += 1
-                            errors.append(gettext(f"خطأ في السطر {cast(int, index) + 2}: {str(e)}"))
+                            # Row-level import failure: logged with the row
+                            # number so the sheet can be fixed, and the operator
+                            # is told which line to look at - never the raw
+                            # driver error.
+                            current_app.logger.error(
+                                "product import row %s failed: %s", cast(int, index) + 2, e, exc_info=True
+                            )
+                            errors.append(
+                                gettext(f"تعذّر استيراد السطر {cast(int, index) + 2} من الملف."),
+                            )
 
                 if success_count > 0:
                     flash(gettext(f"تم استيراد {success_count} منتج بنجاح."), "success")
@@ -480,7 +490,7 @@ def import_products():
                     gettext("حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."),
                     "danger",
                 )
-                current_app.logger.error(f"Import Failed: {e}")
+                current_app.logger.error("product import failed: %s", e, exc_info=True)
             finally:
                 if filepath and os.path.exists(filepath):
                     try:
@@ -548,7 +558,7 @@ def import_grid():
                 count += 1
             except Exception as e:
                 errors += 1
-                current_app.logger.error(f"Grid Import Error: {e}")
+                current_app.logger.error("grid import row %s failed: %s", count, e, exc_info=True)
 
     if count > 0:
         flash(gettext(f"تم إضافة {count} منتج بنجاح."), "success")
@@ -760,7 +770,7 @@ def create():
                 try:
                     check_products_limit()
                 except TenantLimitError as e:
-                    flash(str(e), "warning")
+                    refuse(e, context="product create", category=ErrorCategory.BUSINESS)
                     return redirect(url_for("products.create"))
 
                 product = Product(
@@ -861,13 +871,7 @@ def create():
                 return redirect(url_for("products.index"))
 
             except Exception as e:
-                current_app.logger.exception(f"Error creating product: {e}")
-                flash(
-                    gettext(
-                        f"❌ فشل إضافة المنتج: {str(e)}\n💡 تأكد من:\n   • اسم المنتج فريد\n   • الأسعار صحيحة\n   • SKU غير مكرر"
-                    ),
-                    "danger",
-                )
+                refuse(e, context="product create")
         else:
             # Form validation failed
             current_app.logger.warning(f"Form validation failed. Errors: {form.errors}")
@@ -1136,7 +1140,7 @@ def edit(**kwargs):
             return redirect(url_for("products.view", id=product.id))
 
         except Exception as e:
-            flash(gettext(f"❌ فشل تحديث المنتج: {str(e)}"), "danger")
+            refuse(e, context=f"product edit {record_id}")
 
     category_list = ProductService.list_active_categories(get_active_tenant_id(current_user))
     product.visible_stock = StockService.get_product_stock(product.id, user=current_user)
@@ -1218,7 +1222,7 @@ def delete(**kwargs):
         return redirect(url_for("products.index"))
 
     except Exception as e:
-        current_app.logger.error(f"Error deleting product {record_id}: {e}")
+        current_app.logger.error("product delete %s failed: %s", record_id, e, exc_info=True)
         if _wants_json():
             return error_response(
                 message=gettext("فشل حذف المنتج. حدث خطأ غير متوقع."),
@@ -1330,9 +1334,15 @@ def create_category():
 
     except Exception as e:
         if request.is_json:
-            return error_response(message=str(e), status_code=400)
-
-        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
+            # Both surfaces were echoing the raw exception: the JSON body
+            # (machine-readable, so a psycopg2 message reached API consumers
+            # verbatim) and the flash. Both are now governed.
+            refuse(e, context="product category")
+            if request.is_json:
+                return error_response(
+                    message=ErrorMessages.unexpected_error(),
+                    status_code=400,
+                )
         return redirect(url_for("products.categories"))
 
 
@@ -1386,8 +1396,15 @@ def update_category(**kwargs):
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
-            return error_response(message=str(e), status_code=400)
-        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
+            # Both surfaces were echoing the raw exception: the JSON body
+            # (machine-readable, so a psycopg2 message reached API consumers
+            # verbatim) and the flash. Both are now governed.
+            refuse(e, context="product category")
+            if request.is_json:
+                return error_response(
+                    message=ErrorMessages.unexpected_error(),
+                    status_code=400,
+                )
         return redirect(url_for("products.categories"))
 
 
@@ -1423,8 +1440,15 @@ def delete_category(**kwargs):
         return redirect(url_for("products.categories"))
     except Exception as e:
         if request.is_json:
-            return error_response(message=str(e), status_code=400)
-        flash(gettext(f"❌ حدث خطأ: {str(e)}"), "danger")
+            # Both surfaces were echoing the raw exception: the JSON body
+            # (machine-readable, so a psycopg2 message reached API consumers
+            # verbatim) and the flash. Both are now governed.
+            refuse(e, context="product category")
+            if request.is_json:
+                return error_response(
+                    message=ErrorMessages.unexpected_error(),
+                    status_code=400,
+                )
         return redirect(url_for("products.categories"))
 
 
