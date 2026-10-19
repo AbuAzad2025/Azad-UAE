@@ -168,9 +168,23 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   to the actual assertion.
 
 ### Scenario Waves — and the gates `ruff` does not run
-- **Wave 9 (Sales, CRM and the customer ledger) — complete.** QOT `4d0cfcc0`,
-  SAL `311ad0b2`, CUS `ef13c73d`, CRM `04024125`. 272 scenarios; the catalogue's
-  per-wave budget is enforced by `tests/unit/test_scenario_catalog.py`.
+- **Waves 7-13 are delivered** (`delivered=True` in
+  `tests/integration/business_scenarios/scenario_catalog.py`): wave 7 OWN/PKG/BAK/MON,
+  wave 8 LED/ADV/TRE/EXP/RPT/BUD, wave 9 SAL/CRM/CUS/QOT, wave 10 WHS/PRD/PUR,
+  wave 11 POS, wave 12 PAY/CHQ, wave 13 HR.
+  The catalogue's per-wave budget is enforced by
+  `tests/unit/test_scenario_catalog.py` — a wave is only honest once its
+  `delivered` flag is set, and the flag is what the gate reads.
+- **Remaining: wave 14 (`MKT`/`AI`/`PRJ`, 139), wave 15 (`SHOP`/`PUB`, 108),
+  wave 16 (`SET`/`USR`/`API`/`HOM`, 149).**
+- **The coverage floor hides behind the other jobs.** `COVERAGE_FAIL_UNDER: 85` is
+  computed from the *combined* `.coverage` files every slice uploads. A slice that
+  fails its tests never produces its data file, so one red test job silently
+  drops ~8k statements out of the report and the floor then fails with a
+  misleading number (observed: 71.42% while the code was at 98.52% the day
+  before). Read the combine line in the `coverage-report` log before believing
+  the percentage: `Combined 8 files` is healthy, `Combined 4 files` means four
+  slices died upstream. Fix the failing slices; do not touch `.coveragerc`.
 - **`ruff check` is not the static gate.** CI's *Static quality* job runs
   **mypy**, **fourteen** lint scripts, and a generated-docs comparison. Waves 8,
   QOT, SAL and CUS each passed the whole local `business_scenarios` suite and
@@ -200,8 +214,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   **module-level** imports. `services/` twice hid `from flask import abort` inside
   a function body, so it passed a rule it was violating. Grep for the import
   anywhere in `services/`, not just at the top.
-- Wave 10 next: `WHS` (warehouse, transfers, unified_inventory, stock_sync),
-  `PRD` (products, assets), `PUR` (purchases).
+- Wave 14 next: `MKT`/`AI`/`PRJ`, then wave 15 (`SHOP`/`PUB`), wave 16
+  (`SET`/`USR`/`API`/`HOM`).
+- **`/auth/login` refuses to switch users while a session is open.** A scenario
+  that needs two actors has to log the first one out first, or the second login
+  is a no-op and the guard under test is never exercised by the actor it was
+  written for.
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`

@@ -401,6 +401,7 @@ WAVES: tuple[Wave, ...] = (
                 "an employee record is personal data with an audit trail",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=14,
