@@ -459,6 +459,7 @@ WAVES: tuple[Wave, ...] = (
                 "a public donation must never be creditable to the wrong tenant",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=16,
