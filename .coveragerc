@@ -10,7 +10,6 @@ source =
     models
     routes
     services
-    utils
     config
     extensions
 omit =
@@ -117,7 +116,6 @@ source =
     models/
     routes/
     services/
-    utils/
     /home/runner/work/Azad-UAE/Azad-UAE/app/
     /home/runner/work/Azad-UAE/Azad-UAE/ai_knowledge/
     /home/runner/work/Azad-UAE/Azad-UAE/bootstrap/
@@ -125,7 +123,6 @@ source =
     /home/runner/work/Azad-UAE/Azad-UAE/models/
     /home/runner/work/Azad-UAE/Azad-UAE/routes/
     /home/runner/work/Azad-UAE/Azad-UAE/services/
-    /home/runner/work/Azad-UAE/Azad-UAE/utils/
 
 [report]
 omit =
