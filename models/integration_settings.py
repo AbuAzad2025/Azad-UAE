@@ -55,29 +55,38 @@ class IntegrationSettings(db.Model):
     @staticmethod
     def get_service_config(service_name, tenant_id=None):
         """
-        الحصول على إعدادات خدمة معينة.
+        ??????? ??? ??????? ???? ?????.
 
         tenant_id=None means the platform-global row (owner panel scope) and
-        strictly matches NULL rows — it never falls back to another tenant's
+        strictly matches NULL rows - it never falls back to another tenant's
         row (cross-tenant leak guard).
+
+        The lookup runs without the automatic ORM tenant scope: the scope
+        filters on the *active* tenant, which for the platform owner is not the
+        tenant this row belongs to. With the scope on, an existing row was
+        invisible here and the insert below hit the unique constraint on
+        (tenant_id, service_name) instead.
         """
-        q = IntegrationSettings.query.filter_by(service_name=service_name)
-        if tenant_id is not None:
-            q = q.filter_by(tenant_id=tenant_id)
-        else:
-            q = q.filter(IntegrationSettings.tenant_id.is_(None))
-        integration = q.first()
-        if not integration:
-            # إنشاء سجل جديد بإعدادات افتراضية
-            integration = IntegrationSettings(
-                service_name=service_name,
-                tenant_id=tenant_id,
-                enabled=False,
-                config_data=json.dumps({}, ensure_ascii=False),
-            )
-            db.session.add(integration)
-            db.session.flush()
-        return integration
+        from utils.tenanting import without_tenant_scope
+
+        with without_tenant_scope():
+            q = IntegrationSettings.query.filter_by(service_name=service_name)
+            if tenant_id is not None:
+                q = q.filter_by(tenant_id=tenant_id)
+            else:
+                q = q.filter(IntegrationSettings.tenant_id.is_(None))
+            integration = q.first()
+            if not integration:
+                # ????? ??? ???? ???????? ????????
+                integration = IntegrationSettings(
+                    service_name=service_name,
+                    tenant_id=tenant_id,
+                    enabled=False,
+                    config_data=json.dumps({}, ensure_ascii=False),
+                )
+                db.session.add(integration)
+                db.session.flush()
+            return integration
 
     def get_config(self):
         """

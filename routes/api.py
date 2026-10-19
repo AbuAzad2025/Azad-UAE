@@ -16,7 +16,7 @@ from services.stock_service import StockService
 from utils.api_response import error_response, success_response
 from utils.branching import (
     get_accessible_warehouse_ids,
-    get_accessible_warehouses,
+    get_accessible_warehouses_query,
     get_branch_stock_map,
 )
 from utils.decorators import branch_scope_id, permission_required
@@ -793,7 +793,9 @@ def _query_accessible_warehouses():
     from models import Warehouse
 
     q = request.args.get("q", "").strip()
-    whs = get_accessible_warehouses(current_user)
+    # The *query* helper, not the materialised one: this endpoint filters and
+    # orders in the database, and get_accessible_warehouses() returns a list.
+    whs = get_accessible_warehouses_query(current_user)
     if q:
         whs = whs.filter(Warehouse.name.ilike(f"%{q}%"))
     whs = whs.order_by(Warehouse.name).limit(20).all()

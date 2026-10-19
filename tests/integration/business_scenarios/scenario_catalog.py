@@ -494,6 +494,7 @@ WAVES: tuple[Wave, ...] = (
                 "the first screen every operator sees, and its tenant scope",
             ),
         ),
+        delivered=True,
     ),
 )
 

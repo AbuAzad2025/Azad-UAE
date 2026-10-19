@@ -168,14 +168,16 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   to the actual assertion.
 
 ### Scenario Waves — and the gates `ruff` does not run
-- **Waves 7-15 are delivered** (`delivered=True` in
+- **Waves 7-16 are delivered** (`delivered=True` in
   `tests/integration/business_scenarios/scenario_catalog.py`): wave 7 OWN/PKG/BAK/MON,
   wave 8 LED/ADV/TRE/EXP/RPT/BUD, wave 9 SAL/CRM/CUS/QOT, wave 10 WHS/PRD/PUR,
-  wave 11 POS, wave 12 PAY/CHQ, wave 13 HR, wave 14 MKT/AI/PRJ, wave 15 SHOP/PUB.
+  wave 11 POS, wave 12 PAY/CHQ, wave 13 HR, wave 14 MKT/AI/PRJ, wave 15 SHOP/PUB,
+  wave 16 SET/USR/API/HOM.
   The catalogue's per-wave budget is enforced by
   `tests/unit/test_scenario_catalog.py` — a wave is only honest once its
   `delivered` flag is set, and the flag is what the gate reads.
-- **Remaining: wave 16 (`SET`/`USR`/`API`/`HOM`, 149).**
+- **The whole plan is delivered.** Every wave's domains meet their budget, so
+  the per-domain gate now covers the entire catalogue.
 - **The coverage floor hides behind the other jobs.** `COVERAGE_FAIL_UNDER: 85` is
   computed from the *combined* `.coverage` files every slice uploads. A slice that
   fails its tests never produces its data file, so one red test job silently
@@ -213,8 +215,6 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   **module-level** imports. `services/` twice hid `from flask import abort` inside
   a function body, so it passed a rule it was violating. Grep for the import
   anywhere in `services/`, not just at the top.
-- Wave 16 next: `SET` (tenant settings), `USR` (users, roles, branches), `API`
-  (api, api_enhanced, api_docs, graphql, printing) and `HOM` (dashboard).
 - **`/auth/login` refuses to switch users while a session is open.** A scenario
   that needs two actors has to log the first one out first, or the second login
   is a no-op and the guard under test is never exercised by the actor it was
@@ -227,6 +227,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   (`utils/feature_guards.install_feature_gate`), and the storefront is behind
   the platform's `SystemSettings.enable_ecommerce`; a scenario that expects
   either to answer has to switch the flag on first.
+- **A scenario that flips a switch has to put it back.** The request and the
+  test share one session, so a switch flipped inside a scenario is committed
+  and leaks into every suite that runs after it — the wave-15 shop suite broke
+  the wave-3 storefront gate exactly that way. The same applies to the
+  platform vault: whoever creates it must open it with the password the other
+  suites use, or every later suite finds a vault it cannot unlock.
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`

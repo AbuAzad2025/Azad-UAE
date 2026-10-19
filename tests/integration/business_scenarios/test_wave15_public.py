@@ -42,6 +42,8 @@ PUBLIC_PATHS = [
     "/robots.txt",
     "/humans.txt",
 ]
+#: The password the platform vault is opened with across the suites.
+VAULT_PASSWORD = "Vault-Pass-123"
 
 
 def _vault(db_session, **flags):
@@ -50,6 +52,10 @@ def _vault(db_session, **flags):
     The platform vault is tenant-less by design - its ``tenant_id`` is NULL -
     so it is created the same way: a vault that belongs to no tenant is what
     the platform's own money is kept in.
+
+    The password is the one the other suites unlock with, and the row is
+    removed again afterwards. A vault left behind with an unknown password
+    would lock every suite that runs after this one.
     """
     from models.payment_vault import PaymentVault
 
@@ -58,9 +64,9 @@ def _vault(db_session, **flags):
         vault = PaymentVault(
             tenant_id=None,
             vault_name="Platform Vault",
-            vault_password_hash="not-a-real-hash",
             is_locked=False,
         )
+        vault.set_vault_password(VAULT_PASSWORD)
         db_session.add(vault)
         db_session.flush()
     for field, value in flags.items():

@@ -49,6 +49,25 @@ from .common import (
 logger = logging.getLogger(__name__)
 
 
+def _known_template(folder: str, name: str) -> bool:
+    """True when the print template exists.
+
+    The preview routes render ``<folder>/<name>.html``. A name that does not
+    exist used to reach the renderer and answer 500, which is the wrong answer
+    for a bad URL: the caller asked for a template that is not there, so the
+    template is not there - 404, not a stack trace. The name is also rejected
+    when it tries to walk out of its folder.
+    """
+    if not name or "/" in name or "\\" in name or ".." in name:
+        return False
+    try:
+        available = set(current_app.jinja_env.list_templates())
+    except Exception:
+        logger.warning("Could not list the print templates", exc_info=True)
+        return False
+    return f"{folder}/{name}.html" in available
+
+
 @owner_bp.route("/integrations")
 @owner_required
 def integrations():
@@ -618,6 +637,9 @@ def preview_invoice(template):
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
 
+    if not _known_template("invoices", template):
+        abort(404)
+
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
         abort(403)
@@ -743,6 +765,9 @@ def preview_receipt(template):
     from utils.auth_helpers import is_global_owner_user
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
+
+    if not _known_template("receipts", template):
+        abort(404)
 
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
@@ -996,10 +1021,15 @@ def exchange_rates():
 @owner_required
 def payment_gateways():
     from models import PaymentVault
+    from utils.tenanting import without_tenant_scope
 
     vault = PaymentVault.get_platform_vault()
     if not vault:
-        with atomic_transaction("payment_gateway_create_vault"):
+        # The platform vault is tenant-less by design, and the ORM's auto-stamp
+        # would give it the active tenant instead - which both defeats the point
+        # and collides with that tenant's own vault. The scope has to stay off
+        # through the commit, because that is where the stamp happens.
+        with without_tenant_scope(), atomic_transaction("payment_gateway_create_vault"):
             vault = PaymentVault(tenant_id=None)
             vault.set_vault_password(current_app.config.get("SECRET_KEY", "default-vault-password"))
             db.session.add(vault)

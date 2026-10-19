@@ -206,6 +206,30 @@ def _other_tenant(db_session):
     return tenant
 
 
+@pytest.fixture(autouse=True)
+def _restore_platform_switches(db_session, demo_tenant):
+    """Put the platform's ecommerce switch and the tenant's store flag back.
+
+    A request inside a test commits them - the session is shared with the
+    request - so without this a later suite that expects the switch to be off
+    (the storefront's own gate) would see it on, and the storefront would be
+    published in a suite that believes it is closed.
+    """
+    from models.system_settings import SystemSettings
+    from models.tenant import Tenant
+
+    was_ecommerce = SystemSettings.get_current().enable_ecommerce
+    tenant_row = db_session.get(Tenant, demo_tenant.id)
+    was_store = tenant_row.enable_store if tenant_row is not None else None
+    yield
+    db_session.expire_all()
+    SystemSettings.get_current().enable_ecommerce = was_ecommerce
+    tenant_row = db_session.get(Tenant, demo_tenant.id)
+    if tenant_row is not None and was_store is not None:
+        tenant_row.enable_store = was_store
+    db_session.commit()
+
+
 @pytest.fixture
 def store_manager(client, db_session, demo_tenant, demo_branch):
     """A signed-in store manager, with the tenant's store feature switched on.
