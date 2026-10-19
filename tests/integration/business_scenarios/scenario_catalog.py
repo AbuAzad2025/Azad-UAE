@@ -324,6 +324,7 @@ WAVES: tuple[Wave, ...] = (
                 "conversion is a money path that must be idempotent",
             ),
         ),
+    delivered=True,
     ),
     Wave(
         number=10,
