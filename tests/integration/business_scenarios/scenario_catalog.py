@@ -387,6 +387,7 @@ WAVES: tuple[Wave, ...] = (
                 "an unreconcilable instrument is worse than a missing one",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=13,
