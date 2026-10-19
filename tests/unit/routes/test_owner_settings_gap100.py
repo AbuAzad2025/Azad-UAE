@@ -62,7 +62,9 @@ class TestIntegrationExceptionGap100:
             resp = app.test_client().post("/owner/integrations/test/email")
         assert resp.status_code == 500
         data = resp.get_json()
-        assert "smtp down" in data["message"]
+        # Governed: an untyped Exception is never echoed verbatim to the client.
+        assert "smtp down" not in data["message"]
+        assert data["message"]
 
     def test_currency_test_exception_returns_500(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)
@@ -86,7 +88,7 @@ class TestIntegrationExceptionGap100:
             )
             resp = app.test_client().post("/owner/integrations/test/currency_api")
         assert resp.status_code == 500
-        assert "api down" in resp.get_json()["message"]
+        assert "api down" not in resp.get_json()["message"]
 
 
 class TestInvoiceLogoWatermarkGap100:

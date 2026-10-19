@@ -153,7 +153,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "warehouse": 14,
     "whatsapp": 3,
 }
-ORIGINAL_SCENARIO_COUNT = 76
+ORIGINAL_SCENARIO_COUNT = 77
 TARGET_SCENARIO_COUNT = 1000
 
 
@@ -204,7 +204,7 @@ WAVES: tuple[Wave, ...] = (
         number=6,
         title="Accounting spine - balance, periods, reversal",
         domains=(),
-        fixed_scenarios=14,
+        fixed_scenarios=15,
         delivered=True,
     ),
     Wave(

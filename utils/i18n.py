@@ -4142,6 +4142,8 @@ TRANSLATIONS = {
         "en": "First backup will be created on schedule",
     },
     "Show_All": {"ar": "عرض الكل", "en": "Show All"},
+    "Show_Full_Trace": {"ar": "إظهار التتبع الكامل", "en": "Show Full Trace"},
+    "Hide_Full_Trace": {"ar": "إخفاء التتبع الكامل", "en": "Hide Full Trace"},
     "Security_Info": {"ar": "معلومات الأمان", "en": "Security Info"},
     "Protection": {"ar": "الحماية", "en": "Protection"},
     "Encryption_Checksum": {"ar": "تشفير + Checksum", "en": "Encryption + Checksum"},

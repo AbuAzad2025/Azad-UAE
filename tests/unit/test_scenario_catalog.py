@@ -180,14 +180,14 @@ class TestScenarioIdentifiers:
 
     def test_identifiers_use_a_catalogued_prefix(self):
         owners, _ = _declared_ids()
-        known = catalog.PREFIXES | {f"S-{i:02d}" for i in range(1, 31)}
+        known = catalog.PREFIXES | {f"S-{i:02d}" for i in range(1, 32)}
         unknown = sorted(sid for sid in owners if not any(sid == k or sid.startswith(k + "-") for k in known))
         assert not unknown, f"scenario identifiers outside the catalogue: {unknown}"
 
     def test_original_wave_scenarios_are_all_present(self):
-        """S-01..S-30 must each still be claimed by exactly one suite."""
+        """S-01..S-31 must each still be claimed by exactly one suite."""
         _, hosts = _declared_ids()
-        missing = [f"S-{i:02d}" for i in range(1, 31) if len(set(hosts.get(f"S-{i:02d}", []))) != 1]
+        missing = [f"S-{i:02d}" for i in range(1, 32) if len(set(hosts.get(f"S-{i:02d}", []))) != 1]
         assert not missing, f"wave 0-6 scenarios claimed zero or several times: {missing}"
 
 
