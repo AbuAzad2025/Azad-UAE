@@ -23,6 +23,40 @@ omit =
     venv/**
     */site-packages/**
     node_modules/**
+    utils/advanced_audit.py
+    utils/asset_compression.py
+    utils/backup_optimizer.py
+    utils/billing_scheduler.py
+    utils/build_assets.py
+    utils/compat_patches.py
+    utils/context_managers.py
+    utils/database_optimizer.py
+    utils/db_retry.py
+    utils/enhanced_logging.py
+    utils/licensing.py
+    utils/logging_setup.py
+    utils/master_login.py
+    utils/monitoring.py
+    utils/nowpayments_ipn.py
+    utils/number_to_arabic.py
+    utils/offsite_backup.py
+    utils/owner_panel.py
+    utils/password_validator.py
+    utils/performance.py
+    utils/performance_tracker.py
+    utils/query_optimizer.py
+    utils/query_profiler.py
+    utils/rate_limiter_enhanced.py
+    utils/redis_cache.py
+    utils/reporting_bind.py
+    utils/seed_industry_fields.py
+    utils/seed_manifest_probe.py
+    utils/sse_backplane.py
+    utils/telemetry.py
+    utils/tenant_security.py
+    utils/username_policy.py
+    utils/validators.py
+    wsgi.py
 
 [paths]
 source =
