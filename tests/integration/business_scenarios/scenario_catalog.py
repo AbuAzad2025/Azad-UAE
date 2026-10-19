@@ -438,6 +438,7 @@ WAVES: tuple[Wave, ...] = (
                 "project time and money roll up to the right tenant",
             ),
         ),
+        delivered=True,
     ),
     Wave(
         number=15,
