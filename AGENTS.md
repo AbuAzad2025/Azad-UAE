@@ -283,6 +283,11 @@ are **not** fixed; each is pinned by a test that names it.
   no mapping row, so those postings are refused — and CI forces the flag to
   `False`, so the whole scenario suite proves a configuration production does
   not run. **That is the first thing to fix.**
+  Measured, not inferred: flipping `tests/conftest.py`'s
+  `ENABLE_DYNAMIC_GL_MAPPING` to `True` breaks the wave-6 accounting spine —
+  `GLMappingError: No approved GL concept was provided for legacy hardcoded
+  account code 1110-B8` — because the resolver refuses a posting that names no
+  concept, and the legacy path names only an account code.
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`
