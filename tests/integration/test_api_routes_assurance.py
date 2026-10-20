@@ -183,7 +183,7 @@ class TestAuthenticatedApi:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q, create=True)
+        mocker.patch.object(api_module, "get_accessible_warehouses_query", return_value=mock_q, create=True)
         with app.app_context():
             resp = auth_client.get("/api/warehouses?q=Main")
         assert resp.status_code == 200

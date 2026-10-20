@@ -162,15 +162,22 @@ def _leave_request(db_session, tenant, user, leave_type, *, state="draft", days=
 
 
 def _attendance(db_session, tenant, user, *, branch=None, hours=None, check_out=True):
+    """An attendance row.
+
+    The check-in is *now*, not "eight hours ago": the service only finds an
+    open record whose check-in is today, so a row from yesterday is invisible
+    to it - and a scenario that ran at one in the morning would quietly assert
+    something different from the same scenario run at ten in the evening.
+    """
     from models import Attendance
 
-    check_in = datetime.now(UTC) - timedelta(hours=8)
+    now = datetime.now(UTC)
     att = Attendance(
         tenant_id=tenant.id,
         branch_id=branch.id if branch else None,
         user_id=user.id,
-        check_in=check_in,
-        check_out=check_in + timedelta(hours=8) if check_out else None,
+        check_in=now,
+        check_out=now if check_out else None,
         work_hours=Decimal(str(hours)) if hours is not None else None,
         state="validated" if check_out else "draft",
     )
