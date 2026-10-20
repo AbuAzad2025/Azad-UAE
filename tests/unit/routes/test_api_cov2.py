@@ -249,7 +249,7 @@ class TestQueryHelperEmptyQArcs:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q)
+        mocker.patch.object(api_module, "get_accessible_warehouses_query", return_value=mock_q)
         resp = api_cov2_client.get("/api/warehouses")
         assert resp.status_code == 200
         assert resp.get_json()["data"]["results"][0]["id"] == 1

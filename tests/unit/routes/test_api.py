@@ -497,7 +497,7 @@ class TestApiEndpoints:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q, create=True)
+        mocker.patch.object(api_module, "get_accessible_warehouses_query", return_value=mock_q, create=True)
         resp = api_client.get("/api/warehouses?q=Main")
         assert resp.status_code == 200
 
@@ -633,7 +633,7 @@ class TestApiEndpoints:
         mock_q.order_by.return_value = mock_q
         mock_q.limit.return_value = mock_q
         mock_q.all.return_value = [wh]
-        mocker.patch.object(api_module, "get_accessible_warehouses", return_value=mock_q)
+        mocker.patch.object(api_module, "get_accessible_warehouses_query", return_value=mock_q)
         resp = api_client.get("/api/search_warehouses?q=Branch")
         assert resp.status_code == 200
         assert resp.get_json()["data"]["results"][0]["id"] == 2
