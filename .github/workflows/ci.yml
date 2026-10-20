@@ -77,7 +77,11 @@ jobs:
               {"postgres-version":15,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
               {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
               {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
-              {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
+              {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
+              {"postgres-version":15,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
+              {"postgres-version":15,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
+              {"postgres-version":15,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
+              {"postgres-version":15,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
               {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           else
@@ -88,7 +92,11 @@ jobs:
               {"postgres-version":16,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
               {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
               {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
-              {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/",          "cov-flag":"integration"},
+              {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
+              {"postgres-version":16,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
+              {"postgres-version":16,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
+              {"postgres-version":16,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
+              {"postgres-version":16,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
               {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           fi
@@ -987,6 +995,32 @@ jobs:
       - name: Enforce coverage floor (COVERAGE_FAIL_UNDER=${{ env.COVERAGE_FAIL_UNDER }})
         if: hashFiles('.coverage') != ''
         run: coverage report --show-missing --fail-under=${{ env.COVERAGE_FAIL_UNDER }}
+
+      # Each layer gets its own floor. The global floor is blind to a layer
+      # eroding: routes are 28% of the statements, so a route layer falling
+      # from 99% to 90% would still leave the whole project above 95%. The
+      # floors below sit just under the measured values, so ordinary churn
+      # does not break them and a regression cannot hide behind the total.
+      - name: Enforce the per-layer floors
+        if: hashFiles('.coverage') != ''
+        run: |
+          while read -r pattern floor; do
+            [ -z "$pattern" ] && continue
+            echo "::group::$pattern >= $floor%"
+            if ! out=$(coverage report --include="$pattern" --fail-under="$floor" 2>&1); then
+              echo "$out" | tail -20
+              echo "::endgroup::"
+              exit 1
+            fi
+            echo "$out" | tail -1
+            echo "::endgroup::"
+          done <<'FLOORS'
+          routes/* 98
+          services/* 97
+          models/* 99
+          utils/* 96
+          app/* 90
+          FLOORS
 
       - name: Generate comprehensive coverage report
         if: hashFiles('.coverage') != ''

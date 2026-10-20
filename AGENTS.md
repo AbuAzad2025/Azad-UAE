@@ -94,6 +94,11 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 - Coverage floor: `COVERAGE_FAIL_UNDER: 95` (measured 98.49% — raised from 85
   once every slice passed again, so the floor cannot be eroded one slice at a
   time).
+- **Per-layer floors** (the `coverage-report` job): routes 98, services 97,
+  models 99, utils 96, app 90 — measured 98.99 / 98.24 / 99.92 / 97.67 / 93.38.
+  The global floor is blind to a layer eroding, because a layer is a small
+  part of the total: routes are 28% of the statements, so a route layer at 90%
+  would still leave the project above 95.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → a3d7f1b9c6e2`
@@ -219,6 +224,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   **module-level** imports. `services/` twice hid `from flask import abort` inside
   a function body, so it passed a rule it was violating. Grep for the import
   anywhere in `services/`, not just at the top.
+- **The scenario suite is split across four CI jobs** (`scenarios-a` … `scenarios-d`),
+  because one job for `tests/integration/business_scenarios/` was the build's
+  critical path at ~90 minutes. The split uses brace globs, so
+  `tests/unit/test_scenario_slices.py` checks that every scenario file lands
+  in exactly one slice — a file that matches no slice is not slow, it is
+  *absent*, and a scenario that never runs reports nothing at all.
 - **`/auth/login` refuses to switch users while a session is open.** A scenario
   that needs two actors has to log the first one out first, or the second login
   is a no-op and the guard under test is never exercised by the actor it was
