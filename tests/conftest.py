@@ -223,7 +223,12 @@ class TestConfig:
         "pool_pre_ping": True,
         # 3s proved flaky on hosts whose Postgres is still settling after
         # crash-recovery fsyncs; new-backend spawn occasionally exceeded it.
-        "connect_args": {"connect_timeout": 10},
+        # The session timezone is pinned to UTC, the way config.py pins it for
+        # the application: the models store UTC-aware instants and the columns
+        # are naive, so the session decides what actually lands in the column -
+        # and a test that ran in the server's local zone would assert against
+        # values the application never writes.
+        "connect_args": {"connect_timeout": 10, "options": "-c timezone=UTC"},
     }
     WTF_CSRF_ENABLED = False
     CACHE_TYPE = "null"

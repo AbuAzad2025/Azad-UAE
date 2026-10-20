@@ -33,13 +33,19 @@ class TestAwardPoints:
         result = GamificationService.award_points(999999, "sale_created")
         assert result["success"] is False
 
-    def test_user_without_points_attr_initializes_zero(self, mocker):
-        user = SimpleNamespace(id=1)
+    def test_award_points_accumulates_on_the_existing_balance(self, mocker):
+        # ``points`` is a real column on ``users`` now, so the service reads
+        # and writes it directly instead of probing the instance for the
+        # attribute. The old test asserted the "no points attribute yet"
+        # fallback, which was the defect: the balance never reached the disk.
+        user = SimpleNamespace(id=1, points=25)
         mocker.patch.object(db.session, "get", return_value=user)
-        mocker.patch.object(db.session, "commit")
+        mocker.patch.object(db.session, "flush")
         result = GamificationService.award_points(1, "sale_created")
         assert result["success"] is True
-        assert user.points == 10
+        assert result["points_awarded"] == 10
+        assert result["total_points"] == 35
+        assert user.points == 35
 
     def test_sale_created_awards_points(self, db_session, sample_user):
         sample_user.points = 0

@@ -129,11 +129,23 @@ class Config:
     if _db_uri.startswith("postgresql"):
         SQLALCHEMY_ENGINE_OPTIONS["pool_size"] = 10
         SQLALCHEMY_ENGINE_OPTIONS["max_overflow"] = 20
-        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {"options": "-c statement_timeout=30000"}
+        # The session timezone is pinned to UTC, and it is not a cosmetic
+        # choice. The models store UTC-aware instants, but the columns were
+        # created naive (``timestamp without time zone``), so PostgreSQL renders
+        # an aware value into the *session* timezone: on a server that does not
+        # run on UTC, every timestamp the app writes is the local time wearing
+        # a UTC label. Revision f3a9c1e5b2d8 then reads those legacy values
+        # back as UTC, which moves every timestamp in a populated database by
+        # the server's UTC offset - and a row near midnight moves to a different
+        # accounting day. Pinning the session to UTC makes the app's writes
+        # and the migration's reading agree, on any server.
+        SQLALCHEMY_ENGINE_OPTIONS["connect_args"] = {
+            "options": "-c statement_timeout=30000 -c timezone=UTC",
+        }
 
     SQLALCHEMY_BINDS = {}
     if _db_uri.startswith("postgresql"):
-        SQLALCHEMY_BINDS["reporting"] = f"{_db_uri}?options=-c statement_timeout=60000"
+        SQLALCHEMY_BINDS["reporting"] = f"{_db_uri}?options=-c statement_timeout=60000 -c timezone=UTC"
 
     SQLALCHEMY_ECHO = False
 

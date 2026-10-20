@@ -91,6 +91,12 @@ class User(UserMixin, db.Model):
 
     __tablename__ = "users"
 
+    # The leaderboard reads one tenant's active users ordered by points, so the
+    # index is tenant-leading and ends on the sort key: PostgreSQL can walk it
+    # in points order and stop after the first page instead of sorting the
+    # whole tenant.
+    __table_args__ = (db.Index("idx_users_tenant_points", "tenant_id", "points"),)
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
@@ -132,6 +138,10 @@ class User(UserMixin, db.Model):
     last_seen = db.Column(db.DateTime(timezone=True))
     login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime(timezone=True))
+
+    # Gamification economy - the persisted point balance. Badges are a pure
+    # function of this number, and the leaderboard ranks by it.
+    points = db.Column(db.Integer, default=0, server_default="0", nullable=False)
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(

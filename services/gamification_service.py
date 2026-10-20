@@ -43,13 +43,14 @@ class GamificationService:
             elif amount > 5000:
                 points = 30
 
-        if not hasattr(user, "points"):
-            user.points = 0
+        # users.points is a real column, so the balance survives the session.
+        # ``or 0`` covers a row that was inserted before the default was applied.
+        previous_total = user.points or 0
+        total = previous_total + points
+        user.points = total
 
-        user.points = (user.points or 0) + points
-
-        old_badge = GamificationService.get_user_badge(user.points - points)
-        new_badge = GamificationService.get_user_badge(user.points)
+        old_badge = GamificationService.get_user_badge(previous_total)
+        new_badge = GamificationService.get_user_badge(total)
 
         level_up = old_badge["name_ar"] != new_badge["name_ar"]
 
@@ -58,7 +59,7 @@ class GamificationService:
         return {
             "success": True,
             "points_awarded": points,
-            "total_points": user.points,
+            "total_points": total,
             "badge": new_badge,
             "level_up": level_up,
         }
@@ -81,16 +82,18 @@ class GamificationService:
         from models import User
         from utils.tenanting import scoped_user_query
 
+        # Ranked by points, with the id as the tie-break so two users on the
+        # same total always come back in the same order.
         users = (
             scoped_user_query(active_only=True, exclude_owners=True)
-            .order_by(User.points.desc() if hasattr(User, "points") else User.id)
+            .order_by(User.points.desc(), User.id.asc())
             .limit(limit)
             .all()
         )
 
         leaderboard = []
         for idx, user in enumerate(users, 1):
-            points = getattr(user, "points", 0) or 0
+            points = user.points or 0
             badge = GamificationService.get_user_badge(points)
 
             leaderboard.append(
@@ -114,7 +117,7 @@ class GamificationService:
         if not user:
             return {"success": False}
 
-        points = getattr(user, "points", 0) or 0
+        points = user.points or 0
         badge = GamificationService.get_user_badge(points)
 
         total_sales = Sale.query.filter_by(seller_id=user_id).count()
