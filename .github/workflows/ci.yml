@@ -47,8 +47,11 @@ env:
   PYTHON_VERSION: '3.12'
   NODE_VERSION: '22'
   # Minimum total line coverage enforced in coverage-report.
-  # Set to 85 to enforce a meaningful floor; current coverage is ~96%.
-  COVERAGE_FAIL_UNDER: '85'
+  # Raised from 85 to 95 once every slice passed again: the measured total is
+  # 98.49%, so 95 keeps the floor meaningful and still leaves room for the
+  # churn of an ordinary change. The gap between this and the measurement is
+  # what stops the coverage from eroding one slice at a time.
+  COVERAGE_FAIL_UNDER: '95'
   # `flask db upgrade` needs an app factory. Also stops the Flask CLI from
   # auto-loading ./app.py, which builds a second app instance on import.
   FLASK_APP: 'app.factory:create_app'

@@ -91,7 +91,9 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   stylesheet in its extends/include chain defines.
 - `check_css_class_collisions.py` — @media-aware; fails when one bare class is
   defined twice at the same scope with disagreeing bodies. Baseline is empty.
-- Coverage floor: `COVERAGE_FAIL_UNDER: 85`.
+- Coverage floor: `COVERAGE_FAIL_UNDER: 95` (measured 98.49% — raised from 85
+  once every slice passed again, so the floor cannot be eroded one slice at a
+  time).
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → a3d7f1b9c6e2`
@@ -177,8 +179,10 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   `tests/unit/test_scenario_catalog.py` — a wave is only honest once its
   `delivered` flag is set, and the flag is what the gate reads.
 - **The whole plan is delivered.** Every wave's domains meet their budget, so
-  the per-domain gate now covers the entire catalogue.
-- **The coverage floor hides behind the other jobs.** `COVERAGE_FAIL_UNDER: 85` is
+  the per-domain gate now covers the entire catalogue — and the gate also
+  fails when a wave *meets* its budget but is not flagged `delivered`, which
+  is what let waves 9 and 12 sit complete and ungated for two releases.
+- **The coverage floor hides behind the other jobs.** `COVERAGE_FAIL_UNDER: 95` is
   computed from the *combined* `.coverage` files every slice uploads. A slice that
   fails its tests never produces its data file, so one red test job silently
   drops ~8k statements out of the report and the floor then fails with a

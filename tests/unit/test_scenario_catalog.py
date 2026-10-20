@@ -145,6 +145,29 @@ class TestCatalogueIntegrity:
             f"{catalog.coverage_gap()} short of {catalog.TARGET_SCENARIO_COUNT}"
         )
 
+    def test_a_wave_that_meets_its_budget_is_marked_delivered(self):
+        """The flag cannot lag behind the work.
+
+        The ``delivered`` flag is what the budget gate reads, so a wave that
+        has been written in full but not flagged is invisible to the gate -
+        and that is exactly how waves 9 and 12 sat complete and ungated for
+        two releases. The flag is a piece of bookkeeping, and bookkeeping that
+        only fails when somebody remembers it is not a gate.
+
+        A wave is complete when every one of its domains has declared at
+        least its budget. It then has to say so.
+        """
+        owners, _ = _declared_ids()
+        declared = collections.Counter(sid.split("-")[0] for sid in owners)
+        complete = []
+        for wave in catalog.WAVES:
+            if not wave.domains:
+                continue
+            if all(declared.get(d.prefix, 0) >= catalog.domain_budget(d) for d in wave.domains):
+                complete.append(wave.number)
+        unflagged = [n for n in complete if not catalog.WAVES[n].delivered]
+        assert not unflagged, f"these waves meet their budget but are not marked delivered: {unflagged}"
+
     def test_every_delivered_domain_owes_what_it_committed_to(self):
         """The aggregate check above is satisfied by one fat domain.
 
