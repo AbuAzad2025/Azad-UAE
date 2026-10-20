@@ -242,12 +242,47 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   (`utils/feature_guards.install_feature_gate`), and the storefront is behind
   the platform's `SystemSettings.enable_ecommerce`; a scenario that expects
   either to answer has to switch the flag on first.
+- **The session timezone is pinned to UTC** (`config.py` sets
+  `-c timezone=UTC`; the test config does the same). The models store
+  UTC-aware instants into naive columns, so the session decides what actually
+  lands in the column, and revision `f3a9c1e5b2d8` reads the legacy values
+  back as UTC — without the pin, every timestamp in a populated database moves
+  by the server's UTC offset on upgrade, and a row near midnight moves to a
+  different accounting day. `scripts/ops/verify_migration_preserves_data.py`
+  proves the chain preserves the data on a populated database.
 - **A scenario that flips a switch has to put it back.** The request and the
   test share one session, so a switch flipped inside a scenario is committed
   and leaks into every suite that runs after it — the wave-15 shop suite broke
   the wave-3 storefront gate exactly that way. The same applies to the
   platform vault: whoever creates it must open it with the password the other
   suites use, or every later suite finds a vault it cannot unlock.
+
+### Production-readiness findings — OPEN, with the evidence
+The four proofs below are in the tree and green. The findings they produced
+are **not** fixed; each is pinned by a test that names it.
+- `tests/integration/test_sales_concurrency_load.py` — no oversell, no double
+  charge, the ledger balances under 30 concurrent writers. **Open:** the
+  document number is allocated without a lock (`utils/helpers.py:96`), so a
+  collision loses the order; and the POS session's turnover loses updates
+  (`services/pos_checkout_service.py:291`), which is what the drawer
+  reconciliation is built from. `services/document_sequence_service.py` has
+  the correct `SELECT FOR UPDATE` primitive and nothing calls it.
+- `tests/integration/test_period_close_reconciliation.py` — 300 invoices, 878
+  entries, closed through the real route: the trial balance, the AR/AP
+  controls, both VAT accounts and the inventory account reconcile to the cent.
+  **Open:** a supplier credit note against a VAT bill cannot be posted at all
+  (`models/purchase_return.py:83` drops the tax), and the fiscal-year close
+  can never post its closing entry (`services/gl_service.py:2023`).
+- `tests/integration/business_scenarios/test_wave8_fx.py` (ADV-49…ADV-60) —
+  **Open:** the unrealized revaluation is never unwound at settlement, so a
+  settled invoice keeps a receivable; and `revaluate_open_items` has no
+  caller, so no invoice is revalued in production at all.
+- `docs/AUDIT_CHART_OF_ACCOUNTS.md` — 5 P0, 8 P1, 6 P2 in the chart of
+  accounts and the concept mapping. The sharpest one: under the production
+  default `ENABLE_DYNAMIC_GL_MAPPING=True`, 19 concepts the services post have
+  no mapping row, so those postings are refused — and CI forces the flag to
+  `False`, so the whole scenario suite proves a configuration production does
+  not run. **That is the first thing to fix.**
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`
