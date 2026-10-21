@@ -64,9 +64,9 @@ import uuid
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import delete
 
 from extensions import db
+from tests.integration._purge_helper import purge_tenant
 
 # ---------------------------------------------------------------- parameters
 # N: units physically on the shelf for the contended product.
@@ -232,119 +232,6 @@ def _seed_money_tenant(label, *, stock=STOCK_QTY, price=UNIT_PRICE, cost=UNIT_CO
         "customer_id": customer.id,
         "stock": Decimal(str(stock)),
     }
-
-
-def _purge_tenant(tenant_id, role_id=None):
-    """Delete everything the workload committed for one tenant.
-
-    The worker threads commit on their own connections, so the rows survive
-    the test's savepoint. Leaving them behind would corrupt every later test
-    in the same pytest process (the integration CI job runs the whole
-    directory in one process).
-    """
-    from models import (
-        AuditLog,
-        Branch,
-        Customer,
-        GLAccount,
-        LoginHistory,
-        Payment,
-        Product,
-        ProductCategory,
-        ProductCostHistory,
-        Role,
-        Sale,
-        SaleLine,
-        StockMovement,
-        Tenant,
-        User,
-        Warehouse,
-    )
-    from models.gl import GLJournalEntry, GLJournalLine
-    from models.pos_session import PosSession
-    from models.pos_shift import PosShift
-    from models.product_warehouse_cost import ProductWarehouseCost
-    from models.user import role_permissions
-    from models.warehouse import ProductWarehouseStock
-
-    # Start from a clean transaction. The purge runs at module teardown, in
-    # the same thread and the same session the assertions used, so a
-    # transaction left aborted by an earlier statement would make every
-    # delete below fail with InFailedSqlTransaction and leave the rows
-    # behind for the next test in the session.
-    db.session.rollback()
-
-    failures: list[str] = []
-
-    def _delete(label, fn):
-        """Run one delete inside a savepoint.
-
-        A RESTRICT foreign key that was not anticipated must not abort the
-        whole purge: the failure is collected and raised at the end, after
-        the rows that could be removed have been removed.
-        """
-        savepoint = db.session.begin_nested()
-        try:
-            fn()
-            savepoint.commit()
-        except Exception as exc:  # noqa: BLE001 - reported, not swallowed
-            savepoint.rollback()
-            failures.append(f"{label}: {exc}")
-
-    def _delete_where(model, *criteria):
-        _delete(
-            model.__tablename__,
-            lambda: db.session.query(model).filter(*criteria).delete(synchronize_session=False),
-        )
-
-    user_ids = [row[0] for row in db.session.query(User.id).filter(User.tenant_id == tenant_id).all()]
-    sale_ids = [row[0] for row in db.session.query(Sale.id).filter(Sale.tenant_id == tenant_id).all()]
-    entry_ids = [
-        row[0] for row in db.session.query(GLJournalEntry.id).filter(GLJournalEntry.tenant_id == tenant_id).all()
-    ]
-
-    if sale_ids:
-        _delete_where(SaleLine, SaleLine.sale_id.in_(sale_ids))
-    if entry_ids:
-        _delete_where(GLJournalLine, GLJournalLine.entry_id.in_(entry_ids))
-    _delete_where(GLJournalEntry, GLJournalEntry.tenant_id == tenant_id)
-    _delete_where(Payment, Payment.tenant_id == tenant_id)
-    _delete_where(Sale, Sale.tenant_id == tenant_id)
-    _delete_where(StockMovement, StockMovement.tenant_id == tenant_id)
-    _delete_where(ProductCostHistory, ProductCostHistory.tenant_id == tenant_id)
-    _delete_where(ProductWarehouseCost, ProductWarehouseCost.tenant_id == tenant_id)
-    _delete_where(ProductWarehouseStock, ProductWarehouseStock.tenant_id == tenant_id)
-    _delete_where(PosShift, PosShift.tenant_id == tenant_id)
-    _delete_where(PosSession, PosSession.tenant_id == tenant_id)
-    _delete_where(GLAccount, GLAccount.tenant_id == tenant_id)
-    _delete_where(Product, Product.tenant_id == tenant_id)
-    _delete_where(ProductCategory, ProductCategory.tenant_id == tenant_id)
-    _delete_where(Customer, Customer.tenant_id == tenant_id)
-    _delete_where(Warehouse, Warehouse.tenant_id == tenant_id)
-    # The audit trail and the login history reference the cashier, so they
-    # have to go before the user does.
-    if user_ids:
-        _delete_where(AuditLog, AuditLog.user_id.in_(user_ids))
-        _delete_where(LoginHistory, LoginHistory.user_id.in_(user_ids))
-    _delete_where(AuditLog, AuditLog.tenant_id == tenant_id)
-    # Users before branches: users.branch_id is a RESTRICT foreign key, so
-    # deleting the branch first aborts the whole purge.
-    _delete_where(User, User.tenant_id == tenant_id)
-    _delete_where(Branch, Branch.tenant_id == tenant_id)
-    _delete_where(Tenant, Tenant.id == tenant_id)
-    if role_id is not None:
-        # role_permissions is a secondary table: it references the role, so
-        # the links have to be cut before the role can go.
-        _delete(
-            "role_permissions",
-            lambda: db.session.execute(delete(role_permissions).where(role_permissions.c.role_id == role_id)),
-        )
-        _delete_where(Role, Role.id == role_id)
-    db.session.commit()
-    remaining = db.session.query(Sale).filter(Sale.tenant_id == tenant_id).count()
-    print(f"\n=== PURGE tenant {tenant_id}: failures={failures} sales_left={remaining}")
-    if failures:
-        raise RuntimeError(f"purge of tenant {tenant_id} left rows behind: {failures}")
 
 
 def _open_register(app, ctx):
@@ -626,7 +513,7 @@ def pos_storm_workload(app):
         f"lost={(order_total - register_total) if register_total is not None else 'n/a'}"
     )
     yield {"ctx": ctx, "results": results, "elapsed": elapsed}
-    _purge_tenant(ctx["tenant_id"], role_id=ctx["role_id"])
+    purge_tenant(db.session, ctx["tenant_id"], role_id=ctx["role_id"])
 
 
 @pytest.fixture(scope="module")
@@ -642,7 +529,7 @@ def service_storm_workload(app):
         f"elapsed={elapsed:.1f}s number_collisions={collisions} {_histogram(results)}"
     )
     yield {"ctx": ctx, "results": results, "elapsed": elapsed, "collisions": collisions}
-    _purge_tenant(ctx["tenant_id"], role_id=ctx["role_id"])
+    purge_tenant(db.session, ctx["tenant_id"], role_id=ctx["role_id"])
 
 
 @pytest.fixture(scope="module")
@@ -657,8 +544,8 @@ def isolation_storm_workload(app):
     results_b = [r for r in results if r["index"] % 2 == 1]
     print(f"\n=== ISOLATION STORM: A={_histogram(results_a)} B={_histogram(results_b)} elapsed={elapsed:.1f}s")
     yield {"a": ctx_a, "b": ctx_b, "results_a": results_a, "results_b": results_b}
-    _purge_tenant(ctx_a["tenant_id"], role_id=ctx_a["role_id"])
-    _purge_tenant(ctx_b["tenant_id"], role_id=ctx_b["role_id"])
+    purge_tenant(db.session, ctx_a["tenant_id"], role_id=ctx_a["role_id"])
+    purge_tenant(db.session, ctx_b["tenant_id"], role_id=ctx_b["role_id"])
 
 
 # --------------------------------------------------------------------- tests

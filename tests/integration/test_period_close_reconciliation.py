@@ -44,6 +44,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.integration._purge_helper import refresh_statistics
+
 # ── Scale ────────────────────────────────────────────────────────────────────
 # Every number below is a document, not a row in a table: each one is created
 # through the real service so it produces its real GL postings.
@@ -566,6 +568,11 @@ def _purge_tenant(tenant_id: int) -> None:
         session.rollback()
     if failures:
         print(f"\nPURGE INCOMPLETE for tenant {tenant_id}: {failures}", flush=True)
+    # The rows are gone, but PostgreSQL keeps the statistics it gathered, so a
+    # planner that still believes the table is large picks a different index
+    # for the same query. An index assertion in a later suite then fails, and
+    # the failure has nothing to do with the books this suite reconciled.
+    refresh_statistics(session)
 
 
 #: Reference data that survives the purge — see _purge_tenant for why.
