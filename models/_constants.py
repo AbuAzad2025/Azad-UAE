@@ -44,6 +44,11 @@ GL_CONCEPT_COUPON_EXPENSE = "COUPON_EXPENSE"
 GL_CONCEPT_LOYALTY_LIABILITY = "LOYALTY_LIABILITY"
 GL_CONCEPT_SHIPPING_COST_EXPENSE = "SHIPPING_COST_EXPENSE"
 GL_CONCEPT_CAMPAIGN_DISCOUNT_EXPENSE = "CAMPAIGN_DISCOUNT_EXPENSE"
+#: The reversal of a campaign discount on a promotional sale's return. The
+#: service posts it (services/return_service.py) and the resolver refuses a
+#: concept it does not know, so without this constant a promotional return
+#: could not be posted at all - in either flag state.
+GL_CONCEPT_CAMPAIGN_DISCOUNT_REVERSAL = "CAMPAIGN_DISCOUNT_REVERSAL"
 GL_CONCEPT_WARRANTY_CLAIM_EXPENSE = "WARRANTY_CLAIM_EXPENSE"
 GL_CONCEPT_PURCHASE_RETURNS = "PURCHASE_RETURNS"
 GL_CONCEPT_SALES_COMMISSION = "SALES_COMMISSION"
@@ -115,6 +120,7 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_LOYALTY_LIABILITY,
     GL_CONCEPT_SHIPPING_COST_EXPENSE,
     GL_CONCEPT_CAMPAIGN_DISCOUNT_EXPENSE,
+    GL_CONCEPT_CAMPAIGN_DISCOUNT_REVERSAL,
     GL_CONCEPT_WARRANTY_CLAIM_EXPENSE,
     GL_CONCEPT_PURCHASE_RETURNS,
     GL_CONCEPT_SALES_COMMISSION,
@@ -281,7 +287,7 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_MISC_EXPENSE: {
         "meaning": "Miscellaneous Expense",
-        "legacy_code": "6990",
+        "legacy_code": "6500",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
@@ -408,6 +414,13 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
         "legacy_code": "6131",
         "required": False,
         "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_CAMPAIGN_DISCOUNT_REVERSAL: {
+        "meaning": "Campaign Discount Reversal (a promotional sale's return)",
+        "legacy_code": "6131",
+        "required": False,
+        "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_WARRANTY_CLAIM_EXPENSE: {

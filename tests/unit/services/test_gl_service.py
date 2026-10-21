@@ -452,12 +452,33 @@ class TestPaymentConceptsExtended:
 
 
 class TestDynamicMappingPaths:
-    def test_resolve_with_dynamic_mapping_account_code_only_raises(self, sample_tenant, mocker):
+    def test_resolve_with_dynamic_mapping_account_code_only_falls_back(self, sample_tenant, mocker):
+        """A posting that names only an account code is not refused.
+
+        The dynamic mapping governs the postings that name a *concept*: a
+        concept the tenant has not mapped is refused, because posting it
+        somewhere else would be money in the wrong account. A posting that
+        names only an account code is the legacy vocabulary - a branch cash
+        box, for instance, which is not a concept at all - and it is posted to
+        the account it names, exactly as it was before the feature existed.
+        Refusing it would break every call site that has not been converted,
+        and the production default is on.
+        """
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
+        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
+        account = GLService._resolve_journal_line_account(
+            {"account": "1111"},
+            sample_tenant.id,
+        )
+        assert account is not None
+
+    def test_resolve_with_dynamic_mapping_unmapped_concept_raises(self, sample_tenant, mocker):
+        """A concept the tenant has not mapped is still refused."""
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError, match="No approved GL concept"):
             GLService._resolve_journal_line_account(
-                {"account": "1111"},
+                {"account": "1111", "concept_code": "AR"},
                 sample_tenant.id,
             )
 

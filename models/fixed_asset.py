@@ -313,6 +313,18 @@ class FixedAsset(db.Model):
                 }
             )
 
+        # The posting has to name the branch of the account it uses. An asset
+        # without a branch falls back to the tenant's default bank account,
+        # and that account belongs to a branch - so the entry is dated to that
+        # branch. Without this the entry claims no branch while naming a
+        # branch account, which the liquidity validation refuses.
+        posting_branch_id = self.branch_id
+        if posting_branch_id is None and bank_account:
+            from services.gl_service import gl_helpers
+
+            bank = gl_helpers.get_account(bank_account, getattr(self, "tenant_id", None))
+            posting_branch_id = getattr(bank, "branch_id", None)
+
         if self.disposal_gain_loss > 0:
             lines.append(
                 {
@@ -348,10 +360,10 @@ class FixedAsset(db.Model):
         disposal_type = "بيع" if self.disposal_price > 0 else "إتلاف"
         gl_post_or_fail(
             lines=lines,
-            description=f"قيد {disposal_type} أصل - {self.asset_number}",
+            description=f"??? {disposal_type} ??? - {self.asset_number}",
             reference_type=GLRef.ASSET_DISPOSAL,
             reference_id=self.id,
-            branch_id=self.branch_id,
+            branch_id=posting_branch_id,
             tenant_id=getattr(self, "tenant_id", None),
         )
 

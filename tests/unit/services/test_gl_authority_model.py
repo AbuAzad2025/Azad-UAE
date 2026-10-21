@@ -556,23 +556,34 @@ class TestMappingMode:
             gain_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="4600").first()
             loss_acc = GLAccount.query.filter_by(tenant_id=tenant.id, code="6700").first()
 
-            gain_map = GLAccountMapping(
-                tenant_id=tenant.id,
-                concept_code="FIXED_ASSET_GAIN",
-                gl_account_id=gain_acc.id,
-                branch_id=None,
-                is_active=True,
-            )
-            db.session.add(gain_map)
-            loss_map = GLAccountMapping(
-                tenant_id=tenant.id,
-                concept_code="FIXED_ASSET_LOSS",
-                gl_account_id=loss_acc.id,
-                branch_id=None,
-                is_active=True,
-            )
-            db.session.add(loss_map)
+            gain_map = None
+            if not GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code="FIXED_ASSET_GAIN").first():
+                gain_map = GLAccountMapping(
+                    tenant_id=tenant.id,
+                    concept_code="FIXED_ASSET_GAIN",
+                    gl_account_id=gain_acc.id,
+                    branch_id=None,
+                    is_active=True,
+                )
+                db.session.add(gain_map)
+            loss_map = None
+            if not GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code="FIXED_ASSET_LOSS").first():
+                loss_map = GLAccountMapping(
+                    tenant_id=tenant.id,
+                    concept_code="FIXED_ASSET_LOSS",
+                    gl_account_id=loss_acc.id,
+                    branch_id=None,
+                    is_active=True,
+                )
+                db.session.add(loss_map)
             db.session.commit()
+
+            # The provisioning may already have created these rows - the
+            # fixed-assets module is enabled by default now - so the mapping is
+            # read back rather than taken from the local variable.
+            gain_map = GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code="FIXED_ASSET_GAIN").first()
+            loss_map = GLAccountMapping.query.filter_by(tenant_id=tenant.id, concept_code="FIXED_ASSET_LOSS").first()
+            assert gain_map is not None and loss_map is not None
 
             resolved_gain = resolve_gl_account(tenant.id, "FIXED_ASSET_GAIN")
             assert resolved_gain is not None

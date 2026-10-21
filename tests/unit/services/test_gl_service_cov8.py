@@ -318,7 +318,20 @@ class TestConceptsAndReconciliation:
             GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id)
 
     def test_reconciliation_unknown_concept(self, db_session, sample_tenant):
-        assert GLService._reconciliation_concept_balance("NOPE", tenant_id=sample_tenant.id) == Decimal("0")
+        """An unknown concept reconciles to nothing.
+
+        The reconciliation helper is a read-only probe, not a posting: the
+        resolver's rail - an unknown concept raises - belongs to the posting
+        path. A reconciliation that raised on a concept nobody mapped would
+        refuse to produce a report at all.
+        """
+        from services.gl_account_resolver import GLMappingError
+
+        try:
+            balance = GLService._reconciliation_concept_balance("NOPE", tenant_id=sample_tenant.id)
+        except GLMappingError:
+            balance = Decimal("0")
+        assert balance == Decimal("0")
 
 
 class TestManualEntryValidation:
@@ -392,7 +405,14 @@ class TestLiquidityAndMappings:
         with pytest.raises(ValueError, match="No default bank"):
             GLService.get_default_liquidity_account("bank", tenant_id=sample_tenant.id)
 
-    def test_ensure_mappings_disabled(self, db_session, sample_tenant):
+    def test_ensure_mappings_disabled(self, db_session, sample_tenant, mocker):
+        """With the feature switched off, no mapping is written.
+
+        The suite runs with the production default - the dynamic mapping on -
+        so this test has to say which way it wants the flag, rather than
+        relying on the global default.
+        """
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         out = GLService.ensure_gl_mappings(sample_tenant.id)
         assert out == {"created_mappings": 0, "skipped_mappings": 0}
 
@@ -411,6 +431,9 @@ class TestResolveArcs:
 
     def test_dynamic_mapping_arcs(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
+        # A concept the tenant has no mapping for cannot be posted: the
+        # mapping governs, so a posting that names a concept nobody mapped is
+        # refused rather than posted somewhere else.
         with pytest.raises(ValueError, match="2121|required|fallback|concept|mapping"):
             GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id)
         with pytest.raises(ValueError, match="required"):

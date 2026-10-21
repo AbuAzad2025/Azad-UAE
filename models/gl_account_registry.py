@@ -865,6 +865,18 @@ INDUSTRY_EXTENSIONS = {
 }
 
 GL_MODULE_DEFINITIONS = {
+    # A module's ``feature_flag`` is read off the tenant by
+    # ``services/gl_provisioning_service.py`` with ``getattr(tenant, flag,
+    # False)``. A flag that is not a column on the ``tenants`` table is
+    # therefore always False: the module is never provisioned, the concepts it
+    # owns have no mapping row, and under the production default
+    # (ENABLE_DYNAMIC_GL_MAPPING=True) the posting that needs one of them is
+    # refused outright. Every flag below is a real ``Tenant`` column.
+    #
+    # A concept that an ordinary operation posts must live in a *required*
+    # module, because a required module is provisioned for every tenant. A
+    # concept that only exists because an optional feature uses it belongs
+    # with that feature.
     "core_sales": GLModuleDefinition(
         "core_sales",
         True,
@@ -877,6 +889,21 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("TIER_DISCOUNT", "4100", "core_sales"),
             GLConceptMappingTemplate("POS_CASH_DIFFERENCE", "6550", "core_sales"),
             GLConceptMappingTemplate("AR", "1130", "core_sales"),
+            # Industry-revenue concepts. Their own accounts (4114 Food Sales,
+            # 4115 Beverage Sales) are industry-extension accounts, so they
+            # exist only in the chart of a tenant whose business_type is
+            # "restaurant". The provisioning engine can gate a module on a
+            # tenant boolean column and on nothing else - it has no industry
+            # gate - so a module carrying 4114/4115 would either be skipped
+            # for every tenant or report "account 4114 not found" for every
+            # non-restaurant tenant. Both concepts therefore resolve to the
+            # parent Sales Revenue account, which every chart carries and
+            # which is where every sale already posts: the ledger produces no
+            # industry split today (docs/AUDIT_CHART_OF_ACCOUNTS.md, F-19).
+            # A restaurant tenant that wants the split re-points the row at
+            # 4114/4115 from the Owner panel.
+            GLConceptMappingTemplate("FOOD_SALES_REVENUE", "4100", "core_sales"),
+            GLConceptMappingTemplate("BEVERAGE_SALES_REVENUE", "4100", "core_sales"),
         ],
     ),
     "core_purchases": GLModuleDefinition(
@@ -890,6 +917,16 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("COGS", "5100", "core_purchases"),
             GLConceptMappingTemplate("FREIGHT_IN", "5301", "core_purchases"),
             GLConceptMappingTemplate("CUSTOMS_DUTY", "5302", "core_purchases"),
+            # ACCOUNTS_PAYABLE is the legacy twin of AP: the supplier opening
+            # balance posts it (routes/suppliers.py:213) instead of AP, so it
+            # needs a row of its own or that posting is refused.
+            GLConceptMappingTemplate("ACCOUNTS_PAYABLE", "2110", "core_purchases"),
+            # PURCHASES has no account of its own in this chart: a purchase is
+            # capitalised straight into inventory (Dr 1140 / Cr 2110), so the
+            # concept resolves to the same inventory asset account. It is a
+            # required concept, so without a row every tenant is reported as
+            # short of a required mapping.
+            GLConceptMappingTemplate("PURCHASES", "1140", "core_purchases"),
             # LANDED_COST is non-posting — no mapping template
         ],
     ),
@@ -903,6 +940,18 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("DEFERRED_CHEQUES_PAYABLE", "2130", "core_payments"),
             GLConceptMappingTemplate("BANK_FEES", "6260", "core_payments"),
             GLConceptMappingTemplate("CARD_PROCESSING_FEES", "6260", "core_payments"),
+            # MISC_EXPENSE is the fallback expense bucket: a POS petty-cash
+            # movement (services/pos_cash_service.py), a cheque bounce fee
+            # (services/cheque_service.py) and an expense with no GL account
+            # of its own (routes/expenses.py) all land on it. 6500 is the
+            # account the legacy fallback in services/gl_service.py already
+            # names for it.
+            GLConceptMappingTemplate("MISC_EXPENSE", "6500", "core_payments"),
+            # SUSPENSE takes an unmatched bank item (services/
+            # bank_reconciliation_service.py). It is not left to the optional
+            # bank_reconciliation module: the posting is part of ordinary
+            # reconciliation work and must resolve for every tenant.
+            GLConceptMappingTemplate("SUSPENSE", "2999", "core_payments"),
         ],
     ),
     "core_inventory": GLModuleDefinition(
@@ -921,7 +970,7 @@ GL_MODULE_DEFINITIONS = {
     "shop_online": GLModuleDefinition(
         "shop_online",
         False,
-        "enable_online_store",
+        "enable_store",
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("SHOP_SALES_REVENUE", "4103", "shop_online"),
@@ -946,6 +995,7 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("CAMPAIGN_DISCOUNT_EXPENSE", "6131", "campaigns"),
+            GLConceptMappingTemplate("CAMPAIGN_DISCOUNT_REVERSAL", "6131", "campaigns"),
         ],
     ),
     "partners": GLModuleDefinition(
@@ -966,6 +1016,15 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("PAYROLL_EXPENSE", "6220", "payroll"),
+            # PAYROLL_EXPENSE_2 has no mapping row and cannot have one: the
+            # database constrains gl_account_mappings.concept_code to a fixed
+            # list (ck_gl_account_mappings_concept_code, created by
+            # migrations/versions/squash_001_baseline.py) and that list does
+            # not contain PAYROLL_EXPENSE_2, so PostgreSQL refuses the row
+            # with a CheckViolation and aborts the whole provisioning
+            # transaction. No service posts the concept, so nothing is
+            # refused today; the registry and the schema have to be brought
+            # back into step before it can be mapped.
             GLConceptMappingTemplate("PAYROLL_PAYABLE", "2141", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_PROVISION", "6190", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_LIABILITY", "2140", "payroll"),
@@ -1033,7 +1092,7 @@ GL_MODULE_DEFINITIONS = {
     "azad_platform": GLModuleDefinition(
         "azad_platform",
         False,
-        "enable_ecommerce",
+        "enable_azad_platform",
         accounts=[
             GLAccountTemplate(
                 "2180",

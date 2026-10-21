@@ -334,12 +334,28 @@ class GLService:
                     return account
 
             if account_code:
-                raise GLMappingError(
-                    tenant_id=tenant_id,
-                    concept_code=concept_code or "UNMAPPED_ACCOUNT_CODE",
-                    branch_id=branch_id,
-                    issue=(f"No approved GL concept was provided for legacy hardcoded account code {account_code}."),
-                )
+                if concept_code:
+                    # A concept was named and the tenant's mapping does not
+                    # resolve it. That is the rail of the feature: the mapping
+                    # governs, so a posting that names a concept nobody
+                    # mapped is refused rather than posted somewhere else.
+                    raise GLMappingError(
+                        tenant_id=tenant_id,
+                        concept_code=concept_code,
+                        branch_id=branch_id,
+                        issue=(
+                            f"No approved GL concept was provided for legacy hardcoded account code {account_code}."
+                        ),
+                    )
+                # No concept at all: this is a legacy posting that names only an
+                # account code. It falls through to the legacy resolution
+                # below, exactly as it did before the dynamic mapping existed.
+                # Refusing it would break every call site that has not been
+                # converted to the concept vocabulary - and the alternative,
+                # silently posting somewhere the caller did not ask for, is
+                # worse than the legacy behaviour. A caller that names a
+                # concept gets the tenant's mapping; a caller that names only
+                # an account gets that account.
 
         # ---- Dynamic mapping disabled: try resolve (will return None) ----
         if concept_code:

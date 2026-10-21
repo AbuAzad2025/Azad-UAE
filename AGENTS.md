@@ -288,6 +288,21 @@ are **not** fixed; each is pinned by a test that names it.
   `GLMappingError: No approved GL concept was provided for legacy hardcoded
   account code 1110-B8` — because the resolver refuses a posting that names no
   concept, and the legacy path names only an account code.
+  **Half of that is now fixed.** The nine module flags exist on the `Tenant`
+  model (migration `5e2b8f4a6c13`), the concepts that had no mapping row
+  have one, `CAMPAIGN_DISCOUNT_REVERSAL` is a known concept, the database's
+  allow-list matches the model's (migration `c3d9e1f7a204`), and a posting
+  that names only an account code falls back to the legacy account instead of
+  being refused. **Two blockers are left before the flag can be switched on
+  in the suite**, and both are measured:
+  1. A fixed-asset disposal posts to account `1180` (Fixed Assets), which is
+     a *header*. The record-mode resolution refuses a header, so the disposal
+     is refused. The chart has no leaf fixed-asset account, and the seed
+     manifest pins the base chart at 98 accounts — so the fix is a leaf
+     account (or a sub-account per asset class) plus the seed count.
+  2. `tests/unit/services/test_gl_service_cov8.py::TestResolveArcs::test_dynamic_mapping_arcs`
+     assumes a tenant without a mapping for `AR`; with the flag on, the
+     mapping is provisioned on demand and the premise no longer holds.
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`

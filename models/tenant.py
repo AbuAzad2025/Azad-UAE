@@ -103,6 +103,28 @@ class Tenant(db.Model):
     allow_custom_integrations = db.Column(db.Boolean, default=False)
     enable_auto_backup = db.Column(db.Boolean, default=True)
 
+    # Module switches for dynamic GL provisioning.
+    # services/gl_provisioning_service.py provisions a non-core GL module's
+    # concept mappings only when the module's feature flag is on, and it reads
+    # the flag off the tenant with getattr(tenant, flag, False). A flag with no
+    # column here is therefore always False, the module is never provisioned,
+    # and under ENABLE_DYNAMIC_GL_MAPPING=True the posting that needs one of
+    # its concepts is refused outright.
+    # Default True: the postings these modules make (a shipment's revenue, a
+    # campaign discount, a partner commission, a depreciation, a donation, a
+    # platform fee) happen on ordinary operations, so a tenant that has not
+    # switched a module off must never have its posting refused. The flag is
+    # the tenant's switch to turn a module off knowingly - not a gate that
+    # silently breaks a normal operation.
+    enable_shipments = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_campaigns = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_partners = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_fixed_assets = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_donations = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_warranty_tracking = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_bank_reconciliation = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_azad_platform = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+
     # Preferences - التفضيلات
     default_currency = db.Column(
         db.String(3), default=context_aware_default_currency
