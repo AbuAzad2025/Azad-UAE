@@ -96,7 +96,14 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("1160", "Prepayments", "مدفوعات مقدمة", "asset", 2, False, "1100"),
     GLAccountTemplate("1170", "Employee Advances", "سلف الموظفين", "asset", 2, False, "1100"),
-    GLAccountTemplate("1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, True, "1100"),
+    # 1180 is the fixed-asset account the assets are capitalised to and the
+    # disposals are relieved from. It used to be a header over accounts that
+    # do not exist, which made it unpostable: a disposal that named it was
+    # refused ("Explicit GL account 1180 is a header/group account"), because
+    # a header is not a place money can go. A header with no children is not a
+    # grouping, it is a mistake - so it is a postable leaf instead, and the
+    # tree builder repairs existing tenants' rows on the next boot.
+    GLAccountTemplate("1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, False, "1100"),
     GLAccountTemplate("1190", "Accumulated Depreciation", "مجمع الإهلاك", "asset", 2, False, "1100", is_contra=True),
     GLAccountTemplate("1200", "Non-Current Assets", "أصول غير متداولة", "asset", 1, True, "1000"),
     GLAccountTemplate("2000", "Liabilities", "الخصوم", "liability", 0, True),

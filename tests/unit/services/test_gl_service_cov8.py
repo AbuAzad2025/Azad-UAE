@@ -438,9 +438,9 @@ class TestResolveArcs:
             GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id)
         with pytest.raises(ValueError, match="required"):
             GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id, ensure_core=False)
-        from models import GLAccount
+        from models import GLAccount as _GLAccount
 
-        cash_acct = GLAccount(
+        cash_acct = _GLAccount(
             tenant_id=sample_tenant.id,
             code="COV8CASH",
             name="Cov8 Cash",

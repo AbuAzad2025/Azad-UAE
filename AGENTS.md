@@ -293,16 +293,22 @@ are **not** fixed; each is pinned by a test that names it.
   have one, `CAMPAIGN_DISCOUNT_REVERSAL` is a known concept, the database's
   allow-list matches the model's (migration `c3d9e1f7a204`), and a posting
   that names only an account code falls back to the legacy account instead of
-  being refused. **Two blockers are left before the flag can be switched on
+  being refused.   **Two blockers are left before the flag can be switched on
   in the suite**, and both are measured:
-  1. A fixed-asset disposal posts to account `1180` (Fixed Assets), which is
-     a *header*. The record-mode resolution refuses a header, so the disposal
-     is refused. The chart has no leaf fixed-asset account, and the seed
-     manifest pins the base chart at 98 accounts — so the fix is a leaf
-     account (or a sub-account per asset class) plus the seed count.
+  1. A fixed-asset disposal posts to account `1180` (Fixed Assets), which was
+     a *header* over accounts that do not exist, so the record-mode resolution
+     refused it ("Explicit GL account 1180 is a header/group account"). **Fixed
+     here:** `1180` is now a postable leaf, and the tree builder repairs
+     existing tenants' rows on the next boot. The chart still has one
+     fixed-asset account for every asset class; a leaf per class is the
+     remaining improvement.
   2. `tests/unit/services/test_gl_service_cov8.py::TestResolveArcs::test_dynamic_mapping_arcs`
-     assumes a tenant without a mapping for `AR`; with the flag on, the
-     mapping is provisioned on demand and the premise no longer holds.
+     assumes a tenant without a mapping for `AR`. With the flag on, the
+     mapping is provisioned on demand - a fresh tenant gets 54 mapping rows
+     and no errors (measured) - so the premise does not hold, and the test
+     has to say which way it wants the flag rather than relying on the
+     global default. **This is the last thing between the suite and the
+     production configuration.**
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`
