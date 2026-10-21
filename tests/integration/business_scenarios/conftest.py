@@ -1,6 +1,6 @@
 """Fixtures and assertions for the business-scenario suite.
 
-Two things every scenario needs and none of the existing fixtures provide:
+Three things every scenario needs and none of the existing fixtures provide:
 
 1. A way to ask the ledger a question. The integration suite so far asserts on
    service return values; a business scenario has to ask what the accounts now
@@ -8,6 +8,11 @@ Two things every scenario needs and none of the existing fixtures provide:
 2. A signed-in client for each actor a scenario involves - platform owner,
    company admin, cashier - because the permission boundary is part of the
    behaviour under test.
+3. A tenant that can post at all. Under ENABLE_DYNAMIC_GL_MAPPING - the
+   production default - a posting names a *concept* and the tenant's own
+   GLAccountMapping row decides which account it lands on, so a tenant with no
+   chart of accounts and no mappings cannot post anything. See
+   ``demo_tenant`` below.
 """
 
 from __future__ import annotations
@@ -16,6 +21,77 @@ import uuid
 from decimal import Decimal
 
 import pytest
+
+
+# ── The provisioned scenario tenant ───────────────────────────────────────
+# ENABLE_DYNAMIC_GL_MAPPING is the production default: a posting names a
+# *concept* and the tenant's GLAccountMapping row decides the account. A tenant
+# that has neither a chart of accounts nor a mapping row therefore cannot post
+# at all - the posting is refused with "No active GL account mapping exists for
+# this concept".
+#
+# That refusal is the feature working, not a fault: it is what stops a posting
+# from landing on an account the tenant never set up. But a *test* tenant built
+# with a bare ``Tenant(...)`` has no chart because nobody ever gave it one, so
+# the refusal says nothing about the product under test - it only says the
+# fixture is not a real tenant.
+#
+# The unit suite has always provisioned this (tests/conftest.py's
+# ``sample_gl_accounts`` calls GLService.ensure_core_accounts), which is exactly
+# why the service and model suites stayed green when the flag was switched on
+# and the business scenarios did not: they built their tenant with a bare
+# ``Tenant(...)`` and nothing else. Wave 6 already had to do this by hand
+# (test_wave6_accounting_spine.py's ``ledger_tenant``); this is that same
+# provisioning, once, for every scenario in the directory.
+def _provision_gl_chart(tenant_id: int) -> None:
+    """Give a tenant its chart of accounts and its concept mappings.
+
+    GLService.ensure_core_accounts does both halves: GLTreeBuilder.build for
+    the accounts, and - because the flag is on - GLService.ensure_gl_mappings
+    for the concept rows. Without the second half the chart is there but every
+    concept-named posting is still refused.
+    """
+    from services.gl_service import GLService
+
+    GLService.ensure_core_accounts(tenant_id=tenant_id)
+
+
+@pytest.fixture
+def demo_tenant(db_session, app):
+    """The scenario tenant, with the chart of accounts a real tenant has.
+
+    Overrides the factory tenant in tests/integration/conftest.py, for the
+    business-scenario directory only, by adding the provisioning the scenario
+    suite never had. The tenant itself is unchanged; it simply has its books
+    open for business, which is what every scenario that posts assumes.
+    """
+    from tests.factories import TenantFactory
+
+    tenant = TenantFactory()
+    db_session.commit()
+    with app.app_context():
+        _provision_gl_chart(tenant.id)
+        db_session.commit()
+    return tenant
+
+
+@pytest.fixture
+def demo_branch(db_session, demo_tenant, app):
+    """A main branch for the demo tenant, with the branch's own cashbox.
+
+    The chart's cashbox and bank accounts are per branch (``1110-B{branch.id}``),
+    so the tree is built again now that the branch exists: a chart built before
+    the branch row existed has no cashbox for it, and a till with no cashbox has
+    nowhere to put the money.
+    """
+    from tests.factories import BranchFactory
+
+    branch = BranchFactory(tenant=demo_tenant)
+    db_session.commit()
+    with app.app_context():
+        _provision_gl_chart(demo_tenant.id)
+        db_session.commit()
+    return branch
 
 
 @pytest.fixture

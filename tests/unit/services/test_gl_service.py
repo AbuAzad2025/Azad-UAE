@@ -489,11 +489,65 @@ class TestDynamicMappingPaths:
         code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
         assert code == "1131"
 
-    def test_get_customer_credit_dynamic_missing_raises(self, sample_tenant, mocker):
+    def test_get_customer_credit_dynamic_missing_falls_back(self, sample_tenant, mocker):
+        """A concept the tenant has not mapped degrades to the static code.
+
+        This helper picks the account code; it does not decide whether the
+        posting is allowed. When the tenant's mapping cannot be resolved it
+        hands back the documented static account - the one the legacy path
+        used - exactly as its sibling ``get_account_code_for_concept``
+        does. Raising here aborted the whole document before the posting
+        boundary could apply its own rule, and the rule lives there.
+
+        The rail is untouched by the fallback: every caller pairs this code
+        with the concept on the same journal line, and a line that names a
+        concept nobody mapped is refused when it is posted. So the helper
+        degrades, and the refusal still happens one layer down - which is
+        what ``test_resolve_with_dynamic_mapping_unmapped_concept_raises``
+        above pins.
+        """
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
+
+        # (a) The resolver refuses: the tenant has no mapping for the
+        #     concept. The helper degrades instead of propagating.
+        mocker.patch(
+            "services.gl_service.resolve_gl_account",
+            side_effect=GLMappingError(
+                tenant_id=sample_tenant.id,
+                concept_code="AR",
+                branch_id=None,
+                issue="No active GL account mapping exists for this concept.",
+            ),
+        )
+        code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
+        assert code == GL_ACCOUNTS["receivable"] == "1130"
+
+        # (b) The resolver hands back nothing at all - same outcome.
+        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
+        code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
+        assert code == GL_ACCOUNTS["receivable"] == "1130"
+
+    def test_get_customer_credit_dynamic_missing_falls_back_per_customer_type(self, sample_tenant, mocker):
+        """The degraded code is the one that carries that customer's credit.
+
+        The fallback is not one code for everybody: a trade customer's
+        balance sits on the receivable, a partner's on the partner current
+        account and a merchant's on the merchants-payable account. A
+        degradation that ignored the customer type would post a partner's
+        balance into the trade receivable - the same wrong-account defect
+        the dynamic mapping exists to prevent, one layer up.
+        """
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
-        with pytest.raises(GLMappingError):
-            GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
+
+        partner = MagicMock(customer_type="partner")
+        merchant = MagicMock(customer_type="merchant")
+
+        partner_code = GLService.get_customer_credit_account(partner, tenant_id=sample_tenant.id)
+        assert partner_code == GL_ACCOUNTS["partner_current_account"] == "2150"
+
+        merchant_code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
+        assert merchant_code == GL_ACCOUNTS["merchants_payable"] == "2115"
 
     def test_cheque_debit_dynamic_mapping(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)

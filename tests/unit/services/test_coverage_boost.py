@@ -938,7 +938,9 @@ class TestStockCoverage:
 
     def test_resolve_gl_concept_dynamic_enabled(self, mocker):
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
-        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=MagicMock(account_code="9999"))
+        # resolve_gl_account returns the GLAccount row - the code is in
+        # ``code``, not in ``account_code`` (that one is the mapping's).
+        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=MagicMock(code="9999"))
         assert _resolve_gl_concept_account("CASH", "1010", tenant_id=1) == "9999"
 
     def test_resolve_gl_concept_dynamic_fails_raises_gl_mapping_error(self, mocker):

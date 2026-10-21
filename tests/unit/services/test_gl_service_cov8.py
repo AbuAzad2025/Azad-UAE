@@ -23,7 +23,10 @@ Targets (services/gl_service.py):
   create_journal_entry header raise (474).
 - get_default_liquidity_account ambiguous raise (795).
 - Dynamic-mapping arcs via flag patch (257-275, 267-275, 326-328,
-  333-336, 336-345, 576, 580, 828-836).
+  333-336, 336-345, 576, 580, 828-836): the concept resolves through the
+  tenant's mapping, and a concept the tenant has not mapped is refused.
+  The customer-credit *helper* degrades to the static code instead of
+  refusing - the refusal belongs to the posting boundary.
 - ensure_gl_mappings disabled early return (573).
 - get_scoped_account_or_404 / get_entry_or_404 / list_payment_vaults /
   paginate_all_entries (1541-1543, 1790-1792, 1886-1889, 1893-1895).
@@ -430,15 +433,88 @@ class TestResolveArcs:
             GLService._resolve_journal_line_account({"account": "COV8-NOPE"}, sample_tenant.id)
 
     def test_dynamic_mapping_arcs(self, db_session, sample_tenant, sample_gl_accounts, mocker):
-        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
-        # A concept the tenant has no mapping for cannot be posted: the
-        # mapping governs, so a posting that names a concept nobody mapped is
-        # refused rather than posted somewhere else.
-        with pytest.raises(ValueError, match="2121|required|fallback|concept|mapping"):
-            GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id)
-        with pytest.raises(ValueError, match="required"):
-            GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id, ensure_core=False)
+        """The dynamic-mapping rail, asserted in both directions.
+
+        The flag is mocked explicitly - in the service *and* in the resolver,
+        which reads its own copy of it - so the test says which way it wants
+        the feature instead of inheriting the global default. The suite runs
+        with the production default (the mapping on); a test that leaned on
+        that default would assert a different contract on every
+        configuration, and would stop testing the rail altogether the moment
+        the flag was switched.
+
+        (a) A tenant that HAS an active mapping for the concept resolves
+            through that mapping: the tenant's row decides the account, not
+            the registry's default account code.
+        (b) A tenant that has NO active mapping for the concept is refused.
+            The resolver raises GLMappingError rather than posting the amount
+            somewhere the caller did not ask for - that refusal is the whole
+            point of the feature.
+
+        Both directions build the rows they need, so the outcome never
+        depends on what the ``sample_gl_accounts`` fixture happened to
+        provision for this tenant.
+        """
         from models import GLAccount as _GLAccount
+        from models import GLAccountMapping as _GLAccountMapping
+        from services.gl_account_resolver import GLMappingError
+
+        mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
+        mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
+
+        def _drop_ar_mappings():
+            _GLAccountMapping.query.filter_by(tenant_id=sample_tenant.id, concept_code="AR").delete(
+                synchronize_session=False
+            )
+            db_session.commit()
+
+        mapped_account = _GLAccount(
+            tenant_id=sample_tenant.id,
+            code="COV8AR",
+            name="Cov8 AR",
+            type="asset",
+            is_active=True,
+            is_header=False,
+        )
+        db_session.add(mapped_account)
+        db_session.commit()
+        try:
+            # (a) The tenant's own mapping governs the posting. The account
+            #     it names is not the registry default for AR, so the
+            #     assertion proves the mapping decided - not the chart.
+            _drop_ar_mappings()
+            db_session.add(
+                _GLAccountMapping(
+                    tenant_id=sample_tenant.id,
+                    concept_code="AR",
+                    gl_account_id=mapped_account.id,
+                    branch_id=None,
+                    is_active=True,
+                )
+            )
+            db_session.commit()
+            resolved = GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id)
+            assert resolved.id == mapped_account.id
+            assert resolved.code == "COV8AR"
+
+            # (b) No active mapping for the concept: the posting is refused.
+            #     ``ensure_core=False`` says "provision nothing on my behalf",
+            #     so the tenant really is left without a mapping to resolve.
+            _drop_ar_mappings()
+            with pytest.raises(GLMappingError, match="No active GL account mapping exists"):
+                GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id, ensure_core=False)
+
+            # The refusal is about the missing mapping, not about the concept:
+            # with provisioning on, the mapping is created on demand again and
+            # the posting resolves - through the registry's account now, not
+            # through the row this test wrote.
+            provisioned = GLService._resolve_journal_line_account({"concept_code": "AR"}, sample_tenant.id)
+            assert provisioned is not None
+            assert provisioned.id != mapped_account.id
+        finally:
+            _drop_ar_mappings()
+            db_session.delete(mapped_account)
+            db_session.commit()
 
         cash_acct = _GLAccount(
             tenant_id=sample_tenant.id,
@@ -452,6 +528,8 @@ class TestResolveArcs:
         db_session.add(cash_acct)
         db_session.commit()
         try:
+            # A liquidity-owned concept is resolved through the explicit
+            # account the line names - it has no mapping row at all.
             cash = GLService._resolve_journal_line_account(
                 {"account": cash_acct.code, "concept_code": "CASH"}, sample_tenant.id
             )
@@ -487,15 +565,54 @@ class TestResolveArcs:
             db_session.delete(branch_acct)
             db_session.commit()
 
-    def test_customer_credit_dynamic_raise(self, db_session, sample_tenant, mocker):
-        from services.gl_account_resolver import GLMappingError
+    def test_customer_credit_dynamic_degrades_to_static(self, db_session, sample_tenant, mocker):
+        """A concept that cannot be resolved degrades to the static code.
 
+        The helper picks the account code; the posting boundary decides
+        whether the posting is allowed. A tenant with no mapping for the
+        customer's credit concept - or a customer type whose concept the
+        registry does not know - gets the documented static account instead
+        of an exception that would abort the whole document before the
+        posting boundary ever saw it.
+
+        The rail is untouched: the callers pair this code with the concept
+        on the same journal line, and a line that names a concept nobody
+        mapped is refused when it is posted.
+        """
+        from services.gl_account_resolver import GLMappingError, resolve_gl_account
+
+        # The flag is mocked in the service *and* in the resolver, which
+        # reads its own copy of it - so the test says which way it wants
+        # the feature instead of inheriting the global default.
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
-        with pytest.raises(GLMappingError):
-            GLService.get_customer_credit_account(SimpleNamespace(customer_type="merchant"), tenant_id=sample_tenant.id)
+        mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
+        merchant = SimpleNamespace(customer_type="merchant")
+
+        # (a) The resolver refuses: the tenant has no mapping for the
+        #     concept. The helper degrades instead of propagating the
+        #     refusal to its caller.
+        mocker.patch(
+            "services.gl_service.resolve_gl_account",
+            side_effect=GLMappingError(
+                tenant_id=sample_tenant.id,
+                concept_code="MERCHANT_CURRENT_ACCOUNT",
+                branch_id=None,
+                issue="No active GL account mapping exists for this concept.",
+            ),
+        )
+        code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
+        assert code == GL_ACCOUNTS["merchants_payable"] == "2115"
+
+        # (b) The concept the customer type names is not one the registry
+        #     knows, so the resolver refuses it ...
         mocker.patch.object(GLService, "get_customer_credit_concept", return_value="")
-        with pytest.raises(GLMappingError):
-            GLService.get_customer_credit_account(SimpleNamespace(customer_type="merchant"), tenant_id=sample_tenant.id)
+        mocker.patch("services.gl_service.resolve_gl_account", resolve_gl_account)
+        with pytest.raises(GLMappingError, match="Unknown GL concept code"):
+            resolve_gl_account(tenant_id=sample_tenant.id, concept_code="")
+        # ... and the helper absorbs that refusal and hands back the
+        # merchant's static account.
+        code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
+        assert code == GL_ACCOUNTS["merchants_payable"] == "2115"
 
     def test_dynamic_record_branch_arc(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         from models import GLAccount

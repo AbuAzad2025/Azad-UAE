@@ -22,7 +22,12 @@ These tests pin the fix:
 * a freshly provisioned tenant really carries the rows, and the resolver
   really resolves the concepts through them;
 * every concept the services post is a concept the registry knows, so no
-  posting names a concept the resolver refuses as unknown.
+  posting names a concept the resolver refuses as unknown;
+* every ``legacy_code`` hint names an account the seed really creates and the
+  account the registry maps the concept to, so the Owner panel's mapping
+  preview does not report noise for every tenant;
+* no source file carries a run of question marks, which is what an Arabic
+  string turns into when the file is written in the wrong encoding.
 """
 
 from __future__ import annotations
@@ -110,6 +115,29 @@ KNOWN_POSTED_CONCEPTS_WITHOUT_A_REGISTRY_ENTRY = frozenset({"CAMPAIGN_DISCOUNT_R
 # refused today, but it cannot be given a mapping row until the schema is
 # brought back into step with the registry.
 KNOWN_CONCEPTS_MISSING_FROM_THE_SCHEMA_CONSTRAINT = frozenset({"PAYROLL_EXPENSE_2"})
+
+# The mapping-owned concepts that carry no legacy_code hint at all. The Owner
+# panel's preview reports a concept without a hint as "manual_required" and
+# leaves the mapping to the Owner; that is a different thing from a concept
+# whose hint names an account the chart does not have, which is a defect. The
+# set is pinned so that a hint appearing or disappearing is a deliberate
+# change rather than a drift nobody notices.
+CONCEPTS_WITHOUT_A_LEGACY_CODE_HINT = frozenset(
+    {
+        "COGS_REVERSAL",
+        "CUSTOMS_DUTY",
+        "FX_GAIN",
+        "FX_LOSS",
+        "FREIGHT_IN",
+        "INVENTORY_ADJUSTMENT_GAIN",
+        "INVENTORY_ADJUSTMENT_LOSS",
+        "PURCHASE_RETURNS",
+        "PURCHASES",
+        "SALES_DISCOUNT",
+        "SALES_RETURNS",
+        "TIER_DISCOUNT",
+    }
+)
 
 
 def _chart_templates() -> dict[str, GLAccountTemplate]:
@@ -323,6 +351,100 @@ class TestMappingTargets:
             assert mode in (RESOLUTION_MODE_LIQUIDITY, RESOLUTION_MODE_RECORD), f"{code} is {mode}"
 
 
+class TestLegacyCodeHints:
+    """A concept's ``legacy_code`` hint must name an account that exists.
+
+    ``GL_CONCEPT_REGISTRY[concept]["legacy_code"]`` is the hint the Owner
+    panel's mapping-validation preview reads
+    (``services/gl_mapping_validation.py``): it matches the hint against the
+    tenant's own accounts to propose a mapping.
+
+    A hint that names an account the chart does not have is reported as
+    "manual_required" for *every* tenant, which buries the real findings
+    under noise. A hint that names the wrong account is worse: the preview
+    proposes a mapping the registry would never provision, so the Owner
+    approves one account and the ledger posts to another.
+
+    The chart is the set of accounts the seed creates - the base chart
+    (``BASE_ACCOUNTS``) plus the industry extensions
+    (``INDUSTRY_EXTENSIONS``) - the same two sources
+    ``services/gl_tree_builder.py`` builds a tenant's chart from, so the
+    assertions cannot be fooled by a partial list.
+    """
+
+    def test_every_hint_names_an_account_the_seed_creates(self):
+        templates = _chart_templates()
+        offenders = sorted(
+            (code, meta["legacy_code"])
+            for code, meta in GL_CONCEPT_REGISTRY.items()
+            if meta["legacy_code"] is not None and meta["legacy_code"] not in templates
+        )
+        assert not offenders, (
+            "these concepts carry a legacy_code hint that names an account the seed never creates, so "
+            "the Owner panel's preview reports them as 'manual_required' for every tenant: "
+            f"{offenders}"
+        )
+
+    def test_a_mapping_concept_hint_names_a_postable_account(self):
+        """A mapping-owned concept is posted to, so its hint must be a leaf.
+
+        The preview rejects a header account as unpostable and reports the
+        concept as an invalid candidate for every tenant. The hints that do
+        name a header are the concepts the preview never resolves by hint:
+        BANK (1120) is the header the tenant's bank accounts hang off, and
+        LANDED_COST (5300) is the header the landed-cost accounts hang off.
+        """
+        templates = _chart_templates()
+        headers = sorted(
+            (code, meta["legacy_code"])
+            for code, meta in GL_CONCEPT_REGISTRY.items()
+            if meta["resolution_mode"] == RESOLUTION_MODE_MAPPING
+            and meta["legacy_code"] is not None
+            and meta["legacy_code"] in templates
+            and templates[meta["legacy_code"]].is_header
+        )
+        assert not headers, (
+            f"these hints name a header account, which the preview rejects as unpostable for every tenant: {headers}"
+        )
+
+    def test_a_mapping_concept_hint_names_the_account_the_registry_maps_it_to(self):
+        rows = _mapping_rows()
+        offenders = sorted(
+            (code, meta["legacy_code"], sorted({account for _module, account in rows[code]}))
+            for code, meta in GL_CONCEPT_REGISTRY.items()
+            if meta["resolution_mode"] == RESOLUTION_MODE_MAPPING
+            and meta["legacy_code"] is not None
+            and code in rows
+            and meta["legacy_code"] not in {account for _module, account in rows[code]}
+        )
+        assert not offenders, (
+            "these hints name an account the registry does not map the concept to, so the preview "
+            f"proposes a mapping the provisioning engine would never create: {offenders}"
+        )
+
+    def test_the_concepts_that_carry_no_hint_are_the_pinned_ones(self):
+        hintless = sorted(
+            code
+            for code, meta in GL_CONCEPT_REGISTRY.items()
+            if meta["resolution_mode"] == RESOLUTION_MODE_MAPPING and meta["legacy_code"] is None
+        )
+        assert hintless == sorted(CONCEPTS_WITHOUT_A_LEGACY_CODE_HINT), (
+            "the set of mapping-owned concepts without a legacy_code hint changed. A concept that "
+            "loses its hint is reported as 'manual_required' for every tenant, and one that gains "
+            f"one names an account the chart may not have. Changed: {hintless}"
+        )
+
+    def test_the_misc_expense_hint_names_the_account_it_maps_to(self):
+        """The precedent: MISC_EXPENSE maps to 6500, so 6990 would be wrong.
+
+        The hint is what the Owner panel's preview reads, and a hint that
+        names an account the chart does not have turns the concept into
+        "manual_required" noise for every tenant.
+        """
+        assert GL_CONCEPT_REGISTRY["MISC_EXPENSE"]["legacy_code"] == "6500"
+        assert _mapping_rows()["MISC_EXPENSE"] == [("core_payments", "6500")]
+
+
 class TestSchemaConstraint:
     """The database constrains the concept codes a mapping row may carry."""
 
@@ -484,3 +606,29 @@ class TestProvisionedTenant:
                 assert account.code == code, f"{concept} resolved to {account.code}, expected {code}"
         finally:
             app.config["ENABLE_DYNAMIC_GL_MAPPING"] = original
+
+
+class TestSourceTextIntegrity:
+    """No source file may carry a run of question marks.
+
+    A file that is rewritten in the wrong encoding writes every Arabic
+    character as "?", and the corruption is invisible in a diff of a file
+    that is mostly ASCII. It also reaches the ledger: a fixed-asset disposal
+    was posted with the description "??? بيع ??? - ASSET-001" instead of the
+    Arabic text it is supposed to carry.
+    """
+
+    SCANNED_DIRECTORIES = ("models", "services", "routes", "utils", "migrations")
+
+    def test_no_source_file_has_a_run_of_question_marks(self):
+        offenders: list[str] = []
+        for directory in self.SCANNED_DIRECTORIES:
+            for path in sorted((PROJECT_ROOT / directory).rglob("*.py")):
+                text = path.read_text(encoding="utf-8", errors="replace")
+                for number, line in enumerate(text.splitlines(), start=1):
+                    if "???" in line:
+                        offenders.append(f"{path.relative_to(PROJECT_ROOT)}:{number}")
+        assert not offenders, (
+            "these source lines carry a run of question marks, which is what an Arabic string turns "
+            f"into when the file is written in the wrong encoding: {offenders}"
+        )

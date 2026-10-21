@@ -240,7 +240,13 @@ class TestConfig:
     MAIL_PASSWORD = None
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     ENABLE_MWAC = True
-    ENABLE_DYNAMIC_GL_MAPPING = False
+    # The production default: a posting that names a *concept* is resolved
+    # through the tenant's GLAccountMapping row. The suite used to run with
+    # this off, which proved a configuration production does not run - the
+    # concept vocabulary, the on-demand provisioning and the refusal rail
+    # were all dormant. It is on now, so the suite exercises the same
+    # configuration as a live install.
+    ENABLE_DYNAMIC_GL_MAPPING = True
     ENABLE_LANDED_COST_CAPITALIZATION = True
     ENABLE_ONLINE_EXCHANGE_RATE_FALLBACK = False
     ENABLE_ADVANCED_RECONCILIATION = True

@@ -87,7 +87,13 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
         try:
             resolved = resolve_gl_account(tenant_id=tenant_id, concept_code=concept_code)
             if resolved:
-                return resolved.account_code
+                # resolve_gl_account returns the GLAccount row, whose code lives
+                # in ``code``; ``account_code`` is the GLAccountMapping's
+                # attribute. Reading the wrong one raised an AttributeError that
+                # the generic handler below turned into "dynamic mapping
+                # failure" - so every stock posting failed on a tenant that had
+                # a chart.
+                return resolved.code
         except GLMappingError:
             raise
         except Exception:
@@ -187,6 +193,13 @@ class StockService:
         tenant_id = (movement.tenant_id if movement is not None else None) or (
             product.tenant_id if product is not None else None
         )
+        # The chart comes first. A concept is resolved against the tenant's
+        # own chart and mapping, so a tenant that has neither yet cannot be
+        # resolved against - it would be refused before it was ever given
+        # one. Provisioning after the resolves (which is what this did) asks
+        # the resolver a question the tenant cannot answer yet, and the
+        # adjustment answers 500 instead of working.
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
         loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
         asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
         gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
@@ -226,7 +239,6 @@ class StockService:
                 },
             ]
         branch_id = warehouse.branch_id if warehouse else None
-        GLService.ensure_core_accounts(tenant_id=tenant_id)
         post_or_fail(
             lines=lines,
             description=f"Stock Adjustment - {product.name}",
@@ -281,9 +293,12 @@ class StockService:
             cost_value = Decimal(str(quantity)) * Decimal(str(product.cost_price))
             if cost_value > 0:
                 tenant_id = product.tenant_id if product is not None else None
+                # The chart comes before the resolves here too: the opening
+                # stock lines name concepts, and a concept is resolved
+                # against the tenant's chart and mapping.
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
                 asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
                 equity_account = _resolve_gl_concept_account("OPENING_BALANCE_EQUITY", "3130", tenant_id)
-                GLService.ensure_core_accounts(tenant_id=tenant_id)
                 post_or_fail(
                     lines=[
                         {

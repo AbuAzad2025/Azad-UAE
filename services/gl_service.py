@@ -369,7 +369,13 @@ class GLService:
 
         # ---- Legacy fallback (no concept, or dynamic mapping disabled) ----
         if not account_code:
-            raise ValueError("GL account code is required when dynamic mapping is disabled.")
+            # Reachable in both modes: a line that names neither an account
+            # nor a concept that resolves to one. The old text ("...when
+            # dynamic mapping is disabled") described only the legacy mode,
+            # but the flag can be on and the line still arrive here empty.
+            raise ValueError(
+                "GL account code is required: no account was named and no GL concept resolved to an account."
+            )
 
         account = gl_helpers.get_account(account_code, tenant_id)
         if account is None and ensure_core:
@@ -847,29 +853,43 @@ class GLService:
         return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
+    def _customer_credit_fallback_code(customer):
+        """The documented static account that carries a customer's credit balance."""
+        customer_type = getattr(customer, "customer_type", None) if customer else None
+        if customer_type == "partner":
+            return GL_ACCOUNTS["partner_current_account"]
+        if customer_type == "merchant":
+            return GL_ACCOUNTS["merchants_payable"]
+        return GL_ACCOUNTS["receivable"]
+
+    @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
-        if tenant_id and is_dynamic_gl_mapping_enabled():
-            concept = GLService.get_customer_credit_concept(customer)
-            if concept:
-                account = resolve_gl_account(
-                    tenant_id=tenant_id,
-                    concept_code=concept,
-                    branch_id=branch_id,
-                )
-                if account:
-                    return account.code
-            raise GLMappingError(
+        """Return the GL account code that carries a customer's credit balance.
+
+        The tenant's own mapping decides the account while dynamic mapping is
+        on. When that mapping cannot be resolved the helper degrades to the
+        documented static fallback - the account the legacy path used -
+        exactly as its sibling ``get_account_code_for_concept`` does. A
+        helper that raises where its sibling hands back a code is a trap for
+        callers: it aborts the whole document before the posting boundary
+        can apply its own rule, and the rule lives there - a line that
+        names a concept nobody mapped is refused when it is posted, not
+        when the code for it is picked.
+        """
+        concept = GLService.get_customer_credit_concept(customer)
+        fallback_code = GLService._customer_credit_fallback_code(customer)
+        if not (tenant_id and is_dynamic_gl_mapping_enabled()):
+            return fallback_code
+        try:
+            account = resolve_gl_account(
                 tenant_id=tenant_id,
-                concept_code=concept or "AR",
+                concept_code=concept,
                 branch_id=branch_id,
-                issue="No GL account mapping found for customer credit account.",
             )
-        code = "1130"
-        if customer and getattr(customer, "customer_type", None) == "partner":
-            code = "2150"
-        elif customer and getattr(customer, "customer_type", None) == "merchant":
-            code = "2115"
-        return code
+        except GLMappingError:
+            logger.debug("No dynamic GL mapping for concept %s; trying static fallback", concept, exc_info=True)
+            account = None
+        return account.code if account else fallback_code
 
     @staticmethod
     def create_manual_entry(
@@ -1476,28 +1496,52 @@ class GLService:
 
     @staticmethod
     def _reconciliation_concept_balance(concept_code, tenant_id=None, branch_id=None):
+        """Balance of the tenant's control account for a GL concept.
+
+        One contract in both modes. The account is the one the tenant's
+        mapping names for the concept - 1130/2110 for AR/AP - and never a
+        hardcoded sub-account that only one of the two modes read (1131 and
+        2111), which made the same reconciliation report a different number
+        depending on the flag.
+
+        This is a read-only probe, not a posting, so it never refuses to
+        produce a report: a concept the tenant has not mapped - or a
+        concept nobody knows - reconciles to zero instead of raising.
+        """
         from decimal import Decimal
 
         from sqlalchemy import func
 
-        from services.gl_account_resolver import is_dynamic_gl_mapping_enabled
-
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
-        legacy_codes = {"AR": "1131", "AP": "2111"}
-        if is_dynamic_gl_mapping_enabled():
-            line = {"concept_code": concept_code}
-        else:
-            account_code = legacy_codes.get(concept_code)
-            if not account_code:
-                return Decimal("0")
-            line = {"account": account_code}
-        acc = GLService._resolve_journal_line_account(
-            line,
-            tenant_id,
-            branch_id=branch_id,
-            ensure_core=False,
-            missing_ok=True,
-        )
+        concept = str(concept_code or "").strip().upper()
+        meta = GL_CONCEPT_REGISTRY.get(concept)
+        if not meta:
+            # An unknown concept reconciles to nothing.
+            return Decimal("0")
+        line = {"concept_code": concept}
+        registry_code = meta.get("legacy_code")
+        if registry_code:
+            # The account the concept owns in the tenant's chart. It is what
+            # the mapping names by default, and it is what the legacy path
+            # resolves when the mapping is not in play - so both modes read
+            # the same control account.
+            line["account"] = registry_code
+        try:
+            acc = GLService._resolve_journal_line_account(
+                line,
+                tenant_id,
+                branch_id=branch_id,
+                ensure_core=False,
+                missing_ok=True,
+            )
+        except (GLMappingError, ValueError):
+            logger.debug(
+                "Reconciliation probe could not resolve concept %s for tenant %s; reconciling to zero",
+                concept,
+                tenant_id,
+                exc_info=True,
+            )
+            return Decimal("0")
         if not acc:
             return Decimal("0")
         q = (

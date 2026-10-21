@@ -55,7 +55,7 @@ class IntegrationSettings(db.Model):
     @staticmethod
     def get_service_config(service_name, tenant_id=None):
         """
-        ??????? ??? ??????? ???? ?????.
+        الحصول على إعدادات خدمة معينة.
 
         tenant_id=None means the platform-global row (owner panel scope) and
         strictly matches NULL rows - it never falls back to another tenant's
@@ -77,7 +77,7 @@ class IntegrationSettings(db.Model):
                 q = q.filter(IntegrationSettings.tenant_id.is_(None))
             integration = q.first()
             if not integration:
-                # ????? ??? ???? ???????? ????????
+                # إنشاء سجل جديد بإعدادات افتراضية
                 integration = IntegrationSettings(
                     service_name=service_name,
                     tenant_id=tenant_id,

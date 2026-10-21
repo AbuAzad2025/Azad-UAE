@@ -46,9 +46,12 @@ class TestResolveGlAccount:
 
     def test_dynamic_success(self, mocker):
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=True)
+        # resolve_gl_account returns the GLAccount row - its code is in
+        # ``code`` (``account_code`` belongs to GLAccountMapping), so the
+        # mock has to mirror the model the service is handed.
         mocker.patch(
             "services.gl_account_resolver.resolve_gl_account",
-            return_value=MagicMock(account_code="1150"),
+            return_value=MagicMock(code="1150"),
         )
         assert _resolve_gl_concept_account("CASH", "9999", tenant_id=3) == "1150"
 

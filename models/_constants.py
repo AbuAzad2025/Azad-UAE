@@ -144,6 +144,19 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_SUSPENSE,
 )
 
+#: The concept registry. ``legacy_code`` is the hint the Owner panel's
+#: mapping-validation preview reads (``services/gl_mapping_validation.py``):
+#: it matches the hint against the tenant's own accounts to propose a mapping.
+#:
+#: A hint therefore has to name an account the seed really creates - the base
+#: chart plus the industry extensions (``models/gl_account_registry.py``). A
+#: hint that names an account the chart does not have is reported as
+#: "manual_required" for every tenant, which hides the real findings behind
+#: noise; a hint that names the wrong account proposes a mapping the registry
+#: would never provision. For a mapping-owned concept the hint is the account
+#: the registry maps it to, and for a record-owned concept it is the account
+#: the posting names. ``tests/unit/models/test_gl_registry_concepts.py`` pins
+#: both.
 GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     GL_CONCEPT_AR: {
         "meaning": "Accounts Receivable",
@@ -268,19 +281,19 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_PARTNER_CURRENT_ACCOUNT: {
         "meaning": "Partner Current Account",
-        "legacy_code": "3350",
+        "legacy_code": "2150",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_MERCHANT_CURRENT_ACCOUNT: {
         "meaning": "Merchant Current Account",
-        "legacy_code": "2115",
+        "legacy_code": "2151",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_SHIPPING_REVENUE: {
         "meaning": "Shipping Revenue",
-        "legacy_code": "4300",
+        "legacy_code": "4200",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
@@ -294,20 +307,20 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_COMMISSION_EXPENSE: {
         "meaning": "Commission Expense",
-        "legacy_code": "6150",
+        "legacy_code": "6120",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_EMPLOYEE_ADVANCES: {
         "meaning": "Employee Advances",
-        "legacy_code": "1160",
+        "legacy_code": "1170",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_PAYROLL_EXPENSE: {
         "meaning": "Payroll Expense",
-        "legacy_code": "6100",
+        "legacy_code": "6220",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
@@ -321,62 +334,62 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_PAYROLL_PAYABLE: {
         "meaning": "Payroll Payable",
-        "legacy_code": "2140",
+        "legacy_code": "2141",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_BANK_FEES: {
         "meaning": "Bank Fees",
-        "legacy_code": "6950",
+        "legacy_code": "6260",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_BANK_INTEREST_INCOME: {
         "meaning": "Bank Interest Income",
-        "legacy_code": "4500",
+        "legacy_code": "4300",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_DONATION_REVENUE: {
         "meaning": "Donation Revenue",
-        "legacy_code": "4200",
+        "legacy_code": "4500",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_FIXED_ASSET_ASSET: {
         "meaning": "Fixed Asset Asset",
-        "legacy_code": "1240",
+        "legacy_code": "1180",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_RECORD,
     },
     GL_CONCEPT_DEPRECIATION_EXPENSE: {
         "meaning": "Depreciation Expense",
-        "legacy_code": "6180",
+        "legacy_code": "6300",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_RECORD,
     },
     GL_CONCEPT_ACCUMULATED_DEPRECIATION: {
         "meaning": "Accumulated Depreciation",
-        "legacy_code": "1290",
+        "legacy_code": "1190",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_RECORD,
     },
     GL_CONCEPT_FIXED_ASSET_GAIN: {
         "meaning": "Fixed Asset Disposal Gain",
-        "legacy_code": "4500",
+        "legacy_code": "4600",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_FIXED_ASSET_LOSS: {
         "meaning": "Fixed Asset Disposal Loss",
-        "legacy_code": "6990",
+        "legacy_code": "6700",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
@@ -397,7 +410,7 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_LOYALTY_LIABILITY: {
         "meaning": "Customer Loyalty Points Liability",
-        "legacy_code": "2160",
+        "legacy_code": "2161",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
@@ -474,14 +487,14 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_FOOD_SALES_REVENUE: {
         "meaning": "Food Sales Revenue",
-        "legacy_code": "4114",
+        "legacy_code": "4100",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_BEVERAGE_SALES_REVENUE: {
         "meaning": "Beverage Sales Revenue",
-        "legacy_code": "4115",
+        "legacy_code": "4100",
         "required": False,
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,

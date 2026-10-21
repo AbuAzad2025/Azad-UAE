@@ -360,7 +360,7 @@ class FixedAsset(db.Model):
         disposal_type = "بيع" if self.disposal_price > 0 else "إتلاف"
         gl_post_or_fail(
             lines=lines,
-            description=f"??? {disposal_type} ??? - {self.asset_number}",
+            description=f"قيد {disposal_type} أصل - {self.asset_number}",
             reference_type=GLRef.ASSET_DISPOSAL,
             reference_id=self.id,
             branch_id=posting_branch_id,

@@ -48,7 +48,12 @@ class TestMWACHelper:
 
 class TestResolveGlConceptAccount:
     def test_dynamic_mapping_enabled(self, mocker):
-        resolved = MagicMock(account_code="9999")
+        # resolve_gl_account hands back the GLAccount row, and the account's
+        # code lives in ``code`` - ``account_code`` is the GLAccountMapping's
+        # attribute. A mock that names the wrong attribute does not mirror
+        # the model, and the service reading ``.code`` off it would be
+        # reading a mock artefact rather than a real row.
+        resolved = MagicMock(code="9999")
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=True,

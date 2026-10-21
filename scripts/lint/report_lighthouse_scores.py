@@ -6,6 +6,29 @@ numbers, using the thresholds from scripts/lighthouserc.json rather than a
 second copy: if the gate's floors move, this report moves with them instead of
 quietly approving a score the gate would reject.
 
+THE RULE
+--------
+
+Every audited URL is measured N times, where N is ``collect.numberOfRuns`` in
+scripts/lighthouserc.json (currently 3). The gate is decided on the **median
+run** of those N - the run whose performance score is the median of the runs -
+and every category of that run has to clear its floor. Each category's median
+across the runs has to clear its floor too.
+
+Why the median run and not one arbitrary run: a CI runner measures a page
+whose *server* was cold for the first request, and that cold request is a
+property of the runner, not of the page. The same commit scored 65 on one run
+and 97 on the next, from the same code, on the same URL. One sample cannot
+tell a regression from a cold start. Three samples can, and the median of them
+removes the single-sample artefact *without* moving a floor: a page that is
+genuinely slow is slow in its median as well, and the spread is printed so a
+page whose measurement is unstable is visible rather than hidden.
+
+The representative runs are written to .lighthouse-gate/.lighthouseci/ so that
+``lhci assert``, run from that directory, checks exactly the numbers printed
+here instead of every individual run (which would fail the build on the one
+cold run this rule exists to ignore).
+
 Exits non-zero when no report was produced. A missing report is not a pass - it
 means lhci never measured the URLs, and reporting success there would recreate
 the silent failure this gate exists to prevent.
@@ -13,16 +36,30 @@ the silent failure this gate exists to prevent.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
+import statistics
 import sys
 
 REPORT_DIR = pathlib.Path(".lighthouseci")
 CONFIG = pathlib.Path("scripts/lighthouserc.json")
+# The directory `lhci assert` is run from. It holds the representative run per
+# URL, named the way lhci expects (lhr-<digits>.json).
+GATE_DIR = pathlib.Path(".lighthouse-gate")
 
 # Checked only so a page that renders but is not actually usable (an error page
 # still gets a score) cannot be reported as healthy.
 SANITY_FLOOR = 0.5
+
+
+def _load_config() -> dict:
+    """Read the lhci config, or an empty dict if it cannot be read."""
+    try:
+        raw = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return {}
+    return raw if isinstance(raw, dict) else {}
 
 
 def _gate_thresholds() -> dict[str, float]:
@@ -38,11 +75,9 @@ def _gate_thresholds() -> dict[str, float]:
     under half. Getting a tight SEO budget onto / alone needs two lhci configs
     and two collect passes, not a matrix.
     """
-    try:
-        raw = json.loads(CONFIG.read_text(encoding="utf-8-sig"))
-        assertions = raw["ci"]["assert"]["assertions"]
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        print(f"FAIL: cannot read {CONFIG}: {exc}", file=sys.stderr)
+    assertions = _load_config().get("ci", {}).get("assert", {}).get("assertions", {})
+    if not isinstance(assertions, dict):
+        print(f"FAIL: cannot read the assert block in {CONFIG}", file=sys.stderr)
         return {}
 
     floors: dict[str, float] = {}
@@ -54,42 +89,153 @@ def _gate_thresholds() -> dict[str, float]:
     return floors
 
 
-def _dedupe(reports: list[dict]) -> tuple[list[dict], list[str]]:
-    """One entry per URL, keeping the worst score seen.
+def _expected_runs() -> int:
+    """How many runs per URL the collect step is configured to produce.
 
-    collect writes .lighthouseci/ and the filesystem upload copies into the same
-    directory, so a page legitimately arrives more than once with identical
-    numbers. Those collapse silently. Reports that *disagree* are a different
-    thing: picking either one silently is how a regression gets approved by a
-    lucky copy, so the conflict is returned as a failure and the lower score is
-    used.
+    Read from the same config the floors come from, so the rule this script
+    prints ("median of N") and the number of runs lhci actually performs cannot
+    drift apart.
     """
-    grouped: dict[str, list[dict]] = {}
-    for report in reports:
-        url = report.get("finalDisplayedUrl") or report.get("requestedUrl") or "?"
-        grouped.setdefault(url, []).append(report)
+    number = _load_config().get("ci", {}).get("collect", {}).get("numberOfRuns", 1)
+    try:
+        return max(1, int(number))
+    except (TypeError, ValueError):
+        return 1
 
-    collapsed: list[dict] = []
+
+def _scores(report: dict) -> dict[str, float]:
+    """Category scores of one Lighthouse run."""
+    out: dict[str, float] = {}
+    for name, cat in (report.get("categories") or {}).items():
+        value = cat.get("score") if isinstance(cat, dict) else None
+        if value is not None:
+            out[name] = float(value)
+    return out
+
+
+def _url_of(report: dict) -> str:
+    return report.get("finalDisplayedUrl") or report.get("requestedUrl") or "?"
+
+
+def _run_key(report: dict) -> str:
+    """Identify the *run* a report belongs to.
+
+    lhci writes every run twice: once as `lhr-<timestamp>.json` from collect
+    and once as `<host>-<path>-<date>.report.json` from the filesystem upload.
+    Both copies carry the same `fetchTime`, so it identifies the run. A report
+    without one falls back to a hash of its content.
+    """
+    fetch_time = report.get("fetchTime")
+    if fetch_time:
+        return f"t:{fetch_time}"
+    blob = json.dumps(report, sort_keys=True, default=str).encode("utf-8")
+    return f"h:{hashlib.sha256(blob).hexdigest()}"
+
+
+def _group_runs(reports: list[dict]) -> tuple[dict[str, list[dict]], list[str]]:
+    """Group the reports into one entry per run, per URL.
+
+    The copies of a single run collapse. Copies of the *same* run that
+    disagree are a different thing: one of them is corrupt, and silently
+    picking either one is how a regression gets approved by a lucky copy, so
+    the conflict is returned as a failure.
+    """
+    by_run: dict[tuple[str, str], dict] = {}
     conflicts: list[str] = []
-    for url, items in grouped.items():
-        if len(items) == 1:
-            collapsed.append(items[0])
+    for report in reports:
+        url = _url_of(report)
+        key = (url, _run_key(report))
+        existing = by_run.get(key)
+        if existing is None:
+            by_run[key] = report
             continue
+        if _scores(existing) != _scores(report):
+            rendered = " vs ".join(
+                " ".join(f"{k}={v:.2f}" for k, v in sorted(_scores(r).items())) for r in (existing, report)
+            )
+            conflicts.append(f"{url}: two copies of the same run disagree - {rendered}")
 
-        def scores(r: dict) -> dict[str, float]:
-            out = {}
-            for name, cat in (r.get("categories") or {}).items():
-                value = cat.get("score") if isinstance(cat, dict) else None
-                if value is not None:
-                    out[name] = float(value)
-            return out
+    grouped: dict[str, list[dict]] = {}
+    for (url, _key), report in by_run.items():
+        grouped.setdefault(url, []).append(report)
+    for runs in grouped.values():
+        runs.sort(key=lambda r: (r.get("fetchTime") or "", _run_key(r)))
+    return grouped, conflicts
 
-        variants = {tuple(sorted(scores(r).items())) for r in items}
-        if len(variants) > 1:
-            rendered = " vs ".join(" ".join(f"{k}={v:.2f}" for k, v in sorted(scores(r).items())) for r in items)
-            conflicts.append(f"{url}: reports disagree - {rendered}")
-        collapsed.append(min(items, key=lambda r: min(scores(r).values(), default=1.0)))
-    return collapsed, conflicts
+
+def _median_run(runs: list[dict]) -> dict:
+    """The run whose performance score is the median of the runs.
+
+    Performance is the category that has been observed to swing between runs
+    (65 on one run, 97 on the next, same commit), so it is the one the
+    representative run is selected on.
+
+    Only runs that produced a performance score are eligible. A run without
+    one is a measurement that did not happen - Lighthouse reports the error in
+    the audit (NO_LCP on the login page, seen in a local run) and leaves the
+    category score null - and such a run must never be picked as the
+    representative one.
+    """
+    eligible = [r for r in runs if _scores(r).get("performance") is not None]
+    if not eligible:
+        return {}
+
+    def perf(report: dict) -> float:
+        return _scores(report)["performance"]
+
+    median = statistics.median([perf(r) for r in eligible])
+    return min(eligible, key=lambda r: (abs(perf(r) - median), r.get("fetchTime") or ""))
+
+
+def _unusable(runs: list[dict], category: str) -> list[str]:
+    """Runs that produced no score for a category, with Lighthouse's reason.
+
+    A null score is not a page that scored badly, it is a measurement that
+    did not happen. It is reported by name so the log says which run was
+    dropped and why, instead of the run silently disappearing from the median.
+    """
+    problems: list[str] = []
+    for run in runs:
+        if _scores(run).get(category) is not None:
+            continue
+        reason = ""
+        audit = (run.get("audits") or {}).get("largest-contentful-paint")
+        if category == "performance" and isinstance(audit, dict):
+            reason = f" ({audit.get('errorMessage')})" if audit.get("errorMessage") else ""
+        problems.append(f"{run.get('fetchTime') or 'unknown timestamp'}{reason}")
+    return problems
+
+
+def _write_gate_reports(representatives: dict[str, dict]) -> list[str]:
+    """Write the representative run of each URL for `lhci assert` to check.
+
+    lhci assert reads `lhr-<digits>.json` from the .lighthouseci directory of
+    the current working directory, so the files are written into
+    .lighthouse-gate/.lighthouseci/ and the assert step runs from
+    .lighthouse-gate. The raw runs stay untouched in .lighthouseci/ as the
+    evidence.
+    """
+    problems: list[str] = []
+    gate = GATE_DIR / ".lighthouseci"
+    try:
+        if gate.exists():
+            for stale in gate.glob("lhr-*.json"):
+                stale.unlink()
+        gate.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        return [f"cannot prepare {gate}: {exc}"]
+
+    for index, (_url, report) in enumerate(sorted(representatives.items()), start=1):
+        if not report:
+            # No usable run for this URL - the report already failed. Writing
+            # an empty file would only give `lhci assert` something to choke
+            # on, and it would not run anyway.
+            continue
+        try:
+            (gate / f"lhr-{index}.json").write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        except OSError as exc:
+            problems.append(f"cannot write the representative report: {exc}")
+    return problems
 
 
 def _load_reports() -> tuple[list[dict], list[str]]:
@@ -116,6 +262,7 @@ def main() -> int:
         print(f"FAIL: no category thresholds found in {CONFIG} - the gate constrains nothing.")
         return 1
 
+    expected_runs = _expected_runs()
     reports, broken = _load_reports()
     if not reports:
         print(f"FAIL: no usable Lighthouse report in {REPORT_DIR}/ - nothing was measured.")
@@ -131,13 +278,62 @@ def main() -> int:
 
     failures = [f"unreadable report: {item}" for item in broken]
 
-    unique, conflicts = _dedupe(reports)
+    grouped, conflicts = _group_runs(reports)
     failures.extend(conflicts)
-    for report in unique:
-        url = report.get("finalDisplayedUrl") or report.get("requestedUrl") or "?"
+
+    print(
+        f"Gate rule: median of {expected_runs} run(s) per URL. The gate is decided on the "
+        "median run\n(the run whose performance score is the median); every category of that "
+        "run and every\ncategory's median across the runs must clear its floor."
+    )
+    print(f"Floors from {CONFIG}: " + ", ".join(f"{k} {v * 100:.0f}" for k, v in sorted(thresholds.items())))
+    print()
+
+    representatives: dict[str, dict] = {}
+    for url, runs in sorted(grouped.items()):
+        if len(runs) < expected_runs:
+            # Not a failure on its own: the collect step exits non-zero when it
+            # cannot produce its runs, so this only fires if the config and the
+            # collection disagree. It is loud because the rule printed above
+            # claims a median of N and this is not N.
+            print(
+                f"  WARNING: {url} - {len(runs)} run(s) collected, {expected_runs} expected; "
+                "the median is taken over what was measured."
+            )
+        representative = _median_run(runs)
+        representatives[url] = representative
+
         print(f"  {url}")
-        for name, floor in thresholds.items():
-            category = report.get("categories", {}).get(name)
+        unusable = _unusable(runs, "performance")
+        for item in unusable:
+            print(f"    WARNING: run {item} produced no performance score - excluded from the median")
+        if not representative:
+            failures.append(f"{url}: no run produced a performance score - nothing to gate")
+            print("    MISSING performance      no run produced a score")
+            print()
+            continue
+        for name in sorted(thresholds):
+            measured = [_scores(run).get(name) for run in runs]
+            values: list[float] = [v for v in measured if v is not None]
+            if not values:
+                print(f"    MISSING {name:<16}   --")
+                continue
+            median = statistics.median(values)
+            spread = max(values) - min(values)
+            rendered = " / ".join(f"{v * 100:.1f}" for v in values)
+            print(
+                f"    runs  {name:<16} {rendered}   median {median * 100:5.1f}  "
+                f"min {min(values) * 100:5.1f}  max {max(values) * 100:5.1f}  spread {spread * 100:4.1f}"
+            )
+            if spread > 0.05:
+                print(f"          ^ unstable measurement: the runs differ by {spread * 100:.1f} points")
+            if median < thresholds[name]:
+                failures.append(
+                    f"{url}: {name} median of {len(values)} run(s) scored {median * 100:.1f} < gate {thresholds[name] * 100:.0f}"
+                )
+        print(f"    median run: {representative.get('fetchTime') or 'unknown'}")
+        for name, floor in sorted(thresholds.items()):
+            category = (representative.get("categories") or {}).get(name)
             score = None if category is None else category.get("score")
             if score is None:
                 failures.append(f"{url}: {name} has no score")
@@ -151,11 +347,14 @@ def main() -> int:
             elif score < SANITY_FLOOR:
                 failures.append(f"{url}: {name} scored {pct:.1f} - rendered but unusable")
 
-        runtime = report.get("runtimeError") or {}
+        runtime = representative.get("runtimeError") or {}
         # Lighthouse omits runtimeError entirely when the page loaded; a falsy
         # code also means no error, so only a real code is a failure.
         if runtime.get("code"):
             failures.append(f"{url}: runtime error {runtime.get('code')}")
+        print()
+
+    failures.extend(_write_gate_reports(representatives))
 
     if failures:
         print("\nFAIL:")
@@ -163,7 +362,7 @@ def main() -> int:
             print(f"  - {item}")
         return 1
 
-    print("\nAll measured pages rendered and cleared the gate.")
+    print(f"All measured pages rendered and cleared the gate (median of {expected_runs} run(s)).")
     return 0
 
 

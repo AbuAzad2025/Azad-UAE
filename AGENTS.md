@@ -99,11 +99,26 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   The global floor is blind to a layer eroding, because a layer is a small
   part of the total: routes are 28% of the statements, so a route layer at 90%
   would still leave the project above 95.
+- **The Lighthouse gate measures the median of 3 runs per URL**, not one run:
+  `scripts/lighthouserc.json` sets `collect.numberOfRuns: 3` and
+  `scripts/lint/report_lighthouse_scores.py` decides on the median run and on
+  each category's median. One cold sample used to decide the whole gate and
+  swung the same commit between 65 and 97. The floors did not move
+  (performance 90, accessibility 90, best-practices 90, SEO 65) — a page that
+  is slow in its median still fails. `docs/LIGHTHOUSE_GATE.md` has the
+  measurements, the rule, and the findings that are still open (the landing
+  page's render-blocking third-party font stylesheet is the one that is left).
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → a3d7f1b9c6e2`
+- **Migration chain (single head):** `squash_001 → … → c3d9e1f7a204` (58 revisions)
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
+  - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
+    `enable_partners`, `enable_fixed_assets`, `enable_donations`, `enable_warranty_tracking`,
+    `enable_bank_reconciliation`, `enable_azad_platform`) — all `NOT NULL DEFAULT true`,
+    because the postings those modules make happen on ordinary operations
+  - `c3d9e1f7a204` the GL concept allow-list rebuilt from the model's own list, so the
+    database and the model cannot drift apart again
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)
@@ -209,6 +224,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   --max-inline-scripts 170` · `check_utility_reachability.py` ·
   `check_css_class_collisions.py` · `check_api_docs.py` · `cspell` over templates +
   static JS.
+  (`check_strict_i18n.py` lives in `scripts/`, not `scripts/lint/`.)
 - **The last three are the ones that get forgotten.** They live past the point
   where the log stops naming them, `check_api_docs.py` compares
   `docs/API_REFERENCE.md` against the live url_map — so *changing a permission
@@ -278,37 +294,34 @@ are **not** fixed; each is pinned by a test that names it.
   settled invoice keeps a receivable; and `revaluate_open_items` has no
   caller, so no invoice is revalued in production at all.
 - `docs/AUDIT_CHART_OF_ACCOUNTS.md` — 5 P0, 8 P1, 6 P2 in the chart of
-  accounts and the concept mapping. The sharpest one: under the production
-  default `ENABLE_DYNAMIC_GL_MAPPING=True`, 19 concepts the services post have
-  no mapping row, so those postings are refused — and CI forces the flag to
-  `False`, so the whole scenario suite proves a configuration production does
-  not run. **That is the first thing to fix.**
-  Measured, not inferred: flipping `tests/conftest.py`'s
-  `ENABLE_DYNAMIC_GL_MAPPING` to `True` breaks the wave-6 accounting spine —
-  `GLMappingError: No approved GL concept was provided for legacy hardcoded
-  account code 1110-B8` — because the resolver refuses a posting that names no
-  concept, and the legacy path names only an account code.
-  **Half of that is now fixed.** The nine module flags exist on the `Tenant`
-  model (migration `5e2b8f4a6c13`), the concepts that had no mapping row
-  have one, `CAMPAIGN_DISCOUNT_REVERSAL` is a known concept, the database's
-  allow-list matches the model's (migration `c3d9e1f7a204`), and a posting
-  that names only an account code falls back to the legacy account instead of
-  being refused.   **Two blockers are left before the flag can be switched on
-  in the suite**, and both are measured:
-  1. A fixed-asset disposal posts to account `1180` (Fixed Assets), which was
-     a *header* over accounts that do not exist, so the record-mode resolution
-     refused it ("Explicit GL account 1180 is a header/group account"). **Fixed
-     here:** `1180` is now a postable leaf, and the tree builder repairs
-     existing tenants' rows on the next boot. The chart still has one
-     fixed-asset account for every asset class; a leaf per class is the
-     remaining improvement.
-  2. `tests/unit/services/test_gl_service_cov8.py::TestResolveArcs::test_dynamic_mapping_arcs`
-     assumes a tenant without a mapping for `AR`. With the flag on, the
-     mapping is provisioned on demand - a fresh tenant gets 54 mapping rows
-     and no errors (measured) - so the premise does not hold, and the test
-     has to say which way it wants the flag rather than relying on the
-     global default. **This is the last thing between the suite and the
-     production configuration.**
+  accounts and the concept mapping. The sharpest one was that under the
+  production default `ENABLE_DYNAMIC_GL_MAPPING=True`, 19 concepts the services
+  post had no mapping row, so those postings were refused — and CI forced the
+  flag to `False`, so the whole scenario suite proved a configuration
+  production does not run. **That is now fixed and the flag is on:**
+  - the nine module flags exist on the `Tenant` model (migration `5e2b8f4a6c13`);
+  - the concepts that had no mapping row have one, and
+    `CAMPAIGN_DISCOUNT_REVERSAL` — which `services/return_service.py` posts and
+    no list knew — is a concept (`models/_constants.py`);
+  - the database's allow-list is rebuilt from the model's own list (migration
+    `c3d9e1f7a204`), so the two cannot drift apart again;
+  - a posting that names **only an account code** falls back to that account;
+    a posting that names a **concept nobody mapped** is still refused, which is
+    the rail of the feature;
+  - `services/stock_service.py` provisions the chart **before** it resolves a
+    concept (it resolved first and provisioned after, so a tenant with no chart
+    answered 500), and reads `.code` off the `GLAccount` the resolver returns
+    (it read `.account_code`, which is the mapping's attribute, so the generic
+    handler turned it into "dynamic mapping failure" and every stock posting
+    failed);
+  - `models/fixed_asset.py` posts a disposal with the branch of the bank
+    account it uses, and `1180` is a postable leaf rather than a header over
+    accounts that do not exist;
+  - the scenario conftest provisions its tenant, the way the unit conftest's
+    `sample_gl_accounts` already did.
+  Measured: with the flag on, the ten previously-red scenario files are
+  **227 passed / 1 xfailed** (the xfail is the FX finding below), and the
+  unit services and models layers are green.
 
 ### Files Modified (Wave 9 session)
 - `models/{gl,receipt,shipment,sale,payment,cheque,warehouse,fixed_asset}.py`

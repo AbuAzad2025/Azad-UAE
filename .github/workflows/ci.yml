@@ -761,6 +761,24 @@ jobs:
   # to apply the SEO budget only to / (which should be indexable) using an
   # assert matrix, and that needs the measured baseline first. Ratchet it from
   # real numbers, not from optimism.
+  #
+  # On the score swinging between 65 and 97 for the same commit and the same
+  # URL: one sample was measuring the RUNNER, not the page. Two measured causes,
+  # both fixed below without moving a floor:
+  #
+  #   * a cold server. gunicorn boots one worker per core (2*CPU+1) and every
+  #     worker runs the whole create_app() path - the seeding and the
+  #     seed-manifest probes - 9.6s per worker, measured, all of them at once
+  #     against the same Postgres. The first request a worker serves then pays
+  #     the lazy imports, the Jinja compile of public/landing.html and the first
+  #     DB connection: 454ms against 28ms for the same page warm.
+  #   * a cold audit. lhci ran ONE Lighthouse run per URL, so a single cold
+  #     sample decided the whole gate.
+  #
+  # The gate now measures the median of 3 runs per URL (the median run, and the
+  # median of each category, have to clear the floor) and the server is warmed
+  # before the audit starts. A page that is genuinely slow is slow in its
+  # median too, so the floors still bite.
   lighthouse-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -803,42 +821,101 @@ jobs:
           python scripts/lint/check_model_schema_parity.py
       - name: Start app server
         run: |
-          gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
-          for _ in $(seq 1 60); do
-            curl -sf -o /dev/null http://localhost:5000/auth/login && break
+          # One worker, several threads, on purpose.
+          #
+          # gunicorn's default is 2*CPU+1 workers, and every one of them runs
+          # the whole create_app() path at boot: the seeding, the
+          # seed-manifest probes and the tenant maintenance (9.6s measured on a
+          # developer box). With the default worker count that is a herd of
+          # seeders against one Postgres, still running while the audit starts.
+          # It is also a lottery: a curl warms the worker that answered it, and
+          # the audited request lands on whichever worker is free - a worker
+          # that has never rendered the page pays the lazy imports, the Jinja
+          # compile and the first DB connection inside the measured window
+          # (454ms against 28ms warm, measured on the same process).
+          #
+          # One worker removes the lottery and the herd. Threads keep the
+          # browser's parallel asset fetches parallel, so the page is not
+          # penalised for the single process. This job measures a page, not a
+          # throughput - tests/integration/test_sales_concurrency_load.py is
+          # where concurrency is measured.
+          gunicorn --bind 0.0.0.0:5000 --worker-class gthread --workers 1 --threads 4 \
+            --timeout 60 --access-logfile gunicorn-access.log \
+            wsgi:app --daemon --error-logfile gunicorn.log
+          for _ in $(seq 1 90); do
+            # A redirect is not readiness: no -L here, so a 302 keeps the loop
+            # waiting instead of being read as "the server is up".
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+              http://localhost:5000/auth/login || echo 000)
+            if [ "$code" = "200" ]; then break; fi
             sleep 1
           done
-      - name: Verify audited URLs before measuring
+      - name: Warm up and verify the audited pages
         run: |
-          # lhci will happily audit an error page and report a score for it.
-          # Require a real 200 on each URL that is about to be measured, after
-          # following redirects, and refuse a redirect chain: a loop or a
-          # redirect into a login prompt means the page under test is not the
-          # page we think it is.
+          # The audit must measure a WARM page, so the server is warmed the way
+          # a visitor's browser would warm it: every audited URL is fetched
+          # until it answers 200, together with the static assets the page
+          # references. The cold and the warm timings are printed, so the log
+          # shows what the warm-up bought, and gunicorn-access.log carries the
+          # server-side duration of every request - including the audited ones.
           #
-          # These are the canonical paths. /login is a legacy alias registered in
-          # main.py that 302s to /auth/login, so auditing it measured a redirect
-          # rather than the login form.
-          for url in http://localhost:5000/auth/login http://localhost:5000/; do
-            read -r code hops <<< "$(curl -sSL -o /dev/null \
-              -w '%{http_code} %{num_redirects}' "$url" || echo '000 99')"
-            echo "  $url -> $code after $hops redirect(s)"
-            if [ "$code" != "200" ]; then
-              echo "::error::$url settled on $code, not 200"
-              echo "--- gunicorn.log ---"
-              cat gunicorn.log || true
-              exit 1
-            fi
-            if [ "$hops" -gt 2 ]; then
-              echo "::error::$url took $hops redirects - redirect chain, not a real page"
-              exit 1
-            fi
+          # The 200 is the point, not a formality: lhci will happily audit an
+          # error page and report a score for it. Redirects are followed and
+          # the settled response has to be 200, and a redirect chain is
+          # refused: a loop or a redirect into a login prompt means the page
+          # under test is not the page we think it is. These are the canonical
+          # paths - /login is a legacy alias registered in main.py that 302s to
+          # /auth/login, so auditing it measured a redirect rather than the
+          # login form.
+          #
+          # What is NOT warmed: the third-party font stylesheet the landing
+          # page pulls from fonts.googleapis.com. It is not ours to warm, the
+          # audit's Chrome has its own cache, and it is a real page-level
+          # dependency - see docs/LIGHTHOUSE_GATE.md for the measurement.
+          set -uo pipefail
+          audited_urls=("http://localhost:5000/auth/login" "http://localhost:5000/")
+          warmup_rounds=3
+          assets_file="${RUNNER_TEMP:-/tmp}/lh_assets.txt"
+
+          for url in "${audited_urls[@]}"; do
+            for round in $(seq 1 "$warmup_rounds"); do
+              read -r code hops secs < <(curl -sSL -o /dev/null \
+                -w '%{http_code} %{num_redirects} %{time_total}' "$url" || echo '000 99 0')
+              if [ "$code" != "200" ]; then
+                echo "::error::$url settled on $code, not 200"
+                echo "--- gunicorn.log ---"
+                cat gunicorn.log || true
+                exit 1
+              fi
+              if [ "$hops" -gt 2 ]; then
+                echo "::error::$url took $hops redirects - redirect chain, not a real page"
+                exit 1
+              fi
+              echo "  $url warm#$round -> $code (${hops} redirect(s), ${secs}s)"
+            done
+
+            # The assets this page references, so the first audited run does
+            # not pay for a cold asset path either.
+            curl -sSL "$url" \
+              | grep -oE '(href|src)="/static/[^"]+"' \
+              | sed -E 's/^[^"]*"([^"]+)"$/\1/' \
+              | sort -u > "$assets_file" || true
+            while read -r asset; do
+              [ -n "$asset" ] || continue
+              asset_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+                "http://localhost:5000$asset" || echo 000)
+              echo "  asset $asset -> $asset_code"
+            done < "$assets_file"
           done
       - name: Run Lighthouse CI
         run: |
           # collect/assert/upload are separate on purpose: `autorun` swallows a
           # non-zero collect when the server never came up, which is the same
           # silence as before. Explicit steps stop at the first failure.
+          #
+          # collect runs 3 Lighthouse runs per URL (numberOfRuns in
+          # scripts/lighthouserc.json). One run cannot tell a regression from a
+          # cold server; three can, and the gate reads the median of them.
           lhci collect --config=scripts/lighthouserc.json
           # Persist before asserting. With upload after assert, a failing gate
           # skipped it, so `.lighthouseci/` was empty, the artifact was empty,
@@ -849,13 +926,25 @@ jobs:
         if: always()
         run: python scripts/lint/report_lighthouse_scores.py
       - name: Assert Lighthouse budgets
-        run: lhci assert --config=scripts/lighthouserc.json
+        # Run from .lighthouse-gate: the report step wrote the MEDIAN run of
+        # each URL there, and `lhci assert` reads the lhr-*.json files of the
+        # .lighthouseci directory of the working directory it runs from. Pointed
+        # at the raw .lighthouseci/ it would assert every individual run, and
+        # one cold run would fail the build - the exact artefact this job
+        # exists to stop measuring. The raw runs stay in .lighthouseci/ as the
+        # evidence, and the numbers asserted here are the ones the report
+        # printed.
+        working-directory: .lighthouse-gate
+        run: lhci assert --config=../scripts/lighthouserc.json
       - name: Upload Lighthouse reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: lighthouse-reports
-          path: .lighthouseci
+          path: |
+            .lighthouseci
+            .lighthouse-gate
+            gunicorn-access.log
           # upload-artifact@v4 skips dotfiles unless told otherwise, and
           # .lighthouseci is a dotfile. Without this the step warns "No files were
           # found with the provided path" and the run carries no evidence at all,
