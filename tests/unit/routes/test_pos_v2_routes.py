@@ -183,6 +183,12 @@ def _pos_api_patches(**kwargs):
         )
         stack.enter_context(
             patch(
+                "routes.pos.get_paused_session_locked",
+                return_value=kwargs.get("paused_session"),
+            )
+        )
+        stack.enter_context(
+            patch(
                 "routes.pos.get_paused_session",
                 return_value=kwargs.get("paused_session"),
             )
