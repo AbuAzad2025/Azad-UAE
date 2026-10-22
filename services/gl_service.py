@@ -392,6 +392,43 @@ class GLService:
         return account
 
     @staticmethod
+    def _resolve_report_account(concept_code, tenant_id=None, branch_id=None, legacy_code=None):
+        """Resolve the GL account a READ-ONLY report should read.
+
+        A report is a read. It must answer even when the tenant has no chart
+        of accounts yet, and it must never create one as a side effect. So
+        this resolver never provisions (``ensure_core=False``) and never
+        raises: a concept the tenant has not mapped resolves to ``None``, and
+        the report treats that account's balance as zero.
+
+        The posting rail is untouched. ``_resolve_journal_line_account`` still
+        refuses a posting that names a concept nobody mapped - that rail is
+        the point of the dynamic mapping, and a report must not weaken it.
+        """
+        concept = str(concept_code or "").strip().upper()
+        if not concept:
+            return None
+        line: dict[str, Any] = {"concept_code": concept}
+        if legacy_code:
+            line["account"] = legacy_code
+        try:
+            return GLService._resolve_journal_line_account(
+                line,
+                tenant_id,
+                branch_id=branch_id,
+                ensure_core=False,
+                missing_ok=True,
+            )
+        except (GLMappingError, ValueError):
+            logger.debug(
+                "Report probe could not resolve concept %s for tenant %s; reporting it as zero",
+                concept,
+                tenant_id,
+                exc_info=True,
+            )
+            return None
+
+    @staticmethod
     def create_journal_entry(
         date,
         description,
@@ -700,7 +737,14 @@ class GLService:
 
     @staticmethod
     def get_vat_report(date_from=None, date_to=None, branch_id=None, tenant_id=None):
-        """VAT summary: output (2121 credits) vs input (2122 debits). Includes posted entries only."""
+        """VAT summary: output (2121 credits) vs input (2122 debits). Includes posted entries only.
+
+        This is a read, so it degrades instead of refusing to render: the two
+        VAT accounts are resolved through the tenant's concept mapping, and an
+        account the tenant has not mapped - or a tenant that has no chart of
+        accounts at all - contributes a zero balance instead of an error. The
+        report never provisions the chart while reading it.
+        """
         from sqlalchemy import func
 
         from utils.tax_settings import is_tax_enabled
@@ -716,21 +760,25 @@ class GLService:
                 "date_to": date_to,
                 "branch_id": branch_id,
                 "tax_disabled": True,
+                "unresolved_accounts": [],
             }
-        output_acc = GLService._resolve_journal_line_account(
-            GLService.posting_line("tax_payable"),
-            tenant_id,
+        output_acc = GLService._resolve_report_account(
+            GL_ACCOUNT_CONCEPTS["tax_payable"],
+            tenant_id=tenant_id,
             branch_id=branch_id,
-            ensure_core=False,
-            missing_ok=True,
+            legacy_code=GL_ACCOUNTS["tax_payable"],
         )
-        input_acc = GLService._resolve_journal_line_account(
-            GLService.posting_line("vat_input"),
-            tenant_id,
+        input_acc = GLService._resolve_report_account(
+            GL_ACCOUNT_CONCEPTS["vat_input"],
+            tenant_id=tenant_id,
             branch_id=branch_id,
-            ensure_core=False,
-            missing_ok=True,
+            legacy_code=GL_ACCOUNTS["vat_input"],
         )
+        unresolved = []
+        if not output_acc:
+            unresolved.append(GL_ACCOUNT_CONCEPTS["tax_payable"])
+        if not input_acc:
+            unresolved.append(GL_ACCOUNT_CONCEPTS["vat_input"])
         result = {
             "vat_output": 0.0,
             "vat_input": 0.0,
@@ -739,6 +787,7 @@ class GLService:
             "date_from": date_from,
             "date_to": date_to,
             "branch_id": branch_id,
+            "unresolved_accounts": unresolved,
         }
         if not output_acc and not input_acc:
             return result
@@ -1518,30 +1567,17 @@ class GLService:
         if not meta:
             # An unknown concept reconciles to nothing.
             return Decimal("0")
-        line = {"concept_code": concept}
+        # The account the concept owns in the tenant's chart. It is what the
+        # mapping names by default, and it is what the legacy path resolves
+        # when the mapping is not in play - so both modes read the same
+        # control account.
         registry_code = meta.get("legacy_code")
-        if registry_code:
-            # The account the concept owns in the tenant's chart. It is what
-            # the mapping names by default, and it is what the legacy path
-            # resolves when the mapping is not in play - so both modes read
-            # the same control account.
-            line["account"] = registry_code
-        try:
-            acc = GLService._resolve_journal_line_account(
-                line,
-                tenant_id,
-                branch_id=branch_id,
-                ensure_core=False,
-                missing_ok=True,
-            )
-        except (GLMappingError, ValueError):
-            logger.debug(
-                "Reconciliation probe could not resolve concept %s for tenant %s; reconciling to zero",
-                concept,
-                tenant_id,
-                exc_info=True,
-            )
-            return Decimal("0")
+        acc = GLService._resolve_report_account(
+            concept,
+            tenant_id=tenant_id,
+            branch_id=branch_id,
+            legacy_code=registry_code,
+        )
         if not acc:
             return Decimal("0")
         q = (

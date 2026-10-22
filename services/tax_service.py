@@ -70,14 +70,29 @@ class TaxService:
         # emitting a return of 0/0 because the GL report failed would understate
         # the liability and is unrecoverable once filed. Let the caller's
         # transaction roll back and surface the error instead.
+        #
+        # A GL report that cannot answer is not a failure: a tenant whose chart
+        # of accounts does not exist yet has no VAT to file, and the report
+        # says so with a zero balance instead of refusing to render. The
+        # accounts it could not resolve are reported back, so a zero return
+        # that means "nothing configured" is not mistaken for a zero return
+        # that means "nothing owed".
         gl_report = GLService.get_vat_report(
             date_from=date_from or None,
             date_to=date_to or None,
             tenant_id=tenant_id,
         )
+        unresolved = list(gl_report.get("unresolved_accounts") or [])
+        if unresolved:
+            logger.warning(
+                "VAT return for tenant %s could not resolve GL accounts %s; the return reports them as zero",
+                tenant_id,
+                ", ".join(unresolved),
+            )
         output_vat = Decimal(str(gl_report.get("vat_output", 0)))
         input_vat = Decimal(str(gl_report.get("vat_input", 0)))
 
         result = strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
         result["source"] = "gl"
+        result["unresolved_accounts"] = unresolved
         return result
