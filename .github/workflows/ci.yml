@@ -463,6 +463,16 @@ jobs:
           # page and the baseline is now empty, so there is no allowance left; see
           # docs/shop_utilities_collision.md.
           python scripts/lint/check_css_class_collisions.py
+          # Every font the pages use is served from this repository
+          # (static/fonts/). A font that is referenced but absent is invisible
+          # in the HTML - the page still renders and still passes every test -
+          # and shows up only as text in the wrong face; a font that is served
+          # from a third party is render-blocking and puts the latency of a
+          # host the runner does not control on the critical path to the first
+          # paint. This checks both, and that every font stack still has a
+          # generic fallback, so a font that cannot be loaded degrades the
+          # type and never the text.
+          python scripts/lint/check_font_assets.py
           # docs/API_REFERENCE.md is generated from the live url_map. This compares
           # the committed file against what the code actually exposes, so a
           # hand-written endpoint that does not exist fails the build. The previous
@@ -842,14 +852,46 @@ jobs:
           gunicorn --bind 0.0.0.0:5000 --worker-class gthread --workers 1 --threads 4 \
             --timeout 60 --access-logfile gunicorn-access.log \
             wsgi:app --daemon --error-logfile gunicorn.log
-          for _ in $(seq 1 90); do
+
+          # Readiness is a GATE, not a suggestion.
+          #
+          # The old loop ran 90 attempts and then fell out of the bottom of the
+          # `for` whatever the server had answered, and the step exited 0
+          # either way. A server that never came up was reported as a server
+          # that did, and the failure surfaced three steps later as "nothing
+          # was measured" - a message that named neither the server nor the
+          # step that had lost it. The loop now has to END in a 200, and a
+          # dead gunicorn ends it immediately instead of after 90 silent
+          # attempts.
+          ready=0
+          code=000
+          for attempt in $(seq 1 90); do
             # A redirect is not readiness: no -L here, so a 302 keeps the loop
             # waiting instead of being read as "the server is up".
             code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
-              http://localhost:5000/auth/login || echo 000)
-            if [ "$code" = "200" ]; then break; fi
+              http://localhost:5000/auth/login || true)
+            code=${code:-000}
+            if [ "$code" = "200" ]; then
+              ready=1
+              echo "::notice::gunicorn answered 200 on /auth/login after $attempt attempt(s)"
+              break
+            fi
+            if ! pgrep -f gunicorn > /dev/null 2>&1; then
+              echo "::error::gunicorn is no longer running - it died during boot (attempt $attempt, last status $code)"
+              break
+            fi
+            if [ $((attempt % 10)) -eq 0 ]; then
+              echo "::notice::still waiting for the server (attempt $attempt/90, last status $code)"
+            fi
             sleep 1
           done
+          if [ "$ready" != "1" ]; then
+            echo "::error::The app server never answered 200 on /auth/login (last status: $code)."
+            echo "::error::The audit below cannot run against a server that is not up - read gunicorn.log for the boot traceback."
+            echo "--- gunicorn.log ---"
+            cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log - the server never wrote one)"
+            exit 1
+          fi
       - name: Warm up and verify the audited pages
         run: |
           # The audit must measure a WARM page, so the server is warmed the way
@@ -868,23 +910,46 @@ jobs:
           # /auth/login, so auditing it measured a redirect rather than the
           # login form.
           #
-          # What is NOT warmed: the third-party font stylesheet the landing
-          # page pulls from fonts.googleapis.com. It is not ours to warm, the
-          # audit's Chrome has its own cache, and it is a real page-level
-          # dependency - see docs/LIGHTHOUSE_GATE.md for the measurement.
+          # What is NOT warmed: a third-party font stylesheet. There is none
+          # left - every family is served from this repository (static/fonts/)
+          # - so the page no longer has a dependency the runner does not
+          # control. See docs/LIGHTHOUSE_GATE.md for the measurement.
           set -uo pipefail
           audited_urls=("http://localhost:5000/auth/login" "http://localhost:5000/")
           warmup_rounds=3
           assets_file="${RUNNER_TEMP:-/tmp}/lh_assets.txt"
+          echo "Warming ${#audited_urls[@]} URL(s), $warmup_rounds round(s) each."
 
           for url in "${audited_urls[@]}"; do
             for round in $(seq 1 "$warmup_rounds"); do
-              read -r code hops secs < <(curl -sSL -o /dev/null \
-                -w '%{http_code} %{num_redirects} %{time_total}' "$url" || echo '000 99 0')
+              # Every number comes out of a command substitution, and every
+              # variable starts at a defined value.
+              #
+              # The old line was
+              #   read -r code hops secs < <(curl ... -w '%{http_code} ...')
+              # and it killed the step SILENTLY on the first SUCCESSFUL
+              # request: curl's -w output has no trailing newline, so `read`
+              # reaches EOF and returns 1, and the runner's `bash -e` turns
+              # that into an exit before a single line was printed. Run
+              # 39674996405 died exactly there - 38ms, no output, exit 1 - and
+              # the job's only message was "nothing was measured" three steps
+              # downstream, naming neither the cause nor the step.
+              code=000
+              hops=0
+              secs=0
+              raw=$(curl -sSL -o /dev/null --max-time 30 \
+                -w '%{http_code} %{num_redirects} %{time_total}\n' "$url" 2>/dev/null) || raw=""
+              if [ -n "$raw" ]; then
+                # A here-string always ends with a newline, so `read` returns 0.
+                IFS=' ' read -r code hops secs <<< "$raw" || true
+              fi
+              case "$code" in ''|*[!0-9]*) code=000 ;; esac
+              case "$hops" in ''|*[!0-9]*) hops=0 ;; esac
+              case "$secs" in ''|*[!0-9.]*) secs=0 ;; esac
               if [ "$code" != "200" ]; then
-                echo "::error::$url settled on $code, not 200"
+                echo "::error::$url settled on $code, not 200 (round $round of $warmup_rounds)"
                 echo "--- gunicorn.log ---"
-                cat gunicorn.log || true
+                cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log)"
                 exit 1
               fi
               if [ "$hops" -gt 2 ]; then
@@ -900,13 +965,23 @@ jobs:
               | grep -oE '(href|src)="/static/[^"]+"' \
               | sed -E 's/^[^"]*"([^"]+)"$/\1/' \
               | sort -u > "$assets_file" || true
-            while read -r asset; do
+            while read -r asset || [ -n "$asset" ]; do
               [ -n "$asset" ] || continue
               asset_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
-                "http://localhost:5000$asset" || echo 000)
+                "http://localhost:5000$asset" || true)
+              asset_code=${asset_code:-000}
               echo "  asset $asset -> $asset_code"
+              if [ "$asset_code" != "200" ]; then
+                # A page that links an asset the server does not have is a
+                # broken page, and lhci would score it without complaining.
+                echo "::error::$asset answered $asset_code - the page links an asset the server does not serve"
+                echo "--- gunicorn.log ---"
+                cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log)"
+                exit 1
+              fi
             done < "$assets_file"
           done
+          echo "Warm-up complete: ${#audited_urls[@]} URL(s) x $warmup_rounds round(s), all settled on 200."
       - name: Run Lighthouse CI
         run: |
           # collect/assert/upload are separate on purpose: `autorun` swallows a

@@ -1,5 +1,7 @@
 /* Azad donation — Palestinian artisan style, not generic AI purple */
-@import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Rubik:wght@400;500;700&display=swap");
+
+/* Amiri + Rubik are served from the repository (static/fonts/amiri, static/fonts/rubik).
+   The @import that used to pull them from fonts.googleapis.com was render-blocking. */
 
 :root {
 	--az-green: #006233;

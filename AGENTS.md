@@ -106,8 +106,16 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   swung the same commit between 65 and 97. The floors did not move
   (performance 90, accessibility 90, best-practices 90, SEO 65) — a page that
   is slow in its median still fails. `docs/LIGHTHOUSE_GATE.md` has the
-  measurements, the rule, and the findings that are still open (the landing
-  page's render-blocking third-party font stylesheet is the one that is left).
+  measurements and the rule. **The open finding is closed**: every font is
+  vendored under `static/fonts/` and served from the repository, so the
+  landing page has no render-blocking third-party stylesheet any more
+  (measured on the same machine: the landing page's median performance went
+  from 91.0 to 95.0, its third-party font requests from 11 to 0, and no floor
+  moved). `scripts/lint/check_font_assets.py` is the gate that keeps it true:
+  every `@font-face` src resolves to a file in the repository, every vendored
+  file is a real woff2, no stylesheet or template names a third-party font
+  host, and every font stack keeps a generic fallback so a font that cannot be
+  loaded degrades the type and never the text.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → c3d9e1f7a204` (58 revisions)
@@ -222,8 +230,8 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   `check_txn_boundaries.py` · `check_service_side_effects.py` · `check_tag_shape.py` ·
   `check_a11y_labels.py` · `check_inline_assets.py --max-static 50 --max-dynamic 21
   --max-inline-scripts 170` · `check_utility_reachability.py` ·
-  `check_css_class_collisions.py` · `check_api_docs.py` · `cspell` over templates +
-  static JS.
+  `check_css_class_collisions.py` · `check_font_assets.py` · `check_api_docs.py` ·
+  `cspell` over templates + static JS.
   (`check_strict_i18n.py` lives in `scripts/`, not `scripts/lint/`.)
 - **The last three are the ones that get forgotten.** They live past the point
   where the log stops naming them, `check_api_docs.py` compares

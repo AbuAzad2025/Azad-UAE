@@ -53,9 +53,8 @@
   <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
 
-  <!-- DNS Prefetch & Preconnect -->
-  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
-  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+  <!-- Every font this shell uses is served from the repository, so there is no
+       third-party host to connect to. -->
 
   <!-- Tajawal served synchronously from local woff2 (no preload: the sync
        stylesheet exposes @font-face during head parse, making preloads
@@ -90,10 +89,11 @@
        preload-miss warnings and late font swap — determinism beats microsavings) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
 
-  <!-- Modern Latin/Arabic supplement (Inter + Noto Sans Arabic) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Noto+Sans+Arabic:wght@400;500;600;700;800&amp;display=swap">
+  <!-- Modern Latin/Arabic supplement (Inter + Noto Sans Arabic), served from
+       the repository: a fonts.googleapis.com stylesheet here was render-blocking
+       on every application page. See docs/LIGHTHOUSE_GATE.md. -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/inter/inter.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='fonts/noto-sans-arabic/noto-sans-arabic.css') }}">
 
   <!-- FontAwesome -->
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">

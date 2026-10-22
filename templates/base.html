@@ -11,9 +11,8 @@
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
 
-  <!-- Preconnect for performance -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  {# No third-party font connection: every family this shell uses is served
+     from the repository (see partials/head.html). #}
 
   {% include 'partials/head.html' %}
   {% block extra_css %}{% endblock %}

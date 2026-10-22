@@ -266,6 +266,12 @@ def main() -> int:
     reports, broken = _load_reports()
     if not reports:
         print(f"FAIL: no usable Lighthouse report in {REPORT_DIR}/ - nothing was measured.")
+        print("      This step only reads what lhci wrote; the measurement was lost EARLIER,")
+        print("      in this job's own log. Read these steps, in this order:")
+        print("        1. 'Start app server'                     - did the server ever answer 200?")
+        print("        2. 'Warm up and verify the audited pages' - did every audited URL settle on 200?")
+        print("        3. 'Run Lighthouse CI'                    - did `lhci collect` / `lhci upload` run?")
+        print("      The first one that FAILED is the cause; this step is only where the absence became visible.")
         if broken:
             # A report that exists but will not parse is a different fault from
             # no report at all; saying otherwise hides the real cause.

@@ -339,11 +339,19 @@ def create_app(config_class=Config) -> Flask:
         # sites) and cannot execute script — allow them in style-src. NOTE: a
         # nonce in style-src would make browsers IGNORE unsafe-inline, so style
         # gets unsafe-inline WITHOUT a nonce; script-src keeps the nonce.
+        #
+        # No font host: every family is served from this repository
+        # (static/fonts/), so fonts.googleapis.com and fonts.gstatic.com are
+        # NOT allowed any more. Leaving them allowed would have made the
+        # "no third-party font" rule advisory - a stray Google Fonts link
+        # would have been permitted by the browser and would have put a
+        # render-blocking request from a host the runner does not control back
+        # on the critical path to the first paint. See docs/LIGHTHOUSE_GATE.md.
         csp = (
             "default-src 'self'; "
             f"script-src 'self' {nonce_directive}{unsafe_inline}{unsafe_eval}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+            f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+            "font-src 'self' https://cdnjs.cloudflare.com; "
             "img-src 'self' data: blob:; "
             "media-src 'self' data: blob:; "
             "connect-src 'self' wss: https://cdn.jsdelivr.net; "

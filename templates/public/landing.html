@@ -39,7 +39,12 @@
     <link rel="alternate" hreflang="x-default" href="{{ url_for('public.landing', _external=True) }}">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    {# Fonts are served from the repository. A fonts.googleapis.com stylesheet
+       here was render-blocking: the browser could not paint until a host the
+       runner does not control had answered, which cost this page ~7-8
+       Lighthouse performance points. See docs/LIGHTHOUSE_GATE.md. #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts/inter/inter.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='fonts/tajawal/tajawal.css') }}">
     {% if is_en %}
     <link rel="stylesheet" href="{{ dist_url('css/landing-page-en.css') }}">
     {% else %}
