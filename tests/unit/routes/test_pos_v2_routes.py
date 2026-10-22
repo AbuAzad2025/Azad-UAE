@@ -177,6 +177,12 @@ def _pos_api_patches(**kwargs):
         )
         stack.enter_context(
             patch(
+                "routes.pos.get_active_session_locked",
+                return_value=kwargs.get("session", _mock_session()),
+            )
+        )
+        stack.enter_context(
+            patch(
                 "routes.pos.get_paused_session",
                 return_value=kwargs.get("paused_session"),
             )
@@ -776,8 +782,12 @@ class TestPosSessionApi:
         with (
             _pos_api_patches(),
             patch(
-                "routes.pos.require_active_session",
-                side_effect=ValueError("no session"),
+                "routes.pos.get_active_session_locked",
+                return_value=None,
+            ),
+            patch(
+                "routes.pos.get_paused_session_locked",
+                return_value=None,
             ),
         ):
             resp = pos_client.post("/pos/api/session/close", json={"closing_balance": 0})

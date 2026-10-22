@@ -343,6 +343,73 @@ def require_active_session(user=None, branch_id: int | None = None) -> PosSessio
     return session
 
 
+_MAX_POS_LOCK_RETRIES = 3
+
+
+def _safe_pos_lock(query, label="PosSession"):
+    """Execute SELECT … FOR UPDATE with savepoint-based retry for POS session.
+
+    Uses savepoints so that a failed lock attempt does NOT roll back the
+    caller's entire transaction. On final failure, aborts — never silently
+    drops the lock.
+    """
+    from flask import current_app
+    from sqlalchemy.exc import OperationalError
+
+    for attempt in range(1, _MAX_POS_LOCK_RETRIES + 1):
+        savepoint = db.session.begin_nested()
+        try:
+            result = query.with_for_update().first()
+            savepoint.commit()
+            return result
+        except OperationalError:
+            savepoint.rollback()
+            if attempt == _MAX_POS_LOCK_RETRIES:
+                current_app.logger.critical(
+                    "Row-level lock acquisition failed after %d attempts for %s — aborting to prevent race condition.",
+                    _MAX_POS_LOCK_RETRIES,
+                    label,
+                )
+                raise
+            current_app.logger.warning(
+                "Lock contention on %s (attempt %d/%d) — retrying.",
+                label,
+                attempt,
+                _MAX_POS_LOCK_RETRIES,
+            )
+    raise RuntimeError(f"Failed to acquire row lock for {label}")
+
+
+def get_active_session_locked(user=None, branch_id: int | None = None) -> PosSession | None:
+    """Fetch the active POS session with SELECT FOR UPDATE (retry logic)."""
+    tenant_id = get_active_tenant_id(user)
+    if not tenant_id:
+        return None
+    branch_id = branch_id or get_active_branch_id(user)
+    query = PosSession.query.filter(
+        PosSession.tenant_id == int(tenant_id),
+        PosSession.branch_id == int(branch_id) if branch_id else True,
+        PosSession.user_id == user.id if user else True,
+        PosSession.status == PosSession.STATUS_OPEN,
+    ).order_by(PosSession.id.desc())
+    return _safe_pos_lock(query, label=f"PosSession(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})")
+
+
+def get_paused_session_locked(user=None, branch_id: int | None = None) -> PosSession | None:
+    """Fetch the paused POS session with SELECT FOR UPDATE (retry logic)."""
+    tenant_id = get_active_tenant_id(user)
+    if not tenant_id:
+        return None
+    branch_id = branch_id or get_active_branch_id(user)
+    query = PosSession.query.filter(
+        PosSession.tenant_id == int(tenant_id),
+        PosSession.branch_id == int(branch_id) if branch_id else True,
+        PosSession.user_id == user.id if user else True,
+        PosSession.status == PosSession.STATUS_PAUSED,
+    ).order_by(PosSession.id.desc())
+    return _safe_pos_lock(query, label=f"PosSession-PAUSED(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})")
+
+
 def create_pos_session(
     user,
     branch_id: int,

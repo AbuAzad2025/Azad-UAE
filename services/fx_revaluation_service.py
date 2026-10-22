@@ -384,3 +384,71 @@ def reverse_previous_revaluation(
             reversed_ids.append(reversed_entry.id)
 
     return reversed_ids
+
+
+def reverse_sale_revaluation(sale_id: int, tenant_id: int | None = None) -> list[int]:
+    """Reverse all FX revaluation entries for a specific sale.
+
+    Called when a sale is fully settled to unwind unrealized FX gain/loss
+    before posting the realized FX gain/loss.
+    """
+    from models.gl import GLJournalEntry
+
+    tag = f"{_REVALUATION_TAG}|sale:{sale_id}"
+    if tenant_id is not None:
+        q = tenant_query(GLJournalEntry).filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
+        q = q.filter(GLJournalEntry.tenant_id == tenant_id)
+    else:
+        q = GLJournalEntry.query.filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
+
+    reversed_ids = []
+    with atomic_transaction("fx_revaluation_reversal_sale"):
+        for entry in q.all():
+            reversed_entry = entry.reverse_entry(
+                description=f"Reverse FX Revaluation — Sale #{sale_id} (settled)",
+            )
+            reversed_ids.append(reversed_entry.id)
+
+    return reversed_ids
+
+
+def reverse_purchase_revaluation(purchase_id: int, tenant_id: int | None = None) -> list[int]:
+    """Reverse all FX revaluation entries for a specific purchase.
+
+    Called when a purchase is fully settled to unwind unrealized FX gain/loss
+    before posting the realized FX gain/loss.
+    """
+    from models.gl import GLJournalEntry
+
+    tag = f"{_REVALUATION_TAG}|purchase:{purchase_id}"
+    if tenant_id is not None:
+        q = tenant_query(GLJournalEntry).filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
+        q = q.filter(GLJournalEntry.tenant_id == tenant_id)
+    else:
+        q = GLJournalEntry.query.filter(
+            GLJournalEntry.notes.like(f"%{tag}%"),
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.is_reversed.is_(False),
+        )
+
+    reversed_ids = []
+    with atomic_transaction("fx_revaluation_reversal_purchase"):
+        for entry in q.all():
+            reversed_entry = entry.reverse_entry(
+                description=f"Reverse FX Revaluation — Purchase #{purchase_id} (settled)",
+            )
+            reversed_ids.append(reversed_entry.id)
+
+    return reversed_ids

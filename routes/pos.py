@@ -61,13 +61,14 @@ from utils.pos_helpers import (
     compute_fast_cash_options,
     create_pos_session,
     get_active_session,
+    get_active_session_locked,
     get_paused_session,
+    get_paused_session_locked,
     get_pos_walkin_customer,
     lookup_pos_product_exact,
     merge_checkout_lines,
     parse_scale_barcode,
     payment_amount_base,
-    require_active_session,
     safe_decimal,
     search_pos_products,
     serialize_pos_product,
@@ -265,12 +266,12 @@ def _session_report_payload(session, include_sensitive: bool):
     return data
 
 
-def _get_closable_session(user):
-    """Open session, falling back to the user's paused session (both closable)."""
+def _get_closable_session_locked(user):
+    """Open session with SELECT FOR UPDATE, falling back to paused session with lock (both closable)."""
     try:
-        return require_active_session(user)
+        return get_active_session_locked(user)
     except ValueError:
-        return get_paused_session(user)
+        return get_paused_session_locked(user)
 
 
 def _paused_session_error_response():
@@ -737,7 +738,7 @@ def api_checkout():
         return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
 
-    session = get_active_session(current_user)
+    session = get_active_session_locked(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
@@ -1181,7 +1182,7 @@ def api_session_open():
 @permission_required("manage_sales")
 def api_session_pause():
     payload = request.get_json(silent=True) or {}
-    session = get_active_session(current_user)
+    session = get_active_session_locked(current_user)
     if not session:
         return error_response(message=gettext("لا توجد جلسة مفتوحة لإيقافها."), status_code=404)
     token_error = _require_session_token(session, payload)
@@ -1201,7 +1202,7 @@ def api_session_pause():
 @permission_required("manage_sales")
 def api_session_resume():
     payload = request.get_json(silent=True) or {}
-    session = get_paused_session(current_user)
+    session = get_paused_session_locked(current_user)
     if not session:
         return error_response(message=gettext("لا توجد جلسة موقوفة لاستئنافها."), status_code=404)
     token_error = _require_session_token(session, payload)
@@ -1253,7 +1254,7 @@ def api_session_close():
         if replay_response is not None:
             return replay_response
 
-    session = _get_closable_session(current_user)
+    session = _get_closable_session_locked(current_user)
     if not session:
         return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=404)
 
@@ -1726,7 +1727,7 @@ def api_cash_movement_create():
         return error_response(message=gettext("مبلغ الحركة غير صالح."), status_code=400)
     reason = (payload.get("reason") or "").strip()
 
-    session = get_active_session(current_user)
+    session = get_active_session_locked(current_user)
     if not session:
         if get_paused_session(current_user):
             return _paused_session_error_response()
