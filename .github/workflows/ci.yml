@@ -317,12 +317,16 @@ jobs:
           pip install -r requirements.txt
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -597,12 +601,16 @@ jobs:
           pip install -r requirements.txt
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -693,12 +701,16 @@ jobs:
           pip install -r requirements.txt schemathesis==4.24.3
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -796,12 +808,16 @@ jobs:
           pip install -r requirements.txt
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -890,12 +906,16 @@ jobs:
           npm install -g @lhci/cli
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -1150,12 +1170,16 @@ jobs:
           npx playwright install chromium
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in $(seq 1 30); do
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
