@@ -67,7 +67,7 @@ Flask-Babel==4.0.0
 # config / tests / first-run scripts — bump only with a CACHE_TYPE migration.
 Flask-Caching==2.4.1
 Flask-Compress==1.24
-Brotli==1.2.0
+Brotli==1.2.1
 
 # Data Processing & AI
 # NOTE: AI providers are called via plain HTTP (requests) in
