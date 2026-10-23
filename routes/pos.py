@@ -739,13 +739,7 @@ def api_checkout():
         return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
 
-    session = get_active_session_locked(current_user)
-    if not session:
-        if get_paused_session(current_user):
-            return _paused_session_error_response()
-        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
-
-    token_error = _require_session_token(session, payload)
+    token_error = _require_session_token(payload)
     if token_error:
         return token_error
 
@@ -764,6 +758,14 @@ def api_checkout():
 
     try:
         with atomic_transaction("pos_checkout_flow"):
+            # Fetch the session with SELECT FOR UPDATE INSIDE the transaction
+            # to prevent race conditions on session totals (total_sales, etc.)
+            session = get_active_session_locked(current_user)
+            if not session:
+                if get_paused_session(current_user):
+                    return _paused_session_error_response()
+                return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
+
             # Phase 4 — offline-first idempotency. The ledger row is created
             # inside THIS transaction: a rollback (any failure below) removes
             # it, so only a committed sale completes the key.
