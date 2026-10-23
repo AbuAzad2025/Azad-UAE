@@ -343,7 +343,7 @@ def require_active_session(user=None, branch_id: int | None = None) -> PosSessio
     return session
 
 
-_MAX_POS_LOCK_RETRIES = 3
+_MAX_POS_LOCK_RETRIES = 10
 
 
 def _safe_pos_lock(query, label="PosSession"):

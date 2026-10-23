@@ -617,22 +617,6 @@ class TestPosCheckoutStorm:
             "stock on hand does not match the units on the sale lines"
         )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "P1 - the register's own totals lose updates under concurrency. "
-            "services/pos_checkout_service.py:291 does "
-            "'session.total_sales = session.total_sales + sale.total_amount' on a row that "
-            "routes/pos.py:740 read (get_active_session) BEFORE the per-product lock at "
-            "services/pos_checkout_service.py:110, so every terminal that queued on the lock "
-            "wrote back the total it read before the queue started. The drawer's expected "
-            "cash at close is computed from that column "
-            "(models/pos_session.py:106 compute_expected_balance), so the close reports a "
-            "false variance. Fix: take the session row under SELECT FOR UPDATE (or "
-            "accumulate with a database-side UPDATE ... SET total = total + x), then remove "
-            "this marker."
-        ),
-    )
     def test_pos_session_totals_match_the_orders_they_summarise(self, app, pos_storm_workload):
         """The register's turnover equals the turnover of the orders it took."""
         from models.pos_session import PosSession
