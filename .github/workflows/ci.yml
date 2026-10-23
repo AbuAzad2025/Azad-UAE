@@ -177,6 +177,22 @@ jobs:
           sudo apt-get install -y --no-install-recommends libharfbuzz-subset0 \
             || echo "::notice::libharfbuzz-subset0 not available on this runner; WeasyPrint will require it at a future major version"
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          # pg_isready only checks if the port is open, not if the database
+          # is fully initialized and accepting authentication. Wait until we
+          # can actually connect and run a simple query.
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
+
       - name: Run tests
         run: |
           # Provision the schema from Alembic, the same source the app uses.
@@ -298,6 +314,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Verify app boots
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -566,6 +594,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Run frontend asset audit (pytest)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -650,6 +690,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt schemathesis==4.24.3
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Warm up database schema
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -741,6 +793,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Run tenant isolation fuzzer
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -823,6 +887,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt gunicorn
           npm install -g @lhci/cli
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Provision schema
         run: |
           # Deliberately NOT `|| true`. An unmigrated database is exactly the
@@ -1071,6 +1147,18 @@ jobs:
           # browser build differs from the one installed by pip's playwright.
           # Install the Node-side chromium as well (deps already installed above).
           npx playwright install chromium
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready (attempt $i)"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            sleep 2
+          done
+          echo "::error::PostgreSQL did not become ready in time"
+          exit 1
       - name: Seed auth users and export states
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
