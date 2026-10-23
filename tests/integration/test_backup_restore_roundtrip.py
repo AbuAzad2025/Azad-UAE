@@ -68,8 +68,9 @@ class TestBackupRestoreRoundtrip:
         is_pg15 = False
         if pg_version:
             import re
+
             # Match patterns like "pg_dump (PostgreSQL) 15.x" or "15."
-            if re.search(r'\b15\.\d', pg_version) or "PostgreSQL 15" in pg_version:
+            if re.search(r"\b15\.\d", pg_version) or "PostgreSQL 15" in pg_version:
                 is_pg15 = True
         if is_pg15:
             app.logger.info(f"Skipping backup test on PG 15: {pg_version}")
