@@ -763,7 +763,9 @@ def api_checkout():
             if not session:
                 if get_paused_session(current_user):
                     return _paused_session_error_response()
-                return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
+                return error_response(
+                    message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403
+                )
 
             # Phase 4 — offline-first idempotency. The ledger row is created
             # inside THIS transaction: a rollback (any failure below) removes

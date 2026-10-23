@@ -160,6 +160,7 @@ class PaymentService:
         # Reverse any unrealized FX revaluation entries for this purchase
         # before posting the realized FX gain/loss
         from services.fx_revaluation_service import reverse_purchase_revaluation
+
         reverse_purchase_revaluation(purchase.id, tenant_id=tenant_id)
         post_or_fail(
             fx_lines,

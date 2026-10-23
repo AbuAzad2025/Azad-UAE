@@ -395,7 +395,9 @@ def get_active_session_locked(user=None, branch_id: int | None = None) -> PosSes
         PosSession.user_id == user.id if user else True,
         PosSession.status == PosSession.STATUS_OPEN,
     ).order_by(PosSession.id.desc())
-    return _safe_pos_lock(query, label=f"PosSession(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})")
+    return _safe_pos_lock(
+        query, label=f"PosSession(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})"
+    )
 
 
 def get_paused_session_locked(user=None, branch_id: int | None = None) -> PosSession | None:
@@ -410,7 +412,9 @@ def get_paused_session_locked(user=None, branch_id: int | None = None) -> PosSes
         PosSession.user_id == user.id if user else True,
         PosSession.status == PosSession.STATUS_PAUSED,
     ).order_by(PosSession.id.desc())
-    return _safe_pos_lock(query, label=f"PosSession-PAUSED(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})")
+    return _safe_pos_lock(
+        query, label=f"PosSession-PAUSED(tenant={tenant_id},branch={branch_id},user={user.id if user else 'None'})"
+    )
 
 
 def create_pos_session(

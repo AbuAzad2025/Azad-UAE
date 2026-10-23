@@ -1225,6 +1225,7 @@ class SaleService:
                     # Reverse any unrealized FX revaluation entries for this sale
                     # before posting the realized FX gain/loss
                     from services.fx_revaluation_service import reverse_sale_revaluation
+
                     reverse_sale_revaluation(sale.id, tenant_id=(sale.tenant_id if sale is not None else None))
                     try:
                         fx_lines = []
