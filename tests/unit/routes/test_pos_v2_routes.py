@@ -172,13 +172,17 @@ def _pos_api_patches(**kwargs):
         stack.enter_context(
             patch(
                 "routes.pos.get_active_session",
-                return_value=kwargs.get("session", _mock_session()),
+                return_value=(
+                    kwargs["session"]
+                    if "session" in kwargs and kwargs["session"] is not None
+                    else kwargs.get("paused_session", _mock_session())
+                ),
             )
         )
         stack.enter_context(
             patch(
                 "routes.pos.get_active_session_locked",
-                return_value=kwargs.get("session", _mock_session()),
+                return_value=kwargs["session"] if "session" in kwargs else _mock_session(),
             )
         )
         stack.enter_context(

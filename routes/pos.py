@@ -762,7 +762,8 @@ def api_checkout():
             # to prevent race conditions on session totals (total_sales, etc.)
             session = get_active_session_locked(current_user)
             if not session:
-                if get_paused_session(current_user):
+                paused = get_paused_session(current_user)
+                if paused:
                     return _paused_session_error_response()
                 return error_response(
                     message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403
