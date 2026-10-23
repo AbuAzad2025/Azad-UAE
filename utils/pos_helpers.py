@@ -5,11 +5,12 @@ from __future__ import annotations
 import time
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
 
-from extensions import db
 from flask import current_app
+from sqlalchemy.exc import OperationalError
+
+from extensions import db
 from models import Customer, PosSession, Product
 from services.stock_service import StockService
-from sqlalchemy.exc import OperationalError
 from utils.branching import (
     get_accessible_warehouse_ids,
     get_active_branch_id,
