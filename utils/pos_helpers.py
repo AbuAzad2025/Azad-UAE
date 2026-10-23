@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import time
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
 
 from extensions import db
+from flask import current_app
 from models import Customer, PosSession, Product
 from services.stock_service import StockService
+from sqlalchemy.exc import OperationalError
 from utils.branching import (
     get_accessible_warehouse_ids,
     get_active_branch_id,
@@ -353,9 +356,6 @@ def _safe_pos_lock(query, label="PosSession"):
     caller's entire transaction. On final failure, aborts — never silently
     drops the lock.
     """
-    from flask import current_app
-    from sqlalchemy.exc import OperationalError
-    import time
 
     for attempt in range(1, _MAX_POS_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
