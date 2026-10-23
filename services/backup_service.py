@@ -1919,18 +1919,6 @@ This archive does NOT include secrets, .env, or AI runtime memory.
                     if restore_uploads and "uploads.tar.gz" in tar.getnames():
                         tar.extract("uploads.tar.gz", work, filter="data")
                 dump_path = os.path.join(work, "db.dump")
-
-                # Filter out SET transaction_timeout which is not supported in PG 15
-                # (added by pg_dump 16+ but unrecognized by pg_restore 15)
-                try:
-                    with open(dump_path, "rb") as f:
-                        dump_data = f.read()
-                    dump_data = re.sub(rb"^SET transaction_timeout = 0;\s*\n", b"", dump_data, flags=re.MULTILINE)
-                    with open(dump_path, "wb") as f:
-                        f.write(dump_data)
-                except Exception:
-                    pass  # If filtering fails, proceed with original dump
-
             elif filename.endswith(".dump"):
                 dump_path = os.path.join(work, "legacy.dump")
                 shutil.copy2(path, dump_path)
