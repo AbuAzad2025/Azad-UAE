@@ -63,9 +63,15 @@ class TestBackupRestoreRoundtrip:
         # pg_restore 15 does not support 'transaction_timeout' parameter
         # added in PG 16; skip if pg_restore is version 15
         pg_version = pg_tools.get("pg_dump_version", "")
-        app.logger.info(f"Backup test pg_version: '{pg_version}'")
+        app.logger.info(f"Backup test pg_dump_version: '{pg_version}'")
         # Check for version 15.x patterns - pg_dump --version outputs "pg_dump (PostgreSQL) 15.xx"
-        if pg_version and (" 15." in pg_version or "PostgreSQL 15" in pg_version):
+        is_pg15 = False
+        if pg_version:
+            import re
+            # Match patterns like "pg_dump (PostgreSQL) 15.x" or "15."
+            if re.search(r'\b15\.\d', pg_version) or "PostgreSQL 15" in pg_version:
+                is_pg15 = True
+        if is_pg15:
             app.logger.info(f"Skipping backup test on PG 15: {pg_version}")
             pytest.skip(f"pg_restore {pg_version} does not support transaction_timeout parameter")
         elif not pg_version:

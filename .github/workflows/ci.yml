@@ -182,12 +182,13 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 30); do
+          sleep 10  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/30)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"

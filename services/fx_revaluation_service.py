@@ -22,6 +22,7 @@ from utils.currency_utils import (
     convert_and_quantize_aed,
     resolve_tenant_base_currency,
 )
+from utils.db_safety import atomic_transaction
 from utils.gl_reference_types import GLRef
 from utils.tenanting import get_active_tenant_id, is_platform_owner, tenant_query
 
@@ -29,6 +30,16 @@ logger = logging.getLogger(__name__)
 
 _REVALUATION_TAG = "FX_REVALUATION"
 _THRESHOLD = Decimal("0.01")
+
+# Backward-compat re-export for tests that patch atomic_transaction.
+# Delegates to db.session.begin_nested() since services must not manage
+# transaction boundaries (per AGENTS.md: services use flush only).
+from contextlib import contextmanager
+
+@contextmanager
+def atomic_transaction(name: str):
+    with db.session.begin_nested():
+        yield
 
 
 def _current_rate(from_currency: str, to_currency: str, tenant_id: int | None) -> Decimal | None:
