@@ -343,7 +343,7 @@ def require_active_session(user=None, branch_id: int | None = None) -> PosSessio
     return session
 
 
-_MAX_POS_LOCK_RETRIES = 10
+_MAX_POS_LOCK_RETRIES = 20
 
 
 def _safe_pos_lock(query, label="PosSession"):
@@ -355,6 +355,7 @@ def _safe_pos_lock(query, label="PosSession"):
     """
     from flask import current_app
     from sqlalchemy.exc import OperationalError
+    import time
 
     for attempt in range(1, _MAX_POS_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
@@ -377,6 +378,7 @@ def _safe_pos_lock(query, label="PosSession"):
                 attempt,
                 _MAX_POS_LOCK_RETRIES,
             )
+            time.sleep(0.1)  # Brief pause to reduce contention
     raise RuntimeError(f"Failed to acquire row lock for {label}")
 
 
