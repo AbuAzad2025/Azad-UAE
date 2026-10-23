@@ -22,7 +22,6 @@ from utils.currency_utils import (
     convert_and_quantize_aed,
     resolve_tenant_base_currency,
 )
-from utils.db_safety import atomic_transaction
 from utils.gl_reference_types import GLRef
 from utils.tenanting import get_active_tenant_id, is_platform_owner, tenant_query
 
@@ -180,7 +179,7 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
         fallback_key="fx_loss",
     )
 
-    with atomic_transaction("fx_revaluation"):
+    with db.session.begin_nested():
         if open_sales:
             _post_ar_revaluation(
                 open_sales,
@@ -376,7 +375,7 @@ def reverse_previous_revaluation(
         )
 
     reversed_ids = []
-    with atomic_transaction("fx_revaluation_reversal"):
+    with db.session.begin_nested():
         for entry in q.all():
             reversed_entry = entry.reverse_entry(
                 description=f"Reverse FX Revaluation — {period_month}",
@@ -410,7 +409,7 @@ def reverse_sale_revaluation(sale_id: int, tenant_id: int | None = None) -> list
         )
 
     reversed_ids = []
-    with atomic_transaction("fx_revaluation_reversal_sale"):
+    with db.session.begin_nested():
         for entry in q.all():
             reversed_entry = entry.reverse_entry(
                 description=f"Reverse FX Revaluation — Sale #{sale_id} (settled)",
@@ -444,7 +443,7 @@ def reverse_purchase_revaluation(purchase_id: int, tenant_id: int | None = None)
         )
 
     reversed_ids = []
-    with atomic_transaction("fx_revaluation_reversal_purchase"):
+    with db.session.begin_nested():
         for entry in q.all():
             reversed_entry = entry.reverse_entry(
                 description=f"Reverse FX Revaluation — Purchase #{purchase_id} (settled)",
