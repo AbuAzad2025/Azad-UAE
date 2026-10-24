@@ -152,7 +152,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
 
     steps:
       - uses: actions/checkout@v7
@@ -307,7 +306,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -593,7 +591,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -695,8 +692,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
-    steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
@@ -805,7 +800,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -898,7 +892,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
@@ -1159,7 +1152,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-        command: postgres -c max_connections=200
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
