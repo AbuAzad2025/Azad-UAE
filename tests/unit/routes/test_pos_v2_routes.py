@@ -173,9 +173,7 @@ def _pos_api_patches(**kwargs):
             patch(
                 "routes.pos.get_active_session",
                 return_value=(
-                    kwargs["session"]
-                    if "session" in kwargs and kwargs["session"] is not None
-                    else kwargs.get("paused_session", _mock_session())
+                    kwargs["session"] if "session" in kwargs else kwargs.get("paused_session", _mock_session())
                 ),
             )
         )

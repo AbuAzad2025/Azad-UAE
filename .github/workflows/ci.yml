@@ -135,6 +135,7 @@ jobs:
       APP_ENV: testing
       DEBUG: "true"
       PYTEST_ADDOPTS: ""
+      AUTO_MIGRATE: "1"
 
     services:
 
@@ -337,6 +338,7 @@ jobs:
           SECRET_KEY: test-secret-key
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
+          AUTO_MIGRATE: "1"
         run: |
           python -c "from app import create_app; app = create_app()"
 
@@ -622,6 +624,7 @@ jobs:
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
           DEBUG: "true"
+          AUTO_MIGRATE: "1"
         run: pytest tests/unit/test_js_reachability.py -v --tb=short
 
   # ── Git & repository scanning ──
@@ -722,6 +725,7 @@ jobs:
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
           DEBUG: "true"
+          AUTO_MIGRATE: "1"
         run: |
           # Schema comes from Alembic, the same source the app uses. db.create_all()
             # built a competing definition of the tables from model metadata,
@@ -737,6 +741,7 @@ jobs:
           APP_ENV: testing
           ENABLE_SWAGGER_UI: "true"
           DEBUG: "true"
+          AUTO_MIGRATE: "1"
         run: |
           # Start app in background
           python -m flask run --port=5000 --host=0.0.0.0 &
@@ -829,6 +834,7 @@ jobs:
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
           DEBUG: "true"
+          AUTO_MIGRATE: "1"
         run: |
           pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
 
@@ -893,6 +899,7 @@ jobs:
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
       CI: "true"
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -1190,6 +1197,7 @@ jobs:
           SECRET_KEY: test-secret-key
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
+          AUTO_MIGRATE: "1"
         run: |
           python scripts/auth/setup_test_users.py
       - name: Start app server for tours
@@ -1198,6 +1206,7 @@ jobs:
           SECRET_KEY: test-secret-key
           OWNER_PASSWORD: TestOwner@1234567890123456!
           APP_ENV: testing
+          AUTO_MIGRATE: "1"
         run: |
           gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
           for attempt in $(seq 1 20); do

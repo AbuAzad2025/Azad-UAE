@@ -69,6 +69,7 @@ from utils.pos_helpers import (
     merge_checkout_lines,
     parse_scale_barcode,
     payment_amount_base,
+    require_active_session,  # noqa: F401 (patched in tests)
     safe_decimal,
     search_pos_products,
     serialize_pos_product,
@@ -738,11 +739,15 @@ def api_checkout():
         return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
 
-    token_error = _require_session_token(payload)
-    if token_error:
-        return token_error
-
     idempotency_key = _extract_idempotency_key(payload)
+
+    # Fetch session first - paused session check should come before shift check
+    session = get_active_session(current_user)
+    if not session:
+        paused = get_paused_session(current_user)
+        if paused:
+            return _paused_session_error_response()
+        return error_response(message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403)
 
     shift = _get_active_shift(current_user)
     # Phase 4 — shifts are a pro-tier sub-feature. On the basic tier the POS
@@ -761,12 +766,14 @@ def api_checkout():
             # to prevent race conditions on session totals (total_sales, etc.)
             session = get_active_session_locked(current_user)
             if not session:
-                paused = get_paused_session(current_user)
-                if paused:
-                    return _paused_session_error_response()
                 return error_response(
                     message=gettext("لا توجد جلسة كاشير مفتوحة. يرجى فتح جلسة أولاً."), status_code=403
                 )
+
+            # Validate session token for terminal-bound sessions
+            token_error = _require_session_token(session, payload)
+            if token_error:
+                return token_error
 
             # Phase 4 — offline-first idempotency. The ledger row is created
             # inside THIS transaction: a rollback (any failure below) removes

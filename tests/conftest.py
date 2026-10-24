@@ -32,6 +32,13 @@ os.environ.setdefault("CELERY_RESULT_BACKEND", "memory://")
 os.environ.setdefault("RATELIMIT_STORAGE_URI", "memory://")
 os.environ.setdefault("SKIP_SYSTEM_INTEGRITY", "1")
 
+# Mock external services for tests
+os.environ.setdefault("HARDWARE_AGENT_URL", "http://127.0.0.1:8567")
+os.environ.setdefault("REDIS_URL", "memory://")
+os.environ.setdefault("SSE_BACKPLANE_URL", "memory://")
+
+import fakeredis
+
 
 def _init_project_imports():
     from app import create_app
@@ -1492,3 +1499,30 @@ def logged_in_client(client, sample_user):
         follow_redirects=True,
     )
     return client
+
+
+# ─── External Service Mocks ───
+
+
+@pytest.fixture(autouse=True)
+def _mock_hardware_agent():
+    """Mock the POS hardware agent HTTP calls to avoid connection timeouts."""
+    from unittest.mock import MagicMock, patch
+
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"success": True, "data": {}}
+
+    with patch("requests.post", return_value=mock_response) as mock_post:
+        yield mock_post
+
+
+@pytest.fixture(autouse=True)
+def _mock_redis_backplane():
+    """Mock Redis backplane for SSE to avoid connection timeouts."""
+    from unittest.mock import patch
+
+    fake_redis = fakeredis.FakeRedis(decode_responses=True)
+    with patch("redis.Redis", return_value=fake_redis):
+        with patch("redis.from_url", return_value=fake_redis):
+            yield fake_redis
