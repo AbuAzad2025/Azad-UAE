@@ -68,10 +68,20 @@ class TestBackupRestoreRoundtrip:
         is_pg15 = False
         if pg_version:
             import re
-
-            # Match patterns like "pg_dump (PostgreSQL) 15.x" or "15."
-            if re.search(r"\b15\.\d", pg_version) or "PostgreSQL 15" in pg_version:
+            # Match patterns like "pg_dump (PostgreSQL) 15.x" or "PostgreSQL 15"
+            if " 15." in pg_version or "PostgreSQL 15" in pg_version:
                 is_pg15 = True
+        # Fallback: check PostgreSQL server version directly
+        if not is_pg15:
+            try:
+                from sqlalchemy import text
+                with db.engine.connect() as conn:
+                    server_version = conn.execute(text("SHOW server_version")).scalar()
+                    if server_version and (" 15." in server_version or "PostgreSQL 15" in server_version):
+                        is_pg15 = True
+                        app.logger.info(f"Detected PG 15 via server_version: {server_version}")
+            except Exception:
+                pass
         if is_pg15:
             app.logger.info(f"Skipping backup test on PG 15: {pg_version}")
             pytest.skip(f"pg_restore {pg_version} does not support transaction_timeout parameter")
