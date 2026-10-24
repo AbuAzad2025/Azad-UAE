@@ -80,10 +80,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - name: Set up Python
@@ -159,10 +155,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
@@ -317,10 +309,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
@@ -409,10 +397,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
@@ -475,10 +459,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
@@ -529,10 +509,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
@@ -636,10 +612,6 @@ jobs:
         ports:
         - 5432:5432
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        command:
-        - postgres
-        - -c
-        - max_connections=200
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-python@v7
