@@ -1,144 +1,76 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: CI
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Coverage policy: every production file type is gated — Python, Jinja/HTML,
-# JavaScript, CSS, YAML and JSON. Only documentation, binary assets and
-# vendored third-party bundles (AdminLTE) may skip a CI run.
-# ─────────────────────────────────────────────────────────────────────────────
-on:
+true:
   push:
-    branches: [main, develop]
+    branches:
+    - main
+    - develop
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '**.svg'
-      - '**.png'
-      - '**.jpg'
-      - '**.ico'
-      - '**.woff'
-      - '**.woff2'
-      - '**.ttf'
-      - 'static/adminlte/**'
+    - '**.md'
+    - docs/**
+    - '**.svg'
+    - '**.png'
+    - '**.jpg'
+    - '**.ico'
+    - '**.woff'
+    - '**.woff2'
+    - '**.ttf'
+    - static/adminlte/**
   pull_request:
-    branches: [main]
+    branches:
+    - main
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '**.svg'
-      - '**.png'
-      - '**.jpg'
-      - '**.ico'
-      - '**.woff'
-      - '**.woff2'
-      - '**.ttf'
-      - 'static/adminlte/**'
-  workflow_dispatch:
-
+    - '**.md'
+    - docs/**
+    - '**.svg'
+    - '**.png'
+    - '**.jpg'
+    - '**.ico'
+    - '**.woff'
+    - '**.woff2'
+    - '**.ttf'
+    - static/adminlte/**
+  workflow_dispatch: null
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-# Least privilege by default; jobs that need more declare it themselves.
 permissions:
   contents: read
-
 env:
   PYTHON_VERSION: '3.12'
   NODE_VERSION: '22'
-  # Minimum total line coverage enforced in coverage-report.
-  # Raised from 85 to 95 once every slice passed again: the measured total is
-  # 98.49%, so 95 keeps the floor meaningful and still leaves room for the
-  # churn of an ordinary change. The gap between this and the measurement is
-  # what stops the coverage from eroding one slice at a time.
   COVERAGE_FAIL_UNDER: '95'
-  # `flask db upgrade` needs an app factory. Also stops the Flask CLI from
-  # auto-loading ./app.py, which builds a second app instance on import.
-  FLASK_APP: 'app.factory:create_app'
-
+  FLASK_APP: app.factory:create_app
 jobs:
-  # ── Matrix engine: adapt PG version grid to Git ref ──
   determine-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - id: set-matrix
-        run: |
-          IS_MAIN_OR_TAG='${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}'
-          if [ "$IS_MAIN_OR_TAG" = "true" ]; then
-            MATRIX='{"include":[
-              {"postgres-version":15,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg15"},
-              {"postgres-version":16,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg16"},
-              {"postgres-version":17,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes-pg17"},
-              {"postgres-version":15,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
-              {"postgres-version":15,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
-              {"postgres-version":15,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
-              {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
-              {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
-              {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
-              {"postgres-version":15,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
-              {"postgres-version":15,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
-              {"postgres-version":15,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
-              {"postgres-version":15,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
-              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
-            ]}'
-          else
-            MATRIX='{"include":[
-              {"postgres-version":16,"test-group":"routes",  "test-path":"tests/unit/routes/",             "cov-flag":"unit-routes"},
-              {"postgres-version":16,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
-              {"postgres-version":16,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
-              {"postgres-version":16,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
-              {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
-              {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
-              {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
-              {"postgres-version":16,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
-              {"postgres-version":16,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
-              {"postgres-version":16,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
-              {"postgres-version":16,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
-              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
-            ]}'
-          fi
-          echo "matrix=$(echo "$MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
-
-  # ── Python tests split by directory ──
+    - id: set-matrix
+      run: "IS_MAIN_OR_TAG='${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}'\nif [ \"$IS_MAIN_OR_TAG\" = \"true\" ]; then\n  MATRIX='{\"include\":[\n    {\"postgres-version\":15,\"test-group\":\"routes\",  \"test-path\":\"tests/unit/routes/\",             \"cov-flag\":\"unit-routes-pg15\"},\n    {\"postgres-version\":16,\"test-group\":\"routes\",  \"test-path\":\"tests/unit/routes/\",             \"cov-flag\":\"unit-routes-pg16\"},\n    {\"postgres-version\":17,\"test-group\":\"routes\",  \"test-path\":\"tests/unit/routes/\",             \"cov-flag\":\"unit-routes-pg17\"},\n    {\"postgres-version\":15,\"test-group\":\"services\",\"test-path\":\"tests/unit/services/\",           \"cov-flag\":\"unit-services\"},\n    {\"postgres-version\":15,\"test-group\":\"models\",  \"test-path\":\"tests/unit/models/\",             \"cov-flag\":\"unit-models\"},\n    {\"postgres-version\":15,\"test-group\":\"ai_knowledge\",\"test-path\":\"tests/unit/ai_knowledge/\",  \"cov-flag\"\
+        :\"unit-ai-knowledge\"},\n    {\"postgres-version\":15,\"test-group\":\"utils\",   \"test-path\":\"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/\", \"cov-flag\":\"unit-utils\"},\n    {\"postgres-version\":15,\"test-group\":\"core\",    \"test-path\":\"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core\", \"cov-flag\":\"unit-core\"},\n    {\"postgres-version\":15,\"test-group\":\"integration\",\"test-path\":\"tests/integration/ --ignore=tests/integration/business_scenarios\",\"cov-flag\":\"integration\"},\n    {\"postgres-version\":15,\"test-group\":\"scenarios-a\",\"test-path\":\"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py\",\"cov-flag\":\"scenarios-a\"},\n    {\"postgres-version\":15,\"test-group\":\"scenarios-b\",\"test-path\":\"tests/integration/business_scenarios/test_wave{8,9}_*.py\"\
+        ,\"cov-flag\":\"scenarios-b\"},\n    {\"postgres-version\":15,\"test-group\":\"scenarios-c\",\"test-path\":\"tests/integration/business_scenarios/test_wave{10,11,12}_*.py\",\"cov-flag\":\"scenarios-c\"},\n    {\"postgres-version\":15,\"test-group\":\"scenarios-d\",\"test-path\":\"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py\",\"cov-flag\":\"scenarios-d\"},\n    {\"postgres-version\":15,\"test-group\":\"e2e\",     \"test-path\":\"tests/e2e/ --ignore=tests/e2e/tours/\",\"cov-flag\":\"e2e\"}\n  ]}'\nelse\n  MATRIX='{\"include\":[\n    {\"postgres-version\":16,\"test-group\":\"routes\",  \"test-path\":\"tests/unit/routes/\",             \"cov-flag\":\"unit-routes\"},\n    {\"postgres-version\":16,\"test-group\":\"services\",\"test-path\":\"tests/unit/services/\",           \"cov-flag\":\"unit-services\"},\n    {\"postgres-version\":16,\"test-group\":\"models\",  \"test-path\":\"tests/unit/models/\",             \"cov-flag\":\"unit-models\"},\n    {\"postgres-version\"\
+        :16,\"test-group\":\"ai_knowledge\",\"test-path\":\"tests/unit/ai_knowledge/\",  \"cov-flag\":\"unit-ai-knowledge\"},\n    {\"postgres-version\":16,\"test-group\":\"utils\",   \"test-path\":\"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/\", \"cov-flag\":\"unit-utils\"},\n    {\"postgres-version\":16,\"test-group\":\"core\",    \"test-path\":\"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core\", \"cov-flag\":\"unit-core\"},\n    {\"postgres-version\":16,\"test-group\":\"integration\",\"test-path\":\"tests/integration/ --ignore=tests/integration/business_scenarios\",\"cov-flag\":\"integration\"},\n    {\"postgres-version\":16,\"test-group\":\"scenarios-a\",\"test-path\":\"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py\",\"cov-flag\":\"scenarios-a\"},\n    {\"postgres-version\":16,\"\
+        test-group\":\"scenarios-b\",\"test-path\":\"tests/integration/business_scenarios/test_wave{8,9}_*.py\",\"cov-flag\":\"scenarios-b\"},\n    {\"postgres-version\":16,\"test-group\":\"scenarios-c\",\"test-path\":\"tests/integration/business_scenarios/test_wave{10,11,12}_*.py\",\"cov-flag\":\"scenarios-c\"},\n    {\"postgres-version\":16,\"test-group\":\"scenarios-d\",\"test-path\":\"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py\",\"cov-flag\":\"scenarios-d\"},\n    {\"postgres-version\":16,\"test-group\":\"e2e\",     \"test-path\":\"tests/e2e/ --ignore=tests/e2e/tours/\",\"cov-flag\":\"e2e\"}\n  ]}'\nfi\necho \"matrix=$(echo \"$MATRIX\" | jq -c .)\" >> \"$GITHUB_OUTPUT\"\n"
   test:
-    needs: [determine-matrix]
+    needs:
+    - determine-matrix
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
     runs-on: ubuntu-latest
-    # Real work is ~50 min: interpreter setup, pip cache restore, `flask db
-    # upgrade` over 54 revisions, then 2394 tests in 0:49:45 measured on the
-    # integration slice. 120 leaves >2x headroom for a slow runner so a
-    # legitimate run is never killed on time. The job was previously reported
-    # "cancelled" repeatedly, but not by this limit - the optional Codecov
-    # upload hung retrying a tokenless upload long after pytest had passed.
-    # That step is now gated on the token and bounded; this number is the
-    # backstop, not the fix.
     timeout-minutes: 120
     strategy:
-      # Never cancel sibling groups: every directory must report, even when
-      # another group fails �?" no part of the test suite may be skipped.
       fail-fast: false
       matrix: ${{ fromJSON(needs.determine-matrix.outputs.matrix) }}
-
-    # Job-level so EVERY step that boots the app or runs pytest inherits it.
-    # These were step-level on "Run tests" only, so the query-profiler step
-    # below ran with no DATABASE_URL at all: conftest then fell back to the dev
-    # database (postgres:123@localhost/azad_uae), every one of its 4706 tests
-    # errored on connection refused, and `|| true` hid it. The profiler step
-    # reported success while producing no profile.
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key-not-for-production
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      DEBUG: "true"
-      PYTEST_ADDOPTS: ""
-      AUTO_MIGRATE: "1"
-
+      DEBUG: 'true'
+      PYTEST_ADDOPTS: ''
+      AUTO_MIGRATE: '1'
     services:
-
       postgres:
         image: postgres:${{ matrix.postgres-version }}
         env:
@@ -146,150 +78,71 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
-      - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install dependencies
+      run: 'python -m pip install --upgrade pip
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
+        pip install -r requirements.txt
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      # WeasyPrint warns that HarfBuzz-Subset "will be required by future
-      # versions". Installing it now keeps the PDF/print tests off a
-      # deprecation that will otherwise become a hard failure on a WeasyPrint
-      # major bump. Not fatal if the package is unavailable on the runner image:
-      # it is forward-compatibility, not a current requirement.
-      - name: Install system libs for WeasyPrint
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends libharfbuzz-subset0 \
-            || echo "::notice::libharfbuzz-subset0 not available on this runner; WeasyPrint will require it at a future major version"
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-
-      - name: Run tests
-        run: |
-          # Provision the schema from Alembic, the same source the app uses.
-          # db.create_all() built a competing definition of the tables straight
-          # from model metadata, so a column could exist in the model, be absent
-          # from every migration, and still pass here while breaking any
-          # environment that actually ran the migrations.
-          #
-          # This is deliberately NOT `|| true`. With the failure swallowed, a
-          # broken migration chain just meant the tests ran against no schema
-          # and failed later with a confusing UndefinedTable instead of here.
-          flask db upgrade
-          # Now that the schema is real, prove the models agree with it.
-          python scripts/lint/check_model_schema_parity.py
-          # Run the assigned test group
-          pytest ${{ matrix.test-path }} -v --tb=short \
-            --cov=. --cov-config=.coveragerc --cov-report=term \
-            --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml
-
-          coverage combine 2>/dev/null || true
-          ls -la .coverage 2>/dev/null || true
-          cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
-
-      # ── N+1 profiling (opt-in, rides the existing test runs) ──────────────
-      # The profiler is loaded only for the two groups that exercise real request
-      # lifecycles, and only on one PostgreSQL version, so it runs on a small slice
-      # of the matrix. It is a second full pytest invocation for that slice, not a
-      # free ride on the normal run. QUERY_PROFILE_OUT points at a directory that
-      # is created here; the plugin writes the JSON in pytest's cleanup hook, which
-      # runs even when a test fails, so a red run still yields the profile.
-      - name: Profile SELECT queries per route
-        if: ${{ matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16) }}
-        env:
-          QUERY_PROFILE: "1"
-          QUERY_PROFILE_OUT: ${{ github.workspace }}/query-profile
-          QUERY_PROFILE_TOP: "25"
-          PYTHONPATH: ${{ github.workspace }}/tests
-        run: |
-          mkdir -p query-profile
-          # Profiling must never block the suite, so the run itself is tolerated.
-          pytest ${{ matrix.test-path }} -p query_profile_plugin -q --tb=short --no-cov || true
-          # But a *missing* profile is a real defect, not a non-event: it means the
-          # instrumentation is not working, which is exactly how this step stayed
-          # broken and invisible. Fail loudly instead of printing a warning.
-          if [ ! -f query-profile/query_profile.json ]; then
-            echo "::error::query profiler produced no query_profile.json for ${{ matrix.test-group }} - N+1 instrumentation is not working"
-            exit 1
-          fi
-          echo "profile written for ${{ matrix.test-group }}"
-
-      - name: Upload query profile
-        if: ${{ always() && (matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16)) }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: query-profile-${{ matrix.cov-flag }}
-          path: query-profile/query_profile.json
-          if-no-files-found: warn
-          retention-days: 14
-
-      - name: Upload coverage to Codecov (optional)
-        # This repo has no CODECOV_TOKEN, and a tokenless upload is rejected
-        # ("not valid tokenless upload") after retrying for ~24 minutes - which
-        # is why the integration job reported "cancelled" 24 minutes AFTER
-        # pytest had already passed 2394 tests. fail_ci_if_error covers the exit
-        # code, not the retries, so the step is bounded instead: the upload is
-        # optional and must never eat the job's time budget.
-        if: always()
-        timeout-minutes: 5
-        uses: codecov/codecov-action@v7
-        with:
-          files: ./coverage-${{ matrix.cov-flag }}.xml
-          flags: ${{ matrix.cov-flag }}
-          fail_ci_if_error: false
-
-      - name: Upload raw coverage data
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: covdata-${{ matrix.cov-flag }}
-          path: coverage-data-${{ matrix.cov-flag }}
-          if-no-files-found: ignore
-          retention-days: 1
-
-      - name: Upload template coverage data
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: templates-${{ matrix.cov-flag }}
-          path: templates_rendered.json
-          if-no-files-found: ignore
-          retention-days: 1
-
-  # ── App boot verification (quick smoke test) ──
+        '
+    - name: Install system libs for WeasyPrint
+      run: "sudo apt-get update -qq\nsudo apt-get install -y --no-install-recommends libharfbuzz-subset0 \\\n  || echo \"::notice::libharfbuzz-subset0 not available on this runner; WeasyPrint will require it at a future major version\"\n"
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Run tests
+      run: "# Provision the schema from Alembic, the same source the app uses.\n# db.create_all() built a competing definition of the tables straight\n# from model metadata, so a column could exist in the model, be absent\n# from every migration, and still pass here while breaking any\n# environment that actually ran the migrations.\n#\n# This is deliberately NOT `|| true`. With the failure swallowed, a\n# broken migration chain just meant the tests ran against no schema\n# and failed later with a confusing UndefinedTable instead of here.\nflask db upgrade\n# Now that the schema is real, prove the models agree with it.\npython scripts/lint/check_model_schema_parity.py\n# Run the assigned test group\npytest ${{ matrix.test-path }} -v --tb=short \\\n  --cov=. --cov-config=.coveragerc --cov-report=term \\\n  --cov-report=xml:coverage-${{ matrix.cov-flag }}.xml\n\ncoverage combine 2>/dev/null || true\nls -la .coverage 2>/dev/null || true\ncp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null\
+        \ || true\n"
+    - name: Profile SELECT queries per route
+      if: ${{ matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16) }}
+      env:
+        QUERY_PROFILE: '1'
+        QUERY_PROFILE_OUT: ${{ github.workspace }}/query-profile
+        QUERY_PROFILE_TOP: '25'
+        PYTHONPATH: ${{ github.workspace }}/tests
+      run: "mkdir -p query-profile\n# Profiling must never block the suite, so the run itself is tolerated.\npytest ${{ matrix.test-path }} -p query_profile_plugin -q --tb=short --no-cov || true\n# But a *missing* profile is a real defect, not a non-event: it means the\n# instrumentation is not working, which is exactly how this step stayed\n# broken and invisible. Fail loudly instead of printing a warning.\nif [ ! -f query-profile/query_profile.json ]; then\n  echo \"::error::query profiler produced no query_profile.json for ${{ matrix.test-group }} - N+1 instrumentation is not working\"\n  exit 1\nfi\necho \"profile written for ${{ matrix.test-group }}\"\n"
+    - name: Upload query profile
+      if: ${{ always() && (matrix.test-group == 'integration' || (matrix.test-group == 'routes' && matrix.postgres-version == 16)) }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: query-profile-${{ matrix.cov-flag }}
+        path: query-profile/query_profile.json
+        if-no-files-found: warn
+        retention-days: 14
+    - name: Upload coverage to Codecov (optional)
+      if: always()
+      timeout-minutes: 5
+      uses: codecov/codecov-action@v7
+      with:
+        files: ./coverage-${{ matrix.cov-flag }}.xml
+        flags: ${{ matrix.cov-flag }}
+        fail_ci_if_error: false
+    - name: Upload raw coverage data
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: covdata-${{ matrix.cov-flag }}
+        path: coverage-data-${{ matrix.cov-flag }}
+        if-no-files-found: ignore
+        retention-days: 1
+    - name: Upload template coverage data
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: templates-${{ matrix.cov-flag }}
+        path: templates_rendered.json
+        if-no-files-found: ignore
+        retention-days: 1
   verify-boot:
-    needs: [determine-matrix]
+    needs:
+    - determine-matrix
     runs-on: ubuntu-latest
     timeout-minutes: 15
     services:
@@ -300,293 +153,148 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install dependencies
+      run: 'python -m pip install --upgrade pip
+
+        pip install -r requirements.txt
+
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Run database migrations
+      env:
+        AUTO_MIGRATE: '1'
+      run: 'flask db upgrade
+
+        python scripts/lint/check_model_schema_parity.py'
+    - name: Verify app boots
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        AUTO_MIGRATE: '1'
+      run: 'python -c "from app import create_app; app = create_app()"
+
+        '
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      AUTO_MIGRATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-
-      - name: Run database migrations
-        env:
-          AUTO_MIGRATE: "1"
-        run: |
-          flask db upgrade
-          python scripts/lint/check_model_schema_parity.py
-
-      - name: Verify app boots
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          AUTO_MIGRATE: "1"
-        run: |
-          python -c "from app import create_app; app = create_app()"
-
-  # ── Security scan (bandit) ──
-  # Scope comes ONLY from .bandit.yml — no inline excludes, so no production
-  # Python file can silently drop out of the scan.
+      AUTO_MIGRATE: '1'
   security-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install bandit
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit
-      - name: Bandit security scan (gate)
-        run: bandit -c .bandit.yml -r .
-      - name: Bandit JSON report
-        if: always()
-        run: bandit -c .bandit.yml -r . -f json -o bandit-report.json || true
-      - name: Upload bandit report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: bandit-report
-          path: bandit-report.json
-          if-no-files-found: ignore
-          retention-days: 7
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install bandit
+      run: 'python -m pip install --upgrade pip
 
-  # ── Static quality gates: Python · Jinja/HTML · JS · CSS · YAML · JSON ──
+        pip install bandit
+
+        '
+    - name: Bandit security scan (gate)
+      run: bandit -c .bandit.yml -r .
+    - name: Bandit JSON report
+      if: always()
+      run: bandit -c .bandit.yml -r . -f json -o bandit-report.json || true
+    - name: Upload bandit report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: bandit-report
+        path: bandit-report.json
+        if-no-files-found: ignore
+        retention-days: 7
   lint-audit:
-    name: Static quality (py · jinja · js · css · yaml · json)
+    name: "Static quality (py \xC2\xB7 jinja \xC2\xB7 js \xC2\xB7 css \xC2\xB7 yaml \xC2\xB7 json)"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Set up Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+    - name: Install Python lint tools
+      run: "python -m pip install --upgrade pip\n# Full requirements are REQUIRED here: mypy needs real flask types\n# (e.g. abort() -> NoReturn) for correct narrowing \xE2\u20AC\u201D a slim install\n# degrades every unresolved import to Any and produces false errors.\n# ruff is PINNED: 0.16 expanded the default rule set (BLE001/UP017/\n# I001/FURB157...) which fires codebase-wide. Pin to the 0.15 line\n# whose defaults match this codebase's compliance baseline, same as\n# the pinned @biomejs/biome below.\npip install -r requirements.txt ruff==0.15.22 mypy pip-audit yamllint jinja2\n"
+    - name: Install Node lint tools
+      run: 'npm ci --no-audit --no-fund
 
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
+        npm install -g @biomejs/biome@2.5.4 cspell
 
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install Python lint tools
-        run: |
-          python -m pip install --upgrade pip
-          # Full requirements are REQUIRED here: mypy needs real flask types
-          # (e.g. abort() -> NoReturn) for correct narrowing — a slim install
-          # degrades every unresolved import to Any and produces false errors.
-          # ruff is PINNED: 0.16 expanded the default rule set (BLE001/UP017/
-          # I001/FURB157...) which fires codebase-wide. Pin to the 0.15 line
-          # whose defaults match this codebase's compliance baseline, same as
-          # the pinned @biomejs/biome below.
-          pip install -r requirements.txt ruff==0.15.22 mypy pip-audit yamllint jinja2
-
-      - name: Install Node lint tools
-        run: |
-          npm ci --no-audit --no-fund
-          npm install -g @biomejs/biome@2.5.4 cspell
-
-      # ── Python ──
-      - name: Ruff check (Python lint)
-        run: ruff check . --output-format github
-
-      - name: Ruff format (Python formatting)
-        run: ruff format . --check --diff
-
-      - name: Mypy (Python types)
-        run: mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases
-
-      # ── Jinja / HTML templates ──
-      - name: Jinja template gate (all templates must parse)
-        run: python scripts/lint/check_templates.py
-
-      - name: Strict i18n lint (templates & Python)
-        run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
-
-      # i18n regression gates. check_strict_i18n proves every string is *wrapped*
-      # in a translation call; these two prove the call actually resolves.
-      # The gap they close: {{ _('x') }} and {% trans %} resolve through
-      # environment.gettext, and with no translator installed there they returned
-      # the raw key. 2022 call sites across 82 templates rendered English to an
-      # Arabic user while passing the strict lint, because the key existed in the
-      # catalogue - the call simply never consulted it.
-      - name: Untranslated-key gate (no template call renders as its own key)
-        run: python scripts/lint/check_i18n_untranslated.py --limit 20
-
-      - name: Translation catalogue health (every key resolves to Arabic)
-        run: python scripts/lint/report_catalogue_health.py --limit 20
-
-      - name: Alembic graph gate (single head, reversible chain)
-        run: python scripts/lint/check_migration_head.py
-
-      - name: Transaction-boundary gate (services never end a transaction)
-        run: python scripts/lint/check_txn_boundaries.py
-
-      - name: Service side-effect gate (no schema/connection management in services)
-        run: python scripts/lint/check_service_side_effects.py
-
-      - name: Tag shape gate (no <pclass= / <tdclass= mangling)
-        run: python scripts/lint/check_tag_shape.py
-
-      - name: Accessibility gate (every form control has an accessible name)
-        run: python scripts/lint/check_a11y_labels.py
-
-      # Ratcheting budget, not a target. The template cleanup (inline styles ->
-#   static  50  - was 281. print/receipt family -> print-utilities.css,
-#              invoices -> print-utilities.css, width utilities ->
-#              layout-utilities.css.
-#   dynamic 21  - computed per row (stage colour, progress %, loop delay).
-#              A CHECK-style "no inline styles" rule is unachievable for
-#              these; the end state is a custom property read from a data-
-#              attribute, which still needs one style attribute.
-#   scripts 170 - inline <script> blocks, bounded (Track 3, not started).
-#
-# Headroom is zero on static and scripts by design: the budget is the measured
-# count. Lower it in the commit that removes declarations, never ahead of one.
-#
-# Remaining 50 static: 16 on the WeasyPrint path (print templates link no
-# stylesheet at all), 10 in shop/order_invoice.html which is deliberately
-# self-contained for email/download, 24 in browser pages.
-      - name: Inline asset budget (static styles / inline scripts)
-        run: |
-          python scripts/lint/check_inline_assets.py --top 12
-          # The static budget was 94 while the actual count is 55, so the gate
-          # permitted re-adding 39 of the very declarations Track 1 had already
-          # removed - it could not fail on a regression it had budgeted for. A
-          # ratchet has to sit at the measured number to hold anything; it is set
-          # to the count, not above it. Lower it in the same commit that removes
-          # declarations, never ahead of them.
-          python scripts/lint/check_inline_assets.py \
-            --max-static 50 \
-            --max-dynamic 21 \
-            --max-inline-scripts 170
-          # A utility class whose stylesheet is linked nowhere resolves to nothing:
-          # the page still renders, still parses, still passes every test, and the
-          # element is simply unstyled. This resolves each page's extends-chain
-          # and fails when a class it uses cannot be reached. It is the check that
-          # would have caught layout-utilities.css being referenced by 30
-          # templates while linked from no layout at all.
-          python scripts/lint/check_utility_reachability.py
-          # A class defined twice at the same scope is not two rules: the second
-          # silently replaces the first for every consumer. @media-aware, so a
-          # legitimate responsive override is not mistaken for a collision - a
-          # naive scan flags 110 classes across four sheets and every one of them
-          # is correct. The shop-utilities.css ic-* collisions were namespaced per
-          # page and the baseline is now empty, so there is no allowance left; see
-          # docs/shop_utilities_collision.md.
-          python scripts/lint/check_css_class_collisions.py
-          # Every font the pages use is served from this repository
-          # (static/fonts/). A font that is referenced but absent is invisible
-          # in the HTML - the page still renders and still passes every test -
-          # and shows up only as text in the wrong face; a font that is served
-          # from a third party is render-blocking and puts the latency of a
-          # host the runner does not control on the critical path to the first
-          # paint. This checks both, and that every font stack still has a
-          # generic fallback, so a font that cannot be loaded degrades the
-          # type and never the text.
-          python scripts/lint/check_font_assets.py
-          # docs/API_REFERENCE.md is generated from the live url_map. This compares
-          # the committed file against what the code actually exposes, so a
-          # hand-written endpoint that does not exist fails the build. The previous
-          # reference documented /api/webhooks/subscribe, X-Webhook-Signature,
-          # per-plan rate limits and POST /api/sales; none of those exist, and
-          # nothing compared the document to the code, so it survived.
-          python scripts/lint/check_api_docs.py
-
-      # ── JavaScript ──
-      - name: Biome check (JS lint+format, scope from biome.json)
-        run: biome check . --reporter github
-
-      - name: Frontend unit tests (vitest with coverage)
-        run: npm test -- --coverage
-
-      - name: Upload frontend coverage
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-frontend
-          path: coverage-frontend/
-          if-no-files-found: ignore
-          retention-days: 7
-
-      # ── CSS ──
-      - name: Stylelint (all project CSS)
-        run: npx stylelint "static/**/*.css"
-
-      # ── JSON ──
-      - name: JSON validation (every tracked .json file)
-        run: |
-          fail=0
-          count=0
-          while IFS= read -r f; do
-            count=$((count + 1))
-            if ! python -m json.tool "$f" > /dev/null 2>&1; then
-              echo "::error file=$f::Invalid JSON"
-              fail=1
-            fi
-          done < <(git ls-files '*.json' -- ':!:node_modules')
-          echo "Validated ${count} JSON file(s)"
-          exit $fail
-
-      # ── YAML ──
-      - name: yamllint (every tracked .yml/.yaml file)
-        run: |
-          git ls-files '*.yml' '*.yaml' -- ':!:node_modules' | \
-            xargs python -m yamllint -c .yamllint.yml
-
-      # ── Dependencies & spelling ──
-      - name: pip-audit (known vulnerabilities in requirements)
-        run: python -m pip_audit -r requirements.txt
-
-      - name: Cspell (templates & project JS)
-        run: |
-          npx cspell --config scripts/lint/.cspell.json \
-            "templates/**/*.html" "static/js/**/*.js" "static/*.js"
-
-      # ── GitHub Actions workflows themselves ──
-      - name: actionlint (workflow syntax — fails on findings)
-        run: |
-          docker run --rm -v "$PWD:/repo" -w /repo \
-            docker.io/rhysd/actionlint:latest .github/workflows/*.yml
-
-  # ── Frontend asset audit (Jinja/static) — Adaptive Frontend Asset Audit directive ──
+        '
+    - name: Ruff check (Python lint)
+      run: ruff check . --output-format github
+    - name: Ruff format (Python formatting)
+      run: ruff format . --check --diff
+    - name: Mypy (Python types)
+      run: mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases
+    - name: Jinja template gate (all templates must parse)
+      run: python scripts/lint/check_templates.py
+    - name: Strict i18n lint (templates & Python)
+      run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
+    - name: Untranslated-key gate (no template call renders as its own key)
+      run: python scripts/lint/check_i18n_untranslated.py --limit 20
+    - name: Translation catalogue health (every key resolves to Arabic)
+      run: python scripts/lint/report_catalogue_health.py --limit 20
+    - name: Alembic graph gate (single head, reversible chain)
+      run: python scripts/lint/check_migration_head.py
+    - name: Transaction-boundary gate (services never end a transaction)
+      run: python scripts/lint/check_txn_boundaries.py
+    - name: Service side-effect gate (no schema/connection management in services)
+      run: python scripts/lint/check_service_side_effects.py
+    - name: Tag shape gate (no <pclass= / <tdclass= mangling)
+      run: python scripts/lint/check_tag_shape.py
+    - name: Accessibility gate (every form control has an accessible name)
+      run: python scripts/lint/check_a11y_labels.py
+    - name: Inline asset budget (static styles / inline scripts)
+      run: "python scripts/lint/check_inline_assets.py --top 12\n# The static budget was 94 while the actual count is 55, so the gate\n# permitted re-adding 39 of the very declarations Track 1 had already\n# removed - it could not fail on a regression it had budgeted for. A\n# ratchet has to sit at the measured number to hold anything; it is set\n# to the count, not above it. Lower it in the same commit that removes\n# declarations, never ahead of them.\npython scripts/lint/check_inline_assets.py \\\n  --max-static 50 \\\n  --max-dynamic 21 \\\n  --max-inline-scripts 170\n# A utility class whose stylesheet is linked nowhere resolves to nothing:\n# the page still renders, still parses, still passes every test, and the\n# element is simply unstyled. This resolves each page's extends-chain\n# and fails when a class it uses cannot be reached. It is the check that\n# would have caught layout-utilities.css being referenced by 30\n# templates while linked from no layout at all.\npython scripts/lint/check_utility_reachability.py\n\
+        # A class defined twice at the same scope is not two rules: the second\n# silently replaces the first for every consumer. @media-aware, so a\n# legitimate responsive override is not mistaken for a collision - a\n# naive scan flags 110 classes across four sheets and every one of them\n# is correct. The shop-utilities.css ic-* collisions were namespaced per\n# page and the baseline is now empty, so there is no allowance left; see\n# docs/shop_utilities_collision.md.\npython scripts/lint/check_css_class_collisions.py\n# Every font the pages use is served from this repository\n# (static/fonts/). A font that is referenced but absent is invisible\n# in the HTML - the page still renders and still passes every test -\n# and shows up only as text in the wrong face; a font that is served\n# from a third party is render-blocking and puts the latency of a\n# host the runner does not control on the critical path to the first\n# paint. This checks both, and that every font stack still has a\n\
+        # generic fallback, so a font that cannot be loaded degrades the\n# type and never the text.\npython scripts/lint/check_font_assets.py\n# docs/API_REFERENCE.md is generated from the live url_map. This compares\n# the committed file against what the code actually exposes, so a\n# hand-written endpoint that does not exist fails the build. The previous\n# reference documented /api/webhooks/subscribe, X-Webhook-Signature,\n# per-plan rate limits and POST /api/sales; none of those exist, and\n# nothing compared the document to the code, so it survived.\npython scripts/lint/check_api_docs.py\n"
+    - name: Biome check (JS lint+format, scope from biome.json)
+      run: biome check . --reporter github
+    - name: Frontend unit tests (vitest with coverage)
+      run: npm test -- --coverage
+    - name: Upload frontend coverage
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-frontend
+        path: coverage-frontend/
+        if-no-files-found: ignore
+        retention-days: 7
+    - name: Stylelint (all project CSS)
+      run: npx stylelint "static/**/*.css"
+    - name: JSON validation (every tracked .json file)
+      run: "fail=0\ncount=0\nwhile IFS= read -r f; do\n  count=$((count + 1))\n  if ! python -m json.tool \"$f\" > /dev/null 2>&1; then\n    echo \"::error file=$f::Invalid JSON\"\n    fail=1\n  fi\ndone < <(git ls-files '*.json' -- ':!:node_modules')\necho \"Validated ${count} JSON file(s)\"\nexit $fail\n"
+    - name: yamllint (every tracked .yml/.yaml file)
+      run: "git ls-files '*.yml' '*.yaml' -- ':!:node_modules' | \\\n  xargs python -m yamllint -c .yamllint.yml\n"
+    - name: pip-audit (known vulnerabilities in requirements)
+      run: python -m pip_audit -r requirements.txt
+    - name: Cspell (templates & project JS)
+      run: "npx cspell --config scripts/lint/.cspell.json \\\n  \"templates/**/*.html\" \"static/js/**/*.js\" \"static/*.js\"\n"
+    - name: "actionlint (workflow syntax \xE2\u20AC\u201D fails on findings)"
+      run: "docker run --rm -v \"$PWD:/repo\" -w /repo \\\n  docker.io/rhysd/actionlint:latest .github/workflows/*.yml\n"
   frontend-asset-quality:
     name: Frontend asset audit (Jinja/static)
     runs-on: ubuntu-latest
@@ -599,64 +307,43 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install dependencies
+      run: 'python -m pip install --upgrade pip
+
+        pip install -r requirements.txt
+
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Run database migrations
+      env:
+        AUTO_MIGRATE: '1'
+      run: 'flask db upgrade
+
+        python scripts/lint/check_model_schema_parity.py'
+    - name: Run frontend asset audit (pytest)
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key-not-for-production
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        DEBUG: 'true'
+        AUTO_MIGRATE: '1'
+      run: pytest tests/unit/test_js_reachability.py -v --tb=short
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-      SECRET_KEY: test-secret-key-not-for-production
+      SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      DEBUG: "true"
-      AUTO_MIGRATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-
-      - name: Run database migrations
-        env:
-          AUTO_MIGRATE: "1"
-        run: |
-          flask db upgrade
-          python scripts/lint/check_model_schema_parity.py
-
-      - name: Run frontend asset audit (pytest)
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key-not-for-production
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          DEBUG: "true"
-          AUTO_MIGRATE: "1"
-        run: pytest tests/unit/test_js_reachability.py -v --tb=short
-
-  # ── Git & repository scanning ──
+      AUTO_MIGRATE: '1'
   repo-security:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -664,46 +351,39 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - name: Gitleaks (secret scanning)
-        uses: gitleaks/gitleaks-action@v3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Trivy filesystem scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '1'
-      # `if: always()` is load-bearing. exit-code: '1' above fails the step, which
-      # aborts the job, so with the default `if: success()` this upload never ran
-      # and the scan destroyed its own findings. Run 36824832100 failed repo-security
-      # with no retrievable SARIF for exactly that reason - a security gate that
-      # cannot tell you what it found.
-      - name: Upload Trivy results to GitHub Security
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: 'trivy-results.sarif'
-          category: 'trivy-fs'
-
-  # ── Docker infrastructure audit (Hadolint) ──
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - name: Gitleaks (secret scanning)
+      uses: gitleaks/gitleaks-action@v3
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Trivy filesystem scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: fs
+        scan-ref: .
+        format: sarif
+        output: trivy-results.sarif
+        severity: HIGH,CRITICAL
+        exit-code: '1'
+    - name: Upload Trivy results to GitHub Security
+      if: always()
+      uses: github/codeql-action/upload-sarif@v4
+      with:
+        sarif_file: trivy-results.sarif
+        category: trivy-fs
   docker-infra-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - name: Hadolint Dockerfile Audit
-        run: |
-          echo "=== RUNNING DOCKERFILE LINT ==="
-          docker run --rm -i -v "${PWD}/scripts/.hadolint.yaml:/root/.hadolint.yaml" hadolint/hadolint < scripts/lint/Dockerfile.ci
+    - uses: actions/checkout@v7
+    - name: Hadolint Dockerfile Audit
+      run: 'echo "=== RUNNING DOCKERFILE LINT ==="
 
-  # ── API fuzz testing (Schemathesis, non-blocking) ──
+        docker run --rm -i -v "${PWD}/scripts/.hadolint.yaml:/root/.hadolint.yaml" hadolint/hadolint < scripts/lint/Dockerfile.ci
+
+        '
   api-fuzz:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -715,111 +395,57 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install deps
+      run: 'python -m pip install --upgrade pip
+
+        pip install -r requirements.txt schemathesis==4.24.3
+
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Warm up database schema
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        DEBUG: 'true'
+        AUTO_MIGRATE: '1'
+      run: "# Schema comes from Alembic, the same source the app uses. db.create_all()\n  # built a competing definition of the tables from model metadata,\n  # and it also had to run *after* create_app() - so the boot tried to\n  # query tenants before any table existed and died first.\n  flask db upgrade\n"
+    - name: Boot app and run Schemathesis (non-blocking)
+      continue-on-error: true
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        ENABLE_SWAGGER_UI: 'true'
+        DEBUG: 'true'
+        AUTO_MIGRATE: '1'
+      run: "# Start app in background\npython -m flask run --port=5000 --host=0.0.0.0 &\n# Wait for app to be ready (max 30s)\nfor i in $(seq 1 30); do\n  if curl -sf http://localhost:5000/api-docs/openapi.json > /dev/null 2>&1; then\n    echo \"App ready after ${i}s\"\n    break\n  fi\n  sleep 1\ndone\n# Fuzz public + documented API endpoints \xE2\u20AC\u201D spec served at /api-docs/openapi.json\n# Schemathesis v4: base-url + request-timeout live in scripts/schemathesis.toml (CLI flags removed).\n# ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation\n# tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.\n# --config-file is a top-level CLI option and must precede the `run` subcommand.\n#\n# Stays non-blocking (a fuzz finding must not fail the build on its own),\n# but the finding is no longer swallowed: the old `|| echo` discarded\n# Schemathesis's own output, so the annotation said only \"issues (ignored)\"\
+        \n# and the actual failing check was invisible without reading raw logs.\nset +e\nschemathesis --config-file scripts/schemathesis.toml run http://localhost:5000/api-docs/openapi.json \\\n  --max-failures 1 \\\n  --exclude-checks ignored_auth,negative_data_rejection 2>&1 | tee schemathesis.log\nfuzz_rc=${PIPESTATUS[0]}\nset -e\nif [ \"$fuzz_rc\" -ne 0 ]; then\n  echo \"::warning title=api-fuzz::Schemathesis exited ${fuzz_rc} \xE2\u20AC\u201D failing checks (see schemathesis-log artifact):\"\n  grep -iE \"failed|error|missing_property|not defined\" schemathesis.log | head -15 || true\nfi\n"
+    - name: Upload api-fuzz log
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: schemathesis-log
+        path: schemathesis.log
+        if-no-files-found: ignore
+        retention-days: 14
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      DEBUG: "true"
-      AUTO_MIGRATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt schemathesis==4.24.3
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-      - name: Warm up database schema
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          DEBUG: "true"
-          AUTO_MIGRATE: "1"
-        run: |
-          # Schema comes from Alembic, the same source the app uses. db.create_all()
-            # built a competing definition of the tables from model metadata,
-            # and it also had to run *after* create_app() - so the boot tried to
-            # query tenants before any table existed and died first.
-            flask db upgrade
-      - name: Boot app and run Schemathesis (non-blocking)
-        continue-on-error: true
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          ENABLE_SWAGGER_UI: "true"
-          DEBUG: "true"
-          AUTO_MIGRATE: "1"
-        run: |
-          # Start app in background
-          python -m flask run --port=5000 --host=0.0.0.0 &
-          # Wait for app to be ready (max 30s)
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:5000/api-docs/openapi.json > /dev/null 2>&1; then
-              echo "App ready after ${i}s"
-              break
-            fi
-            sleep 1
-          done
-          # Fuzz public + documented API endpoints — spec served at /api-docs/openapi.json
-          # Schemathesis v4: base-url + request-timeout live in scripts/schemathesis.toml (CLI flags removed).
-          # ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation
-          # tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.
-          # --config-file is a top-level CLI option and must precede the `run` subcommand.
-          #
-          # Stays non-blocking (a fuzz finding must not fail the build on its own),
-          # but the finding is no longer swallowed: the old `|| echo` discarded
-          # Schemathesis's own output, so the annotation said only "issues (ignored)"
-          # and the actual failing check was invisible without reading raw logs.
-          set +e
-          schemathesis --config-file scripts/schemathesis.toml run http://localhost:5000/api-docs/openapi.json \
-            --max-failures 1 \
-            --exclude-checks ignored_auth,negative_data_rejection 2>&1 | tee schemathesis.log
-          fuzz_rc=${PIPESTATUS[0]}
-          set -e
-          if [ "$fuzz_rc" -ne 0 ]; then
-            echo "::warning title=api-fuzz::Schemathesis exited ${fuzz_rc} — failing checks (see schemathesis-log artifact):"
-            grep -iE "failed|error|missing_property|not defined" schemathesis.log | head -15 || true
-          fi
-
-      - name: Upload api-fuzz log
-        if: ${{ always() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: schemathesis-log
-          path: schemathesis.log
-          if-no-files-found: ignore
-          retention-days: 14
-
-  # ── Tenant isolation fuzzer ──
+      AUTO_MIGRATE: '1'
   tenant-isolation-fuzzer:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -831,94 +457,45 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install deps
+      run: 'python -m pip install --upgrade pip
+
+        pip install -r requirements.txt
+
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Run database migrations
+      env:
+        AUTO_MIGRATE: '1'
+      run: 'flask db upgrade
+
+        python scripts/lint/check_model_schema_parity.py'
+    - name: Run tenant isolation fuzzer
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        DEBUG: 'true'
+        AUTO_MIGRATE: '1'
+      run: 'pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
+
+        '
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      DEBUG: "true"
-      AUTO_MIGRATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-      - name: Run tenant isolation fuzzer
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          DEBUG: "true"
-          AUTO_MIGRATE: "1"
-        run: |
-          pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
-
-  # ── Lighthouse CI (web vitals, BLOCKING) ──
-  # This gate measured nothing until now. Nothing in this job ran the migrations,
-  # so the azad_test database had no tables; every context processor query raised
-  # UndefinedTable and both audited URLs rendered error pages. `continue-on-error:
-  # true` then discarded lhci's non-zero exit, so the job went green while
-  # auditing a broken page. Separately, every assertion in lighthouserc.json was
-  # "warn", so even without that, no score could ever fail the build.
-  #
-  # Now: schema is provisioned first, the server is started explicitly so a boot
-  # failure surfaces its own log, both audited URLs are confirmed to return 200
-  # before lhci runs, and the assertions are "error".
-  #
-  # On the SEO floor: /auth/login is deliberately `noindex, nofollow`, which is
-  # correct for a login page and makes Lighthouse's is-crawlable audit fail. Its
-  # measured SEO was 0.66 against a 0.90 floor, so a 0.90 gate here punishes the
-  # app for being right about not indexing credentials. The floor is 0.70 and is
-  # PROVISIONAL - set from one measurement, not a principle. The principled fix is
-  # to apply the SEO budget only to / (which should be indexable) using an
-  # assert matrix, and that needs the measured baseline first. Ratchet it from
-  # real numbers, not from optimism.
-  #
-  # On the score swinging between 65 and 97 for the same commit and the same
-  # URL: one sample was measuring the RUNNER, not the page. Two measured causes,
-  # both fixed below without moving a floor:
-  #
-  #   * a cold server. gunicorn boots one worker per core (2*CPU+1) and every
-  #     worker runs the whole create_app() path - the seeding and the
-  #     seed-manifest probes - 9.6s per worker, measured, all of them at once
-  #     against the same Postgres. The first request a worker serves then pays
-  #     the lazy imports, the Jinja compile of public/landing.html and the first
-  #     DB connection: 454ms against 28ms for the same page warm.
-  #   * a cold audit. lhci ran ONE Lighthouse run per URL, so a single cold
-  #     sample decided the whole gate.
-  #
-  # The gate now measures the median of 3 runs per URL (the median run, and the
-  # median of each category, have to clear the floor) and the server is warmed
-  # before the audit starts. A page that is genuinely slow is slow in its
-  # median too, so the floors still bite.
+      AUTO_MIGRATE: '1'
   lighthouse-ci:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -930,255 +507,98 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      CI: "true"
-      AUTO_MIGRATE: "1"
+      CI: 'true'
+      AUTO_MIGRATE: '1'
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt gunicorn
-          npm install -g @lhci/cli
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-      - name: Provision schema
-        run: |
-          # Deliberately NOT `|| true`. An unmigrated database is exactly the
-          # failure this gate was silently reporting as a pass.
-          flask db upgrade
-          python scripts/lint/check_model_schema_parity.py
-      - name: Start app server
-        run: |
-          # One worker, several threads, on purpose.
-          #
-          # gunicorn's default is 2*CPU+1 workers, and every one of them runs
-          # the whole create_app() path at boot: the seeding, the
-          # seed-manifest probes and the tenant maintenance (9.6s measured on a
-          # developer box). With the default worker count that is a herd of
-          # seeders against one Postgres, still running while the audit starts.
-          # It is also a lottery: a curl warms the worker that answered it, and
-          # the audited request lands on whichever worker is free - a worker
-          # that has never rendered the page pays the lazy imports, the Jinja
-          # compile and the first DB connection inside the measured window
-          # (454ms against 28ms warm, measured on the same process).
-          #
-          # One worker removes the lottery and the herd. Threads keep the
-          # browser's parallel asset fetches parallel, so the page is not
-          # penalised for the single process. This job measures a page, not a
-          # throughput - tests/integration/test_sales_concurrency_load.py is
-          # where concurrency is measured.
-          gunicorn --bind 0.0.0.0:5000 --worker-class gthread --workers 1 --threads 4 \
-            --timeout 60 --access-logfile gunicorn-access.log \
-            wsgi:app --daemon --error-logfile gunicorn.log
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install deps
+      run: 'python -m pip install --upgrade pip
 
-          # Readiness is a GATE, not a suggestion.
-          #
-          # The old loop ran 90 attempts and then fell out of the bottom of the
-          # `for` whatever the server had answered, and the step exited 0
-          # either way. A server that never came up was reported as a server
-          # that did, and the failure surfaced three steps later as "nothing
-          # was measured" - a message that named neither the server nor the
-          # step that had lost it. The loop now has to END in a 200, and a
-          # dead gunicorn ends it immediately instead of after 90 silent
-          # attempts.
-          ready=0
-          code=000
-          for attempt in $(seq 1 90); do
-            # A redirect is not readiness: no -L here, so a 302 keeps the loop
-            # waiting instead of being read as "the server is up".
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
-              http://localhost:5000/auth/login || true)
-            code=${code:-000}
-            if [ "$code" = "200" ]; then
-              ready=1
-              echo "::notice::gunicorn answered 200 on /auth/login after $attempt attempt(s)"
-              break
-            fi
-            if ! pgrep -f gunicorn > /dev/null 2>&1; then
-              echo "::error::gunicorn is no longer running - it died during boot (attempt $attempt, last status $code)"
-              break
-            fi
-            if [ $((attempt % 10)) -eq 0 ]; then
-              echo "::notice::still waiting for the server (attempt $attempt/90, last status $code)"
-            fi
-            sleep 1
-          done
-          if [ "$ready" != "1" ]; then
-            echo "::error::The app server never answered 200 on /auth/login (last status: $code)."
-            echo "::error::The audit below cannot run against a server that is not up - read gunicorn.log for the boot traceback."
-            echo "--- gunicorn.log ---"
-            cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log - the server never wrote one)"
-            exit 1
-          fi
-      - name: Warm up and verify the audited pages
-        run: |
-          # The audit must measure a WARM page, so the server is warmed the way
-          # a visitor's browser would warm it: every audited URL is fetched
-          # until it answers 200, together with the static assets the page
-          # references. The cold and the warm timings are printed, so the log
-          # shows what the warm-up bought, and gunicorn-access.log carries the
-          # server-side duration of every request - including the audited ones.
-          #
-          # The 200 is the point, not a formality: lhci will happily audit an
-          # error page and report a score for it. Redirects are followed and
-          # the settled response has to be 200, and a redirect chain is
-          # refused: a loop or a redirect into a login prompt means the page
-          # under test is not the page we think it is. These are the canonical
-          # paths - /login is a legacy alias registered in main.py that 302s to
-          # /auth/login, so auditing it measured a redirect rather than the
-          # login form.
-          #
-          # What is NOT warmed: a third-party font stylesheet. There is none
-          # left - every family is served from this repository (static/fonts/)
-          # - so the page no longer has a dependency the runner does not
-          # control. See docs/LIGHTHOUSE_GATE.md for the measurement.
-          set -uo pipefail
-          audited_urls=("http://localhost:5000/auth/login" "http://localhost:5000/")
-          warmup_rounds=3
-          assets_file="${RUNNER_TEMP:-/tmp}/lh_assets.txt"
-          echo "Warming ${#audited_urls[@]} URL(s), $warmup_rounds round(s) each."
+        pip install -r requirements.txt gunicorn
 
-          for url in "${audited_urls[@]}"; do
-            for round in $(seq 1 "$warmup_rounds"); do
-              # Every number comes out of a command substitution, and every
-              # variable starts at a defined value.
-              #
-              # The old line was
-              #   read -r code hops secs < <(curl ... -w '%{http_code} ...')
-              # and it killed the step SILENTLY on the first SUCCESSFUL
-              # request: curl's -w output has no trailing newline, so `read`
-              # reaches EOF and returns 1, and the runner's `bash -e` turns
-              # that into an exit before a single line was printed. Run
-              # 39674996405 died exactly there - 38ms, no output, exit 1 - and
-              # the job's only message was "nothing was measured" three steps
-              # downstream, naming neither the cause nor the step.
-              code=000
-              hops=0
-              secs=0
-              raw=$(curl -sSL -o /dev/null --max-time 30 \
-                -w '%{http_code} %{num_redirects} %{time_total}\n' "$url" 2>/dev/null) || raw=""
-              if [ -n "$raw" ]; then
-                # A here-string always ends with a newline, so `read` returns 0.
-                IFS=' ' read -r code hops secs <<< "$raw" || true
-              fi
-              case "$code" in ''|*[!0-9]*) code=000 ;; esac
-              case "$hops" in ''|*[!0-9]*) hops=0 ;; esac
-              case "$secs" in ''|*[!0-9.]*) secs=0 ;; esac
-              if [ "$code" != "200" ]; then
-                echo "::error::$url settled on $code, not 200 (round $round of $warmup_rounds)"
-                echo "--- gunicorn.log ---"
-                cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log)"
-                exit 1
-              fi
-              if [ "$hops" -gt 2 ]; then
-                echo "::error::$url took $hops redirects - redirect chain, not a real page"
-                exit 1
-              fi
-              echo "  $url warm#$round -> $code (${hops} redirect(s), ${secs}s)"
-            done
+        npm install -g @lhci/cli
 
-            # The assets this page references, so the first audited run does
-            # not pay for a cold asset path either.
-            curl -sSL "$url" \
-              | grep -oE '(href|src)="/static/[^"]+"' \
-              | sed -E 's/^[^"]*"([^"]+)"$/\1/' \
-              | sort -u > "$assets_file" || true
-            while read -r asset || [ -n "$asset" ]; do
-              [ -n "$asset" ] || continue
-              asset_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
-                "http://localhost:5000$asset" || true)
-              asset_code=${asset_code:-000}
-              echo "  asset $asset -> $asset_code"
-              if [ "$asset_code" != "200" ]; then
-                # A page that links an asset the server does not have is a
-                # broken page, and lhci would score it without complaining.
-                echo "::error::$asset answered $asset_code - the page links an asset the server does not serve"
-                echo "--- gunicorn.log ---"
-                cat gunicorn.log 2>/dev/null || echo "(no gunicorn.log)"
-                exit 1
-              fi
-            done < "$assets_file"
-          done
-          echo "Warm-up complete: ${#audited_urls[@]} URL(s) x $warmup_rounds round(s), all settled on 200."
-      - name: Run Lighthouse CI
-        run: |
-          # collect/assert/upload are separate on purpose: `autorun` swallows a
-          # non-zero collect when the server never came up, which is the same
-          # silence as before. Explicit steps stop at the first failure.
-          #
-          # collect runs 3 Lighthouse runs per URL (numberOfRuns in
-          # scripts/lighthouserc.json). One run cannot tell a regression from a
-          # cold server; three can, and the gate reads the median of them.
-          lhci collect --config=scripts/lighthouserc.json
-          # Persist before asserting. With upload after assert, a failing gate
-          # skipped it, so `.lighthouseci/` was empty, the artifact was empty,
-          # and the reports that explain the failure were the one thing thrown
-          # away. Evidence first, verdict second.
-          lhci upload --config=scripts/lighthouserc.json
-      - name: Report measured scores
-        if: always()
-        run: python scripts/lint/report_lighthouse_scores.py
-      - name: Assert Lighthouse budgets
-        # Run from .lighthouse-gate: the report step wrote the MEDIAN run of
-        # each URL there, and `lhci assert` reads the lhr-*.json files of the
-        # .lighthouseci directory of the working directory it runs from. Pointed
-        # at the raw .lighthouseci/ it would assert every individual run, and
-        # one cold run would fail the build - the exact artefact this job
-        # exists to stop measuring. The raw runs stay in .lighthouseci/ as the
-        # evidence, and the numbers asserted here are the ones the report
-        # printed.
-        working-directory: .lighthouse-gate
-        run: lhci assert --config=../scripts/lighthouserc.json
-      - name: Upload Lighthouse reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lighthouse-reports
-          path: |
-            .lighthouseci
-            .lighthouse-gate
-            gunicorn-access.log
-          # upload-artifact@v4 skips dotfiles unless told otherwise, and
-          # .lighthouseci is a dotfile. Without this the step warns "No files were
-          # found with the provided path" and the run carries no evidence at all,
-          # while still reporting success.
-          include-hidden-files: true
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Provision schema
+      run: '# Deliberately NOT `|| true`. An unmigrated database is exactly the
 
-  # ── E2E business flow tours (Playwright, BLOCKING) ──
-  # Tours are BLOCKING: any failure fails the CI job (no continue-on-error).
-  # Gate: npx playwright test --config=scripts/playwright.config.json --reporter=list
-  # (JS tours; the old pytest-playwright POS tours never actually ran in CI —
-  # their conftest STATE_DIR was off-by-one so every tour silently skipped —
-  # and their assumptions did not match the real POS UI. They were removed.)
+        # failure this gate was silently reporting as a pass.
+
+        flask db upgrade
+
+        python scripts/lint/check_model_schema_parity.py
+
+        '
+    - name: Start app server
+      run: "# One worker, several threads, on purpose.\n#\n# gunicorn's default is 2*CPU+1 workers, and every one of them runs\n# the whole create_app() path at boot: the seeding, the\n# seed-manifest probes and the tenant maintenance (9.6s measured on a\n# developer box). With the default worker count that is a herd of\n# seeders against one Postgres, still running while the audit starts.\n# It is also a lottery: a curl warms the worker that answered it, and\n# the audited request lands on whichever worker is free - a worker\n# that has never rendered the page pays the lazy imports, the Jinja\n# compile and the first DB connection inside the measured window\n# (454ms against 28ms warm, measured on the same process).\n#\n# One worker removes the lottery and the herd. Threads keep the\n# browser's parallel asset fetches parallel, so the page is not\n# penalised for the single process. This job measures a page, not a\n# throughput - tests/integration/test_sales_concurrency_load.py is\n# where\
+        \ concurrency is measured.\ngunicorn --bind 0.0.0.0:5000 --worker-class gthread --workers 1 --threads 4 \\\n  --timeout 60 --access-logfile gunicorn-access.log \\\n  wsgi:app --daemon --error-logfile gunicorn.log\n\n# Readiness is a GATE, not a suggestion.\n#\n# The old loop ran 90 attempts and then fell out of the bottom of the\n# `for` whatever the server had answered, and the step exited 0\n# either way. A server that never came up was reported as a server\n# that did, and the failure surfaced three steps later as \"nothing\n# was measured\" - a message that named neither the server nor the\n# step that had lost it. The loop now has to END in a 200, and a\n# dead gunicorn ends it immediately instead of after 90 silent\n# attempts.\nready=0\ncode=000\nfor attempt in $(seq 1 90); do\n  # A redirect is not readiness: no -L here, so a 302 keeps the loop\n  # waiting instead of being read as \"the server is up\".\n  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 \\\n  \
+        \  http://localhost:5000/auth/login || true)\n  code=${code:-000}\n  if [ \"$code\" = \"200\" ]; then\n    ready=1\n    echo \"::notice::gunicorn answered 200 on /auth/login after $attempt attempt(s)\"\n    break\n  fi\n  if ! pgrep -f gunicorn > /dev/null 2>&1; then\n    echo \"::error::gunicorn is no longer running - it died during boot (attempt $attempt, last status $code)\"\n    break\n  fi\n  if [ $((attempt % 10)) -eq 0 ]; then\n    echo \"::notice::still waiting for the server (attempt $attempt/90, last status $code)\"\n  fi\n  sleep 1\ndone\nif [ \"$ready\" != \"1\" ]; then\n  echo \"::error::The app server never answered 200 on /auth/login (last status: $code).\"\n  echo \"::error::The audit below cannot run against a server that is not up - read gunicorn.log for the boot traceback.\"\n  echo \"--- gunicorn.log ---\"\n  cat gunicorn.log 2>/dev/null || echo \"(no gunicorn.log - the server never wrote one)\"\n  exit 1\nfi\n"
+    - name: Warm up and verify the audited pages
+      run: "# The audit must measure a WARM page, so the server is warmed the way\n# a visitor's browser would warm it: every audited URL is fetched\n# until it answers 200, together with the static assets the page\n# references. The cold and the warm timings are printed, so the log\n# shows what the warm-up bought, and gunicorn-access.log carries the\n# server-side duration of every request - including the audited ones.\n#\n# The 200 is the point, not a formality: lhci will happily audit an\n# error page and report a score for it. Redirects are followed and\n# the settled response has to be 200, and a redirect chain is\n# refused: a loop or a redirect into a login prompt means the page\n# under test is not the page we think it is. These are the canonical\n# paths - /login is a legacy alias registered in main.py that 302s to\n# /auth/login, so auditing it measured a redirect rather than the\n# login form.\n#\n# What is NOT warmed: a third-party font stylesheet. There is none\n# left - every\
+        \ family is served from this repository (static/fonts/)\n# - so the page no longer has a dependency the runner does not\n# control. See docs/LIGHTHOUSE_GATE.md for the measurement.\nset -uo pipefail\naudited_urls=(\"http://localhost:5000/auth/login\" \"http://localhost:5000/\")\nwarmup_rounds=3\nassets_file=\"${RUNNER_TEMP:-/tmp}/lh_assets.txt\"\necho \"Warming ${#audited_urls[@]} URL(s), $warmup_rounds round(s) each.\"\n\nfor url in \"${audited_urls[@]}\"; do\n  for round in $(seq 1 \"$warmup_rounds\"); do\n    # Every number comes out of a command substitution, and every\n    # variable starts at a defined value.\n    #\n    # The old line was\n    #   read -r code hops secs < <(curl ... -w '%{http_code} ...')\n    # and it killed the step SILENTLY on the first SUCCESSFUL\n    # request: curl's -w output has no trailing newline, so `read`\n    # reaches EOF and returns 1, and the runner's `bash -e` turns\n    # that into an exit before a single line was printed. Run\n    # 39674996405\
+        \ died exactly there - 38ms, no output, exit 1 - and\n    # the job's only message was \"nothing was measured\" three steps\n    # downstream, naming neither the cause nor the step.\n    code=000\n    hops=0\n    secs=0\n    raw=$(curl -sSL -o /dev/null --max-time 30 \\\n      -w '%{http_code} %{num_redirects} %{time_total}\\n' \"$url\" 2>/dev/null) || raw=\"\"\n    if [ -n \"$raw\" ]; then\n      # A here-string always ends with a newline, so `read` returns 0.\n      IFS=' ' read -r code hops secs <<< \"$raw\" || true\n    fi\n    case \"$code\" in ''|*[!0-9]*) code=000 ;; esac\n    case \"$hops\" in ''|*[!0-9]*) hops=0 ;; esac\n    case \"$secs\" in ''|*[!0-9.]*) secs=0 ;; esac\n    if [ \"$code\" != \"200\" ]; then\n      echo \"::error::$url settled on $code, not 200 (round $round of $warmup_rounds)\"\n      echo \"--- gunicorn.log ---\"\n      cat gunicorn.log 2>/dev/null || echo \"(no gunicorn.log)\"\n      exit 1\n    fi\n    if [ \"$hops\" -gt 2 ]; then\n      echo \"::error::$url\
+        \ took $hops redirects - redirect chain, not a real page\"\n      exit 1\n    fi\n    echo \"  $url warm#$round -> $code (${hops} redirect(s), ${secs}s)\"\n  done\n\n  # The assets this page references, so the first audited run does\n  # not pay for a cold asset path either.\n  curl -sSL \"$url\" \\\n    | grep -oE '(href|src)=\"/static/[^\"]+\"' \\\n    | sed -E 's/^[^\"]*\"([^\"]+)\"$/\\1/' \\\n    | sort -u > \"$assets_file\" || true\n  while read -r asset || [ -n \"$asset\" ]; do\n    [ -n \"$asset\" ] || continue\n    asset_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \\\n      \"http://localhost:5000$asset\" || true)\n    asset_code=${asset_code:-000}\n    echo \"  asset $asset -> $asset_code\"\n    if [ \"$asset_code\" != \"200\" ]; then\n      # A page that links an asset the server does not have is a\n      # broken page, and lhci would score it without complaining.\n      echo \"::error::$asset answered $asset_code - the page links an asset the server does\
+        \ not serve\"\n      echo \"--- gunicorn.log ---\"\n      cat gunicorn.log 2>/dev/null || echo \"(no gunicorn.log)\"\n      exit 1\n    fi\n  done < \"$assets_file\"\ndone\necho \"Warm-up complete: ${#audited_urls[@]} URL(s) x $warmup_rounds round(s), all settled on 200.\"\n"
+    - name: Run Lighthouse CI
+      run: '# collect/assert/upload are separate on purpose: `autorun` swallows a
+
+        # non-zero collect when the server never came up, which is the same
+
+        # silence as before. Explicit steps stop at the first failure.
+
+        #
+
+        # collect runs 3 Lighthouse runs per URL (numberOfRuns in
+
+        # scripts/lighthouserc.json). One run cannot tell a regression from a
+
+        # cold server; three can, and the gate reads the median of them.
+
+        lhci collect --config=scripts/lighthouserc.json
+
+        # Persist before asserting. With upload after assert, a failing gate
+
+        # skipped it, so `.lighthouseci/` was empty, the artifact was empty,
+
+        # and the reports that explain the failure were the one thing thrown
+
+        # away. Evidence first, verdict second.
+
+        lhci upload --config=scripts/lighthouserc.json
+
+        '
+    - name: Report measured scores
+      if: always()
+      run: python scripts/lint/report_lighthouse_scores.py
+    - name: Assert Lighthouse budgets
+      working-directory: .lighthouse-gate
+      run: lhci assert --config=../scripts/lighthouserc.json
+    - name: Upload Lighthouse reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: lighthouse-reports
+        path: '.lighthouseci
+
+          .lighthouse-gate
+
+          gunicorn-access.log
+
+          '
+        include-hidden-files: true
   e2e-tours:
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -1190,182 +610,130 @@ jobs:
           POSTGRES_PASSWORD: azad_test
           POSTGRES_DB: azad_test
         ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+    - name: Install Python deps
+      run: 'python -m pip install --upgrade pip
+
+        pip install -r requirements.txt gunicorn playwright
+
+        python -m playwright install --with-deps chromium
+
+        '
+    - name: Install Node deps (for JS tours)
+      run: 'npm ci --no-audit --no-fund
+
+        # The tours run via `npx playwright` (Node 1.62.x), whose expected
+
+        # browser build differs from the one installed by pip''s playwright.
+
+        # Install the Node-side chromium as well (deps already installed above).
+
+        npx playwright install chromium
+
+        '
+    - name: Wait for PostgreSQL to be ready
+      run: "# pg_isready only checks if the port is open, not if the database\n# is fully initialized and accepting authentication. Wait until we\n# can actually connect and run a simple query.\nsleep 10  # Give PostgreSQL time to finish initialization\nfor i in $(seq 1 60); do\n  if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c \"SELECT 1\" > /dev/null 2>&1; then\n    echo \"PostgreSQL is ready (attempt $i)\"\n    exit 0\n  fi\n  echo \"Waiting for PostgreSQL... (attempt $i/60)\"\n  sleep 2\ndone\necho \"::error::PostgreSQL did not become ready in time\"\nexit 1\n"
+    - name: Run database migrations
+      env:
+        AUTO_MIGRATE: '1'
+      run: 'flask db upgrade
+
+        python scripts/lint/check_model_schema_parity.py'
+    - name: Seed auth users and export states
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        AUTO_MIGRATE: '1'
+      run: 'python scripts/auth/setup_test_users.py
+
+        '
+    - name: Start app server for tours
+      env:
+        DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+        SECRET_KEY: test-secret-key
+        OWNER_PASSWORD: TestOwner@1234567890123456!
+        APP_ENV: testing
+        AUTO_MIGRATE: '1'
+      run: "gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log\nfor attempt in $(seq 1 20); do\n  if curl -fsS http://localhost:5000/auth/login >/dev/null 2>&1; then\n    echo \"App server is up (attempt $attempt)\"\n    exit 0\n  fi\n  sleep 3\ndone\necho \"App server failed to start\"; cat gunicorn.log; exit 1\n"
+    - name: Run Playwright JS tours (BLOCKING, --reporter=list)
+      env:
+        PLAYWRIGHT_BASE_URL: http://localhost:5000
+      run: 'npx playwright test --config=scripts/playwright.config.json --reporter=list
+
+        '
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: playwright-report
+        path: playwright-report/
+        if-no-files-found: ignore
+        retention-days: 7
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
       OWNER_PASSWORD: TestOwner@1234567890123456!
       APP_ENV: testing
-      AUTO_MIGRATE: "1"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-      - uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - name: Install Python deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt gunicorn playwright
-          python -m playwright install --with-deps chromium
-      - name: Install Node deps (for JS tours)
-        run: |
-          npm ci --no-audit --no-fund
-          # The tours run via `npx playwright` (Node 1.62.x), whose expected
-          # browser build differs from the one installed by pip's playwright.
-          # Install the Node-side chromium as well (deps already installed above).
-          npx playwright install chromium
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 30  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 120); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/120)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
-      - name: Seed auth users and export states
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          AUTO_MIGRATE: "1"
-        run: |
-          python scripts/auth/setup_test_users.py
-      - name: Start app server for tours
-        env:
-          DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
-          SECRET_KEY: test-secret-key
-          OWNER_PASSWORD: TestOwner@1234567890123456!
-          APP_ENV: testing
-          AUTO_MIGRATE: "1"
-        run: |
-          gunicorn --bind 0.0.0.0:5000 wsgi:app --daemon --error-logfile gunicorn.log
-          for attempt in $(seq 1 20); do
-            if curl -fsS http://localhost:5000/auth/login >/dev/null 2>&1; then
-              echo "App server is up (attempt $attempt)"
-              exit 0
-            fi
-            sleep 3
-          done
-          echo "App server failed to start"; cat gunicorn.log; exit 1
-      - name: Run Playwright JS tours (BLOCKING, --reporter=list)
-        env:
-          PLAYWRIGHT_BASE_URL: http://localhost:5000
-        run: |
-          npx playwright test --config=scripts/playwright.config.json --reporter=list
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: playwright-report/
-          if-no-files-found: ignore
-          retention-days: 7
-
-  # ── Comprehensive coverage report (backend + frontend) ──
+      AUTO_MIGRATE: '1'
   coverage-report:
-    needs: [test]
+    needs:
+    - test
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: always()
     steps:
-      - uses: actions/checkout@v7
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - name: Install coverage
-        run: pip install coverage
-
-      - name: Download coverage artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: covdata-*
-          path: coverage-data/
-
-      - name: Download template coverage artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: templates-*
-          path: template-data/
-
-      - name: Download frontend coverage artifacts
-        uses: actions/download-artifact@v8
-        with:
-          pattern: coverage-frontend
-          path: coverage-frontend/
-
-      - name: Combine coverage data
-        run: |
-          shopt -s nullglob
-          files=(coverage-data/covdata-*/coverage-data-*)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "::warning::No coverage data artifacts found — test jobs may have failed early"
-            exit 0
-          fi
-          coverage combine "${files[@]}"
-          cp .coverage coverage-combined-data
-
-      - name: Enforce coverage floor (COVERAGE_FAIL_UNDER=${{ env.COVERAGE_FAIL_UNDER }})
-        if: hashFiles('.coverage') != ''
-        run: coverage report --show-missing --fail-under=${{ env.COVERAGE_FAIL_UNDER }}
-
-      # Each layer gets its own floor. The global floor is blind to a layer
-      # eroding: routes are 28% of the statements, so a route layer falling
-      # from 99% to 90% would still leave the whole project above 95%. The
-      # floors below sit just under the measured values, so ordinary churn
-      # does not break them and a regression cannot hide behind the total.
-      - name: Enforce the per-layer floors
-        if: hashFiles('.coverage') != ''
-        run: |
-          while read -r pattern floor; do
-            [ -z "$pattern" ] && continue
-            echo "::group::$pattern >= $floor%"
-            if ! out=$(coverage report --include="$pattern" --fail-under="$floor" 2>&1); then
-              echo "$out" | tail -20
-              echo "::endgroup::"
-              exit 1
-            fi
-            echo "$out" | tail -1
-            echo "::endgroup::"
-          done <<'FLOORS'
-          routes/* 98
-          services/* 97
-          models/* 99
-          utils/* 96
-          app/* 90
-          FLOORS
-
-      - name: Generate comprehensive coverage report
-        if: hashFiles('.coverage') != ''
-        run: python scripts/coverage_report.py
-
-      - name: Upload combined coverage data
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-combined
-          path: coverage-combined-data
-          if-no-files-found: ignore
-          retention-days: 7
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: pip
+    - name: Install coverage
+      run: pip install coverage
+    - name: Download coverage artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: covdata-*
+        path: coverage-data/
+    - name: Download template coverage artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: templates-*
+        path: template-data/
+    - name: Download frontend coverage artifacts
+      uses: actions/download-artifact@v8
+      with:
+        pattern: coverage-frontend
+        path: coverage-frontend/
+    - name: Combine coverage data
+      run: "shopt -s nullglob\nfiles=(coverage-data/covdata-*/coverage-data-*)\nif [ ${#files[@]} -eq 0 ]; then\n  echo \"::warning::No coverage data artifacts found \xE2\u20AC\u201D test jobs may have failed early\"\n  exit 0\nfi\ncoverage combine \"${files[@]}\"\ncp .coverage coverage-combined-data\n"
+    - name: Enforce coverage floor (COVERAGE_FAIL_UNDER=${{ env.COVERAGE_FAIL_UNDER }})
+      if: hashFiles('.coverage') != ''
+      run: coverage report --show-missing --fail-under=${{ env.COVERAGE_FAIL_UNDER }}
+    - name: Enforce the per-layer floors
+      if: hashFiles('.coverage') != ''
+      run: "while read -r pattern floor; do\n  [ -z \"$pattern\" ] && continue\n  echo \"::group::$pattern >= $floor%\"\n  if ! out=$(coverage report --include=\"$pattern\" --fail-under=\"$floor\" 2>&1); then\n    echo \"$out\" | tail -20\n    echo \"::endgroup::\"\n    exit 1\n  fi\n  echo \"$out\" | tail -1\n  echo \"::endgroup::\"\ndone <<'FLOORS'\nroutes/* 98\nservices/* 97\nmodels/* 99\nutils/* 96\napp/* 90\nFLOORS\n"
+    - name: Generate comprehensive coverage report
+      if: hashFiles('.coverage') != ''
+      run: python scripts/coverage_report.py
+    - name: Upload combined coverage data
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-combined
+        path: coverage-combined-data
+        if-no-files-found: ignore
+        retention-days: 7
