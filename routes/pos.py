@@ -69,6 +69,7 @@ from utils.pos_helpers import (
     merge_checkout_lines,
     parse_scale_barcode,
     payment_amount_base,
+    require_active_session,
     safe_decimal,
     search_pos_products,
     serialize_pos_product,
