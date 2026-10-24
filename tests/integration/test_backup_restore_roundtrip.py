@@ -10,6 +10,7 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.pool import NullPool
 
+from extensions import db
 from services.backup_service import BackupService
 from utils.db_safety import atomic_transaction
 
@@ -64,10 +65,10 @@ class TestBackupRestoreRoundtrip:
         # added in PG 16; skip if pg_restore is version 15
         pg_version = pg_tools.get("pg_dump_version", "")
         app.logger.info(f"Backup test pg_dump_version: '{pg_version}'")
-        # Check for version 15.x patterns - pg_dump --version outputs "pg_dump (PostgreSQL) 15.xx"
+        # pg_restore 15 does not support 'transaction_timeout' parameter
+        # added in PG 16; skip if pg_restore is version 15
         is_pg15 = False
         if pg_version:
-            import re
             # Match patterns like "pg_dump (PostgreSQL) 15.x" or "PostgreSQL 15"
             if " 15." in pg_version or "PostgreSQL 15" in pg_version:
                 is_pg15 = True
@@ -75,6 +76,7 @@ class TestBackupRestoreRoundtrip:
         if not is_pg15:
             try:
                 from sqlalchemy import text
+
                 with db.engine.connect() as conn:
                     server_version = conn.execute(text("SHOW server_version")).scalar()
                     if server_version and (" 15." in server_version or "PostgreSQL 15" in server_version):
