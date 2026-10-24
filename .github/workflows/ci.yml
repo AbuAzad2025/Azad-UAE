@@ -306,6 +306,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -599,6 +605,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key-not-for-production
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      DEBUG: "true"
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -708,6 +721,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      DEBUG: "true"
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -817,6 +837,13 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      DEBUG: "true"
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -1169,6 +1196,12 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
+      SECRET_KEY: test-secret-key
+      OWNER_PASSWORD: TestOwner@1234567890123456!
+      APP_ENV: testing
+      AUTO_MIGRATE: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
