@@ -72,3 +72,41 @@ def _accumulate_session_tender(session, tender_chunk, tenant_id=None):
     elif method == "card":
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
+
+
+def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
+    """Accumulate tender amounts into session totals using SQL-level atomic updates.
+
+    This avoids lost updates under concurrency by using UPDATE ... SET col = col + :val
+    instead of read-modify-write in Python.
+    """
+    from decimal import Decimal
+
+    from sqlalchemy import update as sa_update
+
+    from models.pos_session import PosSession
+    from utils.currency_utils import convert_and_quantize_aed
+
+    method = tender_chunk.get("payment_method", "cash")
+    amount = Decimal(str(tender_chunk.get("amount", 0)))
+    currency = tender_chunk.get("currency", "AED")
+    rate = Decimal(str(tender_chunk.get("exchange_rate", 1)))
+    amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
+
+    if method == "cash":
+        db.session.execute(
+            sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_cash_sales=PosSession.total_cash_sales + amount_aed)
+        )
+    elif method == "card":
+        db.session.execute(
+            sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_card_sales=PosSession.total_card_sales + amount_aed)
+        )
+    db.session.execute(
+        sa_update(PosSession)
+        .where(PosSession.id == session.id)
+        .values(total_sales=PosSession.total_sales + amount_aed)
+    )

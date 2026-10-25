@@ -9,6 +9,7 @@ from extensions import db
 from models import Sale
 from models.receipt import Receipt
 from services.cheque_service import process_cheque_receive
+from services.document_sequence_service import DocumentSequenceService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import GlPostingError, post_or_fail
 from services.gl_service import GLService
@@ -24,8 +25,35 @@ from utils.field_validators import (
     validate_payment_method,
 )
 from utils.gl_reference_types import GLRef
-from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
+
+
+def generate_number(
+    prefix,
+    model,
+    field_name,
+    date_format="%Y",
+    branch_code=None,
+    branch_id=None,
+    tenant_id=None,
+):
+    """Compatibility wrapper delegating to DocumentSequenceService.next_number."""
+    # Map model to sequence code
+    model_name = model.__name__ if hasattr(model, "__name__") else str(model)
+    code_map = {
+        "Payment": "payment",
+        "Receipt": "receipt",
+        "Sale": "sale",
+        "Purchase": "purchase",
+        "PurchaseReturn": "purchase_return",
+    }
+    code = code_map.get(model_name, model_name.lower())
+
+    return DocumentSequenceService.next_number(
+        tenant_id=tenant_id,
+        code=code,
+        branch_code=branch_code,
+    )
 
 
 class PaymentService:
@@ -212,11 +240,9 @@ class PaymentService:
         try:
             tenant_id_for_rate = supplier.tenant_id if supplier is not None else None
             payment_number = generate_number(
-                "PAY",
-                Payment,
-                "payment_number",
+                "PAY", Payment, "payment_number",
                 branch_id=branch_id,
-                tenant_id=tenant_id_for_rate,
+                tenant_id=tenant_id_for_rate
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(
@@ -382,11 +408,9 @@ class PaymentService:
         tenant_id = (supplier.tenant_id if supplier is not None else None) or get_active_tenant_id(current_user)
 
         payment_number = generate_number(
-            "PAY",
-            Payment,
-            "payment_number",
+            "PAY", Payment, "payment_number",
             branch_id=branch_id,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id
         )
 
         exchange_rate = PaymentService._resolve_transaction_rate(currency, tenant_id=tenant_id)
@@ -468,7 +492,6 @@ class PaymentService:
         from datetime import datetime
 
         from models import Customer, Payment
-        from utils.helpers import generate_number
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
@@ -491,11 +514,9 @@ class PaymentService:
             amount_decimal, base_currency, exchange_rate, tenant_id=resolved_tenant_id
         )
         payment_number = generate_number(
-            "PAY",
-            Payment,
-            "payment_number",
+            "PAY", Payment, "payment_number",
             branch_id=resolved_branch_id,
-            tenant_id=resolved_tenant_id,
+            tenant_id=resolved_tenant_id
         )
         payment = Payment(
             payment_number=payment_number,
@@ -600,11 +621,9 @@ class PaymentService:
             )
 
             receipt_number = generate_number(
-                "RCV",
-                Receipt,
-                "receipt_number",
+                "REC", Receipt, "receipt_number",
                 branch_id=branch_id,
-                tenant_id=tenant_id,
+                tenant_id=tenant_id
             )
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate, tenant_id=tenant_id)
@@ -841,9 +860,7 @@ class PaymentService:
                             sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                         ),
                         payment_number=generate_number(
-                            "PAY-S",
-                            Payment,
-                            "payment_number",
+                            "PAY-S", Payment, "payment_number",
                             branch_id=sale.branch_id,
                             tenant_id=sale.tenant_id if sale is not None else None,
                         ),
@@ -909,18 +926,15 @@ class PaymentService:
     ):
         """Create outgoing payment (refund to customer) with GL posting and optional cheque."""
         from models import Customer, Payment
-        from utils.helpers import generate_number
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
             raise ValueError(gettext("العميل غير موجود"))
 
         payment_number = generate_number(
-            "PAY",
-            Payment,
-            "payment_number",
+            "PAY", Payment, "payment_number",
             branch_id=branch_id,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id
         )
         payment = Payment(
             tenant_id=tenant_id,
@@ -1154,12 +1168,9 @@ class PaymentService:
                     tenant_id=(
                         sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                     ),
-                    payment_number=generate_number(
-                        "PAY-S",
-                        Payment,
-                        "payment_number",
-                        branch_id=sale.branch_id,
+                    payment_number=DocumentSequenceService.next_number(
                         tenant_id=(sale.tenant_id if sale is not None else None),
+                        code="payment",
                     ),
                     payment_type="sale_payment",
                     direction="incoming",

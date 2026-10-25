@@ -13,13 +13,13 @@ from models import Customer, PosOrderType, Product
 from models.enums import PermissionEnum
 from services.logging_core import LoggingCore
 from services.pos_override_service import PosOverrideService
+from services.pos_session_service import _accumulate_session_tender_atomic
 from services.pos_write_service import PosWriteService
 from services.promotion_service import PromotionService
 from services.sale_service import SaleService
 from utils.branching import ensure_warehouse_access, get_active_branch_id
 from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 from utils.pos_checkout_helpers import (
-    _accumulate_session_tender,
     _compute_change_due,
     _parse_split_tenders,
     _pos_standard_price,
@@ -288,17 +288,36 @@ class PosCheckoutService:
 
         sale.pos_session_id = session.id
         db.session.add(sale)
-        session.total_sales = Decimal(str(session.total_sales or 0)) + Decimal(str(sale.total_amount or 0))
+        # Atomic SQL-level update to prevent lost updates under concurrency.
+        # Read-modify-write in Python races even under SELECT FOR UPDATE because
+        # SQLAlchemy may return a cached object from the identity map.
+        from sqlalchemy import update as sa_update
+
+        from models.pos_session import PosSession
+
+        sale_amount = Decimal(str(sale.total_amount or 0))
+        db.session.execute(
+            sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_sales=PosSession.total_sales + sale_amount)
+        )
         if payment_data and payment_data.get("payment_method") == "cash":
-            session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + convert_and_quantize_aed(
+            cash_aed = convert_and_quantize_aed(
                 payment_data.get("amount", 0),
                 payment_currency,
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
+            db.session.execute(
+                sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_cash_sales=PosSession.total_cash_sales + cash_aed)
+            )
         if payments_data:
             for tender_chunk in payments_data:
-                _accumulate_session_tender(session, tender_chunk, tenant_id)
+                _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
+        # Refresh the Python object so subsequent code sees the updated totals.
+        db.session.refresh(session)
 
         change_due = _compute_change_due(
             sale,

@@ -14,6 +14,7 @@ from models import (
     Supplier,
     Tenant,
 )
+from services.document_sequence_service import DocumentSequenceService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
 from services.gl_service import GL_ACCOUNTS, GLService
@@ -23,9 +24,35 @@ from utils.branching import ensure_warehouse_access
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.field_validators import validate_currency_code
 from utils.gl_reference_types import GLRef
-from utils.helpers import generate_number
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 from utils.tenanting import get_active_tenant_id
+
+
+def generate_number(
+    prefix,
+    model,
+    field_name,
+    date_format="%Y",
+    branch_code=None,
+    branch_id=None,
+    tenant_id=None,
+):
+    """Compatibility wrapper delegating to DocumentSequenceService.next_number."""
+    model_name = model.__name__ if hasattr(model, "__name__") else str(model)
+    code_map = {
+        "Payment": "payment",
+        "Receipt": "receipt",
+        "Sale": "sale",
+        "Purchase": "purchase",
+        "PurchaseReturn": "purchase_return",
+    }
+    code = code_map.get(model_name, model_name.lower())
+
+    return DocumentSequenceService.next_number(
+        tenant_id=tenant_id,
+        code=code,
+        branch_code=branch_code,
+    )
 
 
 def resolve_tenant_base_currency(tenant_id=None, tenant=None):
@@ -134,11 +161,9 @@ class PurchaseService:
         # Generate Number
         purchase_branch_id = warehouse.branch_id or user.branch_id
         purchase_number = generate_number(
-            "P",
-            Purchase,
-            "purchase_number",
+            "P", Purchase, "purchase_number",
             branch_id=purchase_branch_id,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id
         )
 
         from utils.tax_settings import get_prices_include_vat
@@ -485,11 +510,9 @@ class PurchaseService:
         mwac = current_app.config.get("ENABLE_MWAC", False)
 
         return_number = generate_number(
-            "PR",
-            PurchaseReturn,
-            "return_number",
+            "PR", PurchaseReturn, "return_number",
             branch_id=branch_id,
-            tenant_id=tenant_id,
+            tenant_id=tenant_id
         )
 
         purchase_return = PurchaseReturn(

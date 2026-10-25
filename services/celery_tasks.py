@@ -322,6 +322,21 @@ def send_abandoned_cart_reminders():
 
 
 @celery.task
+def revaluate_open_fx_items(tenant_id: int | None = None):
+    """Run month-end FX revaluation for all open foreign-currency AR/AP.
+
+    Idempotent per period.  Safe to call repeatedly.
+    """
+    from app import create_app
+    from services.fx_revaluation_service import revaluate_open_items
+
+    app = create_app()
+    with app.app_context():
+        result = revaluate_open_items(tenant_id=tenant_id)
+        return result
+
+
+@celery.task
 def cleanup_old_cache():
     from extensions import cache
 

@@ -7,6 +7,7 @@ from flask_babel import gettext
 from extensions import db
 from models import PartnerCommissionEntry, Payment, Sale, SaleLine, Tenant
 from services.commission_gl_service import post_sale_commissions
+from services.document_sequence_service import DocumentSequenceService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
 from services.gl_service import GLService
@@ -21,9 +22,35 @@ from utils.field_validators import (
     validate_sale_status,
 )
 from utils.gl_reference_types import GLRef
-from utils.helpers import generate_number
 from utils.tax_settings import normalize_tax_rate, should_post_vat_gl
 from utils.tenanting import get_active_tenant_id
+
+
+def generate_number(
+    prefix,
+    model,
+    field_name,
+    date_format="%Y",
+    branch_code=None,
+    branch_id=None,
+    tenant_id=None,
+):
+    """Compatibility wrapper delegating to DocumentSequenceService.next_number."""
+    model_name = model.__name__ if hasattr(model, "__name__") else str(model)
+    code_map = {
+        "Payment": "payment",
+        "Receipt": "receipt",
+        "Sale": "sale",
+        "Purchase": "purchase",
+        "PurchaseReturn": "purchase_return",
+    }
+    code = code_map.get(model_name, model_name.lower())
+
+    return DocumentSequenceService.next_number(
+        tenant_id=tenant_id,
+        code=code,
+        branch_code=branch_code,
+    )
 
 
 class SaleService:
@@ -148,7 +175,7 @@ class SaleService:
         prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=sale_branch_id)
 
         try:
-            sale_number = generate_number("S", Sale, "sale_number", branch_id=sale_branch_id, tenant_id=tenant_id)
+            sale_number = generate_number("S", Sale, "sale_number", tenant_id=tenant_id)
             paid_amount_aed = Decimal("0")
 
             from utils.currency_utils import resolve_tenant_base_currency
@@ -587,7 +614,6 @@ class SaleService:
                 )
                 # Record excess as customer prepayment (unlinked to sale for reuse)
                 from models import Payment
-                from utils.helpers import generate_number
 
                 prepayment = Payment(
                     tenant_id=(sale.tenant_id if sale is not None else None),
@@ -975,16 +1001,13 @@ class SaleService:
         sale.notes = (sale.notes or "") + payment_note
 
         from models import Payment
-        from utils.helpers import generate_number
+        from services.document_sequence_service import DocumentSequenceService
 
         prepayment = Payment(
             tenant_id=(sale.tenant_id if sale is not None else None),
-            payment_number=generate_number(
-                "PRE",
-                Payment,
-                "payment_number",
-                branch_id=sale.branch_id,
+            payment_number=DocumentSequenceService.next_number(
                 tenant_id=(sale.tenant_id if sale is not None else None),
+                code="payment",
             ),
             payment_type="prepayment",
             direction="incoming",
@@ -1022,7 +1045,6 @@ class SaleService:
         """
         from datetime import datetime
 
-        from utils.helpers import generate_number
 
         # Validate payment amount
         amount_decimal = Decimal(str(amount))

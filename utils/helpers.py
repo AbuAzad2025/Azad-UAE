@@ -96,7 +96,11 @@ def generate_number(
     q = db.session.query(model).filter(getattr(model, field_name).like(pattern))
     if tenant_id is not None and hasattr(model, "tenant_id"):
         q = q.filter(model.tenant_id == tenant_id)
-    latest = q.order_by(getattr(model, field_name).desc()).first()
+    # SELECT FOR UPDATE to serialize concurrent number generation and
+    # reduce (but not eliminate) race conditions.  Callers that need
+    # guaranteed uniqueness should use generate_number_and_save() which
+    # retries on IntegrityError.
+    latest = q.order_by(getattr(model, field_name).desc()).with_for_update().first()
 
     if latest:
         last_number = _parse_sequence_suffix(getattr(latest, field_name))
@@ -412,6 +416,25 @@ def format_datetime(datetime_obj, fmt="%Y-%m-%d %H:%M"):
     return str(datetime_obj)
 
 
+def format_date(date_obj, fmt="%Y-%m-%d"):
+    """Format a date object to string."""
+    if date_obj is None:
+        return ""
+    if hasattr(date_obj, "strftime"):
+        return date_obj.strftime(fmt)
+    return str(date_obj)
+
+
+def format_number(value, decimals=2):
+    """Format a number with thousand separators."""
+    if value is None:
+        return "0"
+    try:
+        return f"{float(value):,.{decimals}f}"
+    except (ValueError, TypeError):
+        return "0"
+
+
 def convert_currency(amount, from_currency, to_currency=None):
     from services.currency_service import CurrencyService
 
@@ -439,18 +462,5 @@ def generate_barcode():
     return f"{datetime.now().strftime('%Y%m%d')}{uuid.uuid4().hex[:6].upper()}"
 
 
-def format_date(date_obj, fmt="%Y-%m-%d"):
-    if date_obj is None:
-        return ""
-    if hasattr(date_obj, "strftime"):
-        return date_obj.strftime(fmt)
-    return str(date_obj)
 
 
-def format_number(value, decimals=2):
-    if value is None:
-        return "0"
-    try:
-        return f"{float(value):,.{decimals}f}"
-    except (ValueError, TypeError):
-        return str(value)

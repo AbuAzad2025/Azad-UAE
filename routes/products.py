@@ -1635,7 +1635,7 @@ def print_label(**kwargs):
 def print_labels():
     from services.label_print_service import get_product_labels_html
 
-    ids = request.json.get("product_ids", []) if request.is_json else request.form.getlist("product_ids")
+    ids = (request.get_json(silent=True) or {}).get("product_ids", []) if request.is_json else request.form.getlist("product_ids")
     ids = [int(i) for i in ids if str(i).isdigit()]
     if not ids:
         flash(gettext("اختر منتجات للطباعة."), "warning")
