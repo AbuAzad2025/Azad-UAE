@@ -106,7 +106,5 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
             .values(total_card_sales=PosSession.total_card_sales + amount_aed)
         )
     db.session.execute(
-        sa_update(PosSession)
-        .where(PosSession.id == session.id)
-        .values(total_sales=PosSession.total_sales + amount_aed)
+        sa_update(PosSession).where(PosSession.id == session.id).values(total_sales=PosSession.total_sales + amount_aed)
     )

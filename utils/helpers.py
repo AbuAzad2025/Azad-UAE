@@ -460,7 +460,3 @@ def generate_sku():
 
 def generate_barcode():
     return f"{datetime.now().strftime('%Y%m%d')}{uuid.uuid4().hex[:6].upper()}"
-
-
-
-

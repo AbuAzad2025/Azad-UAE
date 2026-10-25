@@ -1045,7 +1045,6 @@ class SaleService:
         """
         from datetime import datetime
 
-
         # Validate payment amount
         amount_decimal = Decimal(str(amount))
         if amount_decimal <= Decimal("0"):

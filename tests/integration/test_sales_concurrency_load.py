@@ -616,6 +616,7 @@ class TestPosCheckoutStorm:
         assert on_hand == STOCK_QTY - sum((Decimal(str(line.quantity)) for line in snapshot["lines"]), Decimal("0")), (
             "stock on hand does not match the units on the sale lines"
         )
+
     def test_pos_session_totals_match_the_orders_they_summarise(self, app, pos_storm_workload):
         """The register's turnover equals the turnover of the orders it took."""
         from models.pos_session import PosSession

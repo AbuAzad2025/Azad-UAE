@@ -408,7 +408,9 @@ def purchase_return(**kwargs):
         return redirect(url_for("purchases.view", id=record_id))
 
     if request.method == "POST":
-        lines_data = (request.get_json(silent=True) or {}).get("lines", []) if request.is_json else request.form.getlist("lines")
+        lines_data = (
+            (request.get_json(silent=True) or {}).get("lines", []) if request.is_json else request.form.getlist("lines")
+        )
         reason = request.form.get("reason", "")
         notes = request.form.get("notes", "")
 

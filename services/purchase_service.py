@@ -161,9 +161,7 @@ class PurchaseService:
         # Generate Number
         purchase_branch_id = warehouse.branch_id or user.branch_id
         purchase_number = generate_number(
-            "P", Purchase, "purchase_number",
-            branch_id=purchase_branch_id,
-            tenant_id=tenant_id
+            "P", Purchase, "purchase_number", branch_id=purchase_branch_id, tenant_id=tenant_id
         )
 
         from utils.tax_settings import get_prices_include_vat
@@ -509,11 +507,7 @@ class PurchaseService:
         capitalized = current_app.config.get("ENABLE_LANDED_COST_CAPITALIZATION", True)
         mwac = current_app.config.get("ENABLE_MWAC", False)
 
-        return_number = generate_number(
-            "PR", PurchaseReturn, "return_number",
-            branch_id=branch_id,
-            tenant_id=tenant_id
-        )
+        return_number = generate_number("PR", PurchaseReturn, "return_number", branch_id=branch_id, tenant_id=tenant_id)
 
         purchase_return = PurchaseReturn(
             tenant_id=tenant_id,
