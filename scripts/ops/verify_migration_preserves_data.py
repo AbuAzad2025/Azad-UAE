@@ -315,7 +315,7 @@ def _admin_engine(admin_url: str) -> Engine:
 
 
 def _scratch_url(admin_url: str, db_name: str) -> str:
-    return str(make_url(admin_url).set(database=db_name))
+    return make_url(admin_url).set(database=db_name).render_as_string(hide_password=False)
 
 
 def _guard_db_name(db_name: str) -> None:
@@ -1807,7 +1807,7 @@ def _resolve_admin_url(explicit: str | None) -> str:
     for env_name in ("MIGRATION_PROBE_ADMIN_URL", "TEST_DATABASE_URL", "DATABASE_URL"):
         candidate = (os.environ.get(env_name) or "").strip()
         if candidate and candidate.startswith(("postgres://", "postgresql://", "postgresql+psycopg2://")):
-            return str(make_url(candidate).set(database="postgres"))
+            return make_url(candidate).set(database="postgres").render_as_string(hide_password=False)
     return DEFAULT_ADMIN_URL
 
 
