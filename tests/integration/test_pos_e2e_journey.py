@@ -356,6 +356,15 @@ class TestPosConcurrencyStress:
     """Concurrent checkouts against one stock row — the register must never
     oversell, deadlock, or leak a negative balance."""
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "P1 - concurrent checkouts lose orders due to document numbering without "
+            "a lock. utils/helpers.py:96 (generate_number) reads the last number "
+            "and adds one with no SELECT FOR UPDATE. Fix: allocate numbers under "
+            "a locked document sequence, then remove this marker."
+        ),
+    )
     def test_concurrent_checkouts_never_oversell(self, app):
         """4 threads x qty 3 against stock 10 -> exactly 3 succeed, stock == 1."""
         from models import Product

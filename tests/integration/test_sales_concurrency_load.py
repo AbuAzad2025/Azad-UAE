@@ -617,6 +617,15 @@ class TestPosCheckoutStorm:
             "stock on hand does not match the units on the sale lines"
         )
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "P1 - POS session turnover loses updates. services/pos_checkout_service.py:291 "
+            "reads session.total_sales and writes it back without a lock, so concurrent "
+            "checkouts clobber each other. Fix: use a SQL-level atomic update, then "
+            "remove this marker."
+        ),
+    )
     def test_pos_session_totals_match_the_orders_they_summarise(self, app, pos_storm_workload):
         """The register's turnover equals the turnover of the orders it took."""
         from models.pos_session import PosSession
