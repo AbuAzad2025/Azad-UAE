@@ -254,8 +254,8 @@ def _resolve_delivery(sale, tid):
 @login_required
 @permission_required("manage_sales")
 def bulk_print():
-    doc_ids = request.json.get("ids", [])
-    doc_type = request.json.get("type", "sale")
+    doc_ids = (request.get_json(silent=True) or {}).get("ids", [])
+    doc_type = (request.get_json(silent=True) or {}).get("type", "sale")
     doc_type = _normalize_doc_type(doc_type)
     registry = cast("dict[str, Any]", PrintService.PRINTABLE_DOCUMENTS)
     entry = registry.get(doc_type)
@@ -300,8 +300,8 @@ def print_history():
 @login_required
 @permission_required("view_reports")
 def print_preview_api():
-    doc_type = request.json.get("type")
-    doc_id = request.json.get("id")
+    doc_type = (request.get_json(silent=True) or {}).get("type")
+    doc_id = (request.get_json(silent=True) or {}).get("id")
     if not doc_type or not doc_id:
         return error_response(message="Missing type or id", status_code=400)
 
@@ -651,8 +651,6 @@ def print_advanced_ledger():
     accounts = GLAccount.query.filter_by(tenant_id=tid, is_active=True, is_header=False).limit(20).all()
 
     trial_balance_data = []
-    total_debit = total_credit = 0
-
     for account in accounts:
         balance = account.get_balance()
         if balance != 0:
@@ -663,34 +661,17 @@ def print_advanced_ledger():
                     "credit": abs(balance) if balance < 0 else 0,
                 }
             )
-            total_debit += balance if balance > 0 else 0
-            total_credit += abs(balance) if balance < 0 else 0
 
     return PrintService.render_print(
         "ledger/professional_printing.html",
         {
-            "trial_balance_data": [
-                {
-                    "account": item["account"],
-                    "debit": item["debit"],
-                    "credit": item["credit"],
-                }
-                for item in [
-                    {"account": a, "debit": d, "credit": c}
-                    for a, d, c in zip(
-                        accounts,
-                        [a.get_balance() if a.get_balance() > 0 else 0 for a in accounts],
-                        [abs(a.get_balance()) if a.get_balance() < 0 else 0 for a in accounts],
-                        strict=True,
-                    )
-                ]
-            ],
+            "trial_balance_data": trial_balance_data,
             "date_from": date.today() - timedelta(days=30),
             "date_to": date.today(),
             "print_branding": get_print_header_context(),
-            "settings": InvoiceSettings.get_active(user=current_user),
+            "settings": InvoiceSettings.get_active(tid),
         },
-        tenant_id=get_active_tenant_id(current_user),
+        tenant_id=tid,
     )
 
 
