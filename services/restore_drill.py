@@ -74,7 +74,7 @@ class RestoreDrillService:
             host = str(scratch.host or "")
             if host.lower() in ("localhost", "::1"):
                 scratch = scratch.set(host="127.0.0.1")
-            return str(scratch), ""
+            return scratch.render_as_string(hide_password=False), ""
         except Exception as exc:
             return None, f"invalid DATABASE_URL: {type(exc).__name__}: {exc}"[:200]
 
