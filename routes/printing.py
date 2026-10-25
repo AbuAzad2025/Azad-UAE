@@ -220,6 +220,28 @@ def _handle_packing_slip_pdf(sale_id, tid):
     )
 
 
+from dataclasses import dataclass
+
+
+@dataclass
+class DeliveryInfo:
+    """Delivery/shipping info for packing slip rendering.
+
+    Populated from a Shipment when one is linked to the sale, otherwise
+    falls back to sale/customer data so the packing slip still renders.
+    """
+
+    number: str | None = None
+    date: Any = None
+    method: str | None = None
+    status: str | None = None
+    shipping_method: str | None = None
+    tracking_number: str | None = None
+    address: str | None = None
+    customer_name: str | None = None
+    customer_phone: str | None = None
+
+
 def _resolve_delivery(sale, tid):
     """Resolve delivery info from shipment or fall back to sale/customer data."""
     shipment = None
@@ -230,24 +252,13 @@ def _resolve_delivery(sale, tid):
     if shipment:
         return shipment
 
-    class SimpleDelivery:
-        number = None
-        date = None
-        method = None
-        status = None
-        shipping_method = None
-        tracking_number = None
-        address = None
-        customer_name = None
-        customer_phone = None
-
-    d = SimpleDelivery()
-    d.number = sale.sale_number
-    d.date = sale.sale_date
-    d.address = sale.customer.address if sale.customer else ""
-    d.customer_name = sale.customer.name if sale.customer else ""
-    d.customer_phone = sale.customer.phone if sale.customer else ""
-    return d
+    return DeliveryInfo(
+        number=sale.sale_number,
+        date=sale.sale_date,
+        address=sale.customer.address if sale.customer else "",
+        customer_name=sale.customer.name if sale.customer else "",
+        customer_phone=sale.customer.phone if sale.customer else "",
+    )
 
 
 @printing_bp.route("/bulk-print", methods=["POST"])

@@ -192,7 +192,14 @@ class PrintService:
 
     @staticmethod
     def render_pdf(template, extra_context=None, tenant_id=None, filename="document.pdf"):
-        """Render template as PDF bytes using WeasyPrint."""
+        """Render template as PDF bytes using WeasyPrint.
+
+        Returns PDF bytes on success. If WeasyPrint is unavailable or
+        rendering fails, falls back to returning the raw HTML encoded as
+        UTF-8 bytes so callers always receive a non-empty response.
+        Callers should check the ``Content-Type`` header to distinguish
+        PDF from HTML fallback output.
+        """
 
         html = PrintService.render_print(template, extra_context, tenant_id)
         try:
