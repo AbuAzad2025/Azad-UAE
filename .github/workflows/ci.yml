@@ -151,7 +151,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v7
@@ -183,8 +183,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -305,7 +305,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -321,8 +321,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -590,7 +590,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -606,8 +606,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -691,7 +691,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -707,8 +707,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -800,7 +800,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -816,8 +816,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -892,7 +892,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
       SECRET_KEY: test-secret-key
@@ -916,8 +916,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
@@ -1152,7 +1152,7 @@ jobs:
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -1180,8 +1180,8 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
+          sleep 15  # Give PostgreSQL time to finish initialization
+          for i in $(seq 1 90); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
