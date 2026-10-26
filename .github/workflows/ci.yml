@@ -183,16 +183,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
 
       - name: Run tests
         run: |
@@ -320,16 +324,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Verify app boots
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -604,16 +612,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Run frontend asset audit (pytest)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -704,16 +716,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Warm up database schema
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -812,16 +828,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Run tenant isolation fuzzer
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -911,16 +931,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Provision schema
         run: |
           # Deliberately NOT `|| true`. An unmigrated database is exactly the
@@ -1174,16 +1198,20 @@ jobs:
           # pg_isready only checks if the port is open, not if the database
           # is fully initialized and accepting authentication. Wait until we
           # can actually connect and run a simple query.
-          for i in $(seq 1 90); do
-            if pg_isready -h localhost -p 5432 > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          python -c "
+import socket, time, sys
+for i in range(1, 91):
+    try:
+        s = socket.create_connection(('localhost', 5432), timeout=5)
+        s.close()
+        print('PostgreSQL is ready (attempt', i, ')')
+        sys.exit(0)
+    except Exception as e:
+        print('Waiting for PostgreSQL... (attempt', i, '/90):', str(e)[:80])
+        time.sleep(2)
+print('::error::PostgreSQL did not become ready in time')
+sys.exit(1)
+" 
       - name: Seed auth users and export states
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
