@@ -187,13 +187,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -329,13 +329,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -618,13 +618,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -723,13 +723,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -836,13 +836,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -940,13 +940,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
@@ -1208,13 +1208,13 @@ jobs:
           if ! command -v psql &> /dev/null; then
             sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1
           fi
-          sleep 15  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 90); do
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends postgresql-client > /dev/null 2>&1 || true
+          for i in $(seq 1 60); do
             if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
               echo "PostgreSQL is ready (attempt $i)"
               exit 0
             fi
-            echo "Waiting for PostgreSQL... (attempt $i/90)"
+            echo "Waiting for PostgreSQL... (attempt $i/60)"
             sleep 2
           done
           echo "::error::PostgreSQL did not become ready in time"
