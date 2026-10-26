@@ -126,15 +126,17 @@ class GLProvisioningService:
                     branch_id=None,
                     is_active=True,
                 )
+                savepoint = db.session.begin_nested()
                 try:
                     db.session.add(am)
                     db.session.flush()
+                    savepoint.commit()
                     existing_mappings.add(mapping.concept_code)
                     result.created_mappings += 1
                 except Exception:
                     # Concurrent insert race: another transaction already
                     # created this mapping.  Roll back the savepoint and skip.
-                    db.session.rollback()
+                    savepoint.rollback()
                     result.skipped_mappings += 1
 
     @staticmethod
