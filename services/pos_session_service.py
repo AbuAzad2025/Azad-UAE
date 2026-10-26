@@ -71,7 +71,7 @@ def _accumulate_session_tender(session, tender_chunk, tenant_id=None):
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
-    session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
+    # total_sales is set separately by the sale amount; do NOT double-count tender amounts
 
 
 def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
@@ -99,12 +99,14 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
             .where(PosSession.id == session.id)
             .values(total_cash_sales=PosSession.total_cash_sales + amount_aed)
         )
+        session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
             .values(total_card_sales=PosSession.total_card_sales + amount_aed)
         )
-    db.session.execute(
-        sa_update(PosSession).where(PosSession.id == session.id).values(total_sales=PosSession.total_sales + amount_aed)
-    )
+        session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
+    # NOTE: total_sales is already set by the sale amount (sale.total_amount).
+    # Tender amounts (cash + card) are tracked separately in total_cash_sales
+    # and total_card_sales. Do NOT add them to total_sales to avoid double-counting.

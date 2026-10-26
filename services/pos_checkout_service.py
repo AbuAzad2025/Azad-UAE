@@ -301,6 +301,7 @@ class PosCheckoutService:
             .where(PosSession.id == session.id)
             .values(total_sales=PosSession.total_sales + sale_amount)
         )
+        session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
                 payment_data.get("amount", 0),
@@ -313,6 +314,7 @@ class PosCheckoutService:
                 .where(PosSession.id == session.id)
                 .values(total_cash_sales=PosSession.total_cash_sales + cash_aed)
             )
+            session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
                 _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
