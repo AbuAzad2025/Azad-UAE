@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Check if PostgreSQL is ready to accept connections with authentication."""
-import time
-import sys
 import os
+import sys
+import time
 
 def check_psycopg2():
     """Check using psycopg2 (Python PostgreSQL driver)."""
