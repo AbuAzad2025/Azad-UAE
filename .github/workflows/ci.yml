@@ -178,22 +178,11 @@ jobs:
           sudo apt-get install -y --no-install-recommends libharfbuzz-subset0 \
             || echo "::notice::libharfbuzz-subset0 not available on this runner; WeasyPrint will require it at a future major version"
 
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
 
       - name: Run tests
         run: |
@@ -316,22 +305,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Verify app boots
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -601,22 +579,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Run frontend asset audit (pytest)
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -702,22 +669,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt schemathesis==4.24.3
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Warm up database schema
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -811,22 +767,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Run tenant isolation fuzzer
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
@@ -911,22 +856,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt gunicorn
           npm install -g @lhci/cli
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Provision schema
         run: |
           # Deliberately NOT `|| true`. An unmigrated database is exactly the
@@ -1175,22 +1109,11 @@ jobs:
           # browser build differs from the one installed by pip's playwright.
           # Install the Node-side chromium as well (deps already installed above).
           npx playwright install chromium
-      - name: Wait for PostgreSQL to be ready
+      - name: Install psycopg2 if needed
         run: |
-          # pg_isready only checks if the port is open, not if the database
-          # is fully initialized and accepting authentication. Wait until we
-          # can actually connect and run a simple query.
-          sleep 10  # Give PostgreSQL time to finish initialization
-          for i in $(seq 1 60); do
-            if PGPASSWORD=azad_test psql -h localhost -U azad_test -d azad_test -c "SELECT 1" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready (attempt $i)"
-              exit 0
-            fi
-            echo "Waiting for PostgreSQL... (attempt $i/60)"
-            sleep 2
-          done
-          echo "::error::PostgreSQL did not become ready in time"
-          exit 1
+          pip install psycopg2-binary > /dev/null 2>&1 || echo "::notice::psycopg2-binary install failed"
+      - name: Wait for PostgreSQL readiness
+        run: python scripts/check_postgres_ready.py
       - name: Seed auth users and export states
         env:
           DATABASE_URL: postgresql://azad_test:azad_test@localhost:5432/azad_test
