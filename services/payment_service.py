@@ -25,6 +25,7 @@ from utils.field_validators import (
     validate_payment_method,
 )
 from utils.gl_reference_types import GLRef
+import utils.helpers
 from utils.tenanting import get_active_tenant_id
 
 
@@ -1154,10 +1155,7 @@ class PaymentService:
                     tenant_id=(
                         sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                     ),
-                    payment_number=DocumentSequenceService.next_number(
-                        tenant_id=(sale.tenant_id if sale is not None else None),
-                        code="payment",
-                    ),
+                    payment_number=utils.helpers.generate_number("PAY", Payment, "payment_number", tenant_id=(sale.tenant_id if sale is not None else None)),
                     payment_type="sale_payment",
                     direction="incoming",
                     sale_id=sale.id,

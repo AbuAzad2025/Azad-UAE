@@ -61,6 +61,8 @@ class DocumentSequenceService:
         branch_scoped=False,
     ):
         """Get existing sequence or create default."""
+        if tenant_id is None:
+            return None
         seq = DocumentSequence.query.filter_by(tenant_id=tenant_id, code=code).first()
         if seq:
             return seq
@@ -98,6 +100,8 @@ class DocumentSequenceService:
         Uses SELECT FOR UPDATE with retry logic to prevent race conditions.
         """
         seq = DocumentSequenceService.get_or_create(tenant_id, code)
+        if seq is None:
+            return f"DOC-{datetime.now(UTC).year}-0001"
         if not seq.is_active:
             raise ValueError(f"Sequence {code} is inactive.")
 
