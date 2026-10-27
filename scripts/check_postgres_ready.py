@@ -39,7 +39,7 @@ def check_psql():
     try:
         env = os.environ.copy()
         env["PGPASSWORD"] = "azad_test"
-        result = subprocess.run(
+        result = subprocess.run(  # nosec B603 B607
             ["psql", "-h", "localhost", "-U", "azad_test", "-d", "azad_test", "-c", "SELECT 1"],
             env=env,
             capture_output=True,

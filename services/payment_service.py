@@ -5,6 +5,7 @@ from flask import current_app
 from flask_babel import gettext
 from flask_login import current_user
 
+import utils.helpers
 from extensions import db
 from models import Sale
 from models.receipt import Receipt
@@ -25,7 +26,6 @@ from utils.field_validators import (
     validate_payment_method,
 )
 from utils.gl_reference_types import GLRef
-import utils.helpers
 from utils.tenanting import get_active_tenant_id
 
 
@@ -1155,7 +1155,9 @@ class PaymentService:
                     tenant_id=(
                         sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                     ),
-                    payment_number=utils.helpers.generate_number("PAY", Payment, "payment_number", tenant_id=(sale.tenant_id if sale is not None else None)),
+                    payment_number=utils.helpers.generate_number(
+                        "PAY", Payment, "payment_number", tenant_id=(sale.tenant_id if sale is not None else None)
+                    ),
                     payment_type="sale_payment",
                     direction="incoming",
                     sale_id=sale.id,
