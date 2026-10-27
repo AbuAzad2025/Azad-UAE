@@ -852,7 +852,7 @@ class PaymentService:
                         tenant_id=(
                             sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                         ),
-                        payment_number=utils.helpers.generate_number(
+                        payment_number=generate_number(
                             "PAY-S",
                             Payment,
                             "payment_number",
@@ -1161,7 +1161,7 @@ class PaymentService:
                     tenant_id=(
                         sale.tenant_id if sale is not None else customer.tenant_id if customer is not None else None
                     ),
-                    payment_number=utils.helpers.generate_number(
+                    payment_number=generate_number(
                         "PAY", Payment, "payment_number", tenant_id=(sale.tenant_id if sale is not None else None)
                     ),
                     payment_type="sale_payment",
