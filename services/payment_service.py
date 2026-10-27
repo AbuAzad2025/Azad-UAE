@@ -5,7 +5,6 @@ from flask import current_app
 from flask_babel import gettext
 from flask_login import current_user
 
-import utils.helpers
 from extensions import db
 from models import Sale
 from models.receipt import Receipt
@@ -240,7 +239,7 @@ class PaymentService:
 
         try:
             tenant_id_for_rate = supplier.tenant_id if supplier is not None else None
-            payment_number = utils.helpers.generate_number(
+            payment_number = generate_number(
                 "PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id_for_rate
             )
 
@@ -406,9 +405,7 @@ class PaymentService:
 
         tenant_id = (supplier.tenant_id if supplier is not None else None) or get_active_tenant_id(current_user)
 
-        payment_number = utils.helpers.generate_number(
-            "PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id
-        )
+        payment_number = generate_number("PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id)
 
         exchange_rate = PaymentService._resolve_transaction_rate(currency, tenant_id=tenant_id)
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
@@ -510,7 +507,7 @@ class PaymentService:
         amount_aed = convert_and_quantize_aed(
             amount_decimal, base_currency, exchange_rate, tenant_id=resolved_tenant_id
         )
-        payment_number = utils.helpers.generate_number(
+        payment_number = generate_number(
             "PAY", Payment, "payment_number", branch_id=resolved_branch_id, tenant_id=resolved_tenant_id
         )
         payment = Payment(
@@ -615,9 +612,7 @@ class PaymentService:
                 sale=source_sale,
             )
 
-            receipt_number = utils.helpers.generate_number(
-                "REC", Receipt, "receipt_number", branch_id=branch_id, tenant_id=tenant_id
-            )
+            receipt_number = generate_number("REC", Receipt, "receipt_number", branch_id=branch_id, tenant_id=tenant_id)
 
             exchange_rate = PaymentService._resolve_transaction_rate(currency, user_exchange_rate, tenant_id=tenant_id)
             base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
@@ -926,9 +921,7 @@ class PaymentService:
         if not customer:
             raise ValueError(gettext("العميل غير موجود"))
 
-        payment_number = utils.helpers.generate_number(
-            "PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id
-        )
+        payment_number = generate_number("PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id)
         payment = Payment(
             tenant_id=tenant_id,
             payment_number=payment_number,
