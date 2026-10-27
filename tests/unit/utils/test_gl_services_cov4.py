@@ -83,7 +83,7 @@ def test_helpers_pure():
     assert format_datetime(None) == ""
     assert format_date(None) == ""
     assert format_number(None) == "0"  # 434-440
-    assert format_number("bad", 2) == "bad"
+    assert format_number("bad", 2) == "0"
     assert format_number(1234.5) == "1,234.50"
     assert generate_sku().startswith("SKU-")  # 418-419
     assert generate_barcode()  # 422-423

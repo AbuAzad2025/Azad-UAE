@@ -52,7 +52,7 @@ class TestGenerateNumber:
         model.tenant_id = 1
         q = MagicMock()
         q.filter.return_value = q
-        q.order_by.return_value.first.return_value = latest
+        q.order_by.return_value.with_for_update.return_value.first.return_value = latest
         with patch("utils.helpers.db.session.query", return_value=q):
             result = h.generate_number("INV", model, field_name="sale_number", tenant_id=1)
         assert result.endswith("-0008")
@@ -61,7 +61,7 @@ class TestGenerateNumber:
         latest = MagicMock(sale_number="INV-2026-XYZ")
         q = MagicMock()
         q.filter.return_value = q
-        q.order_by.return_value.first.return_value = latest
+        q.order_by.return_value.with_for_update.return_value.first.return_value = latest
         with patch("utils.helpers.db.session.query", return_value=q):
             result = h.generate_number("INV", MagicMock(tenant_id=1), field_name="sale_number")
         assert result.endswith("-0001")

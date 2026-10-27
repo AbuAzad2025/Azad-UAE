@@ -100,7 +100,7 @@ def generate_number(
     # reduce (but not eliminate) race conditions.  Callers that need
     # guaranteed uniqueness should use generate_number_and_save() which
     # retries on IntegrityError.
-    latest = q.order_by(getattr(model, field_name).desc()).with_for_update().first()
+    latest = q.order_by(getattr(model, field_name).desc()).with_for_update(of=model).first()
 
     if latest:
         last_number = _parse_sequence_suffix(getattr(latest, field_name))

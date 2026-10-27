@@ -94,7 +94,7 @@ class TestHelpersCoverageBoost:
         assert format_date(dt) == "2026-01-02"
         assert format_time("already") == "already"
         assert format_datetime(12345) == "12345"
-        assert format_number("bad") == "bad"
+        assert format_number("bad") == "0"
         assert format_number(Decimal("1234.5"), decimals=1) == "1,234.5"
 
     def test_generate_sku_and_barcode(self):
