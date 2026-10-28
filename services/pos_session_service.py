@@ -93,32 +93,20 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
 
     if method == "cash":
-        from models.pos_session import PosSession
+        from sqlalchemy import text
 
-        locked_session = (
-            db.session.query(PosSession)
-            .filter(PosSession.id == session.id)
-            .populate_existing()
-            .with_for_update()
-            .first()
+        db.session.execute(
+            text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
+            {"amount": float(amount_aed), "id": session.id},
         )
-        if locked_session:
-            locked_session.total_cash_sales = Decimal(str(locked_session.total_cash_sales or 0)) + amount_aed
-            db.session.add(locked_session)
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
-        from models.pos_session import PosSession
+        from sqlalchemy import text
 
-        locked_session = (
-            db.session.query(PosSession)
-            .filter(PosSession.id == session.id)
-            .populate_existing()
-            .with_for_update()
-            .first()
+        db.session.execute(
+            text("UPDATE pos_sessions SET total_card_sales = total_card_sales + :amount WHERE id = :id"),
+            {"amount": float(amount_aed), "id": session.id},
         )
-        if locked_session:
-            locked_session.total_card_sales = Decimal(str(locked_session.total_card_sales or 0)) + amount_aed
-            db.session.add(locked_session)
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     # NOTE: total_sales is already set by the sale amount (sale.total_amount).
     # Tender amounts (cash + card) are tracked separately in total_cash_sales

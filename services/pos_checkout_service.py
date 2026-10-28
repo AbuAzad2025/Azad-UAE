@@ -307,18 +307,12 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
-            from models.pos_session import PosSession
+            from sqlalchemy import text
 
-            locked_session = (
-                db.session.query(PosSession)
-                .filter(PosSession.id == session.id)
-                .populate_existing()
-                .with_for_update()
-                .first()
+            db.session.execute(
+                text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
+                {"amount": float(cash_aed), "id": session.id},
             )
-            if locked_session:
-                locked_session.total_cash_sales = Decimal(str(locked_session.total_cash_sales or 0)) + cash_aed
-                db.session.add(locked_session)
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
