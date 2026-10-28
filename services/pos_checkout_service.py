@@ -293,12 +293,21 @@ class PosCheckoutService:
         # SQLAlchemy may return a cached object from the identity map.
 
         sale_amount = Decimal(str(sale.total_amount or 0))
-        from sqlalchemy import text
+        from models.pos_session import PosSession
 
-        db.session.execute(
-            text("UPDATE pos_sessions SET total_sales = total_sales + :amount WHERE id = :id"),
-            {"amount": float(sale_amount), "id": session.id},
+        # Lock the session row with SELECT FOR UPDATE + populate_existing
+        # to avoid SQLAlchemy identity-map caching under concurrency.
+        locked = (
+            db.session.query(PosSession)
+            .filter(PosSession.id == session.id)
+            .populate_existing()
+            .with_for_update()
+            .first()
         )
+        if locked is not None:
+            locked.total_sales = Decimal(str(locked.total_sales or 0)) + sale_amount
+            db.session.add(locked)
+            db.session.flush()
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
@@ -307,12 +316,19 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
-            from sqlalchemy import text
+            from models.pos_session import PosSession
 
-            db.session.execute(
-                text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
-                {"amount": float(cash_aed), "id": session.id},
+            locked = (
+                db.session.query(PosSession)
+                .filter(PosSession.id == session.id)
+                .populate_existing()
+                .with_for_update()
+                .first()
             )
+            if locked is not None:
+                locked.total_cash_sales = Decimal(str(locked.total_cash_sales or 0)) + cash_aed
+                db.session.add(locked)
+                db.session.flush()
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
