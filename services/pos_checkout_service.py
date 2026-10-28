@@ -291,15 +291,13 @@ class PosCheckoutService:
         # Atomic SQL-level update to prevent lost updates under concurrency.
         # Read-modify-write in Python races even under SELECT FOR UPDATE because
         # SQLAlchemy may return a cached object from the identity map.
-        from sqlalchemy import update as sa_update
-
-        from models.pos_session import PosSession
 
         sale_amount = Decimal(str(sale.total_amount or 0))
+        from sqlalchemy import text
+
         db.session.execute(
-            sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
+            text("UPDATE pos_sessions SET total_sales = total_sales + :amount WHERE id = :id"),
+            {"amount": float(sale_amount), "id": session.id},
         )
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
@@ -309,10 +307,11 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
+            from sqlalchemy import text
+
             db.session.execute(
-                sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
+                text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
+                {"amount": float(cash_aed), "id": session.id},
             )
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
