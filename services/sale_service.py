@@ -177,7 +177,7 @@ class SaleService:
         prices_include_vat = get_prices_include_vat(tenant_id=tenant_id, branch_id=sale_branch_id)
 
         try:
-            sale_number = utils.helpers.generate_number("S", Sale, "sale_number", tenant_id=tenant_id)
+            sale_number = generate_number("S", Sale, "sale_number", tenant_id=tenant_id)
             paid_amount_aed = Decimal("0")
 
             from utils.currency_utils import resolve_tenant_base_currency
@@ -619,7 +619,7 @@ class SaleService:
 
                 prepayment = Payment(
                     tenant_id=(sale.tenant_id if sale is not None else None),
-                    payment_number=utils.helpers.generate_number(
+                    payment_number=generate_number(
                         "PRE",
                         Payment,
                         "payment_number",
@@ -862,7 +862,7 @@ class SaleService:
         sale = Sale(
             customer_id=customer.id,
             seller_id=seller_id,
-            sale_number=utils.helpers.generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
+            sale_number=generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
             total_amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
             checkout_payment_method="cash",
             amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
