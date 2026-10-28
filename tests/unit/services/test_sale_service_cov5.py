@@ -270,7 +270,7 @@ def test_quick_sale_guards_and_success(db_session, sample_tenant, sample_custome
         SaleService.create_quick_sale(sample_customer.id, 999999999, 1, 10)
     StockService.add_stock(sample_product.id, 50, warehouse_id=sample_warehouse.id)
     sale = SaleService.create_quick_sale(sample_customer.id, sample_product.id, 2, 10, tenant_id=sample_tenant.id)
-    assert sale.sale_number.startswith("SALE-")
+    assert sale.sale_number.startswith("S-")
 
 
 def test_quick_sale_without_warehouse_skips_stock(db_session, sample_tenant, sample_customer, sample_product, mocker):

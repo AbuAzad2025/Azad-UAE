@@ -71,7 +71,9 @@ def _accumulate_session_tender(session, tender_chunk, tenant_id=None):
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
-    # total_sales is set separately by the sale amount; do NOT double-count tender amounts
+    else:
+        # Unknown tender methods still count toward total_sales
+        session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
 
 
 def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):

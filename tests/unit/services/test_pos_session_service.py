@@ -92,8 +92,8 @@ class TestUpdateSessionTotals:
         )
         db_session.flush()
 
-        # 210 (sale) + 50 (cash chunk) + 20 (card chunk)
-        assert Decimal(str(pos_session.total_sales)) == Decimal("280.000")
+        # total_sales = sale amount only (tender amounts tracked separately)
+        assert Decimal(str(pos_session.total_sales)) == Decimal("210.000")
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("50.000")
         assert Decimal(str(pos_session.total_card_sales)) == Decimal("20.000")
 

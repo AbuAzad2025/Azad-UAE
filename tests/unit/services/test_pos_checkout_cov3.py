@@ -37,9 +37,10 @@ def _base_payload(product_id, **over):
 
 
 def _session(tenant_id, branch_id, user_id):
+    from extensions import db
     from models.pos_session import PosSession
 
-    return PosSession(
+    sess = PosSession(
         tenant_id=tenant_id,
         branch_id=branch_id,
         user_id=user_id,
@@ -47,6 +48,8 @@ def _session(tenant_id, branch_id, user_id):
         opening_balance_cash=Decimal("0"),
         status=PosSession.STATUS_OPEN,
     )
+    db.session.add(sess)
+    return sess
 
 
 def _stub_sale(mocker, tenant_id=1, total="50", number=None, customer_id=1, seller_id=1):
@@ -253,9 +256,9 @@ class TestDiscountSerialPrice:
 
         walkin = MagicMock(id=79, customer_type="individual", name="W")
         mocker.patch("services.pos_checkout_service.get_pos_walkin_customer", return_value=walkin)
-        user = MagicMock(id=9, is_owner=False)
+        user = MagicMock(id=1, is_owner=False)
         user.has_permission = lambda code: False
-        sess = _session(sample_tenant.id, sample_branch.id, 9)
+        sess = _session(sample_tenant.id, sample_branch.id, 1)
         with pytest.raises(PosCheckoutError) as exc:
             PosCheckoutService.checkout(
                 payload=_base_payload(
