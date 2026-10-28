@@ -99,14 +99,14 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
-            .values(total_cash_sales=PosSession.total_cash_sales + amount_aed)
+            .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed)
         )
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
-            .values(total_card_sales=PosSession.total_card_sales + amount_aed)
+            .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed)
         )
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     # NOTE: total_sales is already set by the sale amount (sale.total_amount).

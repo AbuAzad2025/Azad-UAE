@@ -299,7 +299,7 @@ class PosCheckoutService:
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.total_sales + sale_amount)
+            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
         )
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
@@ -312,7 +312,7 @@ class PosCheckoutService:
             db.session.execute(
                 sa_update(PosSession)
                 .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.total_cash_sales + cash_aed)
+                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
             )
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
