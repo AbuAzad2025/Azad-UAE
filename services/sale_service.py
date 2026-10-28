@@ -4,7 +4,6 @@ from decimal import ROUND_HALF_UP, Decimal
 from flask import current_app
 from flask_babel import gettext
 
-import utils.helpers
 from extensions import db
 from models import PartnerCommissionEntry, Payment, Sale, SaleLine, Tenant
 from services.commission_gl_service import post_sale_commissions
@@ -1073,7 +1072,7 @@ class SaleService:
                 except ValueError:
                     raise ValueError(gettext("تاريخ الشيك غير صالح"))
 
-        payment_number = utils.helpers.generate_number(
+        payment_number = generate_number(
             "PAY",
             Payment,
             "payment_number",

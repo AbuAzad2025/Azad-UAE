@@ -100,7 +100,13 @@ def generate_number(
     # reduce (but not eliminate) race conditions.  Callers that need
     # guaranteed uniqueness should use generate_number_and_save() which
     # retries on IntegrityError.
-    latest = q.order_by(getattr(model, field_name).desc()).with_for_update(of=model).first()
+    try:
+        latest = q.order_by(getattr(model, field_name).desc()).with_for_update().first()
+    except Exception:
+        # PostgreSQL doesn't support FOR UPDATE on the nullable side of an
+        # outer join (models with lazy="joined").  Fall back to an unlocked
+        # read; callers needing strict uniqueness use generate_number_and_save.
+        latest = q.order_by(getattr(model, field_name).desc()).first()
 
     if latest:
         last_number = _parse_sequence_suffix(getattr(latest, field_name))

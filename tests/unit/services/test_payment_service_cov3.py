@@ -273,7 +273,7 @@ class TestCustomerPayment:
         with (
             patch(f"{MOD}.current_user", new=_user_mock()),
             patch(f"{MOD}.db") as mock_db,
-            patch("utils.helpers.generate_number", return_value="PAY-C1"),
+            patch("services.payment_service.generate_number", return_value="PAY-C1"),
         ):
             mock_db.session.get.return_value = customer
             payment = PaymentService.create_customer_payment(5, "40", branch_id=2, user_id=9)
@@ -288,7 +288,7 @@ class TestCustomerPayment:
         with (
             patch(f"{MOD}.current_user", new=_user_mock()),
             patch(f"{MOD}.db") as mock_db,
-            patch("utils.helpers.generate_number", return_value="PAY-C2"),
+            patch("services.payment_service.generate_number", return_value="PAY-C2"),
         ):
             mock_db.session.get.side_effect = [customer, user]
             payment = PaymentService.create_customer_payment(5, "40", user_id=9)
@@ -301,7 +301,7 @@ class TestCustomerPayment:
         with (
             patch(f"{MOD}.current_user", new=_user_mock()),
             patch(f"{MOD}.db") as mock_db,
-            patch("utils.helpers.generate_number", return_value="PAY-C3"),
+            patch("services.payment_service.generate_number", return_value="PAY-C3"),
         ):
             mock_db.session.get.side_effect = [customer, None]
             payment = PaymentService.create_customer_payment(5, "40", user_id=9)
@@ -329,7 +329,7 @@ class TestCustomerRefund:
         with (
             patch(f"{MOD}.current_user", new=_user_mock()),
             patch(f"{MOD}.db") as mock_db,
-            patch("utils.helpers.generate_number", return_value="PAY-RF1"),
+            patch("services.payment_service.generate_number", return_value="PAY-RF1"),
             patch("services.cheque_service.ChequeService.create_cheque", return_value=cheque) as mk,
             patch("services.cheque_service.process_cheque_issue") as issue,
         ):

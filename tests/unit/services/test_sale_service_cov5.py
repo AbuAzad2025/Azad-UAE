@@ -270,7 +270,7 @@ def test_quick_sale_guards_and_success(db_session, sample_tenant, sample_custome
         SaleService.create_quick_sale(sample_customer.id, 999999999, 1, 10)
     StockService.add_stock(sample_product.id, 50, warehouse_id=sample_warehouse.id)
     sale = SaleService.create_quick_sale(sample_customer.id, sample_product.id, 2, 10, tenant_id=sample_tenant.id)
-    assert sale.sale_number.startswith("S-")
+    assert sale.sale_number.startswith("SALE-")
 
 
 def test_quick_sale_without_warehouse_skips_stock(db_session, sample_tenant, sample_customer, sample_product, mocker):
@@ -658,7 +658,7 @@ def test_fx_cross_currency_partial_settlement(app):
 
     sale = _fx_sale()
     with (
-        patch("utils.helpers.generate_number", return_value="PAY-FX"),
+        patch("services.sale_service.generate_number", return_value="PAY-FX"),
         patch("services.sale_service.post_or_fail"),
         patch("services.sale_service.GLService"),
         patch("services.sale_service.db.session"),
@@ -677,7 +677,7 @@ def test_fx_same_currency_rate_diff_no_post(app):
     sale.payments = []
     sale.returns = []
     with (
-        patch("utils.helpers.generate_number", return_value="PAY-FX2"),
+        patch("services.sale_service.generate_number", return_value="PAY-FX2"),
         patch("services.sale_service.post_or_fail"),
         patch("services.sale_service.GLService"),
         patch("services.sale_service.db.session"),

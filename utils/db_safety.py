@@ -41,7 +41,7 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
     for attempt in range(1, MAX_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
         try:
-            row = query.with_for_update(of=model).first()
+            row = query.with_for_update().first()
             savepoint.commit()
             if row is None:
                 raise LookupError(f"{target} not found")

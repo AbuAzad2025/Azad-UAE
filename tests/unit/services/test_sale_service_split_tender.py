@@ -49,7 +49,7 @@ def payment_mocks():
     with (
         patch.object(SaleService, "create_payment_for_sale") as create_payment,
         patch("services.sale_service.db") as mock_db,
-        patch("utils.helpers.generate_number", return_value="PRE-1"),
+        patch("services.sale_service.generate_number", return_value="PRE-1"),
         patch("models.Payment") as mock_payment_cls,
     ):
         mock_payment_cls.return_value = MagicMock(id=55)
