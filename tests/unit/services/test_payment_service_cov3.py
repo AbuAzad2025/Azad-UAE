@@ -347,7 +347,7 @@ class TestCustomerRefund:
         with (
             patch(f"{MOD}.current_user", new=_user_mock()),
             patch(f"{MOD}.db") as mock_db,
-            patch("utils.helpers.generate_number", return_value="PAY-RF2"),
+            patch("services.payment_service.generate_number", return_value="PAY-RF2"),
             # create_customer_refund imports GLService locally
             patch("services.gl_service.GLService") as gl,
             patch(f"{MOD}.post_or_fail", return_value=MagicMock(id=52)) as post,

@@ -209,7 +209,7 @@ def test_fx_exact_settlement_posts_nothing(app):
     sale.payments = [paid]
     sale.returns = []
     with (
-        patch("utils.helpers.generate_number", return_value="PAY-FX3"),
+        patch("services.sale_service.generate_number", return_value="PAY-FX3"),
         patch("services.sale_service.post_or_fail"),
         patch("services.sale_service.GLService"),
         patch("services.sale_service.db.session"),
@@ -697,7 +697,7 @@ def test_fx_open_balance_negative_skips_posting(app):
     sale.payments = [MM(payment_confirmed=True, amount_aed=Decimal("130"))]
     sale.returns = [MM(status="approved", amount_aed=Decimal("10"))]
     with (
-        patch("utils.helpers.generate_number", return_value="PAY-FX3"),
+        patch("services.sale_service.generate_number", return_value="PAY-FX3"),
         patch("services.sale_service.post_or_fail"),
         patch("services.sale_service.GLService"),
         patch("services.sale_service.db.session"),
