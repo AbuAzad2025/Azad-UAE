@@ -297,16 +297,16 @@ class PosCheckoutService:
 
         # Lock the session row with SELECT FOR UPDATE + populate_existing
         # to avoid SQLAlchemy identity-map caching under concurrency.
-        locked = (
+        locked_session = (
             db.session.query(PosSession)
             .filter(PosSession.id == session.id)
             .populate_existing()
             .with_for_update()
             .first()
         )
-        if locked is not None:
-            locked.total_sales = Decimal(str(locked.total_sales or 0)) + sale_amount
-            db.session.add(locked)
+        if locked_session is not None:
+            locked_session.total_sales = Decimal(str(locked_session.total_sales or 0)) + sale_amount
+            db.session.add(locked_session)
             db.session.flush()
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
@@ -318,16 +318,16 @@ class PosCheckoutService:
             )
             from models.pos_session import PosSession
 
-            locked = (
+            locked_session = (
                 db.session.query(PosSession)
                 .filter(PosSession.id == session.id)
                 .populate_existing()
                 .with_for_update()
                 .first()
             )
-            if locked is not None:
-                locked.total_cash_sales = Decimal(str(locked.total_cash_sales or 0)) + cash_aed
-                db.session.add(locked)
+            if locked_session is not None:
+                locked_session.total_cash_sales = Decimal(str(locked_session.total_cash_sales or 0)) + cash_aed
+                db.session.add(locked_session)
                 db.session.flush()
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
