@@ -698,24 +698,6 @@ class TestSalesServiceStorm:
             "stock on hand does not match the units on the sale lines"
         )
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "P1 - document numbering is read without a lock. utils/helpers.py:96 "
-            "(generate_number) and services/gl_helpers.py:113 (next_entry_number) read the "
-            "last number and add one, with no SELECT FOR UPDATE, while the unique "
-            "constraints uq_sales_tenant_sale_number (models/sale.py:46) and "
-            "uq_gl_journal_entries_tenant_number (models/gl.py:195) turn the collision into "
-            "a hard failure. Measured: simultaneous SaleService.create_sale calls against "
-            "one tenant lose the large majority of their orders to UniqueViolation on the "
-            "sale number - 57 of 60 refused in the first measurement - before they ever "
-            "reach the stock row, so the worker here has to re-submit the order. The "
-            "register hides it for a single product (the per-product lock serialises the "
-            "terminals) but not for two terminals selling different products, where the "
-            "locks no longer overlap. Fix: allocate the numbers under a locked document "
-            "sequence, or retry the insert on the unique violation, then remove this marker."
-        ),
-    )
     def test_no_order_needs_a_second_submission(self, app, service_storm_workload):
         """No order has to be re-submitted because the document number collided."""
         collisions = service_storm_workload["collisions"]

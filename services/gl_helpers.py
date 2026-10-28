@@ -110,7 +110,7 @@ def next_entry_number(tenant_id, entry_date=None):
     query = GLJournalEntry.query.filter(GLJournalEntry.entry_number.like(f"JE-{y}-%"))
     if tenant_id is not None:
         query = query.filter(GLJournalEntry.tenant_id == int(tenant_id))
-    latest = query.order_by(GLJournalEntry.entry_number.desc()).first()
+    latest = query.order_by(GLJournalEntry.entry_number.desc()).with_for_update(of=GLJournalEntry).first()
     last_num = 0
     if latest:
         match = _ENTRY_NUMBER_RE.match(latest.entry_number or "")
