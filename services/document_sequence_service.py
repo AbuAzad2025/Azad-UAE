@@ -94,12 +94,12 @@ class DocumentSequenceService:
         return seq
 
     @staticmethod
-    def next_number(tenant_id, code, branch_code=None, date=None):
+    def next_number(tenant_id, code, branch_code=None, date=None, prefix=None):
         """
         Generate the next document number atomically.
         Uses SELECT FOR UPDATE with retry logic to prevent race conditions.
         """
-        seq = DocumentSequenceService.get_or_create(tenant_id, code)
+        seq = DocumentSequenceService.get_or_create(tenant_id, code, prefix=prefix)
         if seq is None:
             return f"DOC-{datetime.now(UTC).year}-0001"
         if not seq.is_active:

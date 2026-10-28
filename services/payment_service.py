@@ -53,6 +53,7 @@ def generate_number(
         tenant_id=tenant_id,
         code=code,
         branch_code=branch_code,
+        prefix=prefix,
     )
 
 
