@@ -121,8 +121,8 @@ class TestGetAccount:
 def _mock_journal_query(mocker, latest_entry):
     mock_query = mocker.patch("services.gl_helpers.GLJournalEntry.query")
     end = mock_query.filter.return_value
-    end.order_by.return_value.first.return_value = latest_entry
-    end.filter.return_value.order_by.return_value.first.return_value = latest_entry
+    end.order_by.return_value.with_for_update.return_value.first.return_value = latest_entry
+    end.filter.return_value.order_by.return_value.with_for_update.return_value.first.return_value = latest_entry
     return mock_query
 
 
