@@ -285,8 +285,8 @@ def _is_out_of_stock(exc):
     lowered = text.lower()
     if "stock" in lowered and ("not enough" in lowered or "insufficient" in lowered):
         return True
-    # The domain message is Arabic: "المخزون غير كافٍ" (the stock is not enough).
-    return "المخزون" in text and "كاف" in text
+    # The domain message is Arabic: "╪º┘ä┘à╪«╪▓┘ê┘å ╪║┘è╪▒ ┘â╪º┘ü┘ì" (the stock is not enough).
+    return "╪º┘ä┘à╪«╪▓┘ê┘å" in text and "┘â╪º┘ü" in text
 
 
 def _pos_worker(app, ctx, barrier, index):
@@ -336,26 +336,27 @@ def _service_path_worker(app, ctx, barrier, index):
         "error": None,
     }
 
-    barrier.wait(timeout=BARRIER_TIMEOUT)
-    for submission in range(MAX_SUBMISSIONS):
-        try:
-            with atomic_transaction(f"load_sale_{index}_{submission}"):
-                customer = db.session.get(Customer, ctx["customer_id"])
-                seller = db.session.get(User, ctx["user_id"])
-                product = db.session.get(Product, ctx["product_id"])
-                sale = SaleService.create_sale(
-                    customer=customer,
-                    seller=seller,
-                    lines_data=[
-                        {
-                            "product": product,
-                            "quantity": ATTEMPT_QTY,
-                            "unit_price": UNIT_PRICE,
-                            "discount_percent": 0,
-                        }
-                    ],
-                    warehouse_id=ctx["warehouse_id"],
-                    currency="AED",
+    with app.app_context():
+        barrier.wait(timeout=BARRIER_TIMEOUT)
+        for submission in range(MAX_SUBMISSIONS):
+            try:
+                with atomic_transaction(f"load_sale_{index}_{submission}"):
+                    customer = db.session.get(Customer, ctx["customer_id"])
+                    seller = db.session.get(User, ctx["user_id"])
+                    product = db.session.get(Product, ctx["product_id"])
+                    sale = SaleService.create_sale(
+                        customer=customer,
+                        seller=seller,
+                        lines_data=[
+                            {
+                                "product": product,
+                                "quantity": ATTEMPT_QTY,
+                                "unit_price": UNIT_PRICE,
+                                "discount_percent": 0,
+                            }
+                        ],
+                        warehouse_id=ctx["warehouse_id"],
+                        currency="AED",
                         tax_rate=0,
                         discount_amount=0,
                         shipping_cost=0,
