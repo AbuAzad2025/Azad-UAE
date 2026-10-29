@@ -295,13 +295,7 @@ class PosCheckoutService:
         sale_amount = Decimal(str(sale.total_amount or 0))
         from models.pos_session import PosSession
 
-        locked_session = (
-            db.session.query(PosSession)
-            .filter(PosSession.id == session.id)
-            .populate_existing()
-            .with_for_update()
-            .first()
-        )
+        locked_session = db.session.query(PosSession).filter(PosSession.id == session.id).with_for_update().first()
         if locked_session is not None:
             locked_session.total_sales = Decimal(str(locked_session.total_sales or 0)) + sale_amount
             db.session.add(locked_session)
