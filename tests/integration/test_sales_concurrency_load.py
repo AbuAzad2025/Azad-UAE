@@ -293,26 +293,25 @@ def _pos_worker(app, ctx, barrier, index):
     """One concurrent checkout through the real HTTP register."""
     outcome = {"index": index, "ok": False, "status": None, "sale_id": None, "error": None}
 
-    with app.app_context():
-        with app.test_client() as client:
-            client.set_cookie(ctx["cookie_name"], ctx["cookie_value"])
-            payload = dict(ctx["payload"])
-            payload["lines"] = [
-                {
-                    "product_id": ctx["product_id"],
-                    "quantity": float(ATTEMPT_QTY),
-                    "discount_percent": 0,
-                }
-            ]
-            barrier.wait(timeout=BARRIER_TIMEOUT)
-            resp = client.post("/pos/api/checkout", json=payload, content_type="application/json")
-            outcome["status"] = resp.status_code
-            body = resp.get_json(silent=True) or {}
-            if resp.status_code == 200 and body.get("success"):
-                outcome["ok"] = True
-                outcome["sale_id"] = (body.get("data") or {}).get("sale_id")
-            else:
-                outcome["error"] = str(body.get("message") or body)[:300]
+    with app.test_client() as client:
+        client.set_cookie(ctx["cookie_name"], ctx["cookie_value"])
+        payload = dict(ctx["payload"])
+        payload["lines"] = [
+            {
+                "product_id": ctx["product_id"],
+                "quantity": float(ATTEMPT_QTY),
+                "discount_percent": 0,
+            }
+        ]
+        barrier.wait(timeout=BARRIER_TIMEOUT)
+        resp = client.post("/pos/api/checkout", json=payload, content_type="application/json")
+        outcome["status"] = resp.status_code
+        body = resp.get_json(silent=True) or {}
+        if resp.status_code == 200 and body.get("success"):
+            outcome["ok"] = True
+            outcome["sale_id"] = (body.get("data") or {}).get("sale_id")
+        else:
+            outcome["error"] = str(body.get("message") or body)[:300]
     return outcome
 
 
@@ -337,27 +336,26 @@ def _service_path_worker(app, ctx, barrier, index):
         "error": None,
     }
 
-    with app.app_context():
-        barrier.wait(timeout=BARRIER_TIMEOUT)
-        for submission in range(MAX_SUBMISSIONS):
-            try:
-                with atomic_transaction(f"load_sale_{index}_{submission}"):
-                    customer = db.session.get(Customer, ctx["customer_id"])
-                    seller = db.session.get(User, ctx["user_id"])
-                    product = db.session.get(Product, ctx["product_id"])
-                    sale = SaleService.create_sale(
-                        customer=customer,
-                        seller=seller,
-                        lines_data=[
-                            {
-                                "product": product,
-                                "quantity": ATTEMPT_QTY,
-                                "unit_price": UNIT_PRICE,
-                                "discount_percent": 0,
-                            }
-                        ],
-                        warehouse_id=ctx["warehouse_id"],
-                        currency="AED",
+    barrier.wait(timeout=BARRIER_TIMEOUT)
+    for submission in range(MAX_SUBMISSIONS):
+        try:
+            with atomic_transaction(f"load_sale_{index}_{submission}"):
+                customer = db.session.get(Customer, ctx["customer_id"])
+                seller = db.session.get(User, ctx["user_id"])
+                product = db.session.get(Product, ctx["product_id"])
+                sale = SaleService.create_sale(
+                    customer=customer,
+                    seller=seller,
+                    lines_data=[
+                        {
+                            "product": product,
+                            "quantity": ATTEMPT_QTY,
+                            "unit_price": UNIT_PRICE,
+                            "discount_percent": 0,
+                        }
+                    ],
+                    warehouse_id=ctx["warehouse_id"],
+                    currency="AED",
                         tax_rate=0,
                         discount_amount=0,
                         shipping_cost=0,
