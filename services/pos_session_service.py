@@ -95,7 +95,13 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     if method == "cash":
         from models.pos_session import PosSession
 
-        locked = db.session.query(PosSession).filter(PosSession.id == session.id).with_for_update().first()
+        locked = (
+            db.session.query(PosSession)
+            .filter(PosSession.id == session.id)
+            .populate_existing()
+            .with_for_update()
+            .first()
+        )
         if locked is not None:
             locked.total_cash_sales = Decimal(str(locked.total_cash_sales or 0)) + amount_aed
             db.session.add(locked)
@@ -103,7 +109,13 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     elif method == "card":
         from models.pos_session import PosSession
 
-        locked = db.session.query(PosSession).filter(PosSession.id == session.id).with_for_update().first()
+        locked = (
+            db.session.query(PosSession)
+            .filter(PosSession.id == session.id)
+            .populate_existing()
+            .with_for_update()
+            .first()
+        )
         if locked is not None:
             locked.total_card_sales = Decimal(str(locked.total_card_sales or 0)) + amount_aed
             db.session.add(locked)
