@@ -93,7 +93,15 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
 
     if method == "cash":
+        from contextlib import suppress
+
         from sqlalchemy import text
+
+        with suppress(Exception):
+            db.session.execute(
+                text("SELECT pg_advisory_xact_lock(:session_id)"),
+                {"session_id": session.id},
+            )
 
         db.session.execute(
             text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
@@ -101,7 +109,15 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         )
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
+        from contextlib import suppress
+
         from sqlalchemy import text
+
+        with suppress(Exception):
+            db.session.execute(
+                text("SELECT pg_advisory_xact_lock(:session_id)"),
+                {"session_id": session.id},
+            )
 
         db.session.execute(
             text("UPDATE pos_sessions SET total_card_sales = total_card_sales + :amount WHERE id = :id"),

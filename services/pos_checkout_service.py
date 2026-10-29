@@ -293,7 +293,15 @@ class PosCheckoutService:
         # SQLAlchemy may return a cached object from the identity map.
 
         sale_amount = Decimal(str(sale.total_amount or 0))
+        from contextlib import suppress
+
         from sqlalchemy import text
+
+        with suppress(Exception):
+            db.session.execute(
+                text("SELECT pg_advisory_xact_lock(:session_id)"),
+                {"session_id": session.id},
+            )
 
         db.session.execute(
             text("UPDATE pos_sessions SET total_sales = total_sales + :amount WHERE id = :id"),
@@ -307,7 +315,13 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
-            from sqlalchemy import text
+            from contextlib import suppress
+
+            with suppress(Exception):
+                db.session.execute(
+                    text("SELECT pg_advisory_xact_lock(:session_id)"),
+                    {"session_id": session.id},
+                )
 
             db.session.execute(
                 text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
