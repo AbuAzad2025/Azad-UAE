@@ -337,50 +337,49 @@ def _service_path_worker(app, ctx, barrier, index):
         "error": None,
     }
 
-    with app.app_context():
-        barrier.wait(timeout=BARRIER_TIMEOUT)
-        for submission in range(MAX_SUBMISSIONS):
-            try:
-                with atomic_transaction(f"load_sale_{index}_{submission}"):
-                    customer = db.session.get(Customer, ctx["customer_id"])
-                    seller = db.session.get(User, ctx["user_id"])
-                    product = db.session.get(Product, ctx["product_id"])
-                    sale = SaleService.create_sale(
-                        customer=customer,
-                        seller=seller,
-                        lines_data=[
-                            {
-                                "product": product,
-                                "quantity": ATTEMPT_QTY,
-                                "unit_price": UNIT_PRICE,
-                                "discount_percent": 0,
-                            }
-                        ],
-                        warehouse_id=ctx["warehouse_id"],
-                        currency="AED",
-                        tax_rate=0,
-                        discount_amount=0,
-                        shipping_cost=0,
-                        payment_data={
-                            "amount": float(UNIT_PRICE * ATTEMPT_QTY),
-                            "payment_method": "cash",
-                            "currency": "AED",
-                            "exchange_rate": 1.0,
-                        },
-                    )
-                    db.session.flush()
-                outcome["ok"] = True
-                outcome["sale_id"] = sale.id
-                return outcome
-            except Exception as exc:  # noqa: BLE001 - the failure mode is the measurement
-                db.session.rollback()
-                if _is_numbering_collision(exc):
-                    outcome["collisions"] += 1
-                    continue
-                outcome["error_type"] = type(exc).__name__
-                outcome["error"] = str(exc)[:300]
-                outcome["refused"] = "out_of_stock" if _is_out_of_stock(exc) else "other"
-                return outcome
+    barrier.wait(timeout=BARRIER_TIMEOUT)
+    for submission in range(MAX_SUBMISSIONS):
+        try:
+            with atomic_transaction(f"load_sale_{index}_{submission}"):
+                customer = db.session.get(Customer, ctx["customer_id"])
+                seller = db.session.get(User, ctx["user_id"])
+                product = db.session.get(Product, ctx["product_id"])
+                sale = SaleService.create_sale(
+                    customer=customer,
+                    seller=seller,
+                    lines_data=[
+                        {
+                            "product": product,
+                            "quantity": ATTEMPT_QTY,
+                            "unit_price": UNIT_PRICE,
+                            "discount_percent": 0,
+                        }
+                    ],
+                    warehouse_id=ctx["warehouse_id"],
+                    currency="AED",
+                    tax_rate=0,
+                    discount_amount=0,
+                    shipping_cost=0,
+                    payment_data={
+                        "amount": float(UNIT_PRICE * ATTEMPT_QTY),
+                        "payment_method": "cash",
+                        "currency": "AED",
+                        "exchange_rate": 1.0,
+                    },
+                )
+                db.session.flush()
+            outcome["ok"] = True
+            outcome["sale_id"] = sale.id
+            return outcome
+        except Exception as exc:  # noqa: BLE001 - the failure mode is the measurement
+            db.session.rollback()
+            if _is_numbering_collision(exc):
+                outcome["collisions"] += 1
+                continue
+            outcome["error_type"] = type(exc).__name__
+            outcome["error"] = str(exc)[:300]
+            outcome["refused"] = "out_of_stock" if _is_out_of_stock(exc) else "other"
+            return outcome
         outcome["error_type"] = "SubmissionsExhausted"
         outcome["refused"] = "other"
         return outcome
