@@ -294,25 +294,24 @@ def _pos_worker(app, ctx, barrier, index):
     outcome = {"index": index, "ok": False, "status": None, "sale_id": None, "error": None}
 
     barrier.wait(timeout=BARRIER_TIMEOUT)
-    with app.test_request_context():
-        with app.test_client() as client:
-            client.set_cookie(ctx["cookie_name"], ctx["cookie_value"])
-            payload = dict(ctx["payload"])
-            payload["lines"] = [
-                {
-                    "product_id": ctx["product_id"],
-                    "quantity": float(ATTEMPT_QTY),
-                    "discount_percent": 0,
-                }
-            ]
-            resp = client.post("/pos/api/checkout", json=payload, content_type="application/json")
-            outcome["status"] = resp.status_code
-            body = resp.get_json(silent=True) or {}
-            if resp.status_code == 200 and body.get("success"):
-                outcome["ok"] = True
-                outcome["sale_id"] = (body.get("data") or {}).get("sale_id")
-            else:
-                outcome["error"] = str(body.get("message") or body)[:300]
+    with app.test_client() as client:
+        client.set_cookie(ctx["cookie_name"], ctx["cookie_value"])
+        payload = dict(ctx["payload"])
+        payload["lines"] = [
+            {
+                "product_id": ctx["product_id"],
+                "quantity": float(ATTEMPT_QTY),
+                "discount_percent": 0,
+            }
+        ]
+        resp = client.post("/pos/api/checkout", json=payload, content_type="application/json")
+        outcome["status"] = resp.status_code
+        body = resp.get_json(silent=True) or {}
+        if resp.status_code == 200 and body.get("success"):
+            outcome["ok"] = True
+            outcome["sale_id"] = (body.get("data") or {}).get("sale_id")
+        else:
+            outcome["error"] = str(body.get("message") or body)[:300]
     return outcome
 
 
