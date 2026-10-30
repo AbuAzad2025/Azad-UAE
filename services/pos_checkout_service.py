@@ -321,6 +321,7 @@ class PosCheckoutService:
                     text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
                     {"amount": float(cash_aed), "id": session.id},
                 )
+                conn.commit()
         if payments_data:
             for tender_chunk in payments_data:
                 _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
