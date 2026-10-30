@@ -294,24 +294,16 @@ class PosCheckoutService:
 
         sale_amount = Decimal(str(sale.total_amount or 0))
 
-        import contextlib
-
+        # Use a raw connection for the atomic update to avoid shared-session issues
         from sqlalchemy import text
 
-        # Use a raw connection for the atomic update to avoid shared-session issues
         from extensions import db as _db
 
-        with _db.engine.connect() as conn:
-            with contextlib.suppress(Exception):
-                conn.execute(
-                    text("SELECT pg_advisory_xact_lock(:session_id)"),
-                    {"session_id": session.id},
-                )
+        with _db.engine.begin() as conn:
             conn.execute(
                 text("UPDATE pos_sessions SET total_sales = total_sales + :amount WHERE id = :id"),
                 {"amount": float(sale_amount), "id": session.id},
             )
-            conn.commit()
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
@@ -320,20 +312,15 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
+            from sqlalchemy import text
+
             from extensions import db as _db
 
-            with _db.engine.connect() as conn:
-                with contextlib.suppress(Exception):
-                    conn.execute(
-                        text("SELECT pg_advisory_xact_lock(:session_id)"),
-                        {"session_id": session.id},
-                    )
+            with _db.engine.begin() as conn:
                 conn.execute(
                     text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
                     {"amount": float(cash_aed), "id": session.id},
                 )
-                conn.commit()
-            session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
                 _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)

@@ -93,36 +93,26 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
 
     if method == "cash":
-        from contextlib import suppress
-
         from sqlalchemy import text
 
-        with suppress(Exception):
-            db.session.execute(
-                text("SELECT pg_advisory_xact_lock(:session_id)"),
-                {"session_id": session.id},
-            )
+        from extensions import db as _db
 
-        db.session.execute(
-            text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
-            {"amount": float(amount_aed), "id": session.id},
-        )
+        with _db.engine.begin() as conn:
+            conn.execute(
+                text("UPDATE pos_sessions SET total_cash_sales = total_cash_sales + :amount WHERE id = :id"),
+                {"amount": float(amount_aed), "id": session.id},
+            )
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
-        from contextlib import suppress
-
         from sqlalchemy import text
 
-        with suppress(Exception):
-            db.session.execute(
-                text("SELECT pg_advisory_xact_lock(:session_id)"),
-                {"session_id": session.id},
-            )
+        from extensions import db as _db
 
-        db.session.execute(
-            text("UPDATE pos_sessions SET total_card_sales = total_card_sales + :amount WHERE id = :id"),
-            {"amount": float(amount_aed), "id": session.id},
-        )
+        with _db.engine.begin() as conn:
+            conn.execute(
+                text("UPDATE pos_sessions SET total_card_sales = total_card_sales + :amount WHERE id = :id"),
+                {"amount": float(amount_aed), "id": session.id},
+            )
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     # NOTE: total_sales is already set by the sale amount (sale.total_amount).
     # Tender amounts (cash + card) are tracked separately in total_cash_sales
