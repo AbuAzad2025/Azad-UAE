@@ -458,10 +458,9 @@ class TestFiscalPositionService:
 
     def test_compute_tax_no_position_uses_source_tax(self, mocker):
         line = MagicMock(tax_id=4, unit_price=50, quantity=1)
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get",
-            return_value=MagicMock(rate=10),
-        )
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = MagicMock(rate=10)
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         from services.fiscal_position_service import FiscalPositionService
 
         tax_amount, rate = FiscalPositionService.compute_tax_for_line(line)

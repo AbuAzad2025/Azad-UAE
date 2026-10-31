@@ -137,7 +137,9 @@ class TestComputeTaxBranches:
         mocker.patch(
             "services.fiscal_position_service.FiscalPositionTaxRule.query"
         ).filter_by.return_value.first.return_value = rule
-        mocker.patch("services.fiscal_position_service.db.session.get", return_value=SimpleNamespace(rate=7))
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = SimpleNamespace(rate=7)
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         _, rate = FiscalPositionService.compute_tax_for_line(line, fiscal_position_id=3)
         assert rate == Decimal("7")
 
