@@ -40,18 +40,7 @@ def get_locale():
     return "ar"
 
 
-def _request_scope():
-    """Scope sessions to the request context when available, else app context."""
-    from flask import _app_ctx_stack, _request_ctx_stack, has_app_context, has_request_context
-
-    if has_request_context():
-        return id(_request_ctx_stack.top)
-    if has_app_context():
-        return id(_app_ctx_stack.top)
-    return None
-
-
-db = SQLAlchemy(session_options={"expire_on_commit": False, "scopefunc": _request_scope})
+db = SQLAlchemy(session_options={"expire_on_commit": False})
 
 migrate = Migrate()
 
