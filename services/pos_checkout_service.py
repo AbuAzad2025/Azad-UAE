@@ -296,11 +296,16 @@ class PosCheckoutService:
         from models.pos_session import PosSession
 
         sale_amount = Decimal(str(sale.total_amount or 0))
-        db.session.execute(
-            sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.total_sales + sale_amount)
-        )
+
+        from extensions import db as _db
+
+        with _db.engine.connect() as conn:
+            conn.execute(
+                sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
+            )
+            conn.commit()
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
@@ -309,11 +314,17 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
-            db.session.execute(
-                sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.total_cash_sales + cash_aed)
-            )
+            from sqlalchemy import update as sa_update
+
+            from extensions import db as _db
+
+            with _db.engine.connect() as conn:
+                conn.execute(
+                    sa_update(PosSession)
+                    .where(PosSession.id == session.id)
+                    .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
+                )
+                conn.commit()
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:

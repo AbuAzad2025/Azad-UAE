@@ -84,8 +84,6 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     """
     from decimal import Decimal
 
-    from sqlalchemy import update as sa_update
-
     from models.pos_session import PosSession
     from utils.currency_utils import convert_and_quantize_aed
 
@@ -96,24 +94,42 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
 
     if method == "cash":
-        db.session.execute(
-            sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_cash_sales=PosSession.total_cash_sales + amount_aed)
-        )
+        from sqlalchemy import update as _sa_update
+
+        from extensions import db as _db
+
+        with _db.engine.connect() as conn:
+            conn.execute(
+                _sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed)
+            )
+            conn.commit()
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
-        db.session.execute(
-            sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_card_sales=PosSession.total_card_sales + amount_aed)
-        )
+        from sqlalchemy import update as _sa_update
+
+        from extensions import db as _db
+
+        with _db.engine.connect() as conn:
+            conn.execute(
+                _sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed)
+            )
+            conn.commit()
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     else:
-        db.session.execute(
-            sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.total_sales + amount_aed)
-        )
+        from sqlalchemy import update as _sa_update
+
+        from extensions import db as _db
+
+        with _db.engine.connect() as conn:
+            conn.execute(
+                _sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_sales=PosSession.__table__.c.total_sales + amount_aed)
+            )
+            conn.commit()
         session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
     # NOTE: total_sales is set separately by the sale amount. Do NOT add tender amounts.
