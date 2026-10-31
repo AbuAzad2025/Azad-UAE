@@ -735,12 +735,6 @@ def api_walkin_customer():
 @login_required
 @permission_required(PermissionEnum.MANAGE_SALES)
 def api_checkout():
-    from contextlib import suppress
-
-    from extensions import db
-
-    with suppress(Exception):
-        db.session.remove()
     if not request.is_json:
         return error_response(message=gettext("Content-Type يجب أن يكون application/json."), status_code=415)
     payload = request.get_json(silent=True) or {}
