@@ -291,20 +291,16 @@ class PosCheckoutService:
         # Atomic SQL-level update to prevent lost updates under concurrency.
         # Read-modify-write in Python races even under SELECT FOR UPDATE because
         # SQLAlchemy may return a cached object from the identity map.
-
-        sale_amount = Decimal(str(sale.total_amount or 0))
-
         from sqlalchemy import update as sa_update
 
         from models.pos_session import PosSession
 
+        sale_amount = Decimal(str(sale.total_amount or 0))
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
+            .values(total_sales=PosSession.total_sales + sale_amount)
         )
-        db.session.flush()
-        session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
                 payment_data.get("amount", 0),
@@ -312,16 +308,11 @@ class PosCheckoutService:
                 payment_exchange_rate,
                 tenant_id=tenant_id,
             )
-            from sqlalchemy import update as sa_update
-
-            from models.pos_session import PosSession
-
             db.session.execute(
                 sa_update(PosSession)
                 .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
+                .values(total_cash_sales=PosSession.total_cash_sales + cash_aed)
             )
-            db.session.flush()
         if payments_data:
             for tender_chunk in payments_data:
                 _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
