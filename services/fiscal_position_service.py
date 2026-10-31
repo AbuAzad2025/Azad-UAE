@@ -5,7 +5,6 @@ Inspired by Odoo's account.fiscal.position
 
 from decimal import ROUND_HALF_UP, Decimal
 
-from extensions import db
 from models import Customer, FiscalPosition, FiscalPositionTaxRule, TaxCalculationRule
 
 
@@ -16,13 +15,17 @@ class FiscalPositionService:
         Return the fiscal position applicable for a customer.
         Checks explicit assignment first, then auto-matching rules.
         """
-        customer = db.session.get(Customer, customer_id)
+        from utils.tenanting import tenant_query
+
+        customer = tenant_query(Customer).filter_by(id=customer_id).first()
         if not customer:
             return None
 
         # Explicit assignment
         if hasattr(customer, "fiscal_position_id") and customer.fiscal_position_id:
-            return db.session.get(FiscalPosition, customer.fiscal_position_id)
+            from utils.tenanting import tenant_query
+
+            return tenant_query(FiscalPosition).filter_by(id=customer.fiscal_position_id).first()
 
         # Auto-match by country
         tenant_id = customer.tenant_id
@@ -96,10 +99,14 @@ class FiscalPositionService:
             if rule and rule.destination_tax:
                 tax_rate = Decimal(str(rule.destination_tax.rate or 0))
             else:
-                tax = db.session.get(TaxCalculationRule, source_tax_id)
+                from utils.tenanting import tenant_query
+
+                tax = tenant_query(TaxCalculationRule).filter_by(id=source_tax_id).first()
                 tax_rate = Decimal(str(tax.rate if tax else 0))
         else:
-            tax = db.session.get(TaxCalculationRule, source_tax_id) if source_tax_id else None
+            from utils.tenanting import tenant_query
+
+            tax = tenant_query(TaxCalculationRule).filter_by(id=source_tax_id).first() if source_tax_id else None
             tax_rate = Decimal(str(tax.rate if tax else 0))
 
         net = Decimal(str(line.unit_price or 0)) * Decimal(str(line.quantity or 1))

@@ -29,8 +29,9 @@ class GamificationService:
     @staticmethod
     def award_points(user_id: int, action: str, metadata: dict | None = None) -> dict:
         from models import User
+        from utils.tenanting import tenant_query
 
-        user = db.session.get(User, user_id)
+        user = tenant_query(User).filter_by(id=user_id).first()
         if not user:
             return {"success": False, "error": "User not found"}
 
@@ -112,15 +113,16 @@ class GamificationService:
     @staticmethod
     def get_user_stats(user_id: int) -> dict:
         from models import Sale, User
+        from utils.tenanting import tenant_query
 
-        user = db.session.get(User, user_id)
+        user = tenant_query(User).filter_by(id=user_id).first()
         if not user:
             return {"success": False}
 
         points = user.points or 0
         badge = GamificationService.get_user_badge(points)
 
-        total_sales = Sale.query.filter_by(seller_id=user_id).count()
+        total_sales = tenant_query(Sale).filter_by(seller_id=user_id).count()
         total_amount = db.session.query(db.func.sum(Sale.amount_aed)).filter_by(
             seller_id=user_id, status="confirmed"
         ).scalar() or Decimal("0")

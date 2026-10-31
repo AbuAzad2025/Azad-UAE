@@ -29,7 +29,9 @@ class TestGetUserBadge:
 
 class TestAwardPoints:
     def test_user_not_found(self, mocker):
-        mocker.patch.object(db.session, "get", return_value=None)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = None
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         result = GamificationService.award_points(999999, "sale_created")
         assert result["success"] is False
 
@@ -39,7 +41,9 @@ class TestAwardPoints:
         # attribute. The old test asserted the "no points attribute yet"
         # fallback, which was the defect: the balance never reached the disk.
         user = SimpleNamespace(id=1, points=25)
-        mocker.patch.object(db.session, "get", return_value=user)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = user
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         mocker.patch.object(db.session, "flush")
         result = GamificationService.award_points(1, "sale_created")
         assert result["success"] is True
@@ -112,7 +116,9 @@ class TestLeaderboard:
 
 class TestUserStats:
     def test_user_not_found(self, mocker):
-        mocker.patch.object(db.session, "get", return_value=None)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = None
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         assert GamificationService.get_user_stats(999999)["success"] is False
 
     def test_stats_with_sales(self, db_session, sample_user, sample_tenant, sample_customer):

@@ -10,7 +10,9 @@ class TestGetForCustomer:
     """get_for_customer — explicit, country auto-match, local fallback."""
 
     def test_returns_none_when_customer_missing(self, mocker):
-        mocker.patch("services.fiscal_position_service.db.session.get", return_value=None)
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = None
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
         from services.fiscal_position_service import FiscalPositionService
 
         assert FiscalPositionService.get_for_customer(99) is None
@@ -19,10 +21,14 @@ class TestGetForCustomer:
         customer = MagicMock(tenant_id=1, fiscal_position_id=5, country=None)
         customer.fiscal_position_id = 5
         pos = MagicMock(id=5, code="export")
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get",
-            side_effect=[customer, pos],
-        )
+        def _tq(model):
+            q = MagicMock()
+            if model.__name__ == "Customer":
+                q.filter_by.return_value.first.return_value = customer
+            else:
+                q.filter_by.return_value.first.return_value = pos
+            return q
+        mocker.patch("utils.tenanting.tenant_query", side_effect=_tq)
 
         from services.fiscal_position_service import FiscalPositionService
 
@@ -32,10 +38,14 @@ class TestGetForCustomer:
         customer = MagicMock(tenant_id=1, country="SA", address_country=None)
         customer.fiscal_position_id = None
         pos = MagicMock(id=2, code="gcc")
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get",
-            side_effect=[customer, None],
-        )
+        def _tq(model):
+            q = MagicMock()
+            if model.__name__ == "Customer":
+                q.filter_by.return_value.first.return_value = customer
+            else:
+                q.filter_by.return_value.first.return_value = None
+            return q
+        mocker.patch("utils.tenanting.tenant_query", side_effect=_tq)
         fp_q = mocker.patch("services.fiscal_position_service.FiscalPosition.query")
         fp_q.filter.return_value.first.return_value = pos
 
@@ -47,10 +57,14 @@ class TestGetForCustomer:
         customer = MagicMock(tenant_id=1, country=None, address_country=None)
         customer.fiscal_position_id = None
         local = MagicMock(code="local")
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get",
-            side_effect=[customer, None],
-        )
+        def _tq(model):
+            q = MagicMock()
+            if model.__name__ == "Customer":
+                q.filter_by.return_value.first.return_value = customer
+            else:
+                q.filter_by.return_value.first.return_value = None
+            return q
+        mocker.patch("utils.tenanting.tenant_query", side_effect=_tq)
         fp_q = mocker.patch("services.fiscal_position_service.FiscalPosition.query")
         fp_q.filter.return_value.first.return_value = None
         fp_q.filter_by.return_value.first.return_value = local
@@ -104,10 +118,9 @@ class TestApplyAndCompute:
         mocker.patch(
             "services.fiscal_position_service.FiscalPositionTaxRule.query"
         ).filter_by.return_value.first.return_value = None
-        mocker.patch(
-            "services.fiscal_position_service.db.session.get",
-            return_value=MagicMock(rate=10),
-        )
+        mock_q = MagicMock()
+        mock_q.filter_by.return_value.first.return_value = MagicMock(rate=10)
+        mocker.patch("utils.tenanting.tenant_query", return_value=mock_q)
 
         from services.fiscal_position_service import FiscalPositionService
 
