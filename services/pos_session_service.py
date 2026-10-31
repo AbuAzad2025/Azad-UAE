@@ -109,4 +109,11 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
             .values(total_card_sales=PosSession.total_card_sales + amount_aed)
         )
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
+    else:
+        db.session.execute(
+            sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_sales=PosSession.total_sales + amount_aed)
+        )
+        session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
     # NOTE: total_sales is set separately by the sale amount. Do NOT add tender amounts.
