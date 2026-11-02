@@ -13,8 +13,15 @@ logger = logging.getLogger(__name__)
 MAX_LOCK_RETRIES = 3
 
 
+import random
+import time
+
+_MAX_LOCK_RETRIES = 5
+_BASE_LOCK_RETRY_DELAY = 0.02  # 20ms base delay
+
+
 def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
-    """Re-read one row under ``SELECT ... FOR UPDATE`` and return it.
+    """Re-read one row under ``SELECT ... FOR UPDATE NOWAIT`` and return it.
 
     Money accumulators on Customer / Supplier / Partner are read-modify-write
     targets: ``balance = (balance or 0) - amount``. Under PostgreSQL READ
@@ -28,8 +35,10 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
     and reads the freshly locked value.
 
     Uses a savepoint per attempt so lock contention does not roll back the
-    caller's transaction, and aborts on final failure rather than silently
-    proceeding unlocked. Mirrors ``services.stock_service._safe_for_update``.
+    caller's transaction. On deadlock (which aborts the subtransaction),
+    the savepoint rolls back the failed attempt but keeps the main transaction
+    alive. Retries with exponential backoff + jitter to reduce contention.
+    This prevents deadlocks on shared rows (e.g., walk-in customer in POS).
     """
     from sqlalchemy.exc import OperationalError
 
@@ -38,10 +47,10 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
         query = query.populate_existing()
 
     target = label or f"{model.__name__}({pk})"
-    for attempt in range(1, MAX_LOCK_RETRIES + 1):
+    for attempt in range(1, _MAX_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
         try:
-            row = query.with_for_update(of=model).first()
+            row = query.with_for_update(of=model, nowait=True).first()
             savepoint.commit()
             if row is None:
                 raise LookupError(f"{target} not found")
@@ -49,22 +58,31 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
         except LookupError:
             savepoint.rollback()
             raise
-        except OperationalError:
+        except OperationalError as e:
             savepoint.rollback()
-            if attempt == MAX_LOCK_RETRIES:
+            # Check if it's a lock-not-available error (PostgreSQL error code 55P03)
+            # or a deadlock detected error (PostgreSQL error code 40P01)
+            is_lock_error = getattr(e, "pgcode", None) in ("55P03", "40P01") or "could not obtain lock" in str(e).lower() or "deadlock detected" in str(e).lower()
+            if not is_lock_error:
+                # Re-raise non-lock errors immediately
+                raise
+            if attempt == _MAX_LOCK_RETRIES:
                 logger.critical(
                     "Row lock acquisition failed after %d attempts for %s - aborting "
                     "to prevent a lost update on a money accumulator.",
-                    MAX_LOCK_RETRIES,
+                    _MAX_LOCK_RETRIES,
                     target,
                 )
                 raise
             logger.warning(
-                "Lock contention on %s (attempt %d/%d) - retrying.",
+                "Lock contention on %s (attempt %d/%d) - retrying after backoff.",
                 target,
                 attempt,
-                MAX_LOCK_RETRIES,
+                _MAX_LOCK_RETRIES,
             )
+            # Exponential backoff with jitter: 20ms, 40ms, 80ms, 160ms, 320ms + random 0-20ms
+            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.02)
+            time.sleep(delay)
     raise RuntimeError(f"Failed to acquire row lock for {target}")  # pragma: no cover
 
 

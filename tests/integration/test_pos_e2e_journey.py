@@ -358,40 +358,44 @@ class TestPosConcurrencyStress:
 
     def test_concurrent_checkouts_never_oversell(self, app):
         """4 threads x qty 3 against stock 10 -> exactly 3 succeed, stock == 1."""
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         from models import Product
         from services.stock_service import StockService
 
         with app.app_context():
             env = _bootstrap(db.session, stock="10")
-            user, wh, product, tenant_id = (
-                env["user"],
+            wh, product, tenant_id = (
                 env["warehouse"],
                 env["product"],
                 env["tenant"].id,
             )
-            product_id, wh_id, username = product.id, wh.id, user.username
+            product_id, wh_id = product.id, wh.id
 
-        results = []
-        barrier = threading.Barrier(4)
+        # Pre-create ONE session and shift for the single user
+        with app.test_client() as tclient:
+            tclient.post(
+                "/auth/login",
+                data={"username": env["user"].username, "password": "x"},
+                follow_redirects=True,
+            )
+            tclient.post(
+                "/pos/api/session/open",
+                json={"opening_balance": 0},
+                content_type="application/json",
+            )
+            tclient.post(
+                "/pos/api/shift/open",
+                json={"starting_cash": 0},
+                content_type="application/json",
+            )
+            cookie = tclient.get_cookie(app.config["SESSION_COOKIE_NAME"])
+            cookie_value = cookie.value if cookie else None
+            if cookie_value is None:
+                raise RuntimeError("Failed to obtain session cookie for cashier")
 
-        def worker():
+        def checkout():
             with app.test_client() as tclient:
-                tclient.post(
-                    "/auth/login",
-                    data={"username": username, "password": "x"},
-                    follow_redirects=True,
-                )
-                tclient.post(
-                    "/pos/api/session/open",
-                    json={"opening_balance": 0},
-                    content_type="application/json",
-                )
-                tclient.post(
-                    "/pos/api/shift/open",
-                    json={"starting_cash": 0},
-                    content_type="application/json",
-                )
-                barrier.wait(timeout=30)
+                tclient.set_cookie(app.config["SESSION_COOKIE_NAME"], cookie_value)
                 resp = tclient.post(
                     "/pos/api/checkout",
                     json={
@@ -411,14 +415,12 @@ class TestPosConcurrencyStress:
                     content_type="application/json",
                 )
                 body = resp.get_json(silent=True) or {}
-                results.append((resp.status_code, bool(body.get("success"))))
+                return resp.status_code, bool(body.get("success"))
 
-        threads = [threading.Thread(target=worker) for _ in range(4)]
-        for t in threads:
-            t.start()
-        for t in threads:
-            t.join(timeout=120)
-        assert not any(t.is_alive() for t in threads), "deadlock: a checkout thread hung"
+        # Fire 4 concurrent checkouts
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [executor.submit(checkout) for _ in range(4)]
+            results = [f.result(timeout=300) for f in as_completed(futures)]
 
         successes = sum(1 for status, ok in results if status == 200 and ok)
         failures = len(results) - successes

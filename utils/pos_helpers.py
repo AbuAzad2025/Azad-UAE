@@ -17,7 +17,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.currency_utils import convert_and_quantize_aed
-from utils.helpers import generate_number
+from utils.helpers import generate_number, generate_number_and_save
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 POS_WALKIN_MARKER = "[POS-WALKIN]"
@@ -427,26 +427,71 @@ def create_pos_session(
     tenant_id = get_active_tenant_id(user)
     if not tenant_id:
         raise ValueError("لا توجد شركة نشطة.")
-    number = generate_number(
+    tenant_id_int = int(tenant_id)
+    branch_id_int = int(branch_id)
+
+    def _save(number: str) -> PosSession:
+        session = PosSession(
+            tenant_id=tenant_id_int,
+            branch_id=branch_id_int,
+            user_id=user.id,
+            session_number=number,
+            opening_balance_cash=opening_balance,
+            notes=notes,
+            status=PosSession.STATUS_OPEN,
+            terminal_id=(terminal_id or "").strip() or None,
+        )
+        db.session.add(session)
+        db.session.flush()
+        return session
+
+    return generate_number_and_save(
         prefix="POS-SES",
         model=PosSession,
         field_name="session_number",
+        save_func=_save,
         branch_code=branch_id,
-        tenant_id=int(tenant_id),
+        tenant_id=tenant_id_int,
     )
-    session = PosSession(
-        tenant_id=int(tenant_id),
-        branch_id=int(branch_id),
-        user_id=user.id,
-        session_number=number,
-        opening_balance_cash=opening_balance,
-        notes=notes,
-        status=PosSession.STATUS_OPEN,
-        terminal_id=(terminal_id or "").strip() or None,
+
+
+def create_pos_shift(
+    session: PosSession,
+    user,
+    starting_cash: Decimal = Decimal("0"),
+    notes: str | None = None,
+) -> "PosShift":
+    """Create a POS shift with a unique shift number, retrying on collision."""
+    from models import PosShift
+    from services.pos_session_service import PosSessionService
+
+    tenant_id = session.tenant_id
+    branch_id = session.branch_id
+
+    def _save(number: str) -> "PosShift":
+        shift = PosSessionService.create_shift(
+            tenant_id=tenant_id,
+            branch_id=branch_id,
+            user_id=user.id,
+            starting_cash=starting_cash,
+        )
+        shift.session_id = session.id
+        shift.shift_number = number
+        shift.status = PosShift.SHIFT_OPEN
+        if notes:
+            shift.notes = notes
+        db.session.add(shift)
+        db.session.flush()
+        return shift
+
+    return generate_number_and_save(
+        prefix="SHF",
+        model=PosShift,
+        field_name="shift_number",
+        save_func=_save,
+        branch_code=branch_id,
+        tenant_id=tenant_id,
     )
-    db.session.add(session)
-    db.session.flush()
-    return session
 
 
 def _accumulate_close_totals(session: PosSession, sales_in_session: list) -> tuple[Decimal, Decimal, Decimal]:

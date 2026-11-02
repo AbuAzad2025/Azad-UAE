@@ -60,6 +60,7 @@ from utils.pos_helpers import (
     close_pos_session,
     compute_fast_cash_options,
     create_pos_session,
+    create_pos_shift,
     get_active_session,
     get_active_session_locked,
     get_paused_session,
@@ -1384,26 +1385,11 @@ def api_shift_open():
 
     try:
         with atomic_transaction("pos_shift_open"):
-            tid = get_active_tenant_id(current_user)
-            number = generate_number(
-                prefix="SHF",
-                model=PosShift,
-                field_name="shift_number",
-                branch_code=session.branch_id,
-                tenant_id=int(tid or 0),
-            )
-            from services.pos_session_service import PosSessionService
-
-            shift = PosSessionService.create_shift(
-                tenant_id=int(tid or 0),
-                branch_id=session.branch_id,
-                user_id=current_user.id,
+            shift = create_pos_shift(
+                session=session,
+                user=current_user,
                 starting_cash=Decimal(str(starting_cash)),
             )
-            shift.session_id = session.id
-            shift.shift_number = number
-            shift.status = PosShift.SHIFT_OPEN
-            db.session.flush()
     except Exception as exc:
         # Governed: an untyped Exception echoed verbatim to an API client.
         current_app.logger.error("pos cart remove item failed: %s", exc, exc_info=True)

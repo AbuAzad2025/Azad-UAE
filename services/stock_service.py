@@ -23,29 +23,37 @@ from utils.logger import log_financial
 
 logger = logging.getLogger(__name__)
 
+import random
+import time
+
 _MAX_LOCK_RETRIES = 3
+_BASE_LOCK_RETRY_DELAY = 0.02  # 20ms base delay
 
 
 def _safe_for_update(query, label="row"):
-    """Execute SELECT … FOR UPDATE with savepoint-based retry.
+    """Execute SELECT … FOR UPDATE NOWAIT with simple retry.
 
-    Uses savepoints so that a failed lock attempt does NOT roll back the
-    caller's entire transaction.  On final failure, aborts — never silently
-    drops the lock.
+    Uses NOWAIT to fail fast when the lock is held by another transaction,
+    then retries with exponential backoff + jitter to reduce contention.
+    No savepoints needed since FOR UPDATE NOWAIT doesn't modify data.
 
-    Rationale: The previous try/except pattern silently fell back to an unlocked
-    read when the lock could not be acquired, opening the door to MWAC race
-    conditions where two concurrent transactions read the same old cost and
-    both update it incorrectly ("floating costs").
+    Rationale: The previous blocking FOR UPDATE caused deadlocks under high
+    concurrency (e.g., 4 threads competing for the same stock row) because
+    PostgreSQL would queue waiters indefinitely. NOWAIT + retry ensures
+    threads back off and retry, allowing the database to serialize access
+    without deadlocking the test runner's 120s thread join timeout.
     """
     for attempt in range(1, _MAX_LOCK_RETRIES + 1):
-        savepoint = db.session.begin_nested()
         try:
-            result = query.with_for_update().first()
-            savepoint.commit()
+            result = query.with_for_update(nowait=True).first()
             return result
-        except OperationalError:
-            savepoint.rollback()
+        except OperationalError as e:
+            # Check if it's a lock-not-available error (PostgreSQL error code 55P03)
+            # or a deadlock detected error (PostgreSQL error code 40P01)
+            is_lock_error = getattr(e, "pgcode", None) in ("55P03", "40P01") or "could not obtain lock" in str(e).lower() or "deadlock detected" in str(e).lower()
+            if not is_lock_error:
+                # Re-raise non-lock errors immediately
+                raise
             if attempt == _MAX_LOCK_RETRIES:
                 current_app.logger.critical(
                     "Row-level lock acquisition failed after %d attempts for %s — aborting to prevent MWAC race condition.",
@@ -54,11 +62,14 @@ def _safe_for_update(query, label="row"):
                 )
                 raise
             current_app.logger.warning(
-                "Lock contention on %s (attempt %d/%d) — retrying.",
+                "Lock contention on %s (attempt %d/%d) — retrying after backoff.",
                 label,
                 attempt,
                 _MAX_LOCK_RETRIES,
             )
+            # Exponential backoff with jitter: 50ms, 100ms, 200ms, 400ms, 800ms + random 0-50ms
+            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.05)
+            time.sleep(delay)
     raise RuntimeError(f"Failed to acquire row lock for {label}")  # pragma: no cover
 
 

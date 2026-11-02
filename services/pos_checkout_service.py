@@ -28,6 +28,7 @@ from utils.pos_checkout_helpers import (
 from utils.pos_helpers import POS_QA_MARKER, get_pos_walkin_customer, merge_checkout_lines, safe_decimal
 from utils.structured_logging import log_mutation
 from utils.tenanting import tenant_get
+from services.stock_service import _safe_for_update
 
 
 class PosCheckoutError(Exception):
@@ -107,13 +108,15 @@ class PosCheckoutService:
         lines_data = []
         product_ids = [int(r["product_id"]) for r in merged]
         if product_ids:
-            locked = {
-                p.id: p
-                for p in db.session.query(Product)
-                .filter(Product.id.in_(product_ids), Product.tenant_id == tenant_id)
-                .with_for_update()
-                .all()
-            }
+            # Lock products one by one in ID order to prevent deadlocks.
+            # Use _safe_for_update with NOWAIT + retry to fail fast under contention.
+            locked = {}
+            for pid in sorted(set(product_ids)):
+                q = db.session.query(Product).filter(Product.id == pid, Product.tenant_id == tenant_id)
+                product = _safe_for_update(q, label=f"Product p={pid}")
+                if not product or not product.is_active:
+                    raise PosCheckoutError(gettext("يوجد منتج غير صالح داخل السلة."), 400)
+                locked[pid] = product
         else:
             locked = {}
 

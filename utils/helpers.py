@@ -122,15 +122,17 @@ def generate_number_and_save(
     branch_code=None,
     branch_id=None,
     tenant_id=None,
-    max_attempts=20,
+    max_attempts=50,
 ):
     """
     Generate a unique number and create the record via save_func().
     Retries on unique-constraint violation to handle concurrent requests.
     """
+    import random
+    import time
     from sqlalchemy.exc import IntegrityError
 
-    for _attempt in range(max_attempts):
+    for attempt in range(max_attempts):
         number = generate_number(
             prefix=prefix,
             model=model,
@@ -143,6 +145,16 @@ def generate_number_and_save(
         try:
             return save_func(number)
         except IntegrityError:
+            # Transaction is aborted; rollback to clear the error state before retrying.
+            db.session.rollback()
+            # Exponential backoff with more jitter to spread out retries.
+            # Base delay: 10ms, doubling each attempt, plus random 0-100ms jitter.
+            base_delay = 0.01 * (2 ** attempt)
+            jitter = random.uniform(0, 0.1)
+            delay = base_delay + jitter
+            # Cap at 5 seconds to avoid excessive delays
+            delay = min(delay, 5.0)
+            time.sleep(delay)
             logger.debug("Number collision for %r; retrying (%s)", number, max_attempts, exc_info=True)
             continue
     raise RuntimeError(f"Could not generate unique number after {max_attempts} attempts")
