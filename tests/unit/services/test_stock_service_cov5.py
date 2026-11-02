@@ -72,7 +72,10 @@ def test_lock_retry_then_success(db_session):
         lock_error,
         row,
     ]
-    with patch.object(ss, "current_app") as ca:
+    with (
+        patch.object(ss, "current_app") as ca,
+        patch("time.sleep"),
+    ):
         result = ss._safe_for_update(q, label="probe")
     assert result is row
     assert q.with_for_update.return_value.first.call_count == 2
@@ -90,6 +93,7 @@ def test_lock_retry_exhausted_raises(db_session):
     ]
     with (
         patch.object(ss, "current_app") as ca,
+        patch("time.sleep"),
         pytest.raises(OperationalError),
     ):
         ss._safe_for_update(q, label="probe2")

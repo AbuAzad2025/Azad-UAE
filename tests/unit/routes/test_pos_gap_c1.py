@@ -837,7 +837,7 @@ class TestShiftLifecycle:
             _pos_api_patches(),
             patch("routes.pos._get_active_shift", return_value=None),
             patch.object(PosSessionService, "create_shift", return_value=created),
-            patch("routes.pos.generate_number", return_value="SHF-0007"),
+            patch("utils.pos_helpers.generate_number_and_save", return_value=created),
         ):
             resp = pg_client.post("/pos/api/shift/open", json={"starting_cash": "250"})
         assert resp.status_code == 201
