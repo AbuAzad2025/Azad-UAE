@@ -150,7 +150,7 @@ def generate_number_and_save(
             # Exponential backoff with more jitter to spread out retries.
             # Base delay: 10ms, doubling each attempt, plus random 0-100ms jitter.
             base_delay = 0.01 * (2**attempt)
-            jitter = random.uniform(0, 0.1)
+            jitter = random.uniform(0, 0.1)  # nosec B311
             delay = base_delay + jitter
             # Cap at 5 seconds to avoid excessive delays
             delay = min(delay, 5.0)

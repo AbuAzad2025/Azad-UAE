@@ -72,7 +72,7 @@ def _safe_for_update(query, label="row"):
                 _MAX_LOCK_RETRIES,
             )
             # Exponential backoff with jitter: 50ms, 100ms, 200ms, 400ms, 800ms + random 0-50ms
-            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.05)
+            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.05)  # nosec B311
             time.sleep(delay)
     raise RuntimeError(f"Failed to acquire row lock for {label}")  # pragma: no cover
 

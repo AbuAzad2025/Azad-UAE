@@ -85,7 +85,7 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
                 _MAX_LOCK_RETRIES,
             )
             # Exponential backoff with jitter: 20ms, 40ms, 80ms, 160ms, 320ms + random 0-20ms
-            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.02)
+            delay = _BASE_LOCK_RETRY_DELAY * (2 ** (attempt - 1)) + random.uniform(0, 0.02)  # nosec B311
             time.sleep(delay)
     raise RuntimeError(f"Failed to acquire row lock for {target}")  # pragma: no cover
 
