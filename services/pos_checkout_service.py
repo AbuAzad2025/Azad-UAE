@@ -25,10 +25,10 @@ from utils.pos_checkout_helpers import (
     _pos_standard_price,
     _promotion_evaluation_json,
 )
+from services.stock_service import _safe_for_update
 from utils.pos_helpers import POS_QA_MARKER, get_pos_walkin_customer, merge_checkout_lines, safe_decimal
 from utils.structured_logging import log_mutation
 from utils.tenanting import tenant_get
-from services.stock_service import _safe_for_update
 
 
 class PosCheckoutError(Exception):

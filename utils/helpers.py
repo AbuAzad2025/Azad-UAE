@@ -1,11 +1,14 @@
 import logging
 import os
+import random
 import re
+import time
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
 from flask import current_app, request
+from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 
 from extensions import db
@@ -128,9 +131,6 @@ def generate_number_and_save(
     Generate a unique number and create the record via save_func().
     Retries on unique-constraint violation to handle concurrent requests.
     """
-    import random
-    import time
-    from sqlalchemy.exc import IntegrityError
 
     for attempt in range(max_attempts):
         number = generate_number(

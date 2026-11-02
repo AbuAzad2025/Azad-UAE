@@ -9,7 +9,6 @@ proves the register never oversells.
 
 from __future__ import annotations
 
-import threading
 import uuid
 from datetime import UTC
 from decimal import Decimal
@@ -359,6 +358,7 @@ class TestPosConcurrencyStress:
     def test_concurrent_checkouts_never_oversell(self, app):
         """4 threads x qty 3 against stock 10 -> exactly 3 succeed, stock == 1."""
         from concurrent.futures import ThreadPoolExecutor, as_completed
+
         from models import Product
         from services.stock_service import StockService
 

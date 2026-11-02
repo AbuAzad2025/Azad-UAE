@@ -9,7 +9,8 @@ from flask import current_app
 from sqlalchemy.exc import OperationalError
 
 from extensions import db
-from models import Customer, PosSession, Product
+from models import Customer, PosSession, PosShift, Product
+from services.pos_session_service import PosSessionService
 from services.stock_service import StockService
 from utils.branching import (
     get_accessible_warehouse_ids,
@@ -17,7 +18,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.currency_utils import convert_and_quantize_aed
-from utils.helpers import generate_number, generate_number_and_save
+from utils.helpers import generate_number_and_save
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 POS_WALKIN_MARKER = "[POS-WALKIN]"
@@ -460,15 +461,13 @@ def create_pos_shift(
     user,
     starting_cash: Decimal = Decimal("0"),
     notes: str | None = None,
-) -> "PosShift":
+) -> PosShift:
     """Create a POS shift with a unique shift number, retrying on collision."""
-    from models import PosShift
-    from services.pos_session_service import PosSessionService
 
     tenant_id = session.tenant_id
     branch_id = session.branch_id
 
-    def _save(number: str) -> "PosShift":
+    def _save(number: str) -> PosShift:
         shift = PosSessionService.create_shift(
             tenant_id=tenant_id,
             branch_id=branch_id,
