@@ -5,9 +5,10 @@ from __future__ import annotations
 import json
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
-from extensions import db
 from flask import current_app
 from flask_babel import gettext
+
+from extensions import db
 from models import Customer, PosOrderType, Product
 from models.enums import PermissionEnum
 from services.logging_core import LoggingCore

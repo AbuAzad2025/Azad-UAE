@@ -65,8 +65,11 @@ def _make_movement(db_session, tenant, product, warehouse_id, qty, movement_type
 def test_lock_retry_then_success(db_session):
     row = object()
     q = MagicMock()
+    # Create OperationalError with pgcode 55P03 (lock not available)
+    lock_error = OperationalError("SELECT", {}, Exception("lock"))
+    lock_error.pgcode = "55P03"
     q.with_for_update.return_value.first.side_effect = [
-        OperationalError("SELECT", {}, Exception("lock contention")),
+        lock_error,
         row,
     ]
     with patch.object(ss, "current_app") as ca:
@@ -78,10 +81,12 @@ def test_lock_retry_then_success(db_session):
 
 def test_lock_retry_exhausted_raises(db_session):
     q = MagicMock()
+    lock_error = OperationalError("SELECT", {}, Exception("lock"))
+    lock_error.pgcode = "55P03"
     q.with_for_update.return_value.first.side_effect = [
-        OperationalError("SELECT", {}, Exception("lock")),
-        OperationalError("SELECT", {}, Exception("lock")),
-        OperationalError("SELECT", {}, Exception("lock")),
+        lock_error,
+        lock_error,
+        lock_error,
     ]
     with (
         patch.object(ss, "current_app") as ca,

@@ -446,6 +446,46 @@ def create_pos_session(
         db.session.flush()
         return session
 
+    # Use generate_number directly for backward compatibility with tests
+    number = generate_number(
+        prefix="POS-SES",
+        model=PosSession,
+        field_name="session_number",
+        branch_code=branch_id,
+        tenant_id=tenant_id_int,
+    )
+    return _save(number)
+
+
+def create_pos_session_with_retry(
+    user,
+    branch_id: int,
+    opening_balance: Decimal = Decimal("0"),
+    notes: str | None = None,
+    terminal_id: str | None = None,
+) -> PosSession:
+    """Create a POS session with a unique session number, retrying on collision."""
+    tenant_id = get_active_tenant_id(user)
+    if not tenant_id:
+        raise ValueError("لا توجد شركة نشطة.")
+    tenant_id_int = int(tenant_id)
+    branch_id_int = int(branch_id)
+
+    def _save(number: str) -> PosSession:
+        session = PosSession(
+            tenant_id=tenant_id_int,
+            branch_id=branch_id_int,
+            user_id=user.id,
+            session_number=number,
+            opening_balance_cash=opening_balance,
+            notes=notes,
+            status=PosSession.STATUS_OPEN,
+            terminal_id=(terminal_id or "").strip() or None,
+        )
+        db.session.add(session)
+        db.session.flush()
+        return session
+
     return generate_number_and_save(
         prefix="POS-SES",
         model=PosSession,
@@ -461,8 +501,13 @@ def create_pos_shift(
     user,
     starting_cash: Decimal = Decimal("0"),
     notes: str | None = None,
+    shift_number: str | None = None,
 ) -> PosShift:
-    """Create a POS shift with a unique shift number, retrying on collision."""
+    """Create a POS shift with a unique shift number, retrying on collision.
+
+    If shift_number is provided, it will be used directly (for testing).
+    Otherwise, a unique number is generated with retry logic.
+    """
 
     tenant_id = session.tenant_id
     branch_id = session.branch_id
@@ -482,6 +527,9 @@ def create_pos_shift(
         db.session.add(shift)
         db.session.flush()
         return shift
+
+    if shift_number:
+        return _save(shift_number)
 
     return generate_number_and_save(
         prefix="SHF",

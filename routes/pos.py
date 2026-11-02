@@ -52,6 +52,7 @@ from utils.decorators import permission_required
 from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.helpers import generate_number
 from utils.logger import log_hardware, log_security
+from utils.pos_helpers import create_pos_shift
 from utils.pos_checkout_helpers import _pos_standard_price, _promotion_evaluation_json
 from utils.pos_features import pos_feature_enabled
 from utils.pos_helpers import (

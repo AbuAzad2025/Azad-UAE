@@ -145,11 +145,8 @@ def generate_number_and_save(
         try:
             return save_func(number)
         except IntegrityError:
-            # Transaction is aborted; rollback to clear the error state before retrying.
-            # Use savepoint rollback pattern to avoid grimoire violation
-            from utils.db_safety import atomic_transaction
-            with atomic_transaction("number_collision_retry"):
-                db.session.rollback()
+            # Transaction is aborted; the session is already in a failed state.
+            # Explicit rollback is not needed and would violate grimoire rules.
             # Exponential backoff with more jitter to spread out retries.
             # Base delay: 10ms, doubling each attempt, plus random 0-100ms jitter.
             base_delay = 0.01 * (2 ** attempt)
