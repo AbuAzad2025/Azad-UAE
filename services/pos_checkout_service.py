@@ -5,10 +5,9 @@ from __future__ import annotations
 import json
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
+from extensions import db
 from flask import current_app
 from flask_babel import gettext
-
-from extensions import db
 from models import Customer, PosOrderType, Product
 from models.enums import PermissionEnum
 from services.logging_core import LoggingCore
@@ -17,6 +16,7 @@ from services.pos_session_service import _accumulate_session_tender_atomic
 from services.pos_write_service import PosWriteService
 from services.promotion_service import PromotionService
 from services.sale_service import SaleService
+from services.stock_service import _safe_for_update
 from utils.branching import ensure_warehouse_access, get_active_branch_id
 from utils.currency_utils import context_aware_default_currency, convert_and_quantize_aed
 from utils.pos_checkout_helpers import (
@@ -25,7 +25,6 @@ from utils.pos_checkout_helpers import (
     _pos_standard_price,
     _promotion_evaluation_json,
 )
-from services.stock_service import _safe_for_update
 from utils.pos_helpers import POS_QA_MARKER, get_pos_walkin_customer, merge_checkout_lines, safe_decimal
 from utils.structured_logging import log_mutation
 from utils.tenanting import tenant_get

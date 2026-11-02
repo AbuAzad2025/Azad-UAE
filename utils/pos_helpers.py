@@ -18,7 +18,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.currency_utils import convert_and_quantize_aed
-from utils.helpers import generate_number_and_save
+from utils.helpers import generate_number, generate_number_and_save
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 POS_WALKIN_MARKER = "[POS-WALKIN]"
