@@ -149,7 +149,7 @@ def generate_number_and_save(
             # Explicit rollback is not needed and would violate grimoire rules.
             # Exponential backoff with more jitter to spread out retries.
             # Base delay: 10ms, doubling each attempt, plus random 0-100ms jitter.
-            base_delay = 0.01 * (2 ** attempt)
+            base_delay = 0.01 * (2**attempt)
             jitter = random.uniform(0, 0.1)
             delay = base_delay + jitter
             # Cap at 5 seconds to avoid excessive delays

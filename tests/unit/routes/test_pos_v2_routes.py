@@ -88,6 +88,9 @@ def _pos_enabled_patches(**kwargs):
     def _query_side(model):
         q = MagicMock()
         q.filter.return_value.with_for_update.return_value.all.return_value = _default_locked_products
+        # Also mock .first() for _safe_for_update which calls .first()
+        if _default_locked_products:
+            q.filter.return_value.with_for_update.return_value.first.return_value = _default_locked_products[0]
         q.filter.return_value.all.return_value = []
         return q
 

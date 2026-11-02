@@ -62,7 +62,11 @@ def lock_row_for_update(model, pk, *, label=None, populate_existing=True):
             savepoint.rollback()
             # Check if it's a lock-not-available error (PostgreSQL error code 55P03)
             # or a deadlock detected error (PostgreSQL error code 40P01)
-            is_lock_error = getattr(e, "pgcode", None) in ("55P03", "40P01") or "could not obtain lock" in str(e).lower() or "deadlock detected" in str(e).lower()
+            is_lock_error = (
+                getattr(e, "pgcode", None) in ("55P03", "40P01")
+                or "could not obtain lock" in str(e).lower()
+                or "deadlock detected" in str(e).lower()
+            )
             if not is_lock_error:
                 # Re-raise non-lock errors immediately
                 raise

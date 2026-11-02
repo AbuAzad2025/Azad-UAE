@@ -833,6 +833,7 @@ class TestShiftLifecycle:
     def test_open_success_creates_numbered_shift(self, pg_client):
         created = MagicMock(status="open")
         created.to_dict.return_value = {"shift_number": "SHF-0007"}
+        created.shift_number = "SHF-0007"
         with (
             _pos_api_patches(),
             patch("routes.pos._get_active_shift", return_value=None),
