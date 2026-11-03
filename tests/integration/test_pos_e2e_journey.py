@@ -351,6 +351,7 @@ class TestPosE2EJourney:
 
 
 @pytest.mark.slow
+@pytest.mark.timeout(300)
 class TestPosConcurrencyStress:
     """Concurrent checkouts against one stock row — the register must never
     oversell, deadlock, or leak a negative balance."""

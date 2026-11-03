@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 import time
 from decimal import ROUND_CEILING, ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -352,21 +353,30 @@ _MAX_POS_LOCK_RETRIES = 20
 
 
 def _safe_pos_lock(query, label="PosSession"):
-    """Execute SELECT … FOR UPDATE with savepoint-based retry for POS session.
+    """Execute SELECT … FOR UPDATE NOWAIT with savepoint-based retry for POS session.
 
     Uses savepoints so that a failed lock attempt does NOT roll back the
     caller's entire transaction. On final failure, aborts — never silently
     drops the lock.
-    """
 
+    Uses NOWAIT to fail fast when the lock is held by another transaction,
+    then retries with exponential backoff + jitter to reduce contention.
+    """
     for attempt in range(1, _MAX_POS_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
         try:
-            result = query.with_for_update().first()
+            result = query.with_for_update(nowait=True).first()
             savepoint.commit()
             return result
-        except OperationalError:
+        except OperationalError as e:
             savepoint.rollback()
+            is_lock_error = (
+                getattr(e, "pgcode", None) in ("55P03", "40P01")
+                or "could not obtain lock" in str(e).lower()
+                or "deadlock detected" in str(e).lower()
+            )
+            if not is_lock_error:
+                raise
             if attempt == _MAX_POS_LOCK_RETRIES:
                 current_app.logger.critical(
                     "Row-level lock acquisition failed after %d attempts for %s — aborting to prevent race condition.",
@@ -380,8 +390,9 @@ def _safe_pos_lock(query, label="PosSession"):
                 attempt,
                 _MAX_POS_LOCK_RETRIES,
             )
-            time.sleep(0.1)  # Brief pause to reduce contention
-    raise RuntimeError(f"Failed to acquire row lock for {label}")
+            delay = 0.05 * (2 ** (attempt - 1)) + random.uniform(0, 0.05)  # nosec B311
+            time.sleep(delay)
+    raise RuntimeError(f"Failed to acquire row lock for {label}")  # pragma: no cover
 
 
 def get_active_session_locked(user=None, branch_id: int | None = None) -> PosSession | None:
