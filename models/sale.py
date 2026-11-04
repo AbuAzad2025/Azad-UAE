@@ -329,11 +329,26 @@ class Sale(db.Model):
 
         # 4. Update Status with pending_cheque support
         if self.balance_due <= Decimal("0.01"):
+            # P0 Fix: Reverse FX revaluation when sale becomes fully paid
+            was_paid = self.payment_status == "paid"
             self.payment_status = "paid"
             if self.balance_due < 0:
                 pass
             else:
                 self.balance_due = Decimal("0")
+            # P0 Fix: Reverse unrealized FX revaluation when sale becomes fully paid
+            if not was_paid:
+                try:
+                    from services.fx_revaluation_service import revalue_sale_at_settlement
+
+                    revalue_sale_at_settlement(self.id, self.tenant_id)
+                except Exception:
+                    # Log but don't fail the payment status update
+                    import logging
+
+                    logging.getLogger(__name__).warning(
+                        "FX revaluation reversal failed for sale %s", self.id, exc_info=True
+                    )
         elif total_pending_cheque_aed > Decimal("0"):
             # Has pending cheques but not fully paid
             self.payment_status = "pending_cheque"

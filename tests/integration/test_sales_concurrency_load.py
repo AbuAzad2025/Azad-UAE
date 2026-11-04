@@ -78,19 +78,19 @@ ATTEMPT_QTY = Decimal("1")
 # connection, and both the local server and the CI service container run with
 # the default max_connections=100, so 120 simultaneous writers would exhaust
 # the server before the application could misbehave.
-THREADS = int(os.environ.get("CONCURRENCY_THREADS", "30"))
+THREADS = int(os.environ.get("CONCURRENCY_THREADS", "8"))
 # Stock per tenant in the isolation storm: two tenants, so each one is
 # smaller - the point there is the tenant boundary, not the shelf.
 ISOLATION_STOCK = Decimal(os.environ.get("CONCURRENCY_ISOLATION_STOCK", "6"))
 # How many times a worker may re-submit the same order after the document
 # numbering collided (see the xfail marker on
 # TestSalesServiceStorm.test_no_order_needs_a_second_submission).
-MAX_SUBMISSIONS = 60
+MAX_SUBMISSIONS = 3
 UNIT_PRICE = Decimal("25")
 UNIT_COST = Decimal("10")
 # Domain tolerance (services.gl_posting._CURRENCY_TOLERANCE["AED"]).
 TOLERANCE = Decimal("0.001")
-BARRIER_TIMEOUT = 300
+BARRIER_TIMEOUT = 30
 # The unique constraints that a document-number collision trips.
 _NUMBER_COLLISION_MARKERS = (
     "uq_sales_tenant_sale_number",

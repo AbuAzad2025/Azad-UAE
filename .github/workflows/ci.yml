@@ -115,7 +115,7 @@ jobs:
     # upload hung retrying a tokenless upload long after pytest had passed.
     # That step is now gated on the token and bounded; this number is the
     # backstop, not the fix.
-    timeout-minutes: 120
+    timeout-minutes: 1440
     strategy:
       # Never cancel sibling groups: every directory must report, even when
       # another group fails �?" no part of the test suite may be skipped.

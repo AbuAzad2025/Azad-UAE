@@ -19,7 +19,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.currency_utils import convert_and_quantize_aed
-from utils.helpers import generate_number, generate_number_and_save
+from utils.helpers import generate_number_and_save
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 POS_WALKIN_MARKER = "[POS-WALKIN]"
@@ -349,18 +349,18 @@ def require_active_session(user=None, branch_id: int | None = None) -> PosSessio
     return session
 
 
-_MAX_POS_LOCK_RETRIES = 20
+_MAX_POS_LOCK_RETRIES = 10
 
 
 def _safe_pos_lock(query, label="PosSession"):
     """Execute SELECT … FOR UPDATE NOWAIT with savepoint-based retry for POS session.
 
     Uses savepoints so that a failed lock attempt does NOT roll back the
-    caller's entire transaction. On final failure, aborts — never silently
-    drops the lock.
+    caller's entire transaction. On final failure, falls back to blocking FOR UPDATE.
 
     Uses NOWAIT to fail fast when the lock is held by another transaction,
     then retries with exponential backoff + jitter to reduce contention.
+    If all retries fail, falls back to blocking FOR UPDATE as last resort.
     """
     for attempt in range(1, _MAX_POS_LOCK_RETRIES + 1):
         savepoint = db.session.begin_nested()
@@ -378,19 +378,20 @@ def _safe_pos_lock(query, label="PosSession"):
             if not is_lock_error:
                 raise
             if attempt == _MAX_POS_LOCK_RETRIES:
-                current_app.logger.critical(
-                    "Row-level lock acquisition failed after %d attempts for %s — aborting to prevent race condition.",
-                    _MAX_POS_LOCK_RETRIES,
+                current_app.logger.warning(
+                    "Lock contention on %s after %d attempts — falling back to blocking FOR UPDATE",
                     label,
+                    _MAX_POS_LOCK_RETRIES,
                 )
-                raise
+                # Final attempt with blocking FOR UPDATE
+                return query.with_for_update().first()
             current_app.logger.warning(
                 "Lock contention on %s (attempt %d/%d) — retrying.",
                 label,
                 attempt,
                 _MAX_POS_LOCK_RETRIES,
             )
-            delay = 0.05 * (2 ** (attempt - 1)) + random.uniform(0, 0.05)  # nosec B311
+            delay = 0.01 * (2 ** (attempt - 1)) + random.uniform(0, 0.02)  # nosec B311
             time.sleep(delay)
     raise RuntimeError(f"Failed to acquire row lock for {label}")  # pragma: no cover
 
@@ -457,15 +458,15 @@ def create_pos_session(
         db.session.flush()
         return session
 
-    # Use generate_number directly for backward compatibility with tests
-    number = generate_number(
+    # Use generate_number_and_save to handle unique number generation with retry on collision
+    return generate_number_and_save(
         prefix="POS-SES",
         model=PosSession,
         field_name="session_number",
+        save_func=_save,
         branch_code=branch_id,
         tenant_id=tenant_id_int,
     )
-    return _save(number)
 
 
 def create_pos_session_with_retry(

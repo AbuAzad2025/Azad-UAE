@@ -188,9 +188,11 @@ class PaymentService:
             ]
         # Reverse any unrealized FX revaluation entries for this purchase
         # before posting the realized FX gain/loss
-        from services.fx_revaluation_service import reverse_purchase_revaluation
+        from services.fx_revaluation_service import revalue_purchase_at_settlement, reverse_purchase_revaluation
 
         reverse_purchase_revaluation(purchase.id, tenant_id=tenant_id)
+        # P0 Fix: Also call the settlement revaluation wrapper for semantic clarity
+        revalue_purchase_at_settlement(purchase.id, tenant_id=tenant_id)
         post_or_fail(
             fx_lines,
             description=f"FX Gain/Loss - Payment {payment.payment_number}",

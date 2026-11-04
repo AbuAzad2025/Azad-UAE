@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy.orm import Mapped, relationship
 
@@ -80,7 +80,14 @@ class PurchaseReturn(db.Model):
 
     def calculate_totals(self):
         self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
-        self.total_amount = self.subtotal
+
+        # Calculate tax amount
+        tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
+        self.tax_amount = (self.subtotal * (tax_rate_decimal / Decimal("100"))).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
+        self.total_amount = (self.subtotal + self.tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
         from utils.currency_utils import resolve_tenant_base_currency
 

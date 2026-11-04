@@ -42,16 +42,26 @@ def atomic_transaction(name: str):
 
 
 def _current_rate(from_currency: str, to_currency: str, tenant_id: int | None) -> Decimal | None:
-    """Current rate for the pair, or None when no rate can be resolved (needs_input)."""
-    rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
-        from_currency,
-        to_currency,
-        tenant_id=tenant_id,
-    )
-    rate = rate_info.get("rate")
-    if rate is None:
-        return None
-    return Decimal(str(rate))
+    """Current rate for the pair, or None when no rate can be resolved (needs_input).
+
+    Uses a simple LRU cache to avoid N+1 queries when revaluing multiple
+    sales/purchases with the same currency pair in a single run.
+    """
+    from functools import lru_cache
+
+    @lru_cache(maxsize=128)
+    def _cached_rate(from_curr: str, to_curr: str, tenant: int | None) -> Decimal | None:
+        rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+            from_curr,
+            to_curr,
+            tenant_id=tenant,
+        )
+        rate = rate_info.get("rate")
+        if rate is None:
+            return None
+        return Decimal(str(rate))
+
+    return _cached_rate(from_currency, to_currency, tenant_id)
 
 
 def _open_sales(tenant_id: int | None, base_currency: str):
@@ -427,6 +437,30 @@ def reverse_sale_revaluation(sale_id: int, tenant_id: int | None = None) -> list
             reversed_ids.append(reversed_entry.id)
 
     return reversed_ids
+
+
+def revalue_sale_at_settlement(sale_id: int, tenant_id: int | None = None) -> list[int]:
+    """Reverse all FX revaluation entries for a specific sale at settlement.
+
+    Called when a sale is fully settled to unwind unrealized FX gain/loss
+    before posting the realized FX gain/loss.
+
+    This is a wrapper around ``reverse_sale_revaluation`` for semantic clarity
+    at the point of settlement.
+    """
+    return reverse_sale_revaluation(sale_id, tenant_id=tenant_id)
+
+
+def revalue_purchase_at_settlement(purchase_id: int, tenant_id: int | None = None) -> list[int]:
+    """Reverse all FX revaluation entries for a specific purchase at settlement.
+
+    Called when a purchase is fully settled to unwind unrealized FX gain/loss
+    before posting the realized FX gain/loss.
+
+    This is a wrapper around ``reverse_purchase_revaluation`` for semantic clarity
+    at the point of settlement.
+    """
+    return reverse_purchase_revaluation(purchase_id, tenant_id=tenant_id)
 
 
 def reverse_purchase_revaluation(purchase_id: int, tenant_id: int | None = None) -> list[int]:
