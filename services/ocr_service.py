@@ -73,7 +73,7 @@ class OCRService:
             logger.exception(f"OCR failed: {e}")
             raise
 
-    def _preprocess_image(self, image: "Image.Image") -> "Image.Image":
+    def _preprocess_image(self, image: Image.Image) -> Image.Image:
         """Preprocess image for better OCR accuracy."""
         # Convert to grayscale
         if image.mode != "L":
@@ -127,7 +127,6 @@ class OCRService:
                 continue
 
             # Try to match known patterns
-            matched = False
             for field, patterns in self.FIELD_PATTERNS.items():
                 for pattern in patterns:
                     match = re.search(pattern, line, re.IGNORECASE)
@@ -135,7 +134,6 @@ class OCRService:
                         value = match.group(1).strip()
                         if value:
                             current_product[field] = value
-                            matched = True
                             break
 
             # If line looks like a product row (has price and qty)

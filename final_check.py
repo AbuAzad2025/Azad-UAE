@@ -1,10 +1,8 @@
-f = open("models/gl_account_registry.py", "r", encoding="utf-8")
-c = f.read()
-f.close()
+with open("models/gl_account_registry.py", encoding="utf-8") as f:
+    c = f.read()
 
-f2 = open("services/gl_service.py", "r", encoding="utf-8")
-c2 = f2.read()
-f2.close()
+with open("services/gl_service.py", encoding="utf-8") as f2:
+    c2 = f2.read()
 
 with open("final_verification.txt", "w", encoding="utf-8") as out:
     out.write("4190 Contra-Revenue: " + str("4190" in c) + "\n")

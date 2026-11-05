@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 import random
@@ -111,7 +112,8 @@ def generate_number(
             )
         except Exception:
             # Fall back to legacy method if sequence service unavailable
-            pass
+            with contextlib.suppress(Exception):
+                pass
 
     # Legacy fallback for models without sequence or when tenant_id is None
     year = datetime.now().strftime(date_format)

@@ -78,16 +78,16 @@ from .print_history import PrintHistory
 from .product import Product, ProductCategory, ProductPartner
 from .product_cost_history import ProductCostHistory
 from .product_image import ProductImage
+from .product_import_job import (
+    ProductImportJob,
+    ProductImportJobStatus,
+    ProductImportRollbackLog,
+    ProductImportTemplate,
+)
 from .product_price_tier import ProductPriceTier
 from .product_return import ProductReturn, ProductReturnLine
 from .product_serial import ProductSerial
 from .product_warehouse_cost import ProductWarehouseCost
-from .product_import_job import (
-    ProductImportJob,
-    ProductImportJobStatus,
-    ProductImportTemplate,
-    ProductImportRollbackLog,
-)
 from .profit_center import ProfitCenter
 from .projects import Project, ProjectMember, Task, TaskStage, Timesheet
 from .purchase import (

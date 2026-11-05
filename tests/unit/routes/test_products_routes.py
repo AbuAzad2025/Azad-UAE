@@ -277,21 +277,9 @@ def _run_import_post(
     warehouse_query=None,
     os_remove_side_effect=None,
 ):
-
-    wh_query = warehouse_query or _warehouse_query_mock()
-
-
-def _run_import_post(
-    app,
-    df,
-    *,
-    update_existing=False,
-    existing_product=None,
-    warehouse_query=None,
-    os_remove_side_effect=None,
-):
-    from contextlib import ExitStack
     import io
+    from contextlib import ExitStack
+
     from werkzeug.datastructures import FileStorage
     from werkzeug.wrappers import Response
 

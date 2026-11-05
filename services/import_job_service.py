@@ -11,10 +11,13 @@ import pandas as pd
 
 from extensions import db
 from models import (
+    GLJournalEntry,
     Product,
     ProductImportJob,
     ProductImportJobStatus,
     ProductImportTemplate,
+    ProductWarehouseStock,
+    StockMovement,
 )
 from services.product_service import ProductService
 from services.stock_service import StockService
@@ -187,7 +190,6 @@ class ProductImportService:
         "name": "name",
         "name_ar": "name_ar",
         "price": "regular_price",
-        "price": "regular_price",
         "cost": "cost_price",
         "cost_price": "cost_price",
         "stock": "current_stock",
@@ -239,7 +241,6 @@ class ProductImportService:
         """Read file into DataFrame with proper encoding handling."""
         import io
 
-        ext = filename.lower().split(".")[-1]
         file_io = io.BytesIO(file_content)
 
         if filename.lower().endswith(".csv"):
@@ -262,8 +263,6 @@ class ProductImportService:
         df = df.copy()
         df.columns = df.columns.str.lower().str.strip()
 
-        column_map = self._resolve_column_map()
-        renamed = {}
         for src, target in self._resolve_column_map().items():
             src_lower = src.lower().strip()
             if src_lower in df.columns:
@@ -272,8 +271,8 @@ class ProductImportService:
         # Apply default values
         defaults = self._get_default_values()
         for field, default in defaults.items():
-            if target not in df.columns:
-                df[target] = default
+            if field not in df.columns:
+                df[field] = default
 
         return df
 
@@ -281,7 +280,6 @@ class ProductImportService:
         """Validate a single row, return list of errors."""
         errors = []
 
-        required = self._get_required_fields()
         for field in self._get_required_fields():
             if field not in row or pd.isna(row.get(field)) or str(row.get(field, "")).strip() == "":
                 errors.append(f"Row {row_num}: Missing required field '{field}'")
@@ -410,7 +408,7 @@ class ProductImportService:
                 barcode=barcode,
                 part_number=str(row.get("part_number", "")).strip() if not pd.isna(row.get("part_number")) else None,
                 warranty_days=int(row.get("warranty_days", 0) or 0),
-                category_id=self._resolve_category(row.get("category")),
+                category_id=category_id,
                 unit=str(row.get("unit", "قطعة")).strip() if not pd.isna(row.get("unit")) else "قطعة",
                 tenant_id=self.tenant_id,
             )
@@ -566,7 +564,6 @@ def process_product_import_task(
     import logging
 
     logger = logging.getLogger(__name__)
-    file_content = base64.b64decode(file_content_b64)
 
     from app import create_app
 
@@ -597,8 +594,6 @@ def process_product_import_task(
                 )
 
             # Monkey-patch progress updates
-            original_process = ProductImportService.process_dataframe
-
             def progress_wrapper(df, update_existing, dry_run):
                 # This is a simplified version - in production you'd want a proper callback
                 return ProductImportService.process_dataframe(service, df, update_existing=False, dry_run=False)
@@ -627,8 +622,6 @@ def process_product_import_rollback_task(rollback_job_id: int):
     app = create_app()
 
     with app.app_context():
-        from models import ProductWarehouseStock, GLJournalEntry, StockMovement
-
         rollback_job = ProductImportJob.query.get_or_404(rollback_job_id)
         original_job = rollback_job.rollback_job_id and ProductImportJob.query.get(rollback_job.rollback_job_id)
 

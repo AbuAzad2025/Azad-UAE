@@ -1,7 +1,8 @@
+import base64
+import contextlib
+import uuid
 from decimal import Decimal
 from io import BytesIO
-import base64
-import uuid
 
 from flask import (
     Blueprint,
@@ -21,11 +22,11 @@ from flask_login import current_user, login_required
 from extensions import db, limiter
 from models import (
     Product,
+    ProductImportJob,
+    ProductImportJobStatus,
+    ProductImportTemplate,
     ProductPartner,
     StockMovement,
-    ProductImportJob,
-    ProductImportTemplate,
-    ProductImportJobStatus,
 )
 from services.import_job_service import ImportJobService, ProductImportService
 from services.logging_core import LoggingCore
@@ -1569,10 +1570,8 @@ def import_jobs():
     query = ProductImportJob.query.filter_by(tenant_id=tid).order_by(ProductImportJob.created_at.desc())
 
     if status_filter:
-        try:
+        with contextlib.suppress(ValueError):
             query = query.filter(ProductImportJob.status == ProductImportJobStatus(status_filter))
-        except ValueError:
-            pass
 
     pagination = query.paginate(page=page, per_page=20, error_out=False)
     return render_template("products/import_jobs.html", pagination=pagination, status_filter=status_filter)
@@ -1800,7 +1799,7 @@ def api_products_bulk():
 @permission_required("manage_products")
 def ocr_scan():
     """Extract products from invoice/box image using OCR."""
-    from services.ocr_service import OCRService, InvoiceParser
+    from services.ocr_service import InvoiceParser, OCRService
 
     if "file" not in request.files:
         return error_response(message="No file uploaded", status_code=400)
@@ -1813,7 +1812,6 @@ def ocr_scan():
         return error_response(message="OCR service not available. Install tesseract-ocr.", status_code=503)
 
     file_bytes = file.read()
-    ocr = OCRService()
 
     try:
         if request.form.get("parse_invoice") == "true":

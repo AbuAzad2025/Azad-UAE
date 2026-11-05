@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from enum import Enum
+from enum import StrEnum
 
-from sqlalchemy import JSON, Enum as SQLEnum
+from sqlalchemy import JSON
+from sqlalchemy import Enum as SQLEnum
 
 from extensions import db
 
 
-class ProductImportJobStatus(str, Enum):
+class ProductImportJobStatus(StrEnum):
     """Status of a product import job."""
 
     PENDING = "pending"
@@ -258,7 +259,7 @@ class ProductImportTemplate(db.Model):
         }
 
     @classmethod
-    def to_dict_list(cls, templates: list["ProductImportTemplate"]) -> list[dict]:
+    def to_dict_list(cls, templates: list[ProductImportTemplate]) -> list[dict]:
         return [t.to_dict() for t in templates]
 
     def apply_to_dataframe(self, df, tenant_id: int):
