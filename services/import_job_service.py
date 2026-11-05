@@ -525,8 +525,8 @@ class ProductImportService:
                 return {"dry_run": True, "preview": results}
 
             if not job or not job.is_dry_run:
-                if not job.is_dry_run:
-                    db.session.commit()
+                # Caller (route or Celery task) manages transaction boundary
+                pass
 
             if job:
                 ImportJobService.complete_job(
@@ -546,7 +546,6 @@ class ProductImportService:
             logger.exception(f"Import failed: {e}")
             if job:
                 ImportJobService.fail_job(job.id, str(e))
-                db.session.commit()
             raise
 
 

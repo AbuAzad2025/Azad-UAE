@@ -357,42 +357,45 @@ def import_products():
         return redirect(url_for("products.import_jobs"))
 
     # Synchronous import (for smaller files or dry-run)
-    service = ProductImportService(tid, current_user.id)
-    if template_id:
-        template = ProductImportTemplate.query.get(template_id)
-        if template:
-            service.set_template(template)
+    from utils.db_safety import atomic_transaction
 
-    job.original_filename = file.filename or filename
-    job.update_existing = update_existing
+    with atomic_transaction("product_import_sync"):
+        service = ProductImportService(tid, current_user.id)
+        if template_id:
+            template = ProductImportTemplate.query.get(template_id)
+            if template:
+                service.set_template(template)
 
-    try:
-        results = service.run_import(
-            file_content=file_content,
-            filename=file.filename or filename,
-            job=job,
-            update_existing=update_existing,
-        )
+        job.original_filename = file.filename or filename
+        job.update_existing = update_existing
 
-        if results.get("dry_run"):
-            flash(gettext("معاينة الاستيراد جاهزة. راجع النتائج قبل التنفيذ الفعلي."), "info")
-            return render_template("products/import_preview.html", preview=results["preview"], job=job)
-
-        if results["success"] > 0:
-            flash(gettext(f"تم استيراد {results['success']} منتج بنجاح."), "success")
-
-        if results["errors"] > 0:
-            flash(
-                gettext(f"لم يتم استيراد {results['errors']} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى."),
-                "warning",
+        try:
+            results = service.run_import(
+                file_content=file_content,
+                filename=file.filename or filename,
+                job=job,
+                update_existing=update_existing,
             )
 
-        return redirect(url_for("products.import_job_detail", job_id=job.id))
+            if results.get("dry_run"):
+                flash(gettext("معاينة الاستيراد جاهزة. راجع النتائج قبل التنفيذ الفعلي."), "info")
+                return render_template("products/import_preview.html", preview=results["preview"], job=job)
 
-    except Exception as e:
-        current_app.logger.error("product import failed: %s", e, exc_info=True)
-        flash(gettext("حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."), "danger")
-        return redirect(url_for("products.import_products"))
+            if results["success"] > 0:
+                flash(gettext(f"تم استيراد {results['success']} منتج بنجاح."), "success")
+
+            if results["errors"] > 0:
+                flash(
+                    gettext(f"لم يتم استيراد {results['errors']} منتج. يرجى مراجعة البيانات والمحاولة مرة أخرى."),
+                    "warning",
+                )
+
+            return redirect(url_for("products.import_job_detail", job_id=job.id))
+
+        except Exception as e:
+            current_app.logger.error("product import failed: %s", e, exc_info=True)
+            flash(gettext("حدث خطأ أثناء معالجة الملف: يرجى التأكد من صحة البيانات وإعادة المحاولة."), "danger")
+            return redirect(url_for("products.import_products"))
 
 
 @products_bp.route("/import-grid", methods=["POST"])
@@ -1753,6 +1756,8 @@ def import_template_delete(template_id: int):
 @permission_required("manage_products")
 def api_products_bulk():
     """Bulk create/update products via JSON API."""
+    from utils.db_safety import atomic_transaction
+
     if not request.is_json:
         return error_response(message="Content-Type must be application/json", status_code=415)
 
@@ -1771,10 +1776,8 @@ def api_products_bulk():
 
     df = pd.DataFrame(products_data)
 
-    results = service.process_dataframe(df, update_existing=update_existing, dry_run=False)
-
-    if not request.is_json:
-        db.session.commit()
+    with atomic_transaction("api_products_bulk"):
+        results = service.process_dataframe(df, update_existing=update_existing, dry_run=False)
 
     return success_response(
         data={
