@@ -354,7 +354,7 @@ class ProductImportService:
         row_num: int,
         update_existing: bool = False,
         job: ProductImportJob | None = None,
-    ) -> tuple[bool, dict | None, list[str]]:
+    ) -> tuple[bool, dict[str, int | str] | None, list[str]]:
         """Process a single row, return (success, product_data, errors)."""
         errors = self._validate_row(row, row_num)
         if errors:
@@ -406,7 +406,7 @@ class ProductImportService:
                 cost_price=Decimal(str(row.get("cost_price", 0))) if not pd.isna(row.get("cost_price")) else None,
                 sku=sku,
                 barcode=barcode,
-                part_number=str(row.get("part_number", "")).strip() if not pd.isna(row.get("part_number")) else None,
+                part_number=str(row.get("part_number", "")).strip() if not pd.isna(row.get("part_number")) else "",
                 warranty_days=int(row.get("warranty_days", 0) or 0),
                 category_id=category_id,
                 unit=str(row.get("unit", "قطعة")).strip() if not pd.isna(row.get("unit")) else "قطعة",
@@ -447,7 +447,7 @@ class ProductImportService:
         job: ProductImportJob | None = None,
     ) -> dict:
         """Process entire DataFrame, return results."""
-        results = {
+        results: dict[str, object] = {
             "success": 0,
             "errors": 0,
             "errors_detail": [],
@@ -457,27 +457,42 @@ class ProductImportService:
             "summary": {},
         }
 
+        # Type hints for mypy
+        success_count: int = 0
+        errors_count: int = 0
+        errors_detail: list[dict[str, object]] = []
+        created_ids: list[int] = []
+        updated_ids: list[int] = []
+
         for idx, row in df.iterrows():
             row_num = idx + 2  # 1-indexed + header
             success, data, errors = self._process_row(row, idx + 2, update_existing, job)
 
             if errors:
-                results["errors"] += 1
-                results["errors_detail"].extend([{"row": row_num, "error": e, "data": row.to_dict()} for e in errors])
+                errors_count += 1
+                errors_detail.extend([{"row": row_num, "error": e, "data": row.to_dict()} for e in errors])
                 continue
 
             if data:
-                if data["action"] == "created":
-                    results["created_ids"].append(data["id"])
+                # Type ignores needed because mypy can't infer exact types from dict[str, int | str]
+                action: str = data["action"]  # type: ignore[assignment]
+                product_id: int = data["id"]  # type: ignore[assignment]
+                if action == "created":
+                    created_ids.append(product_id)
                 else:
-                    results["updated_ids"].append(data["id"])
-                results["success"] += 1
+                    updated_ids.append(product_id)
+                success_count += 1
 
+        results["success"] = success_count
+        results["errors"] = errors_count
+        results["errors_detail"] = errors_detail
+        results["created_ids"] = created_ids
+        results["updated_ids"] = updated_ids
         results["summary"] = {
             "total_processed": len(df),
-            "created": len(results["created_ids"]),
-            "updated": len(results["updated_ids"]),
-            "errors": results["errors"],
+            "created": len(created_ids),
+            "updated": len(updated_ids),
+            "errors": errors_count,
         }
         return results
 

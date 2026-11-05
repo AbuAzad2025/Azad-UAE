@@ -64,7 +64,7 @@ class OCRService:
             raise RuntimeError("Tesseract OCR not available. Install pytesseract and tesseract-ocr.")
 
         try:
-            image = Image.open(io.BytesIO(image_bytes))
+            image: Image.Image = Image.open(io.BytesIO(image_bytes))
             # Preprocess for better OCR
             image = self._preprocess_image(image)
             text = pytesseract.image_to_string(image, lang=self.lang, config="--psm 6")
@@ -89,7 +89,18 @@ class OCRService:
         width, height = image.size
         if width < 1000:
             scale = 1000 / width
-            image = image.resize((int(width * scale), int(height * scale)), Image.LANCZOS)
+            # Handle PIL version differences for LANCZOS
+            resample: int
+            try:
+                # PIL >= 9.1.0
+                from PIL.Image import Resampling
+
+                resample = Resampling.LANCZOS
+            except ImportError:
+                # PIL < 9.1.0
+                # Use getattr with default fallback to BICUBIC
+                resample = getattr(Image, "LANCZOS", getattr(Image, "BICUBIC", 3))
+            image = image.resize((int(width * scale), int(height * scale)), resample)
 
         return image
 
