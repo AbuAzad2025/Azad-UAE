@@ -35,6 +35,7 @@ BASELINE_PATH = Path(__file__).resolve().parent / "txn_boundaries_baseline.txt"
 # and therefore must be able to commit.
 ENTRY_POINT_ALLOWLIST = {
     "celery_tasks.py",
+    "import_job_service.py",  # contains Celery tasks (@celery.task) that serve as entry points
 }
 
 COMMIT_ROLLBACK_CALLS = {"commit", "rollback"}
@@ -145,7 +146,7 @@ def main() -> int:
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 method = _is_db_session_call(node)
-                if method:
+                if method and not is_entry_point:
                     failures.append(
                         (
                             rel,
