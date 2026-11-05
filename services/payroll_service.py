@@ -110,7 +110,9 @@ class PayrollService:
         gl_entry = post_or_fail(
             [
                 {
-                    "account": "1170",
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id, fallback_key="1170"
+                    ),
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": Decimal(str(amount)),
                     "credit": 0,
@@ -307,7 +309,9 @@ class PayrollService:
         if actual_deduction > 0:
             lines.append(
                 {
-                    "account": "1170",
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id, fallback_key="1170"
+                    ),
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": 0,
                     "credit": Decimal(str(actual_deduction)),

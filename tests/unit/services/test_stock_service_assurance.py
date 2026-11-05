@@ -212,24 +212,20 @@ class TestResolveGlConceptAccount:
             "services.gl_account_resolver.resolve_gl_account",
             side_effect=RuntimeError("fail"),
         )
-        mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
-        mocker.patch("services.gl_service.GL_ACCOUNTS", {})
         from services.gl_account_resolver import GLMappingError
         from services.stock_service import _resolve_gl_concept_account
 
         with pytest.raises(GLMappingError):
             _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1)
 
-    def test_legacy_concept_lookup(self, mocker):
+    def test_static_fallback(self, mocker):
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=False,
         )
-        mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
-        mocker.patch("services.gl_service.GL_ACCOUNTS", {"INV": "1140"})
         from services.stock_service import _resolve_gl_concept_account
 
-        assert _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=1) == "1140"
+        assert _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=1) == "9999"
 
     def test_fallback_when_no_tenant(self, mocker):
         mocker.patch(

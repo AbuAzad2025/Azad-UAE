@@ -17,7 +17,7 @@ from models import (
 from services.document_sequence_service import DocumentSequenceService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GLService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService, _safe_for_update
 from utils.branching import ensure_warehouse_access
@@ -328,24 +328,30 @@ class PurchaseService:
         # Budget enforcement check
         from services.budget_enforcement import check_budget_for_account
 
+        inventory_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="1140"
+        )
         budget_check = check_budget_for_account(
             tenant_id=tenant_id,
-            account_code=GL_ACCOUNTS["inventory"],
+            account_code=inventory_account,
             amount=inventory_debit,
             branch_id=purchase_branch_id,
         )
         if budget_check and not budget_check.get("allowed", True):
             raise ValueError(gettext(budget_check["message"]))
 
+        ap_account = GLService.get_account_code_for_concept(
+            "AP", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="2110"
+        )
         lines = [
             {
-                "account": GL_ACCOUNTS["inventory"],
+                "account": inventory_account,
                 "concept_code": "INVENTORY_ASSET",
                 "debit": inventory_debit,
                 "description": gettext(f"شراء بضاعة {purchase.purchase_number}"),
             },
             {
-                "account": GL_ACCOUNTS["payable"],
+                "account": ap_account,
                 "concept_code": "AP",
                 "credit": total_payable,
                 "description": gettext(f"ذمم دائنة - مورد: {purchase.supplier_name}"),
@@ -357,7 +363,9 @@ class PurchaseService:
             if purchase.freight > 0:
                 lines.append(
                     {
-                        "account": GL_ACCOUNTS.get("freight_in", "5301"),
+                        "account": GLService.get_account_code_for_concept(
+                            "FREIGHT_IN", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5301"
+                        ),
                         "concept_code": "FREIGHT_IN",
                         "debit": purchase.freight,
                         "description": gettext(f"أجور شحن - {purchase.purchase_number}"),
@@ -366,7 +374,9 @@ class PurchaseService:
             if purchase.customs_duty > 0:
                 lines.append(
                     {
-                        "account": GL_ACCOUNTS.get("customs_duty", "5302"),
+                        "account": GLService.get_account_code_for_concept(
+                            "CUSTOMS_DUTY", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5302"
+                        ),
                         "concept_code": "CUSTOMS_DUTY",
                         "debit": purchase.customs_duty,
                         "description": gettext(f"رسوم جمركية - {purchase.purchase_number}"),
@@ -375,7 +385,10 @@ class PurchaseService:
             if purchase.insurance > 0:
                 lines.append(
                     {
-                        "account": GL_ACCOUNTS.get("insurance_in", "5303"),
+                        "account": GLService.get_account_code_for_concept(
+                            "INSURANCE_IN", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5303"
+                        ),
+                        "concept_code": "INSURANCE_IN",
                         "explicit_account_allowed": True,
                         "debit": purchase.insurance,
                         "description": gettext(f"تأمين شحن - {purchase.purchase_number}"),
@@ -384,7 +397,10 @@ class PurchaseService:
             if purchase.other_landed_cost > 0:
                 lines.append(
                     {
-                        "account": GL_ACCOUNTS.get("misc_expense", "6500"),
+                        "account": GLService.get_account_code_for_concept(
+                            "MISC_EXPENSE", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="6500"
+                        ),
+                        "concept_code": "MISC_EXPENSE",
                         "explicit_account_allowed": True,
                         "debit": purchase.other_landed_cost,
                         "description": gettext(f"تكاليف إضافية أخرى - {purchase.purchase_number}"),
@@ -394,7 +410,9 @@ class PurchaseService:
         if purchase.tax_amount > 0 and should_post_vat_gl(tenant_id):
             lines.append(
                 {
-                    "account": GL_ACCOUNTS["vat_input"],
+                    "account": GLService.get_account_code_for_concept(
+                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="2122"
+                    ),
                     "concept_code": "VAT_INPUT",
                     "debit": purchase.tax_amount,
                     "description": gettext(f"ضريبة مدخلات (شراء) {purchase.purchase_number}"),
@@ -683,21 +701,27 @@ class PurchaseService:
                         )
 
         purchase_return.total_amount = inventory_credit + tax_amount
-        purchase_return.calculate_totals()
+        purchase_return.calculate_totals(recalculate_tax=False)
         db.session.flush()
 
         # GL posting
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
+        ap_account = GLService.get_account_code_for_concept(
+            "AP", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="2110"
+        )
+        inventory_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="1140"
+        )
         gl_lines = [
             {
-                "account": GL_ACCOUNTS["payable"],
+                "account": ap_account,
                 "concept_code": "AP",
                 "debit": purchase_return.total_amount,
                 "description": gettext(f"مرتجع مشتريات {return_number}"),
             },
             {
-                "account": GL_ACCOUNTS["inventory"],
+                "account": inventory_account,
                 "concept_code": "INVENTORY_ASSET",
                 "credit": inventory_credit,
                 "description": gettext(f"إرجاع بضاعة للمورد {return_number}"),
@@ -707,7 +731,9 @@ class PurchaseService:
         if tax_amount > 0 and should_post_vat_gl(tenant_id):
             gl_lines.append(
                 {
-                    "account": GL_ACCOUNTS["vat_input"],
+                    "account": GLService.get_account_code_for_concept(
+                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="2122"
+                    ),
                     "concept_code": "VAT_INPUT",
                     "credit": tax_amount,
                     "description": gettext(f"عكس ضريبة مدخلات {return_number}"),

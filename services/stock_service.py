@@ -96,7 +96,6 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
         is_dynamic_gl_mapping_enabled,
         resolve_gl_account,
     )
-    from services.gl_service import GL_ACCOUNT_CONCEPTS, GL_ACCOUNTS
 
     if is_dynamic_gl_mapping_enabled() and tenant_id:
         try:
@@ -123,9 +122,7 @@ def _resolve_gl_concept_account(concept_code, fallback_account_code, tenant_id=N
                 branch_id=None,
                 issue="dynamic mapping failure",
             ) from None
-    concept_key = {v: k for k, v in GL_ACCOUNT_CONCEPTS.items()}.get(concept_code)
-    if concept_key and concept_key in GL_ACCOUNTS:
-        return GL_ACCOUNTS[concept_key]
+    # Fallback: use the provided fallback account code directly
     return fallback_account_code
 
 
@@ -215,9 +212,16 @@ class StockService:
         # the resolver a question the tenant cannot answer yet, and the
         # adjustment answers 500 instead of working.
         GLService.ensure_core_accounts(tenant_id=tenant_id)
-        loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
-        asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
-        gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
+        branch_id = warehouse.branch_id if warehouse else None
+        loss_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+        )
+        asset_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+        )
+        gain_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+        )
 
         if Decimal(str(movement.quantity)) < 0:
             lines = [
@@ -312,8 +316,13 @@ class StockService:
                 # stock lines name concepts, and a concept is resolved
                 # against the tenant's chart and mapping.
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
-                asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
-                equity_account = _resolve_gl_concept_account("OPENING_BALANCE_EQUITY", "3130", tenant_id)
+                branch_id = warehouse.branch_id if warehouse else None
+                asset_account = GLService.get_account_code_for_concept(
+                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+                )
+                equity_account = GLService.get_account_code_for_concept(
+                    "OPENING_BALANCE_EQUITY", tenant_id=tenant_id, branch_id=branch_id, fallback_key="3130"
+                )
                 post_or_fail(
                     lines=[
                         {
@@ -1001,11 +1010,15 @@ class StockService:
         product_name = product.name if product else f"Product #{product_id}"
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
-        asset_account = _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id)
+        asset_account = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+        )
 
         if variance > 0:
             # New cost > old average: inventory value needs to be reduced (loss)
-            loss_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_LOSS", "5150", tenant_id)
+            loss_account = GLService.get_account_code_for_concept(
+                "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+            )
             lines = [
                 {
                     "account": loss_account,
@@ -1025,7 +1038,9 @@ class StockService:
             description = f"Retrospective Cost Adjustment (Loss) — {product_name}"
         else:
             # New cost < old average: inventory value needs to be increased (gain)
-            gain_account = _resolve_gl_concept_account("INVENTORY_ADJUSTMENT_GAIN", "5150", tenant_id)
+            gain_account = GLService.get_account_code_for_concept(
+                "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+            )
             lines = [
                 {
                     "account": asset_account,

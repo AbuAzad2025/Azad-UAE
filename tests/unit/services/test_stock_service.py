@@ -71,25 +71,19 @@ class TestResolveGlConceptAccount:
             "services.gl_account_resolver.resolve_gl_account",
             side_effect=RuntimeError("fail"),
         )
-        mocker.patch(
-            "services.gl_service.GL_ACCOUNT_CONCEPTS",
-            {"INVENTORY_ASSET": "INVENTORY_ASSET"},
-        )
-        mocker.patch("services.gl_service.GL_ACCOUNTS", {})
         from services.gl_account_resolver import GLMappingError
 
         with pytest.raises(GLMappingError):
             _resolve_gl_concept_account("INVENTORY_ASSET", "1140", tenant_id=1)
 
-    def test_legacy_concept_lookup(self, mocker):
+    def test_static_fallback(self, mocker):
         mocker.patch(
             "services.gl_account_resolver.is_dynamic_gl_mapping_enabled",
             return_value=False,
         )
-        mocker.patch("services.gl_service.GL_ACCOUNT_CONCEPTS", {"INV": "INVENTORY_ASSET"})
-        mocker.patch("services.gl_service.GL_ACCOUNTS", {"INV": "1140"})
+        # When dynamic mapping is disabled, falls back to the provided fallback code
         code = _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=1)
-        assert code == "1140"
+        assert code == "9999"
 
 
 class TestCreateMovement:

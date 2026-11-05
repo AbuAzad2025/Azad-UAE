@@ -24,7 +24,9 @@ from models import (
     ProductWarehouseCost,
     Warehouse,
 )
-from services.gl_service import GL_ACCOUNTS
+from services.gl_service import GLService
+
+# GL_ACCOUNTS removed - use direct account codes
 from utils.gl_tenant import scope_gl_accounts
 
 # Tolerance for floating-point rounding in reconciliation
@@ -233,7 +235,9 @@ class InventoryReconciliationService:
                 "total_movement_qty": float(total_movement_qty),
                 "overall_qty_diff": float(overall_qty_diff),
                 "all_matched": all_matched,
-                "inventory_account_code": GL_ACCOUNTS["inventory"],
+                "inventory_account_code": GLService.get_account_code_for_concept(
+                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+                ),
                 "record_count": len(rows),
             },
         }
@@ -260,8 +264,11 @@ class InventoryReconciliationService:
             date_to=date_to,
         )
 
-        # Resolve inventory GL account once
-        acc_q = GLAccount.query.filter_by(code=GL_ACCOUNTS["inventory"])
+        # Resolve inventory GL account once via concept
+        inventory_account_code = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+        )
+        acc_q = GLAccount.query.filter_by(code=inventory_account_code)
         if tenant_id is not None:
             acc_q = scope_gl_accounts(acc_q, tenant_id=tenant_id)
         inventory_account = acc_q.first()

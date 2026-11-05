@@ -76,13 +76,9 @@ class TestResolveGlAccount:
 
     def test_static_concept_hit(self, mocker):
         mocker.patch("services.gl_account_resolver.is_dynamic_gl_mapping_enabled", return_value=False)
-        from services.gl_service import GL_ACCOUNT_CONCEPTS
-
-        # pick a real concept mapping if available
-        if GL_ACCOUNT_CONCEPTS:
-            concept = next(iter(GL_ACCOUNT_CONCEPTS.values()))
-            out = _resolve_gl_concept_account(concept, "9999", tenant_id=None)
-            assert isinstance(out, str)
+        # When dynamic mapping is disabled and no tenant, falls back to fallback code
+        out = _resolve_gl_concept_account("INVENTORY_ASSET", "9999", tenant_id=None)
+        assert out == "9999"
 
 
 class TestAvailability:

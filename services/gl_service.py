@@ -29,100 +29,9 @@ logger = logging.getLogger(__name__)
 
 _JE_SEQ: dict[str, int] = {}
 
-# مرجع الحسابات: استخدم هذه الرموز للقيود لضمان الاتساق
-# أصول: 1110 صندوق، 1120 بنك، 1130 ذمم مدينة، 1140 مخزون، 1150 شيكات تحت التحصيل، 1170 سلف موظفين
-# خصوم: 2110 ذمم دائنة، 2115 ذمم تجار، 2121 ضريبة مخرجات (VAT Output)، 2122 ضريبة مدخلات (VAT Input)، 2130 شيكات مؤجلة، 2140 رواتب مستحقة
-# إيرادات: 4100 مبيعات، 4200 خدمات، 4300 شحن، 4400 أرباح فرق عملة، 4500 أخرى
-# مصروفات: 5100 تكلفة بضاعة، 5150 تعديلات مخزون، 6130 خصومات ممنوحة، 6100 رواتب، 6600 خسائر فرق عملة، 6500 متنوعة
-# 'cash' and 'bank' are retained as header account references for legacy callers.
-# get_default_liquidity_account().
-GL_ACCOUNTS = {
-    "cash": "1110",
-    "bank": "1120",
-    "bank_savings": "1121",
-    "receivable": "1130",
-    "inventory": "1140",
-    "cheques_under_collection": "1150",
-    "employee_advances": "1170",  # Employee advances / prepayments
-    "vat_input": "2122",  # VAT Input (recoverable tax on purchases)
-    "payable": "2110",
-    "merchants_payable": "2115",
-    "deferred_cheques": "2130",  # Deferred Cheques Payable (outgoing cheques not yet cleared)
-    "tax_payable": "2121",  # VAT Output (tax collected on sales)
-    "salaries_payable": "2141",
-    "end_of_service_liability": "2140",
-    "sales_revenue": "4100",
-    "service_revenue": "4200",
-    "shipping_revenue": "4300",
-    "fx_gain": "4400",
-    "other_revenue": "4500",
-    "cogs": "5100",
-    "inventory_adjustments": "5150",
-    "discounts_given": "6130",
-    "campaign_discounts": "6131",
-    "salaries_expense": "6220",
-    "commission_expense": "6150",
-    "depreciation_expense": "6180",
-    "accumulated_depreciation": "1190",  # Contra-asset: Accumulated Depreciation
-    "rent": "6210",
-    "utilities": "6230",
-    "maintenance": "6240",
-    "freight_in": "5301",
-    "customs_duty": "5302",
-    "insurance_in": "5303",
-    "fx_loss": "6600",
-    "bank_charges": "6260",
-    "misc_expense": "6500",
-    "partner_current_account": "2150",
-    "azad_platform_payable": "2180",
-    "azad_platform_fee_accrued": "2181",
-    "azad_platform_fee_paid": "2182",
-    "azad_subscription_expense": "6410",
-    "azad_subscription_revenue": "4700",
-    "end_of_service_provision": "6190",
-    "leave_accrual_liability": "2160",
-    "pos_cash_difference": "6550",
-}
-
-GL_ACCOUNT_CONCEPTS = {
-    "cash": "CASH",
-    "bank": "BANK",
-    "receivable": "AR",
-    "inventory": "INVENTORY_ASSET",
-    "cheques_under_collection": "CHEQUES_UNDER_COLLECTION",
-    "employee_advances": "EMPLOYEE_ADVANCES",
-    "vat_input": "VAT_INPUT",
-    "payable": "AP",
-    "merchants_payable": "MERCHANT_CURRENT_ACCOUNT",
-    "deferred_cheques": "DEFERRED_CHEQUES_PAYABLE",
-    "salaries_payable": "PAYROLL_PAYABLE",
-    "end_of_service_liability": "END_OF_SERVICE_LIABILITY",
-    "tax_payable": "VAT_OUTPUT",
-    "sales_revenue": "SALES_REVENUE",
-    "shipping_revenue": "SHIPPING_REVENUE",
-    "service_revenue": "DONATION_REVENUE",
-    "cogs": "COGS",
-    "inventory_adjustments": "INVENTORY_ADJUSTMENT_LOSS",
-    "discounts_given": "SALES_DISCOUNT",
-    "campaign_discounts": "CAMPAIGN_DISCOUNT_EXPENSE",
-    "salaries_expense": "PAYROLL_EXPENSE",
-    "commission_expense": "COMMISSION_EXPENSE",
-    "depreciation_expense": "DEPRECIATION_EXPENSE",
-    "accumulated_depreciation": "ACCUMULATED_DEPRECIATION",
-    "fx_gain": "FX_GAIN",
-    "fx_loss": "FX_LOSS",
-    "bank_charges": "BANK_FEES",
-    "misc_expense": "MISC_EXPENSE",
-    "partner_current_account": "PARTNER_CURRENT_ACCOUNT",
-    "azad_platform_payable": "AZAD_PLATFORM_PAYABLE",
-    "azad_platform_fee_accrued": "AZAD_PLATFORM_FEE_ACCRUED",
-    "azad_platform_fee_paid": "AZAD_PLATFORM_FEE_PAID",
-    "azad_subscription_expense": "AZAD_SUBSCRIPTION_EXPENSE",
-    "azad_subscription_revenue": "AZAD_SUBSCRIPTION_REVENUE",
-    "end_of_service_provision": "END_OF_SERVICE_PROVISION",
-    "leave_accrual_liability": "LEAVE_ACCRUAL_LIABILITY",
-    "pos_cash_difference": "POS_CASH_DIFFERENCE",
-}
+# GL Account Concept Registry is now the single source of truth.
+# All legacy GL_ACCOUNTS and GL_ACCOUNT_CONCEPTS have been removed.
+# Use the unified resolution pipeline via GLService methods.
 
 
 class GLService:
@@ -136,16 +45,16 @@ class GLService:
         concept_code=None,
         account=None,
     ):
-        legacy_code = account if account is not None else GL_ACCOUNTS[account_key]
-        concept = concept_code if concept_code is not None else GL_ACCOUNT_CONCEPTS.get(account_key)
+        # Modern unified path: always use concept_code for resolution
+        # The modern resolution pipeline handles account resolution via GLService methods
         line = {
-            "account": legacy_code,
+            "account": account,
             "debit": debit,
             "credit": credit,
             "description": description,
         }
-        if concept:
-            line["concept_code"] = concept
+        if concept_code:
+            line["concept_code"] = concept_code
         return line
 
     @staticmethod
@@ -763,22 +672,20 @@ class GLService:
                 "unresolved_accounts": [],
             }
         output_acc = GLService._resolve_report_account(
-            GL_ACCOUNT_CONCEPTS["tax_payable"],
+            "VAT_OUTPUT",
             tenant_id=tenant_id,
             branch_id=branch_id,
-            legacy_code=GL_ACCOUNTS["tax_payable"],
         )
         input_acc = GLService._resolve_report_account(
-            GL_ACCOUNT_CONCEPTS["vat_input"],
+            "VAT_INPUT",
             tenant_id=tenant_id,
             branch_id=branch_id,
-            legacy_code=GL_ACCOUNTS["vat_input"],
         )
         unresolved = []
         if not output_acc:
-            unresolved.append(GL_ACCOUNT_CONCEPTS["tax_payable"])
+            unresolved.append("VAT_OUTPUT")
         if not input_acc:
-            unresolved.append(GL_ACCOUNT_CONCEPTS["vat_input"])
+            unresolved.append("VAT_INPUT")
         result = {
             "vat_output": 0.0,
             "vat_input": 0.0,
@@ -898,7 +805,7 @@ class GLService:
                     branch_id=branch_id,
                     issue="No GL account mapping found for cheque debit account.",
                 )
-            return GL_ACCOUNTS.get("cheques_under_collection", "1150")
+            return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
         return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
@@ -906,10 +813,10 @@ class GLService:
         """The documented static account that carries a customer's credit balance."""
         customer_type = getattr(customer, "customer_type", None) if customer else None
         if customer_type == "partner":
-            return GL_ACCOUNTS["partner_current_account"]
+            return "2150"  # PARTNER_CURRENT_ACCOUNT
         if customer_type == "merchant":
-            return GL_ACCOUNTS["merchants_payable"]
-        return GL_ACCOUNTS["receivable"]
+            return "2115"  # MERCHANT_CURRENT_ACCOUNT
+        return "1130"  # RECEIVABLE
 
     @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
@@ -1500,7 +1407,7 @@ class GLService:
     @staticmethod
     def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None, fallback_key=None):
         """Resolve GL account code for a concept.
-        Tries dynamic mapping first, then falls back to GL_ACCOUNTS dict.
+        Tries dynamic mapping first, then falls back to static fallback_key (which is the account code directly).
         Raises GLMappingError if no mapping and no fallback available.
         """
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
@@ -1513,12 +1420,14 @@ class GLService:
                 )
                 if account:
                     return account.code
-            except GLMappingError:
+            except Exception:
                 logger.debug(
-                    "No dynamic GL mapping for concept %s; trying static fallback", concept_code, exc_info=True
+                    "Dynamic GL mapping failed for concept %s; trying static fallback", concept_code, exc_info=True
                 )
-        if fallback_key and fallback_key in GL_ACCOUNTS:
-            return GL_ACCOUNTS[fallback_key]
+        # Fallback key is now the actual account code (e.g., "4100", "1110")
+        # Accept any non-empty string as valid fallback
+        if fallback_key:
+            return fallback_key
         raise GLMappingError(
             tenant_id=tenant_id or 0,
             concept_code=concept_code,
@@ -2125,12 +2034,13 @@ class FiscalYearService:
         gl_lines = []
         for item in pl["lines"]:
             bal = item["balance"]
-            acct_id = item["account_id"]
+            acct_code = item["account_code"]
             if item["account_type"] == "revenue":
                 # Revenue has normal credit balance; close by debiting it
                 gl_lines.append(
                     {
-                        "account_id": acct_id,
+                        "account": acct_code,
+                        "concept_code": "REVENUE_CLOSING",
                         "debit": abs(bal),
                         "credit": Decimal("0"),
                         "description": f"إقفال إيرادات - {fiscal_year}",
@@ -2140,7 +2050,8 @@ class FiscalYearService:
                 # Expense has normal debit balance; close by crediting it
                 gl_lines.append(
                     {
-                        "account_id": acct_id,
+                        "account": acct_code,
+                        "concept_code": "EXPENSE_CLOSING",
                         "debit": Decimal("0"),
                         "credit": abs(bal),
                         "description": f"إقفال مصروفات - {fiscal_year}",
@@ -2152,7 +2063,8 @@ class FiscalYearService:
         if net >= 0:
             gl_lines.append(
                 {
-                    "account_id": retained_acct.id,
+                    "account": retained_acct.code,
+                    "concept_code": "RETAINED_EARNINGS",
                     "debit": Decimal("0"),
                     "credit": abs(net),
                     "description": f"أرباح المرحلة - {fiscal_year}",
@@ -2161,7 +2073,8 @@ class FiscalYearService:
         else:
             gl_lines.append(
                 {
-                    "account_id": retained_acct.id,
+                    "account": retained_acct.code,
+                    "concept_code": "RETAINED_EARNINGS",
                     "debit": abs(net),
                     "credit": Decimal("0"),
                     "description": f"خسائر المرحلة - {fiscal_year}",

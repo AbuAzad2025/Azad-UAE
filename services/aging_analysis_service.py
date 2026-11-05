@@ -19,6 +19,7 @@ from models import (
     Sale,
     Supplier,
 )
+from services.gl_service import GLService
 from utils.constants import SALE_PAYMENT_STATUSES
 
 
@@ -305,15 +306,17 @@ class AgingAnalysisService:
 
     @staticmethod
     def _resolve_aging_account(concept_code: str, tenant_id=None, branch_id=None):
-        """إيجاد حساب GL للمقارنة."""
-        from services.gl_service import GL_ACCOUNTS
-
-        code = GL_ACCOUNTS.get(
-            ("receivable" if "AR" in concept_code or "receivable" in concept_code else "payable"),
-            "1130",
-        )
-        if "payable" in concept_code or "AP" in concept_code:
-            code = GL_ACCOUNTS.get("payable", "2110")
+        """إيجاد حساب GL للمقارنة - يستخدم نظام التحليل الموحد."""
+        target_concept = "AP" if "payable" in concept_code or "AP" in concept_code else "AR"
+        if tenant_id:
+            code = GLService.get_account_code_for_concept(
+                target_concept,
+                tenant_id=tenant_id,
+                branch_id=branch_id,
+                fallback_key="2110" if target_concept == "AP" else "1130",
+            )
+        else:
+            code = "2110" if target_concept == "AP" else "1130"
         q = GLAccount.query.filter_by(code=code)
         if tenant_id:
             q = q.filter_by(tenant_id=int(tenant_id))

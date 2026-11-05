@@ -255,6 +255,39 @@ class PosCheckoutService:
                 override_token=payload.get("override_token"),
             )
 
+        # Lock session row to prevent concurrent turnover updates
+        if session:
+            from models.pos_session import PosSession
+
+            session = _safe_for_update(
+                db.session.query(PosSession).filter_by(id=session.id).populate_existing(),
+                label=f"PosSession({session.id})",
+            )
+            if not session:
+                raise PosCheckoutError(gettext("جلسة POS غير صالحة."), 400)
+            if session.status != "open":
+                raise PosCheckoutError(gettext("لا يمكن إتمام البيع: جلسة POS مغلقة."), 400)
+
+        # Lock shift row if present
+        if shift:
+            shift_id = getattr(shift, "id", None)
+            if shift_id is not None:
+                from models import PosShift
+
+                shift = _safe_for_update(
+                    db.session.query(PosShift).filter_by(id=shift_id).populate_existing(),
+                    label=f"PosShift({shift_id})",
+                )
+                if not shift:
+                    raise PosCheckoutError(gettext("الوردية غير صالحة."), 400)
+                if shift.status != "open":
+                    raise PosCheckoutError(gettext("لا يمكن إتمام البيع: الوردية مغلقة."), 400)
+            else:
+                # Mock shift in tests - just validate status if available
+                shift_status = getattr(shift, "status", None)
+                if shift_status and shift_status != "open":
+                    raise PosCheckoutError(gettext("لا يمكن إتمام البيع: الوردية مغلقة."), 400)
+
         sale = SaleService.create_sale(
             customer=customer,
             seller=user,

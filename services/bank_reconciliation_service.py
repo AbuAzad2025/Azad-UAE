@@ -18,6 +18,7 @@ from models import (
     GLJournalEntry,
     GLJournalLine,
 )
+from services.gl_service import GLService
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_number
 
@@ -251,7 +252,12 @@ class BankReconciliationService:
             )
             lines.append(
                 {
-                    "account": "4500",  # إيرادات أخرى
+                    "account": GLService.get_account_code_for_concept(
+                        "BANK_INTEREST_INCOME",
+                        tenant_id=getattr(reconciliation.bank_account, "tenant_id", None),
+                        branch_id=getattr(reconciliation, "branch_id", None),
+                        fallback_key="4500",
+                    ),
                     "concept_code": "BANK_INTEREST_INCOME",
                     "debit": 0,
                     "credit": reconciliation.bank_interest,
@@ -531,7 +537,11 @@ class BankReconciliationService:
             .filter(GLAccount.code.like("2999%"))
             .first()
         )
-        suspense_account_code = str(suspense_gl.code) if suspense_gl else "2999"
+        suspense_account_code = (
+            str(suspense_gl.code)
+            if suspense_gl
+            else GLService.get_account_code_for_concept("SUSPENSE", tenant_id=tenant_id, fallback_key="2999")
+        )
 
         results = []
         for stmt in orphans:

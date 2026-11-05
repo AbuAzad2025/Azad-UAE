@@ -9,7 +9,7 @@ from flask_babel import gettext
 
 from models import PartnerCommissionEntry
 from services.gl_posting import post_or_fail
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GLService
 from utils.gl_reference_types import GLRef
 
 logger = logging.getLogger(__name__)
@@ -38,16 +38,24 @@ def post_sale_commissions(sale):
         )
 
     GLService.ensure_core_accounts(tenant_id=getattr(sale, "tenant_id", None))
+    tenant_id = getattr(sale, "tenant_id", None)
+    branch_id = sale.branch_id
+    commission_expense_account = GLService.get_account_code_for_concept(
+        "COMMISSION_EXPENSE", tenant_id=tenant_id, branch_id=branch_id, fallback_key="6150"
+    )
+    partner_account = GLService.get_account_code_for_concept(
+        "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key="2150"
+    )
     return post_or_fail(
         [
             {
-                "account": GL_ACCOUNTS["commission_expense"],
+                "account": commission_expense_account,
                 "concept_code": "COMMISSION_EXPENSE",
                 "debit": total,
                 "description": gettext(f"عمولات شركاء — {sale.sale_number}"),
             },
             {
-                "account": GL_ACCOUNTS["partner_current_account"],
+                "account": partner_account,
                 "concept_code": "PARTNER_CURRENT_ACCOUNT",
                 "credit": total,
                 "description": gettext(f"جاري شركاء — {sale.sale_number}"),
@@ -57,6 +65,6 @@ def post_sale_commissions(sale):
         reference_type=GLRef.PARTNER_COMMISSION,
         reference_id=sale.id,
         exchange_rate=exchange_rate,
-        branch_id=sale.branch_id,
+        branch_id=branch_id,
         tenant_id=getattr(sale, "tenant_id", None),
     )

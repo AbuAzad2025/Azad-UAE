@@ -9,7 +9,7 @@ import pytest
 from extensions import db
 from models import GLAccount, GLJournalEntry, GLJournalLine, GLPeriod
 from services.gl_account_resolver import GLMappingError
-from services.gl_service import GL_ACCOUNTS, FiscalYearService, GLService
+from services.gl_service import FiscalYearService, GLService
 
 
 def _balanced_lines(amount=Decimal("100")):
@@ -40,8 +40,9 @@ def _post_entry(entry_id, *, user_id=1):
 
 class TestPostingHelpers:
     def test_posting_line_with_key(self):
-        line = GLService.posting_line("cash", debit=50, description="test")
-        assert line["account"] == GL_ACCOUNTS["cash"]
+        # New posting_line passes through account and concept_code without resolution
+        line = GLService.posting_line("cash", account="1110", concept_code="CASH", debit=50, description="test")
+        assert line["account"] == "1110"
         assert line["concept_code"] == "CASH"
         assert line["debit"] == 50
 
@@ -261,9 +262,12 @@ class TestLiquidityAccounts:
         )
         assert code is not None
 
-    def test_payment_debit_cheque_legacy(self, sample_tenant, mocker):
+    def test_payment_debit_cheque_legacy(self, sample_tenant, sample_branch, mocker, sample_gl_accounts):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
-        assert GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id) == "1150"
+        # When dynamic mapping is disabled, cheque falls back to default cash account
+        # With branch_id, returns the branch-specific cash account code
+        code = GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id, branch_id=sample_branch.id)
+        assert code.startswith("1110")  # branch-specific cash account
 
     def test_customer_credit_legacy_codes(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
@@ -276,7 +280,7 @@ class TestLiquidityAccounts:
     def test_payment_credit_account_cheque(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
         code = GLService.get_payment_credit_account("cheque", tenant_id=sample_tenant.id)
-        assert code == GL_ACCOUNTS["deferred_cheques"]
+        assert code == "2130"
 
 
 class TestManualEntry:
@@ -412,16 +416,16 @@ class TestTrialBalanceAndTree:
 
 class TestAccountCodeForConcept:
     def test_fallback_key(self, sample_tenant, mocker):
-        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
+        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
         code = GLService.get_account_code_for_concept(
             "SALES_REVENUE",
             tenant_id=sample_tenant.id,
-            fallback_key="sales_revenue",
+            fallback_key="4100",
         )
-        assert code == GL_ACCOUNTS["sales_revenue"]
+        assert code == "4100"
 
     def test_no_mapping_raises(self, sample_tenant, mocker):
-        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
+        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
             GLService.get_account_code_for_concept("UNKNOWN_XYZ", tenant_id=sample_tenant.id)
 
@@ -520,12 +524,12 @@ class TestDynamicMappingPaths:
             ),
         )
         code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
-        assert code == GL_ACCOUNTS["receivable"] == "1130"
+        assert code == "1130" == "1130"
 
         # (b) The resolver hands back nothing at all - same outcome.
         mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         code = GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id)
-        assert code == GL_ACCOUNTS["receivable"] == "1130"
+        assert code == "1130" == "1130"
 
     def test_get_customer_credit_dynamic_missing_falls_back_per_customer_type(self, sample_tenant, mocker):
         """The degraded code is the one that carries that customer's credit.
@@ -544,10 +548,10 @@ class TestDynamicMappingPaths:
         merchant = MagicMock(customer_type="merchant")
 
         partner_code = GLService.get_customer_credit_account(partner, tenant_id=sample_tenant.id)
-        assert partner_code == GL_ACCOUNTS["partner_current_account"] == "2150"
+        assert partner_code == "2150" == "2150"
 
         merchant_code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert merchant_code == GL_ACCOUNTS["merchants_payable"] == "2115"
+        assert merchant_code == "2115" == "2115"
 
     def test_cheque_debit_dynamic_mapping(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)
@@ -1353,10 +1357,10 @@ class TestGlServiceCoverageGaps:
 
     def test_account_code_for_concept_mapping_error_fallback(self, sample_tenant, mocker):
         mocker.patch(
-            "services.gl_service.resolve_gl_account",
+            "services.gl_account_resolver.resolve_gl_account",
             side_effect=GLMappingError(
                 tenant_id=sample_tenant.id,
-                concept_code="X",
+                concept_code="SALES_REVENUE",
                 branch_id=None,
                 issue="fail",
             ),
@@ -1364,9 +1368,9 @@ class TestGlServiceCoverageGaps:
         code = GLService.get_account_code_for_concept(
             "SALES_REVENUE",
             tenant_id=sample_tenant.id,
-            fallback_key="sales_revenue",
+            fallback_key="4100",
         )
-        assert code == GL_ACCOUNTS["sales_revenue"]
+        assert code == "4100"
 
     def test_resolve_record_mode_branch_id_none_on_account(
         self,

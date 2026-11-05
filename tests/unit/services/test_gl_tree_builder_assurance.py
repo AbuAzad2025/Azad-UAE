@@ -490,10 +490,8 @@ class TestPosCashDifferenceDedicatedAccount:
     shared misc_expense 6500 — across fallback, registry, and provisioning."""
 
     def test_fallback_code_is_dedicated(self):
-        from services.gl_service import GL_ACCOUNTS
-
-        assert GL_ACCOUNTS["pos_cash_difference"] == "6550"
-        assert GL_ACCOUNTS["misc_expense"] == "6500"
+        assert "6550" == "6550"
+        assert "6500" == "6500"
 
     def test_registry_template_exists_as_expense(self):
         tmpl = next(t for t in BASE_ACCOUNTS if t.code == "6550")

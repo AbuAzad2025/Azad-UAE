@@ -96,14 +96,11 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("1160", "Prepayments", "مدفوعات مقدمة", "asset", 2, False, "1100"),
     GLAccountTemplate("1170", "Employee Advances", "سلف الموظفين", "asset", 2, False, "1100"),
-    # 1180 is the fixed-asset account the assets are capitalised to and the
-    # disposals are relieved from. It used to be a header over accounts that
-    # do not exist, which made it unpostable: a disposal that named it was
-    # refused ("Explicit GL account 1180 is a header/group account"), because
-    # a header is not a place money can go. A header with no children is not a
-    # grouping, it is a mistake - so it is a postable leaf instead, and the
-    # tree builder repairs existing tenants' rows on the next boot.
-    GLAccountTemplate("1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, False, "1100"),
+    # 1180 is the Fixed Assets header. 1181 is the postable cost account
+    # where asset acquisitions are capitalised and disposals are relieved.
+    # 1180 remains a header for grouping; 1181 is the postable cost account.
+    GLAccountTemplate("1180", "Fixed Assets", "الأصول الثابتة", "asset", 2, True, "1100"),
+    GLAccountTemplate("1181", "Fixed Assets - Cost", "الأصول الثابتة - التكلفة", "asset", 3, False, "1180"),
     GLAccountTemplate("1190", "Accumulated Depreciation", "مجمع الإهلاك", "asset", 2, False, "1100", is_contra=True),
     GLAccountTemplate("1200", "Non-Current Assets", "أصول غير متداولة", "asset", 1, True, "1000"),
     GLAccountTemplate("2000", "Liabilities", "الخصوم", "liability", 0, True),
@@ -265,6 +262,9 @@ BASE_ACCOUNTS = [
         False,
         "4000",
     ),
+    GLAccountTemplate(
+        "4190", "Sales Returns & Allowances", "مرتجعات ومخصصات المبيعات", "revenue", 1, False, "4000", is_contra=True
+    ),
     GLAccountTemplate("5000", "Cost of Sales", "تكلفة المبيعات", "expense", 0, True),
     GLAccountTemplate(
         "5100",
@@ -279,7 +279,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("5102", "COGS - Wholesale", "تكلفة بضاعة جملة", "expense", 2, False, "5100"),
     GLAccountTemplate("5103", "COGS - Online", "تكلفة بضاعة أونلاين", "expense", 2, False, "5100"),
     GLAccountTemplate("5200", "Inventory Adjustments", "تسويات المخزون", "expense", 1, True, "5000"),
-    GLAccountTemplate("5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200", is_contra=True),
+    GLAccountTemplate("5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200"),
     GLAccountTemplate("5202", "Inventory Loss", "خسارة مخزونية", "expense", 2, False, "5200"),
     GLAccountTemplate(
         "5150",

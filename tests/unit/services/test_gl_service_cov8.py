@@ -42,7 +42,7 @@ import pytest
 from flask import g
 
 from models import GLJournalEntry, GLJournalLine
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GLService
 
 
 def _pick_account(sample_tenant, code_prefix, account_type):
@@ -271,10 +271,16 @@ class TestStatementLedgerFilters:
             partner_none = GLService.get_partner_ledger(999999999)
             assert partner_none["transactions"] == []
             output_acc = GLService._resolve_journal_line_account(
-                GLService.posting_line("tax_payable"), sample_tenant.id, ensure_core=False, missing_ok=True
+                GLService.posting_line("tax_payable", concept_code="VAT_OUTPUT"),
+                sample_tenant.id,
+                ensure_core=False,
+                missing_ok=True,
             )
             input_acc = GLService._resolve_journal_line_account(
-                GLService.posting_line("vat_input"), sample_tenant.id, ensure_core=False, missing_ok=True
+                GLService.posting_line("vat_input", concept_code="VAT_INPUT"),
+                sample_tenant.id,
+                ensure_core=False,
+                missing_ok=True,
             )
             mocker.patch.object(
                 GLService,
@@ -288,8 +294,8 @@ class TestStatementLedgerFilters:
             assert recon_none >= 0
             branch_bal_none = GLService.get_account_balance_for_branch(entries[0].lines[0].account_id)
             assert isinstance(branch_bal_none, float)
-            fallback_none = GLService.get_account_code_for_concept("NOPE", fallback_key="sales_revenue")
-            assert fallback_none == GL_ACCOUNTS["sales_revenue"]
+            fallback_none = GLService.get_account_code_for_concept("NOPE", fallback_key="4100")
+            assert fallback_none == "4100"
         finally:
             _cleanup_posted_lines(db_session, entries)
 
@@ -313,10 +319,7 @@ class TestConceptsAndReconciliation:
     def test_concept_fallback_and_raise(self, db_session, sample_tenant):
         from services.gl_account_resolver import GLMappingError
 
-        assert (
-            GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id, fallback_key="sales_revenue")
-            == GL_ACCOUNTS["sales_revenue"]
-        )
+        assert GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id, fallback_key="4100") == "4100"
         with pytest.raises(GLMappingError):
             GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id)
 
@@ -601,7 +604,7 @@ class TestResolveArcs:
             ),
         )
         code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert code == GL_ACCOUNTS["merchants_payable"] == "2115"
+        assert code == "2115" == "2115"
 
         # (b) The concept the customer type names is not one the registry
         #     knows, so the resolver refuses it ...
@@ -612,7 +615,7 @@ class TestResolveArcs:
         # ... and the helper absorbs that refusal and hands back the
         # merchant's static account.
         code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert code == GL_ACCOUNTS["merchants_payable"] == "2115"
+        assert code == "2115" == "2115"
 
     def test_dynamic_record_branch_arc(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         from models import GLAccount

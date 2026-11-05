@@ -82,6 +82,12 @@ from .product_price_tier import ProductPriceTier
 from .product_return import ProductReturn, ProductReturnLine
 from .product_serial import ProductSerial
 from .product_warehouse_cost import ProductWarehouseCost
+from .product_import_job import (
+    ProductImportJob,
+    ProductImportJobStatus,
+    ProductImportTemplate,
+    ProductImportRollbackLog,
+)
 from .profit_center import ProfitCenter
 from .projects import Project, ProjectMember, Task, TaskStage, Timesheet
 from .purchase import (
@@ -284,4 +290,8 @@ __all__ = [
     "PrintHistory",
     "DocumentSnapshot",
     "DocumentVerification",
+    "ProductImportJob",
+    "ProductImportJobStatus",
+    "ProductImportTemplate",
+    "ProductImportRollbackLog",
 ]

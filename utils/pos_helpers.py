@@ -85,11 +85,11 @@ def payment_amount_base(payment, tenant_id: int | None = None) -> Decimal:
 def resolve_pos_cash_account_code(tenant_id: int, branch_id: int) -> str:
     """Postable branch cash account code (single source for POS GL cash legs)."""
     from services import gl_helpers
-    from services.gl_service import GL_ACCOUNTS, GLService
+    from services.gl_service import GLService
     from services.gl_tree_builder import GLTreeBuilder
 
     GLService.ensure_core_accounts(tenant_id=tenant_id)
-    cash_parent_code = GL_ACCOUNTS.get("cash", "1110")
+    cash_parent_code = "1110"
     cash_acct_code = GLTreeBuilder._branch_account_code(cash_parent_code, branch_id)
     cash_account = gl_helpers.get_account(cash_acct_code, tenant_id=tenant_id)
     if cash_account is None or getattr(cash_account, "is_header", False):

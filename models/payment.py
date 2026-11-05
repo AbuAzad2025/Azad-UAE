@@ -1,6 +1,7 @@
 """Payment model - tracks outgoing/incoming payments."""
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy.orm import validates
 
@@ -167,6 +168,14 @@ class Payment(db.Model):
             # تحديث حالة الفاتورة
             if self.sale:
                 self.sale.recalculate_payment_status()
+            elif self.purchase:
+                # For purchases, check if fully paid and unwind FX revaluation
+                from services.fx_revaluation_service import revalue_purchase_at_settlement
+
+                paid = self.purchase.get_paid_amount()
+                total = Decimal(str(self.purchase.amount_aed or 0))
+                if paid >= total:
+                    revalue_purchase_at_settlement(self.purchase.id, self.purchase.tenant_id)
 
     def reject_payment(self, reason):
         """رفض الدفعة (شيك مرتد) - يعكس التوزيع على فاتورة البيع"""

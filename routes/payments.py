@@ -1575,9 +1575,12 @@ def create_payment(purchase_id):
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
                     )
+                    ap_account = GLService.get_account_code_for_concept(
+                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                    )
                     lines = [
                         {
-                            "account": "2110",
+                            "account": ap_account,
                             "concept_code": "AP",
                             "debit": payment.amount,
                             "description": gettext(f"سداد للمورد {payment.supplier_name}"),

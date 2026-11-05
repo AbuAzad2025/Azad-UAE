@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 import pytest
 
 import routes.products as products_mod
+from models.product_import_job import ProductImportJobStatus
 from tests.unit.routes.conftest import _chain_query, unauthenticated_client
 
 
@@ -20,6 +21,11 @@ def _import_dataframe(data):
             sys.modules.pop(mod, None)
     pd = importlib.import_module("pandas")
     return pd.DataFrame(data)
+
+
+def _assert_import_job_redirect(resp):
+    assert resp.status_code == 302
+    assert "import_job_detail" in resp.location
 
 
 def _assert_import_index_redirect(resp):
@@ -271,18 +277,54 @@ def _run_import_post(
     warehouse_query=None,
     os_remove_side_effect=None,
 ):
+
+    wh_query = warehouse_query or _warehouse_query_mock()
+
+
+def _run_import_post(
+    app,
+    df,
+    *,
+    update_existing=False,
+    existing_product=None,
+    warehouse_query=None,
+    os_remove_side_effect=None,
+):
     from contextlib import ExitStack
+    import io
+    from werkzeug.datastructures import FileStorage
+    from werkzeug.wrappers import Response
 
     from routes.products import import_products
 
-    file_mock = MagicMock()
-    file_mock.filename = "products.xlsx"
-    file_mock.save = MagicMock()
     wh_query = warehouse_query or _warehouse_query_mock()
 
     with app.test_request_context("/products/import", method="POST"), ExitStack() as stack:
         stack.enter_context(patch("routes.products._read_import_dataframe", return_value=df))
+        stack.enter_context(patch("services.import_job_service.ProductImportService._read_dataframe", return_value=df))
         stack.enter_context(patch("models.Warehouse.query", wh_query))
+        stack.enter_context(patch("routes.products.gettext", side_effect=lambda x, **kwargs: x))
+        stack.enter_context(patch("routes.products.flash", side_effect=lambda *args, **kwargs: None))
+
+        # Mock redirect to return a proper Response object
+        def mock_redirect(url):
+            resp = Response(status=302)
+            resp.headers["Location"] = url
+            return resp
+
+        stack.enter_context(patch("routes.products.redirect", side_effect=mock_redirect))
+        stack.enter_context(
+            patch("routes.products.url_for", side_effect=lambda *args, **kwargs: "/products/import_job_detail/1")
+        )
+        # Mock create_job to avoid duplicate file detection
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
+        mock_job.update_existing = False
+        mock_job.status = ProductImportJobStatus.PENDING
+        mock_job.celery_task_id = None
+        stack.enter_context(patch("services.import_job_service.ImportJobService.create_job", return_value=mock_job))
         if os_remove_side_effect is not None:
             stack.enter_context(patch("os.remove", side_effect=os_remove_side_effect))
         else:
@@ -295,7 +337,13 @@ def _run_import_post(
             ctx["product_query"].filter.return_value = inner
             with patch("routes.products.request") as req:
                 req.method = "POST"
-                req.files = {"file": file_mock}
+                req.files = {
+                    "file": FileStorage(
+                        stream=io.BytesIO(b"mock file content"),
+                        filename="products.xlsx",
+                        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    )
+                }
                 req.form = {"update_existing": "1"} if update_existing else {}
                 req.url = "/products/import"
                 return import_products()
@@ -483,7 +531,7 @@ class TestImportProducts:
             }
         )
         resp = _run_import_post(products_import_app, df)
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
     def test_import_post_duplicate_without_update(self, products_client, upload_dir):
         df = _import_dataframe({"name": ["Dup"], "price": [10.0]})
@@ -1154,10 +1202,19 @@ class TestProductsExtendedCoverage:
             with (
                 patch("models.Warehouse.query", _warehouse_query_mock()),
                 patch("routes.products._read_import_dataframe", return_value=df),
+                patch("services.import_job_service.ImportJobService.create_job") as mock_create_job,
             ):
+                mock_job = MagicMock()
+                mock_job.id = 1
+                mock_job.is_dry_run = False
+                mock_job.original_filename = "products.csv"
+                mock_job.update_existing = False
+                mock_job.status = ProductImportJobStatus.PENDING
+                mock_job.celery_task_id = None
+                mock_create_job.return_value = mock_job
                 resp = products_client.post(
                     "/products/import",
-                    data={"file": (BytesIO(b"a,b\r\n1,2"), "products.csv")},
+                    data={"file": (BytesIO(b"a,b\r\n\r\n1,2"), "products.csv")},
                     content_type="multipart/form-data",
                 )
         assert resp.status_code == 302

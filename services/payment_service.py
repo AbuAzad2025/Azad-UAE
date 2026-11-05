@@ -337,9 +337,12 @@ class PaymentService:
                     branch_id=payment.branch_id,
                     tenant_id=tenant_id,
                 )
+                ap_account = GLService.get_account_code_for_concept(
+                    "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                )
                 lines = [
                     {
-                        "account": "2110",
+                        "account": ap_account,
                         "concept_code": "AP",
                         "debit": payment.amount,
                         "description": gettext(f"دفعة للمورد {supplier.name}"),
@@ -455,7 +458,9 @@ class PaymentService:
                     "description": gettext(f"استرداد من مورد {supplier.name}"),
                 },
                 {
-                    "account": "2110",
+                    "account": GLService.get_account_code_for_concept(
+                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                    ),
                     "concept_code": "AP",
                     "credit": payment.amount,
                     "description": gettext(f"سند قبض {payment.payment_number}"),

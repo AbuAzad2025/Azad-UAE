@@ -199,18 +199,22 @@ def create():
                     from services.gl_service import GLService
 
                     GLService.ensure_core_accounts(tenant_id=tid)
+                    opening_equity_account = GLService.get_account_code_for_concept(
+                        "OPENING_BALANCE_EQUITY", tenant_id=tid, fallback_key="3130"
+                    )
+                    ap_account = GLService.get_account_code_for_concept("AP", tenant_id=tid, fallback_key="2110")
                     post_or_fail(
                         lines=[
                             {
-                                "account": "3130",
+                                "account": opening_equity_account,
                                 "concept_code": "OPENING_BALANCE_EQUITY",
                                 "debit": initial_balance,
                                 "credit": 0,
                                 "description": gettext(f"رصيد افتتاحي للمورد {supplier.name}"),
                             },
                             {
-                                "account": "2110",
-                                "concept_code": "ACCOUNTS_PAYABLE",
+                                "account": ap_account,
+                                "concept_code": "AP",
                                 "debit": 0,
                                 "credit": initial_balance,
                                 "description": gettext(f"رصيد افتتاحي للمورد {supplier.name}"),

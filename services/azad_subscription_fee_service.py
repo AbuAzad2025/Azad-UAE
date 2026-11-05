@@ -11,7 +11,7 @@ from extensions import db
 from models import AzadSubscriptionFee
 from models.system_settings import SystemSettings
 from services.gl_posting import post_or_fail
-from services.gl_service import GL_ACCOUNTS, GLService
+from services.gl_service import GLService
 from utils.gl_reference_types import GLRef
 
 
@@ -162,18 +162,26 @@ class AzadSubscriptionFeeService:
             "AZAD_PLATFORM_PAYABLE",
             branch_id=_resolve_main_branch(tid),
             tenant_id=tid,
-            fallback_key="azad_platform_payable",
+            fallback_key="2180",
         )
         credit_concept = GLService.get_payment_credit_concept(payment_method)
         if credit_concept:
             credit_account = GLService._resolve_journal_line_account(
-                GLService.posting_line(credit_concept.lower().replace("_", "")),
+                GLService.posting_line(credit_concept.lower().replace("_", ""), concept_code=credit_concept),
                 tenant_id=tid,
                 missing_ok=True,
             )
-            credit_code = credit_account.code if credit_account else GL_ACCOUNTS.get("cash")
+            credit_code = (
+                credit_account.code
+                if credit_account
+                else GLService.get_account_code_for_concept(
+                    credit_concept, tenant_id=tid, branch_id=_resolve_main_branch(tid), fallback_key="1110"
+                )
+            )
         else:
-            credit_code = GL_ACCOUNTS.get("cash")
+            credit_code = GLService.get_account_code_for_concept(
+                "CASH", tenant_id=tid, branch_id=_resolve_main_branch(tid), fallback_key="1110"
+            )
 
         GLService.ensure_core_accounts(tenant_id=int(tid))
         branch_id = _resolve_main_branch(tid)

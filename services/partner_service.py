@@ -298,7 +298,7 @@ class PartnerService:
     def pay_distribution(dist_id: int, tenant_id: int | None = None) -> bool:
         from models import PartnerProfitDistribution
         from services.gl_posting import post_or_fail
-        from services.gl_service import GL_ACCOUNTS, GLService
+        from services.gl_service import GLService
         from utils.gl_reference_types import GLRef
 
         dist = db.session.get(PartnerProfitDistribution, dist_id)
@@ -316,14 +316,16 @@ class PartnerService:
             branch_id = _resolve_main_branch(dist.tenant_id)
             try:
                 partner_account = GLService.get_account_code_for_concept(
-                    "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id, fallback_key="2150"
                 )
             except Exception:
                 partner_account = "2150"
             try:
-                bank_account = GLService.get_default_liquidity_account("bank", tenant_id=dist.tenant_id)
+                bank_account = GLService.get_default_liquidity_account(
+                    "bank", tenant_id=dist.tenant_id, branch_id=branch_id
+                )
             except Exception:
-                bank_account = GL_ACCOUNTS.get("bank", "1120")
+                bank_account = "1120"
             lines = [
                 {
                     "account": partner_account,
@@ -405,21 +407,23 @@ class PartnerService:
             partner.total_additional_investment = Decimal(str(partner.total_additional_investment or 0)) + amount_base
         if amount_base != 0:
             from services.gl_posting import post_or_fail
-            from services.gl_service import GL_ACCOUNTS, GLService
+            from services.gl_service import GLService
             from utils.gl_reference_types import GLRef
             from utils.tax_settings import _resolve_main_branch
 
             branch_id = _resolve_main_branch(partner.tenant_id)
             try:
                 partner_account = GLService.get_account_code_for_concept(
-                    "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id, branch_id=branch_id, fallback_key="2150"
                 )
             except Exception:
                 partner_account = "2150"
             try:
-                bank_account = GLService.get_default_liquidity_account("bank", tenant_id=partner.tenant_id)
+                bank_account = GLService.get_default_liquidity_account(
+                    "bank", tenant_id=partner.tenant_id, branch_id=branch_id
+                )
             except Exception:
-                bank_account = GL_ACCOUNTS.get("bank", "1120")
+                bank_account = "1120"
             amt = float(abs(amount_base))
             if amount_base > 0:
                 lines = [

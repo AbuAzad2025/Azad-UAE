@@ -22,12 +22,25 @@ from utils.gl_reference_types import GLRef
 class DonationGLService:
     @staticmethod
     def _vault_accounts(vault: PaymentVault | None, tenant_id: int) -> tuple[str, str]:
-        debit = (getattr(vault, "donation_debit_account", None) or "1120").strip()
-        credit = (getattr(vault, "donation_credit_account", None) or "4200").strip()
-        debit_account = GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
-        if debit in ("1110", "1120") or getattr(debit_account, "is_header", False):
-            liquidity_kind = "cash" if debit == "1110" else "bank"
-            debit = GLService.get_default_liquidity_account(liquidity_kind, tenant_id=tenant_id)
+        debit = (getattr(vault, "donation_debit_account", None) or "").strip()
+        credit = (getattr(vault, "donation_credit_account", None) or "").strip()
+
+        if not debit:
+            debit = GLService.get_default_liquidity_account("bank", tenant_id=tenant_id)
+        else:
+            debit_account = (
+                GLAccount.query.filter_by(code=debit, tenant_id=tenant_id).order_by(GLAccount.id.asc()).first()
+            )
+            if debit_account and (
+                debit_account.liquidity_kind in ("cash", "bank") or getattr(debit_account, "is_header", False)
+            ):
+                debit = GLService.get_default_liquidity_account(debit_account.liquidity_kind, tenant_id=tenant_id)
+
+        if not credit:
+            credit = GLService.get_account_code_for_concept(
+                "DONATION_REVENUE", tenant_id=tenant_id, fallback_key="4200"
+            )
+
         return debit, credit
 
     @staticmethod

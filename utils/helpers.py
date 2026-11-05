@@ -91,6 +91,29 @@ def generate_number(
     branch_id=None,
     tenant_id=None,
 ):
+    """
+    Generate a document number using the centralized DocumentSequenceService
+    which provides atomic row-level locking (SELECT FOR UPDATE) on the sequence row.
+    Falls back to legacy query-based generation for models without a configured sequence.
+    """
+    # Map model/field_name to DocumentSequence code
+    sequence_code = _model_field_to_sequence_code(model, field_name)
+
+    if sequence_code and tenant_id is not None:
+        # Use the atomic sequence service with proper row-level locking
+        try:
+            from services.document_sequence_service import DocumentSequenceService
+
+            return DocumentSequenceService.next_number(
+                tenant_id=tenant_id,
+                code=sequence_code,
+                branch_code=branch_code,
+            )
+        except Exception:
+            # Fall back to legacy method if sequence service unavailable
+            pass
+
+    # Legacy fallback for models without sequence or when tenant_id is None
     year = datetime.now().strftime(date_format)
 
     resolved_branch_code = _resolve_branch_code(branch_code=branch_code, branch_id=branch_id)
@@ -114,6 +137,32 @@ def generate_number(
     if resolved_branch_code:
         return f"{prefix}-{resolved_branch_code}-{year}-{next_number:04d}"
     return f"{prefix}-{year}-{next_number:04d}"
+
+
+def _model_field_to_sequence_code(model, field_name: str) -> str | None:
+    """Map (model, field_name) to DocumentSequence code."""
+    model_name = model.__name__.lower() if hasattr(model, "__name__") else str(model).lower()
+
+    # Direct model name mappings
+    model_to_code = {
+        "sale": "sale",
+        "purchase": "purchase",
+        "purchasereturn": "return",
+        "payment": "payment",
+        "receipt": "receipt",
+        "cheque": "cheque",
+        "shipment": "shipment",
+        "fixedasset": "asset",
+        "purchaserequisition": "purchase_requisition",
+        "purchaseorder": "purchase_order",
+        "goodsreceipt": "goods_receipt",
+        "quotation": "quotation",
+        "bankreconciliation": "bank_reconciliation",
+        "budget": "budget",
+        "warehousetransfer": "transfer",
+    }
+
+    return model_to_code.get(model_name)
 
 
 def generate_number_and_save(

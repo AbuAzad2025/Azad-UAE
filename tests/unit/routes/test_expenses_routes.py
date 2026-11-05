@@ -872,7 +872,6 @@ class TestBuildExpenseGlLines:
         # GL_ACCOUNTS says it is. Hard-coding the code here meant the
         # assertion kept passing for the wrong reason while the COA moved, and
         # then failed for a reason that had nothing to do with the fallback.
-        from services.gl_service import GL_ACCOUNTS
 
-        assert lines[0]["account"] == GL_ACCOUNTS["misc_expense"]
+        assert lines[0]["account"] == "6500"
         assert lines[0]["concept_code"] == "MISC_EXPENSE"

@@ -60,9 +60,11 @@ def _resolve_transaction_rate(currency, user_rate=None):
 
 
 def _build_expense_gl_lines(expense, tenant_id):
-    from services.gl_service import GL_ACCOUNTS
+    from services.gl_service import GLService
 
-    misc_expense_account = GL_ACCOUNTS["misc_expense"]
+    misc_expense_account = GLService.get_account_code_for_concept(
+        "MISC_EXPENSE", tenant_id=tenant_id, fallback_key="6500"
+    )
     category = expense.category
     expense_account = category.gl_account_code if category and category.gl_account_code else misc_expense_account
     expense_concept = None if category and category.gl_account_code else "MISC_EXPENSE"
@@ -73,7 +75,9 @@ def _build_expense_gl_lines(expense, tenant_id):
         expense_account = misc_expense_account
         expense_concept = "MISC_EXPENSE"
     if expense.payment_method == "cheque":
-        payment_account = "2120"
+        payment_account = GLService.get_account_code_for_concept(
+            "DEFERRED_CHEQUES_PAYABLE", tenant_id=tid, fallback_key="2120"
+        )
         payment_concept = "DEFERRED_CHEQUES_PAYABLE"
     else:
         payment_account = GLService.get_payment_credit_account(
@@ -238,10 +242,9 @@ def create():
 
                 # Budget enforcement check
                 from services.budget_enforcement import check_budget_for_account
-                from services.gl_service import GL_ACCOUNTS as _GL_ACCTS
 
                 cat = ExpenseService.get_category(expense.category_id)
-                expense_acct = getattr(cat, "gl_account_code", None) or _GL_ACCTS.get("misc_expense", "6500")
+                expense_acct = getattr(cat, "gl_account_code", None) or "6500"
                 budget_check = check_budget_for_account(
                     tenant_id=tid,
                     account_code=expense_acct,
@@ -532,7 +535,6 @@ def categories():
 
 def _validate_gl_account_code(gl_account_code, tenant_id):
     """التحقق من صحة حساب الأستاذ لفئة المصروف"""
-    from services.gl_service import GL_ACCOUNTS
 
     if not gl_account_code:
         return True
@@ -550,7 +552,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
     restricted_codes = ["1130", "1150", "1160", "2110", "2120", "2140", "3130", "3350"]
     if code_str in restricted_codes:
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'))
-    if first_digit in restricted_prefixes and code_str != GL_ACCOUNTS["misc_expense"]:
+    if first_digit in restricted_prefixes and code_str != "6500":
         raise ValueError(
             gettext(
                 f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'

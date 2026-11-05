@@ -107,7 +107,12 @@ def dashboard():
                 stats["cash_balance"] = float(MainSiteService.liquidity_balance("cash", gl_tid, scoped_branch_id))
                 stats["bank_balance"] = float(MainSiteService.liquidity_balance("bank", gl_tid, scoped_branch_id))
 
-                inventory_acc = get_gl_account_by_code("1140", tenant_id=gl_tid)
+                from services.gl_service import GLService
+
+                inventory_account_code = GLService.get_account_code_for_concept(
+                    "INVENTORY_ASSET", tenant_id=gl_tid, fallback_key="1140"
+                )
+                inventory_acc = get_gl_account_by_code(inventory_account_code, tenant_id=gl_tid)
                 if inventory_acc:
                     stats["inventory_value_gl"] = float(
                         MainSiteService.inventory_gl_value(inventory_acc, scoped_branch_id)

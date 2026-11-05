@@ -9,14 +9,45 @@ from sqlalchemy import func
 
 from extensions import db
 from models import Customer, GLAccount, GLJournalEntry, GLJournalLine, Sale
-from services.gl_service import GL_ACCOUNTS
+from services.gl_service import GLService
 from utils.gl_tenant import scope_gl_accounts
 
-AR_SUBLEDGER_ACCOUNTS = (
-    ("1130", lazy_gettext("ذمم مدينة"), ("regular",)),
-    ("3350", lazy_gettext("جاري الشركاء"), ("partner",)),
-    ("2115", lazy_gettext("ذمم التجار"), ("merchant",)),
-)
+
+def _get_receivable_concept_account(tenant_id=None, branch_id=None, fallback="1130"):
+    """Get the receivable account code via concept resolution."""
+    if tenant_id:
+        return GLService.get_account_code_for_concept(
+            "AR", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
+        )
+    return fallback
+
+
+def _get_partner_account(tenant_id=None, branch_id=None, fallback="3350"):
+    """Get the partner current account code via concept resolution."""
+    if tenant_id:
+        return GLService.get_account_code_for_concept(
+            "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
+        )
+    return fallback
+
+
+def _get_merchant_account(tenant_id=None, branch_id=None, fallback="2115"):
+    """Get the merchant current account code via concept resolution."""
+    if tenant_id:
+        return GLService.get_account_code_for_concept(
+            "MERCHANT_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
+        )
+    return fallback
+
+
+# These are the canonical subledger account codes — resolved dynamically per tenant/branch.
+# Kept as callables so callers can pass tenant/branch context.
+def _ar_subledger_accounts(tenant_id=None, branch_id=None):
+    return (
+        (_get_receivable_concept_account(tenant_id, branch_id), lazy_gettext("ذمم مدينة"), ("regular",)),
+        (_get_partner_account(tenant_id, branch_id), lazy_gettext("جاري الشركاء"), ("partner",)),
+        (_get_merchant_account(tenant_id, branch_id), lazy_gettext("ذمم التجار"), ("merchant",)),
+    )
 
 
 class ARReconciliationService:
@@ -129,7 +160,9 @@ class ARReconciliationService:
         total_gl = Decimal("0")
         total_ops = Decimal("0")
 
-        for code, label, customer_types in AR_SUBLEDGER_ACCOUNTS:
+        subledger_accounts = _ar_subledger_accounts(tenant_id, branch_id)
+
+        for code, label, customer_types in subledger_accounts:
             acc_q = GLAccount.query.filter_by(code=code)
             if tenant_id is not None:
                 acc_q = scope_gl_accounts(acc_q, tenant_id=tenant_id)
@@ -157,8 +190,8 @@ class ARReconciliationService:
             "total_difference": float(total_gl - total_ops),
             "all_matched": all(r["matched"] for r in rows),
             "account_codes": {
-                "receivable": GL_ACCOUNTS["receivable"],
-                "partners": "3350",
-                "merchants": GL_ACCOUNTS["merchants_payable"],
+                "receivable": _get_receivable_concept_account(tenant_id, branch_id),
+                "partners": _get_partner_account(tenant_id, branch_id),
+                "merchants": _get_merchant_account(tenant_id, branch_id),
             },
         }

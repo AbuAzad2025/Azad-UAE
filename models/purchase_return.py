@@ -78,15 +78,28 @@ class PurchaseReturn(db.Model):
         cascade="all, delete-orphan",
     )
 
-    def calculate_totals(self):
+    def calculate_totals(self, recalculate_tax: bool = True):
+        """
+        Calculate totals for the purchase return.
+
+        Args:
+            recalculate_tax: If True, recalculate tax based on tax_rate.
+                           If False, preserve existing tax_amount (used when tax
+                           was calculated proportionally from the original purchase).
+        """
         self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
 
-        # Calculate tax amount
-        tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
-        self.tax_amount = (self.subtotal * (tax_rate_decimal / Decimal("100"))).quantize(
+        # Calculate tax amount only if recalculate_tax is True or tax_amount not set
+        if recalculate_tax or self.tax_amount is None:
+            tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
+            self.tax_amount = (self.subtotal * (tax_rate_decimal / Decimal("100"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+        # If recalculate_tax is False, preserve the existing tax_amount
+
+        self.total_amount = (self.subtotal + (self.tax_amount or Decimal("0"))).quantize(
             Decimal("0.001"), rounding=ROUND_HALF_UP
         )
-        self.total_amount = (self.subtotal + self.tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
         from utils.currency_utils import resolve_tenant_base_currency
