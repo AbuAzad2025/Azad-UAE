@@ -433,21 +433,21 @@ jobs:
         run: python scripts/lint/check_a11y_labels.py
 
       # Ratcheting budget, not a target. The template cleanup (inline styles ->
-#   static  50  - was 281. print/receipt family -> print-utilities.css,
-#              invoices -> print-utilities.css, width utilities ->
-#              layout-utilities.css.
-#   dynamic 21  - computed per row (stage colour, progress %, loop delay).
-#              A CHECK-style "no inline styles" rule is unachievable for
-#              these; the end state is a custom property read from a data-
-#              attribute, which still needs one style attribute.
-#   scripts 170 - inline <script> blocks, bounded (Track 3, not started).
-#
-# Headroom is zero on static and scripts by design: the budget is the measured
-# count. Lower it in the commit that removes declarations, never ahead of one.
-#
-# Remaining 50 static: 16 on the WeasyPrint path (print templates link no
-# stylesheet at all), 10 in shop/order_invoice.html which is deliberately
-# self-contained for email/download, 24 in browser pages.
+      #   static  50  - was 281. print/receipt family -> print-utilities.css,
+      #              invoices -> print-utilities.css, width utilities ->
+      #              layout-utilities.css.
+      #   dynamic 21  - computed per row (stage colour, progress %, loop delay).
+      #              A CHECK-style "no inline styles" rule is unachievable for
+      #              these; the end state is a custom property read from a data-
+      #              attribute, which still needs one style attribute.
+      #   scripts 170 - inline <script> blocks, bounded (Track 3, not started).
+      #
+      # Headroom is zero on static and scripts by design: the budget is the measured
+      # count. Lower it in the commit that removes declarations, never ahead of one.
+      #
+      # Remaining 50 static: 16 on the WeasyPrint path (print templates link no
+      # stylesheet at all), 10 in shop/order_invoice.html which is deliberately
+      # self-contained for email/download, 24 in browser pages.
       - name: Inline asset budget (static styles / inline scripts)
         run: |
           python scripts/lint/check_inline_assets.py --top 12
