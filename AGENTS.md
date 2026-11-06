@@ -83,7 +83,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 ### CI — gates that are actually enforced
 - Authoritative status lives in the Actions tab; a run id recorded here goes stale
   the moment anything is pushed, so it is deliberately not cited here.
-- `python scripts/lint/check_migration_head.py` → single head, chain len 52.
+- `python scripts/lint/check_migration_head.py` → single head, chain len 60.
 - Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 170`
   (measured 50 / 21 / 170 — zero headroom by design; lower a budget only in the
   commit that removes declarations).
@@ -118,7 +118,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   loaded degrades the type and never the text.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → c3d9e1f7a204` (58 revisions)
+- **Migration chain (single head):** `squash_001 → … → d7e8f9a0b1c2` (60 revisions)
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
@@ -127,6 +127,11 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
     because the postings those modules make happen on ordinary operations
   - `c3d9e1f7a204` the GL concept allow-list rebuilt from the model's own list, so the
     database and the model cannot drift apart again
+  - `0c8596234965` product import jobs/templates (background import with rollback)
+  - `d7e8f9a0b1c2` the GL concept allow-list widened for the fiscal-close concepts
+    (`RETAINED_EARNINGS`, `REVENUE_CLOSING`, `EXPENSE_CLOSING`) and the landed-cost
+    insurance leg (`INSURANCE_IN`), rebuilt from `GL_CONCEPT_CODES` again — add a new
+    concept only with a new rebuild migration
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)
@@ -167,7 +172,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
   **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
-  field definitions** (13 core + 61 across 12 industries) / 98 base GL accounts
+  field definitions** (13 core + 61 across 12 industries) / 100 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
   (`app/bootstrap.py`); `AUTO_MIGRATE=1` lets a fresh database be migrated at
@@ -282,25 +287,34 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   suites use, or every later suite finds a vault it cannot unlock.
 
 ### Production-readiness findings — OPEN, with the evidence
-The four proofs below are in the tree and green. The findings they produced
-are **not** fixed; each is pinned by a test that names it.
+The proofs below are in the tree and green. Of them, only the fiscal-year
+period dating and the open-item FX revaluation stay open; the others below
+are fixed.
 - `tests/integration/test_sales_concurrency_load.py` — no oversell, no double
-  charge, the ledger balances under 30 concurrent writers. **Open:** the
-  document number is allocated without a lock (`utils/helpers.py:96`), so a
-  collision loses the order; and the POS session's turnover loses updates
-  (`services/pos_checkout_service.py:291`), which is what the drawer
-  reconciliation is built from. `services/document_sequence_service.py` has
-  the correct `SELECT FOR UPDATE` primitive and nothing calls it.
+  charge, the ledger balances under 30 concurrent writers. **Fixed:**
+  `utils/helpers.py` now generates numbers through
+  `DocumentSequenceService.next_number()` (its `SELECT FOR UPDATE` row lock)
+  and the legacy fallback uses `with_for_update(of=model)`;
+  `services/pos_checkout_service.py` updates turnover with atomic
+  `UPDATE … SET col = col + ?` SQL instead of Python read-modify-write, so
+  the drawer reconciliation no longer loses updates.
 - `tests/integration/test_period_close_reconciliation.py` — 300 invoices, 878
   entries, closed through the real route: the trial balance, the AR/AP
   controls, both VAT accounts and the inventory account reconcile to the cent.
-  **Open:** a supplier credit note against a VAT bill cannot be posted at all
-  (`models/purchase_return.py:83` drops the tax), and the fiscal-year close
-  can never post its closing entry (`services/gl_service.py:2023`).
+  **Partly fixed:** a supplier credit note against a VAT bill now posts
+  balanced — `models/purchase_return.py`
+  `calculate_totals(recalculate_tax=False)` preserves the total the service
+  set (`inventory_credit + tax`), pinned by
+  `test_purchase_return_against_a_vat_bill_is_refused` (now asserts the
+  balanced posting). **Open:** the fiscal-year close can never post its
+  closing entry (`services/gl_service.py:2023` dates the entry into the
+  period it just closed, which `assert_period_open` refuses).
 - `tests/integration/business_scenarios/test_wave8_fx.py` (ADV-49…ADV-60) —
-  **Open:** the unrealized revaluation is never unwound at settlement, so a
-  settled invoice keeps a receivable; and `revaluate_open_items` has no
-  caller, so no invoice is revalued in production at all.
+  **Partly fixed:** the settlement unwind posts now
+  (`revalue_sale_at_settlement` in `models/sale.py`,
+  `revalue_purchase_at_settlement` in `models/payment.py`). **Open:**
+  `revaluate_open_items` has no caller, so no invoice is revalued in
+  production at all.
 - `docs/AUDIT_CHART_OF_ACCOUNTS.md` — 5 P0, 8 P1, 6 P2 in the chart of
   accounts and the concept mapping. The sharpest one was that under the
   production default `ENABLE_DYNAMIC_GL_MAPPING=True`, 19 concepts the services
