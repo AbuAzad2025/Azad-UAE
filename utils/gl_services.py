@@ -44,6 +44,7 @@ def gl_post_or_fail(
     exchange_rate=1.0,
     branch_id=None,
     tenant_id=None,
+    allow_closed_period=False,
 ):
     from services.gl_posting import post_or_fail
     from utils.currency_utils import get_system_default_currency
@@ -59,6 +60,7 @@ def gl_post_or_fail(
         exchange_rate=exchange_rate,
         branch_id=branch_id,
         tenant_id=tenant_id,
+        allow_closed_period=allow_closed_period,
     )
 
 

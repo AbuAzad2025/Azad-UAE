@@ -141,8 +141,8 @@ def next_entry_number(tenant_id, entry_date=None):
     return f"JE-{y}-{last_num + 1:04d}"
 
 
-def assert_period_open(entry_date, tenant_id):
-    if tenant_id is None:
+def assert_period_open(entry_date, tenant_id, *, allow_closed_period: bool = False):
+    if tenant_id is None or allow_closed_period:
         return
     dt = entry_date if isinstance(entry_date, datetime) else datetime.now(UTC)
     from models.gl import GLPeriod

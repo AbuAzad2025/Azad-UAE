@@ -905,19 +905,13 @@ def test_the_books_reconcile_to_the_cent(client, db_session, books):
 
 
 def _try_fiscal_year_close(client, close_user, tenant, fiscal_year: int, tenant_id: int) -> str:
-    """Close every month of the fiscal year, then try the year-end close.
+    """Close every month of the fiscal year, then post the year-end close.
 
-    FINDING (P1): the fiscal-year close cannot post its closing entry.
-    ``FiscalYearService.close_fiscal_year`` first requires all twelve
-    periods of the year to be closed (services/gl_service.py:2017) and then
-    posts the closing entry dated the last day of that same year
-    (services/gl_service.py:2023, :2075-2082) — which
-    ``assert_period_open`` refuses, because the period it is dated in has
-    just been closed. The close is therefore guaranteed to fail on its way
-    out, and the year's result is never transferred to retained earnings.
-
-    The behaviour is pinned here rather than assumed: the books must be left
-    exactly as they were, and still balanced.
+    Fixed: the closing entry is dated the last day of the fiscal year and is
+    now allowed into a closed period (``allow_closed_period=True`` in
+    ``FiscalYearService.close_fiscal_year``). It zeroes revenue and expense
+    into retained earnings; the trial balance must stay balanced (debit ==
+    credit) and its gross totals must grow by the closing amount.
     """
     from models.gl import GLPeriod
     from services.gl_service import FiscalYearService
@@ -933,18 +927,13 @@ def _try_fiscal_year_close(client, close_user, tenant, fiscal_year: int, tenant_
     assert closed == 12, f"only {closed} of the 12 periods of {fiscal_year} are closed"
 
     before = _trial_balance(_session(), tenant_id)
-    try:
-        FiscalYearService.close_fiscal_year(tenant_id, fiscal_year, user_id=close_user.id)
-    except Exception as exc:
-        after = _trial_balance(_session(), tenant_id)
-        assert before == after, f"the refused fiscal-year close changed the books: {before} -> {after}"
-        return f"REFUSED — {type(exc).__name__}: {exc} (books unchanged and still balanced)"
+    entry = FiscalYearService.close_fiscal_year(tenant_id, fiscal_year, user_id=close_user.id)
+    assert entry is not None and entry.id is not None, "fiscal-year close posted no closing entry"
 
     after = _trial_balance(_session(), tenant_id)
-    assert before[0] == after[0] and before[1] == after[1], (
-        f"the fiscal-year close left the trial balance unbalanced: {before} -> {after}"
-    )
-    return f"POSTED — closing entry written, trial balance still {after[0]} == {after[1]}"
+    assert after[0] == after[1], f"the fiscal-year close left the trial balance unbalanced: {before} -> {after}"
+    assert after[0] > before[0], f"the fiscal-year close left the trial balance unchanged: {before} -> {after}"
+    return f"POSTED — closing entry {entry.id} written, trial balance {after[0]} == {after[1]}"
 
 
 def _session():

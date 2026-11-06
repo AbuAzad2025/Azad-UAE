@@ -86,6 +86,7 @@ def post_or_fail(
     user_id=None,
     tenant_id=None,
     commit=False,
+    allow_closed_period=False,
 ):
     """
     Post a journal entry with mandatory validation flow.
@@ -129,7 +130,7 @@ def post_or_fail(
     assert_balanced_lines(lines, currency=currency)
 
     entry_date = date or datetime.now(UTC)
-    assert_period_open(entry_date, tenant_id)
+    assert_period_open(entry_date, tenant_id, allow_closed_period=allow_closed_period)
 
     # The GL is stored in the tenant base currency only: convert and quantize
     # every line at this final gateway before anything is persisted.
@@ -161,6 +162,7 @@ def post_or_fail(
             currency=currency,
             exchange_rate=exchange_rate,
             entry_type="auto",
+            allow_closed_period=allow_closed_period,
         )
 
         # Validate the entry (sets status to 'validated' or 'error')

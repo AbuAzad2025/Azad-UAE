@@ -350,6 +350,7 @@ class GLService:
         currency=None,
         exchange_rate=None,
         entry_type="auto",
+        allow_closed_period=False,
     ):
         """Standardized GL Entry Creation"""
 
@@ -363,7 +364,7 @@ class GLService:
         if not lines:
             raise ValueError(gettext(f'لا يمكن ترحيل "{description}" بدون سطور قيد.'))
 
-        gl_helpers.assert_period_open(date, tenant_id)
+        gl_helpers.assert_period_open(date, tenant_id, allow_closed_period=allow_closed_period)
         entry_number = gl_helpers.next_entry_number(tenant_id, date)
 
         from models import Branch
@@ -2041,6 +2042,7 @@ class FiscalYearService:
                     {
                         "account": acct_code,
                         "concept_code": "REVENUE_CLOSING",
+                        "explicit_account_allowed": True,
                         "debit": abs(bal),
                         "credit": Decimal("0"),
                         "description": f"إقفال إيرادات - {fiscal_year}",
@@ -2052,6 +2054,7 @@ class FiscalYearService:
                     {
                         "account": acct_code,
                         "concept_code": "EXPENSE_CLOSING",
+                        "explicit_account_allowed": True,
                         "debit": Decimal("0"),
                         "credit": abs(bal),
                         "description": f"إقفال مصروفات - {fiscal_year}",
@@ -2088,6 +2091,7 @@ class FiscalYearService:
             date=closing_date,
             user_id=user_id,
             tenant_id=tenant_id,
+            allow_closed_period=True,
         )
 
         # Lock all periods for the fiscal year (redundant safety)

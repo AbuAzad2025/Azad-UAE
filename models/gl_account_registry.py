@@ -1145,8 +1145,6 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("RETAINED_EARNINGS", "3200", "core_accounting"),
-            GLConceptMappingTemplate("REVENUE_CLOSING", "3200", "core_accounting"),
-            GLConceptMappingTemplate("EXPENSE_CLOSING", "3200", "core_accounting"),
         ],
     ),
 }

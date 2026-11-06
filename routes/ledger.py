@@ -223,6 +223,38 @@ def run_depreciation():
     return redirect(url_for("ledger.gl_periods"))
 
 
+@ledger_bp.route("/fx-revaluation", methods=["POST"])
+@login_required
+@permission_required("manage_ledger")
+def run_fx_revaluation():
+    """Month-end unrealized FX revaluation for open foreign AR/AP.
+
+    Real-work flow: at month end the accountant revalues open items to the
+    current rate; settlement later unwinds the revaluation via
+    revalue_*_at_settlement. This is the caller the revaluation service had
+    none of.
+    """
+    from utils.tenanting import require_active_tenant_id
+
+    tenant_id = require_active_tenant_id()
+    from services.fx_revaluation_service import revaluate_open_items
+
+    with atomic_transaction("fx_revaluation"):
+        summary = revaluate_open_items(tenant_id=tenant_id)
+        db.session.flush()
+    return success_response(
+        data={
+            "ar_count": summary.get("ar_count", 0),
+            "ap_count": summary.get("ap_count", 0),
+            "ar_diff": float(summary.get("ar_diff") or 0),
+            "ap_diff": float(summary.get("ap_diff") or 0),
+            "entry_ids": summary.get("entry_ids") or [],
+            "errors": summary.get("errors") or [],
+            "skipped_existing_period": bool(summary.get("skipped_existing_period")),
+        }
+    )
+
+
 @ledger_bp.route("/income-statement")
 @login_required
 @permission_required("view_ledger")

@@ -600,17 +600,17 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     },
     GL_CONCEPT_REVENUE_CLOSING: {
         "meaning": "Revenue Closing Entry",
-        "legacy_code": "3200",
-        "required": True,
+        "legacy_code": None,
+        "required": False,
         "normal_balance": "debit",
-        "resolution_mode": RESOLUTION_MODE_MAPPING,
+        "resolution_mode": RESOLUTION_MODE_RECORD,
     },
     GL_CONCEPT_EXPENSE_CLOSING: {
         "meaning": "Expense Closing Entry",
-        "legacy_code": "3200",
-        "required": True,
+        "legacy_code": None,
+        "required": False,
         "normal_balance": "credit",
-        "resolution_mode": RESOLUTION_MODE_MAPPING,
+        "resolution_mode": RESOLUTION_MODE_RECORD,
     },
     GL_CONCEPT_INSURANCE_IN: {
         "meaning": "Insurance In (Landed Cost)",
