@@ -307,11 +307,10 @@ def books(app, db_session, demo_tenant, demo_branch, demo_warehouse, demo_user, 
         # Bills land in both warehouses, from both suppliers, at the product's
         # own cost so the moving-average cost never drifts from it.
         #
-        # The last N_PURCHASE_RETURNS bills are zero-rated. That is not
-        # cosmetic: a purchase return against a VAT-bearing bill builds an
-        # unbalanced journal entry and the ledger refuses it, so the only
-        # purchase returns that can exist in the books are the ones whose
-        # parent bill carried no tax. The refusal is pinned separately in
+        # The last N_PURCHASE_RETURNS bills are zero-rated, so the returns in
+        # this books set also carry no VAT. A return against a VAT-bearing bill
+        # used to build an unbalanced journal entry and was refused; that is
+        # fixed (purchase_return totals preserved) and pinned separately in
         # test_purchase_return_against_a_vat_bill_is_refused.
         for i in range(N_PURCHASES):
             spec = products[i % len(products)]
@@ -957,25 +956,17 @@ def _session():
 def test_purchase_return_against_a_vat_bill_is_refused(
     db_session, demo_tenant, demo_branch, demo_warehouse, demo_user, demo_supplier
 ):
-    """FINDING (P1): a supplier credit note for a VAT-bearing bill cannot be posted.
+    """A supplier credit note for a VAT-bearing bill posts balanced.
 
-    The purchase return builds its journal entry from two different numbers:
-
-    * the AP debit uses ``purchase_return.total_amount``, which
-      ``PurchaseReturn.calculate_totals()`` resets to the *subtotal* — the tax
-      is dropped (models/purchase_return.py:83, reached from
-      services/purchase_service.py:667-668);
-    * the VAT-input credit uses the proportional tax carried over from the
-      parent bill (services/purchase_service.py:689-696).
-
-    The two disagree by exactly the tax, ``post_or_fail`` refuses the
-    unbalanced entry, and the whole return is rolled back. In a tenant with
-    tax enabled — the default — a supplier credit note is therefore impossible.
-
-    This test pins the *observed* behaviour, with the numbers, so the defect
-    cannot be quietly changed into a different defect.
+    Fixed: PurchaseReturn.calculate_totals(recalculate_tax=False) now preserves
+    the total the service set (inventory_credit + proportional tax), instead of
+    recomputing total = subtotal + tax. The VAT-inclusive case
+    (prices_include_vat=True) also needs that preservation — there
+    inventory_credit = subtotal / (1 + rate) and recomputing from subtotal
+    unbalances the entry by (subtotal - inventory_credit). With the fix the
+    journal entry debits AP (inventory_credit + tax), credits inventory
+    (inventory_credit) and credits VAT input (tax) — balanced to the cent.
     """
-    from services.gl_posting import UnbalancedJournalEntryError
     from services.product_service import ProductService
     from services.purchase_service import PurchaseService
     from services.stock_service import StockService
@@ -1019,49 +1010,42 @@ def test_purchase_return_against_a_vat_bill_is_refused(
     assert Decimal(str(purchase.tax_amount)) == expected_tax
     db_session.commit()
 
-    with pytest.raises(UnbalancedJournalEntryError) as excinfo:
-        PurchaseService.create_purchase_return(
-            purchase,
-            demo_user,
-            [
-                {
-                    "purchase_line_id": pl.id,
-                    "product_id": pl.product_id,
-                    "quantity": pl.quantity,
-                    "unit_cost": pl.unit_cost,
-                }
-                for pl in purchase.lines
-            ],
-            reason="damaged on arrival",
-        )
-
-    message = str(excinfo.value)
-    assert f"{expected_subtotal}" in message or f"{expected_tax}" in message, (
-        f"the refusal does not carry the offending amounts: {message}"
+    purchase_return = PurchaseService.create_purchase_return(
+        purchase,
+        demo_user,
+        [
+            {
+                "purchase_line_id": pl.id,
+                "product_id": pl.product_id,
+                "quantity": pl.quantity,
+                "unit_cost": pl.unit_cost,
+            }
+            for pl in purchase.lines
+        ],
+        reason="damaged on arrival",
     )
 
-    # The caller undoes the refused return (the ledger route does it inside
-    # atomic_transaction); nothing of the return survives it.
-    db_session.rollback()
     from models import ProductWarehouseStock, PurchaseReturn
 
-    assert PurchaseReturn.query.filter_by(tenant_id=tenant.id, purchase_id=purchase.id).count() == 0, (
-        "the refused purchase return left a credit note behind"
+    assert PurchaseReturn.query.filter_by(tenant_id=tenant.id, purchase_id=purchase.id).count() == 1, (
+        "the purchase return did not leave a credit note behind"
     )
+    assert Decimal(str(purchase_return.subtotal)) == expected_subtotal
+    assert Decimal(str(purchase_return.tax_amount)) == expected_tax.quantize(Decimal("0.001"))
+    assert Decimal(str(purchase_return.total_amount)) == (expected_subtotal + expected_tax).quantize(Decimal("0.001"))
     stock = ProductWarehouseStock.query.filter_by(
         tenant_id=tenant.id, product_id=product.id, warehouse_id=demo_warehouse.id
     ).first()
-    assert stock is not None and Decimal(str(stock.quantity)) == Decimal("70"), (
-        "the refused purchase return moved stock "
-        f"(expected 10 opening + 60 purchased = 70, got {getattr(stock, 'quantity', None)})"
+    assert stock is not None and Decimal(str(stock.quantity)) == Decimal("10"), (
+        "the purchase return did not move stock "
+        f"(expected 10 opening + 60 purchased - 60 returned = 10, got {getattr(stock, 'quantity', None)})"
     )
 
     print(
-        "\nFINDING P1 — purchase return against a VAT-bearing bill is refused: "
+        "\nFIXED — purchase return against a VAT-bearing bill posts balanced: "
         f"bill subtotal {expected_subtotal} + VAT {expected_tax} = {expected_subtotal + expected_tax}; "
-        f"the return's journal entry debits AP {expected_subtotal} but credits "
-        f"inventory {expected_subtotal} + VAT input {expected_tax} -> unbalanced by {expected_tax}. "
-        f"post_or_fail said: {message}",
+        "the return's journal entry debits AP "
+        f"{expected_subtotal + expected_tax} and credits inventory {expected_subtotal} + VAT input {expected_tax}.",
         flush=True,
     )
     db_session.rollback()
