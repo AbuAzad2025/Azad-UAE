@@ -318,13 +318,17 @@ class PosCheckoutService:
         # Use the caller's transaction: db.session.execute within the route's
         # atomic_transaction. A separate engine connection would block on the
         # SELECT FOR UPDATE row lock the route holds, deadlocking checkout.
+        # synchronize_session=False avoids the executor refreshing the identity
+        # map from the UPDATE, which would double-count when we then add in
+        # Python — expire the attribute instead so the next read is fresh.
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
+            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount),
+            execution_options={"synchronize_session": False},
         )
+        db.session.expire(session, ["total_sales"])
         db.session.flush()
-        session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
                 payment_data.get("amount", 0),
@@ -337,10 +341,11 @@ class PosCheckoutService:
             db.session.execute(
                 sa_update(PosSession)
                 .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
+                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed),
+                execution_options={"synchronize_session": False},
             )
+            db.session.expire(session, ["total_cash_sales"])
             db.session.flush()
-            session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
                 _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)

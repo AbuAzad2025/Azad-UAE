@@ -339,7 +339,8 @@ def _service_path_worker(app, ctx, barrier, index):
     barrier.wait(timeout=BARRIER_TIMEOUT)
     for submission in range(MAX_SUBMISSIONS):
         try:
-            with atomic_transaction(f"load_sale_{index}_{submission}"):
+            with app.app_context(), atomic_transaction(f"load_sale_{index}_{submission}"):
+                db.session.remove()
                 customer = db.session.get(Customer, ctx["customer_id"])
                 seller = db.session.get(User, ctx["user_id"])
                 product = db.session.get(Product, ctx["product_id"])
@@ -371,7 +372,8 @@ def _service_path_worker(app, ctx, barrier, index):
             outcome["sale_id"] = sale.id
             return outcome
         except Exception as exc:  # noqa: BLE001 - the failure mode is the measurement
-            db.session.rollback()
+            with app.app_context():
+                db.session.rollback()
             if _is_numbering_collision(exc):
                 outcome["collisions"] += 1
                 continue
