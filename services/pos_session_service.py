@@ -99,34 +99,37 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     if method == "cash":
         from sqlalchemy import update as _sa_update
 
+        _pre = Decimal(str(session.total_cash_sales or 0))
         db.session.execute(
             _sa_update(PosSession)
             .where(PosSession.id == session.id)
             .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed),
             execution_options={"synchronize_session": False},
         )
-        db.session.expire(session, ["total_cash_sales"])
+        session.__dict__["total_cash_sales"] = _pre + amount_aed
         db.session.flush()
     elif method == "card":
         from sqlalchemy import update as _sa_update
 
+        _pre = Decimal(str(session.total_card_sales or 0))
         db.session.execute(
             _sa_update(PosSession)
             .where(PosSession.id == session.id)
             .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed),
             execution_options={"synchronize_session": False},
         )
-        db.session.expire(session, ["total_card_sales"])
+        session.__dict__["total_card_sales"] = _pre + amount_aed
         db.session.flush()
     else:
         from sqlalchemy import update as _sa_update
 
+        _pre = Decimal(str(session.total_sales or 0))
         db.session.execute(
             _sa_update(PosSession)
             .where(PosSession.id == session.id)
             .values(total_sales=PosSession.__table__.c.total_sales + amount_aed),
             execution_options={"synchronize_session": False},
         )
-        db.session.expire(session, ["total_sales"])
+        session.__dict__["total_sales"] = _pre + amount_aed
         db.session.flush()
     # NOTE: total_sales is set separately by the sale amount. Do NOT add tender amounts.

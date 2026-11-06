@@ -318,16 +318,18 @@ class PosCheckoutService:
         # Use the caller's transaction: db.session.execute within the route's
         # atomic_transaction. A separate engine connection would block on the
         # SELECT FOR UPDATE row lock the route holds, deadlocking checkout.
-        # synchronize_session=False avoids the executor refreshing the identity
-        # map from the UPDATE, which would double-count when we then add in
-        # Python — expire the attribute instead so the next read is fresh.
+        # synchronize_session=False leaves the identity map stale; write the
+        # fresh total straight into __dict__ so the in-memory object matches
+        # the DB without marking it dirty — a later flush must not overwrite
+        # the atomic increment (lost update under concurrency).
+        _pre_sales = Decimal(str(session.total_sales or 0))
         db.session.execute(
             sa_update(PosSession)
             .where(PosSession.id == session.id)
             .values(total_sales=PosSession.__table__.c.total_sales + sale_amount),
             execution_options={"synchronize_session": False},
         )
-        db.session.expire(session, ["total_sales"])
+        session.__dict__["total_sales"] = _pre_sales + sale_amount
         db.session.flush()
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
@@ -338,13 +340,14 @@ class PosCheckoutService:
             )
             from sqlalchemy import update as sa_update
 
+            _pre_cash = Decimal(str(session.total_cash_sales or 0))
             db.session.execute(
                 sa_update(PosSession)
                 .where(PosSession.id == session.id)
                 .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed),
                 execution_options={"synchronize_session": False},
             )
-            db.session.expire(session, ["total_cash_sales"])
+            session.__dict__["total_cash_sales"] = _pre_cash + cash_aed
             db.session.flush()
         if payments_data:
             for tender_chunk in payments_data:

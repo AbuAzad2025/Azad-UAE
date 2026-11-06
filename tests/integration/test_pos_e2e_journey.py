@@ -235,7 +235,8 @@ class TestPosConcurrencyStress:
         from services.stock_service import StockService
         from utils.db_safety import atomic_transaction
 
-        patch("services.sale_service.post_or_fail", return_value=None).start()
+        _post_patcher = patch("services.sale_service.post_or_fail", return_value=None)
+        _post_patcher.start()
         import threading as _t
 
         _ctr = {"n": 0}
@@ -247,7 +248,8 @@ class TestPosConcurrencyStress:
                 n = _ctr["n"]
             return f"S-TEST-{n:04d}"
 
-        patch("services.sale_service.generate_number", side_effect=_gen).start()
+        _gen_patcher = patch("services.sale_service.generate_number", side_effect=_gen)
+        _gen_patcher.start()
 
         # Patch _safe_for_update to use blocking FOR UPDATE
         def _safe_upd(query, label="row"):
@@ -280,75 +282,86 @@ class TestPosConcurrencyStress:
 
         _orig_lock_row = _dbs.lock_row_for_update
         _dbs.lock_row_for_update = _blocking_lock
-        with app.app_context():
-            env = _bootstrap(db.session, stock="10")
-            from models import Customer as Cust
+        # These patches were started with patch().start() and leaked into every
+        # later test in the same process (post_or_fail stayed a no-op, so no
+        # GL entry was ever posted again). Stop them in a finally below.
+        try:
+            with app.app_context():
+                env = _bootstrap(db.session, stock="10")
+                from models import Customer as Cust
 
-            customers = []
-            for i in range(4):
-                c = Cust(tenant_id=env["tenant"].id, name=f"Walk-in-{i}", customer_type="regular", is_active=True)
-                db.session.add(c)
-                db.session.flush()
-                customers.append(c)
-            db.session.commit()
-            tenant_id = env["tenant"].id
-            user_id = env["user"].id
-            product_id = env["product"].id
-            warehouse_id = env["warehouse"].id
-            customer_ids = [c.id for c in customers]
+                customers = []
+                for i in range(4):
+                    c = Cust(tenant_id=env["tenant"].id, name=f"Walk-in-{i}", customer_type="regular", is_active=True)
+                    db.session.add(c)
+                    db.session.flush()
+                    customers.append(c)
+                db.session.commit()
+                tenant_id = env["tenant"].id
+                user_id = env["user"].id
+                product_id = env["product"].id
+                warehouse_id = env["warehouse"].id
+                customer_ids = [c.id for c in customers]
 
-        barrier = threading.Barrier(4)
+            barrier = threading.Barrier(4)
 
-        def worker(idx):
-            barrier.wait(timeout=120)
-            try:
-                with app.app_context():
-                    db.session.remove()
-                    with atomic_transaction(f"concurrent_checkout_{idx}"):
-                        cust = db.session.get(Cust, customer_ids[idx])
-                        seller = db.session.get(User, user_id)
-                        product = db.session.get(Product, product_id)
-                        SaleService.create_sale(
-                            customer=cust,
-                            seller=seller,
-                            lines_data=[
-                                {"product": product, "quantity": 3, "unit_price": Decimal("25"), "discount_percent": 0}
-                            ],
-                            warehouse_id=warehouse_id,
-                            currency="AED",
-                            tax_rate=0,
-                            discount_amount=0,
-                            shipping_cost=0,
-                            payment_data={
-                                "amount": 75.0,
-                                "payment_method": "cash",
-                                "currency": "AED",
-                                "exchange_rate": 1.0,
-                            },
-                        )
-                        db.session.flush()
-                return True
-            except Exception:
+            def worker(idx):
+                barrier.wait(timeout=120)
                 try:
                     with app.app_context():
-                        db.session.rollback()
+                        db.session.remove()
+                        with atomic_transaction(f"concurrent_checkout_{idx}"):
+                            cust = db.session.get(Cust, customer_ids[idx])
+                            seller = db.session.get(User, user_id)
+                            product = db.session.get(Product, product_id)
+                            SaleService.create_sale(
+                                customer=cust,
+                                seller=seller,
+                                lines_data=[
+                                    {
+                                        "product": product,
+                                        "quantity": 3,
+                                        "unit_price": Decimal("25"),
+                                        "discount_percent": 0,
+                                    }
+                                ],
+                                warehouse_id=warehouse_id,
+                                currency="AED",
+                                tax_rate=0,
+                                discount_amount=0,
+                                shipping_cost=0,
+                                payment_data={
+                                    "amount": 75.0,
+                                    "payment_method": "cash",
+                                    "currency": "AED",
+                                    "exchange_rate": 1.0,
+                                },
+                            )
+                            db.session.flush()
+                    return True
                 except Exception:
-                    pass
-                return False
+                    try:
+                        with app.app_context():
+                            db.session.rollback()
+                    except Exception:
+                        pass
+                    return False
 
-        executor = ThreadPoolExecutor(max_workers=4)
-        futures = [executor.submit(worker, i) for i in range(4)]
-        try:
-            results = [f.result(timeout=180) for f in as_completed(futures)]
-        except Exception:
-            for f in futures:
-                f.cancel()
-            raise
+            executor = ThreadPoolExecutor(max_workers=4)
+            futures = [executor.submit(worker, i) for i in range(4)]
+            try:
+                results = [f.result(timeout=180) for f in as_completed(futures)]
+            except Exception:
+                for f in futures:
+                    f.cancel()
+                raise
+            finally:
+                executor.shutdown(wait=False, cancel_futures=True)
         finally:
-            executor.shutdown(wait=False, cancel_futures=True)
-
-        _ss._safe_for_update = _orig_safe
-        _dbs.lock_row_for_update = _orig_lock_row
+            _post_patcher.stop()
+            _gen_patcher.stop()
+            _ss._safe_for_update = _orig_safe
+            _dbs.lock_row_for_update = _orig_lock_row
 
         successes = sum(1 for r in results if r)
         assert successes == 3, f"expected 3 winners, got {successes}: {results}"
