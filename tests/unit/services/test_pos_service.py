@@ -277,12 +277,19 @@ class TestPosSessions:
 
     def test_create_pos_session(self, mocker):
         mocker.patch("utils.pos_helpers.get_active_tenant_id", return_value=1)
-        mocker.patch("utils.pos_helpers.generate_number", return_value="POS-SES-1")
+        # Production uses generate_number_and_save for retry-safe number generation
+        mock_save = mocker.patch(
+            "utils.pos_helpers.generate_number_and_save",
+            side_effect=lambda prefix, model, field_name, save_func, branch_code=None, tenant_id=None: save_func(
+                "POS-SES-1"
+            ),
+        )
         mocker.patch("utils.pos_helpers.PosSession", return_value=MagicMock(id=3))
         add = mocker.patch("utils.pos_helpers.db.session.add")
         user = MagicMock(id=4)
         create_pos_session(user, branch_id=2, opening_balance=Decimal("100"))
         add.assert_called_once()
+        mock_save.assert_called_once()
 
     def test_create_pos_session_requires_tenant(self, mocker):
         mocker.patch("utils.pos_helpers.get_active_tenant_id", return_value=None)

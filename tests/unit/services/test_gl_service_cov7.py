@@ -222,18 +222,25 @@ class TestFiscalYearCloseAdditional:
             "calculate_pl_balance",
             return_value={
                 "lines": [
-                    {"account_id": revenue.id, "balance": Decimal("100"), "account_type": "revenue"},
-                    {"account_id": expense.id, "balance": Decimal("105"), "account_type": "expense"},
+                    {
+                        "account_id": revenue.id,
+                        "account_code": revenue.code,
+                        "balance": Decimal("100"),
+                        "account_type": "revenue",
+                    },
+                    {
+                        "account_id": expense.id,
+                        "account_code": expense.code,
+                        "balance": Decimal("105"),
+                        "account_type": "expense",
+                    },
                 ],
                 "net_income": Decimal("-5"),
                 "end_date": date(2026, 12, 31),
             },
         )
-        # NOTE: post_or_fail is mocked because close_fiscal_year builds
-        # account_id-only lines, which _resolve_journal_line_account cannot
-        # resolve (it requires an account code/concept). That production gap
-        # is reported separately; here we cover the retained-loss plug
-        # (net<0 branch) and the period-lock loop.
+        # post_or_fail is mocked because close_fiscal_year now posts
+        # account-code + concept lines (production INT-004 fix).
         fake_closing = SimpleNamespace(
             id=777001,
             reference_type="closing",
@@ -245,7 +252,7 @@ class TestFiscalYearCloseAdditional:
             assert closing is fake_closing
             assert closing.reference_type == "closing"
             posted_lines = post_mock.call_args[0][0]
-            loss_plugs = [line for line in posted_lines if line["account_id"] == retained.id]
+            loss_plugs = [line for line in posted_lines if line["account"] == retained.code]
             assert len(loss_plugs) == 1
             assert loss_plugs[0]["debit"] == Decimal("5")
             assert loss_plugs[0]["credit"] == Decimal("0")
@@ -273,10 +280,16 @@ class TestFiscalYearCloseAdditional:
 class TestVatAndReverse:
     def test_vat_report_with_real_lines(self, db_session, sample_tenant, sample_gl_accounts):
         output_acc = GLService._resolve_journal_line_account(
-            GLService.posting_line("tax_payable"), sample_tenant.id, ensure_core=False, missing_ok=True
+            GLService.posting_line("VAT_OUTPUT", concept_code="VAT_OUTPUT"),
+            sample_tenant.id,
+            ensure_core=False,
+            missing_ok=True,
         )
         input_acc = GLService._resolve_journal_line_account(
-            GLService.posting_line("vat_input"), sample_tenant.id, ensure_core=False, missing_ok=True
+            GLService.posting_line("VAT_INPUT", concept_code="VAT_INPUT"),
+            sample_tenant.id,
+            ensure_core=False,
+            missing_ok=True,
         )
         assert output_acc is not None and input_acc is not None
         cash = _pick_account(sample_tenant, "11", "asset")

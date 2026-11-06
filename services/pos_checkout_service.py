@@ -255,38 +255,20 @@ class PosCheckoutService:
                 override_token=payload.get("override_token"),
             )
 
-        # Lock session row to prevent concurrent turnover updates
-        if session:
-            from models.pos_session import PosSession
-
-            session = _safe_for_update(
-                db.session.query(PosSession).filter_by(id=session.id).populate_existing(),
-                label=f"PosSession({session.id})",
-            )
-            if not session:
-                raise PosCheckoutError(gettext("جلسة POS غير صالحة."), 400)
-            if session.status != "open":
+        # Session is already locked by routes/pos.py via get_active_session_locked()
+        # inside atomic_transaction("pos_checkout_flow"). Do not re-query here:
+        # it would break mocked session objects and duplicate the lock.
+        # Turnover updates below use atomic SQL increments (UPDATE ... SET col = col + :val)
+        # to avoid lost updates under concurrency.
+        if session is not None:
+            session_status = getattr(session, "status", None)
+            if session_status and session_status != "open":
                 raise PosCheckoutError(gettext("لا يمكن إتمام البيع: جلسة POS مغلقة."), 400)
 
-        # Lock shift row if present
-        if shift:
-            shift_id = getattr(shift, "id", None)
-            if shift_id is not None:
-                from models import PosShift
-
-                shift = _safe_for_update(
-                    db.session.query(PosShift).filter_by(id=shift_id).populate_existing(),
-                    label=f"PosShift({shift_id})",
-                )
-                if not shift:
-                    raise PosCheckoutError(gettext("الوردية غير صالحة."), 400)
-                if shift.status != "open":
-                    raise PosCheckoutError(gettext("لا يمكن إتمام البيع: الوردية مغلقة."), 400)
-            else:
-                # Mock shift in tests - just validate status if available
-                shift_status = getattr(shift, "status", None)
-                if shift_status and shift_status != "open":
-                    raise PosCheckoutError(gettext("لا يمكن إتمام البيع: الوردية مغلقة."), 400)
+        if shift is not None:
+            shift_status = getattr(shift, "status", None)
+            if shift_status and shift_status != "open":
+                raise PosCheckoutError(gettext("لا يمكن إتمام البيع: الوردية مغلقة."), 400)
 
         sale = SaleService.create_sale(
             customer=customer,

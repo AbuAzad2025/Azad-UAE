@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Import_Template') }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="mb-0">{{ t('Import_Template') }}</h1>
+  <a href="{{ url_for('products.import_templates') }}" class="btn btn-secondary">{{ t('Back_To_List') }}</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+      <div class="form-group">
+        <label for="name">{{ t('Name_Product') }}</label>
+        <input type="text" class="form-control" id="name" name="name" value="{{ template.name if template else '' }}" required aria-label="name">
+      </div>
+      <div class="form-group">
+        <label for="description">{{ t('Status') }}</label>
+        <textarea class="form-control" id="description" name="description" aria-label="description">{{ template.description if template else '' }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

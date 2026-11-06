@@ -16,13 +16,13 @@ class TestVaultAccounts:
             return_value="1111",
         )
         debit, credit = DonationGLService._vault_accounts(None, sample_tenant.id)
-        assert credit == "4200"
+        assert credit == "4500"
         assert debit == "1111"
 
     def test_cash_debit_resolves_cash_liquidity(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         vault = MagicMock()
         vault.donation_debit_account = "1110"
-        vault.donation_credit_account = "4200"
+        vault.donation_credit_account = "4500"
         mock_liq = mocker.patch(
             "services.donation_gl_service.GLService.get_default_liquidity_account",
             return_value="1110",
@@ -30,12 +30,12 @@ class TestVaultAccounts:
         debit, credit = DonationGLService._vault_accounts(vault, sample_tenant.id)
         mock_liq.assert_called_with("cash", tenant_id=sample_tenant.id)
         assert debit == "1110"
-        assert credit == "4200"
+        assert credit == "4500"
 
     def test_bank_debit_resolves_bank_liquidity(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         vault = MagicMock()
         vault.donation_debit_account = "1120"
-        vault.donation_credit_account = "4200"
+        vault.donation_credit_account = "4500"
         mock_liq = mocker.patch(
             "services.donation_gl_service.GLService.get_default_liquidity_account",
             return_value="1120",
@@ -50,10 +50,10 @@ class TestVaultAccounts:
         GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="4100").first()
         vault = MagicMock()
         vault.donation_debit_account = "4100"
-        vault.donation_credit_account = "4200"
+        vault.donation_credit_account = "4500"
         debit, credit = DonationGLService._vault_accounts(vault, sample_tenant.id)
         assert debit == "4100"
-        assert credit == "4200"
+        assert credit == "4500"
 
 
 class TestPostCompletedDonation:

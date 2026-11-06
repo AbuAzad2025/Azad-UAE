@@ -34,7 +34,8 @@ class DonationGLService:
             if debit_account and (
                 debit_account.liquidity_kind in ("cash", "bank") or getattr(debit_account, "is_header", False)
             ):
-                debit = GLService.get_default_liquidity_account(debit_account.liquidity_kind, tenant_id=tenant_id)
+                kind = debit_account.liquidity_kind or ("cash" if str(debit).startswith("111") else "bank")
+                debit = GLService.get_default_liquidity_account(kind, tenant_id=tenant_id)
 
         if not credit:
             credit = GLService.get_account_code_for_concept(

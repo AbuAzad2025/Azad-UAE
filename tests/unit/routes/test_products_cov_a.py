@@ -433,11 +433,19 @@ class TestImportBranches:
         assert resp.status_code == 302
 
     def test_import_dataframe_failure_renders_arc_476_482(self, cov_products_client):
-        """Arc 476->482: processing exception -> finally cleanup -> re-render."""
+        """Processing exception flashes and redirects back to the import form."""
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
         with (
             _products_patches(),
             patch(
-                "routes.products._read_import_dataframe",
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
+            patch(
+                "services.import_job_service.ProductImportService._read_dataframe",
                 side_effect=RuntimeError("unreadable"),
             ),
             patch("routes.products.ProductService.get_default_warehouse", return_value=_warehouse()),
@@ -447,7 +455,7 @@ class TestImportBranches:
                 data={"file": (BytesIO(b"x"), "products.xlsx")},
                 content_type="multipart/form-data",
             )
-        assert resp.status_code == 200
+        assert resp.status_code == 302
 
     def test_import_grid_autosku_and_barcode(self, cov_products_client):
         """Arcs 514->517, 518->521: empty sku/barcode auto-generated."""

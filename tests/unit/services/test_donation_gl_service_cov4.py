@@ -126,11 +126,11 @@ def test_vault_accounts_plain_passthrough(db_session, sample_tenant):
         "services.donation_gl_service.GLService.get_default_liquidity_account",
         return_value="1150",
     ):
-        vault = SimpleNamespace(donation_debit_account="1150", donation_credit_account="4200")
-        assert DonationGLService._vault_accounts(vault, sample_tenant.id) == ("1150", "4200")
+        vault = SimpleNamespace(donation_debit_account="1150", donation_credit_account="4500")
+        assert DonationGLService._vault_accounts(vault, sample_tenant.id) == ("1150", "4500")
         vault2 = SimpleNamespace(donation_debit_account=None, donation_credit_account=None)
         debit, credit = DonationGLService._vault_accounts(vault2, sample_tenant.id)
-        assert credit == "4200"
+        assert credit == "4500"
         assert debit == "1150"
 
 
@@ -142,15 +142,15 @@ def test_vault_accounts_liquidity_fallback_cash_and_bank(db_session, sample_tena
         "services.donation_gl_service.GLService.get_default_liquidity_account",
         return_value="1111",
     ) as g:
-        vault = SimpleNamespace(donation_debit_account="1110", donation_credit_account="4200")
-        assert DonationGLService._vault_accounts(vault, sample_tenant.id) == ("1111", "4200")
+        vault = SimpleNamespace(donation_debit_account="1110", donation_credit_account="4500")
+        assert DonationGLService._vault_accounts(vault, sample_tenant.id) == ("1111", "4500")
         g.assert_called_once_with("cash", tenant_id=sample_tenant.id)
     with patch(
         "services.donation_gl_service.GLService.get_default_liquidity_account",
         return_value="1120",
     ):
         # 1100 is a header account -> header branch -> bank liquidity kind
-        vault_h = SimpleNamespace(donation_debit_account="1100", donation_credit_account="4200")
+        vault_h = SimpleNamespace(donation_debit_account="1100", donation_credit_account="4500")
         debit, _ = DonationGLService._vault_accounts(vault_h, sample_tenant.id)
         assert debit == "1120"
 

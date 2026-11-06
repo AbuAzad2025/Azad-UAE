@@ -201,13 +201,14 @@ def _asset_account_ids(db_session, tenant):
 
     ``asset_account_id`` is NOT NULL, so an asset cannot exist without one -
     which is why every scenario that builds an asset also asks for the
-    ``sample_gl_accounts`` fixture. 1180 is Fixed Assets, 1190 Accumulated
-    Depreciation (a contra account), 6300 Depreciation Expense.
+    ``sample_gl_accounts`` fixture. 1181 is Fixed Assets - Cost (the postable
+    leaf under the 1180 Fixed Assets header; a header cannot be posted to),
+    1190 Accumulated Depreciation (a contra account), 6300 Depreciation Expense.
     """
     from models import GLAccount
 
     found = {}
-    for code in ("1180", "1190", "6300"):
+    for code in ("1181", "1190", "6300"):
         found[code] = db_session.query(GLAccount).filter_by(tenant_id=tenant.id, code=code).first()
     return found
 
@@ -224,7 +225,7 @@ def _asset(db_session, tenant, user, *, name="PRD Asset", cost="1000.000", statu
         name_en=f"{name}-{uuid.uuid4().hex[:6]}",
         name_ar=f"{name} AR",
         category="equipment",
-        asset_account_id=accounts["1180"].id if accounts.get("1180") else None,
+        asset_account_id=accounts["1181"].id if accounts.get("1181") else None,
         depreciation_account_id=accounts["1190"].id if accounts.get("1190") else None,
         expense_account_id=accounts["6300"].id if accounts.get("6300") else None,
         purchase_date=date(2026, 1, 1),
@@ -806,7 +807,7 @@ class TestPRD45Assets:
                 "name_ar": "أصل",
                 "asset_number": f"FA-F-{uuid.uuid4().hex[:6]}",
                 "category": "equipment",
-                "asset_account_id": str(accounts["1180"].id),
+                "asset_account_id": str(accounts["1181"].id),
                 "depreciation_account_id": str(accounts["1190"].id),
                 "expense_account_id": str(accounts["6300"].id),
                 "purchase_date": "2026-01-01",
@@ -924,3 +925,182 @@ class TestPRD45Assets:
         for name in ("purchase_price", "salvage_value", "accumulated_depreciation", "book_value", "disposal_price"):
             column = FixedAsset.__table__.columns[name]
             assert "NUMERIC" in str(column.type).upper(), f"FixedAsset.{name} is {column.type}, not an exact decimal"
+
+
+class TestPRD56ImportJobs:
+    """PRD-56..67. Background import jobs, templates, bulk API and OCR.
+
+    The form import above creates a ProductImportJob row; these scenarios pin
+    the read surface over that row: the jobs list, the job detail, the
+    progress JSON, the saved column-mapping templates, the JSON bulk API and
+    the OCR endpoint. Each asserts on the row or the payload, not the flash.
+    """
+
+    def test_the_jobs_list_renders(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-56."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.get("/products/import/jobs")
+        assert resp.status_code == 200, f"the jobs list answered {resp.status_code}"
+
+    def test_a_completed_import_appears_in_the_jobs_list(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-57. A sync csv import becomes a completed job the list shows."""
+        from models.product_import_job import ProductImportJob
+
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        client.post(
+            "/products/import",
+            data={"file": (io.BytesIO(_csv_bytes([["name", "price"], ["Job Listed", "10.000"]])), "jobs.csv")},
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+        db_session.expire_all()
+        assert ProductImportJob.query.filter_by(tenant_id=sample_tenant.id).count() >= 1
+
+    def test_the_job_detail_renders(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-58. The sync import redirects to a detail page that renders."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.post(
+            "/products/import",
+            data={"file": (io.BytesIO(_csv_bytes([["name", "price"], ["Detail Product", "10.000"]])), "detail.csv")},
+            content_type="multipart/form-data",
+        )
+        assert resp.status_code == 302, f"the sync import answered {resp.status_code}"
+        assert "/products/import/jobs/" in resp.headers.get("Location", ""), resp.headers.get("Location", "")
+        detail = client.get(resp.headers["Location"])
+        assert detail.status_code == 200, f"the job detail answered {detail.status_code}"
+
+    def test_the_job_progress_answers_json(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-59. The polling endpoint answers the job as JSON."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.post(
+            "/products/import",
+            data={
+                "file": (io.BytesIO(_csv_bytes([["name", "price"], ["Progress Product", "10.000"]])), "progress.csv")
+            },
+            content_type="multipart/form-data",
+        )
+        location = resp.headers["Location"]
+        job_id = location.rstrip("/").split("/")[-1]
+        progress = client.get(f"/products/import/jobs/{job_id}/progress")
+        assert progress.status_code == 200, f"the progress endpoint answered {progress.status_code}"
+        payload = progress.get_json()
+        assert payload["id"] == int(job_id), f"the progress payload named job {payload.get('id')}, expected {job_id}"
+
+    def test_the_bulk_api_creates_the_products(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-60. The JSON bulk endpoint is a third write path and lands rows."""
+        from models import Product
+
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        before = db_session.query(Product).filter_by(tenant_id=sample_tenant.id).count()
+        resp = client.post(
+            "/products/api/products/bulk",
+            json={
+                "products": [
+                    {
+                        "name": f"Bulk Product {uuid.uuid4().hex[:6]}",
+                        "price": "15.0",
+                        "sku": f"BULK-{uuid.uuid4().hex[:8]}",
+                    },
+                ]
+            },
+        )
+        assert resp.status_code == 200, f"the bulk API answered {resp.status_code}: {resp.get_json()}"
+        db_session.expire_all()
+        after = db_session.query(Product).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == before + 1, f"the bulk API created {after - before} rows, expected 1"
+
+    def test_the_bulk_api_rejects_an_empty_payload(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-61. An empty products list is a 400, not an empty success."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.post("/products/api/products/bulk", json={"products": []})
+        assert resp.status_code == 400, f"the empty bulk payload answered {resp.status_code}"
+
+    def test_the_bulk_api_rejects_a_non_json_body(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-62. The bulk endpoint requires application/json and answers 415."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.post(
+            "/products/api/products/bulk",
+            data="plain text",
+            content_type="text/plain",
+        )
+        assert resp.status_code == 415, f"the non-json bulk payload answered {resp.status_code}"
+
+    def test_the_templates_list_renders(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-63."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.get("/products/import/templates")
+        assert resp.status_code == 200, f"the templates list answered {resp.status_code}"
+
+    def test_a_created_template_appears_in_the_list(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-64. A template created through the form is listed by name."""
+        from models.product_import_job import ProductImportTemplate
+
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        name = f"Template {uuid.uuid4().hex[:6]}"
+        resp = client.post(
+            "/products/import/templates/create",
+            data={
+                "name": name,
+                "description": "scenario template",
+                "column_mapping": "{}",
+                "default_values": "{}",
+                "required_fields": "[]",
+            },
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"the template create answered {resp.status_code}"
+        db_session.expire_all()
+        row = db_session.query(ProductImportTemplate).filter_by(tenant_id=sample_tenant.id, name=name).first()
+        assert row is not None, f"the template {name!r} was not stored"
+
+    def test_a_created_template_can_be_deleted(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-65. Deleting a template removes its row."""
+        from models.product_import_job import ProductImportTemplate
+
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        name = f"Template Del {uuid.uuid4().hex[:6]}"
+        client.post(
+            "/products/import/templates/create",
+            data={
+                "name": name,
+                "description": "scenario template",
+                "column_mapping": "{}",
+                "default_values": "{}",
+                "required_fields": "[]",
+            },
+            follow_redirects=True,
+        )
+        db_session.expire_all()
+        row = db_session.query(ProductImportTemplate).filter_by(tenant_id=sample_tenant.id, name=name).first()
+        assert row is not None
+        resp = client.post(f"/products/import/templates/{row.id}/delete", follow_redirects=True)
+        assert resp.status_code == 200, f"the template delete answered {resp.status_code}"
+        db_session.expire_all()
+        gone = db_session.query(ProductImportTemplate).filter_by(tenant_id=sample_tenant.id, name=name).first()
+        assert gone is None, f"the template {name!r} still exists after delete"
+
+    def test_the_ocr_endpoint_rejects_a_missing_file(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-66. OCR without a file is a 400, not a 500."""
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        resp = client.post("/products/ocr/scan", data={})
+        assert resp.status_code == 400, f"the fileless OCR request answered {resp.status_code}"
+
+    def test_a_dry_run_import_renders_a_preview(self, client, db_session, sample_tenant, sample_branch):
+        """PRD-67. A dry-run import previews a write that never lands."""
+        from models import Product
+
+        _product_manager(client, db_session, sample_tenant, sample_branch)
+        before = db_session.query(Product).filter_by(tenant_id=sample_tenant.id).count()
+        resp = client.post(
+            "/products/import",
+            data={
+                "file": (io.BytesIO(_csv_bytes([["name", "price"], ["Preview Product", "10.000"]])), "preview.csv"),
+                "dry_run": "on",
+            },
+            content_type="multipart/form-data",
+            follow_redirects=True,
+        )
+        assert resp.status_code == 200, f"the dry-run import answered {resp.status_code}"
+        db_session.expire_all()
+        after = db_session.query(Product).filter_by(tenant_id=sample_tenant.id).count()
+        assert after == before, f"a dry run created {after - before} products"

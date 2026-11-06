@@ -100,7 +100,7 @@ class SeedSet:
 
         Tenant-scoped sets are measured with a min-across-active-tenants probe,
         and those return 0 when the platform has no tenants yet. Comparing that
-        0 against a floor of 98 reported every tenant set as VIOLATED on a
+        0 against a floor of 100 reported every tenant set as VIOLATED on a
         freshly seeded install that has simply not had its first tenant created -
         a false alarm in the one situation an operator is most likely to be
         staring at the log.
@@ -199,9 +199,9 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=98,
+        expected=100,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
-        note="98 base accounts + the tenant's industry extension (49 across 13 "
+        note="100 base accounts + the tenant's industry extension (49 across 13 "
         "industries) + 2 liquidity accounts per active branch. Self-healing: "
         "matches on code and repairs name/type/parent/header/level/contra.",
         verify="utils.seed_manifest_probe.min_gl_accounts_for_active_tenant",

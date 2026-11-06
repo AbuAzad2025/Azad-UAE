@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Import_Template') }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="mb-0">{{ t('Import_Template') }}</h1>
+  <a href="{{ url_for('products.index') }}" class="btn btn-secondary">{{ t('Back_To_List') }}</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>{{ t('Status') }}</th>
+            <th>{{ t('Name_Product') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in templates %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.description or '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <a href="{{ url_for('products.import_template_create') }}" class="btn btn-primary">{{ t('Add') }}</a>
+  </div>
+</div>
+{% endblock %}

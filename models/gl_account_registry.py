@@ -279,7 +279,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("5102", "COGS - Wholesale", "تكلفة بضاعة جملة", "expense", 2, False, "5100"),
     GLAccountTemplate("5103", "COGS - Online", "تكلفة بضاعة أونلاين", "expense", 2, False, "5100"),
     GLAccountTemplate("5200", "Inventory Adjustments", "تسويات المخزون", "expense", 1, True, "5000"),
-    GLAccountTemplate("5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200"),
+    GLAccountTemplate("5201", "Inventory Gain", "ربح مخزوني", "expense", 2, False, "5200", is_contra=True),
     GLAccountTemplate("5202", "Inventory Loss", "خسارة مخزونية", "expense", 2, False, "5200"),
     GLAccountTemplate(
         "5150",
@@ -934,6 +934,8 @@ GL_MODULE_DEFINITIONS = {
             # required concept, so without a row every tenant is reported as
             # short of a required mapping.
             GLConceptMappingTemplate("PURCHASES", "1140", "core_purchases"),
+            # INSURANCE_IN is the insurance component of landed cost (purchases)
+            GLConceptMappingTemplate("INSURANCE_IN", "5303", "core_purchases"),
             # LANDED_COST is non-posting — no mapping template
         ],
     ),
@@ -1135,6 +1137,16 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("AZAD_PLATFORM_FEE_PAID", "2182", "azad_platform"),
             GLConceptMappingTemplate("AZAD_SUBSCRIPTION_EXPENSE", "6410", "azad_platform"),
             GLConceptMappingTemplate("AZAD_SUBSCRIPTION_REVENUE", "4700", "azad_platform"),
+        ],
+    ),
+    "core_accounting": GLModuleDefinition(
+        "core_accounting",
+        True,
+        accounts=[],
+        mappings=[
+            GLConceptMappingTemplate("RETAINED_EARNINGS", "3200", "core_accounting"),
+            GLConceptMappingTemplate("REVENUE_CLOSING", "3200", "core_accounting"),
+            GLConceptMappingTemplate("EXPENSE_CLOSING", "3200", "core_accounting"),
         ],
     ),
 }

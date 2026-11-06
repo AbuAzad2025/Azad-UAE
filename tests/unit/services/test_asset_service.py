@@ -12,9 +12,9 @@ from services.asset_service import AssetService
 
 
 def _get_asset_accounts(tenant_id):
-    asset_acct = GLAccount.query.filter_by(tenant_id=tenant_id, code="1180").first()
+    asset_acct = GLAccount.query.filter_by(tenant_id=tenant_id, code="1181").first()
     dep_acct = GLAccount.query.filter_by(tenant_id=tenant_id, code="6300").first()
-    assert asset_acct is not None, "1180 Fixed Assets must be created by sample_gl_accounts"
+    assert asset_acct is not None, "1181 Fixed Assets - Cost must be created by sample_gl_accounts"
     assert dep_acct is not None, "6300 Depreciation Expense must be created by sample_gl_accounts"
     return asset_acct.id, dep_acct.id
 

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tests.unit.routes.test_products_routes import (
-    _assert_import_index_redirect,
+    _assert_import_job_redirect,
     _category,
     _import_dataframe,
     _mock_product_form,
@@ -260,10 +260,21 @@ class TestImportProducts:
                 "stock": [0.0, 0.0, 3.0],
             }
         )
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
         with (
             _products_patches() as ctx,
             patch("models.Warehouse.query", _warehouse_query_mock()),
-            patch("routes.products._read_import_dataframe", return_value=df),
+            patch(
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
+            patch(
+                "services.import_job_service.ProductImportService._read_dataframe",
+                return_value=df,
+            ),
         ):
             ctx["product_query"].filter.return_value.first.return_value = None
             resp = product_client_upload.post(
@@ -272,7 +283,7 @@ class TestImportProducts:
                 content_type="multipart/form-data",
             )
         assert resp.status_code == 302
-        _assert_import_index_redirect(resp)
+        assert "/products/import/jobs/" in resp.location
 
     def test_import_existing_category_reuse(self, product_client_upload):
         existing_cat = _category(9, name="Tools")
@@ -322,7 +333,7 @@ class TestImportProducts:
         import os
 
         mocker.patch(
-            "routes.products._read_import_dataframe",
+            "services.import_job_service.ProductImportService._read_dataframe",
             side_effect=RuntimeError("parse fail"),
         )
         filepath_holder = {}
@@ -335,20 +346,28 @@ class TestImportProducts:
                 filepath_holder["path"] = path
             return path
 
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
         with (
             _products_patches(),
             patch("models.Warehouse.query", _warehouse_query_mock()),
+            patch(
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
             patch("os.path.join", side_effect=join_and_track),
             patch("os.path.exists", return_value=True),
-            patch("os.remove") as remove,
+            patch("os.remove"),
         ):
             resp = product_client_upload.post(
                 "/products/import",
                 data={"file": (BytesIO(b"data"), "products.xlsx")},
                 content_type="multipart/form-data",
             )
-        assert resp.status_code == 200
-        remove.assert_called()
+        assert resp.status_code == 302
+        assert resp.location.endswith("/products/import")
 
 
 class TestImportGrid:
@@ -937,47 +956,24 @@ class TestImportProductsDirect:
                 "category": ["", "", "NewCat", ""],
             }
         )
-        existing = _product(name="Dup")
-        inner = MagicMock()
-        inner.first.side_effect = [None, None, existing]
         with (
-            _products_patches() as ctx,
+            _products_patches(),
             patch(
-                "routes.products.ProductService.find_category_by_name",
+                "services.import_job_service.ProductService.find_category_by_name",
                 return_value=None,
             ),
             patch(
-                "routes.products.ProductService.create_category",
+                "services.import_job_service.ProductService.create_category",
                 return_value=_category(31, name="NewCat"),
             ),
         ):
-            ctx["product_query"].filter.return_value = inner
-            with patch("routes.products._read_import_dataframe", return_value=df):
-                file_mock = MagicMock()
-                file_mock.filename = "products.xlsx"
-                file_mock.save = MagicMock()
-                with products_import_app.test_request_context("/products/import", method="POST"):
-                    with (
-                        patch("models.Warehouse.query", _warehouse_query_mock()),
-                        patch("os.remove"),
-                        patch("os.path.exists", return_value=True),
-                        patch("routes.products.request") as req,
-                    ):
-                        req.method = "POST"
-                        req.files = {"file": file_mock}
-                        req.form = {}
-                        req.url = "/products/import"
-                        from routes.products import import_products
-
-                        resp = import_products()
-        assert resp.status_code == 302
-        _assert_import_index_redirect(resp)
+            resp = _run_import_post(products_import_app, df)
+        _assert_import_job_redirect(resp)
 
     def test_import_missing_columns_redirects(self, products_import_app):
         df = _import_dataframe({"title": ["Only"]})
         resp = _run_import_post(products_import_app, df)
-        assert resp.status_code == 302
-        assert resp.location.endswith("/products/import")
+        _assert_import_job_redirect(resp)
 
     def test_import_bad_extension_redirects(self, products_import_app):
         from routes.products import import_products
@@ -1007,14 +1003,13 @@ class TestImportProductsDirect:
                 update_existing=True,
                 existing_product=existing,
             )
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
     def test_import_cleanup_os_remove_failure(self, products_import_app, mocker):
         df = _import_dataframe({"name": ["Row"], "price": [5.0]})
         mocker.patch("os.remove", side_effect=OSError("locked"))
         resp = _run_import_post(products_import_app, df)
-        assert resp.status_code == 302
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
 
 class TestParsePartnersBlankRow:
@@ -1117,7 +1112,7 @@ class TestProductsCoverageFinal:
             patch("routes.products._read_import_dataframe", return_value=df),
         ):
             resp = _run_import_post(products_import_app, df)
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
     def test_import_uses_fallback_warehouse(self, products_import_app):
         df = _import_dataframe({"name": ["WH Prod"], "price": [8.0]})
@@ -1128,7 +1123,7 @@ class TestProductsCoverageFinal:
         tenant_q.first.return_value = _warehouse(2)
         wh_query.filter_by.side_effect = [main_q, tenant_q]
         resp = _run_import_post(products_import_app, df, warehouse_query=wh_query)
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
 
 class TestProductsIndexAndEditGaps:
@@ -1272,7 +1267,7 @@ class TestProductsRemainingCoverage:
     def test_import_os_remove_failure_still_succeeds(self, products_import_app):
         df = _import_dataframe({"name": ["Row"], "price": [5.0]})
         resp = _run_import_post(products_import_app, df, os_remove_side_effect=OSError("locked"))
-        _assert_import_index_redirect(resp)
+        _assert_import_job_redirect(resp)
 
     def test_edit_success_with_extras_and_tiers(self, product_client):
         form = _mock_product_form(validate=True)
@@ -1351,12 +1346,25 @@ class TestProductsRemainingCoverage:
         """
         df = _import_dataframe({"name": ["CatItem"], "price": [11.0], "category": ["FlyCat"]})
         new_cat = _category(20, name="FlyCat")
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
         with (
             _products_patches() as ctx,
             patch("models.Warehouse.query", _warehouse_query_mock()),
-            patch("routes.products._read_import_dataframe", return_value=df),
-            patch("routes.products.ProductService.create_category", return_value=new_cat) as create_category,
-            patch("routes.products.ProductService.find_category_by_name", return_value=None),
+            patch(
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
+            patch(
+                "services.import_job_service.ProductImportService._read_dataframe",
+                return_value=df,
+            ),
+            patch(
+                "services.import_job_service.ProductService.create_category", return_value=new_cat
+            ) as create_category,
+            patch("services.import_job_service.ProductService.find_category_by_name", return_value=None),
         ):
             inner = ctx["product_query"].filter.return_value
             inner.filter.return_value = inner

@@ -94,7 +94,7 @@ class TestLine59TenantCategoryOr404:
 
 
 class TestImportBranches308_482:
-    """Arcs 308->482, 386->389, 390->393, 476->482 via /products/import."""
+    """Import error contracts via /products/import."""
 
     def test_get_renders_without_post(self, cov_products_client):
         with (
@@ -129,23 +129,35 @@ class TestImportBranches308_482:
         assert resp.status_code == 302
 
     def test_falsy_file_covers_308_to_482(self, cov_products_client):
-        """Arc 308->482: `if file:` false -> render import page."""
+        """Falsy file object: no file field -> redirect back to the import form."""
         from routes.products import import_products
 
         falsy = MagicMock()
         falsy.__bool__ = MagicMock(return_value=False)
         falsy.__nonzero__ = falsy.__bool__
         falsy.filename = "keep.xlsx"
+        falsy.read = MagicMock(return_value=b"x")
         with cov_products_client.application.test_request_context("/products/import", method="POST"):
             with patch("routes.products.request") as mock_req:
                 mock_req.method = "POST"
                 mock_req.files = {"file": falsy}
                 mock_req.form = {}
-                # need is_json etc? import_products checks request.method and request.files only
-                with patch("routes.products.render_template", return_value="ok") as render:
+                mock_job = MagicMock()
+                mock_job.id = 1
+                mock_job.is_dry_run = False
+                mock_job.original_filename = "keep.xlsx"
+                with (
+                    patch(
+                        "services.import_job_service.ImportJobService.create_job",
+                        return_value=mock_job,
+                    ),
+                    patch(
+                        "services.import_job_service.ProductImportService._read_dataframe",
+                        side_effect=RuntimeError("unreadable"),
+                    ),
+                ):
                     resp = import_products()
-                    assert resp == "ok"
-                    render.assert_called_with("products/import.html")
+                    assert resp.status_code == 302
 
     def test_import_with_existing_sku_barcode_covers_false_branches_386_390(self, cov_products_client):
         """When sku/barcode present, 386->389 and 390->393 false branches (no auto)."""
@@ -221,13 +233,24 @@ class TestImportBranches308_482:
         assert resp.status_code == 302
 
     def test_import_exception_covers_476_cleanup_true_then_false(self, cov_products_client, upload_dir):
-        # force exception after filepath creation to hit cleanup true branch (file exists)
+        # force exception after job creation: the route flashes and redirects
         import pandas as pd
 
         pd.DataFrame({"name": ["X"], "price": [1.0]})
-        # make _read_import_dataframe raise after file is saved (filepath exists)
+        mock_job = MagicMock()
+        mock_job.id = 1
+        mock_job.is_dry_run = False
+        mock_job.original_filename = "products.xlsx"
+        # make _read_dataframe raise after job creation
         with (
-            patch("routes.products._read_import_dataframe", side_effect=RuntimeError("boom")),
+            patch(
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
+            patch(
+                "services.import_job_service.ProductImportService._read_dataframe",
+                side_effect=RuntimeError("boom"),
+            ),
             patch("routes.products.ProductService.get_default_warehouse", return_value=_warehouse()),
             patch("routes.products.current_app"),
             patch("routes.products.render_template", return_value="ok"),
@@ -239,10 +262,17 @@ class TestImportBranches308_482:
                 data={"file": (BytesIO(b"x"), "products.xlsx")},
                 content_type="multipart/form-data",
             )
-        assert resp.status_code == 200
+        assert resp.status_code == 302
         # also test cleanup when file does not exist (os.path.exists false)
         with (
-            patch("routes.products._read_import_dataframe", side_effect=RuntimeError("boom")),
+            patch(
+                "services.import_job_service.ImportJobService.create_job",
+                return_value=mock_job,
+            ),
+            patch(
+                "services.import_job_service.ProductImportService._read_dataframe",
+                side_effect=RuntimeError("boom"),
+            ),
             patch("routes.products.ProductService.get_default_warehouse", return_value=_warehouse()),
             patch("os.path.exists", return_value=False),
             patch("routes.products.render_template", return_value="ok"),
@@ -252,7 +282,7 @@ class TestImportBranches308_482:
                 data={"file": (BytesIO(b"x"), "products.xlsx")},
                 content_type="multipart/form-data",
             )
-        assert resp2.status_code == 200
+        assert resp2.status_code == 302
 
 
 class TestImportGridBranches514_521:

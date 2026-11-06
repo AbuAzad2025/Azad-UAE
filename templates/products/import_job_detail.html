@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Import') }} {{ t('Products') }}{% endblock %}
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="mb-0">{{ t('Import') }} {{ t('Products') }}</h1>
+  <a href="{{ url_for('products.import_jobs') }}" class="btn btn-secondary">{{ t('Back_To_List') }}</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <tbody>
+          <tr>
+            <th>{{ t('Status') }}</th>
+            <td>{{ job.status.value }}</td>
+          </tr>
+          <tr>
+            <th>{{ t('File') }}</th>
+            <td>{{ job.original_filename or '' }}</td>
+          </tr>
+          <tr>
+            <th>{{ t('Name_Product') }}</th>
+            <td>{{ job.job_name or '' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

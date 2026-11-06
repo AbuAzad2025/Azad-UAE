@@ -464,8 +464,22 @@ class ProductImportService:
         created_ids: list[int] = []
         updated_ids: list[int] = []
 
+        # Normalize here so direct callers (bulk API) get the same column
+        # mapping as the file path. Idempotent: run_import already normalized,
+        # and a column already named like an internal field is left alone.
+        df = self._normalize_dataframe(df)
+
         for idx, row in df.iterrows():
             row_num = idx + 2  # 1-indexed + header
+            if dry_run:
+                # Preview only: validate generously but never write.
+                dry_errors = self._validate_row(row, row_num)
+                if dry_errors:
+                    errors_count += 1
+                    errors_detail.extend([{"row": row_num, "error": e, "data": row.to_dict()} for e in dry_errors])
+                    continue
+                success_count += 1
+                continue
             success, data, errors = self._process_row(row, idx + 2, update_existing, job)
 
             if errors:
@@ -584,7 +598,9 @@ def process_product_import_task(
 
     app = create_app()
 
-    with app.app_context():
+    from utils.db_safety import atomic_transaction
+
+    with app.app_context(), atomic_transaction("background_import"):
         try:
             job = ProductImportJob.query.get_or_404(job_id)
             job.celery_task_id = self.request.id
@@ -624,8 +640,10 @@ def process_product_import_task(
 
         except Exception as exc:
             logger.exception(f"Import task failed: {exc}")
-            ImportJobService.fail_job(job_id, str(exc))
-            db.session.commit()
+            from utils.db_safety import atomic_transaction
+
+            with atomic_transaction("import_task_fail"):
+                ImportJobService.fail_job(job_id, str(exc))
             raise self.retry(exc=exc)
 
 
@@ -636,7 +654,9 @@ def process_product_import_rollback_task(rollback_job_id: int):
 
     app = create_app()
 
-    with app.app_context():
+    from utils.db_safety import atomic_transaction
+
+    with app.app_context(), atomic_transaction("import_rollback"):
         rollback_job = ProductImportJob.query.get_or_404(rollback_job_id)
         original_job = rollback_job.rollback_job_id and ProductImportJob.query.get(rollback_job.rollback_job_id)
 
@@ -677,9 +697,9 @@ def process_product_import_rollback_task(rollback_job_id: int):
             if product:
                 # Restore product fields
                 product.name = snapshot.get("name", product.name)
-                product.regular_price = Decimal(snapshot.get("regular_price", product.regular_price))
+                product.regular_price = Decimal(str(snapshot.get("regular_price") or "0"))
                 cost_price = snapshot.get("cost_price")
-                product.cost_price = Decimal(cost_price) if cost_price else None
+                product.cost_price = Decimal(str(cost_price)) if cost_price else None
                 product.warranty_days = snapshot.get("warranty_days", product.warranty_days)
                 product.part_number = snapshot.get("part_number", product.part_number)
                 product.unit = snapshot.get("unit", product.unit)
@@ -704,7 +724,7 @@ def process_product_import_rollback_task(rollback_job_id: int):
 
         rollback_job.status = ProductImportJobStatus.ROLLED_BACK
         rollback_job.completed_at = datetime.now(UTC)
-        db.session.commit()
+        db.session.flush()
 
         return {
             "status": "rolled_back",

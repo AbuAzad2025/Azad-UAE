@@ -65,6 +65,10 @@ GL_CONCEPT_END_OF_SERVICE_PROVISION = "END_OF_SERVICE_PROVISION"
 GL_CONCEPT_END_OF_SERVICE_LIABILITY = "END_OF_SERVICE_LIABILITY"
 GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY = "LEAVE_ACCRUAL_LIABILITY"
 GL_CONCEPT_SUSPENSE = "SUSPENSE"
+GL_CONCEPT_RETAINED_EARNINGS = "RETAINED_EARNINGS"
+GL_CONCEPT_REVENUE_CLOSING = "REVENUE_CLOSING"
+GL_CONCEPT_EXPENSE_CLOSING = "EXPENSE_CLOSING"
+GL_CONCEPT_INSURANCE_IN = "INSURANCE_IN"
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = "mapping"
@@ -142,6 +146,10 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_END_OF_SERVICE_LIABILITY,
     GL_CONCEPT_LEAVE_ACCRUAL_LIABILITY,
     GL_CONCEPT_SUSPENSE,
+    GL_CONCEPT_RETAINED_EARNINGS,
+    GL_CONCEPT_REVENUE_CLOSING,
+    GL_CONCEPT_EXPENSE_CLOSING,
+    GL_CONCEPT_INSURANCE_IN,
 )
 
 #: The concept registry. ``legacy_code`` is the hint the Owner panel's
@@ -579,6 +587,34 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     GL_CONCEPT_SUSPENSE: {
         "meaning": "Suspense Account",
         "legacy_code": "2999",
+        "required": False,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_RETAINED_EARNINGS: {
+        "meaning": "Retained Earnings",
+        "legacy_code": "3200",
+        "required": True,
+        "normal_balance": "credit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_REVENUE_CLOSING: {
+        "meaning": "Revenue Closing Entry",
+        "legacy_code": "3200",
+        "required": True,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_EXPENSE_CLOSING: {
+        "meaning": "Expense Closing Entry",
+        "legacy_code": "3200",
+        "required": True,
+        "normal_balance": "credit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_INSURANCE_IN: {
+        "meaning": "Insurance In (Landed Cost)",
+        "legacy_code": "5303",
         "required": False,
         "normal_balance": "debit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,

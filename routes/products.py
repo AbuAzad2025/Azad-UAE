@@ -351,15 +351,14 @@ def import_products():
         from services.import_job_service import process_product_import_task
 
         task = process_product_import_task.delay(job.id, file_b64, file.filename, update_existing)
-        job.celery_task_id = task.id
-        db.session.commit()
+        with atomic_transaction("import_job_queue"):
+            job.celery_task_id = task.id
+            db.session.flush()
 
         flash(gettext("تم بدء الاستيراد في الخلفية. يمكنك متابعة التقدم من صفحة المهام."), "info")
         return redirect(url_for("products.import_jobs"))
 
     # Synchronous import (for smaller files or dry-run)
-    from utils.db_safety import atomic_transaction
-
     with atomic_transaction("product_import_sync"):
         service = ProductImportService(tid, current_user.id)
         if template_id:
@@ -1696,8 +1695,9 @@ def import_template_create():
             required_fields=required_fields,
             is_default=is_default,
         )
-        db.session.add(template)
-        db.session.commit()
+        with atomic_transaction("import_template_create"):
+            db.session.add(template)
+            db.session.flush()
         flash(gettext("تم إنشاء القالب بنجاح."), "success")
         return redirect(url_for("products.import_templates"))
 
@@ -1726,7 +1726,8 @@ def import_template_edit(template_id: int):
             return redirect(request.url)
 
         template.is_default = request.form.get("is_default") == "on"
-        db.session.commit()
+        with atomic_transaction("import_template_update"):
+            db.session.flush()
         flash(gettext("تم تحديث القالب بنجاح."), "success")
         return redirect(url_for("products.import_templates"))
 
@@ -1739,8 +1740,9 @@ def import_template_edit(template_id: int):
 def import_template_delete(template_id: int):
     tid = get_active_tenant_id(current_user)
     template = ProductImportTemplate.query.filter_by(id=template_id, tenant_id=tid).first_or_404()
-    db.session.delete(template)
-    db.session.commit()
+    with atomic_transaction("import_template_delete"):
+        db.session.delete(template)
+        db.session.flush()
     flash(gettext("تم حذف القالب."), "success")
     return redirect(url_for("products.import_templates"))
 
@@ -1760,7 +1762,9 @@ def api_products_bulk():
     if not request.is_json:
         return error_response(message="Content-Type must be application/json", status_code=415)
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if data is None:
+        return error_response(message="Invalid JSON payload", status_code=400)
     products_data = data.get("products", [])
     update_existing = data.get("update_existing", False)
 
@@ -1822,9 +1826,9 @@ def ocr_scan():
             result = {"products": ocr_service.extract_products_from_image(file_bytes)}
 
         return success_response(data=result)
-    except Exception as e:
+    except Exception:
         current_app.logger.exception("OCR processing failed")
-        return error_response(message=f"OCR failed: {str(e)}", status_code=500)
+        return error_response(message=gettext("فشل معالجة OCR."), status_code=500)
 
 
 # Mobile/Barcode Scanner API

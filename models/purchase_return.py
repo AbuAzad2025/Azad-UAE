@@ -83,9 +83,10 @@ class PurchaseReturn(db.Model):
         Calculate totals for the purchase return.
 
         Args:
-            recalculate_tax: If True, recalculate tax based on tax_rate.
-                           If False, preserve existing tax_amount (used when tax
-                           was calculated proportionally from the original purchase).
+            recalculate_tax: If True, recalculate tax and total based on tax_rate.
+                           If False, preserve existing tax_amount and total_amount
+                           (used when tax was calculated proportionally from the
+                           original purchase and total is VAT-exclusive based).
         """
         self.subtotal = sum((Decimal(str(line.line_total)) for line in self.lines), Decimal("0"))
 
@@ -95,11 +96,11 @@ class PurchaseReturn(db.Model):
             self.tax_amount = (self.subtotal * (tax_rate_decimal / Decimal("100"))).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-        # If recalculate_tax is False, preserve the existing tax_amount
-
-        self.total_amount = (self.subtotal + (self.tax_amount or Decimal("0"))).quantize(
-            Decimal("0.001"), rounding=ROUND_HALF_UP
-        )
+            self.total_amount = (self.subtotal + (self.tax_amount or Decimal("0"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+        # If recalculate_tax is False, preserve existing tax_amount and total_amount
+        # (service already set total = inventory_credit (VAT-exclusive) + tax)
 
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
         from utils.currency_utils import resolve_tenant_base_currency
