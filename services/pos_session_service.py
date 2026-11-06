@@ -93,43 +93,37 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
     rate = Decimal(str(tender_chunk.get("exchange_rate", 1)))
     amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
 
+    # Use the caller's transaction (db.session.execute + flush). A separate
+    # engine connection would block on the SELECT FOR UPDATE row lock the
+    # route holds inside atomic_transaction, deadlocking the checkout.
     if method == "cash":
         from sqlalchemy import update as _sa_update
 
-        from extensions import db as _db
-
-        with _db.engine.connect() as conn:
-            conn.execute(
-                _sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed)
-            )
-            conn.commit()
+        db.session.execute(
+            _sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed)
+        )
+        db.session.flush()
         session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
     elif method == "card":
         from sqlalchemy import update as _sa_update
 
-        from extensions import db as _db
-
-        with _db.engine.connect() as conn:
-            conn.execute(
-                _sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed)
-            )
-            conn.commit()
+        db.session.execute(
+            _sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed)
+        )
+        db.session.flush()
         session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
     else:
         from sqlalchemy import update as _sa_update
 
-        from extensions import db as _db
-
-        with _db.engine.connect() as conn:
-            conn.execute(
-                _sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_sales=PosSession.__table__.c.total_sales + amount_aed)
-            )
-            conn.commit()
+        db.session.execute(
+            _sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_sales=PosSession.__table__.c.total_sales + amount_aed)
+        )
+        db.session.flush()
         session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
     # NOTE: total_sales is set separately by the sale amount. Do NOT add tender amounts.

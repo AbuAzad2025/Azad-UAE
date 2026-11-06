@@ -315,15 +315,15 @@ class PosCheckoutService:
 
         sale_amount = Decimal(str(sale.total_amount or 0))
 
-        from extensions import db as _db
-
-        with _db.engine.connect() as conn:
-            conn.execute(
-                sa_update(PosSession)
-                .where(PosSession.id == session.id)
-                .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
-            )
-            conn.commit()
+        # Use the caller's transaction: db.session.execute within the route's
+        # atomic_transaction. A separate engine connection would block on the
+        # SELECT FOR UPDATE row lock the route holds, deadlocking checkout.
+        db.session.execute(
+            sa_update(PosSession)
+            .where(PosSession.id == session.id)
+            .values(total_sales=PosSession.__table__.c.total_sales + sale_amount)
+        )
+        db.session.flush()
         session.total_sales = Decimal(str(session.total_sales or 0)) + sale_amount
         if payment_data and payment_data.get("payment_method") == "cash":
             cash_aed = convert_and_quantize_aed(
@@ -334,15 +334,12 @@ class PosCheckoutService:
             )
             from sqlalchemy import update as sa_update
 
-            from extensions import db as _db
-
-            with _db.engine.connect() as conn:
-                conn.execute(
-                    sa_update(PosSession)
-                    .where(PosSession.id == session.id)
-                    .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
-                )
-                conn.commit()
+            db.session.execute(
+                sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed)
+            )
+            db.session.flush()
             session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + cash_aed
         if payments_data:
             for tender_chunk in payments_data:
