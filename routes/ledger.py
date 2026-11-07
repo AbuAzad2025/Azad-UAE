@@ -255,6 +255,47 @@ def run_fx_revaluation():
     )
 
 
+@ledger_bp.route("/income-tax-accrual", methods=["POST"])
+@login_required
+@permission_required("manage_ledger")
+def run_income_tax_accrual():
+    """Accrue the corporate income-tax provision for a fiscal year.
+
+    Idempotent per (tenant, fiscal_year): a second call for the same year
+    returns the existing entry instead of double-accruing. ``taxable_profit``
+    is optional — when omitted the FY accounting profit is used.
+    """
+    from utils.tenanting import require_active_tenant_id
+
+    tenant_id = require_active_tenant_id()
+    from services.income_tax_service import IncomeTaxService
+
+    data = request.get_json(silent=True) or {}
+    fiscal_year = data.get("fiscal_year") or request.form.get("fiscal_year", type=int)
+    taxable_profit = data.get("taxable_profit")
+    if taxable_profit is not None:
+        from decimal import Decimal
+
+        taxable_profit = Decimal(str(taxable_profit or 0))
+    with atomic_transaction("income_tax_accrual"):
+        result = IncomeTaxService.accrue(
+            tenant_id,
+            int(fiscal_year) if fiscal_year is not None else None,
+            taxable_profit=taxable_profit,
+            branch_id=_effective_branch_id(),
+            user_id=current_user.id,
+        )
+        db.session.flush()
+    tax = result.get("tax")
+    return success_response(
+        data={
+            "already_accrued": bool(result.get("already_accrued")),
+            "tax": float(tax) if tax is not None else None,
+            "entry_id": result["entry"].id if result.get("entry") else None,
+        }
+    )
+
+
 @ledger_bp.route("/income-statement")
 @login_required
 @permission_required("view_ledger")

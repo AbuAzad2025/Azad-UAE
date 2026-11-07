@@ -125,7 +125,7 @@ class TestManifestMatchesSource:
     def test_base_chart_of_accounts(self):
         import models.gl_account_registry as registry
 
-        assert len(registry.BASE_ACCOUNTS) == 100
+        assert len(registry.BASE_ACCOUNTS) == 102
 
     def test_document_sequence_count(self):
         """The manifest must name every document type the source can create.
@@ -164,7 +164,7 @@ class TestManifestMatchesSource:
         assert source_keys, "could not find the defaults dict in document_sequence_service"
 
         seed_set = _seed_set("document_sequences")
-        assert len(source_keys) == 9
+        assert len(source_keys) == 19
 
         # The runtime bound is a uniqueness bound, not a row count.
         assert seed_set.expected == 1

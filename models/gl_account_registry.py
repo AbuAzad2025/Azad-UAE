@@ -138,6 +138,7 @@ BASE_ACCOUNTS = [
         "2100",
     ),
     GLAccountTemplate("2141", "Payroll Payable", "رواتب مستحقة", "liability", 2, False, "2100"),
+    GLAccountTemplate("2142", "Income Tax Payable", "ضريبة دخل مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate(
         "2150",
         "Partner Current Accounts",
@@ -337,6 +338,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("6280", "Legal & Professional Fees", "رسوم قانونية", "expense", 2, False, "6200"),
     GLAccountTemplate("6290", "Communication", "اتصالات", "expense", 2, False, "6200"),
     GLAccountTemplate("6300", "Depreciation Expense", "مصروف الإهلاك", "expense", 1, False, "6000"),
+    GLAccountTemplate("6350", "Income Tax Expense", "مصروف ضريبة الدخل", "expense", 1, False, "6000"),
     GLAccountTemplate("6400", "Warranty Claims", "مطالبات الضمان", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6410",
@@ -1078,6 +1080,15 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate("VAT_INPUT", "2122", "vat"),
             GLConceptMappingTemplate("VAT_OUTPUT", "2121", "vat"),
+        ],
+    ),
+    "income_tax": GLModuleDefinition(
+        "income_tax",
+        True,
+        accounts=[],
+        mappings=[
+            GLConceptMappingTemplate("INCOME_TAX_EXPENSE", "6350", "income_tax"),
+            GLConceptMappingTemplate("INCOME_TAX_PAYABLE", "2142", "income_tax"),
         ],
     ),
     "warranty": GLModuleDefinition(

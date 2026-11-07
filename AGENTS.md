@@ -118,7 +118,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   loaded degrades the type and never the text.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → d7e8f9a0b1c2` (60 revisions)
+- **Migration chain (single head):** `squash_001 → … → c5d6e7f8a9b0` (62 revisions)
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
@@ -132,6 +132,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
     (`RETAINED_EARNINGS`, `REVENUE_CLOSING`, `EXPENSE_CLOSING`) and the landed-cost
     insurance leg (`INSURANCE_IN`), rebuilt from `GL_CONCEPT_CODES` again — add a new
     concept only with a new rebuild migration
+  - `a7b8c9d0e1f2` tenants still on the placeholder VAT rate (5.00, the old hardcoded
+    default) backfilled to their `vat_country`'s statutory rate from
+    `utils/country_tax.py` — the system no longer inherits UAE 5% for PS 16% / IL 17%
+    / SA 15% tenants; a tenant's own configured rate is preserved
+  - `c5d6e7f8a9b0` the GL concept allow-list widened for `INCOME_TAX_EXPENSE` /
+    `INCOME_TAX_PAYABLE` (corporate income-tax provision, services/income_tax_service.py)
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)
@@ -172,7 +178,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
   **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
-  field definitions** (13 core + 61 across 12 industries) / 100 base GL accounts
+  field definitions** (13 core + 61 across 12 industries) / 102 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
   (`app/bootstrap.py`); `AUTO_MIGRATE=1` lets a fresh database be migrated at
@@ -181,7 +187,8 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   SaaS packages (owner owns pricing), tenant business tables (expense/product
   categories, departments, CRM stages, helpdesk categories, cost/profit centres,
   fiscal positions, customs taxes), accounting periods (created by close-month),
-  exchange rates, units of measure and VAT rates (no master table exists).
+  exchange rates, units of measure and VAT rates (statutory rates are a code master
+  in `utils/country_tax.py` — COUNTRY_TAX_PROFILES — not seeded rows).
 - The boot never invents a credential. `utils/system_init._ensure_owner_user`
   plants the owner from `OWNER_PASSWORD` and raises rather than fall back to a
   default; `config.assert_production_sanity` enforces a 16+ char mixed password

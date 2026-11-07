@@ -199,9 +199,9 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=100,
+        expected=102,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
-        note="100 base accounts + the tenant's industry extension (49 across 13 "
+        note="102 base accounts + the tenant's industry extension (49 across 13 "
         "industries) + 2 liquidity accounts per active branch. Self-healing: "
         "matches on code and repairs name/type/parent/header/level/contra.",
         verify="utils.seed_manifest_probe.min_gl_accounts_for_active_tenant",
@@ -277,7 +277,10 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
         check="at_most",
         source="services/document_sequence_service.py",
         note="sale, purchase, payment, receipt, gl_entry, cheque, invoice, "
-        "return, expense. Locked with SELECT ... FOR UPDATE on first use.",
+        "return, expense, budget, bank_reconciliation, "
+        "bank_reconciliation_sequence, asset, quotation, shipment, transfer, "
+        "purchase_requisition, purchase_order, goods_receipt. Locked with "
+        "SELECT ... FOR UPDATE on first use.",
         verify="utils.seed_manifest_probe.max_document_sequences_per_document_type",
         tags=("numbering",),
     ),

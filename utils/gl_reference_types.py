@@ -36,6 +36,7 @@ class GLRef:
     POS_CASH_DIFFERENCE = "PosCashDifference"
     POS_CASH_MOVEMENT = "PosCashMovement"
     FX_GAIN_LOSS = "FxGainLoss"
+    INCOME_TAX = "IncomeTax"
 
 
 LEGACY_REF_MAP: dict[str, str] = {

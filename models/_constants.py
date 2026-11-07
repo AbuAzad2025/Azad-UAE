@@ -69,6 +69,8 @@ GL_CONCEPT_RETAINED_EARNINGS = "RETAINED_EARNINGS"
 GL_CONCEPT_REVENUE_CLOSING = "REVENUE_CLOSING"
 GL_CONCEPT_EXPENSE_CLOSING = "EXPENSE_CLOSING"
 GL_CONCEPT_INSURANCE_IN = "INSURANCE_IN"
+GL_CONCEPT_INCOME_TAX_EXPENSE = "INCOME_TAX_EXPENSE"
+GL_CONCEPT_INCOME_TAX_PAYABLE = "INCOME_TAX_PAYABLE"
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = "mapping"
@@ -150,6 +152,8 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_REVENUE_CLOSING,
     GL_CONCEPT_EXPENSE_CLOSING,
     GL_CONCEPT_INSURANCE_IN,
+    GL_CONCEPT_INCOME_TAX_EXPENSE,
+    GL_CONCEPT_INCOME_TAX_PAYABLE,
 )
 
 #: The concept registry. ``legacy_code`` is the hint the Owner panel's
@@ -236,6 +240,18 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
         "meaning": "VAT Output",
         "legacy_code": "2121",
         "required": True,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_INCOME_TAX_EXPENSE: {
+        "meaning": "Income Tax Expense (corporate)",
+        "legacy_code": "6350",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_INCOME_TAX_PAYABLE: {
+        "meaning": "Income Tax Payable",
+        "legacy_code": "2142",
+        "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
     GL_CONCEPT_FX_GAIN: {
