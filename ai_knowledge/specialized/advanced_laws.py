@@ -27,7 +27,7 @@ class AdvancedLaws:
     }
 
     ISRAELI_TAX_LAWS: dict[str, Any] = {
-        "vat_rate": 17,
+        "vat_rate": 18,
         "income_tax_rates": {
             "individual": {
                 "0-77480": 10,

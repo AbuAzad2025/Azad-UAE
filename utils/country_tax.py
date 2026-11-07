@@ -14,7 +14,7 @@ not carry a statutory rate (social security, withholding tax, most VAT
 registration thresholds), the field is ``None`` and labelled
 ``configurable``: the tenant supplies it, the system never invents it.
 
-Supported VAT countries: PS 16%, IL 17%, AE 5%, SA 15%.
+Supported VAT countries: PS 16%, IL 18%, AE 5%, SA 15%.
 Unsupported countries resolve to the ``XX`` (null) profile: zero VAT,
 no filing format, generic TRN check.
 """
@@ -110,7 +110,7 @@ COUNTRY_TAX_PROFILES = {
     "IL": {
         "code": "IL",
         "name": "Israel (إسرائيل)",
-        "vat_rate": Decimal("17.00"),
+        "vat_rate": Decimal("18.00"),
         "vat_return_format": "il_vat_v1",
         "vat_registration_threshold": None,
         "vat_registration_currency": None,

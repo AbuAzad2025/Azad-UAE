@@ -1,5 +1,5 @@
 """
-IsraelStrategy — 17% VAT, ILS, Israeli Tax Authority VAT report, 9-digit ID.
+IsraelStrategy — 18% VAT, ILS, Israeli Tax Authority VAT report, 9-digit ID.
 
 VAT and corporate rates come from utils/country_tax.py (single source of
 truth); this strategy only carries the e-invoice/report formatting for IL.

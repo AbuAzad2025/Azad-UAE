@@ -508,7 +508,7 @@ Output VAT is credited to `2121 VAT Output` (a liability), input VAT is debited 
 `4100` and never in an expense. The VAT return reads the two accounts straight from the ledger and nets
 them (`services/gl_service.py:679-750`, `services/tax_service.py:62-83`), which is the right shape for the
 UAE/Palestine return where output and input are separate lines and a net position can be a receivable.
-Rates are tenant-configurable with AE 5 % / PS 16 % / IL 17 % (`utils/tax_settings.py`).
+Rates are statutory: AE 5 % / PS 16 % / IL 18 % / SA 15 % (`utils/country_tax.py`).
 
 Caveat: `2120 VAT Payable` is a postable account with no children in use except `2121`, so the balance sheet
 shows a permanently nil "VAT Payable" line while the real balance sits in its child (F-15).

@@ -18,7 +18,7 @@ from utils.country_tax import (
 
 def test_vat_rates_by_country():
     assert vat_rate_for_country("PS") == Decimal("16.00")
-    assert vat_rate_for_country("IL") == Decimal("17.00")
+    assert vat_rate_for_country("IL") == Decimal("18.00")
     assert vat_rate_for_country("AE") == Decimal("5.00")
     assert vat_rate_for_country("SA") == Decimal("15.00")
     assert vat_rate_for_country("XX") == Decimal("0")

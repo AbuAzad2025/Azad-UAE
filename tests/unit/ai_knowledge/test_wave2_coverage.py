@@ -105,7 +105,7 @@ class TestAdvancedLawsWave2:
         from ai_knowledge.specialized.advanced_laws import AdvancedLaws
 
         assert "16%" in AdvancedLaws.get_tax_info("palestine", "vat")
-        assert "17%" in AdvancedLaws.get_tax_info("israel", "vat")
+        assert "18%" in AdvancedLaws.get_tax_info("israel", "vat")
         assert "5%" in AdvancedLaws.get_tax_info("uae", "vat")
         assert "15%" in AdvancedLaws.get_tax_info("saudi", "vat")
         assert AdvancedLaws.get_tax_info("unknown", "vat") is None

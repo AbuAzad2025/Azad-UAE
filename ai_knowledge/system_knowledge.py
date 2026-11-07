@@ -673,10 +673,10 @@ ACCOUNTING = {
         "details": "Standard rate 16%. Applied to most goods and services.",
     },
     "vat_israel": {
-        "rate": "17%",
+        "rate": "18%",
         "name": "VAT in Israel",
         "name_ar": "ضريبة القيمة المضافة في إسرائيل",
-        "details": "Standard rate 17%. Reduced rates for certain items.",
+        "details": "Standard rate 18% (Knesset, effective 2025-01-01). Reduced rates for certain items.",
     },
     "account_types": [
         {
