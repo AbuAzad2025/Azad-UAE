@@ -65,12 +65,14 @@ class ShipmentService:
 
     # ── Field-sales expedition (pre-invoice, Van) ──
     @staticmethod
-    def _generate_shipment_number():
+    def _generate_shipment_number(tenant_id=None):
         try:
             from models.shipment import Shipment
             from utils.helpers import generate_number
 
-            return generate_number("SH", Shipment, "shipment_number")
+            if tenant_id is None:
+                return f"SH-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+            return generate_number("SH", Shipment, "shipment_number", tenant_id=tenant_id)
         except Exception:
             return f"SH-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
 
@@ -97,7 +99,7 @@ class ShipmentService:
             raise ValueError("يجب إضافة منتج واحد على الأقل")
 
         shipment = Shipment(
-            shipment_number=ShipmentService._generate_shipment_number(),
+            shipment_number=ShipmentService._generate_shipment_number(tenant_id),
             tenant_id=tenant_id,
             source_type="field_sale",
             source_id=0,

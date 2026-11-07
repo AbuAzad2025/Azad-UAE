@@ -25,7 +25,7 @@ class TransferService:
 
         t = WarehouseTransfer(
             tenant_id=tid,
-            transfer_number=generate_number("TR", WarehouseTransfer, "transfer_number"),
+            transfer_number=generate_number("TR", WarehouseTransfer, "transfer_number", tenant_id=tid),
             from_warehouse_id=from_wh,
             to_warehouse_id=to_wh,
             branch_id=data.get("branch_id"),

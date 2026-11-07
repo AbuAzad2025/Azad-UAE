@@ -52,7 +52,9 @@ class BankReconciliationService:
         opening_balance = Decimal(str(statement["opening_balance"]))
 
         # إنشاء المطابقة
-        reconciliation_number = generate_number("BR", BankReconciliation, "reconciliation_number")
+        reconciliation_number = generate_number(
+            "BR", BankReconciliation, "reconciliation_number", tenant_id=bank_account.tenant_id
+        )
 
         reconciliation = BankReconciliation(
             tenant_id=bank_account.tenant_id,

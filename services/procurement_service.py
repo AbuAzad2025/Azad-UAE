@@ -28,7 +28,7 @@ class ProcurementService:
         tid = cls._tid(user)
         pr = PurchaseRequisition(
             tenant_id=tid,
-            requisition_number=generate_number("PR", PurchaseRequisition, "requisition_number"),
+            requisition_number=generate_number("PR", PurchaseRequisition, "requisition_number", tenant_id=tid),
             requester_id=user.id,
             department_id=data.get("department_id"),
             branch_id=data.get("branch_id"),
@@ -158,7 +158,7 @@ class ProcurementService:
 
         grn = GoodsReceipt(
             tenant_id=tid,
-            grn_number=generate_number("GRN", GoodsReceipt, "grn_number"),
+            grn_number=generate_number("GRN", GoodsReceipt, "grn_number", tenant_id=tid),
             po_id=po.id,
             supplier_id=po.supplier_id,
             warehouse_id=po.warehouse_id,

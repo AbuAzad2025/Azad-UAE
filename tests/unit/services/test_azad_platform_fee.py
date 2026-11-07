@@ -39,6 +39,10 @@ def _patch_common(mocker, *, offline=True, existing=None):
     )
     mocker.patch("models.SystemSettings.get_current", return_value=settings)
     mocker.patch("services.azad_platform_fee_service.GLService.ensure_core_accounts")
+    mocker.patch(
+        "services.azad_platform_fee_service.GLService.get_account_code_for_concept",
+        return_value="6150",
+    )
     mock_post = mocker.patch("services.azad_platform_fee_service.post_or_fail")
     mock_session = mocker.patch("services.azad_platform_fee_service.db.session")
     return mock_post, mock_session

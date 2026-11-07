@@ -25,7 +25,7 @@ class AssetService:
             user = current_user
         asset = FixedAsset(
             tenant_id=tid,
-            asset_number=generate_number("FA", FixedAsset, "asset_number"),
+            asset_number=generate_number("FA", FixedAsset, "asset_number", tenant_id=tid),
             name_ar=data["name_ar"],
             name_en=data.get("name_en"),
             description=data.get("description"),

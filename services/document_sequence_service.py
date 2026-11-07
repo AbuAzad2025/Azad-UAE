@@ -77,6 +77,16 @@ class DocumentSequenceService:
             "invoice": ("INV", "{prefix}-{year}-{counter:04d}", "year", False),
             "return": ("RET", "{prefix}-{year}-{counter:04d}", "year", False),
             "expense": ("EXP", "{prefix}-{year}-{counter:04d}", "year", False),
+            "budget": ("BUD", "{prefix}-{year}-{counter:04d}", "year", False),
+            "bank_reconciliation": ("BR", "{prefix}-{year}-{counter:04d}", "year", False),
+            "bank_reconciliation_sequence": ("BR", "{prefix}-{year}-{counter:04d}", "year", False),
+            "asset": ("FA", "{prefix}-{year}-{counter:04d}", "year", False),
+            "quotation": ("QT", "{prefix}-{year}-{counter:04d}", "year", False),
+            "shipment": ("SH", "{prefix}-{year}-{counter:04d}", "year", False),
+            "transfer": ("TR", "{prefix}-{year}-{counter:04d}", "year", False),
+            "purchase_requisition": ("PR", "{prefix}-{year}-{counter:04d}", "year", False),
+            "purchase_order": ("PO", "{prefix}-{year}-{counter:04d}", "year", False),
+            "goods_receipt": ("GRN", "{prefix}-{year}-{counter:04d}", "year", False),
         }
 
         default = defaults.get(code, ("DOC", "{prefix}-{year}-{counter:04d}", "year", False))

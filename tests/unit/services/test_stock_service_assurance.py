@@ -709,6 +709,7 @@ class TestTransferStock:
         pwc_q = MagicMock()
         pwc_q.filter_by.return_value.first.return_value = None
         mocker.patch("services.stock_service.ProductWarehouseCost.query", pwc_q)
+        mocker.patch("services.stock_service._safe_for_update", return_value=None)
         from services.stock_service import StockService
 
         result = StockService.transfer_stock(1, 1, 2, Decimal("5"))

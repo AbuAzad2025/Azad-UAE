@@ -21,7 +21,7 @@ class QuotationService:
         tid = cls._tid(user)
         q = Quotation(
             tenant_id=tid,
-            quotation_number=generate_number("QT", Quotation, "quotation_number"),
+            quotation_number=generate_number("QT", Quotation, "quotation_number", tenant_id=tid),
             customer_id=int(data["customer_id"]),
             branch_id=data.get("branch_id"),
             warehouse_id=data.get("warehouse_id"),
@@ -160,7 +160,7 @@ class QuotationService:
 
         sale = Sale(
             tenant_id=quotation.tenant_id,
-            sale_number=generate_number("SALE", Sale, "sale_number"),
+            sale_number=generate_number("SALE", Sale, "sale_number", tenant_id=quotation.tenant_id),
             customer_id=quotation.customer_id,
             seller_id=user.id,
             warehouse_id=quotation.warehouse_id,

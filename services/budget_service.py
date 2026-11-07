@@ -36,7 +36,7 @@ class BudgetService:
         tid = cls._tid(user)
         budget = Budget(
             tenant_id=tid,
-            budget_number=generate_number("BUD", Budget, "budget_number"),
+            budget_number=generate_number("BUD", Budget, "budget_number", tenant_id=tid),
             name_ar=data["name_ar"],
             name_en=data.get("name_en"),
             fiscal_year=int(data["fiscal_year"]),

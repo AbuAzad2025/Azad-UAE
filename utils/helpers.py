@@ -1,4 +1,3 @@
-import contextlib
 import logging
 import os
 import random
@@ -95,25 +94,21 @@ def generate_number(
     """
     Generate a document number using the centralized DocumentSequenceService
     which provides atomic row-level locking (SELECT FOR UPDATE) on the sequence row.
-    Falls back to legacy query-based generation for models without a configured sequence.
+    No legacy fallback: a sequence-backed model requires tenant_id.
     """
-    # Map model/field_name to DocumentSequence code
     sequence_code = _model_field_to_sequence_code(model, field_name)
 
-    if sequence_code and tenant_id is not None:
-        # Use the atomic sequence service with proper row-level locking
-        try:
-            from services.document_sequence_service import DocumentSequenceService
+    if sequence_code and tenant_id is None:
+        raise ValueError(f"tenant_id is required for sequenced document {field_name}")
 
-            return DocumentSequenceService.next_number(
-                tenant_id=tenant_id,
-                code=sequence_code,
-                branch_code=branch_code,
-            )
-        except Exception:
-            # Fall back to legacy method if sequence service unavailable
-            with contextlib.suppress(Exception):
-                pass
+    if sequence_code and tenant_id is not None:
+        from services.document_sequence_service import DocumentSequenceService
+
+        return DocumentSequenceService.next_number(
+            tenant_id=tenant_id,
+            code=sequence_code,
+            branch_code=branch_code,
+        )
 
     # Legacy fallback for models without sequence or when tenant_id is None
     year = datetime.now().strftime(date_format)
