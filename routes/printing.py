@@ -21,7 +21,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
-from models.invoice_settings import InvoiceSettings
+from services.invoice_profile_service import resolve_print_profile
 from services.print_service import PrintService
 from utils.api_response import error_response, success_response
 from utils.branching import branch_scope_id
@@ -93,7 +93,7 @@ def print_document(doc_type, **kwargs):
 
     current_template = requested
     if not current_template:
-        s = InvoiceSettings.get_active(eff_tid)
+        s = resolve_print_profile(eff_tid)
         current_template = s.active_template if s and s.active_template else "modern"
 
     return PrintService.render_print(
@@ -468,13 +468,12 @@ def print_customer_statement(id):
             running += t["credit"] - t["debit"]
         t["balance"] = running
 
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import get_company_print_context
     from utils.tenant_branding import get_print_header_context
 
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    branding = get_print_header_context(tid)
-
     eff_tid = tid or getattr(customer, "tenant_id", None)
+    tenant, settings, company = get_company_print_context(tenant_id=eff_tid)
+    branding = get_print_header_context(eff_tid, profile=settings)
     PrintService.create_snapshot(eff_tid, "customer_statement", record_id, reason="print", document=customer)
     PrintService.audit_print(eff_tid, "customer_statement", record_id, action="print")
 
@@ -612,12 +611,12 @@ def print_supplier_statement(id):
             running += t["credit"] - t["debit"]
         t["balance"] = running
 
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import get_company_print_context
     from utils.tenant_branding import get_print_header_context
 
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    branding = get_print_header_context(tid)
     eff_tid = tid or getattr(supplier, "tenant_id", None)
+    tenant, settings, company = get_company_print_context(tenant_id=eff_tid)
+    branding = get_print_header_context(eff_tid, profile=settings)
     PrintService.create_snapshot(eff_tid, "supplier_statement", record_id, reason="print", document=supplier)
     PrintService.audit_print(eff_tid, "supplier_statement", record_id, action="print")
 
@@ -654,10 +653,11 @@ def print_advanced_ledger():
     from datetime import date, timedelta
 
     from models import GLAccount
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import resolve_print_profile
     from utils.tenant_branding import get_print_header_context
 
     tid = get_active_tenant_id(current_user)
+    settings = resolve_print_profile(tid)
 
     accounts = GLAccount.query.filter_by(tenant_id=tid, is_active=True, is_header=False).limit(20).all()
 
@@ -679,8 +679,8 @@ def print_advanced_ledger():
             "trial_balance_data": trial_balance_data,
             "date_from": date.today() - timedelta(days=30),
             "date_to": date.today(),
-            "print_branding": get_print_header_context(),
-            "settings": InvoiceSettings.get_active(tid),
+            "print_branding": get_print_header_context(tid, profile=settings),
+            "settings": settings,
         },
         tenant_id=tid,
     )
@@ -691,20 +691,34 @@ def print_advanced_ledger():
 @login_required
 @admin_required
 def print_settings():
+    from models.tenant import Tenant
+
     tid = get_active_tenant_id(current_user)
-    settings = InvoiceSettings.get_active(tid)
+    settings = resolve_print_profile(tid)
 
     if request.method == "POST":
+        from services.invoice_profile_service import save_print_overlay
+
+        tenant = db.session.get(Tenant, tid)
+        if tenant is None:
+            abort(404)
         with atomic_transaction("print_settings"):
-            settings.paper_size = request.form.get("paper_size", "A4")
-            settings.orientation = request.form.get("orientation", "portrait")
-            settings.active_template = request.form.get("active_template", "modern")
-            settings.header_color = request.form.get("header_color", "#667eea")
-            settings.accent_color = request.form.get("accent_color", "#764ba2")
-            settings.show_logo = request.form.get("show_logo") == "on"
-            settings.enable_qr_code = request.form.get("enable_qr_code") == "on"
-            settings.enable_watermark = request.form.get("enable_watermark") == "on"
-            settings.show_terms = request.form.get("show_terms") == "on"
+            values = {
+                "paper_size": request.form.get("paper_size", "A4"),
+                "orientation": request.form.get("orientation", "portrait"),
+                "active_invoice_template": request.form.get("active_template", "modern"),
+                "invoice_header_color": request.form.get("header_color", "#667eea"),
+                "invoice_accent_color": request.form.get("accent_color", "#764ba2"),
+            }
+            for key, value in values.items():
+                setattr(tenant, key, value)
+            save_print_overlay(
+                tenant,
+                show_logo=request.form.get("show_logo") == "on",
+                enable_qr_code=request.form.get("enable_qr_code") == "on",
+                enable_watermark=request.form.get("enable_watermark") == "on",
+                show_terms=request.form.get("show_terms") == "on",
+            )
             db.session.flush()
             flash(gettext("تم حفظ إعدادات الطباعة"), "success")
             return redirect(url_for("printing.print_settings"))

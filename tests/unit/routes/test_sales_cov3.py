@@ -106,7 +106,9 @@ def _patches(**kwargs):
         stack.enter_context(patch("routes.sales.LoggingCore.log_audit"))
         stack.enter_context(patch("routes.sales.LoggingCore.log_error"))
         stack.enter_context(
-            patch("routes.sales.InvoiceSettings.get_active", return_value=MagicMock(enable_qr_code=False))
+            patch(
+                "services.invoice_profile_service.resolve_print_profile", return_value=MagicMock(enable_qr_code=False)
+            )
         )
         stack.enter_context(patch("routes.sales.number_to_arabic_words", return_value="مائة"))
         stack.enter_context(patch("routes.sales.generate_qr_data_url", return_value="data:x"))

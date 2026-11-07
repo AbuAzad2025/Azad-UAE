@@ -89,7 +89,7 @@
 (() => {
   const toggle = document.getElementById('enable_tax');
   const fields = document.getElementById('tax-fields');
-  const countryRates = { AE: 5, IL: 17, PS: 16, SA: 15 };
+  const countryRates = {{ statutory_rates | tojson }};
   function refresh() {
     fields.style.opacity = toggle.checked ? '1' : '0.45';
     document.getElementById('default_tax_rate').readOnly = !toggle.checked;

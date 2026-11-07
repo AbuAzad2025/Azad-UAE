@@ -195,7 +195,7 @@ class TestPurchasesViewAndPrint:
         with (
             _purchase_patches(purchase=purchase) as ctx,
             patch(
-                "models.invoice_settings.InvoiceSettings.company_print_context",
+                "services.invoice_profile_service.get_company_print_context",
                 return_value=company_ctx,
             ),
             patch(

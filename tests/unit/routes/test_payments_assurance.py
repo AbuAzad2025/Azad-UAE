@@ -448,9 +448,9 @@ class TestReceiptViewPrintAssurance:
         with (
             patch("routes.payments.tenant_get", side_effect=[receipt, sale]),
             patch("utils.decorators.branch_scope_id", return_value=None),
-            patch("routes.payments.InvoiceSettings.get_active", return_value=settings),
+            patch("services.invoice_profile_service.resolve_print_profile", return_value=settings),
             patch(
-                "routes.payments.InvoiceSettings.company_print_context",
+                "services.invoice_profile_service.get_company_print_context",
                 return_value=(MagicMock(name_ar="Co"), settings, {}),
             ),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
@@ -737,9 +737,9 @@ class TestPaymentsGapCoverage:
         with (
             patch("routes.payments.tenant_get", side_effect=[receipt, sale]),
             patch("utils.decorators.branch_scope_id", return_value=None),
-            patch("routes.payments.InvoiceSettings.get_active", return_value=settings),
+            patch("services.invoice_profile_service.resolve_print_profile", return_value=settings),
             patch(
-                "routes.payments.InvoiceSettings.company_print_context",
+                "services.invoice_profile_service.get_company_print_context",
                 return_value=(MagicMock(name_ar="Co"), settings, {}),
             ),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),

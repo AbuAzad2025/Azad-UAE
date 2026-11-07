@@ -126,51 +126,60 @@ class InvoiceSettings(db.Model):
 
     @staticmethod
     def _seed_from_tenant(settings, tenant):
+        """Explicitly copy the current tenant profile into an edit/seed candidate.
+
+        This never happens while rendering. It remains for controlled legacy data
+        migration and should not be called by document generation.
+        """
         if not tenant:
             return settings
-        settings.company_name_ar = tenant.name_ar or tenant.name or settings.company_name_ar
-        settings.company_name_en = tenant.name_en or tenant.name or settings.company_name_en
-        settings.address_ar = tenant.address_ar or settings.address_ar
-        settings.address_en = tenant.address_en or settings.address_en
-        settings.phone_1 = tenant.phone_1 or tenant.mobile or settings.phone_1
-        settings.email = tenant.email or settings.email
-        settings.website = tenant.website or settings.website
-        settings.tax_number = tenant.tax_number or settings.tax_number
-        settings.commercial_register = tenant.commercial_register or settings.commercial_register
-        settings.license_number = tenant.license_number or settings.license_number
-        # Seed a new print settings row from the tenant's configured values.
-        from utils.invoice_profile import sync_invoice_profile
-
-        sync_invoice_profile(
-            tenant,
-            settings,
-            (
-                "bank_name",
-                "bank_account_number",
-                "iban",
-                "swift_code",
-                "payment_terms_ar",
-                "payment_terms_en",
-                "footer_invoice_text_ar",
-                "footer_invoice_text_en",
-                "default_invoice_note_ar",
-                "default_invoice_note_en",
-                "invoice_header_color",
-                "invoice_accent_color",
-                "active_invoice_template",
-                "logo_url",
-            ),
-            skip_empty=True,
+        mapping = (
+            ("name_ar", "company_name_ar", "company_name_en"),
+            ("address_ar", "address_ar", None),
+            ("address_en", "address_en", None),
+            ("phone_1", "phone_1", None),
+            ("phone_2", "phone_2", None),
+            ("email", "email", None),
+            ("website", "website", None),
+            ("tax_number", "tax_number", None),
+            ("commercial_register", "commercial_register", None),
+            ("license_number", "license_number", None),
         )
+        for tenant_field, target, _ in mapping:
+            value = getattr(tenant, tenant_field, None)
+            if value not in (None, ""):
+                setattr(settings, target, value)
+        if tenant.name_en not in (None, ""):
+            settings.company_name_en = tenant.name_en
+        elif tenant.name not in (None, ""):
+            settings.company_name_en = tenant.name
+        for tenant_field, target in (
+            ("bank_name", "bank_name"),
+            ("bank_account_number", "bank_account_number"),
+            ("iban", "iban"),
+            ("swift_code", "swift_code"),
+            ("payment_terms_ar", "payment_terms_ar"),
+            ("payment_terms_en", "payment_terms_en"),
+            ("footer_text_ar", "footer_text_ar"),
+            ("footer_text_en", "footer_text_en"),
+            ("default_invoice_note_ar", "default_invoice_note_ar"),
+            ("default_invoice_note_en", "default_invoice_note_en"),
+            ("invoice_header_color", "header_color"),
+            ("invoice_accent_color", "accent_color"),
+            ("active_invoice_template", "active_template"),
+            ("logo_url", "logo_url"),
+        ):
+            value = getattr(tenant, tenant_field, None)
+            if value not in (None, ""):
+                setattr(settings, target, value)
         return settings
 
     @staticmethod
     def get_active(tenant_id=None, user=None):
-        """Active invoice settings for the given or current tenant.
+        """Return a detached profile snapshot for rendering.
 
-        Tenant-specific rows are created on demand when tenant_id is known.
-        Without tenant context, returns an existing legacy global row if any —
-        never auto-creates active tenant_id=NULL settings.
+        Compatibility name retained for older callers. This method never creates
+        an invoice-settings row; document profile ownership is ``Tenant``.
         """
         if tenant_id is None and user is not None:
             try:
@@ -181,54 +190,18 @@ class InvoiceSettings(db.Model):
                 import logging
 
                 logging.getLogger(__name__).debug("Failed to resolve tenant_id from user", exc_info=True)
+        if tenant_id is None:
+            return None
+        from utils.invoice_profile import resolve_print_profile
 
-        if tenant_id is not None:
-            tid = int(tenant_id)
-            settings = InvoiceSettings.query.filter_by(is_active=True, tenant_id=tid).first()
-            if settings:
-                return settings
-            from models.tenant import Tenant
-
-            tenant = db.session.get(Tenant, tid)
-            if tenant is None:
-                return (
-                    InvoiceSettings.query.filter_by(is_active=True).filter(InvoiceSettings.tenant_id.is_(None)).first()
-                )
-            settings = InvoiceSettings(is_active=True, tenant_id=tid)
-            InvoiceSettings._seed_from_tenant(settings, tenant)
-            db.session.add(settings)
-            db.session.flush()
-            return settings
-
-        return InvoiceSettings.query.filter_by(is_active=True).filter(InvoiceSettings.tenant_id.is_(None)).first()
+        return resolve_print_profile(int(tenant_id))
 
     @staticmethod
     def company_print_context(tenant_id=None):
-        """Tenant branding with per-tenant invoice settings fallback for print views."""
-        from models.tenant import Tenant
-        from utils.tenant_branding import get_print_header_context
+        """Resolve the unified print context from the pinned tenant profile."""
+        from services.invoice_profile_service import get_company_print_context
 
-        if tenant_id is None:
-            tenant = Tenant.get_current()
-            tenant_id = tenant.id if tenant else None
-        else:
-            tenant = db.session.get(Tenant, int(tenant_id))
-
-        branding = get_print_header_context(tenant_id)
-        settings = InvoiceSettings.get_active(tenant_id)
-        return (
-            tenant,
-            settings,
-            {
-                "name_ar": branding["company_name_ar"],
-                "name_en": branding["company_name_en"],
-                "address": branding["address_ar"] or branding["address_en"],
-                "phone": branding["phone"],
-                "email": branding["email"],
-                "tax_number": branding["tax_number"],
-                "logo_url": branding["logo_url"],
-            },
-        )
+        return get_company_print_context(tenant_id=tenant_id)
 
     def to_dict(self):
         """Convert to dictionary"""

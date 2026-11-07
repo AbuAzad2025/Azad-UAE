@@ -211,26 +211,20 @@ class TestAuthHelpers:
             assert name == "شركة الاختبار"
             assert address == "أبوظبي"
 
-    def test_login_company_display_invoice_fallback(self, auth_app):
-        inv = MagicMock()
-        inv.company_name_ar = "من الفاتورة"
-        inv.address_ar = "الشارقة"
-        inv.address_en = ""
+    def test_login_company_display_no_tenant_returns_default(self, auth_app):
         with (
             auth_app.app_context(),
             patch("models.tenant.Tenant.query", _chain_query(first=None)),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active",
-                return_value=inv,
-            ),
         ):
             from routes.auth import (
+                _DEFAULT_TENANT_ADDRESS,
+                _DEFAULT_TENANT_NAME_AR,
                 _login_company_display,
             )
 
             name, address = _login_company_display()
-            assert name == "من الفاتورة"
-            assert address == "الشارقة"
+        assert name == _DEFAULT_TENANT_NAME_AR
+        assert address == _DEFAULT_TENANT_ADDRESS
 
     def test_login_company_display_default(self, auth_app):
         broken_query = MagicMock()
@@ -238,10 +232,6 @@ class TestAuthHelpers:
         with (
             auth_app.app_context(),
             patch("models.tenant.Tenant.query", broken_query),
-            patch(
-                "models.invoice_settings.InvoiceSettings.get_active",
-                side_effect=RuntimeError("db down"),
-            ),
         ):
             from routes.auth import (
                 _DEFAULT_TENANT_NAME_AR,

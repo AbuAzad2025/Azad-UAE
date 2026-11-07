@@ -205,13 +205,13 @@ def print_purchase(**kwargs):
     scoped_branch_id = branch_scope_id()
     if scoped_branch_id is not None and purchase.branch_id != scoped_branch_id:
         return render_template("errors/403.html"), 403
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import get_company_print_context
     from utils.qr_generator import generate_qr_data_url
     from utils.tenant_branding import get_print_header_context
 
     tid = purchase.tenant_id
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
-    print_branding = get_print_header_context(tid)
+    tenant, settings, company = get_company_print_context(tenant_id=tid)
+    print_branding = get_print_header_context(tid, profile=settings)
     qr_data_url = ""
     if settings and settings.enable_qr_code:
         from services.document_verification_service import DocumentVerificationService

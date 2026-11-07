@@ -63,26 +63,19 @@ def granted_permissions(db_session, sample_role):
 
 @pytest.fixture
 def sample_invoice_settings(db_session, sample_tenant):
-    """Explicit InvoiceSettings so active_template is controlled per test."""
+    """The tenant profile owns the print template now."""
     from decimal import Decimal
 
-    from models.invoice_settings import InvoiceSettings
-
-    settings = InvoiceSettings(
-        tenant_id=sample_tenant.id,
-        company_name_ar="شركة الاختبار",
-        company_name_en="Test Company",
-        is_active=True,
-        active_template="modern",
-        enable_qr_code=True,
-        paper_size="A4",
-        orientation="portrait",
-        default_language="ar",
-        watermark_opacity=Decimal("0.10"),
-    )
-    db_session.add(settings)
+    sample_tenant.name_ar = "شركة الاختبار"
+    sample_tenant.name_en = "Test Company"
+    sample_tenant.active_invoice_template = "modern"
+    sample_tenant.enable_qr_code = True
+    sample_tenant.paper_size = "A4"
+    sample_tenant.orientation = "portrait"
+    sample_tenant.default_language = "ar"
+    sample_tenant.watermark_opacity = Decimal("0.10")
     db_session.commit()
-    return settings
+    return sample_tenant
 
 
 @pytest.fixture
@@ -463,7 +456,7 @@ class TestSalesPurchasesReturnsRecordRoutes:
     def test_sale_invoice_templates_render(
         self, db_session, auth_client, granted_permissions, tenant_records, sample_invoice_settings, template
     ):
-        sample_invoice_settings.active_template = template
+        sample_invoice_settings.active_invoice_template = template
         db_session.commit()
         url = f"/sales/{tenant_records['sale'].id}/print"
         resp = auth_client.get(url, follow_redirects=True)

@@ -197,7 +197,6 @@ class TestPreviewReceiptCov3b:
         settings.company_name_ar = "شركة"
         inv_cls = MagicMock()
         inv_cls.get_active = MagicMock(return_value=settings)
-        stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
         stack.enter_context(patch("utils.tenant_branding.get_print_header_context", return_value={}))
 
     def test_cov3_other_tenant(self, app_factory, bypass_owner_auth):
@@ -247,7 +246,6 @@ class TestInvoiceUploadSkipCov3b:
         inv_cls.get_active = MagicMock(return_value=settings)
         with (
             _base(),
-            patch("routes.owner.settings.InvoiceSettings", inv_cls),
         ):
             resp = app.test_client().post(
                 "/owner/invoice-settings",

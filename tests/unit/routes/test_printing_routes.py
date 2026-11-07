@@ -49,7 +49,7 @@ def printing_client(app_factory, bypass_permission_auth):
         patch("routes.printing.branch_scope_id", return_value=None) as branch_scope,
         patch("routes.printing.render_template", return_value="403-page") as render_tpl,
         patch("extensions.db.session", MagicMock()) as session,
-        patch("routes.printing.InvoiceSettings.get_active") as get_settings,
+        patch("services.invoice_profile_service.resolve_print_profile") as get_settings,
         patch(
             "routes.printing.send_file",
             return_value=Response(b"pdf", mimetype="application/pdf"),
@@ -437,7 +437,7 @@ class TestPrintSettings:
         assert "printing/settings.html" in render.call_args[0][0]
 
     def test_settings_post_saves_and_redirects(self, printing_client):
-        settings = printing_client._printing_mocks["settings"]
+        tenant = printing_client._printing_mocks["session"].get.return_value
         resp = printing_client.post(
             "/printing/settings",
             data={
@@ -451,8 +451,13 @@ class TestPrintSettings:
             },
         )
         assert resp.status_code in (302, 303)
-        assert settings.paper_size == "A4"
-        assert settings.orientation == "landscape"
+        assert tenant.paper_size == "A4"
+        assert tenant.orientation == "landscape"
+        assert tenant.active_invoice_template == "modern"
+        assert tenant.invoice_header_color == "#111111"
+        assert tenant.invoice_accent_color == "#222222"
+        assert tenant.show_logo is True
+        assert tenant.enable_qr_code is True
         printing_client._printing_mocks["session"].commit.assert_called_once()
 
 

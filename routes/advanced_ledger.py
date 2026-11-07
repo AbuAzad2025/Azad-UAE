@@ -28,7 +28,7 @@ from utils.currency_utils import get_system_default_currency, resolve_default_cu
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, permission_required
 from utils.gl_tenant import active_tenant_id, gl_account_query, gl_entry_query
-from utils.tenanting import tenant_get_or_404
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404
 
 advanced_ledger_bp = Blueprint("advanced_ledger", __name__, url_prefix="/ledger/advanced")
 
@@ -60,11 +60,11 @@ def professional_printing():
             total_debit += balance if balance > 0 else 0
             total_credit += abs(balance) if balance < 0 else 0
 
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import resolve_print_profile
     from utils.tenant_branding import get_print_header_context
 
-    print_branding = get_print_header_context()
-    settings = InvoiceSettings.get_active(user=current_user)
+    settings = resolve_print_profile(get_active_tenant_id(current_user))
+    print_branding = get_print_header_context(get_active_tenant_id(current_user), profile=settings)
 
     trial_balance_json = [
         {

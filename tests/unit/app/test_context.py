@@ -91,18 +91,9 @@ class TestContextProcessor:
         assert ctx["tenant_name_ar"] == "شركة"
         assert ctx["company_name"] == "Co"
 
-    def test_utility_processor_invoice_fallback(self, ctx_app):
-        inv = MagicMock(
-            company_name_ar="من الفاتورة",
-            company_name_en="From Inv",
-            phone_1="111",
-            email="i@b.com",
-            address_ar="addr",
-            logo_url="/inv.png",
-        )
+    def test_utility_processor_without_tenant(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=inv),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
@@ -117,7 +108,8 @@ class TestContextProcessor:
             sys.enable_pos = False
             sys_set.return_value = sys
             ctx = self._ctx(ctx_app)
-        assert ctx["tenant_name_ar"] == "من الفاتورة"
+        # No tenant, no document profile is invented; blanks stay blanks.
+        assert ctx["tenant_name_ar"] == ""
 
     def test_utility_processor_tenant_exception(self, ctx_app):
         with (
@@ -136,7 +128,6 @@ class TestContextProcessor:
     def test_developer_logo_path_sanitization(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()
@@ -184,7 +175,7 @@ class TestContextProcessor:
                 ctx = self._ctx(ctx_app)
         assert "available_tenants" in ctx
 
-    def test_branding_name_fallback(self, ctx_app):
+    def test_branding_name_is_tenant_only(self, ctx_app):
         tenant = MagicMock(
             name_ar="",
             name_en="",
@@ -205,12 +196,50 @@ class TestContextProcessor:
         tenant.name = ""
         with (
             patch("models.Tenant.get_current", return_value=tenant),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
+            patch("models.system_settings.SystemSettings.get_current") as sys_set,
+            patch("flask_login.current_user", MagicMock(is_authenticated=False)),
+        ):
+            sys = MagicMock()
+            sys.get_custom_setting.return_value = ""
+            sys.default_currency = "AED"
+            sys.currency_symbol = "AED"
+            sys.currency_position = "after"
+            sys.decimal_places = 2
+            sys.enable_tax = True
+            sys.default_tax_rate = None
+            sys.enable_pos = False
+            sys_set.return_value = sys
+            ctx = self._ctx(ctx_app)
+        # No document profile is invented; the profile name is only the tenant's.
+        assert ctx["tenant_name_ar"] == ""
+        assert ctx["tenant_name"] == ""
+
+    def test_logo_falls_back_to_disk_branding(self, ctx_app):
+        tenant = MagicMock(
+            name_ar="شركة",
+            name_en="En",
+            name="En",
+            phone_1="",
+            mobile=None,
+            email="",
+            address_ar="",
+            logo_url="",
+            logo_dark_url="",
+            favicon_url="",
+            default_currency="AED",
+            enable_tax=True,
+            default_tax_rate=5,
+            enable_pos=True,
+            id=1,
+        )
+        with (
+            patch("models.Tenant.get_current", return_value=tenant),
             patch(
                 "utils.tenant_branding.resolve_tenant_branding",
                 return_value={
-                    "company_name_ar": "من العلامة",
-                    "company_name_en": "Brand Co",
+                    "logo_url": "disk.png",
+                    "logo_dark_url": "disk-dark.png",
+                    "favicon_url": "disk-ico.png",
                 },
             ),
             patch("models.system_settings.SystemSettings.get_current") as sys_set,
@@ -227,13 +256,13 @@ class TestContextProcessor:
             sys.enable_pos = False
             sys_set.return_value = sys
             ctx = self._ctx(ctx_app)
-        assert ctx["tenant_name_ar"] == "من العلامة"
-        assert ctx["tenant_name"] == "Brand Co"
+        assert ctx["tenant_logo_url"] == "disk.png"
+        assert ctx["tenant_logo_dark_url"] == "disk-dark.png"
+        assert ctx["tenant_favicon_url"] == "disk-ico.png"
 
     def test_developer_logo_static_prefix_stripped(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()
@@ -304,7 +333,6 @@ class TestContextProcessor:
     def test_developer_logo_static_prefix_without_leading_slash(self, ctx_app):
         with (
             patch("models.Tenant.get_current", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None),
             patch("flask_login.current_user", MagicMock(is_authenticated=False)),
         ):
             sys = MagicMock()

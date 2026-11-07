@@ -98,7 +98,6 @@ class TestCompanyInfoCov3a:
         with (
             _base(),
             patch("routes.owner.settings.Tenant", tenant_cls),
-            patch("routes.owner.settings.InvoiceSettings", inv_cls),
         ):
             resp = app.test_client().post("/owner/company-info", data={"name_ar": "م", "business_type": "general"})
         assert resp.status_code == 302
@@ -113,7 +112,6 @@ class TestCompanyInfoCov3a:
         with (
             _base(),
             patch("routes.owner.settings.Tenant", tenant_cls),
-            patch("routes.owner.settings.InvoiceSettings", inv_cls),
         ):
             resp = app.test_client().post("/owner/company-info", data={"name_ar": "م", "business_type": "general"})
         assert resp.status_code == 302
@@ -165,7 +163,6 @@ class TestPreviewInvoiceCov3a:
         settings.company_name_ar = "شركة"
         inv_cls = MagicMock()
         inv_cls.get_active = MagicMock(return_value=settings)
-        stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
         stack.enter_context(patch("utils.tenant_branding.get_print_header_context", return_value={}))
         return settings
 
@@ -216,7 +213,6 @@ class TestReceiptSourceInfoCov3a:
             _base(),
             ExitStack() as stack,
         ):
-            stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
             stack.enter_context(patch("utils.tenant_branding.get_print_header_context", return_value={}))
             stack.enter_context(patch("utils.tenanting.get_active_tenant_id", return_value=1))
             stack.enter_context(patch("models.Tenant.get_current", return_value=MagicMock()))

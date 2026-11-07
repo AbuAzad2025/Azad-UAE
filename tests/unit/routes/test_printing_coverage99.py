@@ -78,7 +78,7 @@ class TestCustomerStatement:
             ),
             patch("routes.printing.get_active_tenant_id", return_value=1),
             patch("routes.printing.branch_scope_id", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.company_print_context", return_value=(None, None, None)),
+            patch("services.invoice_profile_service.get_company_print_context", return_value=(None, None, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch("routes.printing.PrintService.create_snapshot", return_value=None),
             patch("routes.printing.PrintService.audit_print", return_value=None),
@@ -140,7 +140,7 @@ class TestSupplierStatement:
             ),
             patch("routes.printing.get_active_tenant_id", return_value=1),
             patch("routes.printing.branch_scope_id", return_value=None),
-            patch("models.invoice_settings.InvoiceSettings.company_print_context", return_value=(None, None, None)),
+            patch("services.invoice_profile_service.get_company_print_context", return_value=(None, None, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch("routes.printing.PrintService.create_snapshot", return_value=None),
             patch("routes.printing.PrintService.audit_print", return_value=None),
@@ -190,7 +190,7 @@ class TestAdvancedLedger:
             patch("routes.printing.get_active_tenant_id", return_value=1),
             patch("models.GLAccount.query") as mq,
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
-            patch("models.invoice_settings.InvoiceSettings.get_active", return_value=MagicMock()),
+            patch("services.invoice_profile_service.resolve_print_profile", return_value=MagicMock()),
             patch("routes.printing.PrintService.render_print", return_value="ok"),
         ):
             mq.filter_by.return_value.limit.return_value.all.return_value = [a1, a2, a3]

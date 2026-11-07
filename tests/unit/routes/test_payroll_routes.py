@@ -331,7 +331,7 @@ class TestPayrollSlipAndStatement:
         with (
             _payroll_patches(),
             patch(
-                "models.invoice_settings.InvoiceSettings.company_print_context",
+                "services.invoice_profile_service.get_company_print_context",
                 return_value=(MagicMock(name="tenant"), MagicMock(name="settings"), {"name_ar": "Co"}),
             ),
             patch(

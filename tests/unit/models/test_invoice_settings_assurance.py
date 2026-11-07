@@ -1,4 +1,4 @@
-"""InvoiceSettings model — get_active seeding, print context, to_dict."""
+"""InvoiceSettings compatibility API — seeding and snapshot resolution."""
 
 from __future__ import annotations
 
@@ -34,133 +34,67 @@ class TestInvoiceSettingsModel:
         settings = InvoiceSettings()
         assert InvoiceSettings._seed_from_tenant(settings, None) is settings
 
-    def test_get_active_existing(self, app, mocker):
+    def test_get_active_returns_snapshot_from_explicit_tenant(self, db_session, sample_tenant):
         from models.invoice_settings import InvoiceSettings
 
-        existing = InvoiceSettings()
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value.first.return_value = existing
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        with app.app_context():
-            assert InvoiceSettings.get_active(tenant_id=1) is existing
+        sample_tenant.name_ar = "شركة المعروض"
+        db_session.flush()
+        snapshot = InvoiceSettings.get_active(tenant_id=sample_tenant.id)
+        assert snapshot.tenant_id == sample_tenant.id
+        assert snapshot.company_name_ar == "شركة المعروض"
+        assert snapshot.is_active is True
 
-    def test_get_active_creates_for_tenant(self, app, mocker):
+    def test_get_active_never_persists_rows(self, db_session, sample_tenant):
         from models.invoice_settings import InvoiceSettings
 
-        tenant = MagicMock(
-            id=2,
-            name="T",
-            name_ar="",
-            name_en="",
-            address_ar=None,
-            address_en=None,
-            phone_1=None,
-            mobile=None,
-            email=None,
-            tax_number=None,
-            commercial_register=None,
-            license_number=None,
-        )
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value.first.return_value = None
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        mocker.patch("models.invoice_settings.db.session.get", return_value=tenant)
-        mock_session = mocker.patch("models.invoice_settings.db.session")
-        with app.app_context():
-            settings = InvoiceSettings.get_active(tenant_id=2)
-        mock_session.add.assert_called_once()
-        mock_session.flush.assert_called_once()
-        assert settings.tenant_id == 2
+        InvoiceSettings.get_active(tenant_id=sample_tenant.id)
+        rows = db_session.query(InvoiceSettings).filter_by(tenant_id=sample_tenant.id).count()
+        assert rows == 0
 
-    def test_get_active_missing_tenant_falls_back_legacy(self, app, mocker):
+    def test_get_active_unknown_tenant_returns_none(self, db_session):
         from models.invoice_settings import InvoiceSettings
 
-        legacy = InvoiceSettings()
-        first_chain = MagicMock()
-        first_chain.first.return_value = None
-        legacy_chain = MagicMock()
-        legacy_chain.filter.return_value.first.return_value = legacy
-        mock_q = MagicMock()
-        mock_q.filter_by.side_effect = [first_chain, legacy_chain]
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        mocker.patch("models.invoice_settings.db.session.get", return_value=None)
-        with app.app_context():
-            assert InvoiceSettings.get_active(tenant_id=99) is legacy
+        assert InvoiceSettings.get_active(999999999) is None
 
-    def test_get_active_from_current_user(self, app, mocker):
+    def test_get_active_no_context_returns_none(self):
         from models.invoice_settings import InvoiceSettings
 
-        existing = InvoiceSettings()
-        user = MagicMock(is_authenticated=True)
-        mocker.patch("flask_login.current_user", user)
-        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=5)
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value.first.return_value = existing
-        mock_q.filter_by.return_value.filter.return_value.first.return_value = existing
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        with app.app_context():
-            assert InvoiceSettings.get_active() is existing
+        assert InvoiceSettings.get_active() is None
 
-    def test_get_active_auth_exception_legacy(self, app, mocker):
+    def test_get_active_from_current_user(self, db_session, sample_tenant, mocker):
         from models.invoice_settings import InvoiceSettings
 
-        legacy = InvoiceSettings()
-        mocker.patch("flask_login.current_user", side_effect=RuntimeError("auth"))
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value = mock_q
-        mock_q.filter.return_value.first.return_value = legacy
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        with app.app_context():
-            assert InvoiceSettings.get_active() is legacy
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=sample_tenant.id)
+        snapshot = InvoiceSettings.get_active(user="irrelevant")
+        assert snapshot.tenant_id == sample_tenant.id
 
-    def test_company_print_context(self, app, mocker):
+    def test_get_active_user_resolution_failure_returns_none(self, mocker):
         from models.invoice_settings import InvoiceSettings
 
-        tenant = MagicMock(id=1)
-        settings = InvoiceSettings()
-        mocker.patch("models.tenant.Tenant.get_current", return_value=tenant)
-        mocker.patch(
-            "utils.tenant_branding.get_print_header_context",
-            return_value={
-                "company_name_ar": "أ",
-                "company_name_en": "En",
-                "address_ar": "ع",
-                "address_en": "",
-                "phone": "050",
-                "email": "e@x.com",
-                "tax_number": "T",
-                "logo_url": "logo.png",
-            },
-        )
-        mocker.patch.object(InvoiceSettings, "get_active", return_value=settings)
-        with app.app_context():
-            t, s, ctx = InvoiceSettings.company_print_context()
-        assert ctx["name_en"] == "En"
-        assert ctx["logo_url"] == "logo.png"
+        mocker.patch("utils.tenanting.get_active_tenant_id", side_effect=RuntimeError("auth"))
+        assert InvoiceSettings.get_active(user="irrelevant") is None
 
-    def test_company_print_context_explicit_tenant_id(self, app, mocker):
+    def test_company_print_context(self, db_session, sample_tenant):
         from models.invoice_settings import InvoiceSettings
 
-        tenant = MagicMock(id=7)
-        mocker.patch("models.invoice_settings.db.session.get", return_value=tenant)
-        mocker.patch(
-            "utils.tenant_branding.get_print_header_context",
-            return_value={
-                "company_name_ar": "",
-                "company_name_en": "X",
-                "address_ar": "",
-                "address_en": "Addr",
-                "phone": "",
-                "email": "",
-                "tax_number": "",
-                "logo_url": "",
-            },
-        )
-        mocker.patch.object(InvoiceSettings, "get_active", return_value=InvoiceSettings())
-        with app.app_context():
-            t, _, ctx = InvoiceSettings.company_print_context(tenant_id=7)
-        assert t is tenant
-        assert ctx["address"] == "Addr"
+        sample_tenant.name_ar = "أ"
+        sample_tenant.name_en = "En"
+        sample_tenant.logo_url = "logo.png"
+        db_session.flush()
+        tenant, settings, company = InvoiceSettings.company_print_context(sample_tenant.id)
+        assert tenant.id == sample_tenant.id
+        assert company["name_en"] == "En"
+        assert company["logo_url"] == "logo.png"
+
+    def test_company_print_context_explicit_tenant_id(self, db_session, sample_tenant):
+        from models.invoice_settings import InvoiceSettings
+
+        sample_tenant.address_ar = ""
+        sample_tenant.address_en = "Addr"
+        db_session.flush()
+        tenant, _, company = InvoiceSettings.company_print_context(sample_tenant.id)
+        assert tenant.id == sample_tenant.id
+        assert company["address"] == "Addr"
 
     def test_to_dict(self):
         from models.invoice_settings import InvoiceSettings
@@ -188,7 +122,7 @@ class TestInvoiceSettingsModel:
         assert d["company_name_en"] == "En"
         assert d["enable_qr_code"] is True
 
-    def test_get_active_auth_exception_during_user_resolution(self, app, mocker):
+    def test_get_active_auth_exception_during_user_resolution(self, mocker):
         from models.invoice_settings import InvoiceSettings
 
         class _BrokenUser:
@@ -196,26 +130,14 @@ class TestInvoiceSettingsModel:
             def is_authenticated(self):
                 raise RuntimeError("auth")
 
-        legacy = InvoiceSettings()
-        mocker.patch("flask_login.current_user", _BrokenUser())
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value = mock_q
-        mock_q.filter.return_value.first.return_value = legacy
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        with app.app_context():
-            assert InvoiceSettings.get_active() is legacy
+        mocker.patch("utils.tenanting.get_active_tenant_id", side_effect=RuntimeError("auth"))
+        assert InvoiceSettings.get_active(user=_BrokenUser()) is None
 
-    def test_get_active_auth_context_exception(self, app, mocker):
+    def test_get_active_auth_context_exception(self, mocker):
         from models.invoice_settings import InvoiceSettings
 
-        legacy = InvoiceSettings()
-        mocker.patch("flask_login.current_user", side_effect=RuntimeError("auth"))
-        mock_q = MagicMock()
-        mock_q.filter_by.return_value = mock_q
-        mock_q.filter.return_value.first.return_value = legacy
-        mocker.patch.object(InvoiceSettings, "query", mock_q)
-        with app.app_context():
-            assert InvoiceSettings.get_active() is legacy
+        mocker.patch("utils.tenanting.get_active_tenant_id", side_effect=RuntimeError("auth"))
+        assert InvoiceSettings.get_active(user="irrelevant") is None
 
     def test_repr(self):
         from models.invoice_settings import InvoiceSettings

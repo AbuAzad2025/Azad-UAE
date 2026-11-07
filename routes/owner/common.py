@@ -23,7 +23,6 @@ from models import (  # noqa: F401
     Donation,
     Expense,
     IntegrationSettings,
-    InvoiceSettings,
     Payment,
     Product,
     ProductReturn,

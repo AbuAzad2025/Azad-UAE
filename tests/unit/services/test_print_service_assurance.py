@@ -10,7 +10,7 @@ class TestGetTenantContext:
     def test_builds_print_context(self, mocker):
         tenant, settings, company = MagicMock(), MagicMock(), MagicMock()
         mocker.patch(
-            "models.invoice_settings.InvoiceSettings.company_print_context",
+            "services.invoice_profile_service.get_company_print_context",
             return_value=(tenant, settings, company),
         )
         mocker.patch("utils.tenant_branding.get_print_header_context", return_value={"logo": "x"})

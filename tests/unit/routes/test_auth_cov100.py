@@ -95,7 +95,7 @@ class TestLoginCompanyDisplayCleanFallback:
             auth_cov100_app.app_context(),
             patch("routes.auth.PlatformQueryService.first_active_tenant", return_value=None),
             patch(
-                "models.invoice_settings.InvoiceSettings.get_active",
+                "services.invoice_profile_service.resolve_print_profile",
                 return_value=None,
             ),
         ):

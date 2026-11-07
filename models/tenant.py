@@ -53,6 +53,9 @@ class Tenant(db.Model):
 
     # Branding - العلامة التجارية
     logo_url = db.Column(db.String(500))
+    logo_path = db.Column(db.String(500))
+    stamp_url = db.Column(db.String(500))
+    signature_url = db.Column(db.String(500))
     logo_dark_url = db.Column(db.String(500))
     favicon_url = db.Column(db.String(500))
     brand_color_primary = db.Column(db.String(20), default="#007A3D")
@@ -70,11 +73,37 @@ class Tenant(db.Model):
     invoice_accent_color = db.Column(db.String(20), default="#764ba2")
     payment_terms_ar = db.Column(db.Text)
     payment_terms_en = db.Column(db.Text)
-    footer_invoice_text_ar = db.Column(db.Text)
-    footer_invoice_text_en = db.Column(db.Text)
     default_invoice_note_ar = db.Column(db.Text)
     default_invoice_note_en = db.Column(db.Text)
+    default_receipt_note_ar = db.Column(db.Text)
+    default_receipt_note_en = db.Column(db.Text)
     active_invoice_template = db.Column(db.String(50), default="modern")
+
+    # Print presentation belongs to the same pinned tenant profile. These are
+    # written only by the print-settings flow, not inferred from other tenants.
+    paper_size = db.Column(db.String(20), default="A4")
+    orientation = db.Column(db.String(20), default="portrait")
+    show_logo = db.Column(db.Boolean, default=True, nullable=False)
+    logo_position = db.Column(db.String(20), default="left")
+    logo_size = db.Column(db.String(20), default="medium")
+    text_color = db.Column(db.String(20), default="#333333")
+    terms_conditions_ar = db.Column(db.Text)
+    terms_conditions_en = db.Column(db.Text)
+    footer_text_ar = db.Column(db.Text)
+    footer_text_en = db.Column(db.Text)
+    enable_qr_code = db.Column(db.Boolean, default=True, nullable=False)
+    qr_position = db.Column(db.String(20), default="bottom-right")
+    enable_watermark = db.Column(db.Boolean, default=False, nullable=False)
+    watermark_text = db.Column(db.String(200))
+    watermark_image_path = db.Column(db.String(500))
+    watermark_opacity = db.Column(db.Numeric(3, 2), default=Decimal("0.10"))
+    show_barcode = db.Column(db.Boolean, default=True, nullable=False)
+    show_page_numbers = db.Column(db.Boolean, default=True, nullable=False)
+    show_due_date = db.Column(db.Boolean, default=True, nullable=False)
+    facebook_url = db.Column(db.String(200))
+    instagram_url = db.Column(db.String(200))
+    whatsapp_number = db.Column(db.String(50))
+    show_terms = db.Column(db.Boolean, default=True, nullable=False)
 
     # Subscription - الاشتراك
     subscription_plan = db.Column(db.String(50), default="basic")  # basic, pro, enterprise

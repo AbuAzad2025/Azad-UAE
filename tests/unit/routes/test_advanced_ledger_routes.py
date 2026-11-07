@@ -127,7 +127,7 @@ def _advanced_ledger_patches(**kwargs):
         )
         stack.enter_context(
             patch(
-                "models.invoice_settings.InvoiceSettings.get_active",
+                "services.invoice_profile_service.resolve_print_profile",
                 return_value=MagicMock(active_template="modern", enable_qr_code=False),
             )
         )

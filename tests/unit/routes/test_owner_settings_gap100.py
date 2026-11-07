@@ -28,12 +28,6 @@ def _invoice_settings_obj():
     return s
 
 
-def _invoice_settings_class(settings):
-    cls = MagicMock(name="InvoiceSettings")
-    cls.get_active = MagicMock(return_value=settings)
-    return cls
-
-
 class TestIntegrationExceptionGap100:
     """Lines 135-137 — IntegrationService.test_email raises."""
 
@@ -97,21 +91,19 @@ class TestInvoiceLogoWatermarkGap100:
     def test_logo_upload_sets_logo_path(self, app_factory, bypass_owner_auth, tmp_path):
         app = app_factory(owner_bp)
         settings = _invoice_settings_obj()
-        inv_cls = _invoice_settings_class(settings)
         atomic = _atomic()
         with ExitStack() as stack:
             stack.enter_context(patch("routes.owner.settings.render_template", return_value="ok"))
             stack.enter_context(patch("routes.owner.settings.url_for", return_value="/"))
             mock_db = MagicMock()
             mock_db.engine = MagicMock()
+            mock_db.session.get.return_value = settings
             stack.enter_context(patch("routes.owner.settings.db", mock_db))
             stack.enter_context(patch("routes.owner.settings._invalidate_owner_changes"))
             stack.enter_context(patch("routes.owner.settings._audit_owner_db_action"))
             stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
-            stack.enter_context(patch("routes.owner.settings.InvoiceSettings", inv_cls))
-            stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
             # let makedirs create real dirs; mock save to avoid filesystem side-effects
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
             resp = app.test_client().post(
@@ -129,21 +121,19 @@ class TestInvoiceLogoWatermarkGap100:
     def test_watermark_upload_sets_watermark_path(self, app_factory, bypass_owner_auth, tmp_path):
         app = app_factory(owner_bp)
         settings = _invoice_settings_obj()
-        inv_cls = _invoice_settings_class(settings)
         atomic = _atomic()
         with ExitStack() as stack:
             stack.enter_context(patch("routes.owner.settings.render_template", return_value="ok"))
             stack.enter_context(patch("routes.owner.settings.url_for", return_value="/"))
             mock_db = MagicMock()
             mock_db.engine = MagicMock()
+            mock_db.session.get.return_value = settings
             stack.enter_context(patch("routes.owner.settings.db", mock_db))
             stack.enter_context(patch("routes.owner.settings._invalidate_owner_changes"))
             stack.enter_context(patch("routes.owner.settings._audit_owner_db_action"))
             stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
-            stack.enter_context(patch("routes.owner.settings.InvoiceSettings", inv_cls))
-            stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
             resp = app.test_client().post(
                 "/owner/invoice-settings",
@@ -160,21 +150,19 @@ class TestInvoiceLogoWatermarkGap100:
     def test_both_uploads_together(self, app_factory, bypass_owner_auth, tmp_path):
         app = app_factory(owner_bp)
         settings = _invoice_settings_obj()
-        inv_cls = _invoice_settings_class(settings)
         atomic = _atomic()
         with ExitStack() as stack:
             stack.enter_context(patch("routes.owner.settings.render_template", return_value="ok"))
             stack.enter_context(patch("routes.owner.settings.url_for", return_value="/"))
             mock_db = MagicMock()
             mock_db.engine = MagicMock()
+            mock_db.session.get.return_value = settings
             stack.enter_context(patch("routes.owner.settings.db", mock_db))
             stack.enter_context(patch("routes.owner.settings._invalidate_owner_changes"))
             stack.enter_context(patch("routes.owner.settings._audit_owner_db_action"))
             stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
-            stack.enter_context(patch("routes.owner.settings.InvoiceSettings", inv_cls))
-            stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
             resp = app.test_client().post(
                 "/owner/invoice-settings",
@@ -192,21 +180,19 @@ class TestInvoiceLogoWatermarkGap100:
     def test_empty_filename_skips_save(self, app_factory, bypass_owner_auth, tmp_path):
         app = app_factory(owner_bp)
         settings = _invoice_settings_obj()
-        inv_cls = _invoice_settings_class(settings)
         atomic = _atomic()
         with ExitStack() as stack:
             stack.enter_context(patch("routes.owner.settings.render_template", return_value="ok"))
             stack.enter_context(patch("routes.owner.settings.url_for", return_value="/"))
             mock_db = MagicMock()
             mock_db.engine = MagicMock()
+            mock_db.session.get.return_value = settings
             stack.enter_context(patch("routes.owner.settings.db", mock_db))
             stack.enter_context(patch("routes.owner.settings._invalidate_owner_changes"))
             stack.enter_context(patch("routes.owner.settings._audit_owner_db_action"))
             stack.enter_context(patch("services.logging_core.LoggingCore.log_audit"))
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
-            stack.enter_context(patch("routes.owner.settings.InvoiceSettings", inv_cls))
-            stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
             # Provide files with empty filename — should skip inner if
             resp = app.test_client().post(

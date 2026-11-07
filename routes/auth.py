@@ -80,16 +80,6 @@ def _login_company_display():
             address = ((tenant.address_ar or "") or (tenant.address_en or "")).strip()
     except Exception:
         current_app.logger.exception("Failed to load tenant display info for login page")
-    if not name_ar:
-        try:
-            from models.invoice_settings import InvoiceSettings
-
-            inv = InvoiceSettings.get_active(user=current_user)
-            if inv and (inv.company_name_ar or "").strip():
-                name_ar = (inv.company_name_ar or "").strip()
-                address = (inv.address_ar or inv.address_en or "").strip() or address
-        except Exception:
-            current_app.logger.exception("Failed to load invoice settings for login page display")
     return name_ar or _DEFAULT_TENANT_NAME_AR, address or _DEFAULT_TENANT_ADDRESS
 
 

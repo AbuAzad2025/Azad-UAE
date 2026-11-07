@@ -35,7 +35,7 @@ class TestProfessionalPrintingZeroBalances:
             patch("routes.advanced_ledger.gl_account_query", return_value=q),
             patch("routes.advanced_ledger.render_template", return_value="ok") as render,
             patch(
-                "models.invoice_settings.InvoiceSettings.get_active",
+                "services.invoice_profile_service.resolve_print_profile",
                 return_value=MagicMock(active_template="modern"),
             ),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),

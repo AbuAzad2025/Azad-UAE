@@ -157,7 +157,7 @@ def _sales_patches(**kwargs):
         stack.enter_context(patch("routes.sales.LoggingCore.log_error"))
         stack.enter_context(
             patch(
-                "routes.sales.InvoiceSettings.get_active",
+                "services.invoice_profile_service.resolve_print_profile",
                 return_value=MagicMock(
                     enable_qr_code=False,
                     active_template="modern",
@@ -466,7 +466,7 @@ class TestSalesPrint:
         settings = MagicMock(enable_qr_code=True, active_template="modern", company_name_ar="Co")
         with (
             _sales_patches(),
-            patch("routes.sales.InvoiceSettings.get_active", return_value=settings),
+            patch("services.invoice_profile_service.resolve_print_profile", return_value=settings),
         ):
             resp = sales_client.get("/sales/1/print")
         assert resp.status_code == 200

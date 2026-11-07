@@ -46,7 +46,7 @@ def printing_client(app_factory, bypass_permission_auth):
         patch("routes.printing.branch_scope_id", return_value=None) as branch_scope,
         patch("routes.printing.render_template", return_value="error-page") as render_tpl,
         patch("extensions.db.session", MagicMock()) as sess,
-        patch("routes.printing.InvoiceSettings.get_active") as get_settings,
+        patch("services.invoice_profile_service.resolve_print_profile") as get_settings,
         patch("routes.printing.send_file", return_value=Response(b"pdf", mimetype="application/pdf")) as send_file,
     ):
         settings = MagicMock()
@@ -501,7 +501,7 @@ class TestSettings:
         rt.assert_called_once()
 
     def test_settings_post_saves(self, printing_client):
-        settings = printing_client._mocks["settings"]
+        tenant = printing_client._mocks["session"].get.return_value
         with patch("routes.printing.atomic_transaction"):
             resp = printing_client.post(
                 "/printing/settings",
@@ -518,16 +518,22 @@ class TestSettings:
                 },
             )
         assert resp.status_code in (302, 303)
-        assert settings.paper_size == "A3"
-        assert settings.show_logo is True
-        assert settings.enable_watermark is True
+        assert tenant.paper_size == "A3"
+        assert tenant.orientation == "landscape"
+        assert tenant.active_invoice_template == "classic"
+        assert tenant.invoice_header_color == "#111"
+        assert tenant.invoice_accent_color == "#222"
+        assert tenant.show_logo is True
+        assert tenant.enable_qr_code is True
+        assert tenant.enable_watermark is True
+        assert tenant.show_terms is True
 
     def test_settings_post_defaults(self, printing_client):
-        settings = printing_client._mocks["settings"]
+        tenant = printing_client._mocks["session"].get.return_value
         with patch("routes.printing.atomic_transaction"):
             resp = printing_client.post("/printing/settings", data={})
         assert resp.status_code in (302, 303)
-        assert settings.paper_size == "A4"
+        assert tenant.paper_size == "A4"
 
 
 class TestAuth:

@@ -16,7 +16,7 @@ from flask_login import current_user, login_required
 from sqlalchemy import select
 
 from extensions import db
-from models import Customer, InvoiceSettings, Payment, Supplier
+from models import Customer, Payment, Supplier
 from models.receipt import Receipt
 from services.cheque_service import process_cheque_issue
 from services.currency_service import CurrencyService
@@ -1032,18 +1032,17 @@ def print_receipt(**kwargs):
         flash(gettext("ليس لديك صلاحية لطباعة هذا السند"), "danger")
         return redirect(url_for("payments.receipts"))
 
+    from services.invoice_profile_service import get_company_print_context
     from utils.tenant_branding import get_print_header_context
 
     tid = receipt.tenant_id
-    settings = InvoiceSettings.get_active(tid)
-    print_branding = get_print_header_context(tid)
+    tenant, settings, company = get_company_print_context(tenant_id=tid)
+    print_branding = get_print_header_context(tid, profile=settings)
 
     from services.print_service import PrintService
 
     requested_template = (request.args.get("template") or "").strip().lower()
     template_path = PrintService.resolve_template("receipt", tenant_id=tid, requested_template=requested_template)
-
-    tenant, settings, company = InvoiceSettings.company_print_context(tid)
     print_branch = PaymentService.get_print_branch(receipt_branch_id, tid)
     try:
         default_currency = resolve_default_currency(tenant)

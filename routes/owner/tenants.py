@@ -261,8 +261,8 @@ def tenant_create():
                 invoice_accent_color=_inv_text("invoice_accent_color", "#764ba2"),
                 payment_terms_ar=_inv_text("payment_terms_ar"),
                 payment_terms_en=_inv_text("payment_terms_en"),
-                footer_invoice_text_ar=_inv_text("footer_invoice_text_ar"),
-                footer_invoice_text_en=_inv_text("footer_invoice_text_en"),
+                footer_text_ar=_inv_text("footer_text_ar"),
+                footer_text_en=_inv_text("footer_text_en"),
                 default_invoice_note_ar=_inv_text("default_invoice_note_ar"),
                 default_invoice_note_en=_inv_text("default_invoice_note_en"),
                 active_invoice_template=(request.form.get("active_invoice_template") or "modern").strip() or "modern",
@@ -508,8 +508,8 @@ def tenant_edit(tenant_id):
                     "invoice_accent_color",
                     "payment_terms_ar",
                     "payment_terms_en",
-                    "footer_invoice_text_ar",
-                    "footer_invoice_text_en",
+                    "footer_text_ar",
+                    "footer_text_en",
                     "default_invoice_note_ar",
                     "default_invoice_note_en",
                 ):
@@ -570,13 +570,6 @@ def tenant_edit(tenant_id):
                 tenant.enable_pos_returns = _tristate("enable_pos_returns", tenant.enable_pos_returns)
                 tenant.enable_pos_shifts = _tristate("enable_pos_shifts", tenant.enable_pos_shifts)
                 tenant.updated_at = datetime.now(UTC)
-                # The owner may edit a tenant other than the active one.
-                from services.invoice_profile_service import InvoiceProfileService
-                from utils.invoice_profile import PROFILE_TO_INVOICE_SETTINGS
-
-                _submitted = set(request.form).intersection(PROFILE_TO_INVOICE_SETTINGS)
-                if _submitted:
-                    InvoiceProfileService.sync_from_tenant(tenant, _submitted)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
             flash(

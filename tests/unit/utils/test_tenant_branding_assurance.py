@@ -64,30 +64,33 @@ class TestResolveBranding:
 
     def test_resolve_with_tenant_id(self, mocker):
         tenant = self._tenant()
-        settings = MagicMock(
-            logo_path="assets/tenants/acme/logos/logo.png",
-            logo_url=None,
-            company_name_ar="أ",
-            company_name_en="B",
-            address_ar="x",
-            address_en="y",
-            phone_1="1",
-            email="e",
-            tax_number="T",
-        )
         mocker.patch("extensions.db.session.get", return_value=tenant)
-        mocker.patch("models.invoice_settings.InvoiceSettings.get_active", return_value=settings)
         mocker.patch("utils.tenant_assets.branding_for_tenant_slug", return_value={})
         mocker.patch("os.path.isfile", return_value=True)
 
         branding = tb.resolve_tenant_branding(tenant_id=1)
         assert branding["tenant_id"] == 1
-        assert branding["company_name_en"] == "B"
+        assert branding["company_name_en"] == "Acme EN"
         assert branding["developer_logo_url"] == tb.AZAD_LOGO
+
+    def test_resolve_logo_prefers_profile_upload(self, mocker):
+        tenant = self._tenant()
+        profile = MagicMock(logo_path="uploads/logos/uploaded.png")
+        mocker.patch("extensions.db.session.get", return_value=tenant)
+        mocker.patch("utils.tenant_assets.branding_for_tenant_slug", return_value={})
+        mocker.patch("os.path.isfile", return_value=True)
+
+        branding = tb.resolve_tenant_branding(tenant_id=1, profile=profile)
+        assert branding["logo_url"] == "uploads/logos/uploaded.png"
+
+    def test_resolve_profile_ignored_without_tenant(self, mocker):
+        mocker.patch("models.tenant.Tenant.get_current", return_value=None)
+        branding = tb.resolve_tenant_branding(profile=MagicMock(logo_path="uploads/logos/uploaded.png"))
+        assert branding["logo_url"] == ""
 
     def test_resolve_without_tenant_uses_defaults(self, mocker):
         mocker.patch("models.tenant.Tenant.get_current", return_value=None)
-        mocker.patch("models.invoice_settings.InvoiceSettings.get_active", return_value=None)
+        mocker.patch("services.invoice_profile_service.resolve_print_profile", return_value=None)
         branding = tb.resolve_tenant_branding()
         assert branding["company_name_en"] == "Company"
         assert branding["default_currency"] == "ILS"

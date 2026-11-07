@@ -49,6 +49,12 @@ def test_create_locks_rate_to_country(to_client):
                 "country": "AE",
                 "website": "https://x.example",
                 "commercial_register": "CR-123",
+                "bank_name": "Pinned Bank",
+                "bank_account_number": "123456",
+                "iban": "AE00 0000 0000 0000 0000",
+                "swift_code": "PINNEDS1",
+                "footer_text_ar": "تذييل محدد",
+                "active_invoice_template": "gulf",
             },
         )
         assert resp.status_code in (200, 302, 303)
@@ -63,47 +69,82 @@ def test_create_locks_rate_to_country(to_client):
         assert kwargs["city"] == "Dubai" and kwargs["country"] == "AE"
         assert kwargs["website"] == "https://x.example"
         assert kwargs["commercial_register"] == "CR-123"
+        assert kwargs["bank_name"] == "Pinned Bank"
+        assert kwargs["bank_account_number"] == "123456"
+        assert kwargs["iban"] == "AE00 0000 0000 0000 0000"
+        assert kwargs["swift_code"] == "PINNEDS1"
+        assert kwargs["footer_text_ar"] == "تذييل محدد"
+        assert kwargs["active_invoice_template"] == "gulf"
 
 
-def test_print_overlay_seeds_invoice_constants_from_tenant():
-    from models.invoice_settings import InvoiceSettings
+def test_print_overlay_reads_from_tenant_profile():
+    from types import SimpleNamespace
 
-    settings = InvoiceSettings()
-    t = MagicMock()
-    t.name_ar = "شركة أ"
-    t.name_en = "Co A"
-    t.address_ar = "شارع 1"
-    t.address_en = None  # falsy → keeps settings default
-    t.phone_1 = None
-    t.mobile = None
-    t.email = None
-    t.website = "https://x.example"
-    t.tax_number = "123456789"
-    t.commercial_register = "CR-1"
-    t.license_number = None
-    t.bank_name = "البنك العربي"
-    t.bank_account_number = "123"
-    t.iban = "AE07 0331 2345 6789 0123 456"
-    t.swift_code = "EBILAEAD"
-    t.payment_terms_ar = "الدفع عند التسليم"
-    t.payment_terms_en = None
-    t.footer_invoice_text_ar = "شكرًا لثقتكم"
-    t.footer_invoice_text_en = None
-    t.default_invoice_note_ar = "ملاحظة"
-    t.default_invoice_note_en = None
-    t.invoice_header_color = "#111111"
-    t.invoice_accent_color = "#222222"
-    t.active_invoice_template = "gulf"
-    InvoiceSettings._seed_from_tenant(settings, t)
-    assert settings.bank_name == "البنك العربي"
-    assert settings.iban.startswith("AE07")
-    assert settings.payment_terms_ar == "الدفع عند التسليم"
-    assert settings.footer_text_ar == "شكرًا لثقتكم"
-    assert settings.default_invoice_note_ar == "ملاحظة"
-    assert settings.header_color == "#111111"
-    assert settings.accent_color == "#222222"
-    assert settings.active_template == "gulf"
-    assert settings.website == "https://x.example"
+    from utils.invoice_profile import build_invoice_settings_snapshot
+
+    tenant = SimpleNamespace(
+        id=42,
+        name="Co A",
+        name_ar="شركة أ",
+        name_en="Co A",
+        address_ar="شارع 1",
+        address_en=None,
+        city=None,
+        country="AE",
+        phone_1=None,
+        phone_2=None,
+        mobile=None,
+        email=None,
+        website="https://x.example",
+        tax_number="123456789",
+        vat_number=None,
+        commercial_register="CR-1",
+        license_number=None,
+        logo_url="logo.png",
+        logo_dark_url=None,
+        favicon_url=None,
+        logo_path="",
+        stamp_url="",
+        signature_url="",
+        bank_name="البنك العربي",
+        bank_account_number="123",
+        iban="AE07 0331 2345 6789 0123 456",
+        swift_code="EBILAEAD",
+        payment_terms_ar="الدفع عند التسليم",
+        payment_terms_en=None,
+        footer_text_ar="شكرًا لثقتكم",
+        footer_text_en=None,
+        default_invoice_note_ar="ملاحظة",
+        default_invoice_note_en=None,
+        active_invoice_template="gulf",
+        paper_size="A4",
+        orientation="portrait",
+        show_logo=True,
+        logo_position="left",
+        logo_size="medium",
+        enable_qr_code=True,
+        qr_position="bottom-right",
+        enable_watermark=False,
+        watermark_text="",
+        watermark_image_path="",
+        watermark_opacity=None,
+        default_language="ar",
+        show_barcode=True,
+        show_page_numbers=True,
+        show_due_date=True,
+        show_terms=True,
+        facebook_url=None,
+        instagram_url=None,
+        whatsapp_number=None,
+    )
+    profile = build_invoice_settings_snapshot(tenant)
+    assert profile.bank_name == "البنك العربي"
+    assert profile.iban.startswith("AE07")
+    assert profile.payment_terms_ar == "الدفع عند التسليم"
+    assert profile.footer_text_ar == "شكرًا لثقتكم"
+    assert profile.default_invoice_note_ar == "ملاحظة"
+    assert profile.active_template == "gulf"
+    assert profile.website == "https://x.example"
 
 
 def test_create_rejects_invalid_trn(to_client):
@@ -150,7 +191,6 @@ def test_edit_relocks_rate_on_country_change(to_client):
         patch("routes.owner.tenants._invalidate_owner_changes"),
         patch("routes.owner.tenants._audit_owner_db_action"),
         patch("routes.owner.tenants.render_template", return_value="form"),
-        patch("services.invoice_profile_service.InvoiceProfileService.sync_from_tenant"),
     ):
         resp = to_client.post(
             f"/owner/tenants/{tenant.id}/edit",
@@ -175,7 +215,6 @@ def test_edit_relocks_rate_on_country_change(to_client):
 
 def test_partial_edit_preserves_unsubmitted_tax_and_invoice_fields(to_client):
     from tests.unit.routes.test_owner_tenants_coverage99 import _tenant
-    from utils.invoice_profile import sync_invoice_profile
 
     tenant = _tenant()
     tenant.vat_country = "AE"
@@ -187,57 +226,43 @@ def test_partial_edit_preserves_unsubmitted_tax_and_invoice_fields(to_client):
     tenant.bank_name = "Existing Bank"
     tenant.iban = "existing-iban"
     tenant.enable_store = True
-    overlay = MagicMock(bank_name="Existing Bank", iban="existing-iban", company_name_ar="Old")
     with (
         patch("services.owner_ops_service.OwnerOpsService.get_tenant_or_404", return_value=tenant),
         patch("routes.owner.tenants.db.session"),
-        patch(
-            "services.invoice_profile_service.InvoiceProfileService.sync_from_tenant",
-            side_effect=lambda t, fields: sync_invoice_profile(t, overlay, fields),
-        ) as sync,
         patch("routes.owner.tenants._invalidate_owner_changes"),
         patch("routes.owner.tenants._audit_owner_db_action"),
     ):
         response = to_client.post(f"/owner/tenants/{tenant.id}/edit", data={"name_ar": "New Name"})
 
     assert response.status_code == 302
-    assert tenant.name_ar == overlay.company_name_ar == "New Name"
+    assert tenant.name_ar == "New Name"
     assert tenant.default_tax_rate == Decimal("7.00")
     assert tenant.enable_tax and tenant.prices_include_vat and tenant.enable_store
     assert tenant.vat_number == "123456789012345"
     assert tenant.tax_number == "tax-number"
-    assert tenant.bank_name == overlay.bank_name == "Existing Bank"
-    assert tenant.iban == overlay.iban == "existing-iban"
-    sync.assert_called_once_with(tenant, {"name_ar"})
+    assert tenant.bank_name == "Existing Bank"
+    assert tenant.iban == "existing-iban"
 
 
 def test_edit_syncs_real_footer_column_and_allows_explicit_clear(to_client):
     from tests.unit.routes.test_owner_tenants_coverage99 import _tenant
-    from utils.invoice_profile import sync_invoice_profile
 
     tenant = _tenant()
     tenant.vat_country = "AE"
     tenant.default_tax_rate = Decimal("5")
     tenant.iban = "old-iban"
-    tenant.footer_invoice_text_ar = "old footer"
-    overlay = MagicMock(iban="old-iban", footer_text_ar="old footer")
+    tenant.footer_text_ar = "old footer"
     with (
         patch("services.owner_ops_service.OwnerOpsService.get_tenant_or_404", return_value=tenant),
         patch("routes.owner.tenants.db.session"),
-        patch(
-            "services.invoice_profile_service.InvoiceProfileService.sync_from_tenant",
-            side_effect=lambda t, fields: sync_invoice_profile(t, overlay, fields),
-        ),
         patch("routes.owner.tenants._invalidate_owner_changes"),
         patch("routes.owner.tenants._audit_owner_db_action"),
     ):
-        response = to_client.post(
-            f"/owner/tenants/{tenant.id}/edit", data={"footer_invoice_text_ar": "New footer", "iban": ""}
-        )
+        response = to_client.post(f"/owner/tenants/{tenant.id}/edit", data={"footer_text_ar": "New footer", "iban": ""})
 
     assert response.status_code == 302
-    assert tenant.footer_invoice_text_ar == overlay.footer_text_ar == "New footer"
-    assert tenant.iban is None and overlay.iban is None
+    assert tenant.footer_text_ar == "New footer"
+    assert tenant.iban is None
 
 
 def test_full_profile_form_can_disable_tax(to_client):
@@ -260,20 +285,15 @@ def test_full_profile_form_can_disable_tax(to_client):
     assert tenant.prices_include_vat is False
 
 
-def test_edit_company_identity_updates_profile_and_print_settings(to_client):
+def test_edit_company_identity_updates_profile_only(to_client):
     from tests.unit.routes.test_owner_tenants_coverage99 import _tenant
-    from utils.invoice_profile import sync_invoice_profile
 
     tenant = _tenant()
     tenant.vat_country = "AE"
-    overlay = MagicMock()
+    before = {field: getattr(tenant, field, None) for field in ("bank_name", "iban", "active_invoice_template")}
     with (
         patch("services.owner_ops_service.OwnerOpsService.get_tenant_or_404", return_value=tenant),
         patch("routes.owner.tenants.db.session"),
-        patch(
-            "services.invoice_profile_service.InvoiceProfileService.sync_from_tenant",
-            side_effect=lambda t, fields: sync_invoice_profile(t, overlay, fields),
-        ),
         patch("routes.owner.tenants._invalidate_owner_changes"),
         patch("routes.owner.tenants._audit_owner_db_action"),
     ):
@@ -289,7 +309,10 @@ def test_edit_company_identity_updates_profile_and_print_settings(to_client):
         )
 
     assert response.status_code == 302
-    assert tenant.address_en == overlay.address_en == "New street"
-    assert tenant.website == overlay.website == "https://x.example"
-    assert tenant.commercial_register == overlay.commercial_register == "CR-123"
+    assert tenant.address_en == "New street"
+    assert tenant.website == "https://x.example"
+    assert tenant.commercial_register == "CR-123"
     assert tenant.city == "Dubai" and tenant.country == "AE"
+    # Print/invoice constants that were not submitted keep their stored values.
+    for field, value in before.items():
+        assert getattr(tenant, field) == value

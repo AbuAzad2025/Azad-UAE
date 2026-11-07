@@ -116,15 +116,15 @@ class PrintService:
 
         Args:
             doc_type: Document type key (sale, receipt, payment).
-            tenant_id: Optional tenant ID to read active_template from InvoiceSettings.
+            tenant_id: Optional tenant ID to read the active template from the tenant profile.
             requested_template: Optional explicit template name from user query param.
 
         Returns:
             Template path string.
         """
-        from models.invoice_settings import InvoiceSettings
+        from services.invoice_profile_service import resolve_print_profile
 
-        settings = InvoiceSettings.get_active(tenant_id) if tenant_id else None
+        settings = resolve_print_profile(tenant_id) if tenant_id is not None else None
         active = settings.active_template if settings and settings.active_template else "modern"
 
         if doc_type == "sale":
@@ -152,13 +152,13 @@ class PrintService:
     @staticmethod
     def _get_tenant_context(tenant_id):
         """Build unified print context for any tenant-scoped document."""
-        from models.invoice_settings import InvoiceSettings
+        from services.invoice_profile_service import get_company_print_context
         from utils.tenant_branding import get_print_header_context
         from utils.tenanting import get_active_tenant_id
 
         tid = tenant_id or get_active_tenant_id(current_user)
-        tenant, settings, company = InvoiceSettings.company_print_context(tid)
-        branding = get_print_header_context(tid)
+        tenant, settings, company = get_company_print_context(tenant_id=tid)
+        branding = get_print_header_context(tid, profile=settings)
         return {
             "tenant": tenant,
             "settings": settings,

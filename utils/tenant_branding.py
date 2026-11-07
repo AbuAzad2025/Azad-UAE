@@ -1,10 +1,8 @@
-"""
-Central tenant branding resolution for UI and print documents.
+"""Tenant branding resolution for UI and print documents.
 
-Priority for tenant document logo:
-  invoice_settings.logo_path → invoice_settings.logo_url → tenant.logo_url
-  → tenant.logo_dark_url → static/assets/tenants/{slug}/ (disk)
-  → Azad platform logo (last resort)
+Tenant profile values are authoritative. ``file_hints`` may be supplied by an
+explicit caller for uploaded assets such as a transient print snapshot, but are
+not fetched from legacy settings here.
 """
 
 from __future__ import annotations
@@ -60,26 +58,29 @@ def _first_existing(*candidates: str | None) -> str:
 
 
 @cached_query(timeout=300, key_prefix="tenant_branding")
-def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
+def resolve_tenant_branding(tenant_id: int | None = None, profile=None) -> dict[str, Any]:
+    """Resolve branding from the pinned tenant profile and disk assets.
+
+    ``profile`` is an explicit caller-selected snapshot (for a document) and is
+    not accepted as a replacement tenant ID. Without it the tenant profile alone
+    supplies company fields.
+    """
     from extensions import db
-    from models.invoice_settings import InvoiceSettings
     from models.tenant import Tenant
-    from utils.tenant_assets import branding_for_tenant_slug
 
     tenant = db.session.get(Tenant, int(tenant_id)) if tenant_id else Tenant.get_current()
-    from utils.tenanting import without_tenant_scope
+    if tenant is None:
+        profile = None  # a print snapshot is pinned to one tenant; without it, it cannot resolve
+    from utils.tenant_assets import branding_for_tenant_slug
 
-    with without_tenant_scope():
-        settings = InvoiceSettings.get_active(tenant.id) if tenant else InvoiceSettings.get_active()
-
+    logo_path = getattr(profile, "logo_path", None) if profile is not None else None
     disk: dict[str, str] = {}
     slug = (tenant.slug or "").strip().lower() if tenant else ""
     if slug:
         disk = branding_for_tenant_slug(slug)
 
     logo = _first_existing(
-        settings.logo_path if settings else None,
-        settings.logo_url if settings else None,
+        logo_path,
         tenant.logo_url if tenant else None,
         tenant.logo_dark_url if tenant else None,
         disk.get("logo_url"),
@@ -94,15 +95,10 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
         f"assets/tenants/{slug}/headers/invoice-letterhead.png" if slug else None,
     )
 
-    company_name_ar = (settings.company_name_ar if settings else None) or (tenant.name_ar if tenant else None) or ""
-    company_name_en = (
-        (settings.company_name_en if settings else None)
-        or (tenant.name_en if tenant else None)
-        or (tenant.name if tenant else None)
-        or "Company"
-    )
-    address_ar = (settings.address_ar if settings else None) or (tenant.address_ar if tenant else None) or ""
-    address_en = (settings.address_en if settings else None) or (tenant.address_en if tenant else None) or ""
+    company_name_ar = (tenant.name_ar if tenant else None) or ""
+    company_name_en = (tenant.name_en if tenant else None) or (tenant.name if tenant else None) or "Company"
+    address_ar = (tenant.address_ar if tenant else None) or ""
+    address_en = (tenant.address_en if tenant else None) or ""
 
     return {
         "tenant_id": tenant.id if tenant else None,
@@ -119,14 +115,9 @@ def resolve_tenant_branding(tenant_id: int | None = None) -> dict[str, Any]:
         "company_name_en": company_name_en,
         "address_ar": address_ar,
         "address_en": address_en,
-        "phone": (
-            (settings.phone_1 if settings else None)
-            or (tenant.phone_1 if tenant else None)
-            or (tenant.mobile if tenant else None)
-            or ""
-        ),
-        "email": ((settings.email if settings else None) or (tenant.email if tenant else None) or ""),
-        "tax_number": ((settings.tax_number if settings else None) or (tenant.tax_number if tenant else None) or ""),
+        "phone": ((tenant.phone_1 if tenant else None) or (tenant.mobile if tenant else None) or ""),
+        "email": (tenant.email if tenant else None) or "",
+        "tax_number": (tenant.tax_number if tenant else None) or "",
         "vat_country": (tenant.vat_country if tenant else None) or FALLBACK_VAT_COUNTRY,
         "default_currency": (tenant.default_currency if tenant else None) or FALLBACK_CURRENCY,
         "timezone": (tenant.timezone if tenant else None) or FALLBACK_TIMEZONE,
@@ -143,24 +134,21 @@ def document_logo_relative_path(
     tenant_id: int | None = None,
 ) -> str:
     """Logo path for tenant invoices/receipts/reports (relative under static/)."""
-    branding = resolve_tenant_branding(tenant_id)
-    if settings is not None:
-        explicit = _first_existing(
-            getattr(settings, "logo_path", None),
-            getattr(settings, "logo_url", None),
-        )
-        if explicit:
-            return explicit
+    profile_path = getattr(settings, "logo_path", None) if settings is not None else None
+    logo = _first_existing(profile_path)
+    if logo:
+        return logo
+    branding = resolve_tenant_branding(tenant_id, profile=settings)
     return branding["logo_url"]
 
 
-def get_print_header_context(tenant_id: int | None = None) -> dict[str, Any]:
+def get_print_header_context(tenant_id: int | None = None, profile=None) -> dict[str, Any]:
     """Context dict for print/PDF templates."""
-    return resolve_tenant_branding(tenant_id)
+    return resolve_tenant_branding(tenant_id, profile=profile)
 
 
-def get_invoice_branding(tenant_id: int | None = None) -> dict[str, Any]:
-    return resolve_tenant_branding(tenant_id)
+def get_invoice_branding(tenant_id: int | None = None, profile=None) -> dict[str, Any]:
+    return resolve_tenant_branding(tenant_id, profile=profile)
 
 
 def branding_path_warnings(branding: dict[str, Any] | None) -> list[str]:

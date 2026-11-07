@@ -148,7 +148,6 @@ def register_context_processors(app):
         tenant_enable_pos = True
         try:
             from models import Tenant
-            from models.invoice_settings import InvoiceSettings
 
             tenant = Tenant.get_current()
             if tenant:
@@ -164,15 +163,6 @@ def register_context_processors(app):
                 tenant_enable_tax = bool(getattr(tenant, "enable_tax", True))
                 tenant_default_tax_rate = getattr(tenant, "default_tax_rate", None)
                 tenant_enable_pos = bool(getattr(tenant, "enable_pos", True))
-            if not tenant_name_ar:
-                inv = InvoiceSettings.get_active()
-                if inv:
-                    tenant_name_ar = (inv.company_name_ar or "").strip()
-                    tenant_name = (inv.company_name_en or "").strip() or tenant_name
-                    tenant_phone = (inv.phone_1 or "").strip() or tenant_phone
-                    tenant_email = (inv.email or "").strip() or tenant_email
-                    tenant_address = (inv.address_ar or inv.address_en or "").strip() or tenant_address
-                    tenant_logo_url = (inv.logo_url or "").strip() or tenant_logo_url
             if tenant:
                 from utils.tenant_branding import resolve_tenant_branding
 
@@ -180,10 +170,6 @@ def register_context_processors(app):
                 tenant_logo_url = branding.get("logo_url") or tenant_logo_url
                 tenant_logo_dark_url = branding.get("logo_dark_url") or tenant_logo_dark_url
                 tenant_favicon_url = branding.get("favicon_url") or tenant_favicon_url
-                if not tenant_name_ar:
-                    tenant_name_ar = branding.get("company_name_ar") or tenant_name_ar
-                if not tenant_name:
-                    tenant_name = branding.get("company_name_en") or tenant_name
         except Exception as e:
             try:
                 LoggingCore.log_error(

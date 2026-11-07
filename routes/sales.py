@@ -14,7 +14,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Customer, InvoiceSettings, Product, Sale
+from models import Customer, Product, Sale
 from services.logging_core import LoggingCore
 from services.sale_service import SaleService
 from services.stock_service import StockService
@@ -336,17 +336,17 @@ def print_invoice(**kwargs):
         return redirect(url_for("sales.index"))
 
     from config import Config
-    from models import Branch
+    from models import Branch, Tenant
+    from services.invoice_profile_service import resolve_print_profile
     from utils.tenant_branding import get_print_header_context
 
     tid = sale.tenant_id
-    settings = InvoiceSettings.get_active(tid)
+    settings = resolve_print_profile(tid)
     # Get default currency from tenant or config
-    from models import Tenant
 
     tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else Config.DEFAULT_CURRENCY
-    print_branding = get_print_header_context(tid)
+    print_branding = get_print_header_context(tid, profile=settings)
     print_branch = db.session.get(Branch, sale.branch_id) if sale.branch_id else None
     print_user_name = (
         sale.seller.get_display_name("ar")

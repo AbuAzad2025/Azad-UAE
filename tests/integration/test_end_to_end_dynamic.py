@@ -1068,10 +1068,6 @@ class TestInvoicePrintEngineIsolation:
             assert resp.status_code == 404
 
     def test_print_invoice_uses_dynamic_template_from_settings(self, app, db_session):
-        from models import (
-            InvoiceSettings,
-        )
-
         t = _make_tenant(db_session, "TPrint", "tprint", "AED")
         b = _make_branch(db_session, t.id, "Main", "MAIN")
         wh = _make_wh(db_session, t.id, b.id, True)
@@ -1087,13 +1083,8 @@ class TestInvoicePrintEngineIsolation:
             db_session.flush()
         seller.role.permissions.append(perm)
         db_session.flush()
-        # Set invoice settings to use 'minimal' template
-        inv_set = InvoiceSettings.get_active(t.id)
-        if not inv_set:
-            inv_set = InvoiceSettings(tenant_id=t.id, active_template="minimal", is_active=True)
-            db_session.add(inv_set)
-        else:
-            inv_set.active_template = "minimal"
+        # Tenant profile owns the active print template now.
+        t.active_invoice_template = "minimal"
         db_session.commit()
         from services.sale_service import SaleService
 

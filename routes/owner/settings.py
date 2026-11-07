@@ -20,7 +20,6 @@ from utils.regional_defaults import FALLBACK_CURRENCY
 
 from .common import (
     IntegrationSettings,
-    InvoiceSettings,
     SystemSettings,
     Tenant,
     User,
@@ -238,21 +237,6 @@ def company_info():
                 tenant.brand_color_secondary = request.form.get("brand_color_secondary", "#D4AF37")
 
                 tenant.updated_by = current_user.id
-
-                try:
-                    inv = InvoiceSettings.get_active(user=current_user)
-                    if inv:
-                        inv.company_name_ar = tenant.name_ar or inv.company_name_ar
-                        inv.company_name_en = tenant.name_en or tenant.name or inv.company_name_en
-                        inv.address_ar = tenant.address_ar or inv.address_ar
-                        inv.address_en = tenant.address_en or inv.address_en
-                        inv.phone_1 = tenant.phone_1 or inv.phone_1
-                        inv.phone_2 = tenant.phone_2 or inv.phone_2
-                        inv.email = tenant.email or inv.email
-                        inv.website = tenant.website or inv.website
-                        inv.tax_number = tenant.tax_number or inv.tax_number
-                except Exception as exc:
-                    logger.debug("sync invoice from tenant: %s", exc)
             _invalidate_owner_changes()
             flash(gettext("تم حفظ معلومات الشركة بنجاح"), "success")
             return redirect(url_for("owner.company_info"))
@@ -499,128 +483,102 @@ def store_payment_method_delete(method_id):
 @owner_or_company_admin
 def invoice_settings():
     """إعدادات ترويسات الفواتير وسندات القبض"""
-    settings = InvoiceSettings.get_active(user=current_user)
+    from services.invoice_profile_service import resolve_print_profile, save_print_profile
+
+    tid = get_active_tenant_id(current_user)
+    settings = resolve_print_profile(tid)
 
     if request.method == "POST":
         try:
+            from models.tenant import Tenant
+
+            tenant = db.session.get(Tenant, tid)
+            if tenant is None:
+                abort(404)
+            data = {
+                key: request.form.get(key, "").strip()
+                for key in (
+                    "company_name_ar",
+                    "company_name_en",
+                    "address_ar",
+                    "address_en",
+                    "phone_1",
+                    "phone_2",
+                    "email",
+                    "website",
+                    "tax_number",
+                    "commercial_register",
+                    "license_number",
+                    "bank_name",
+                    "bank_account_number",
+                    "iban",
+                    "swift_code",
+                    "header_color",
+                    "accent_color",
+                    "text_color",
+                    "payment_terms_ar",
+                    "payment_terms_en",
+                    "terms_conditions_ar",
+                    "terms_conditions_en",
+                    "footer_text_ar",
+                    "footer_text_en",
+                    "default_invoice_note_ar",
+                    "default_invoice_note_en",
+                    "default_receipt_note_ar",
+                    "default_receipt_note_en",
+                    "active_template",
+                    "logo_position",
+                    "logo_size",
+                    "qr_position",
+                    "watermark_text",
+                    "default_language",
+                    "facebook_url",
+                    "instagram_url",
+                    "whatsapp_number",
+                )
+            }
+            decimal_opacity = request.form.get("watermark_opacity")
+            if decimal_opacity is not None:
+                data["watermark_opacity"] = Decimal(str(decimal_opacity))
+            for key in (
+                "show_logo",
+                "show_barcode",
+                "show_page_numbers",
+                "show_due_date",
+                "show_terms",
+                "enable_qr_code",
+                "enable_watermark",
+            ):
+                data[key] = request.form.get(key) == "on"
+            data["paper_size"] = request.form.get("paper_size", "A4")
+            data["orientation"] = request.form.get("orientation", "portrait")
+
+            uploaded = {}
+
+            def _save_upload(field, directory, prefix):
+                file = request.files.get(field) if field in request.files else None
+                if not (file and file.filename):
+                    return None
+                import os
+
+                from werkzeug.utils import secure_filename
+
+                filename = secure_filename(file.filename)
+                filename = f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+                folder = os.path.join("static", "uploads", directory)
+                os.makedirs(folder, exist_ok=True)
+                file.save(os.path.join(folder, filename))
+                return f"uploads/{directory}/{filename}"
+
+            if path := _save_upload("company_logo", "logos", "logo"):
+                uploaded["logo_path"] = path
+            if path := _save_upload("watermark_image", "watermarks", "watermark"):
+                uploaded["watermark_image_path"] = path
             with atomic_transaction("invoice_settings"):
-                # Company Info
-                settings.company_name_ar = request.form.get("company_name_ar", "").strip()
-                settings.company_name_en = request.form.get("company_name_en", "").strip()
-
-                # Contact Info
-                settings.address_ar = request.form.get("address_ar", "").strip()
-                settings.address_en = request.form.get("address_en", "").strip()
-                settings.phone_1 = request.form.get("phone_1", "").strip()
-                settings.phone_2 = request.form.get("phone_2", "").strip()
-                settings.email = request.form.get("email", "").strip()
-                settings.website = request.form.get("website", "").strip()
-
-                settings.tax_number = request.form.get("tax_number", "").strip()
-                settings.commercial_register = request.form.get("commercial_register", "").strip()
-                settings.license_number = request.form.get("license_number", "").strip()
-
-                # Bank Info
-                settings.bank_name = request.form.get("bank_name", "").strip()
-                settings.bank_account_number = request.form.get("bank_account_number", "").strip()
-                settings.iban = request.form.get("iban", "").strip()
-                settings.swift_code = request.form.get("swift_code", "").strip()
-
-                # Design
-                settings.header_color = request.form.get("header_color", "#667eea").strip()
-                settings.accent_color = request.form.get("accent_color", "#764ba2").strip()
-                settings.text_color = request.form.get("text_color", "#333333").strip()
-
-                # Layout
-                settings.show_logo = request.form.get("show_logo") == "on"
-                settings.logo_position = request.form.get("logo_position", "left")
-                settings.logo_size = request.form.get("logo_size", "medium")
-
-                # Footer
-                settings.footer_text_ar = request.form.get("footer_text_ar", "").strip()
-                settings.footer_text_en = request.form.get("footer_text_en", "").strip()
-                settings.show_terms = request.form.get("show_terms") == "on"
-
-                # Terms
-                settings.terms_conditions_ar = request.form.get("terms_conditions_ar", "").strip()
-                settings.terms_conditions_en = request.form.get("terms_conditions_en", "").strip()
-                settings.payment_terms_ar = request.form.get("payment_terms_ar", "").strip()
-                settings.payment_terms_en = request.form.get("payment_terms_en", "").strip()
-
-                # Notes
-                settings.default_invoice_note_ar = request.form.get("default_invoice_note_ar", "").strip()
-                settings.default_invoice_note_en = request.form.get("default_invoice_note_en", "").strip()
-                settings.default_receipt_note_ar = request.form.get("default_receipt_note_ar", "").strip()
-                settings.default_receipt_note_en = request.form.get("default_receipt_note_en", "").strip()
-
-                # QR & Watermark
-                settings.enable_qr_code = request.form.get("enable_qr_code") == "on"
-                settings.qr_position = request.form.get("qr_position", "bottom-right")
-                settings.enable_watermark = request.form.get("enable_watermark") == "on"
-                settings.watermark_text = request.form.get("watermark_text", "").strip()
-
-                settings.paper_size = request.form.get("paper_size", "A4")
-                settings.orientation = request.form.get("orientation", "portrait")
-                settings.default_language = request.form.get("default_language", "ar")
-
-                # Additional
-                settings.show_barcode = request.form.get("show_barcode") == "on"
-                settings.show_page_numbers = request.form.get("show_page_numbers") == "on"
-                settings.show_due_date = request.form.get("show_due_date") == "on"
-
-                # Social Media
-                settings.facebook_url = request.form.get("facebook_url", "").strip()
-                settings.instagram_url = request.form.get("instagram_url", "").strip()
-                settings.whatsapp_number = request.form.get("whatsapp_number", "").strip()
-
-                # Template
-                settings.active_template = request.form.get("active_template", "modern")
-
-                # Handle logo upload
-                if "company_logo" in request.files:
-                    logo_file = request.files["company_logo"]
-                    if logo_file and logo_file.filename:
-                        import os
-
-                        from werkzeug.utils import secure_filename
-
-                        filename = secure_filename(logo_file.filename)
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        filename = f"logo_{timestamp}_{filename}"
-
-                        upload_folder = os.path.join("static", "uploads", "logos")
-                        os.makedirs(upload_folder, exist_ok=True)
-
-                        filepath = os.path.join(upload_folder, filename)
-                        logo_file.save(filepath)
-
-                        settings.logo_path = f"uploads/logos/{filename}"
-
-                # Handle watermark image upload
-                if "watermark_image" in request.files:
-                    watermark_file = request.files["watermark_image"]
-                    if watermark_file and watermark_file.filename:
-                        import os
-
-                        from werkzeug.utils import secure_filename
-
-                        filename = secure_filename(watermark_file.filename)
-                        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                        filename = f"watermark_{timestamp}_{filename}"
-
-                        upload_folder = os.path.join("static", "uploads", "watermarks")
-                        os.makedirs(upload_folder, exist_ok=True)
-
-                        filepath = os.path.join(upload_folder, filename)
-                        watermark_file.save(filepath)
-
-                        settings.watermark_image_path = f"uploads/watermarks/{filename}"
-
-                settings.updated_by = current_user.id
+                save_print_profile(tenant, data, allow_files=uploaded)
             _invalidate_owner_changes()
             flash(gettext("تم حفظ إعدادات الترويسات بنجاح"), "success")
             return redirect(url_for("owner.invoice_settings"))
-
         except Exception as e:
             refuse(e, context="owner invoice settings save")
 
@@ -632,7 +590,7 @@ def invoice_settings():
 @owner_or_company_admin
 def preview_invoice(template):
     """معاينة قالب الفاتورة"""
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import resolve_print_profile
     from utils.auth_helpers import is_global_owner_user
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
@@ -643,15 +601,8 @@ def preview_invoice(template):
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
         abort(403)
-    from utils.tenanting import without_tenant_scope
-
-    if tid != get_active_tenant_id(current_user):
-        with without_tenant_scope():
-            settings = InvoiceSettings.get_active(tid)
-            print_branding = get_print_header_context(tid)
-    else:
-        settings = InvoiceSettings.get_active(tid)
-        print_branding = get_print_header_context(tid)
+    settings = resolve_print_profile(tid)
+    print_branding = get_print_header_context(tid, profile=settings)
     from utils.number_to_arabic import number_to_arabic_words
     from utils.qr_generator import generate_qr_data_url
 
@@ -761,7 +712,7 @@ def preview_invoice(template):
 @owner_or_company_admin
 def preview_receipt(template):
     """معاينة قالب سند القبض"""
-    from models.invoice_settings import InvoiceSettings
+    from services.invoice_profile_service import resolve_print_profile
     from utils.auth_helpers import is_global_owner_user
     from utils.tenant_branding import get_print_header_context
     from utils.tenanting import get_active_tenant_id
@@ -772,15 +723,8 @@ def preview_receipt(template):
     tid = request.args.get("tenant_id", type=int) or get_active_tenant_id(current_user)
     if request.args.get("tenant_id") and not is_global_owner_user(current_user):
         abort(403)
-    from utils.tenanting import without_tenant_scope
-
-    if tid != get_active_tenant_id(current_user):
-        with without_tenant_scope():
-            settings = InvoiceSettings.get_active(tid)
-            print_branding = get_print_header_context(tid)
-    else:
-        settings = InvoiceSettings.get_active(tid)
-        print_branding = get_print_header_context(tid)
+    settings = resolve_print_profile(tid)
+    print_branding = get_print_header_context(tid, profile=settings)
     try:
         from models import Tenant
 
@@ -885,6 +829,7 @@ def preview_receipt(template):
 def tax_settings():
     from decimal import Decimal
 
+    from utils.country_tax import COUNTRY_TAX_PROFILES
     from utils.tax_settings import VAT_COUNTRY_LABELS, suggested_rate_for_country
 
     tenant = Tenant.get_current(user=current_user)
@@ -926,6 +871,7 @@ def tax_settings():
         "owner/tax_settings.html",
         tenant=tenant,
         vat_countries=VAT_COUNTRY_LABELS,
+        statutory_rates={code: str(p["vat_rate"]) for code, p in COUNTRY_TAX_PROFILES.items()},
     )
 
 

@@ -48,24 +48,22 @@ class TestSeedFromTenant:
 
 
 class TestGetActive:
-    def test_creates_then_reuses(self, db_session, sample_tenant):
-        first = InvoiceSettings.get_active(sample_tenant.id)
-        assert first is not None
-        assert first.tenant_id == sample_tenant.id
-        second = InvoiceSettings.get_active(sample_tenant.id)
-        assert second.id == first.id
+    def test_returns_snapshot_for_tenant(self, db_session, sample_tenant):
+        snapshot = InvoiceSettings.get_active(sample_tenant.id)
+        assert snapshot is not None
+        assert snapshot.tenant_id == sample_tenant.id
+
+    def test_never_persists_rows(self, db_session, sample_tenant):
+        InvoiceSettings.get_active(sample_tenant.id)
+        assert db_session.query(InvoiceSettings).filter_by(tenant_id=sample_tenant.id).count() == 0
 
     def test_unknown_tenant_falls_back_to_none(self, db_session):
         assert InvoiceSettings.get_active(999999999) is None
 
-    def test_no_context_no_global_returns_none(self, db_session):
-        db_session.query(InvoiceSettings).delete()
-        db_session.flush()
+    def test_no_context_returns_none(self):
         assert InvoiceSettings.get_active() is None
 
-    def test_user_resolution_failure_falls_back(self, db_session):
-        db_session.query(InvoiceSettings).delete()
-        db_session.flush()
+    def test_user_resolution_failure_returns_none(self):
         user = SimpleNamespace(is_authenticated=True)
         assert InvoiceSettings.get_active(user=user) is None
 
@@ -83,18 +81,17 @@ class TestCompanyPrintContext:
         assert "name_ar" in branding
         assert "logo_url" in branding
 
-    def test_without_tenant_no_user(self, db_session):
+    def test_without_tenant_no_user(self):
         tenant, settings, branding = InvoiceSettings.company_print_context()
-        assert branding["name_ar"] is not None or branding["name_ar"] is None
-        assert "phone" in branding
+        assert tenant is None and settings is None and branding is None
 
 
 class TestInvoiceSettingsMisc:
     def test_repr(self):
         assert "شركتي" in repr(InvoiceSettings(company_name_ar="شركتي"))
 
-    def test_to_dict_keys(self, db_session, sample_tenant):
-        settings = InvoiceSettings.get_active(sample_tenant.id)
+    def test_to_dict_keys(self):
+        settings = InvoiceSettings()
         data = settings.to_dict()
         for key in (
             "company_name_ar",

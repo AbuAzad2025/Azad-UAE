@@ -241,16 +241,11 @@ def _settings_class(settings):
     return cls
 
 
-def _invoice_settings_class(invoice_settings):
-    cls = MagicMock(name="InvoiceSettings")
-    cls.get_active = MagicMock(return_value=invoice_settings)
-    return cls
-
-
 def _patch_invoice_settings(stack, invoice_settings):
-    inv_cls = _invoice_settings_class(invoice_settings)
-    stack.enter_context(patch("routes.owner.InvoiceSettings", inv_cls))
-    stack.enter_context(patch("models.invoice_settings.InvoiceSettings", inv_cls))
+    mock_db = MagicMock(name="settings_db")
+    mock_db.session.get.return_value = invoice_settings
+    stack.enter_context(patch("services.invoice_profile_service.resolve_print_profile", return_value=invoice_settings))
+    stack.enter_context(patch("routes.owner.settings.db", mock_db))
 
 
 def _integration_settings_class():
@@ -2483,7 +2478,6 @@ class TestOwnerExtendedCoverage:
         inv_cls = MagicMock()
         inv_cls.get_active = MagicMock(return_value=settings)
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("routes.owner.render_template", return_value="ok"),
         ):
             resp = owner_client.get("/owner/preview-invoice/modern")
@@ -3073,16 +3067,12 @@ class TestOwnerGapClosure:
     def test_invoice_settings_uploads_and_error(self, owner_client, tmp_path):
         from io import BytesIO
 
-        settings = MagicMock()
-        settings_cls = _invoice_settings_class(settings)
         data = {
             "company_name_ar": "شركة",
             "company_logo": (BytesIO(b"png"), "logo.png"),
             "watermark_image": (BytesIO(b"png"), "wm.png"),
         }
         with (
-            patch("routes.owner.InvoiceSettings", settings_cls),
-            patch("models.invoice_settings.InvoiceSettings", settings_cls),
             patch("os.makedirs"),
             patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
         ):
@@ -3094,8 +3084,6 @@ class TestOwnerGapClosure:
             )
         assert resp.status_code in (302, 303, 200)
         with (
-            patch("routes.owner.InvoiceSettings", settings_cls),
-            patch("models.invoice_settings.InvoiceSettings", settings_cls),
             patch("routes.owner.db"),
             patch("utils.db_safety.db.session") as mock_safety_session,
         ):
@@ -3110,9 +3098,7 @@ class TestOwnerGapClosure:
     def test_preview_receipt_full(self, owner_client):
         settings = MagicMock()
         settings.enable_qr_code = True
-        inv_cls = _invoice_settings_class(settings)
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("routes.owner.render_template", return_value="ok"),
             patch("routes.owner.resolve_default_currency", return_value="AED"),
         ):
@@ -3381,7 +3367,6 @@ class TestOwnerGapClosure:
         inv_cls.get_active.side_effect = RuntimeError("inv sync")
         with (
             patch("routes.owner.Tenant", tenant_cls),
-            patch("routes.owner.InvoiceSettings", inv_cls),
         ):
             resp = owner_client.post(
                 "/owner/company-info",
@@ -3435,9 +3420,7 @@ class TestOwnerGapClosure:
     def test_preview_invoice_tenant_currency_fallback(self, owner_client):
         settings = MagicMock()
         settings.enable_qr_code = False
-        inv_cls = _invoice_settings_class(settings)
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch(
                 "routes.owner.resolve_default_currency",
                 side_effect=RuntimeError("curr"),
@@ -3448,10 +3431,7 @@ class TestOwnerGapClosure:
         assert resp.status_code == 200
 
     def test_preview_receipt_currency_fallback(self, owner_client):
-        settings = MagicMock()
-        inv_cls = _invoice_settings_class(settings)
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch(
                 "routes.owner.resolve_default_currency",
                 side_effect=RuntimeError("curr"),
@@ -3760,12 +3740,8 @@ class TestOwnerDirectCalls:
         from routes.owner import invoice_settings, owner_bp
 
         app = app_factory(owner_bp)
-        settings = MagicMock()
-        inv_cls = _invoice_settings_class(settings)
         with (
             _owner_route_patches(),
-            patch("routes.owner.InvoiceSettings", inv_cls),
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
             patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
             app.test_request_context(
@@ -4110,9 +4086,7 @@ class TestOwnerFinalGaps:
     def test_preview_receipt_full_render(self, owner_client):
         settings = MagicMock()
         settings.enable_qr_code = True
-        inv_cls = _invoice_settings_class(settings)
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("routes.owner.render_template", return_value="ok"),
         ):
             resp = owner_client.get("/owner/preview-receipt/modern")
@@ -4415,14 +4389,12 @@ class TestOwnerLastMile:
     def test_preview_receipt_calls_get_source_info(self, owner_client):
         settings = MagicMock()
         settings.enable_qr_code = False
-        inv_cls = _invoice_settings_class(settings)
 
         def _render(name, **ctx):
             ctx["receipt"].get_source_info()
             return "ok"
 
         with (
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("routes.owner.render_template", side_effect=_render),
         ):
             resp = owner_client.get("/owner/preview-receipt/modern")
@@ -4434,13 +4406,9 @@ class TestOwnerLastMile:
         from routes.owner import invoice_settings, owner_bp
 
         app = app_factory(owner_bp)
-        settings = MagicMock()
-        inv_cls = _invoice_settings_class(settings)
 
         with (
             _owner_route_patches(),
-            patch("routes.owner.InvoiceSettings", inv_cls),
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs"),
             patch("os.path.join", side_effect=lambda *a: str(tmp_path) + "/" + a[-1]),
             app.test_request_context(
@@ -4790,7 +4758,6 @@ class TestOwnerHundredPercent:
         from io import BytesIO
 
         settings = MagicMock()
-        inv_cls = _invoice_settings_class(settings)
         logo_path = str(tmp_path / "logo.png")
         wm_path = str(tmp_path / "watermark.png")
         join_calls = {"n": 0}
@@ -4802,8 +4769,6 @@ class TestOwnerHundredPercent:
             return logo_path
 
         with (
-            patch("routes.owner.InvoiceSettings", inv_cls),
-            patch("models.invoice_settings.InvoiceSettings", inv_cls),
             patch("os.makedirs") as makedirs,
             patch("os.path.join", side_effect=_join),
         ):
