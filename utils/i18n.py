@@ -4066,6 +4066,10 @@ TRANSLATIONS = {
     "Filtered_View_Current_Branch": {"ar": "عرض مفلتر على فرعك الحالي", "en": "Filtered view on your current branch"},
     "Quick_Settings": {"ar": "إعدادات سريعة", "en": "Quick Settings"},
     "Tax_Rate_VAT": {"ar": "نسبة الضريبة (VAT)", "en": "Tax Rate (VAT)"},
+    "Statutory_Rate_Locked": {
+        "ar": "النسبة تُحدَّد من دولة الضريبة تلقائيًا (قانونية) — الفواتير تستخدمها فقط، أو 0 للمعفاة",
+        "en": "The rate is set from the tax country automatically (statutory) — invoices use it, or 0 for exempt",
+    },
     "Prices_Include_VAT": {"ar": "الأسعار شاملة الضريبة", "en": "Prices Include VAT"},
     "Logo_URL_Placeholder": {"ar": "رابط الشعار", "en": "Logo URL"},
     "Warehouse_Negative_Sales": {"ar": "البيع بالسالب للمستودعات", "en": "Warehouse Negative Sales"},

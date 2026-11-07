@@ -60,6 +60,42 @@
               <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255" id="f_address_ar">{{ tenant.address_ar or '' }}</textarea>
             </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-percent mr-2"></i>{{ t('Tax_Settings') }} + {{ t('Logo_URL') }}</h5>
+          <p class="text-muted small mb-3">{{ t('Statutory_Rate_Locked') }}</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_vat_country">{{ t('Tax_Country') }}</label>
+              <select name="vat_country" class="form-select" id="input_vat_country" aria-label="vat country">
+                {% for code, label in (vat_countries|default({})).items() %}
+                <option value="{{ code }}" {% if (tenant.vat_country|default('PS')) == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input type="checkbox" class="form-check-input" name="enable_tax" id="input_enable_tax" {% if tenant.enable_tax %}checked{% endif %} aria-label="enable tax">
+                <label class="form-check-label" for="input_enable_tax">{{ t('Enable_Tax_VAT_For_Company') }}</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="prices_include_vat" id="input_prices_include_vat" {% if tenant.prices_include_vat %}checked{% endif %} aria-label="prices include vat">
+                <label class="form-check-label" for="input_prices_include_vat">{{ t('Prices_Include_VAT') }}</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_vat_number">{{ t('VAT_TRN_Number') }}</label>
+              <input type="text" name="vat_number" class="form-control" value="{{ tenant.vat_number or '' }}" id="input_vat_number" aria-label="vat number" maxlength="20" placeholder="{{ t('VAT_TRN_Number') }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_tax_number">{{ t('General_Tax_Number') }}</label>
+              <input type="text" name="tax_number" class="form-control" value="{{ tenant.tax_number or '' }}" id="input_tax_number" aria-label="tax number" maxlength="20" placeholder="{{ t('General_Tax_Number') }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_logo_url">{{ t('Logo_URL') }}</label>
+              <input type="text" name="logo_url" class="form-control" value="{{ tenant.logo_url or '' }}" id="input_logo_url" aria-label="logo url" placeholder="{{ t('Logo_URL_Placeholder') }}">
+            </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">{{ t('Max_Users') }}</label>
               <input type="number" name="max_users" class="form-control" value="{{ tenant.max_users if tenant.max_users is not none else 5 }}" min="-1" id="input_max_users" aria-label="max users">

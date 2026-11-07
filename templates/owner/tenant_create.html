@@ -64,6 +64,42 @@
           </div>
 
           <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-percent mr-2"></i>{{ t('Tax_Settings') }} + {{ t('Logo_URL') }}</h5>
+          <p class="text-muted small mb-3">{{ t('Statutory_Rate_Locked') }}</p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_vat_country">{{ t('Tax_Country') }}</label>
+              <select name="vat_country" class="form-select" id="input_vat_country" aria-label="vat country">
+                {% for code, label in (vat_countries|default({})).items() %}
+                <option value="{{ code }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <div class="form-check mt-4">
+                <input type="checkbox" class="form-check-input" name="enable_tax" id="input_enable_tax" checked aria-label="enable tax">
+                <label class="form-check-label" for="input_enable_tax">{{ t('Enable_Tax_VAT_For_Company') }}</label>
+              </div>
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" name="prices_include_vat" id="input_prices_include_vat" aria-label="prices include vat">
+                <label class="form-check-label" for="input_prices_include_vat">{{ t('Prices_Include_VAT') }}</label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_vat_number">{{ t('VAT_TRN_Number') }}</label>
+              <input type="text" name="vat_number" class="form-control" id="input_vat_number" aria-label="vat number" maxlength="20" placeholder="{{ t('VAT_TRN_Number') }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_tax_number">{{ t('General_Tax_Number') }}</label>
+              <input type="text" name="tax_number" class="form-control" id="input_tax_number" aria-label="tax number" maxlength="20" placeholder="{{ t('General_Tax_Number') }}">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_logo_url">{{ t('Logo_URL') }}</label>
+              <input type="text" name="logo_url" class="form-control" id="input_logo_url" aria-label="logo url" placeholder="{{ t('Logo_URL_Placeholder') }}">
+            </div>
+          </div>
+
+          <hr class="my-4">
           <h5 class="fw-semibold text-primary mb-3"><i class="bi bi-box-seam mr-2"></i>{{ t('Subscription_And_Plan') }}</h5>
           <div class="row g-3">
             <div class="col-md-4">

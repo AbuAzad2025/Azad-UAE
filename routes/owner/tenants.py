@@ -202,6 +202,27 @@ def tenant_create():
                     return False
                 return None
 
+            # Tax & invoice constants are fixed at creation from the
+            # tenant's profile (the user's rule: statutory rates are never
+            # "played with" — always standard-or-exempt). The rate itself is
+            # derived server-side from vat_country; it is never read from the
+            # form, so the stranded legacy default (5%) can never leak into a
+            # tenant whose country bills a different rate.
+            from utils.country_tax import (
+                validate_tax_number,
+                vat_rate_for_country,
+            )
+            from utils.regional_defaults import FALLBACK_VAT_COUNTRY
+
+            vat_country = (request.form.get("vat_country") or FALLBACK_VAT_COUNTRY).strip().upper()[:2]
+            if vat_country not in ("PS", "IL", "AE", "SA"):
+                vat_country = FALLBACK_VAT_COUNTRY
+            vat_number = (request.form.get("vat_number") or "").strip() or None
+            tax_number = (request.form.get("tax_number") or "").strip() or None
+            for _candidate, _label in ((vat_number, "VAT_TRN_Number"), (tax_number, "General_Tax_Number")):
+                if _candidate and not validate_tax_number(_candidate, vat_country):
+                    flash(gettext(f"رقم غير صالح لدولة {vat_country}."), "danger")
+                    return redirect(url_for("owner.tenant_create"))
             tenant = Tenant(
                 name=name_ar,
                 name_ar=name_ar,
@@ -213,6 +234,13 @@ def tenant_create():
                 email=request.form.get("email", "").strip() or None,
                 address_ar=request.form.get("address_ar", "").strip() or None,
                 default_currency=default_currency,
+                vat_country=vat_country,
+                default_tax_rate=vat_rate_for_country(vat_country),
+                enable_tax=(request.form.get("enable_tax") == "on"),
+                prices_include_vat=(request.form.get("prices_include_vat") == "on"),
+                vat_number=vat_number,
+                tax_number=tax_number,
+                logo_url=(request.form.get("logo_url") or "").strip() or None,
                 max_users=_form_int("max_users", 5),
                 max_products=_form_int("max_products", 1000),
                 max_customers=_form_int("max_customers", 500),
@@ -307,7 +335,9 @@ def tenant_create():
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
             flash(gettext(f"خطأ في إنشاء التينانت: {str(e)}"), "danger")
-    return render_template("owner/tenant_create.html", packages=packages)
+    from utils.tax_settings import VAT_COUNTRY_LABELS
+
+    return render_template("owner/tenant_create.html", packages=packages, vat_countries=VAT_COUNTRY_LABELS)
 
 
 @owner_bp.route("/tenants/<int:tenant_id>/suspend", methods=["POST"])
@@ -414,6 +444,28 @@ def tenant_edit(tenant_id):
                 tenant.phone_2 = (request.form.get("phone_2") or tenant.phone_2 or "").strip() or None
                 tenant.email = (request.form.get("email") or tenant.email or "").strip() or None
                 tenant.address_ar = (request.form.get("address_ar") or tenant.address_ar or "").strip() or None
+                # Tax & invoice constants travel with the profile: changing
+                # the VAT country re-locks the rate to that country's
+                # statutory rate (never whatever the operator typed).
+                from utils.country_tax import validate_tax_number, vat_rate_for_country
+                from utils.regional_defaults import FALLBACK_VAT_COUNTRY
+
+                _country = (
+                    (request.form.get("vat_country") or tenant.vat_country or FALLBACK_VAT_COUNTRY).strip().upper()[:2]
+                )
+                if _country not in ("PS", "IL", "AE", "SA"):
+                    _country = tenant.vat_country or FALLBACK_VAT_COUNTRY
+                _vat_number = (request.form.get("vat_number") or "").strip() or None
+                _tax_number = (request.form.get("tax_number") or "").strip() or None
+                for _candidate in (_vat_number, _tax_number):
+                    if _candidate and not validate_tax_number(_candidate, _country):
+                        raise ValueError(gettext(f"رقم غير صالح لدولة {_country}."))
+                tenant.vat_country = _country
+                tenant.default_tax_rate = vat_rate_for_country(_country)
+                tenant.enable_tax = request.form.get("enable_tax") == "on"
+                tenant.vat_number = _vat_number
+                tenant.tax_number = _tax_number
+                tenant.logo_url = (request.form.get("logo_url") or tenant.logo_url or "").strip() or None
                 # Keeps the tenant's own currency when the field is submitted
                 # blank, for the reason _text gives: an emptied <input> posts as
                 # "" and form.get's fallback only helps when the field is
@@ -470,7 +522,9 @@ def tenant_edit(tenant_id):
         except Exception as e:
             flash(gettext(f"خطأ في تحديث التينانت: {str(e)}"), "danger")
 
-    return render_template("owner/tenant_edit.html", tenant=tenant)
+    from utils.tax_settings import VAT_COUNTRY_LABELS
+
+    return render_template("owner/tenant_edit.html", tenant=tenant, vat_countries=VAT_COUNTRY_LABELS)
 
 
 @owner_bp.route("/tenants/<int:tenant_id>/delete", methods=["POST"])
