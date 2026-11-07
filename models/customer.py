@@ -93,11 +93,6 @@ class Customer(db.Model):
         # transaction to be holding: no lock is needed and none is possible.
         if self.id is None:
             return self
-        # Skip lock for POS walk-in customer (shared dummy customer for cash sales).
-        # Its balance is not critical for accounting and locking it causes
-        # contention/deadlocks under high concurrency.
-        if getattr(self, "notes", None) and "[POS-WALKIN]" in self.notes:
-            return self
         from utils.db_safety import lock_row_for_update
 
         return lock_row_for_update(type(self), self.id, label=f"Customer({self.id})")

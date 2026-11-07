@@ -83,31 +83,67 @@ class AiActionsQueryService:
             .all()
         )
 
-    # ── option-2 full lists (legacy unscoped behaviour preserved) ────────────
+    # ── option-2 full lists (tenant-scoped) ──────────────────────────────────
 
     @staticmethod
-    def all_active_sales():
+    def all_active_sales(tid=None):
         from models.sale import Sale
 
-        return Sale.query.filter_by(is_active=True).all()
+        q = Sale.query.filter_by(is_active=True)
+        if tid is not None:
+            q = q.filter_by(tenant_id=tid)
+        else:
+            from utils.tenanting import get_active_tenant_id
+
+            active = get_active_tenant_id()
+            if active is not None:
+                q = q.filter_by(tenant_id=active)
+        return q.all()
 
     @staticmethod
-    def all_active_expenses():
+    def all_active_expenses(tid=None):
         from models.expense import Expense
 
-        return Expense.query.filter_by(is_active=True).all()
+        q = Expense.query.filter_by(is_active=True)
+        if tid is not None:
+            q = q.filter_by(tenant_id=tid)
+        else:
+            from utils.tenanting import get_active_tenant_id
+
+            active = get_active_tenant_id()
+            if active is not None:
+                q = q.filter_by(tenant_id=active)
+        return q.all()
 
     @staticmethod
-    def all_active_purchases():
+    def all_active_purchases(tid=None):
         from models.purchase import Purchase
 
-        return Purchase.query.filter_by(is_active=True).all()
+        q = Purchase.query.filter_by(is_active=True)
+        if tid is not None:
+            q = q.filter_by(tenant_id=tid)
+        else:
+            from utils.tenanting import get_active_tenant_id
+
+            active = get_active_tenant_id()
+            if active is not None:
+                q = q.filter_by(tenant_id=active)
+        return q.all()
 
     @staticmethod
-    def all_active_cheques():
+    def all_active_cheques(tid=None):
         from models.cheque import Cheque
 
-        return Cheque.query.filter_by(is_active=True).all()
+        q = Cheque.query.filter_by(is_active=True)
+        if tid is not None:
+            q = q.filter_by(tenant_id=tid)
+        else:
+            from utils.tenanting import get_active_tenant_id
+
+            active = get_active_tenant_id()
+            if active is not None:
+                q = q.filter_by(tenant_id=active)
+        return q.all()
 
     @staticmethod
     def active_users():

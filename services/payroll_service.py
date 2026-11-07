@@ -86,10 +86,10 @@ class PayrollService:
 
         advance = SalaryAdvance(
             employee_id=employee_id,
-            amount=Decimal(amount),
-            total_amount=Decimal(amount),
+            amount=Decimal(str(amount or "0")),
+            total_amount=Decimal(str(amount or "0")),
             deducted_amount=Decimal("0"),
-            remaining_amount=Decimal(amount),
+            remaining_amount=Decimal(str(amount or "0")),
             description=description,
             created_by=user_id,
             status="approved",

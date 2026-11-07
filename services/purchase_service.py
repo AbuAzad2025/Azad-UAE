@@ -751,6 +751,7 @@ class PurchaseService:
 
         if purchase.supplier:
             supplier = purchase.supplier
+            supplier._locked()
             supplier.total_purchases_aed = max(
                 (supplier.total_purchases_aed or _D("0")) - _D(str(purchase_return.amount_aed or 0)),
                 _D("0"),

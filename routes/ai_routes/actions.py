@@ -2012,7 +2012,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("فاتورة"):
-            sales = AiActionsQueryService.all_active_sales()
+            sales = AiActionsQueryService.all_active_sales(tid)
             if sales:
                 sales_list = "\n".join(
                     [
@@ -2036,7 +2036,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مصروف"):
-            expenses = AiActionsQueryService.all_active_expenses()
+            expenses = AiActionsQueryService.all_active_expenses(tid)
             if expenses:
                 expenses_list = "\n".join(
                     [gettext(f"• {e.description} - {e.amount} درهم - {e.category}") for e in expenses[:10]]
@@ -2075,7 +2075,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("مشتريات"):
-            purchases = AiActionsQueryService.all_active_purchases()
+            purchases = AiActionsQueryService.all_active_purchases(tid)
             del ctx
             if purchases:
                 purchases_list = "\n".join(
@@ -2096,7 +2096,7 @@ def _process_user_action(message, user):
 🤖 المصدر: GROQ API + التحليل المحلي"""
 
         if msg_lower.strip() == "2" and ctx.get("last_action") == gettext("شيك"):
-            cheques = AiActionsQueryService.all_active_cheques()
+            cheques = AiActionsQueryService.all_active_cheques(tid)
             del ctx
             if cheques:
                 cheques_list = "\n".join(

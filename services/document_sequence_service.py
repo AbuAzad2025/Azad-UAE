@@ -89,9 +89,22 @@ class DocumentSequenceService:
             counter_reset=counter_reset or default[2],
             branch_scoped=branch_scoped if branch_scoped is not None else default[3],
         )
-        db.session.add(seq)
-        db.session.flush()
-        return seq
+        # Creation race: two first-time txns both miss .first(), both insert.
+        # The unique (tenant,code) constraint makes the loser fail; catch it
+        # in a savepoint and return the winner's row instead of aborting the
+        # caller's transaction.
+        savepoint = db.session.begin_nested()
+        try:
+            db.session.add(seq)
+            db.session.flush()
+            savepoint.commit()
+            return seq
+        except Exception:
+            savepoint.rollback()
+            existing = DocumentSequence.query.filter_by(tenant_id=tenant_id, code=code).first()
+            if existing is not None:
+                return existing
+            raise
 
     @staticmethod
     def next_number(tenant_id, code, branch_code=None, date=None, prefix=None):

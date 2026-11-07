@@ -259,7 +259,7 @@ def create():
                     exchange_rates=exchange_rates,
                     today=date.today(),
                 )
-            amount = Decimal(str(request.form.get("amount")))
+            amount = Decimal(str(request.form.get("amount") or "0"))
             try:
                 default_currency = resolve_default_currency()
             except Exception as e:
@@ -438,7 +438,7 @@ def edit(**kwargs):
                 cheque.bank_branch = request.form.get("bank_branch")
                 cheque.account_number = request.form.get("account_number")
 
-                cheque.amount = Decimal(str(request.form.get("amount")))
+                cheque.amount = Decimal(str(request.form.get("amount") or "0"))
                 try:
                     default_currency = resolve_default_currency()
                 except Exception as e:
