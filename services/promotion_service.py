@@ -560,8 +560,8 @@ class PromotionService:
                             needed_amount=PromotionService._quantize(min_amount - value),
                         )
                     )
-                elif min_qty > 0 and Decimal(total_remaining) < min_qty:
-                    needed_qty = (min_qty - Decimal(total_remaining)).normalize()
+                elif min_qty > 0 and Decimal(str(total_remaining or "0")) < min_qty:
+                    needed_qty = (min_qty - Decimal(str(total_remaining or "0"))).normalize()
                     prompts.append(
                         PromotionService._prompt(
                             campaign,

@@ -289,7 +289,7 @@ class ReportsQueryService:
 
             if total_revenue > 0:
                 merchant_percentage = float(product.merchant_share or 100)
-                merchant_amount = total_revenue * (Decimal(merchant_percentage) / 100)
+                merchant_amount = total_revenue * (Decimal(str(merchant_percentage or "0")) / 100)
                 merchant = product.merchant_customer
                 merchant_name = merchant.name if merchant else gettext("غير محدد")
 

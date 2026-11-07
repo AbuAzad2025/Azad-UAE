@@ -216,9 +216,9 @@ class Purchase(db.Model):
             gross = self.subtotal - discount
             if tax_rate_decimal > 0:
                 taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
-                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
                 taxable_amount = gross
                 self.tax_amount = Decimal("0")
@@ -227,7 +227,7 @@ class Purchase(db.Model):
             # Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ù„Ø§ ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: Ù†Ø¶ÙŠÙ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© ÙÙˆÙ‚ Ø§Ù„ØµØ§ÙÙŠ
             taxable_amount = self.subtotal - discount
             self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
+                Decimal("0.001"), rounding=ROUND_HALF_UP
             )
             self.total_amount = (taxable_amount + self.tax_amount + self.total_landed_cost).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP

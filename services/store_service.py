@@ -553,7 +553,7 @@ class StoreService:
             reason="redeem",
         )
         db.session.add(txn)
-        return Decimal(points) / Decimal("100")
+        return Decimal(str(points or "0")) / Decimal("100")
 
     # ─── Route-facing scoped fetches ───
 

@@ -230,9 +230,9 @@ class Sale(db.Model):
             gross = self.subtotal - discount - promo_discount + shipping
             if tax_rate_decimal > 0:
                 taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
-                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
                 taxable_amount = gross
                 self.tax_amount = Decimal("0")
@@ -241,7 +241,7 @@ class Sale(db.Model):
             # الأسعار لا تشمل الضريبة: نضيف الضريبة فوق الصافي
             taxable_amount = self.subtotal - discount - promo_discount + shipping
             self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
+                Decimal("0.001"), rounding=ROUND_HALF_UP
             )
             self.total_amount = (taxable_amount + self.tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 

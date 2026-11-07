@@ -111,9 +111,15 @@ class TestPurchaseServiceCreate:
                                 "services.purchase_service.db.session.get",
                                 return_value=product,
                             ).start()
-                            with patch(
-                                "services.purchase_service.post_or_fail",
-                                return_value=None,
+                            with (
+                                patch(
+                                    "services.purchase_service.GLService.get_account_code_for_concept",
+                                    return_value="1140",
+                                ),
+                                patch(
+                                    "services.purchase_service.post_or_fail",
+                                    return_value=None,
+                                ),
                             ):
                                 result = PurchaseService.create_purchase(
                                     user,
@@ -176,6 +182,10 @@ class TestPurchaseServiceCreate:
                                 return_value=product,
                             ).start()
                             with (
+                                patch(
+                                    "services.purchase_service.GLService.get_account_code_for_concept",
+                                    return_value="1140",
+                                ),
                                 patch(
                                     "services.purchase_service.post_or_fail",
                                     return_value=None,
@@ -291,9 +301,15 @@ class TestPurchaseServiceTenantIsolation:
                                     "services.purchase_service.db.session.get",
                                     return_value=product,
                                 ).start()
-                                with patch(
-                                    "services.purchase_service.post_or_fail",
-                                    return_value=None,
+                                with (
+                                    patch(
+                                        "services.purchase_service.GLService.get_account_code_for_concept",
+                                        return_value="1140",
+                                    ),
+                                    patch(
+                                        "services.purchase_service.post_or_fail",
+                                        return_value=None,
+                                    ),
                                 ):
                                     result = PurchaseService.create_purchase(
                                         user,
@@ -357,9 +373,15 @@ class TestPurchaseServiceTenantIsolation:
                                 "services.purchase_service.db.session.get",
                                 return_value=product,
                             ).start()
-                            with patch(
-                                "services.purchase_service.post_or_fail",
-                                return_value=None,
+                            with (
+                                patch(
+                                    "services.purchase_service.GLService.get_account_code_for_concept",
+                                    return_value="1140",
+                                ),
+                                patch(
+                                    "services.purchase_service.post_or_fail",
+                                    return_value=None,
+                                ),
                             ):
                                 result = PurchaseService.create_purchase(
                                     user,
@@ -474,9 +496,15 @@ class TestPurchaseServiceTenantIsolation:
                                 "services.purchase_service.db.session.get",
                                 return_value=product,
                             ).start()
-                            with patch(
-                                "services.purchase_service.post_or_fail",
-                                return_value=None,
+                            with (
+                                patch(
+                                    "services.purchase_service.GLService.get_account_code_for_concept",
+                                    return_value="1140",
+                                ),
+                                patch(
+                                    "services.purchase_service.post_or_fail",
+                                    return_value=None,
+                                ),
                             ):
                                 result = PurchaseService.create_purchase(
                                     user,
