@@ -75,10 +75,23 @@ class TestDefaultTaxRate:
         assert default_tax_rate(1) == Decimal("0")
 
     def test_stored_rate(self, mocker):
+        # A stored rate is honored only when it IS the statutory rate.
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         mocker.patch(
             "utils.tax_settings._resolve_tenant",
-            return_value=MagicMock(default_tax_rate=Decimal("5")),
+            return_value=MagicMock(default_tax_rate=Decimal("5"), vat_country="AE"),
+        )
+        from utils.tax_settings import default_tax_rate
+
+        assert default_tax_rate(1) == Decimal("5")
+
+    def test_stored_custom_rate_is_ignored(self, mocker):
+        # No playing with rates: a non-statutory stored rate is ignored and
+        # the country's statutory rate (AE 5) applies instead.
+        mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
+        mocker.patch(
+            "utils.tax_settings._resolve_tenant",
+            return_value=MagicMock(default_tax_rate=Decimal("10"), vat_country="AE"),
         )
         from utils.tax_settings import default_tax_rate
 
@@ -128,10 +141,19 @@ class TestNormalizeTaxRate:
         assert normalize_tax_rate(15, tenant_id=1) == Decimal("0")
 
     def test_valid_rate(self, mocker):
+        # Only the statutory rate (PS 16 in this context) or 0 is valid.
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         from utils.tax_settings import normalize_tax_rate
 
-        assert normalize_tax_rate("5.5", tenant_id=1) == Decimal("5.5")
+        assert normalize_tax_rate("16", tenant_id=1) == Decimal("16")
+        assert normalize_tax_rate(0, tenant_id=1) == Decimal("0")
+
+    def test_custom_rate_refused(self, mocker):
+        mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
+        from utils.tax_settings import normalize_tax_rate
+
+        with pytest.raises(ValueError, match="المعيارية"):
+            normalize_tax_rate("7", tenant_id=1)
 
     @pytest.mark.parametrize("rate", [-1, 101])
     def test_out_of_range_raises(self, mocker, rate):
@@ -163,15 +185,17 @@ class TestShouldPostVatGl:
 
 
 class TestDefaultTaxRateEdge:
-    def test_stored_rate_negative_treated_as_zero(self, mocker):
+    def test_stored_rate_negative_returns_statutory(self, mocker):
+        # An invalid stored rate means "no valid configuration" → the
+        # country's statutory rate applies (AE 5 here).
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
         mocker.patch(
             "utils.tax_settings._resolve_tenant",
-            return_value=MagicMock(default_tax_rate=Decimal("-1")),
+            return_value=MagicMock(default_tax_rate=Decimal("-1"), vat_country="AE"),
         )
         from utils.tax_settings import default_tax_rate
 
-        assert default_tax_rate(1) == Decimal("0")
+        assert default_tax_rate(1) == Decimal("5")
 
     def test_missing_tenant_after_enabled(self, mocker):
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)

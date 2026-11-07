@@ -47,7 +47,8 @@ def test_tax_enabled_country_default():
         assert ts.get_prices_include_vat() is True
     t2 = SimpleNamespace(enable_tax=True, vat_country=None, default_tax_rate="-1", prices_include_vat=False)
     with patch.object(ts, "_resolve_tenant", return_value=t2):
-        assert ts.default_tax_rate() == Decimal("0")
+        # Stored rate is invalid → country statutory rate (PS 16), never 0.
+        assert ts.default_tax_rate() == Decimal("16")
 
 
 def test_normalize_and_suggest():
@@ -55,7 +56,12 @@ def test_normalize_and_suggest():
         assert ts.normalize_tax_rate(15) == Decimal("0")  # 97-100
         assert ts.should_post_vat_gl() is False  # 107-108
     with patch.object(ts, "is_tax_enabled", return_value=True):
-        assert ts.normalize_tax_rate("5") == Decimal("5")  # 101-104
+        # Statutory rates only (PS 16 is the fallback-country rate): exactly
+        # the standard rate or 0 (exempt) — anything else is refused.
+        assert ts.normalize_tax_rate("16") == Decimal("16")
+        assert ts.normalize_tax_rate(0) == Decimal("0")
+        with pytest.raises(ValueError):  # non-statutory custom rate refused
+            ts.normalize_tax_rate(5)
         with pytest.raises(ValueError):  # 102-103
             ts.normalize_tax_rate(150)
         assert ts.should_post_vat_gl() is True

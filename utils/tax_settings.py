@@ -64,34 +64,37 @@ def vat_country(tenant_id=None) -> str:
 def default_tax_rate(tenant_id=None) -> Decimal:
     """Return the tenant's VAT rate.
 
-    Priority: the tenant's own configured rate if set, otherwise the
-    statutory rate of the tenant's VAT country (utils/country_tax.py).
-    Zero when tax is disabled. A stored rate is never overridden — a
-    tenant pinned to a custom rate keeps it — but a tenant with no
-    configured rate now inherits its country's statutory rate instead of
-    silently getting zero VAT.
+    Priority: the statutory rate of the tenant's VAT country
+    (``utils/country_tax.py``). A stored rate is honored only when it IS
+    the statutory rate — a stored custom rate is a non-compliant
+    configuration and is ignored so the system can never invoice at a
+    non-statutory rate (no free "playing" with rates). Zero when tax is
+    disabled.
     """
     if not is_tax_enabled(tenant_id):
         return Decimal("0")
     tenant = _resolve_tenant(tenant_id)
     if tenant is None:
         return Decimal("0")
+    standard = vat_rate_for_country(vat_country(tenant_id))
     stored = getattr(tenant, "default_tax_rate", None)
     if stored is not None:
         try:
             stored_rate = Decimal(str(stored))
         except Exception:
             stored_rate = None
-        if stored_rate is not None and stored_rate >= Decimal("0"):
+        if stored_rate is not None and stored_rate == standard:
             return stored_rate
-    return vat_rate_for_country(vat_country(tenant_id))
+    return standard
 
 
 def effective_tax_rate(tax_rate, tenant_id=None) -> Decimal:
     """Effective invoice VAT rate with country compliance.
 
-    ``None`` means "not specified" → the tenant/country default. An explicit
-    value is honored (0 = exempt/zero-rated, standard = standard). Tax
+    ``None`` means "not specified" → the tenant/country default (always the
+    statutory rate — see :func:`default_tax_rate`). An explicit rate must be
+    the statutory rate or 0 (exempt/zero-rated); any other value is refused
+    so a single invoice always carries exactly one compliant rate. Tax
     disabled → 0.
     """
     if not is_tax_enabled(tenant_id):
@@ -101,6 +104,9 @@ def effective_tax_rate(tax_rate, tenant_id=None) -> Decimal:
     rate = Decimal(str(tax_rate))
     if rate < Decimal("0") or rate > Decimal("100"):
         raise ValueError("نسبة الضريبة يجب أن تكون بين 0 و 100")
+    standard = vat_rate_for_country(vat_country(tenant_id))
+    if rate != Decimal("0") and rate != standard:
+        raise ValueError(f"نسبة الضريبة يجب أن تكون نسبة الدولة المعيارية ({standard}%) أو 0 للمعفاة")
     return rate
 
 

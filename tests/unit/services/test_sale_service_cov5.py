@@ -452,7 +452,9 @@ def test_vat_exclusive_revenue_path(app):
     product = _product()
     lines = [{"product": product, "quantity": 2, "unit_price": 100}]
     with patch("utils.tax_settings.get_prices_include_vat", return_value=True):
-        result = _run_create(customer, seller, lines, tax_rate=5)
+        # Statutory rate for the fallback country (PS 16) — the invoice must
+        # carry the standard rate or 0, never an arbitrary rate.
+        result = _run_create(customer, seller, lines, tax_rate=16)
         assert result is not None
 
 

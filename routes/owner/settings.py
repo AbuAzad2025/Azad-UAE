@@ -897,9 +897,21 @@ def tax_settings():
             with atomic_transaction("tax_settings"):
                 tenant.enable_tax = request.form.get("enable_tax") == "on"
                 tenant.vat_country = (request.form.get("vat_country") or "PS").strip().upper()[:2]
+                # No free "playing" with rates: when tax is on, the stored
+                # rate must be the country's statutory rate
+                # (utils/country_tax.py). Anything else is refused so the
+                # system stays connectable to the government's e-invoice
+                # system, which only accepts the statutory rate.
+                standard = suggested_rate_for_country(tenant.vat_country)
                 rate = request.form.get("default_tax_rate", type=float)
                 if rate is None and tenant.enable_tax:
-                    rate = float(suggested_rate_for_country(tenant.vat_country))
+                    rate = float(standard)
+                if tenant.enable_tax and Decimal(str(rate or 0)) != standard:
+                    raise ValueError(
+                        gettext(
+                            f"نسبة الضريبة يجب أن تكون نسبة الدولة المعيارية ({standard}%) ولا يمكن تعيين نسبة مخصصة"
+                        )
+                    )
                 tenant.default_tax_rate = Decimal(str(rate or 0))
                 tenant.vat_number = (request.form.get("vat_number") or "").strip() or None
                 tenant.tax_number = (request.form.get("tax_number") or "").strip() or tenant.tax_number
