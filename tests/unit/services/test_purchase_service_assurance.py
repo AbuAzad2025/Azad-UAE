@@ -157,6 +157,7 @@ def _patch_create_common(mocker, *, product=None, warehouse=None, user=None, con
     )
     mocker.patch("services.purchase_service.StockService.process_purchase_lines")
     mocker.patch("services.purchase_service.GLService.ensure_core_accounts")
+    mocker.patch("services.purchase_service.GLService.get_account_code_for_concept", return_value="1140")
     post = mocker.patch("services.purchase_service.post_or_fail")
     mocker.patch("services.purchase_service.LoggingCore.log_audit")
     mocker.patch("services.purchase_service.should_post_vat_gl", return_value=True)
@@ -630,6 +631,7 @@ def _patch_return_common(mocker, purchase, *, config=None, vat_gl=True):
     mocker.patch("services.purchase_service.generate_number", return_value="PR-001")
     mocker.patch("services.purchase_service.StockService.remove_stock")
     mocker.patch("services.purchase_service.GLService.ensure_core_accounts")
+    mocker.patch("services.purchase_service.GLService.get_account_code_for_concept", return_value="1140")
     mocker.patch("services.purchase_service.LoggingCore.log_audit")
     mocker.patch("services.purchase_service.should_post_vat_gl", return_value=vat_gl)
     mocker.patch(

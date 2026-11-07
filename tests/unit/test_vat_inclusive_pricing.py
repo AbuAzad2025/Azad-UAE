@@ -283,8 +283,8 @@ class TestSaleVatInclusiveTotals:
         db_session.commit()
 
         gross = Decimal("116.00") - Decimal("11.60")  # 104.40
-        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        expected_tax = (gross - expected_taxable).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        expected_tax = (gross - expected_taxable).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         assert sale.taxable_amount == expected_taxable, (
             f"Expected taxable_amount={expected_taxable}, got {sale.taxable_amount}"
@@ -328,8 +328,8 @@ class TestSaleVatInclusiveTotals:
         db_session.commit()
 
         gross = Decimal("100.00") + Decimal("23.20")  # 123.20
-        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        expected_tax = (gross - expected_taxable).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        expected_taxable = (gross / Decimal("1.16")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        expected_tax = (gross - expected_taxable).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         assert sale.taxable_amount == expected_taxable, (
             f"Expected taxable_amount={expected_taxable}, got {sale.taxable_amount}"
