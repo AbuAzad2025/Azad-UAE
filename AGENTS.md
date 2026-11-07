@@ -118,7 +118,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   loaded degrades the type and never the text.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → 2f8a0b4c9d31` (64 revisions)
+- **Migration chain (single head):** `squash_001 → … → e2f3a4b5c6d7` (66 revisions)
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
@@ -134,13 +134,22 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
     concept only with a new rebuild migration
   - `a7b8c9d0e1f2` changed 5% tenant VAT rates outside AE to the values in
     `utils/country_tax.py`; it could not distinguish an intentional 5% rate
-    from a default. Those country values are not an effective-dated legal
-    source (for example IL changed to 18% in 2025); review before relying on them.
+    from a default. The statutory profile has since corrected Israel to 18%
+    (`e2f3a4b5c6d7`, below); no other country value changed.
   - `c5d6e7f8a9b0` the GL concept allow-list widened for `INCOME_TAX_EXPENSE` /
     `INCOME_TAX_PAYABLE` (corporate income-tax provision, services/income_tax_service.py)
   - `f3e4d5c6b7a8` adds tenant invoice-profile fields; `2f8a0b4c9d31`
     copies existing invoice settings into empty fields only when exactly one
     active settings row exists, leaving conflicts and source data untouched.
+  - `6a4b7c8d9e30` moves the full print/overlay profile onto tenants as the single
+    source of truth. Adds every print column the templates read (guarded add-if-missing),
+    carries the legacy alternate spellings forward (`footer_invoice_text_*` → `footer_text_*`),
+    backfills from the **single** active invoice_settings row (never between ambiguous
+    duplicates), drops the retired alias columns, and defaults fresh fields to the model's
+    documented values for existing NULL rows. `invoice_settings` rows
+    are never deleted.
+  - `e2f3a4b5c6d7` raises IL tenants with `default_tax_rate = 17.00` to 18.00
+    (statutory; Knesset, effective 2025-01-01). Downgrade is a deliberate no-op.
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)
@@ -196,6 +205,37 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   plants the owner from `OWNER_PASSWORD` and raises rather than fall back to a
   default; `config.assert_production_sanity` enforces a 16+ char mixed password
   in production.
+
+### Tenant document profile — single source of truth (print)
+- **Every document reads one pinned tenant profile.** `Tenant` owns every fact a
+  document shows (identity, bank, payment terms, footer, print presentation); nothing
+  is entered twice and copies cannot drift.
+- **`invoice_settings` is retired as a data source.** No code path seeds, creates or
+  selects an active settings row for a document. `6a4b7c8d9e30` backfills the
+  print/overlay columns onto tenants (guarded add-if-missing), backfills values only
+  from a tenant's single active settings row (ambiguous rows untouched, never guessed),
+  carries the legacy `footer_invoice_text_*` spellings forward into `footer_text_*`,
+  then drops the retired columns. Rows in `invoice_settings` are never deleted.
+- **Read path:** `utils/invoice_profile.py::resolve_print_profile` builds a transient
+  `EffectiveInvoiceSettings` snapshot — attribute namespace matches the retired row so
+  templates render unchanged. `build_invoice_settings_snapshot(tenant, source_settings=None)`
+  does the same explicitly; render never mutates. The snapshot never joins the session.
+- **Integration boundary:** `services/invoice_profile_service.py` — `resolve_print_profile`,
+  `get_company_print_context`, `save_print_profile`, `save_print_overlay`. Owner panel
+  (`/owner/invoice-settings`), `/printing/settings` and every document route call it; nothing
+  else touches the legacy settings row. `save_print_profile` writes the submitted form
+  straight onto the tenant (booleans cast to bool; blank strings clear; omitted keys kept).
+- **Legacy compatibility is read-only:** `InvoiceSettings.get_active(...)` returns the
+  transient snapshot; `InvoiceSettings.to_dict()` stays for tests/templates. No automatic
+  seeding is wired anywhere (the boot seed manifest records `invoice_settings` as
+  `seeder=None`, `scope="lazy"`, `at_most 1 per tenant`, probe retained to flag
+  duplicate legacy rows before they are dropped).
+- **Templates:** `owner/tenant_create.html` / `tenant_edit.html` post `footer_text_ar/en`;
+  `owner/invoice_settings.html` posts the unified field set into `owner.invoice_settings`.
+- Statutory VAT/invoice sources (PS 16 / IL 18 / AE 5 / SA 15, `utils/country_tax.py` —
+  IL corrected to 18% effective 2025-01-01 by the Knesset): the tax rate is taken from the
+  country profile on the server; the tax settings UI reads it via `statutory_rates`
+  injected by `routes/owner/settings.py`; no JS hardcodes a rate.
 
 ### Verification policy — CI is the gate, not the local machine
 - **Do not run the full local test suite.** A single unit slice takes 10-40
