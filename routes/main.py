@@ -109,9 +109,7 @@ def dashboard():
 
                 from services.gl_service import GLService
 
-                inventory_account_code = GLService.get_account_code_for_concept(
-                    "INVENTORY_ASSET", tenant_id=gl_tid, fallback_key="1140"
-                )
+                inventory_account_code = GLService.get_account_code_for_concept("INVENTORY_ASSET", tenant_id=gl_tid)
                 inventory_acc = get_gl_account_by_code(inventory_account_code, tenant_id=gl_tid)
                 if inventory_acc:
                     stats["inventory_value_gl"] = float(

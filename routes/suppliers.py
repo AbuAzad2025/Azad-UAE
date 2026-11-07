@@ -200,9 +200,9 @@ def create():
 
                     GLService.ensure_core_accounts(tenant_id=tid)
                     opening_equity_account = GLService.get_account_code_for_concept(
-                        "OPENING_BALANCE_EQUITY", tenant_id=tid, fallback_key="3130"
+                        "OPENING_BALANCE_EQUITY", tenant_id=tid
                     )
-                    ap_account = GLService.get_account_code_for_concept("AP", tenant_id=tid, fallback_key="2110")
+                    ap_account = GLService.get_account_code_for_concept("AP", tenant_id=tid)
                     post_or_fail(
                         lines=[
                             {

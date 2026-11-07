@@ -143,7 +143,6 @@ class PaymentService:
             "AP",
             branch_id=payment.branch_id,
             tenant_id=tenant_id,
-            fallback_key="payable",
         )
         if fx_diff > 0:
             fx_lines = [
@@ -152,7 +151,6 @@ class PaymentService:
                         "FX_LOSS",
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="fx_loss",
                     ),
                     "concept_code": "FX_LOSS",
                     "debit": fx_diff,
@@ -179,7 +177,6 @@ class PaymentService:
                         "FX_GAIN",
                         branch_id=payment.branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="fx_gain",
                     ),
                     "concept_code": "FX_GAIN",
                     "credit": gain,
@@ -338,7 +335,7 @@ class PaymentService:
                     tenant_id=tenant_id,
                 )
                 ap_account = GLService.get_account_code_for_concept(
-                    "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                    "AP", tenant_id=tenant_id, branch_id=payment.branch_id
                 )
                 lines = [
                     {
@@ -459,7 +456,7 @@ class PaymentService:
                 },
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id
                     ),
                     "concept_code": "AP",
                     "credit": payment.amount,
@@ -756,7 +753,6 @@ class PaymentService:
                                                     "AR",
                                                     branch_id=receipt.branch_id,
                                                     tenant_id=tenant_id,
-                                                    fallback_key="receivable",
                                                 ),
                                                 "concept_code": "AR",
                                                 "debit": fx_diff,
@@ -767,7 +763,6 @@ class PaymentService:
                                                     "FX_GAIN",
                                                     branch_id=receipt.branch_id,
                                                     tenant_id=tenant_id,
-                                                    fallback_key="fx_gain",
                                                 ),
                                                 "concept_code": "FX_GAIN",
                                                 "credit": fx_diff,
@@ -781,7 +776,6 @@ class PaymentService:
                                                     "FX_LOSS",
                                                     branch_id=receipt.branch_id,
                                                     tenant_id=tenant_id,
-                                                    fallback_key="fx_loss",
                                                 ),
                                                 "concept_code": "FX_LOSS",
                                                 "debit": abs(fx_diff),
@@ -792,7 +786,6 @@ class PaymentService:
                                                     "AR",
                                                     branch_id=receipt.branch_id,
                                                     tenant_id=tenant_id,
-                                                    fallback_key="receivable",
                                                 ),
                                                 "concept_code": "AR",
                                                 "credit": abs(fx_diff),

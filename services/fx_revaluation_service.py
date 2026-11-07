@@ -181,22 +181,18 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
     ar_concept = GLService.get_account_code_for_concept(
         "AR",
         tenant_id=tenant_id,
-        fallback_key="receivable",
     )
     ap_concept = GLService.get_account_code_for_concept(
         "AP",
         tenant_id=tenant_id,
-        fallback_key="payable",
     )
     fx_gain = GLService.get_account_code_for_concept(
         "FX_GAIN",
         tenant_id=tenant_id,
-        fallback_key="fx_gain",
     )
     fx_loss = GLService.get_account_code_for_concept(
         "FX_LOSS",
         tenant_id=tenant_id,
-        fallback_key="fx_loss",
     )
 
     with db.session.begin_nested():

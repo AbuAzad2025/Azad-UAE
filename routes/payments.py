@@ -1576,7 +1576,7 @@ def create_payment(purchase_id):
                         tenant_id=tenant_id,
                     )
                     ap_account = GLService.get_account_code_for_concept(
-                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id, fallback_key="2110"
+                        "AP", tenant_id=tenant_id, branch_id=payment.branch_id
                     )
                     lines = [
                         {

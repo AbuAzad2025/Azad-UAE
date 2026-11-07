@@ -256,7 +256,6 @@ class BankReconciliationService:
                         "BANK_INTEREST_INCOME",
                         tenant_id=getattr(reconciliation.bank_account, "tenant_id", None),
                         branch_id=getattr(reconciliation, "branch_id", None),
-                        fallback_key="4500",
                     ),
                     "concept_code": "BANK_INTEREST_INCOME",
                     "debit": 0,
@@ -540,7 +539,7 @@ class BankReconciliationService:
         suspense_account_code = (
             str(suspense_gl.code)
             if suspense_gl
-            else GLService.get_account_code_for_concept("SUSPENSE", tenant_id=tenant_id, fallback_key="2999")
+            else GLService.get_account_code_for_concept("SUSPENSE", tenant_id=tenant_id)
         )
 
         results = []

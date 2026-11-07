@@ -38,9 +38,7 @@ class DonationGLService:
                 debit = GLService.get_default_liquidity_account(kind, tenant_id=tenant_id)
 
         if not credit:
-            credit = GLService.get_account_code_for_concept(
-                "DONATION_REVENUE", tenant_id=tenant_id, fallback_key="4500"
-            )
+            credit = GLService.get_account_code_for_concept("DONATION_REVENUE", tenant_id=tenant_id)
 
         return debit, credit
 

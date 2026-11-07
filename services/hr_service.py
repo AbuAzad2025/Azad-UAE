@@ -480,13 +480,11 @@ class PayrollService:
             "PAYROLL_EXPENSE",
             branch_id=branch_id,
             tenant_id=tenant_id,
-            fallback_key="salaries_expense",
         )
         payable_acct = GLService.get_account_code_for_concept(
             "PAYROLL_PAYABLE",
             branch_id=branch_id,
             tenant_id=tenant_id,
-            fallback_key="salaries_payable",
         )
 
         lines = [

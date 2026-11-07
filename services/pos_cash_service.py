@@ -39,7 +39,6 @@ class PosCashMovementService:
             "MISC_EXPENSE",
             tenant_id=tenant_id,
             branch_id=session.branch_id,
-            fallback_key="misc_expense",
         )
         label = gettext("إيداع نقدي") if movement.movement_type == PosCashMovement.TYPE_PAY_IN else gettext("سحب نقدي")
         description = f"{label} POS — جلسة {session.session_number}: {movement.reason}"

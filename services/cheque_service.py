@@ -291,7 +291,6 @@ def process_cheque_receive(cheque):
             "AR",
             branch_id=cheque.branch_id,
             tenant_id=(cheque.tenant_id if cheque is not None else None),
-            fallback_key="receivable",
         )
     )
     credit_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
@@ -301,7 +300,6 @@ def process_cheque_receive(cheque):
                 "CHEQUES_UNDER_COLLECTION",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="cheques_under_collection",
             ),
             "concept_code": "CHEQUES_UNDER_COLLECTION",
             "debit": cheque.amount_aed,
@@ -341,7 +339,6 @@ def process_cheque_issue(cheque):
             "AP",
             branch_id=cheque.branch_id,
             tenant_id=(cheque.tenant_id if cheque is not None else None),
-            fallback_key="payable",
         )
         debit_concept = "AP"
     elif cheque.customer_id:
@@ -356,7 +353,6 @@ def process_cheque_issue(cheque):
             "AP",
             branch_id=cheque.branch_id,
             tenant_id=(cheque.tenant_id if cheque is not None else None),
-            fallback_key="payable",
         )
         debit_concept = "AP"
     lines = [
@@ -372,7 +368,6 @@ def process_cheque_issue(cheque):
                 "DEFERRED_CHEQUES_PAYABLE",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="deferred_cheques",
             ),
             "concept_code": "DEFERRED_CHEQUES_PAYABLE",
             "debit": 0,
@@ -413,7 +408,6 @@ def _create_clearing_journal_entry(cheque):
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
@@ -429,7 +423,6 @@ def _create_clearing_journal_entry(cheque):
                             "FX_GAIN",
                             branch_id=cheque.branch_id,
                             tenant_id=(cheque.tenant_id if cheque is not None else None),
-                            fallback_key="fx_gain",
                         ),
                         "concept_code": "FX_GAIN",
                         "debit": 0,
@@ -444,7 +437,6 @@ def _create_clearing_journal_entry(cheque):
                             "FX_LOSS",
                             branch_id=cheque.branch_id,
                             tenant_id=(cheque.tenant_id if cheque is not None else None),
-                            fallback_key="fx_loss",
                         ),
                         "concept_code": "FX_LOSS",
                         "debit": abs(cheque.currency_gain_loss),
@@ -459,7 +451,6 @@ def _create_clearing_journal_entry(cheque):
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,
@@ -484,7 +475,6 @@ def _create_clearing_journal_entry(cheque):
                             "FX_LOSS",
                             branch_id=cheque.branch_id,
                             tenant_id=(cheque.tenant_id if cheque is not None else None),
-                            fallback_key="fx_loss",
                         ),
                         "concept_code": "FX_LOSS",
                         "debit": abs(cheque.currency_gain_loss),
@@ -499,7 +489,6 @@ def _create_clearing_journal_entry(cheque):
                             "FX_GAIN",
                             branch_id=cheque.branch_id,
                             tenant_id=(cheque.tenant_id if cheque is not None else None),
-                            fallback_key="fx_gain",
                         ),
                         "concept_code": "FX_GAIN",
                         "debit": 0,
@@ -596,7 +585,6 @@ def _create_bounce_journal_entry(cheque):
                 "AR",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="receivable",
             )
         )
         ar_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
@@ -615,7 +603,6 @@ def _create_bounce_journal_entry(cheque):
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
@@ -630,7 +617,6 @@ def _create_bounce_journal_entry(cheque):
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,
@@ -649,7 +635,6 @@ def _create_bounce_journal_entry(cheque):
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="misc_expense",
                 )
             )
             credit_concept = "MISC_EXPENSE"
@@ -658,7 +643,6 @@ def _create_bounce_journal_entry(cheque):
                 "AP",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="payable",
             )
             credit_concept = "AP"
         elif cheque.customer_id:
@@ -673,7 +657,6 @@ def _create_bounce_journal_entry(cheque):
                 "AP",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="payable",
             )
             credit_concept = "AP"
         lines.append(
@@ -735,7 +718,6 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="misc_expense",
                 )
                 bank_account = gl_get_default_liquidity_account(
                     "bank",
@@ -812,7 +794,6 @@ def _create_cancel_journal_entry(cheque):
                 "AR",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="receivable",
             )
         )
         ar_concept = gl_get_customer_credit_concept(cheque.customer) if cheque.customer_id else "AR"
@@ -829,7 +810,6 @@ def _create_cancel_journal_entry(cheque):
                     "CHEQUES_UNDER_COLLECTION",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="cheques_under_collection",
                 ),
                 "concept_code": "CHEQUES_UNDER_COLLECTION",
                 "debit": 0,
@@ -850,7 +830,6 @@ def _create_cancel_journal_entry(cheque):
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="misc_expense",
                 )
                 credit_concept = "MISC_EXPENSE"
         elif cheque.supplier_id:
@@ -858,7 +837,6 @@ def _create_cancel_journal_entry(cheque):
                 "AP",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="payable",
             )
             credit_concept = "AP"
         elif cheque.customer_id:
@@ -873,7 +851,6 @@ def _create_cancel_journal_entry(cheque):
                 "AP",
                 branch_id=cheque.branch_id,
                 tenant_id=(cheque.tenant_id if cheque is not None else None),
-                fallback_key="payable",
             )
             credit_concept = "AP"
         lines = [
@@ -882,7 +859,6 @@ def _create_cancel_journal_entry(cheque):
                     "DEFERRED_CHEQUES_PAYABLE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
-                    fallback_key="deferred_cheques",
                 ),
                 "concept_code": "DEFERRED_CHEQUES_PAYABLE",
                 "debit": cheque.amount_aed,

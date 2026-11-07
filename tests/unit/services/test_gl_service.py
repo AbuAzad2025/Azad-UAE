@@ -417,12 +417,11 @@ class TestTrialBalanceAndTree:
 class TestAccountCodeForConcept:
     def test_fallback_key(self, sample_tenant, mocker):
         mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
-        code = GLService.get_account_code_for_concept(
-            "SALES_REVENUE",
-            tenant_id=sample_tenant.id,
-            fallback_key="4100",
-        )
-        assert code == "4100"
+        with pytest.raises(GLMappingError):
+            GLService.get_account_code_for_concept(
+                "SALES_REVENUE",
+                tenant_id=sample_tenant.id,
+            )
 
     def test_no_mapping_raises(self, sample_tenant, mocker):
         mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
@@ -1365,12 +1364,11 @@ class TestGlServiceCoverageGaps:
                 issue="fail",
             ),
         )
-        code = GLService.get_account_code_for_concept(
-            "SALES_REVENUE",
-            tenant_id=sample_tenant.id,
-            fallback_key="4100",
-        )
-        assert code == "4100"
+        with pytest.raises(GLMappingError):
+            GLService.get_account_code_for_concept(
+                "SALES_REVENUE",
+                tenant_id=sample_tenant.id,
+            )
 
     def test_resolve_record_mode_branch_id_none_on_account(
         self,

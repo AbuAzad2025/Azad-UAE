@@ -316,7 +316,7 @@ class PartnerService:
             branch_id = _resolve_main_branch(dist.tenant_id)
             try:
                 partner_account = GLService.get_account_code_for_concept(
-                    "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id, fallback_key="2150"
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id
                 )
             except Exception:
                 partner_account = "2150"
@@ -414,7 +414,7 @@ class PartnerService:
             branch_id = _resolve_main_branch(partner.tenant_id)
             try:
                 partner_account = GLService.get_account_code_for_concept(
-                    "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id, branch_id=branch_id, fallback_key="2150"
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id, branch_id=branch_id
                 )
             except Exception:
                 partner_account = "2150"

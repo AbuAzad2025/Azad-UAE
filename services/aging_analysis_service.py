@@ -312,8 +312,7 @@ class AgingAnalysisService:
             code = GLService.get_account_code_for_concept(
                 target_concept,
                 tenant_id=tenant_id,
-                branch_id=branch_id,
-                fallback_key="2110" if target_concept == "AP" else "1130",
+                branch_id=branch_id if target_concept == "AP" else "1130",
             )
         else:
             code = "2110" if target_concept == "AP" else "1130"

@@ -233,7 +233,6 @@ class TestNegativeInventoryILSSale:
                 "VAT_OUTPUT",
                 branch_id=ils_branch.id,
                 tenant_id=ils_tenant.id,
-                fallback_key="tax_payable",
             )
             vat_acct = GLAccount.query.filter_by(tenant_id=ils_tenant.id, code=vat_account_code).first()
             assert all([ar_acct, sales_acct, vat_acct, cogs_acct, inv_acct]), "Key accounts missing"

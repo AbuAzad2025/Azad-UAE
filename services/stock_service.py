@@ -214,13 +214,13 @@ class StockService:
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         branch_id = warehouse.branch_id if warehouse else None
         loss_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+            "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id
         )
         asset_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
         )
         gain_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+            "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id
         )
 
         if Decimal(str(movement.quantity)) < 0:
@@ -318,10 +318,10 @@ class StockService:
                 GLService.ensure_core_accounts(tenant_id=tenant_id)
                 branch_id = warehouse.branch_id if warehouse else None
                 asset_account = GLService.get_account_code_for_concept(
-                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
                 )
                 equity_account = GLService.get_account_code_for_concept(
-                    "OPENING_BALANCE_EQUITY", tenant_id=tenant_id, branch_id=branch_id, fallback_key="3130"
+                    "OPENING_BALANCE_EQUITY", tenant_id=tenant_id, branch_id=branch_id
                 )
                 post_or_fail(
                     lines=[
@@ -1011,13 +1011,13 @@ class StockService:
 
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         asset_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
         )
 
         if variance > 0:
             # New cost > old average: inventory value needs to be reduced (loss)
             loss_account = GLService.get_account_code_for_concept(
-                "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+                "INVENTORY_ADJUSTMENT_LOSS", tenant_id=tenant_id, branch_id=branch_id
             )
             lines = [
                 {
@@ -1039,7 +1039,7 @@ class StockService:
         else:
             # New cost < old average: inventory value needs to be increased (gain)
             gain_account = GLService.get_account_code_for_concept(
-                "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id, fallback_key="5150"
+                "INVENTORY_ADJUSTMENT_GAIN", tenant_id=tenant_id, branch_id=branch_id
             )
             lines = [
                 {

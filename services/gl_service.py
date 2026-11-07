@@ -1406,34 +1406,28 @@ class GLService:
         return balance_map
 
     @staticmethod
-    def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None, fallback_key=None):
-        """Resolve GL account code for a concept.
-        Tries dynamic mapping first, then falls back to static fallback_key (which is the account code directly).
-        Raises GLMappingError if no mapping and no fallback available.
-        """
+    def get_account_code_for_concept(concept_code, branch_id=None, tenant_id=None):
+        """Resolve GL account code for a concept — mapping only, no fallback."""
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
         if tenant_id:
-            try:
-                account = resolve_gl_account(
-                    tenant_id=int(tenant_id),
-                    concept_code=concept_code,
-                    branch_id=branch_id,
-                )
-                if account:
-                    return account.code
-            except Exception:
-                logger.debug(
-                    "Dynamic GL mapping failed for concept %s; trying static fallback", concept_code, exc_info=True
-                )
-        # Fallback key is now the actual account code (e.g., "4100", "1110")
-        # Accept any non-empty string as valid fallback
-        if fallback_key:
-            return fallback_key
+            account = resolve_gl_account(
+                tenant_id=int(tenant_id),
+                concept_code=concept_code,
+                branch_id=branch_id,
+            )
+            if account:
+                return account.code
+            raise GLMappingError(
+                tenant_id=int(tenant_id),
+                concept_code=concept_code,
+                branch_id=branch_id,
+                issue=f"No GL account mapping for concept {concept_code}.",
+            )
         raise GLMappingError(
             tenant_id=tenant_id or 0,
             concept_code=concept_code,
             branch_id=branch_id,
-            issue=f"No GL account mapping or fallback for concept {concept_code}.",
+            issue=f"No tenant to resolve concept {concept_code}.",
         )
 
     @staticmethod
@@ -1449,7 +1443,6 @@ class GLService:
                 "DEFERRED_CHEQUES_PAYABLE",
                 branch_id=branch_id,
                 tenant_id=tenant_id,
-                fallback_key="deferred_cheques",
             )
         return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 

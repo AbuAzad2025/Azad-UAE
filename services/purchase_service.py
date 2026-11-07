@@ -329,7 +329,7 @@ class PurchaseService:
         from services.budget_enforcement import check_budget_for_account
 
         inventory_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="1140"
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_branch_id
         )
         budget_check = check_budget_for_account(
             tenant_id=tenant_id,
@@ -340,9 +340,7 @@ class PurchaseService:
         if budget_check and not budget_check.get("allowed", True):
             raise ValueError(gettext(budget_check["message"]))
 
-        ap_account = GLService.get_account_code_for_concept(
-            "AP", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="2110"
-        )
+        ap_account = GLService.get_account_code_for_concept("AP", tenant_id=tenant_id, branch_id=purchase_branch_id)
         lines = [
             {
                 "account": inventory_account,
@@ -364,7 +362,7 @@ class PurchaseService:
                 lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "FREIGHT_IN", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5301"
+                            "FREIGHT_IN", tenant_id=tenant_id, branch_id=purchase_branch_id
                         ),
                         "concept_code": "FREIGHT_IN",
                         "debit": purchase.freight,
@@ -375,7 +373,7 @@ class PurchaseService:
                 lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "CUSTOMS_DUTY", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5302"
+                            "CUSTOMS_DUTY", tenant_id=tenant_id, branch_id=purchase_branch_id
                         ),
                         "concept_code": "CUSTOMS_DUTY",
                         "debit": purchase.customs_duty,
@@ -386,7 +384,7 @@ class PurchaseService:
                 lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "INSURANCE_IN", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="5303"
+                            "INSURANCE_IN", tenant_id=tenant_id, branch_id=purchase_branch_id
                         ),
                         "concept_code": "INSURANCE_IN",
                         "explicit_account_allowed": True,
@@ -398,7 +396,7 @@ class PurchaseService:
                 lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "MISC_EXPENSE", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="6500"
+                            "MISC_EXPENSE", tenant_id=tenant_id, branch_id=purchase_branch_id
                         ),
                         "concept_code": "MISC_EXPENSE",
                         "explicit_account_allowed": True,
@@ -411,7 +409,7 @@ class PurchaseService:
             lines.append(
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_branch_id, fallback_key="2122"
+                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_branch_id
                     ),
                     "concept_code": "VAT_INPUT",
                     "debit": purchase.tax_amount,
@@ -708,10 +706,10 @@ class PurchaseService:
         GLService.ensure_core_accounts(tenant_id=tenant_id)
 
         ap_account = GLService.get_account_code_for_concept(
-            "AP", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="2110"
+            "AP", tenant_id=tenant_id, branch_id=purchase_return.branch_id
         )
         inventory_account = GLService.get_account_code_for_concept(
-            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="1140"
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=purchase_return.branch_id
         )
         gl_lines = [
             {
@@ -732,7 +730,7 @@ class PurchaseService:
             gl_lines.append(
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_return.branch_id, fallback_key="2122"
+                        "VAT_INPUT", tenant_id=tenant_id, branch_id=purchase_return.branch_id
                     ),
                     "concept_code": "VAT_INPUT",
                     "credit": tax_amount,

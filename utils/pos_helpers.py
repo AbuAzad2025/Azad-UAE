@@ -97,7 +97,6 @@ def resolve_pos_cash_account_code(tenant_id: int, branch_id: int) -> str:
             "CASH",
             tenant_id=tenant_id,
             branch_id=branch_id,
-            fallback_key="cash",
         )
     return cash_acct_code
 
@@ -594,7 +593,6 @@ def _post_session_difference_gl(session: PosSession, closing_cash: Decimal):
         "POS_CASH_DIFFERENCE",
         tenant_id=tenant_id,
         branch_id=session.branch_id,
-        fallback_key="pos_cash_difference",
     )
     lines = []
     if diff_aed < 0:

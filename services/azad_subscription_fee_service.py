@@ -94,7 +94,6 @@ class AzadSubscriptionFeeService:
                         "AZAD_SUBSCRIPTION_EXPENSE",
                         branch_id=branch_id,
                         tenant_id=int(tenant_id),
-                        fallback_key="azad_subscription_expense",
                     ),
                     "concept_code": "AZAD_SUBSCRIPTION_EXPENSE",
                     "debit": amount,
@@ -105,7 +104,6 @@ class AzadSubscriptionFeeService:
                         "AZAD_PLATFORM_PAYABLE",
                         branch_id=branch_id,
                         tenant_id=int(tenant_id),
-                        fallback_key="azad_platform_payable",
                     ),
                     "concept_code": "AZAD_PLATFORM_PAYABLE",
                     "credit": amount,
@@ -162,7 +160,6 @@ class AzadSubscriptionFeeService:
             "AZAD_PLATFORM_PAYABLE",
             branch_id=_resolve_main_branch(tid),
             tenant_id=tid,
-            fallback_key="2180",
         )
         credit_concept = GLService.get_payment_credit_concept(payment_method)
         if credit_concept:
@@ -175,12 +172,12 @@ class AzadSubscriptionFeeService:
                 credit_account.code
                 if credit_account
                 else GLService.get_account_code_for_concept(
-                    credit_concept, tenant_id=tid, branch_id=_resolve_main_branch(tid), fallback_key="1110"
+                    credit_concept, tenant_id=tid, branch_id=_resolve_main_branch(tid)
                 )
             )
         else:
             credit_code = GLService.get_account_code_for_concept(
-                "CASH", tenant_id=tid, branch_id=_resolve_main_branch(tid), fallback_key="1110"
+                "CASH", tenant_id=tid, branch_id=_resolve_main_branch(tid)
             )
 
         GLService.ensure_core_accounts(tenant_id=int(tid))

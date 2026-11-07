@@ -41,10 +41,10 @@ def post_sale_commissions(sale):
     tenant_id = getattr(sale, "tenant_id", None)
     branch_id = sale.branch_id
     commission_expense_account = GLService.get_account_code_for_concept(
-        "COMMISSION_EXPENSE", tenant_id=tenant_id, branch_id=branch_id, fallback_key="6150"
+        "COMMISSION_EXPENSE", tenant_id=tenant_id, branch_id=branch_id
     )
     partner_account = GLService.get_account_code_for_concept(
-        "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key="2150"
+        "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
     )
     return post_or_fail(
         [

@@ -14,30 +14,28 @@ from utils.gl_tenant import scope_gl_accounts
 
 
 def _get_receivable_concept_account(tenant_id=None, branch_id=None, fallback="1130"):
-    """Get the receivable account code via concept resolution."""
+    """Get the receivable account code via concept resolution (mapping only)."""
     if tenant_id:
-        return GLService.get_account_code_for_concept(
-            "AR", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
-        )
-    return fallback
+        return GLService.get_account_code_for_concept("AR", tenant_id=tenant_id, branch_id=branch_id)
+    raise ValueError("tenant_id is required to resolve AR account")
 
 
 def _get_partner_account(tenant_id=None, branch_id=None, fallback="3350"):
-    """Get the partner current account code via concept resolution."""
+    """Get the partner current account code via concept resolution (mapping only)."""
     if tenant_id:
         return GLService.get_account_code_for_concept(
-            "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
+            "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
         )
-    return fallback
+    raise ValueError("tenant_id is required to resolve partner account")
 
 
 def _get_merchant_account(tenant_id=None, branch_id=None, fallback="2115"):
-    """Get the merchant current account code via concept resolution."""
+    """Get the merchant current account code via concept resolution (mapping only)."""
     if tenant_id:
         return GLService.get_account_code_for_concept(
-            "MERCHANT_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id, fallback_key=fallback
+            "MERCHANT_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
         )
-    return fallback
+    raise ValueError("tenant_id is required to resolve merchant account")
 
 
 # These are the canonical subledger account codes — resolved dynamically per tenant/branch.

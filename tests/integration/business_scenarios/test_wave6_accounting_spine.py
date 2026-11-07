@@ -75,7 +75,7 @@ def _cash_and_revenue(tenant_id, amount="100"):
 
     branch = Branch.query.filter_by(tenant_id=tenant_id).order_by(Branch.id.asc()).first()
     cash = GLService.get_payment_debit_account("cash", branch_id=branch.id if branch else None, tenant_id=tenant_id)
-    revenue = GLService.get_account_code_for_concept("sales_revenue", tenant_id=tenant_id, fallback_key="sales_revenue")
+    revenue = GLService.get_account_code_for_concept("sales_revenue", tenant_id=tenant_id)
     return cash, revenue
 
 

@@ -236,7 +236,7 @@ class InventoryReconciliationService:
                 "overall_qty_diff": float(overall_qty_diff),
                 "all_matched": all_matched,
                 "inventory_account_code": GLService.get_account_code_for_concept(
-                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+                    "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
                 ),
                 "record_count": len(rows),
             },
@@ -266,7 +266,7 @@ class InventoryReconciliationService:
 
         # Resolve inventory GL account once via concept
         inventory_account_code = GLService.get_account_code_for_concept(
-            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id, fallback_key="1140"
+            "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
         )
         acc_q = GLAccount.query.filter_by(code=inventory_account_code)
         if tenant_id is not None:

@@ -62,9 +62,7 @@ def _resolve_transaction_rate(currency, user_rate=None):
 def _build_expense_gl_lines(expense, tenant_id):
     from services.gl_service import GLService
 
-    misc_expense_account = GLService.get_account_code_for_concept(
-        "MISC_EXPENSE", tenant_id=tenant_id, fallback_key="6500"
-    )
+    misc_expense_account = GLService.get_account_code_for_concept("MISC_EXPENSE", tenant_id=tenant_id)
     category = expense.category
     expense_account = category.gl_account_code if category and category.gl_account_code else misc_expense_account
     expense_concept = None if category and category.gl_account_code else "MISC_EXPENSE"
@@ -75,9 +73,7 @@ def _build_expense_gl_lines(expense, tenant_id):
         expense_account = misc_expense_account
         expense_concept = "MISC_EXPENSE"
     if expense.payment_method == "cheque":
-        payment_account = GLService.get_account_code_for_concept(
-            "DEFERRED_CHEQUES_PAYABLE", tenant_id=tid, fallback_key="2130"
-        )
+        payment_account = GLService.get_account_code_for_concept("DEFERRED_CHEQUES_PAYABLE", tenant_id=tid)
         payment_concept = "DEFERRED_CHEQUES_PAYABLE"
     else:
         payment_account = GLService.get_payment_credit_account(

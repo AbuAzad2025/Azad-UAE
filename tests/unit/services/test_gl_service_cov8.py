@@ -294,7 +294,7 @@ class TestStatementLedgerFilters:
             assert recon_none >= 0
             branch_bal_none = GLService.get_account_balance_for_branch(entries[0].lines[0].account_id)
             assert isinstance(branch_bal_none, float)
-            fallback_none = GLService.get_account_code_for_concept("NOPE", fallback_key="4100")
+            fallback_none = GLService.get_account_code_for_concept("NOPE")
             assert fallback_none == "4100"
         finally:
             _cleanup_posted_lines(db_session, entries)
@@ -319,7 +319,7 @@ class TestConceptsAndReconciliation:
     def test_concept_fallback_and_raise(self, db_session, sample_tenant):
         from services.gl_account_resolver import GLMappingError
 
-        assert GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id, fallback_key="4100") == "4100"
+        assert GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id) == "4100"
         with pytest.raises(GLMappingError):
             GLService.get_account_code_for_concept("NOPE", tenant_id=sample_tenant.id)
 

@@ -111,7 +111,7 @@ class PayrollService:
             [
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id, fallback_key="1170"
+                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id
                     ),
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": Decimal(str(amount)),
@@ -274,7 +274,6 @@ class PayrollService:
                     "PAYROLL_EXPENSE",
                     branch_id=employee.branch_id,
                     tenant_id=tenant_id,
-                    fallback_key="salaries_expense",
                 ),
                 "concept_code": "PAYROLL_EXPENSE",
                 "debit": Decimal(str(total_expense)),
@@ -297,7 +296,6 @@ class PayrollService:
                         "PAYROLL_PAYABLE",
                         branch_id=employee.branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="salaries_payable",
                     ),
                     "concept_code": "PAYROLL_PAYABLE",
                     "debit": 0,
@@ -310,7 +308,7 @@ class PayrollService:
             lines.append(
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id, fallback_key="1170"
+                        "EMPLOYEE_ADVANCES", tenant_id=tenant_id, branch_id=employee.branch_id
                     ),
                     "concept_code": "EMPLOYEE_ADVANCES",
                     "debit": 0,
@@ -418,7 +416,6 @@ class PayrollService:
                         "END_OF_SERVICE_PROVISION",
                         branch_id=branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="end_of_service_provision",
                     ),
                     "concept_code": "END_OF_SERVICE_PROVISION",
                     "debit": eos_amount,
@@ -432,7 +429,6 @@ class PayrollService:
                         "END_OF_SERVICE_LIABILITY",
                         branch_id=branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="end_of_service_liability",
                     ),
                     "concept_code": "END_OF_SERVICE_LIABILITY",
                     "debit": 0,
@@ -448,7 +444,6 @@ class PayrollService:
                         "PAYROLL_EXPENSE",
                         branch_id=branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="salaries_expense",
                     ),
                     "concept_code": "PAYROLL_EXPENSE",
                     "debit": leave_amount,
@@ -462,7 +457,6 @@ class PayrollService:
                         "LEAVE_ACCRUAL_LIABILITY",
                         branch_id=branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="leave_accrual_liability",
                     ),
                     "concept_code": "LEAVE_ACCRUAL_LIABILITY",
                     "debit": 0,
@@ -555,7 +549,6 @@ class PayrollService:
                         "END_OF_SERVICE_PROVISION",
                         branch_id=employee.branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="end_of_service_provision",
                     ),
                     "concept_code": "END_OF_SERVICE_PROVISION",
                     "debit": eosb_amount,
@@ -567,7 +560,6 @@ class PayrollService:
                         "END_OF_SERVICE_LIABILITY",
                         branch_id=employee.branch_id,
                         tenant_id=tenant_id,
-                        fallback_key="end_of_service_liability",
                     ),
                     "concept_code": "END_OF_SERVICE_LIABILITY",
                     "debit": 0,
