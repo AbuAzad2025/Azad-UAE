@@ -198,7 +198,9 @@ class PayrollService:
                     remaining = Decimal("0")
             advance_deduction_total += remaining
 
-        net_salary = basic_amount + Decimal(allowances) - Decimal(deductions) - advance_deduction_total
+        net_salary = (
+            basic_amount + Decimal(str(allowances or "0")) - Decimal(str(deductions or "0")) - advance_deduction_total
+        )
 
         # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
         existing = PayrollTransaction.query.filter_by(
@@ -213,7 +215,7 @@ class PayrollService:
         # التحقق من أن صافي الراتب غير سالب — خصم جزئي للسلفة
         actual_deduction = advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
         if net_salary < Decimal("0"):
-            max_deductible = basic_amount + Decimal(allowances) - Decimal(deductions)
+            max_deductible = basic_amount + Decimal(str(allowances or "0")) - Decimal(str(deductions or "0"))
             if max_deductible <= Decimal("0"):
                 raise ValueError(
                     gettext(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
@@ -227,8 +229,8 @@ class PayrollService:
             year=year,
             basic_amount=basic_amount,
             days_worked=days_worked if employee.employment_type == "daily" else 0,
-            allowances=Decimal(allowances),
-            deductions=Decimal(deductions),
+            allowances=Decimal(str(allowances or "0")),
+            deductions=Decimal(str(deductions or "0")),
             advances_deducted=actual_deduction,
             net_salary=net_salary,
             branch_id=employee.branch_id,

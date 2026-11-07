@@ -56,29 +56,36 @@ def resolve_default_currency(tenant=None) -> str:
     return get_system_default_currency()
 
 
+def _tenant_base_from_row(tenant) -> str | None:
+    """Base currency from a tenant row: base_currency -> default_currency."""
+    if tenant is None:
+        return None
+    base = getattr(tenant, "base_currency", None)
+    if base:
+        val = str(base).strip().upper()
+        if val:
+            return val
+    default = getattr(tenant, "default_currency", None)
+    if default:
+        val = str(default).strip().upper()
+        if val:
+            return val
+    return None
+
+
 def get_tenant_base_currency(tenant_id: int | None = None) -> str:
     """Return the tenant's base currency dynamically.
-    Priority:
-      1. tenant.base_currency
-      2. tenant.default_currency
-      3. system default (ILS)
+
+    Single resolver: base_currency -> default_currency -> system default.
     """
     if tenant_id is not None:
         try:
             from models.tenant import Tenant
 
             tenant = db.session.get(Tenant, int(tenant_id))
-            if tenant:
-                base = getattr(tenant, "base_currency", None)
-                if base:
-                    val = base.strip().upper()
-                    if val:
-                        return val
-                default = getattr(tenant, "default_currency", None)
-                if default:
-                    val = default.strip().upper()
-                    if val:
-                        return val
+            resolved = _tenant_base_from_row(tenant)
+            if resolved:
+                return resolved
         except Exception:
             logger.debug(
                 "Failed to resolve base currency for tenant %s",
@@ -90,17 +97,9 @@ def get_tenant_base_currency(tenant_id: int | None = None) -> str:
 
 def resolve_tenant_base_currency(tenant=None, tenant_id=None) -> str:
     """Resolve the base currency for a tenant instance or tenant_id."""
-    if tenant is not None:
-        base = getattr(tenant, "base_currency", None)
-        if base:
-            val = base.strip().upper()
-            if val:
-                return val
-        default = getattr(tenant, "default_currency", None)
-        if default:
-            val = default.strip().upper()
-            if val:
-                return val
+    resolved = _tenant_base_from_row(tenant)
+    if resolved:
+        return resolved
     if tenant_id is not None:
         return get_tenant_base_currency(tenant_id)
     # No explicit tenant: resolve from the current request's tenant if any,

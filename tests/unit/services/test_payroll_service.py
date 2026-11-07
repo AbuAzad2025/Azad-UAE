@@ -80,6 +80,10 @@ class TestCreateAdvance:
                 "services.payroll_service.GLService.get_default_liquidity_account",
                 return_value="1100",
             ),
+            patch(
+                "services.payroll_service.GLService.get_account_code_for_concept",
+                return_value="1170",
+            ),
             patch("services.payroll_service.post_or_fail", return_value=gl_entry),
             patch("services.payroll_service.db.session.flush"),
         ):
