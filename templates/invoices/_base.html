@@ -229,7 +229,7 @@
   <p class="p-fs-8 p-muted">💬 {{ settings.default_invoice_note_ar }}</p>
   {% endif %}
 
-  <p class="p-note-divider">{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}</p>
+  <p class="p-note-divider">{% if settings and settings.footer_text_ar %}{{ settings.footer_text_ar }}{% else %}{{ t('شكراً') }} {{ t('لتعاملكم') }} {{ t('معنا') }}{% endif %}</p>
 
   {% if settings and (settings.facebook_url or settings.instagram_url or settings.whatsapp_number) %}
   <div class="social-links">

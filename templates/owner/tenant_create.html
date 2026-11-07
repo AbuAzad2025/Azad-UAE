@@ -58,8 +58,32 @@
               </label>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address') }}</label>
+              <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address_Arabic') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255" id="f_address_ar"></textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="f_address_en">{{ t('Address_English') }}</label>
+              <textarea name="address_en" class="form-control" rows="2" maxlength="255" id="f_address_en"></textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_city">{{ t('City') }}</label>
+              <input type="text" name="city" class="form-control" id="input_city" maxlength="100">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_country">{{ t('Country') }}</label>
+              <input type="text" name="country" class="form-control" id="input_country" maxlength="100">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_website">{{ t('Website') }}</label>
+              <input type="url" name="website" class="form-control" id="input_website" maxlength="200">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_commercial_register">{{ t('Commercial_Register') }}</label>
+              <input type="text" name="commercial_register" class="form-control" id="input_commercial_register" maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_license_number">{{ t('License_Number') }}</label>
+              <input type="text" name="license_number" class="form-control" id="input_license_number" maxlength="100">
             </div>
           </div>
 

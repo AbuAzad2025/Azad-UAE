@@ -239,6 +239,12 @@ def tenant_create():
                 phone_2=request.form.get("phone_2", "").strip() or None,
                 email=request.form.get("email", "").strip() or None,
                 address_ar=request.form.get("address_ar", "").strip() or None,
+                address_en=_inv_text("address_en"),
+                city=_inv_text("city"),
+                country=_inv_text("country"),
+                website=_inv_text("website"),
+                commercial_register=_inv_text("commercial_register"),
+                license_number=_inv_text("license_number"),
                 default_currency=default_currency,
                 vat_country=vat_country,
                 default_tax_rate=vat_rate_for_country(vat_country),
@@ -463,6 +469,9 @@ def tenant_edit(tenant_id):
                 tenant.phone_2 = (request.form.get("phone_2") or tenant.phone_2 or "").strip() or None
                 tenant.email = (request.form.get("email") or tenant.email or "").strip() or None
                 tenant.address_ar = (request.form.get("address_ar") or tenant.address_ar or "").strip() or None
+                for _field in ("address_en", "city", "country", "website", "commercial_register", "license_number"):
+                    if _field in request.form:
+                        setattr(tenant, _field, (request.form.get(_field) or "").strip() or None)
                 # Tax & invoice constants travel with the profile: changing
                 # the VAT country re-locks the rate to that country's
                 # statutory rate (never whatever the operator typed).
@@ -474,21 +483,22 @@ def tenant_edit(tenant_id):
                 )
                 if _country not in ("PS", "IL", "AE", "SA"):
                     _country = tenant.vat_country or FALLBACK_VAT_COUNTRY
-                _vat_number = (request.form.get("vat_number") or "").strip() or None
-                _tax_number = (request.form.get("tax_number") or "").strip() or None
-                for _candidate in (_vat_number, _tax_number):
+                for _field in ("vat_number", "tax_number"):
+                    if _field not in request.form:
+                        continue
+                    _candidate = (request.form.get(_field) or "").strip() or None
                     if _candidate and not validate_tax_number(_candidate, _country):
                         raise ValueError(gettext(f"رقم غير صالح لدولة {_country}."))
+                    setattr(tenant, _field, _candidate)
+                if _country != tenant.vat_country:
+                    tenant.default_tax_rate = vat_rate_for_country(_country)
                 tenant.vat_country = _country
-                tenant.default_tax_rate = vat_rate_for_country(_country)
-                tenant.enable_tax = request.form.get("enable_tax") == "on"
-                tenant.vat_number = _vat_number
-                tenant.tax_number = _tax_number
-                tenant.logo_url = (request.form.get("logo_url") or tenant.logo_url or "").strip() or None
-                # Invoice constants are profile-owned: whatever the operator
-                # edits here is what every invoice/receipt reads. Blank
-                # means "unset" (the print-time resolver then falls back to
-                # the document defaults), never the string "".
+                if "profile_tax_fields" in request.form or "enable_tax" in request.form:
+                    tenant.enable_tax = request.form.get("enable_tax") == "on"
+                if "logo_url" in request.form:
+                    tenant.logo_url = (request.form.get("logo_url") or "").strip() or None
+                # A missing field is not a request to erase it. An explicitly
+                # submitted empty value still allows the operator to clear it.
                 for _field in (
                     "bank_name",
                     "bank_account_number",
@@ -503,10 +513,12 @@ def tenant_edit(tenant_id):
                     "default_invoice_note_ar",
                     "default_invoice_note_en",
                 ):
-                    setattr(tenant, _field, (request.form.get(_field) or "").strip() or None)
-                tenant.active_invoice_template = (
-                    request.form.get("active_invoice_template") or tenant.active_invoice_template or "modern"
-                ).strip() or "modern"
+                    if _field in request.form:
+                        setattr(tenant, _field, (request.form.get(_field) or "").strip() or None)
+                if "active_invoice_template" in request.form:
+                    tenant.active_invoice_template = (
+                        request.form.get("active_invoice_template") or "modern"
+                    ).strip() or "modern"
                 # Keeps the tenant's own currency when the field is submitted
                 # blank, for the reason _text gives: an emptied <input> posts as
                 # "" and form.get's fallback only helps when the field is
@@ -533,56 +545,38 @@ def tenant_edit(tenant_id):
                 )
                 tenant.max_sales_per_month = _form_int("max_sales_per_month", tenant.max_sales_per_month or 5000)
                 tenant.data_retention_days = _form_int("data_retention_days", tenant.data_retention_days or 365)
-                tenant.enable_pos = request.form.get("enable_pos") == "on"
-                tenant.enable_payroll = request.form.get("enable_payroll") == "on"
-                tenant.enable_cheques = request.form.get("enable_cheques") == "on"
-                tenant.enable_expenses = request.form.get("enable_expenses") == "on"
-                tenant.enable_reports = request.form.get("enable_reports") == "on"
-                tenant.enable_ai = request.form.get("enable_ai") == "on"
-                tenant.enable_store = request.form.get("enable_store") == "on"
-                tenant.enable_gl = request.form.get("enable_gl") == "on"
-                tenant.enable_api = request.form.get("enable_api") == "on"
-                tenant.enable_multi_warehouse = request.form.get("enable_multi_warehouse") == "on"
-                tenant.enable_multi_currency = request.form.get("enable_multi_currency") == "on"
-                tenant.enable_auto_backup = request.form.get("enable_auto_backup") == "on"
-                tenant.allow_data_export = request.form.get("allow_data_export") == "on"
-                tenant.allow_custom_integrations = request.form.get("allow_custom_integrations") == "on"
-                tenant.prices_include_vat = request.form.get("prices_include_vat") == "on"
+                for _field in (
+                    "enable_pos",
+                    "enable_payroll",
+                    "enable_cheques",
+                    "enable_expenses",
+                    "enable_reports",
+                    "enable_ai",
+                    "enable_store",
+                    "enable_gl",
+                    "enable_api",
+                    "enable_multi_warehouse",
+                    "enable_multi_currency",
+                    "enable_auto_backup",
+                    "allow_data_export",
+                    "allow_custom_integrations",
+                ):
+                    if "profile_feature_fields" in request.form or _field in request.form:
+                        setattr(tenant, _field, request.form.get(_field) == "on")
+                if "profile_tax_fields" in request.form or "prices_include_vat" in request.form:
+                    tenant.prices_include_vat = request.form.get("prices_include_vat") == "on"
                 tenant.enable_pos_promotions = _tristate("enable_pos_promotions", tenant.enable_pos_promotions)
                 tenant.enable_pos_multi_tender = _tristate("enable_pos_multi_tender", tenant.enable_pos_multi_tender)
                 tenant.enable_pos_returns = _tristate("enable_pos_returns", tenant.enable_pos_returns)
                 tenant.enable_pos_shifts = _tristate("enable_pos_shifts", tenant.enable_pos_shifts)
                 tenant.updated_at = datetime.now(UTC)
-                # Push the print-time overlay to the invoice constants the
-                # operator just set on the profile: the Tenant is the single
-                # source of truth, so the persisted InvoiceSettings row
-                # follows it (creation-time seeding alone would go stale on
-                # the first edit).
-                from models.invoice_settings import InvoiceSettings
+                # The owner may edit a tenant other than the active one.
+                from services.invoice_profile_service import InvoiceProfileService
+                from utils.invoice_profile import PROFILE_TO_INVOICE_SETTINGS
 
-                _overlay = InvoiceSettings.get_active(tenant.id)
-                if _overlay is not None:
-                    for _field in (
-                        "bank_name",
-                        "bank_account_number",
-                        "iban",
-                        "swift_code",
-                        "payment_terms_ar",
-                        "payment_terms_en",
-                        "footer_invoice_text_ar",
-                        "footer_invoice_text_en",
-                        "default_invoice_note_ar",
-                        "default_invoice_note_en",
-                    ):
-                        setattr(_overlay, _field, getattr(tenant, _field, None))
-                    if tenant.invoice_header_color:
-                        _overlay.header_color = tenant.invoice_header_color
-                    if tenant.invoice_accent_color:
-                        _overlay.accent_color = tenant.invoice_accent_color
-                    if tenant.active_invoice_template:
-                        _overlay.active_template = tenant.active_invoice_template
-                    if tenant.logo_url:
-                        _overlay.logo_url = tenant.logo_url
+                _submitted = set(request.form).intersection(PROFILE_TO_INVOICE_SETTINGS)
+                if _submitted:
+                    InvoiceProfileService.sync_from_tenant(tenant, _submitted)
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
             flash(

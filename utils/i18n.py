@@ -5649,6 +5649,7 @@ TRANSLATIONS = {
     "Additional_Options": {"ar": "خيارات إضافية", "en": "Additional Options"},
     "Additional_Price_Tiers": {"ar": "شرائح سعرية إضافية", "en": "Additional Price Tiers"},
     "Address_Arabic": {"ar": "العنوان (عربي)", "en": "Address (Arabic)"},
+    "Address_English": {"ar": "العنوان (إنجليزي)", "en": "Address (English)"},
     "Adjustment": {"ar": "تسوية", "en": "Adjustment"},
     "Adjustment_Type": {"ar": "نوع التسوية", "en": "Adjustment Type"},
     "Advanced Encryption": {"ar": "تشفير متقدم", "en": "Advanced Encryption"},

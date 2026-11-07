@@ -15,6 +15,8 @@
     <div class="col-lg-8">
       <form class="needs-validation card shadow-sm" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+        <input type="hidden" name="profile_tax_fields" value="1" aria-label="tax fields present">
+        <input type="hidden" name="profile_feature_fields" value="1" aria-label="feature fields present">
         <div class="card-header bg-primary text-white">
           <i class="bi bi-pencil-square mr-2"></i>{{ t('Tenant_Data') }}
         </div>
@@ -57,8 +59,32 @@
               </select>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address') }}</label>
+              <label class="form-label fw-semibold" for="f_address_ar">{{ t('Address_Arabic') }}</label>
               <textarea name="address_ar" class="form-control" rows="2" aria-label="address ar" maxlength="255" id="f_address_ar">{{ tenant.address_ar or '' }}</textarea>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-semibold" for="f_address_en">{{ t('Address_English') }}</label>
+              <textarea name="address_en" class="form-control" rows="2" maxlength="255" id="f_address_en">{{ tenant.address_en or '' }}</textarea>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_city">{{ t('City') }}</label>
+              <input type="text" name="city" class="form-control" value="{{ tenant.city or '' }}" id="input_city" maxlength="100">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_country">{{ t('Country') }}</label>
+              <input type="text" name="country" class="form-control" value="{{ tenant.country or '' }}" id="input_country" maxlength="100">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_website">{{ t('Website') }}</label>
+              <input type="url" name="website" class="form-control" value="{{ tenant.website or '' }}" id="input_website" maxlength="200">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_commercial_register">{{ t('Commercial_Register') }}</label>
+              <input type="text" name="commercial_register" class="form-control" value="{{ tenant.commercial_register or '' }}" id="input_commercial_register" maxlength="100">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_license_number">{{ t('License_Number') }}</label>
+              <input type="text" name="license_number" class="form-control" value="{{ tenant.license_number or '' }}" id="input_license_number" maxlength="100">
             </div>
           </div>
 
@@ -290,12 +316,6 @@
               <div class="custom-control custom-switch">
                 <input type="checkbox" class="custom-control-input" name="allow_data_export" id="allow_data_export" {% if tenant.allow_data_export %}checked{% endif %} aria-label="allow data export">
                 <label class="custom-control-label" for="allow_data_export">{{ t('Data_Export') }}</label>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="custom-control custom-switch">
-                <input type="checkbox" class="custom-control-input" name="prices_include_vat" id="prices_include_vat" {% if tenant.prices_include_vat %}checked{% endif %} aria-label="prices include vat">
-                <label class="custom-control-label" for="prices_include_vat">{{ t('Prices_Include_VAT') }}</label>
               </div>
             </div>
           </div>

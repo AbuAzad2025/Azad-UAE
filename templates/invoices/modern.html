@@ -21,4 +21,4 @@
 {% block invoice_extra_css %}{% endblock %}
 
 {# No extra content needed in content block - everything is in _base.html #}
-{% block content %}{% endblock %}
+{% block content %}{{ super() }}{% endblock %}

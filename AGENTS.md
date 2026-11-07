@@ -83,7 +83,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 ### CI — gates that are actually enforced
 - Authoritative status lives in the Actions tab; a run id recorded here goes stale
   the moment anything is pushed, so it is deliberately not cited here.
-- `python scripts/lint/check_migration_head.py` → single head, chain len 60.
+- `python scripts/lint/check_migration_head.py` → single head, chain len 64.
 - Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 170`
   (measured 50 / 21 / 170 — zero headroom by design; lower a budget only in the
   commit that removes declarations).
@@ -118,7 +118,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   loaded degrades the type and never the text.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → c5d6e7f8a9b0` (62 revisions)
+- **Migration chain (single head):** `squash_001 → … → 2f8a0b4c9d31` (64 revisions)
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
@@ -132,12 +132,15 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
     (`RETAINED_EARNINGS`, `REVENUE_CLOSING`, `EXPENSE_CLOSING`) and the landed-cost
     insurance leg (`INSURANCE_IN`), rebuilt from `GL_CONCEPT_CODES` again — add a new
     concept only with a new rebuild migration
-  - `a7b8c9d0e1f2` tenants still on the placeholder VAT rate (5.00, the old hardcoded
-    default) backfilled to their `vat_country`'s statutory rate from
-    `utils/country_tax.py` — the system no longer inherits UAE 5% for PS 16% / IL 17%
-    / SA 15% tenants; a tenant's own configured rate is preserved
+  - `a7b8c9d0e1f2` changed 5% tenant VAT rates outside AE to the values in
+    `utils/country_tax.py`; it could not distinguish an intentional 5% rate
+    from a default. Those country values are not an effective-dated legal
+    source (for example IL changed to 18% in 2025); review before relying on them.
   - `c5d6e7f8a9b0` the GL concept allow-list widened for `INCOME_TAX_EXPENSE` /
     `INCOME_TAX_PAYABLE` (corporate income-tax provision, services/income_tax_service.py)
+  - `f3e4d5c6b7a8` adds tenant invoice-profile fields; `2f8a0b4c9d31`
+    copies existing invoice settings into empty fields only when exactly one
+    active settings row exists, leaving conflicts and source data untouched.
   - `e4506d215617` F-01/F-02: Receipt.sale_id, Shipment.sale_id + purchase_return_id (SET NULL)
   - `17fca8d581b2` F-06: sale.sales_rep_name; sales_rep_id SET NULL; effective_rep defaults to seller
   - `d9ce53ecac53` F-07: package_purchases.tenant_id (downgrade no-ops when owned by 313a)

@@ -138,30 +138,30 @@ class InvoiceSettings(db.Model):
         settings.tax_number = tenant.tax_number or settings.tax_number
         settings.commercial_register = tenant.commercial_register or settings.commercial_register
         settings.license_number = tenant.license_number or settings.license_number
-        # Print-time constants are profile-owned (single source of truth):
-        # the overlay inherits them once, at first use, and never asks the
-        # operator to enter the same fact twice.
-        for _field in (
-            "bank_name",
-            "bank_account_number",
-            "iban",
-            "swift_code",
-            "payment_terms_ar",
-            "payment_terms_en",
-            "footer_invoice_text_ar",
-            "footer_invoice_text_en",
-            "default_invoice_note_ar",
-            "default_invoice_note_en",
-        ):
-            _val = getattr(tenant, _field, None)
-            if _val:
-                setattr(settings, _field, _val)
-        if tenant.invoice_header_color:
-            settings.header_color = tenant.invoice_header_color
-        if tenant.invoice_accent_color:
-            settings.accent_color = tenant.invoice_accent_color
-        if tenant.active_invoice_template:
-            settings.active_template = tenant.active_invoice_template
+        # Seed a new print settings row from the tenant's configured values.
+        from utils.invoice_profile import sync_invoice_profile
+
+        sync_invoice_profile(
+            tenant,
+            settings,
+            (
+                "bank_name",
+                "bank_account_number",
+                "iban",
+                "swift_code",
+                "payment_terms_ar",
+                "payment_terms_en",
+                "footer_invoice_text_ar",
+                "footer_invoice_text_en",
+                "default_invoice_note_ar",
+                "default_invoice_note_en",
+                "invoice_header_color",
+                "invoice_accent_color",
+                "active_invoice_template",
+                "logo_url",
+            ),
+            skip_empty=True,
+        )
         return settings
 
     @staticmethod
