@@ -1311,11 +1311,18 @@ pending → confirmed → processing → shipped → delivered
 - `fiscal_year_start`
 
 ### 22.4 إعدادات الفاتورة
-**النموذج:** `InvoiceSettings`
-- `prefix` — بادئة رقم الفاتورة
-- `starting_number`
-- `terms_and_conditions`
-- `footer_text`
+**النموذج:** `Tenant` — ملف تعريف الشركة هو مصدر الحقيقة لكل فاتورة/سند (لا توجد طبقة إعدادات طباعة منفصلة).
+- `bank_name` / `iban` / `swift_code` / `bank_account_number` — بيانات حساب الشركة (تظهر في الفاتورة)
+- `payment_terms_ar` / `payment_terms_en` — شروط الدفع
+- `default_invoice_note_ar` / `default_invoice_note_en` / `default_receipt_note_ar` / `default_receipt_note_en` — ملاحظات الفاتورة والسند
+- `terms_conditions_ar` / `terms_conditions_en` — شروط وأحكام الطباعة
+- `footer_text_ar` / `footer_text_en` — تذييل المستندات المطبوعة
+- `active_invoice_template` / `paper_size` / `orientation` — قالب الطباعة وحجم الورق واتجاهه
+- `show_logo` / `logo_path` / `logo_position` / `logo_size` — الشعار وموضعه
+- `enable_qr_code` / `qr_position` — رمز QR في المستندات
+- `enable_watermark` / `watermark_text` / `watermark_image_path` / `watermark_opacity` — العلامة المائية
+- `logo_path` / `stamp_url` / `signature_url` — رفع الشعار والختم والتوقيع (عبر صفحة إعدادات الفاتورة للمالك)
+- الرقم الضريبي / التجاري مستمد من حقلي `tax_number` و`commercial_register` للشركة نفسها
 
 ---
 

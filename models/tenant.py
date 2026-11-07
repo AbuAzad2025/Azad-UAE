@@ -61,10 +61,9 @@ class Tenant(db.Model):
     brand_color_primary = db.Column(db.String(20), default="#007A3D")
     brand_color_secondary = db.Column(db.String(20), default="#D4AF37")
 
-    # Invoice constants (single source of truth — see
-    # InvoiceSettings._seed_from_tenant). These tenant attributes are what
-    # every invoice/receipt reads; InvoiceSettings is a print-time overlay
-    # for signature/stamp extras only, never the source of the facts below.
+    # Invoice constants — the Tenant row is the single source of truth.
+    # Every document (invoice/receipt/statement) reads these attributes from
+    # the pinned tenant; there is no separate settings row to drift away.
     bank_name = db.Column(db.String(200))
     bank_account_number = db.Column(db.String(100))
     iban = db.Column(db.String(100))
