@@ -5,18 +5,19 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 
+from utils.country_tax import COUNTRY_TAX_PROFILES, vat_rate_for_country
 from utils.regional_defaults import FALLBACK_VAT_COUNTRY
 
-VAT_RATES_BY_COUNTRY = {
-    "PS": Decimal("16.00"),
-    "IL": Decimal("17.00"),
-    "AE": Decimal("5.00"),
-}
+# Statutory VAT rates — derived from the single source of truth in
+# utils/country_tax.py. Re-exported here (not duplicated) so every existing
+# importer keeps working and cannot drift from the profiles.
+VAT_RATES_BY_COUNTRY = {code: Decimal(str(p["vat_rate"])) for code, p in COUNTRY_TAX_PROFILES.items()}
 
 VAT_COUNTRY_LABELS = {
-    "PS": "فلسطين (16%)",
-    "IL": "إسرائيل (17%)",
-    "AE": "الإمارات (5%)",
+    "PS": f"فلسطين ({vat_rate_for_country('PS')}%)",
+    "IL": f"إسرائيل ({vat_rate_for_country('IL')}%)",
+    "AE": f"الإمارات ({vat_rate_for_country('AE')}%)",
+    "SA": f"السعودية ({vat_rate_for_country('SA')}%)",
 }
 
 
@@ -61,7 +62,15 @@ def vat_country(tenant_id=None) -> str:
 
 
 def default_tax_rate(tenant_id=None) -> Decimal:
-    """Return tenant-configured tax rate. Falls back to 0 if not set."""
+    """Return the tenant's VAT rate.
+
+    Priority: the tenant's own configured rate if set, otherwise the
+    statutory rate of the tenant's VAT country (utils/country_tax.py).
+    Zero when tax is disabled. A stored rate is never overridden — a
+    tenant pinned to a custom rate keeps it — but a tenant with no
+    configured rate now inherits its country's statutory rate instead of
+    silently getting zero VAT.
+    """
     if not is_tax_enabled(tenant_id):
         return Decimal("0")
     tenant = _resolve_tenant(tenant_id)
@@ -70,7 +79,24 @@ def default_tax_rate(tenant_id=None) -> Decimal:
     stored = getattr(tenant, "default_tax_rate", None)
     if stored is not None and Decimal(str(stored)) >= Decimal("0"):
         return Decimal(str(stored))
-    return Decimal("0")  # Removed hardcoded VAT_RATES_BY_COUNTRY fallback
+    return vat_rate_for_country(vat_country(tenant_id))
+
+
+def effective_tax_rate(tax_rate, tenant_id=None) -> Decimal:
+    """Effective invoice VAT rate with country compliance.
+
+    ``None`` means "not specified" → the tenant/country default. An explicit
+    value is honored (0 = exempt/zero-rated, standard = standard). Tax
+    disabled → 0.
+    """
+    if not is_tax_enabled(tenant_id):
+        return Decimal("0")
+    if tax_rate is None:
+        return default_tax_rate(tenant_id)
+    rate = Decimal(str(tax_rate))
+    if rate < Decimal("0") or rate > Decimal("100"):
+        raise ValueError("نسبة الضريبة يجب أن تكون بين 0 و 100")
+    return rate
 
 
 def get_prices_include_vat(tenant_id=None, branch_id=None) -> bool:
@@ -95,13 +121,12 @@ def get_prices_include_vat(tenant_id=None, branch_id=None) -> bool:
 
 
 def normalize_tax_rate(tax_rate, tenant_id=None) -> Decimal:
-    """Return effective tax rate — zero when tenant has tax disabled."""
-    if not is_tax_enabled(tenant_id):
-        return Decimal("0")
-    rate = Decimal(str(tax_rate if tax_rate is not None else 0))
-    if rate < Decimal("0") or rate > Decimal("100"):
-        raise ValueError("نسبة الضريبة يجب أن تكون بين 0 و 100")
-    return rate
+    """Return effective tax rate — zero when tenant has tax disabled.
+
+    Kept for compatibility: a ``None`` rate means "use the tenant/country
+    default" (see effective_tax_rate); an explicit rate is respected.
+    """
+    return effective_tax_rate(tax_rate, tenant_id)
 
 
 def should_post_vat_gl(tenant_id=None) -> bool:
@@ -109,4 +134,4 @@ def should_post_vat_gl(tenant_id=None) -> bool:
 
 
 def suggested_rate_for_country(country_code: str) -> Decimal:
-    return VAT_RATES_BY_COUNTRY.get((country_code or "").strip().upper(), Decimal("0"))
+    return vat_rate_for_country(country_code)

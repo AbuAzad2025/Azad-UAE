@@ -4,6 +4,7 @@ Country-specific compliance engines for Palestine, UAE, and Saudi Arabia.
 """
 
 from .engine import LocalizationStrategy
+from .israel import IsraelStrategy
 from .ksa import KSAStrategy
 from .null import NullStrategy
 from .palestine import PalestineStrategy
@@ -15,6 +16,7 @@ __all__ = [
     "LocalizationStrategy",
     "NullStrategy",
     "PalestineStrategy",
+    "IsraelStrategy",
     "UAEStrategy",
     "KSAStrategy",
 ]

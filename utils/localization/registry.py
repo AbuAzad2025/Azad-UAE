@@ -4,6 +4,7 @@ Localization Strategy Registry — maps country codes to strategy classes.
 
 from typing import cast
 
+from .israel import IsraelStrategy
 from .ksa import KSAStrategy
 from .null import NullStrategy
 from .palestine import PalestineStrategy
@@ -11,6 +12,7 @@ from .uae import UAEStrategy
 
 _STRATEGIES = {
     "PS": PalestineStrategy,
+    "IL": IsraelStrategy,
     "AE": UAEStrategy,
     "SA": KSAStrategy,
 }
