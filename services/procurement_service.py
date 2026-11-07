@@ -100,7 +100,7 @@ class ProcurementService:
 
         po = PurchaseOrder(
             tenant_id=tid,
-            po_number=generate_number("PO", PurchaseOrder, "po_number"),
+            po_number=generate_number("PO", PurchaseOrder, "po_number", tenant_id=tid),
             supplier_id=supplier_id,
             warehouse_id=warehouse_id,
             branch_id=branch_id or requisition.branch_id,

@@ -76,7 +76,7 @@ def _build_expense_gl_lines(expense, tenant_id):
         expense_concept = "MISC_EXPENSE"
     if expense.payment_method == "cheque":
         payment_account = GLService.get_account_code_for_concept(
-            "DEFERRED_CHEQUES_PAYABLE", tenant_id=tid, fallback_key="2120"
+            "DEFERRED_CHEQUES_PAYABLE", tenant_id=tid, fallback_key="2130"
         )
         payment_concept = "DEFERRED_CHEQUES_PAYABLE"
     else:

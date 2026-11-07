@@ -362,7 +362,7 @@ def import_products():
     with atomic_transaction("product_import_sync"):
         service = ProductImportService(tid, current_user.id)
         if template_id:
-            template = ProductImportTemplate.query.get(template_id)
+            template = ProductImportTemplate.query.filter_by(id=template_id, tenant_id=tid).first()
             if template:
                 service.set_template(template)
 

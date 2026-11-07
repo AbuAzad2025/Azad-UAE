@@ -14,7 +14,7 @@ from models.shipment import Shipment
 from services.shipment_service import ShipmentService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
-from utils.tenanting import get_active_tenant_id
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 shipment_bp = Blueprint("shipments", __name__, url_prefix="/shipments")
 
@@ -31,8 +31,12 @@ def _tenant_id():
 @permission_required("manage_warehouse")
 def list_shipments():
     tid = _tenant_id()
+    if tid is None:
+        from flask import abort
+
+        abort(403)
     status = request.args.get("status", "", type=str)
-    q = db.session.query(Shipment).filter(Shipment.tenant_id == tid) if tid else db.session.query(Shipment)
+    q = tenant_query(Shipment)
     if status:
         q = q.filter(Shipment.status == status)
     shipments = q.order_by(Shipment.created_at.desc()).all()
@@ -43,14 +47,10 @@ def list_shipments():
 @login_required
 @permission_required("manage_warehouse")
 def view_shipment(id):
-    s = db.get_or_404(Shipment, id)
-    tid = _tenant_id()
-    if tid and s.tenant_id != tid:
-        from flask import abort
-
-        abort(403)
+    s = tenant_get_or_404(Shipment, id)
     from models.sale import Sale
 
+    tid = _tenant_id()
     sales = []
     if hasattr(Sale, "shipment_id"):
         sales = (
@@ -118,17 +118,13 @@ def create_shipment():
     from utils.tenanting import tenant_query
 
     tid = _tenant_id()
-    warehouses = (
-        tenant_query(Warehouse).filter_by(is_active=True).all()
-        if tid
-        else Warehouse.query.filter_by(is_active=True).all()
-    )
-    products = (
-        tenant_query(Product).filter_by(is_active=True).order_by(Product.name).all()
-        if tid
-        else Product.query.filter_by(is_active=True).order_by(Product.name).all()
-    )
-    users = tenant_query(User).filter_by(is_active=True).all() if tid else User.query.filter_by(is_active=True).all()
+    if tid is None:
+        from flask import abort
+
+        abort(403)
+    warehouses = tenant_query(Warehouse).filter_by(is_active=True).all()
+    products = tenant_query(Product).filter_by(is_active=True).order_by(Product.name).all()
+    users = tenant_query(User).filter_by(is_active=True).all()
     return render_template("shipments/create.html", warehouses=warehouses, products=products, users=users)
 
 
@@ -204,9 +200,11 @@ def api_warehouses():
     from models.warehouse import Warehouse
 
     tid = _tenant_id()
-    query = db.session.query(Warehouse).filter_by(is_active=True)
-    if tid:
-        query = query.filter(Warehouse.tenant_id == tid)
+    if tid is None:
+        from flask import abort
+
+        abort(403)
+    query = tenant_query(Warehouse).filter_by(is_active=True)
     if q:
         query = query.filter(Warehouse.name.ilike(f"%{q}%"))
     rows = query.limit(20).all()
@@ -220,9 +218,11 @@ def api_products():
     from models.product import Product
 
     tid = _tenant_id()
-    query = db.session.query(Product).filter_by(is_active=True)
-    if tid:
-        query = query.filter(Product.tenant_id == tid)
+    if tid is None:
+        from flask import abort
+
+        abort(403)
+    query = tenant_query(Product).filter_by(is_active=True)
     if q:
         query = query.filter(Product.name.ilike(f"%{q}%"))
     rows = query.limit(20).all()

@@ -149,7 +149,9 @@ class Tenant(db.Model):
     @property
     def get_base_currency(self):
         """Return the tenant's base currency. Falls back to default_currency if base_currency is not set."""
-        return (self.base_currency or self.default_currency or "ILS").strip().upper()
+        from utils.regional_defaults import FALLBACK_CURRENCY
+
+        return (self.base_currency or self.default_currency or FALLBACK_CURRENCY).strip().upper()
 
     def get_currency_for_display(self):
         """Return the currency symbol for the tenant's base currency."""

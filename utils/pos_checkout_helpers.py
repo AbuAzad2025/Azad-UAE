@@ -110,13 +110,10 @@ def _tender_chunk_aed(chunk, tenant_id):
 
 
 def _accumulate_session_tender(session, chunk, tenant_id):
-    """Accumulate per-tender session totals for a split-tender chunk."""
-    method = chunk.get("payment_method")
-    chunk_aed = _tender_chunk_aed(chunk, tenant_id)
-    if method == _TENDER_CASH_METHOD:
-        session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + chunk_aed
-    elif method in _TENDER_CARD_METHODS:
-        session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + chunk_aed
+    """Accumulate per-tender session totals (delegates to atomic implementation)."""
+    from services.pos_session_service import _accumulate_session_tender_atomic
+
+    _accumulate_session_tender_atomic(session, chunk, tenant_id)
 
 
 def _compute_change_due(

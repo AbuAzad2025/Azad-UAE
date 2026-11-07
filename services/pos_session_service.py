@@ -37,7 +37,7 @@ class PosSessionService:
             )
         if payments_data:
             for tender_chunk in payments_data:
-                _accumulate_session_tender(session, tender_chunk, tenant_id)
+                _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
         db.session.add(session)
 
     @staticmethod
@@ -56,24 +56,8 @@ class PosSessionService:
 
 
 def _accumulate_session_tender(session, tender_chunk, tenant_id=None):
-    """Accumulate tender amounts into session totals."""
-    from decimal import Decimal
-
-    from utils.currency_utils import convert_and_quantize_aed
-
-    method = tender_chunk.get("payment_method", "cash")
-    amount = Decimal(str(tender_chunk.get("amount", 0)))
-    currency = tender_chunk.get("currency", "AED")
-    rate = Decimal(str(tender_chunk.get("exchange_rate", 1)))
-    amount_aed = convert_and_quantize_aed(amount, currency, rate, tenant_id=tenant_id)
-
-    if method == "cash":
-        session.total_cash_sales = Decimal(str(session.total_cash_sales or 0)) + amount_aed
-    elif method == "card":
-        session.total_card_sales = Decimal(str(session.total_card_sales or 0)) + amount_aed
-    else:
-        # Unknown tender methods still count toward total_sales
-        session.total_sales = Decimal(str(session.total_sales or 0)) + amount_aed
+    """Accumulate tender amounts into session totals (atomic variant)."""
+    _accumulate_session_tender_atomic(session, tender_chunk, tenant_id)
 
 
 def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
@@ -108,7 +92,7 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         )
         session.__dict__["total_cash_sales"] = _pre + amount_aed
         db.session.flush()
-    elif method == "card":
+    elif method in ("card", "bank_transfer", "e_wallet"):
         from sqlalchemy import update as _sa_update
 
         _pre = Decimal(str(session.total_card_sales or 0))
@@ -120,16 +104,6 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         )
         session.__dict__["total_card_sales"] = _pre + amount_aed
         db.session.flush()
-    else:
-        from sqlalchemy import update as _sa_update
-
-        _pre = Decimal(str(session.total_sales or 0))
-        db.session.execute(
-            _sa_update(PosSession)
-            .where(PosSession.id == session.id)
-            .values(total_sales=PosSession.__table__.c.total_sales + amount_aed),
-            execution_options={"synchronize_session": False},
-        )
-        session.__dict__["total_sales"] = _pre + amount_aed
-        db.session.flush()
-    # NOTE: total_sales is set separately by the sale amount. Do NOT add tender amounts.
+    # Unknown methods are not accumulated: total_sales is set separately by
+    # the sale amount in pos_checkout_service, so adding a tender here would
+    # double-count.
