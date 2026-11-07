@@ -25,7 +25,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask, g
-from flask.globals import _cv_request
 from werkzeug.exceptions import Forbidden
 
 import utils.offsite_backup as offsite_backup
@@ -273,11 +272,7 @@ class TestSystemIntegratorWave10:
     def test_active_tid_reads_flask_g(self, app):
         from ai_knowledge.core.system_integration import _active_tid
 
-        token = _cv_request.set(None)
-        try:
-            assert _active_tid() is None
-        finally:
-            _cv_request.reset(token)
+        assert _active_tid() is None
         with app.test_request_context("/x/"):
             g.active_tenant_id = 42
             assert _active_tid() == 42
