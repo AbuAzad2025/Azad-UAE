@@ -34,6 +34,10 @@ class TestPostSaleCommissions:
             side_effect=RuntimeError("no currency"),
         )
         ensure = mocker.patch("services.commission_gl_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.commission_gl_service.GLService.get_account_code_for_concept",
+            return_value="6160",
+        )
         post = mocker.patch("services.commission_gl_service.post_or_fail", return_value=MagicMock(id=9))
         from services.commission_gl_service import post_sale_commissions
 

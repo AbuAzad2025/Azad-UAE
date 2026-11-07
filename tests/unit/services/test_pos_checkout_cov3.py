@@ -377,7 +377,7 @@ class TestPostSaleBranches:
         sess = _session(sample_tenant.id, sample_branch.id, sample_user.id)
         db_session.add(sess)
         db_session.flush()
-        shift = SimpleNamespace(total_change_given=Decimal("0"))
+        shift = SimpleNamespace(id=999, total_change_given=Decimal("0"))
         resp, _ = PosCheckoutService.checkout(
             payload=_base_payload(
                 sample_product.id,

@@ -136,6 +136,10 @@ class TestUpdateSessionTotals:
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("15.500")
 
     def test_unknown_tender_method_only_counts_into_total_sales(self, db_session, sample_tenant, pos_session, sale):
+        # Unknown tender methods (e.g. store_credit) are NOT accumulated as
+        # cash/card; total_sales carries only the sale amount (double-count
+        # would inflate turnover). Contract: POS turnover dedup — total_sales
+        # is set solely from sale.total_amount.
         from services.pos_session_service import PosSessionService
 
         PosSessionService.update_session_totals(
@@ -146,7 +150,7 @@ class TestUpdateSessionTotals:
         )
         db_session.flush()
 
-        assert Decimal(str(pos_session.total_sales)) == Decimal("240.000")
+        assert Decimal(str(pos_session.total_sales)) == Decimal("210.000")
         assert Decimal(str(pos_session.total_cash_sales)) == Decimal("0")
         assert Decimal(str(pos_session.total_card_sales)) == Decimal("0")
 

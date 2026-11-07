@@ -279,7 +279,7 @@ class PosCheckoutService:
             user_exchange_rate=exchange_rate,
             discount_amount=payload.get("discount_amount", 0) or 0,
             shipping_cost=payload.get("shipping_cost", 0) or 0,
-            tax_rate=payload.get("tax_rate", 0) or 0,
+            tax_rate=payload.get("tax_rate"),
             notes=notes,
             payment_data=payment_data,
             payments_data=payments_data,

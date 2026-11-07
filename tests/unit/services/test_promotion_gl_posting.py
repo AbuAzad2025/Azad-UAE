@@ -201,10 +201,10 @@ class TestSaleTotalsWithPromotion:
             promotion_discount_amount=Decimal("21"),
         )
         sale.calculate_totals()
-        # gross = 100 - 21 = 79; taxable = 79 / 1.05 = 75.24; tax = 3.76
+        # gross = 100 - 21 = 79; taxable = 79 / 1.05 = 75.238; tax = 3.762 (0.001 precision)
         assert sale.total_amount == Decimal("79.000")
-        assert sale.taxable_amount == Decimal("75.24")
-        assert sale.tax_amount == Decimal("3.76")
+        assert sale.taxable_amount == Decimal("75.238")
+        assert sale.tax_amount == Decimal("3.762")
 
     def test_calculate_totals_zero_promotion_unchanged(
         self, db_session, sample_tenant, sample_customer, sample_user, sample_product

@@ -89,7 +89,7 @@ class SaleService:
         user_exchange_rate=None,
         discount_amount=0,
         shipping_cost=0,
-        tax_rate=0,
+        tax_rate=None,
         notes=None,
         payment_data=None,
         payments_data=None,
@@ -125,10 +125,12 @@ class SaleService:
         currency = (currency or "").strip() or get_system_default_currency()
         currency = validate_currency_code(currency)
 
-        # Validate discount and tax (rate finalized after tenant/warehouse resolved)
+        # Validate discount and tax (rate finalized after tenant/warehouse resolved).
+        # tax_rate=None means "not specified" → the tenant/country statutory
+        # default (utils/tax_settings.py). Explicit 0 means exempt/zero-rated.
         discount_decimal = Decimal(str(discount_amount)) if discount_amount else Decimal("0")
         shipping_decimal = Decimal(str(shipping_cost)) if shipping_cost else Decimal("0")
-        raw_tax_rate = Decimal(str(tax_rate)) if tax_rate else Decimal("0")
+        raw_tax_rate = None if tax_rate is None else Decimal(str(tax_rate))
 
         if discount_decimal < Decimal("0"):
             raise ValueError(gettext("قيمة الخصم لا يمكن أن تكون سالبة"))

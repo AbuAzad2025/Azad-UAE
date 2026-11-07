@@ -138,7 +138,7 @@ def create():
                     currency=request.form.get("currency") or default_currency,
                     user_exchange_rate=request.form.get("exchange_rate", type=float),
                     discount_amount=safe_float(request.form.get("discount_amount")),
-                    tax_rate=safe_float(request.form.get("tax_rate")),
+                    tax_rate=safe_float(request.form.get("tax_rate"), default=None),
                     notes=request.form.get("notes"),
                     freight=safe_float(request.form.get("freight")),
                     insurance=safe_float(request.form.get("insurance")),
@@ -458,7 +458,9 @@ def api_calculate_purchase_totals():
             return error_response(message="No data provided", status_code=400)
 
         lines = data.get("lines", [])
-        tax_rate = Decimal(str(data.get("tax_rate", 0)))
+        # None = not specified → country/tenant default in normalize_tax_rate.
+        _raw_tax = data.get("tax_rate")
+        tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
         from utils.tax_settings import normalize_tax_rate
 
         # Name the tenant explicitly - see the same fix in routes/sales.py. Omitting

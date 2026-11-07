@@ -77,8 +77,13 @@ def default_tax_rate(tenant_id=None) -> Decimal:
     if tenant is None:
         return Decimal("0")
     stored = getattr(tenant, "default_tax_rate", None)
-    if stored is not None and Decimal(str(stored)) >= Decimal("0"):
-        return Decimal(str(stored))
+    if stored is not None:
+        try:
+            stored_rate = Decimal(str(stored))
+        except Exception:
+            stored_rate = None
+        if stored_rate is not None and stored_rate >= Decimal("0"):
+            return stored_rate
     return vat_rate_for_country(vat_country(tenant_id))
 
 

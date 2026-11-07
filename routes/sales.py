@@ -198,7 +198,7 @@ def create():
 
             discount_amount = safe_float(request.form.get("discount_amount"))
             shipping_cost = safe_float(request.form.get("shipping_cost"))
-            tax_rate = safe_float(request.form.get("tax_rate"))
+            tax_rate = safe_float(request.form.get("tax_rate"), default=None)
             notes = request.form.get("notes")
             sales_rep_id = request.form.get("sales_rep_id", type=int)
             coupon_code = request.form.get("coupon_code", "").strip()
@@ -705,7 +705,9 @@ def api_calculate_sale_totals():
         lines = data.get("lines", [])
         discount_amount = Decimal(str(data.get("discount_amount", 0)))
         shipping_cost = Decimal(str(data.get("shipping_cost", 0)))
-        tax_rate = Decimal(str(data.get("tax_rate", 0)))
+        # None = not specified → country/tenant default in normalize_tax_rate.
+        _raw_tax = data.get("tax_rate")
+        tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
         prices_include_vat = bool(data.get("prices_include_vat", False))
         from utils.tax_settings import normalize_tax_rate
 

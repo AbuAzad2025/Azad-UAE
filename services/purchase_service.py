@@ -78,7 +78,7 @@ class PurchaseService:
         currency=None,
         user_exchange_rate=None,
         discount_amount=0,
-        tax_rate=0,
+        tax_rate=None,
         notes=None,
         freight=0,
         insurance=0,
@@ -96,7 +96,7 @@ class PurchaseService:
             currency: Currency code (default 'AED')
             user_exchange_rate: Optional manual exchange rate
             discount_amount: Total discount amount
-            tax_rate: Tax percentage
+            tax_rate: Tax percentage, or None for the tenant/country statutory default
             notes: Optional notes
             freight: Freight/shipping cost (in purchase currency)
             insurance: Insurance cost (in purchase currency)
