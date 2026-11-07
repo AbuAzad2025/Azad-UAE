@@ -161,6 +161,7 @@ def test_transfer_skips_tenant_check_when_product_unscoped():
         patch.object(ss.StockService, "create_movement", return_value=MagicMock(id=9)),
         patch.object(ss.StockService, "get_product_stock", return_value=Decimal("50")),
         patch.object(ss.ProductWarehouseCost, "query", q_pwc),
+        patch("services.stock_service._safe_for_update", return_value=None),
     ):
         q_wh.filter_by.return_value.first.side_effect = [from_wh, to_wh]
         out, _ = ss.StockService.transfer_stock(1, 10, 11, 10, user=None)
@@ -187,6 +188,7 @@ def test_transfer_moves_pwc_value_to_existing_dest():
         patch.object(ss.StockService, "create_movement", return_value=MagicMock(id=9)),
         patch.object(ss.StockService, "get_product_stock", return_value=Decimal("50")),
         patch.object(ss.ProductWarehouseCost, "query", q_pwc),
+        patch("services.stock_service._safe_for_update", side_effect=[src_pwc, dest_pwc]),
         patch.object(ss.db.session, "flush"),
         patch("utils.auth_helpers.is_global_owner_user", return_value=True),
     ):
@@ -215,6 +217,7 @@ def test_transfer_creates_dest_pwc_and_resets_src_on_drain():
         patch.object(ss.StockService, "create_movement", return_value=MagicMock(id=9)),
         patch.object(ss.StockService, "get_product_stock", return_value=Decimal("50")),
         patch.object(ss.ProductWarehouseCost, "query", q_pwc),
+        patch("services.stock_service._safe_for_update", side_effect=[src_pwc, None]),
         patch.object(ss.db.session, "add") as add_mock,
         patch.object(ss.db.session, "flush"),
         patch("utils.auth_helpers.is_global_owner_user", return_value=False),

@@ -363,9 +363,27 @@ class PosCheckoutService:
             tenant_id,
         )
         if change_due > Decimal("0"):
-            session.total_change_given = safe_decimal(session.total_change_given) + change_due
+            _pre_change = safe_decimal(session.total_change_given)
+            db.session.execute(
+                sa_update(PosSession)
+                .where(PosSession.id == session.id)
+                .values(total_change_given=PosSession.__table__.c.total_change_given + change_due),
+                execution_options={"synchronize_session": False},
+            )
+            session.__dict__["total_change_given"] = _pre_change + change_due
+            db.session.flush()
             if shift is not None:
-                shift.total_change_given = safe_decimal(getattr(shift, "total_change_given", None)) + change_due
+                from models.pos_shift import PosShift
+
+                _pre_shift = safe_decimal(getattr(shift, "total_change_given", None))
+                db.session.execute(
+                    sa_update(PosShift)
+                    .where(PosShift.id == shift.id)
+                    .values(total_change_given=PosShift.__table__.c.total_change_given + change_due),
+                    execution_options={"synchronize_session": False},
+                )
+                shift.__dict__["total_change_given"] = _pre_shift + change_due
+                db.session.flush()
 
         if override_supervisor_id is not None:
             LoggingCore.log_audit(

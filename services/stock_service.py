@@ -31,23 +31,22 @@ _BASE_LOCK_RETRY_DELAY = 0.02  # 20ms base delay
 
 
 def _safe_for_update(query, label="row"):
-    """Execute SELECT … FOR UPDATE NOWAIT with simple retry.
+    """Execute SELECT … FOR UPDATE NOWAIT with savepoint-based retry.
 
     Uses NOWAIT to fail fast when the lock is held by another transaction,
     then retries with exponential backoff + jitter to reduce contention.
-    No savepoints needed since FOR UPDATE NOWAIT doesn't modify data.
-
-    Rationale: The previous blocking FOR UPDATE caused deadlocks under high
-    concurrency (e.g., 4 threads competing for the same stock row) because
-    PostgreSQL would queue waiters indefinitely. NOWAIT + retry ensures
-    threads back off and retry, allowing the database to serialize access
-    without deadlocking the test runner's 120s thread join timeout.
+    Each attempt runs in its own savepoint so a lock failure rolls back
+    only the savepoint, not the caller's transaction — without it, a single
+    contention abort would poison the whole checkout.
     """
     for attempt in range(1, _MAX_LOCK_RETRIES + 1):
+        savepoint = db.session.begin_nested()
         try:
             result = query.with_for_update(nowait=True).first()
+            savepoint.commit()
             return result
         except OperationalError as e:
+            savepoint.rollback()
             # Check if it's a lock-not-available error (PostgreSQL error code 55P03)
             # or a deadlock detected error (PostgreSQL error code 40P01)
             is_lock_error = (
@@ -600,9 +599,15 @@ class StockService:
         # Move average cost value from source to destination
         from models import ProductWarehouseCost
 
-        src_pwc = ProductWarehouseCost.query.filter_by(
-            tenant_id=tenant_id, product_id=product_id, warehouse_id=from_wh.id
-        ).first()
+        # Lock PWC rows in warehouse-id order to serialize concurrent transfers
+        # on the same pair (otherwise two Python RMWs lose valuation updates).
+        _lock_order = sorted([from_wh.id, to_wh.id])
+        _pwcs = {}
+
+        for _wid in _lock_order:
+            _q = ProductWarehouseCost.query.filter_by(tenant_id=tenant_id, product_id=product_id, warehouse_id=_wid)
+            _pwcs[_wid] = _safe_for_update(_q, label=f"PWC transfer p={product_id} w={_wid}")
+        src_pwc = _pwcs[from_wh.id]
         if src_pwc and src_pwc.total_quantity and src_pwc.average_cost:
             unit_cost = src_pwc.average_cost
             transfer_value = (qty * unit_cost).quantize(Decimal("0.001"))
@@ -615,9 +620,7 @@ class StockService:
                 src_pwc.average_cost = Decimal("0.0000")
                 src_pwc.total_value = Decimal("0.001") if src_pwc.total_quantity == 0 else src_pwc.total_value
             # Add to destination
-            dest_pwc = ProductWarehouseCost.query.filter_by(
-                tenant_id=tenant_id, product_id=product_id, warehouse_id=to_wh.id
-            ).first()
+            dest_pwc = _pwcs.get(to_wh.id)
             if not dest_pwc:
                 dest_pwc = ProductWarehouseCost(
                     tenant_id=tenant_id,
