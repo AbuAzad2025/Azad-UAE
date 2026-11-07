@@ -283,6 +283,70 @@
             </div>
             {% endfor %}
           </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-file-text mr-2"></i>{{ t('Invoice_Print_Profile') }}</h5>
+          <p class="text-muted small mb-3">{{ t('Invoice_Print_Profile_Hint') }}</p>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_bank_name">{{ t('Bank_Name') }}</label>
+              <input type="text" name="bank_name" class="form-control" id="input_bank_name" aria-label="bank name" maxlength="200">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_bank_account_number">{{ t('Account_Number') }}</label>
+              <input type="text" name="bank_account_number" class="form-control" id="input_bank_account_number" aria-label="bank account number" maxlength="34" dir="ltr">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-semibold" for="input_iban">IBAN</label>
+              <input type="text" name="iban" class="form-control" id="input_iban" aria-label="iban" maxlength="34" dir="ltr">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-semibold" for="input_swift_code">SWIFT</label>
+              <input type="text" name="swift_code" class="form-control" id="input_swift_code" aria-label="swift code" maxlength="20" dir="ltr">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold" for="input_invoice_header_color">{{ t('Header_Color') }}</label>
+              <input type="color" name="invoice_header_color" class="form-control" id="input_invoice_header_color" value="#667eea" aria-label="invoice header color">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold" for="input_invoice_accent_color">{{ t('Accent_Color') }}</label>
+              <input type="color" name="invoice_accent_color" class="form-control" id="input_invoice_accent_color" value="#764ba2" aria-label="invoice accent color">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_active_invoice_template">{{ t('Active_Template') }}</label>
+              <select name="active_invoice_template" class="form-select" id="input_active_invoice_template" aria-label="active invoice template">
+                <option value="modern" selected>{{ t('Modern') }}</option>
+                <option value="classic">{{ t('Classic') }}</option>
+                <option value="gulf">{{ t('Gulf') }}</option>
+                <option value="simple">{{ t('Simple') }}</option>
+                <option value="minimal">{{ t('Minimal') }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_payment_terms_ar">{{ t('Payment_Terms_Arabic') }}</label>
+              <textarea name="payment_terms_ar" class="form-control" rows="2" id="input_payment_terms_ar" aria-label="payment terms ar"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_payment_terms_en">Payment Terms (English)</label>
+              <textarea name="payment_terms_en" class="form-control" rows="2" id="input_payment_terms_en" aria-label="payment terms en"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_footer_invoice_text_ar">{{ t('Footer_Text_Arabic') }}</label>
+              <textarea name="footer_invoice_text_ar" class="form-control" rows="2" id="input_footer_invoice_text_ar" aria-label="footer text ar"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_footer_invoice_text_en">Footer (English)</label>
+              <textarea name="footer_invoice_text_en" class="form-control" rows="2" id="input_footer_invoice_text_en" aria-label="footer text en"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_default_invoice_note_ar">{{ t('Default_Invoice_Note_Ar') }}</label>
+              <textarea name="default_invoice_note_ar" class="form-control" rows="2" id="input_default_invoice_note_ar" aria-label="default invoice note ar"></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_default_invoice_note_en">Default Note (English)</label>
+              <textarea name="default_invoice_note_en" class="form-control" rows="2" id="input_default_invoice_note_en" aria-label="default invoice note en"></textarea>
+            </div>
+          </div>
         </div>
         <div class="card-footer d-flex justify-content-between">
           <a href="{{ url_for('owner.tenants_list') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>

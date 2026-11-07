@@ -4071,6 +4071,12 @@ TRANSLATIONS = {
         "en": "The rate is set from the tax country automatically (statutory) — invoices use it, or 0 for exempt",
     },
     "Prices_Include_VAT": {"ar": "الأسعار شاملة الضريبة", "en": "Prices Include VAT"},
+    "Invoice_Print_Profile": {"ar": "ثوابت الفاتورة (البروفايل)", "en": "Invoice Print Profile"},
+    "Invoice_Print_Profile_Hint": {
+        "ar": "هذه الثوابت تُحفظ في بروفايل الشركة وتقرأها كل الفاتورة تلقائيًا — لا تُكرر في أي مكان آخر",
+        "en": "These constants live in the tenant profile and every invoice reads them automatically — entered once, never twice",
+    },
+    "Footer_Text_Arabic": {"ar": "نص الذيل (عربي)", "en": "Footer Text (Arabic)"},
     "Logo_URL_Placeholder": {"ar": "رابط الشعار", "en": "Logo URL"},
     "Warehouse_Negative_Sales": {"ar": "البيع بالسالب للمستودعات", "en": "Warehouse Negative Sales"},
     "Update_Success": {"ar": "تم التحديث بنجاح", "en": "Update Successful"},

@@ -58,6 +58,24 @@ class Tenant(db.Model):
     brand_color_primary = db.Column(db.String(20), default="#007A3D")
     brand_color_secondary = db.Column(db.String(20), default="#D4AF37")
 
+    # Invoice constants (single source of truth — see
+    # InvoiceSettings._seed_from_tenant). These tenant attributes are what
+    # every invoice/receipt reads; InvoiceSettings is a print-time overlay
+    # for signature/stamp extras only, never the source of the facts below.
+    bank_name = db.Column(db.String(200))
+    bank_account_number = db.Column(db.String(100))
+    iban = db.Column(db.String(100))
+    swift_code = db.Column(db.String(50))
+    invoice_header_color = db.Column(db.String(20), default="#667eea")
+    invoice_accent_color = db.Column(db.String(20), default="#764ba2")
+    payment_terms_ar = db.Column(db.Text)
+    payment_terms_en = db.Column(db.Text)
+    footer_invoice_text_ar = db.Column(db.Text)
+    footer_invoice_text_en = db.Column(db.Text)
+    default_invoice_note_ar = db.Column(db.Text)
+    default_invoice_note_en = db.Column(db.Text)
+    active_invoice_template = db.Column(db.String(50), default="modern")
+
     # Subscription - الاشتراك
     subscription_plan = db.Column(db.String(50), default="basic")  # basic, pro, enterprise
     subscription_plan_duration = db.Column(db.String(20), default="monthly")  # monthly, annual, lifetime

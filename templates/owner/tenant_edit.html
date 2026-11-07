@@ -96,6 +96,70 @@
               <label class="form-label fw-semibold" for="input_logo_url">{{ t('Logo_URL') }}</label>
               <input type="text" name="logo_url" class="form-control" value="{{ tenant.logo_url or '' }}" id="input_logo_url" aria-label="logo url" placeholder="{{ t('Logo_URL_Placeholder') }}">
             </div>
+          </div>
+
+          <hr class="my-4">
+          <h5 class="fw-semibold text-primary mb-1"><i class="bi bi-file-text mr-2"></i>{{ t('Invoice_Print_Profile') }}</h5>
+          <p class="text-muted small mb-3">{{ t('Invoice_Print_Profile_Hint') }}</p>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_bank_name">{{ t('Bank_Name') }}</label>
+              <input type="text" name="bank_name" class="form-control" value="{{ tenant.bank_name or '' }}" id="input_bank_name" aria-label="bank name" maxlength="200">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="input_bank_account_number">{{ t('Account_Number') }}</label>
+              <input type="text" name="bank_account_number" class="form-control" value="{{ tenant.bank_account_number or '' }}" id="input_bank_account_number" aria-label="bank account number" maxlength="34" dir="ltr">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-semibold" for="input_iban">IBAN</label>
+              <input type="text" name="iban" class="form-control" value="{{ tenant.iban or '' }}" id="input_iban" aria-label="iban" maxlength="34" dir="ltr">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-semibold" for="input_swift_code">SWIFT</label>
+              <input type="text" name="swift_code" class="form-control" value="{{ tenant.swift_code or '' }}" id="input_swift_code" aria-label="swift code" maxlength="20" dir="ltr">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold" for="input_invoice_header_color">{{ t('Header_Color') }}</label>
+              <input type="color" name="invoice_header_color" class="form-control" value="{{ tenant.invoice_header_color or '#667eea' }}" id="input_invoice_header_color" aria-label="invoice header color">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold" for="input_invoice_accent_color">{{ t('Accent_Color') }}</label>
+              <input type="color" name="invoice_accent_color" class="form-control" value="{{ tenant.invoice_accent_color or '#764ba2' }}" id="input_invoice_accent_color" aria-label="invoice accent color">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_active_invoice_template">{{ t('Active_Template') }}</label>
+              <select name="active_invoice_template" class="form-select" id="input_active_invoice_template" aria-label="active invoice template">
+                <option value="modern" {% if (tenant.active_invoice_template|default('modern')) == 'modern' %}selected{% endif %}>{{ t('Modern') }}</option>
+                <option value="classic" {% if 'classic' == tenant.active_invoice_template %}selected{% endif %}>{{ t('Classic') }}</option>
+                <option value="gulf" {% if 'gulf' == tenant.active_invoice_template %}selected{% endif %}>{{ t('Gulf') }}</option>
+                <option value="simple" {% if 'simple' == tenant.active_invoice_template %}selected{% endif %}>{{ t('Simple') }}</option>
+                <option value="minimal" {% if 'minimal' == tenant.active_invoice_template %}selected{% endif %}>{{ t('Minimal') }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_payment_terms_ar">{{ t('Payment_Terms_Arabic') }}</label>
+              <textarea name="payment_terms_ar" class="form-control" rows="2" id="input_payment_terms_ar" aria-label="payment terms ar">{{ tenant.payment_terms_ar or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_payment_terms_en">Payment Terms (English)</label>
+              <textarea name="payment_terms_en" class="form-control" rows="2" id="input_payment_terms_en" aria-label="payment terms en">{{ tenant.payment_terms_en or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_footer_invoice_text_ar">{{ t('Footer_Text_Arabic') }}</label>
+              <textarea name="footer_invoice_text_ar" class="form-control" rows="2" id="input_footer_invoice_text_ar" aria-label="footer text ar">{{ tenant.footer_invoice_text_ar or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_footer_invoice_text_en">Footer (English)</label>
+              <textarea name="footer_invoice_text_en" class="form-control" rows="2" id="input_footer_invoice_text_en" aria-label="footer text en">{{ tenant.footer_invoice_text_en or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_default_invoice_note_ar">{{ t('Default_Invoice_Note_Ar') }}</label>
+              <textarea name="default_invoice_note_ar" class="form-control" rows="2" id="input_default_invoice_note_ar" aria-label="default invoice note ar">{{ tenant.default_invoice_note_ar or '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_default_invoice_note_en">Default Note (English)</label>
+              <textarea name="default_invoice_note_en" class="form-control" rows="2" id="input_default_invoice_note_en" aria-label="default invoice note en">{{ tenant.default_invoice_note_en or '' }}</textarea>
+            </div>
             <div class="col-md-4">
               <label class="form-label fw-semibold" for="input_max_users">{{ t('Max_Users') }}</label>
               <input type="number" name="max_users" class="form-control" value="{{ tenant.max_users if tenant.max_users is not none else 5 }}" min="-1" id="input_max_users" aria-label="max users">

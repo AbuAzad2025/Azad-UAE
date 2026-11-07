@@ -223,6 +223,12 @@ def tenant_create():
                 if _candidate and not validate_tax_number(_candidate, vat_country):
                     flash(gettext(f"رقم غير صالح لدولة {vat_country}."), "danger")
                     return redirect(url_for("owner.tenant_create"))
+
+            def _inv_text(name, default=None):
+                """Blank invoice-constant form values become None (never "")."""
+                raw = (request.form.get(name) or "").strip()
+                return raw or default
+
             tenant = Tenant(
                 name=name_ar,
                 name_ar=name_ar,
@@ -241,6 +247,19 @@ def tenant_create():
                 vat_number=vat_number,
                 tax_number=tax_number,
                 logo_url=(request.form.get("logo_url") or "").strip() or None,
+                bank_name=_inv_text("bank_name"),
+                bank_account_number=_inv_text("bank_account_number"),
+                iban=_inv_text("iban"),
+                swift_code=_inv_text("swift_code"),
+                invoice_header_color=_inv_text("invoice_header_color", "#667eea"),
+                invoice_accent_color=_inv_text("invoice_accent_color", "#764ba2"),
+                payment_terms_ar=_inv_text("payment_terms_ar"),
+                payment_terms_en=_inv_text("payment_terms_en"),
+                footer_invoice_text_ar=_inv_text("footer_invoice_text_ar"),
+                footer_invoice_text_en=_inv_text("footer_invoice_text_en"),
+                default_invoice_note_ar=_inv_text("default_invoice_note_ar"),
+                default_invoice_note_en=_inv_text("default_invoice_note_en"),
+                active_invoice_template=(request.form.get("active_invoice_template") or "modern").strip() or "modern",
                 max_users=_form_int("max_users", 5),
                 max_products=_form_int("max_products", 1000),
                 max_customers=_form_int("max_customers", 500),
@@ -466,6 +485,28 @@ def tenant_edit(tenant_id):
                 tenant.vat_number = _vat_number
                 tenant.tax_number = _tax_number
                 tenant.logo_url = (request.form.get("logo_url") or tenant.logo_url or "").strip() or None
+                # Invoice constants are profile-owned: whatever the operator
+                # edits here is what every invoice/receipt reads. Blank
+                # means "unset" (the print-time resolver then falls back to
+                # the document defaults), never the string "".
+                for _field in (
+                    "bank_name",
+                    "bank_account_number",
+                    "iban",
+                    "swift_code",
+                    "invoice_header_color",
+                    "invoice_accent_color",
+                    "payment_terms_ar",
+                    "payment_terms_en",
+                    "footer_invoice_text_ar",
+                    "footer_invoice_text_en",
+                    "default_invoice_note_ar",
+                    "default_invoice_note_en",
+                ):
+                    setattr(tenant, _field, (request.form.get(_field) or "").strip() or None)
+                tenant.active_invoice_template = (
+                    request.form.get("active_invoice_template") or tenant.active_invoice_template or "modern"
+                ).strip() or "modern"
                 # Keeps the tenant's own currency when the field is submitted
                 # blank, for the reason _text gives: an emptied <input> posts as
                 # "" and form.get's fallback only helps when the field is
@@ -512,6 +553,36 @@ def tenant_edit(tenant_id):
                 tenant.enable_pos_returns = _tristate("enable_pos_returns", tenant.enable_pos_returns)
                 tenant.enable_pos_shifts = _tristate("enable_pos_shifts", tenant.enable_pos_shifts)
                 tenant.updated_at = datetime.now(UTC)
+                # Push the print-time overlay to the invoice constants the
+                # operator just set on the profile: the Tenant is the single
+                # source of truth, so the persisted InvoiceSettings row
+                # follows it (creation-time seeding alone would go stale on
+                # the first edit).
+                from models.invoice_settings import InvoiceSettings
+
+                _overlay = InvoiceSettings.get_active(tenant.id)
+                if _overlay is not None:
+                    for _field in (
+                        "bank_name",
+                        "bank_account_number",
+                        "iban",
+                        "swift_code",
+                        "payment_terms_ar",
+                        "payment_terms_en",
+                        "footer_invoice_text_ar",
+                        "footer_invoice_text_en",
+                        "default_invoice_note_ar",
+                        "default_invoice_note_en",
+                    ):
+                        setattr(_overlay, _field, getattr(tenant, _field, None))
+                    if tenant.invoice_header_color:
+                        _overlay.header_color = tenant.invoice_header_color
+                    if tenant.invoice_accent_color:
+                        _overlay.accent_color = tenant.invoice_accent_color
+                    if tenant.active_invoice_template:
+                        _overlay.active_template = tenant.active_invoice_template
+                    if tenant.logo_url:
+                        _overlay.logo_url = tenant.logo_url
             _invalidate_owner_changes()
             _audit_owner_db_action("tenant_edit", {"tenant_id": tenant_id})
             flash(

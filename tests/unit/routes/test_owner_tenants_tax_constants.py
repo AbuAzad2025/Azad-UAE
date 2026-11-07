@@ -56,6 +56,47 @@ def test_create_locks_rate_to_country(to_client):
         assert kwargs["logo_url"] == "https://x.example/logo.png"
 
 
+def test_print_overlay_seeds_invoice_constants_from_tenant():
+    from models.invoice_settings import InvoiceSettings
+
+    settings = InvoiceSettings()
+    t = MagicMock()
+    t.name_ar = "شركة أ"
+    t.name_en = "Co A"
+    t.address_ar = "شارع 1"
+    t.address_en = None  # falsy → keeps settings default
+    t.phone_1 = None
+    t.mobile = None
+    t.email = None
+    t.website = "https://x.example"
+    t.tax_number = "123456789"
+    t.commercial_register = "CR-1"
+    t.license_number = None
+    t.bank_name = "البنك العربي"
+    t.bank_account_number = "123"
+    t.iban = "AE07 0331 2345 6789 0123 456"
+    t.swift_code = "EBILAEAD"
+    t.payment_terms_ar = "الدفع عند التسليم"
+    t.payment_terms_en = None
+    t.footer_invoice_text_ar = "شكرًا لثقتكم"
+    t.footer_invoice_text_en = None
+    t.default_invoice_note_ar = "ملاحظة"
+    t.default_invoice_note_en = None
+    t.invoice_header_color = "#111111"
+    t.invoice_accent_color = "#222222"
+    t.active_invoice_template = "gulf"
+    InvoiceSettings._seed_from_tenant(settings, t)
+    assert settings.bank_name == "البنك العربي"
+    assert settings.iban.startswith("AE07")
+    assert settings.payment_terms_ar == "الدفع عند التسليم"
+    assert settings.footer_invoice_text_ar == "شكرًا لثقتكم"
+    assert settings.default_invoice_note_ar == "ملاحظة"
+    assert settings.header_color == "#111111"
+    assert settings.accent_color == "#222222"
+    assert settings.active_template == "gulf"
+    assert settings.website == "https://x.example"
+
+
 def test_create_rejects_invalid_trn(to_client):
     with (
         patch(
