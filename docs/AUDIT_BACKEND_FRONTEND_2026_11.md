@@ -52,16 +52,18 @@ Baseline: `main` on `84ab2d52`. CI on the same push is the gate.
 
 | # | Item | Notes |
 |---|------|-------|
-| 1 | Statutory personal income tax for payroll; Zakat; withholding/stamp taxes | out of scope for this codebase today; payroll docs now describe exactly what the product does |
-| 2 | e-invoice integration with PS/AE/SA/IL governments | deferred by decision; copy, landing page, README, catalogues agree on this |
-| 3 | `excise`/`customs` profiles in `country_tax.py` have no executing callers yet | landed-cost customs flows are queued for a later phase |
 | 4 | Sub-threshold: two linen-color logo usages on the receipt for ILS tenants | cosmetic; kept consistent with ₪ symbol |
+
+(Items 1–3 were delivered on 2026-11-09 — see the resolved table below.)
 
 ## Resolved in the follow-up audit pass
 
 | # | Item | Resolution |
 |---|------|------------|
 | 1 | Fiscal-year-close cannot post when the trial balance requires an entry dated inside a year-closed period | `close_fiscal_year` now posts the closing entry on the **first day of the new fiscal year** — the only date that is open by definition when all twelve of the ending year's periods are closed; pinned by `test_the_books_reconcile_to_the_cent`. |
+| 2 | Statutory personal income tax for payroll; social insurance | Delivered for real: progressive brackets + credit points (IL) and the Palestinian schedule in `COUNTRY_TAX_PROFILES`; NSSF (PS, 7%/9%, 18.8k ceiling), Bituach Leumi + Mas Briut (IL, two tiers 3.5%/12% ≤ 7,522 / ≤ 50,695 NIS), GOSI (SA, new/pre-2024-07-03 laws, non-nationals 2% employer hazards only), GPSSA (AE, nationals only, 11%/15%, 70k ceiling) — all in `utils/country_tax.py`, all unit-pinned. Withholdings persist on the transaction, post to the new GL accounts (2143/2144/2147 + 6221) and the payslip shows the breakdown. Employer share posts as an additional expense. Remaining: Zakat and withholding/stamp taxes (no statutory bracket exists for them in scope), and the Israel mandatory pension fund (needs a verified rate table before it can be statutory). |
+| 3 | e-invoice integration with PS/AE/SA/IL | Delivered for real as far as offline generation goes: `utils/einvoice_document.py` builds a UBL 2.1-shaped statutory document (seller/buyer TRN, lines, VAT breakdown, totals, tamper-evident SHA-256) for all four jurisdictions; KSA additionally gets the ZATCA simplified-invoice TLV QR (tags 1–6, per the published spec). Artifacts persist on `e_invoices` (one per sale, regenerated in place) and are downloadable via `/sales/<id>/einvoice.xml` (all countries) and `/sales/<id>/einvoice-qr.png` (KSA). Sales roll back if document generation fails — no sale posts without its statutory record. Government-gateway submission (ZATCA Phase-2 CSID signing, Israel Tax Authority allocation number, PMA/FTA access points) is credential-gated and explicitly not claimed anywhere. |
+| 4 | `excise`/`customs` profiles in `country_tax.py` have no executing callers | Wired into the import landed-cost flow: purchases carry an explicit "imported?" flag; when the customs field is blank the statutory default of the tenant's country applies (PS 15 / IL 18 / AE 5 / SA 15) and the excise amount is computed from the imported products' excise categories at the country rates (AE/KSA: tobacco & energy drinks 100%, soft drinks 50%, base = CIF + customs duty) into the new `excise_amount` landed-cost component, posted to the new `EXCISE_DUTY` concept (account 5304). Basket preview, service and GL posting all share `compute_import_levy_defaults`. |
 
 ## Files materially changed in the pass
 
@@ -71,6 +73,18 @@ Baseline: `main` on `84ab2d52`. CI on the same push is the gate.
 `utils/country_tax.py`, `utils/helpers.py`, `utils/i18n.py`,
 `utils/localization/{uae,ksa,palestine,israel}.py`,
 `translations/{ar,en}/LC_MESSAGES/messages.po`, `docs/USER_GUIDE.md`.
+
+The 2026-11-09 deferred-items pass additionally changed:
+`services/payroll_service.py`, `services/purchase_service.py`,
+`services/sale_service.py`, `services/hr_service.py`, `services/einvoice_service.py`,
+`models/{payroll,product,purchase,einvoice,gl_account_registry,_constants,__init__}.py`,
+`utils/einvoice_document.py`, `utils/country_tax.py`, `utils/seed_manifest.py`,
+`utils/seed_manifest_probe.py`, `utils/localization/{ksa,uae,palestine,israel,null}.py`,
+`routes/{sales,purchases,products}.py`, `templates/payroll/{slip,add_employee}.html`,
+`templates/products/{create,edit}.html`, `templates/purchases/create.html`,
+`templates/sales/view.html`,
+`migrations/versions/{f6a7b8c9d012_payroll_statutory_tax,a8b9c0d1e203_excise_customs_landed,b9c0d1e2f304_einvoice_table}.py`,
+`docs/API_REFERENCE.md`.
 
 ## Verification run
 

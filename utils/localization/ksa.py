@@ -1,9 +1,7 @@
 """
-KSAStrategy — 15% VAT (configurable), ZATCA Phase 2 simplified invoice QR.
+KSAStrategy — 15% VAT, ZATCA simplified-invoice UBL 2.1 XML + TLV QR.
 """
 
-import base64
-import hashlib
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -21,7 +19,10 @@ class KSAStrategy(LocalizationStrategy):
     default_vat_rate = vat_rate_for_country("SA")
     currency = "SAR"
     supports_qr = True
-    zatca_phase = 2
+    # Simplified-invoice QR (TLV tags 1-6) + XML hash — Phase 1 artifact.
+    # Phase 2 (CSID-issued signing/stamping) requires the tenant's ZATCA
+    # onboarding credentials; do not advertise it until it exists.
+    zatca_phase = 1
 
     def _resolve_vat_rate(self, sale=None, tax_rate: Decimal | None = None) -> Decimal:
         coerced = coerce_decimal(tax_rate)
@@ -40,19 +41,6 @@ class KSAStrategy(LocalizationStrategy):
             if amount is not None:
                 return amount
         return Decimal("0")
-
-    @staticmethod
-    def _extract_tax_from_inclusive(total: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
-        total = Decimal(str(total))
-        rate = Decimal(str(rate))
-        if rate <= 0:
-            return total, Decimal("0")
-        net = (total / (Decimal("1") + rate / Decimal("100"))).quantize(
-            _TWO_PLACES,
-            rounding=ROUND_HALF_UP,
-        )
-        tax = (total - net).quantize(_TWO_PLACES, rounding=ROUND_HALF_UP)
-        return net, tax
 
     def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         rate = self._resolve_vat_rate(tax_rate=tax_rate)
@@ -98,31 +86,9 @@ class KSAStrategy(LocalizationStrategy):
         cleaned = re.sub(r"\D", "", str(tax_number).strip())
         return bool(_TRN_PATTERN.match(cleaned))
 
-    @staticmethod
-    def sign_zatca_payload(payload: str) -> str:
-        digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
-        return digest
-
     def generate_einvoice(self, sale) -> dict:
-        rate = self._resolve_vat_rate(sale)
-        total = self._sale_total(sale)
-        net, tax = self._extract_tax_from_inclusive(total, rate)
-        issue_date = sale.sale_date if hasattr(sale, "sale_date") else ""
-        xml = f"""<Invoice>
-  <ID>{sale.id}</ID>
-  <IssueDate>{issue_date}</IssueDate>
-  <TaxTotal><TaxAmount currencyID="SAR">{tax}</TaxAmount></TaxTotal>
-  <LegalMonetaryTotal>
-    <TaxExclusiveAmount currencyID="SAR">{net}</TaxExclusiveAmount>
-    <TaxInclusiveAmount currencyID="SAR">{total}</TaxInclusiveAmount>
-  </LegalMonetaryTotal>
-</Invoice>"""
-        qr_data = f"ZATCA|{rate}|{total}|{sale.id}"
-        qr_b64 = base64.b64encode(qr_data.encode()).decode()
-        invoice_hash = self.sign_zatca_payload(xml)
-        return {
-            "xml_payload": xml,
-            "qr_base64": qr_b64,
-            "invoice_hash": invoice_hash,
-            "format": "zatca_simplified_xml",
-        }
+        from utils.einvoice_document import tenant_for_sale, zatca_document
+
+        tenant = tenant_for_sale(sale)
+        currency = (getattr(sale, "currency", None) or self.currency).strip() or self.currency
+        return zatca_document(sale, tenant, currency=currency)

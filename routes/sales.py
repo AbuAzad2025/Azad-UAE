@@ -421,6 +421,69 @@ def print_invoice(**kwargs):
         )
 
 
+def _sale_scope_or_403(sale):
+    from utils.decorators import branch_scope_id
+
+    scoped_branch_id = branch_scope_id()
+    if scoped_branch_id is not None and sale.branch_id != scoped_branch_id:
+        return render_template("errors/403.html"), 403
+    if current_user.is_seller() and sale.seller_id != current_user.id:
+        return render_template("errors/403.html"), 403
+    return None
+
+
+@sales_bp.route("/<int:id>/einvoice.xml")
+@login_required
+@permission_required("manage_sales")
+def einvoice_xml(**kwargs):
+    """Download the statutory e-invoice XML for this posted sale."""
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
+    denial = _sale_scope_or_403(sale)
+    if denial is not None:
+        return denial
+    from flask import Response
+
+    from models import EInvoice
+
+    row = EInvoice.query.filter_by(tenant_id=sale.tenant_id, sale_id=sale.id).first()
+    if row is None:
+        abort(404)
+    filename = f"einvoice-{sale.sale_number}.xml"
+    return Response(
+        row.xml_payload,
+        mimetype="application/xml",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@sales_bp.route("/<int:id>/einvoice-qr.png")
+@login_required
+@permission_required("manage_sales")
+def einvoice_qr_png(**kwargs):
+    """Render the KSA ZATCA TLV QR payload as a PNG. 404 elsewhere."""
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
+    denial = _sale_scope_or_403(sale)
+    if denial is not None:
+        return denial
+    from flask import Response
+
+    from models import EInvoice
+
+    row = EInvoice.query.filter_by(tenant_id=sale.tenant_id, sale_id=sale.id).first()
+    if row is None or not row.qr_base64:
+        abort(404)
+    import io
+
+    import qrcode
+
+    image = qrcode.make(row.qr_base64)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return Response(buffer.getvalue(), mimetype="image/png")
+
+
 @sales_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_sales")

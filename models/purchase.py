@@ -69,6 +69,7 @@ class Purchase(db.Model):
     freight = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     insurance = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     customs_duty = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    excise_amount = db.Column(db.Numeric(15, 3), default=0, nullable=False)  # Import-time excise (AE/KSA)
     other_landed_cost = db.Column(db.Numeric(15, 3), default=0, nullable=False)
 
     @property
@@ -77,6 +78,7 @@ class Purchase(db.Model):
             Decimal(str(self.freight or 0))
             + Decimal(str(self.insurance or 0))
             + Decimal(str(self.customs_duty or 0))
+            + Decimal(str(self.excise_amount or 0))
             + Decimal(str(self.other_landed_cost or 0))
         )
 

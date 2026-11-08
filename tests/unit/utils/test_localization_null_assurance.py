@@ -5,6 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 from utils.localization.null import NullStrategy
 
 
@@ -23,10 +25,8 @@ class TestNullStrategy:
         assert report["net_payable"] == Decimal("0")
         assert report["format"] == "null"
 
-    def test_generate_einvoice_minimal(self):
+    def test_generate_einvoice_unsupported(self):
         s = NullStrategy()
         sale = MagicMock()
-        result = s.generate_einvoice(sale)
-        assert result["xml_payload"] == "<invoice/>"
-        assert result["qr_base64"] == ""
-        assert result["format"] == "null"
+        with pytest.raises(NotImplementedError):
+            s.generate_einvoice(sale)

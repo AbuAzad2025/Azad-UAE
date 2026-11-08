@@ -26,6 +26,12 @@
 
     </a>
 
+    <a href="{{ url_for('sales.einvoice_xml', id=sale.id) }}" class="btn btn-outline-dark" download>
+
+      <i class="fas fa-file-code mr-2" aria-hidden="true"></i>{{ _('فاتورة إلكترونية') }}
+
+    </a>
+
     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#returnModal">
 
       <i class="fas fa-undo mr-2" aria-hidden="true"></i>{{ t('Return') }}

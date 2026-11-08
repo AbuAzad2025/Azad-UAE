@@ -59,10 +59,11 @@ def test_palestine_branches():
     assert st.validate_tax_number("") is False  # 92-96
     assert st.validate_tax_number("123456789") is True
     assert st.validate_tax_number("abc") is False
-    inv = st.generate_einvoice(SimpleNamespace(total_aed="116", tax_rate="16"))  # 98-120
-    assert "<Invoice>" in inv["xml_payload"]
-    inv0 = st.generate_einvoice(SimpleNamespace(total_aed="100", tax_rate="0"))
-    assert "0" in inv0["xml_payload"]
+    inv = st.generate_einvoice(SimpleNamespace(total_aed="116", tax_rate="16", currency="ILS"))  # 98-120
+    assert "<Invoice" in inv["xml_payload"]
+    assert "TaxAmount" in inv["xml_payload"]
+    inv0 = st.generate_einvoice(SimpleNamespace(total_aed="100", tax_rate="0", currency="ILS"))
+    assert "0.000" in inv0["xml_payload"]
     wps = st.get_wps_format(
         [{"employee_id": "1", "bank_code": "b", "name": "n", "iban": "i", "net_salary": 9}]
     )  # 122-138

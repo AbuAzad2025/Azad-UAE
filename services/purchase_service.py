@@ -62,6 +62,53 @@ def resolve_tenant_base_currency(tenant_id=None, tenant=None):
     return _resolve(tenant_id=tenant_id, tenant=tenant)
 
 
+def compute_import_levy_defaults(line_inputs, *, country, customs_duty, excise_amount):
+    """Statutory customs/excise defaults for one purchase's lines.
+
+    ``line_inputs`` is a list of ``(quantity, unit_cost, discount_percent,
+    excise_category)`` tuples — callers resolve the excise category per line
+    (one indexed query) instead of re-parsing the raw form payload here, so the
+    HTML route and the basket-preview API share one implementation.
+
+    Returns ``(customs_duty, excise_amount)`` quantized to 3dp. ``None`` inputs
+    mean "not specified" and get the statutory default; explicit values win.
+    The excise base follows the FTA/ZATCA import rule: customs value (CIF)
+    plus the customs duty payable on the same entry. Excise is an import-time
+    levy — this helper is only meaningful when the purchase is an import.
+    """
+    from decimal import ROUND_HALF_UP, Decimal
+
+    from utils.country_tax import customs_rate_for_country, excise_rate_for_country
+
+    goods = Decimal("0")
+    per_line: list[tuple[str, Decimal]] = []
+    for quantity, unit_cost, discount_percent, excise_category in line_inputs:
+        qty = Decimal(str(quantity or 0))
+        cost = Decimal(str(unit_cost or 0))
+        disc = Decimal(str(discount_percent or 0))
+        if qty <= 0 or cost < 0:
+            continue
+        value = qty * cost * (Decimal("1") - disc / Decimal("100"))
+        goods += value
+        per_line.append(((excise_category or "").strip().lower(), value))
+
+    customs_rate = customs_rate_for_country(country) or Decimal("0")
+    if customs_duty is None:
+        customs_duty = (goods * customs_rate / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    if excise_amount is None:
+        total = Decimal("0")
+        for category, value in per_line:
+            if not category:
+                continue
+            rate = excise_rate_for_country(country, category)
+            if not rate:
+                continue
+            base = value + (value * customs_rate / Decimal("100"))
+            total += base * rate / Decimal("100")
+        excise_amount = total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    return customs_duty, excise_amount
+
+
 class PurchaseService:
     @classmethod
     def resolve_tenant_base_currency(cls, tenant_id=None, tenant=None):
@@ -82,8 +129,10 @@ class PurchaseService:
         notes=None,
         freight=0,
         insurance=0,
-        customs_duty=0,
+        customs_duty=None,
+        excise_amount=None,
         other_landed_cost=0,
+        is_import=False,
     ):
         """
         Create a new purchase invoice with stock update and GL entries.
@@ -100,8 +149,17 @@ class PurchaseService:
             notes: Optional notes
             freight: Freight/shipping cost (in purchase currency)
             insurance: Insurance cost (in purchase currency)
-            customs_duty: Customs/duty cost (in purchase currency)
+            customs_duty: Customs/duty cost (in purchase currency). None means
+                "not specified": when ``is_import`` is set the statutory
+                default rate of the tenant's country is applied instead.
+            excise_amount: Import-time excise (AE/KSA) — None computes the
+                statutory amount from the excise categories of the imported
+                products at the country's rates when ``is_import`` is set.
             other_landed_cost: Other landed costs (in purchase currency)
+            is_import: Set by the purchases form's "imported?" checkbox —
+                drives the customs/excise statutory default. Explicitly
+                provided values always win over the defaults, and a domestic
+                purchase is untouched.
 
         Returns:
             Purchase object
@@ -186,6 +244,36 @@ class PurchaseService:
             )
         exchange_rate = Decimal(str(rate_info["rate"]))
 
+        # Import-time statutory levies — computed here because the goods value
+        # is only known from lines_data, and the Purchase header needs it at
+        # construction time. Explicitly provided values always win.
+        if is_import:
+            from utils.tax_settings import vat_country
+
+            country = vat_country(tenant_id)
+            product_ids = [line_data.get("product_id") for line_data in lines_data if line_data.get("product_id")]
+            categories: dict[int, str] = {}
+            if product_ids:
+                rows = db.session.query(Product.id, Product.excise_category).filter(Product.id.in_(product_ids)).all()
+                categories = {int(row.id): (row.excise_category or "") for row in rows}
+            line_inputs = [
+                (
+                    line_data.get("quantity"),
+                    line_data.get("unit_cost"),
+                    line_data.get("discount_percent"),
+                    categories.get(int(line_data["product_id"])) if line_data.get("product_id") else None,
+                )
+                for line_data in lines_data
+            ]
+            customs_duty, excise_amount = compute_import_levy_defaults(
+                line_inputs, country=country, customs_duty=customs_duty, excise_amount=excise_amount
+            )
+        else:
+            if customs_duty is None:
+                customs_duty = Decimal("0")
+            if excise_amount is None:
+                excise_amount = Decimal("0")
+
         # Create Purchase Header
         effective_tax_rate = normalize_tax_rate(tax_rate, tenant_id)
         purchase = Purchase(
@@ -212,6 +300,7 @@ class PurchaseService:
             freight=Decimal(str(freight or 0)),
             insurance=Decimal(str(insurance or 0)),
             customs_duty=Decimal(str(customs_duty or 0)),
+            excise_amount=Decimal(str(excise_amount or 0)),
             other_landed_cost=Decimal(str(other_landed_cost or 0)),
         )
 
@@ -378,6 +467,17 @@ class PurchaseService:
                         "concept_code": "CUSTOMS_DUTY",
                         "debit": purchase.customs_duty,
                         "description": gettext(f"رسوم جمركية - {purchase.purchase_number}"),
+                    }
+                )
+            if purchase.excise_amount > 0:
+                lines.append(
+                    {
+                        "account": GLService.get_account_code_for_concept(
+                            "EXCISE_DUTY", tenant_id=tenant_id, branch_id=purchase_branch_id
+                        ),
+                        "concept_code": "EXCISE_DUTY",
+                        "debit": purchase.excise_amount,
+                        "description": gettext(f"رسوم انتقائية - {purchase.purchase_number}"),
                     }
                 )
             if purchase.insurance > 0:

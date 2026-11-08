@@ -31,6 +31,10 @@ GL_CONCEPT_EMPLOYEE_ADVANCES = "EMPLOYEE_ADVANCES"
 GL_CONCEPT_PAYROLL_EXPENSE = "PAYROLL_EXPENSE"
 GL_CONCEPT_PAYROLL_EXPENSE_2 = "PAYROLL_EXPENSE_2"
 GL_CONCEPT_PAYROLL_PAYABLE = "PAYROLL_PAYABLE"
+GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_EXPENSE = "EMPLOYER_SOCIAL_INSURANCE_EXPENSE"
+GL_CONCEPT_EMPLOYEE_SOCIAL_INSURANCE_PAYABLE = "EMPLOYEE_SOCIAL_INSURANCE_PAYABLE"
+GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_PAYABLE = "EMPLOYER_SOCIAL_INSURANCE_PAYABLE"
+GL_CONCEPT_EMPLOYEE_INCOME_TAX_PAYABLE = "EMPLOYEE_INCOME_TAX_PAYABLE"
 GL_CONCEPT_BANK_FEES = "BANK_FEES"
 GL_CONCEPT_BANK_INTEREST_INCOME = "BANK_INTEREST_INCOME"
 GL_CONCEPT_DONATION_REVENUE = "DONATION_REVENUE"
@@ -69,6 +73,7 @@ GL_CONCEPT_RETAINED_EARNINGS = "RETAINED_EARNINGS"
 GL_CONCEPT_REVENUE_CLOSING = "REVENUE_CLOSING"
 GL_CONCEPT_EXPENSE_CLOSING = "EXPENSE_CLOSING"
 GL_CONCEPT_INSURANCE_IN = "INSURANCE_IN"
+GL_CONCEPT_EXCISE_DUTY = "EXCISE_DUTY"
 GL_CONCEPT_INCOME_TAX_EXPENSE = "INCOME_TAX_EXPENSE"
 GL_CONCEPT_INCOME_TAX_PAYABLE = "INCOME_TAX_PAYABLE"
 
@@ -113,6 +118,10 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_PAYROLL_EXPENSE,
     GL_CONCEPT_PAYROLL_EXPENSE_2,
     GL_CONCEPT_PAYROLL_PAYABLE,
+    GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_EXPENSE,
+    GL_CONCEPT_EMPLOYEE_SOCIAL_INSURANCE_PAYABLE,
+    GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_PAYABLE,
+    GL_CONCEPT_EMPLOYEE_INCOME_TAX_PAYABLE,
     GL_CONCEPT_BANK_FEES,
     GL_CONCEPT_BANK_INTEREST_INCOME,
     GL_CONCEPT_DONATION_REVENUE,
@@ -152,6 +161,7 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_REVENUE_CLOSING,
     GL_CONCEPT_EXPENSE_CLOSING,
     GL_CONCEPT_INSURANCE_IN,
+    GL_CONCEPT_EXCISE_DUTY,
     GL_CONCEPT_INCOME_TAX_EXPENSE,
     GL_CONCEPT_INCOME_TAX_PAYABLE,
 )
@@ -260,6 +270,30 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
+    GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_EXPENSE: {
+        "meaning": "Employer social insurance contribution expense",
+        "legacy_code": "6221",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_EMPLOYEE_SOCIAL_INSURANCE_PAYABLE: {
+        "meaning": "Social insurance contribution withheld from employee salary",
+        "legacy_code": "2143",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_EMPLOYER_SOCIAL_INSURANCE_PAYABLE: {
+        "meaning": "Social insurance contribution payable by the employer",
+        "legacy_code": "2144",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_EMPLOYEE_INCOME_TAX_PAYABLE: {
+        "meaning": "Payroll income tax withheld from employee salary",
+        "legacy_code": "2147",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
     GL_CONCEPT_FX_LOSS: {
         "meaning": "Foreign Exchange Loss",
         "legacy_code": None,
@@ -293,6 +327,12 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     GL_CONCEPT_CUSTOMS_DUTY: {
         "meaning": "Customs Duty",
         "legacy_code": None,
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_EXCISE_DUTY: {
+        "meaning": "Excise duty paid at import (AE/KSA)",
+        "legacy_code": "5304",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },

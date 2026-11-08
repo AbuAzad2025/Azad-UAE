@@ -83,7 +83,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 ### CI — gates that are actually enforced
 - Authoritative status lives in the Actions tab; a run id recorded here goes stale
   the moment anything is pushed, so it is deliberately not cited here.
-- `python scripts/lint/check_migration_head.py` → single head, chain len 64.
+- `python scripts/lint/check_migration_head.py` → single head, chain len 69.
 - Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 170`
   (measured 50 / 21 / 170 — zero headroom by design; lower a budget only in the
   commit that removes declarations).
@@ -170,8 +170,49 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   migration-relevant changes; the Alembic graph gate inside Static quality
   passed every time).
 
+### Statutory payroll, e-invoice and import levies (2026-11-09)
+- **Statutory payroll is real.** `utils/country_tax.py` now carries the 2025 rates as one
+  source of truth: NSSF PS 7%/9% (ceiling 18,800 / floor 1,880 ILS), Bituach Leumi +
+  Mas Briut IL (employee 3.5% ≤ 7,522 / 12% ≤ 50,695; employer 4.51% / 7.60%),
+  GOSI SA (post-2024-07-03: 10.25%/12.25%; before: 9.75%/11.75%; non-nationals:
+  employer 2% hazards only; ceiling 45,000, floor 1,500), GPSSA AE (nationals only,
+  Fed. Decree Law 57/2023: 11%/15%, ceiling 70,000, floor 3,000) and IL progressive
+  income tax with 2.25 credit points at the published 2025 value. Withholdings are
+  computed at the annual rate and withheld as 1/12 monthly; they persist on
+  `payroll_transactions` (`income_tax_amount`, `social_insurance_amount`,
+  `social_insurance_employer_amount`), the employer share is an extra expense, and
+  the GL posts balanced (6220/6221 Dr, 2143/2144/2147 Cr, 2141 for manual deductions).
+  `employees.is_national` (GOSI/GPSSA eligibility) exists and is on the add-employee
+  form; `PayrollTransaction.net_salary` is now computed **after** statutory
+  withholdings — wave-13/PS-fallback assertions were updated to match.
+  Israel mandatory pension fund is *not* implemented (no verified rate table);
+  Zakat and stamp taxes are out of scope; everything implemented is unit-pinned by
+  `tests/unit/utils/test_country_tax_payroll.py`.
+- **E-invoice artifacts are real and persisted.** `utils/einvoice_document.py` builds a
+  UBL 2.1 statutory document (seller/buyer TRN, lines, VAT breakdown, totals, SHA-256)
+  for PS/IL/AE/SA; KSA additionally gets the ZATCA simplified-invoice TLV QR
+  (tags 1–6). Every posted sale creates/updates an `e_invoices` row inside the same
+  transaction (`EInvoiceService.generate_for_sale` from `fulfill_sale`), and
+  `/sales/<id>/einvoice.xml` (all countries) + `/sales/<id>/einvoice-qr.png` (KSA)
+  serve it under the print route's guard. Government submission (ZATCA Phase-2 CSID,
+  ITA allocation number, PMA/FTA access points) requires tenant credentials and is
+  **not** claimed anywhere. Migration `b9c0d1e2f304` adds the table.
+- **Import levies are wired.** `create_purchase(..., is_import=True)` applies the
+  statutory customs default (PS 15 / IL 18 / AE 5 / SA 15) when the customs field is
+  blank, and computes the excise amount from the imported products'
+  `excise_category` (`tobacco`/`energy_drinks`/`soft_drinks`) at the country rates
+  (AE/KSA: 100%/100%/50%; base = CIF + customs duty) into the new
+  `purchases.excise_amount`, posted to the new `EXCISE_DUTY` concept (account 5304).
+  `compute_import_levy_defaults` is shared by the service and the basket preview;
+  explicit values always win; `excise_category` is on the product forms,
+  `is_import` on the purchase form. GL account 5304 + `EXCISE_DUTY` concept; migration
+  `a8b9c0d1e203`. Base chart = 107 accounts (`test_seed_manifest.py`).
+- Payslip shows the statutory breakdown; `HR compute_net_salary` is documented as a
+  pre-statutory estimator (the posted path deducts withholdings).
+- Migrations in the chain now run to `b9c0d1e2f304` (69 revisions, single head).
+
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
-- **Migration chain (single head):** `squash_001 → … → e2f3a4b5c6d7` (66 revisions)
+- **Migration chain (single head):** `squash_001 → … → b9c0d1e2f304` (69 revisions); `f6a7b8c9d012` payroll statutory columns + concept allow-list widening + account INSERTs for existing charts, `a8b9c0d1e203` excise/customs landed cost (`purchases.excise_amount`, `products.excise_category`, account 5304, `EXCISE_DUTY`), `b9c0d1e2f304` `e_invoices` table
   - verify the head with `python scripts/lint/check_migration_head.py` (single head, no dangling
     parent, every revision has a `downgrade()`) before trusting any value written here
   - `5e2b8f4a6c13` the eight tenant module flags (`enable_shipments`, `enable_campaigns`,
@@ -243,7 +284,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
   **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
-  field definitions** (13 core + 61 across 12 industries) / 102 base GL accounts
+  field definitions** (13 core + 61 across 12 industries) / 107 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
   (`app/bootstrap.py`); `AUTO_MIGRATE=1` lets a fresh database be migrated at

@@ -142,8 +142,12 @@ def create():
                     notes=request.form.get("notes"),
                     freight=safe_float(request.form.get("freight")),
                     insurance=safe_float(request.form.get("insurance")),
-                    customs_duty=safe_float(request.form.get("customs_duty")),
+                    # Blank means "not specified" — an import then picks up the
+                    # country's statutory default. "0" is an explicit zero.
+                    customs_duty=safe_float(request.form.get("customs_duty"), default=None),
+                    excise_amount=safe_float(request.form.get("excise_amount"), default=None),
                     other_landed_cost=safe_float(request.form.get("other_landed_cost")),
+                    is_import=(request.form.get("is_import") or "").lower() in ("1", "on", "true", "yes"),
                 )
 
             flash(gettext("✅ تم إنشاء فاتورة الشراء بنجاح!"), "success")
@@ -491,11 +495,45 @@ def api_calculate_purchase_totals():
                 current_app.logger.debug("Skipping invalid purchase line: %r", line, exc_info=True)
                 continue
 
+        is_import = bool(data.get("is_import", False))
         freight = Decimal(str(data.get("freight", 0) or 0))
         insurance = Decimal(str(data.get("insurance", 0) or 0))
-        customs_duty = Decimal(str(data.get("customs_duty", 0) or 0))
+        customs_duty = data.get("customs_duty")
+        customs_duty = None if customs_duty is None or str(customs_duty).strip() == "" else Decimal(str(customs_duty))
+        excise_amount = data.get("excise_amount")
+        excise_amount = (
+            None if excise_amount is None or str(excise_amount).strip() == "" else Decimal(str(excise_amount))
+        )
         other_landed_cost = Decimal(str(data.get("other_landed_cost", 0) or 0))
-        landed_total = freight + insurance + customs_duty + other_landed_cost
+        if is_import:
+            from models import Product
+            from services.purchase_service import compute_import_levy_defaults
+            from utils.tax_settings import vat_country
+
+            product_ids = [line.get("product_id") for line in lines if line.get("product_id")]
+            categories: dict[int, str] = {}
+            if product_ids:
+                rows = db.session.query(Product.id, Product.excise_category).filter(Product.id.in_(product_ids)).all()
+                categories = {int(row.id): (row.excise_category or "") for row in rows}
+            line_inputs = [
+                (
+                    line.get("quantity"),
+                    line.get("unit_cost"),
+                    line.get("discount_percent"),
+                    categories.get(int(line["product_id"])) if line.get("product_id") else None,
+                )
+                for line in lines
+            ]
+            customs_duty, excise_amount = compute_import_levy_defaults(
+                line_inputs,
+                country=vat_country(get_active_tenant_id(current_user)),
+                customs_duty=customs_duty,
+                excise_amount=excise_amount,
+            )
+        else:
+            customs_duty = customs_duty or Decimal("0")
+            excise_amount = excise_amount or Decimal("0")
+        landed_total = freight + insurance + customs_duty + excise_amount + other_landed_cost
 
         prices_include_vat = bool(data.get("prices_include_vat", False))
         # Match the posted model (Purchase.calculate_totals): 3-decimal rounding,

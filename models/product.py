@@ -109,6 +109,10 @@ class Product(db.Model):
     barcode = db.Column(db.String(100), index=True)
 
     country_of_origin = db.Column(db.String(100))
+    # Excise classification (AE/KSA). Import-time levies only: the importer of
+    # excise goods pays at customs, so the flag drives the purchase landed-cost
+    # default — it never adds a line to a retail sale.
+    excise_category = db.Column(db.String(20), nullable=True, index=False)  # tobacco | energy_drinks | soft_drinks
 
     category_id = db.Column(db.Integer, db.ForeignKey("product_categories.id", ondelete="RESTRICT"), index=True)
     category = db.relationship("ProductCategory", back_populates="products")

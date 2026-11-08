@@ -39,9 +39,4 @@ class NullStrategy(LocalizationStrategy):
         }
 
     def generate_einvoice(self, sale) -> dict:
-        return {
-            "xml_payload": "<invoice/>",
-            "qr_base64": "",
-            "invoice_hash": "",
-            "format": "null",
-        }
+        raise NotImplementedError(f"E-invoice generation not supported for {self.country_code}")

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
@@ -49,6 +49,9 @@ class PayrollService:
             basic_salary=Decimal(str(data.get("basic_salary") or "0")),
             branch_id=int(branch_id),
             tenant_id=tenant_id,
+            # Nationality flag drives GOSI (KSA) and GPSSA (AE) eligibility —
+            # both schemes cover nationals only. PS/IL contribute for everyone.
+            is_national=str(data.get("is_national") or "").lower() in ("1", "true", "on", "yes"),
             joined_date=(
                 datetime.strptime(data.get("joined_date"), "%Y-%m-%d") if data.get("joined_date") else datetime.now()
             ),
@@ -198,9 +201,39 @@ class PayrollService:
                     remaining = Decimal("0")
             advance_deduction_total += remaining
 
-        net_salary = (
-            basic_amount + Decimal(str(allowances or "0")) - Decimal(str(deductions or "0")) - advance_deduction_total
+        gross_amount = basic_amount + Decimal(str(allowances or "0"))
+        deductions_amount = Decimal(str(deductions or "0"))
+        annual_taxable = gross_amount * Decimal("12")
+
+        from utils.country_tax import payroll_income_tax_amount, social_insurance_amount
+        from utils.tax_settings import vat_country
+
+        country = vat_country(tenant_id)
+        is_national = bool(getattr(employee, "is_national", False))
+        joined = getattr(employee, "joined_date", None)
+        if isinstance(joined, datetime):
+            joined = joined.date()
+        # GOSI (KSA) applies different rates for members who joined on/after
+        # 2024-07-03 (new law) vs before; employees without a hire date default
+        # to the current law.
+        joined_after_2024_07_03 = joined is None or joined >= date(2024, 7, 3)
+
+        social = social_insurance_amount(
+            gross_amount,
+            country,
+            is_national=is_national,
+            joined_2024_07_03_or_later=joined_after_2024_07_03,
         )
+        # Progressive annual tax, withheld as 1/12 each month. The withholding
+        # is an estimate of the employee's annual liability; the final true-up is
+        # settled in the year-end return — same convention as withholding in IL.
+        income_tax_dict = payroll_income_tax_amount(annual_taxable, country)
+        income_tax_monthly = (income_tax_dict["tax"] / Decimal("12")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        social_employee_amount = social["employee"]
+        social_employer_amount = social["employer"]
+
+        withholding_total = social_employee_amount + income_tax_monthly
+        net_salary = gross_amount - deductions_amount - advance_deduction_total - withholding_total
 
         # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
         existing = PayrollTransaction.query.filter_by(
@@ -215,7 +248,9 @@ class PayrollService:
         # التحقق من أن صافي الراتب غير سالب — خصم جزئي للسلفة
         actual_deduction = advance_deduction_total  # المبلغ الذي سيتم خصمه فعلياً من السلف
         if net_salary < Decimal("0"):
-            max_deductible = basic_amount + Decimal(str(allowances or "0")) - Decimal(str(deductions or "0"))
+            # الاستقطاعات القانونية لا تُقتطع من الراتب المستحق نزولاً عن الصفر؛
+            # ما يقتطع جزئياً هو السلفة في حدود ما يسمح به الراتب بعد الضريبة والاشتراك.
+            max_deductible = gross_amount - deductions_amount - withholding_total
             if max_deductible <= Decimal("0"):
                 raise ValueError(
                     gettext(f'صافي راتب الموظف "{employee.name}" سالب ({net_salary}). لا يمكن صرف الراتب.')
@@ -233,6 +268,9 @@ class PayrollService:
             deductions=Decimal(str(deductions or "0")),
             advances_deducted=actual_deduction,
             net_salary=net_salary,
+            income_tax_amount=income_tax_monthly,
+            social_insurance_amount=social_employee_amount,
+            social_insurance_employer_amount=social_employer_amount,
             branch_id=employee.branch_id,
             tenant_id=tenant_id,
             created_by=user_id,
@@ -261,8 +299,6 @@ class PayrollService:
                 adv.is_deducted = True
                 adv.fully_deducted_at = datetime.now()
 
-        total_expense = basic_amount + Decimal(allowances)
-
         GLService.ensure_core_accounts(tenant_id=tenant_id)
         cash_account = GLService.get_default_liquidity_account(
             "cash",
@@ -278,7 +314,7 @@ class PayrollService:
                     tenant_id=tenant_id,
                 ),
                 "concept_code": "PAYROLL_EXPENSE",
-                "debit": Decimal(str(total_expense)),
+                "debit": Decimal(str(gross_amount)),
                 "credit": 0,
                 "description": f"Salary {month}/{year} - {employee.name}",
             },
@@ -290,6 +326,64 @@ class PayrollService:
                 "description": "Net Salary Payment",
             },
         ]
+
+        if social_employer_amount > Decimal("0"):
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYER_SOCIAL_INSURANCE_EXPENSE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYER_SOCIAL_INSURANCE_EXPENSE",
+                    "debit": Decimal(str(social_employer_amount)),
+                    "credit": 0,
+                    "description": "Employer social insurance contribution",
+                }
+            )
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYER_SOCIAL_INSURANCE_PAYABLE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYER_SOCIAL_INSURANCE_PAYABLE",
+                    "debit": 0,
+                    "credit": Decimal(str(social_employer_amount)),
+                    "description": "Employer social insurance payable",
+                }
+            )
+
+        if social_employee_amount > Decimal("0"):
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYEE_SOCIAL_INSURANCE_PAYABLE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYEE_SOCIAL_INSURANCE_PAYABLE",
+                    "debit": 0,
+                    "credit": Decimal(str(social_employee_amount)),
+                    "description": "Employee social insurance withheld",
+                }
+            )
+
+        if income_tax_monthly > Decimal("0"):
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYEE_INCOME_TAX_PAYABLE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYEE_INCOME_TAX_PAYABLE",
+                    "debit": 0,
+                    "credit": Decimal(str(income_tax_monthly)),
+                    "description": "Payroll income tax withheld",
+                }
+            )
 
         if deductions > 0:
             lines.append(

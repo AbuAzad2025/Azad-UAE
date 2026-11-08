@@ -140,6 +140,25 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("2141", "Payroll Payable", "رواتب مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate("2142", "Income Tax Payable", "ضريبة دخل مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate(
+        "2143",
+        "Employee Social Insurance Payable",
+        "اشتراكات التأمينات الاجتماعية الموظف",
+        "liability",
+        2,
+        False,
+        "2100",
+    ),
+    GLAccountTemplate(
+        "2144",
+        "Employer Social Insurance Payable",
+        "اشتراكات التأمينات الاجتماعية صاحب العمل",
+        "liability",
+        2,
+        False,
+        "2100",
+    ),
+    GLAccountTemplate("2147", "Payroll Income Tax Payable", "ضريبة دخل الموظفين مستحقة", "liability", 2, False, "2100"),
+    GLAccountTemplate(
         "2150",
         "Partner Current Accounts",
         "حسابات الشركاء الجارية",
@@ -295,6 +314,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("5301", "Freight In", "شحن وارد", "expense", 2, False, "5300"),
     GLAccountTemplate("5302", "Customs Duty", "رسوم جمركية", "expense", 2, False, "5300"),
     GLAccountTemplate("5303", "Insurance In", "تأمين وارد", "expense", 2, False, "5300"),
+    GLAccountTemplate("5304", "Excise Duty", "رسوم انتقائية", "expense", 2, False, "5300"),
     GLAccountTemplate("6000", "Operating Expenses", "مصروفات تشغيلية", "expense", 0, True),
     GLAccountTemplate(
         "6100",
@@ -330,6 +350,15 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("6200", "Administrative Expenses", "مصروفات إدارية", "expense", 1, True, "6000"),
     GLAccountTemplate("6210", "Rent", "الإيجار", "expense", 2, False, "6200"),
     GLAccountTemplate("6220", "Salaries & Wages", "الرواتب والأجور", "expense", 2, False, "6200"),
+    GLAccountTemplate(
+        "6221",
+        "Employer Social Insurance Expense",
+        "مصروف التأمينات الاجتماعية لصاحب العمل",
+        "expense",
+        2,
+        False,
+        "6200",
+    ),
     GLAccountTemplate("6230", "Utilities", "الكهرباء والمياه", "expense", 2, False, "6200"),
     GLAccountTemplate("6240", "Maintenance & Repairs", "صيانة وإصلاحات", "expense", 2, False, "6200"),
     GLAccountTemplate("6250", "Office Supplies", "قرطاسية ومستلزمات", "expense", 2, False, "6200"),
@@ -926,6 +955,7 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("COGS", "5100", "core_purchases"),
             GLConceptMappingTemplate("FREIGHT_IN", "5301", "core_purchases"),
             GLConceptMappingTemplate("CUSTOMS_DUTY", "5302", "core_purchases"),
+            GLConceptMappingTemplate("EXCISE_DUTY", "5304", "core_purchases"),
             # ACCOUNTS_PAYABLE is the legacy twin of AP: the supplier opening
             # balance posts it (routes/suppliers.py:213) instead of AP, so it
             # needs a row of its own or that posting is refused.
@@ -1027,6 +1057,7 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("PAYROLL_EXPENSE", "6220", "payroll"),
+            GLConceptMappingTemplate("EMPLOYER_SOCIAL_INSURANCE_EXPENSE", "6221", "payroll"),
             # PAYROLL_EXPENSE_2 has no mapping row and cannot have one: the
             # database constrains gl_account_mappings.concept_code to a fixed
             # list (ck_gl_account_mappings_concept_code, created by
@@ -1037,6 +1068,9 @@ GL_MODULE_DEFINITIONS = {
             # refused today; the registry and the schema have to be brought
             # back into step before it can be mapped.
             GLConceptMappingTemplate("PAYROLL_PAYABLE", "2141", "payroll"),
+            GLConceptMappingTemplate("EMPLOYEE_SOCIAL_INSURANCE_PAYABLE", "2143", "payroll"),
+            GLConceptMappingTemplate("EMPLOYER_SOCIAL_INSURANCE_PAYABLE", "2144", "payroll"),
+            GLConceptMappingTemplate("EMPLOYEE_INCOME_TAX_PAYABLE", "2147", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_PROVISION", "6190", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_LIABILITY", "2140", "payroll"),
             GLConceptMappingTemplate("LEAVE_ACCRUAL_LIABILITY", "2160", "payroll"),

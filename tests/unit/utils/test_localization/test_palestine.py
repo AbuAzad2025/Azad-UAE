@@ -74,20 +74,33 @@ class TestPalestineCurrency:
 
 
 class TestPalestineEInvoice:
-    def test_generate_einvoice_uses_dynamic_rate(self, strategy):
-        sale = MagicMock(id=10, total_aed=Decimal("116"), tax_rate=Decimal("16"))
-        result = strategy.generate_einvoice(sale)
-        assert result["format"] == "pma_mof_xml"
-        assert "16" in result["xml_payload"]
+    def _sale(self, total="116", tax="16"):
+        from types import SimpleNamespace
+
+        return SimpleNamespace(
+            id=10,
+            sale_number="INV-PS-10",
+            tenant_id=None,
+            customer=SimpleNamespace(name="زبون", tax_number=""),
+            sale_date=None,
+            currency="ILS",
+            tax_rate=Decimal("16"),
+            tax_amount=Decimal(tax),
+            taxable_amount=Decimal(total) - Decimal(tax),
+            subtotal=Decimal(total) - Decimal(tax),
+            total_amount=Decimal(total),
+            lines=[],
+        )
+
+    def test_generate_einvoice_pma_ubl(self, strategy):
+        result = strategy.generate_einvoice(self._sale())
+        assert result["format"] == "pma_ubl_xml"
+        assert "<cbc:Percent>16</cbc:Percent>" in result["xml_payload"]
         assert "TaxAmount" in result["xml_payload"]
 
     def test_generate_einvoice_zero_rated(self, strategy):
-        sale = MagicMock(spec=["id", "amount_aed", "tax_rate"])
-        sale.id = 5
-        sale.amount_aed = Decimal("200")
-        sale.tax_rate = Decimal("0")
-        result = strategy.generate_einvoice(sale)
-        assert "<TaxAmount>0</TaxAmount>" in result["xml_payload"]
+        result = strategy.generate_einvoice(self._sale(total="200", tax="0"))
+        assert '<cbc:TaxAmount currencyID="ILS">0.000</cbc:TaxAmount>' in result["xml_payload"]
 
     def test_resolve_vat_rate_from_sale(self, strategy):
         sale = MagicMock(spec=["tax_rate"])

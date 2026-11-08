@@ -84,22 +84,25 @@ class IsraelStrategy(LocalizationStrategy):
         return bool(_VAT_ID_PATTERN.match(cleaned))
 
     def generate_einvoice(self, sale) -> dict:
-        rate = self._resolve_vat_rate(sale)
-        total = self._sale_total(sale)
-        tax = (
-            (total * rate / (Decimal("100") + rate)).quantize(_TWO_PLACES, rounding=ROUND_HALF_UP)
-            if rate > 0
-            else Decimal("0")
+        from utils.einvoice_document import build_invoice_xml, invoice_sha256_hex, tenant_for_sale
+
+        tenant = tenant_for_sale(sale)
+        currency = (getattr(sale, "currency", None) or self.currency).strip() or self.currency
+        xml_payload = build_invoice_xml(
+            sale,
+            tenant,
+            country="IL",
+            currency=currency,
+            profile_id="reporting",
+            doc_type_code="388",
         )
-        xml = f"""<Invoice>
-  <Country>IL</Country>
-  <TaxRate>{rate}</TaxRate>
-  <TaxAmount>{tax}</TaxAmount>
-  <Total>{total}</Total>
-</Invoice>"""
         return {
-            "xml_payload": xml,
+            "xml_payload": xml_payload,
             "qr_base64": "",
-            "invoice_hash": "",
-            "format": "il_tax_xml",
+            "invoice_hash": invoice_sha256_hex(xml_payload),
+            # Israel requires the allocation number (מספר הקצאה) from the
+            # Tax Authority's invoice-allocation API for invoices above the
+            # statutory thresholds; the API call happens on submission with
+            # the tenant's credentials. This is the document that gets submitted.
+            "format": "il_ubl_xml",
         }

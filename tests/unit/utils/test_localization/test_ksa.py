@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -64,55 +64,50 @@ class TestKSAValidateTaxNumber:
 
 
 class TestKSAEInvoice:
-    def test_generate_einvoice_tax_inclusive(self, strategy):
-        sale = MagicMock(spec=["id", "total_aed", "sale_date"])
-        sale.id = 42
-        sale.total_aed = Decimal("115")
-        sale.sale_date = "2025-06-01"
-        result = strategy.generate_einvoice(sale)
-        assert result["format"] == "zatca_simplified_xml"
+    def _sale(self, total="115", tax="15", currency="SAR"):
+        from types import SimpleNamespace
+
+        line = SimpleNamespace(
+            quantity=Decimal("1"),
+            unit_price=Decimal(str(Decimal(total) - Decimal(tax))),
+            line_total=Decimal(str(Decimal(total) - Decimal(tax))),
+            product=SimpleNamespace(name="Widget"),
+            product_id=1,
+        )
+        return SimpleNamespace(
+            id=42,
+            sale_number="INV-KSA-42",
+            tenant_id=None,
+            customer=SimpleNamespace(name="Buyer", tax_number=""),
+            sale_date=None,
+            currency=currency,
+            tax_rate=Decimal("15"),
+            tax_amount=Decimal(tax),
+            taxable_amount=Decimal(total) - Decimal(tax),
+            subtotal=Decimal(total) - Decimal(tax),
+            total_amount=Decimal(total),
+            amount_aed=Decimal(total),
+            lines=[line],
+        )
+
+    def test_generate_einvoice_zatca_simplified(self, strategy):
+        result = strategy.generate_einvoice(self._sale())
+        assert result["format"] == "zatca_ubl_simplified_xml"
         assert "TaxExclusiveAmount" in result["xml_payload"]
-        assert "15.00" in result["xml_payload"]
-        assert result["qr_base64"] == base64.b64encode(b"ZATCA|15.00|115|42").decode()
+        assert "<cbc:ID>INV-KSA-42</cbc:ID>" in result["xml_payload"]
+        tlv = base64.b64decode(result["qr_base64"])
+        assert tlv[0] == 1  # TLV tag 1 = seller name
         assert len(result["invoice_hash"]) == 64
 
     def test_generate_einvoice_zero_rated_sale(self, strategy):
-        sale = MagicMock(spec=["id", "amount_aed", "tax_rate"])
-        sale.id = 7
-        sale.amount_aed = Decimal("500")
-        sale.tax_rate = Decimal("0")
+        result = strategy.generate_einvoice(self._sale(total="500", tax="0"))
+        assert '<cbc:TaxAmount currencyID="SAR">0.000</cbc:TaxAmount>' in result["xml_payload"]
+
+    def test_amount_aed_not_required(self, strategy):
+        sale = self._sale()
+        del sale.amount_aed
         result = strategy.generate_einvoice(sale)
-        assert 'TaxAmount currencyID="SAR">0' in result["xml_payload"]
-
-    def test_sign_zatca_payload_mocked(self, strategy):
-        sale = MagicMock(spec=["id", "total_aed"])
-        sale.id = 1
-        sale.total_aed = Decimal("100")
-        with patch.object(strategy, "sign_zatca_payload", return_value="mocked-signature") as signer:
-            result = strategy.generate_einvoice(sale)
-        assert result["invoice_hash"] == "mocked-signature"
-        signer.assert_called_once()
-
-    def test_zatca_portal_connectivity_mocked(self, strategy):
-        sale = MagicMock(spec=["id", "total_aed"])
-        sale.id = 99
-        sale.total_aed = Decimal("50")
-        with (
-            patch.object(
-                strategy,
-                "sign_zatca_payload",
-                side_effect=ConnectionError("ZATCA portal unreachable"),
-            ),
-            pytest.raises(ConnectionError, match="ZATCA portal"),
-        ):
-            strategy.generate_einvoice(sale)
-
-    def test_amount_aed_fallback(self, strategy):
-        sale = MagicMock(spec=["id", "amount_aed"])
-        sale.id = 3
-        sale.amount_aed = Decimal("230")
-        result = strategy.generate_einvoice(sale)
-        assert "230" in result["xml_payload"]
+        assert len(result["invoice_hash"]) == 64
 
 
 class TestKSAExtractTax:
@@ -120,13 +115,3 @@ class TestKSAExtractTax:
         sale = MagicMock(spec=["tax_rate"])
         sale.tax_rate = Decimal("5")
         assert strategy._resolve_vat_rate(sale) == Decimal("5")
-
-    def test_extract_tax_from_inclusive(self, strategy):
-        net, tax = strategy._extract_tax_from_inclusive(Decimal("115"), Decimal("15"))
-        assert net == Decimal("100.00")
-        assert tax == Decimal("15.00")
-
-    def test_extract_tax_zero_rate(self, strategy):
-        net, tax = strategy._extract_tax_from_inclusive(Decimal("80"), Decimal("0"))
-        assert net == Decimal("80")
-        assert tax == Decimal("0")

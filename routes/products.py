@@ -660,6 +660,11 @@ def create():
                     warranty_days = int(float(warranty_days_raw or 0))
                 except (ValueError, TypeError):
                     warranty_days = 0
+                # Import-time excise classification — allow-list enforced here,
+                # the DB stores it as a plain string.
+                excise_category = (request.form.get("excise_category") or "").strip().lower()
+                if excise_category not in ("tobacco", "energy_drinks", "soft_drinks"):
+                    excise_category = None
 
                 # Check tenant product limit
                 from utils.tenant_limits import TenantLimitError, check_products_limit
@@ -692,6 +697,7 @@ def create():
                     has_serial_number=has_serial_number,
                     warranty_days=warranty_days,
                     industry=request.form.get("industry", default_industry) or default_industry,
+                    excise_category=excise_category,
                 )
                 extra_fields = {}
                 for key in request.form:
@@ -921,6 +927,10 @@ def edit(**kwargs):
             product.notes = request.form.get("notes")
             product.merchant_customer_id = merchant_customer_id or None
             product.industry = request.form.get("industry", product.industry or "general") or "general"
+            excise_category = (request.form.get("excise_category") or "").strip().lower()
+            product.excise_category = (
+                excise_category if excise_category in ("tobacco", "energy_drinks", "soft_drinks") else None
+            )
             extra_fields = dict(product.extra_fields or {})
             for key in request.form:
                 if key.startswith("extra_"):

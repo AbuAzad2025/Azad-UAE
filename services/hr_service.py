@@ -325,6 +325,15 @@ class PayrollEngine:
         daily_rate=None,
         days_worked=None,
     ):
+        """Pure gross→net estimator — does NOT include statutory withholdings.
+
+        The real payroll posting path (``PayrollService.process_payroll``)
+        subtracts the statutory NSSF/GOSI/GPSSA/Bituach Leumi contribution and
+        the progressive income-tax withholding (see ``utils/country_tax.py``)
+        and persists them on the PayrollTransaction. This helper is used for
+        in-memory batch previews only, and will always overstate net pay
+        unless the caller subtracts withholdings explicitly.
+        """
         allow = Decimal(str(allowances or 0))
         deduct = Decimal(str(deductions or 0))
         leave_days = Decimal(str(unpaid_leave_days or 0))

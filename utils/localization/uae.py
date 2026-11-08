@@ -14,7 +14,7 @@ class UAEStrategy(LocalizationStrategy):
     country_name = "UAE"
     default_vat_rate = vat_rate_for_country("AE")
     currency = "AED"
-    supports_qr = True
+    supports_qr = False
     supports_wps = True
 
     def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
@@ -48,21 +48,17 @@ class UAEStrategy(LocalizationStrategy):
         }
 
     def generate_einvoice(self, sale) -> dict:
-        total = sale.total_aed if hasattr(sale, "total_aed") else sale.amount_aed
-        tax = total * self.default_vat_rate / Decimal("100")
-        xml = f"""<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
-  <ID>{sale.id}</ID>
-  <TaxTotal><TaxAmount currencyID="AED">{tax}</TaxAmount></TaxTotal>
-  <LegalMonetaryTotal><TaxInclusiveAmount currencyID="AED">{total}</TaxInclusiveAmount></LegalMonetaryTotal>
-</Invoice>"""
-        qr_data = f"VAT:{self.default_vat_rate}|Total:{total}|Sale:{sale.id}"
-        import base64
+        from utils.einvoice_document import build_invoice_xml, invoice_sha256_hex, tenant_for_sale
 
-        qr_b64 = base64.b64encode(qr_data.encode()).decode()
+        tenant = tenant_for_sale(sale)
+        currency = (getattr(sale, "currency", None) or self.currency).strip() or self.currency
+        xml_payload = build_invoice_xml(
+            sale, tenant, country="AE", currency=currency, profile_id="reporting", doc_type_code="388"
+        )
         return {
-            "xml_payload": xml,
-            "qr_base64": qr_b64,
-            "invoice_hash": "",
+            "xml_payload": xml_payload,
+            "qr_base64": "",
+            "invoice_hash": invoice_sha256_hex(xml_payload),
             "format": "fta_ubl_xml",
         }
 

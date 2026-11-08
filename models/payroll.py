@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
@@ -25,6 +26,10 @@ class Employee(db.Model):
     basic_salary = db.Column(db.Numeric(10, 2), default=0)  # Monthly salary or Daily rate
     allowances = db.Column(db.Numeric(10, 2), default=0)  # Monthly allowances
     currency = db.Column(db.String(3), default=context_aware_default_currency)
+
+    # Statutory eligibility — drives whether pension/social insurance applies
+    # (UAE GPSSA and GOSI KSA both cover nationals only; PS/IL cover all).
+    is_national = db.Column(db.Boolean, default=False)
 
     # Bank / WPS Fields
     bank_code = db.Column(db.String(20))  # Bank swift/sort code
@@ -141,6 +146,13 @@ class PayrollTransaction(db.Model):
     allowances = db.Column(db.Numeric(10, 2), default=0)
     deductions = db.Column(db.Numeric(10, 2), default=0)
     advances_deducted = db.Column(db.Numeric(10, 2), default=0)
+    # Statutory withholdings — persisted so the payslip and the payroll GL
+    # entry all carry the same breakdown. ``social_insurance_amount`` is the
+    # employee share withheld; ``social_insurance_employer_amount`` is the
+    # employer share, an additional expense (not part of net pay).
+    income_tax_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    social_insurance_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    social_insurance_employer_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
 
     net_salary = db.Column(db.Numeric(10, 2), nullable=False)
 

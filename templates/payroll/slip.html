@@ -75,6 +75,8 @@
           <tr><td>2</td><td>{{ _('البدلات والإضافي') }}</td><td class="p-status-ok">{{ format_currency(slip.allowances) }}</td></tr>
           <tr><td>3</td><td>{{ _('الخصومات') }}</td><td class="p-status-bad">({{ format_currency(slip.deductions) }})</td></tr>
           <tr><td>4</td><td>{{ _('السلف المستردة') }}</td><td class="p-status-warn">({{ format_currency(slip.advances_deducted) }})</td></tr>
+          {% if slip.social_insurance_amount and slip.social_insurance_amount > 0 %}<tr><td>5</td><td>{{ _('التأمينات الاجتماعية (حصة الموظف)') }}</td><td class="p-status-bad">({{ format_currency(slip.social_insurance_amount) }})</td></tr>{% endif %}
+          {% if slip.income_tax_amount and slip.income_tax_amount > 0 %}<tr><td>6</td><td>{{ _('ضريبة الدخل المستقطعة') }}</td><td class="p-status-bad">({{ format_currency(slip.income_tax_amount) }})</td></tr>{% endif %}
         </tbody>
         <tfoot>
           <tr class="net-row">

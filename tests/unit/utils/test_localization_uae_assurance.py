@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
 from utils.localization.uae import UAEStrategy
 
@@ -13,7 +12,7 @@ class TestUAEStrategyPlugin:
         s = UAEStrategy()
         assert s.country_code == "AE"
         assert s.currency == "AED"
-        assert s.supports_qr is True
+        assert s.supports_qr is False
 
     def test_calculate_tax_default_rate(self):
         s = UAEStrategy()
@@ -35,21 +34,48 @@ class TestUAEStrategyPlugin:
         assert report["format"] == "fta_vat201_v1"
         assert report["currency"] == "AED"
 
+    def _sale(self, total="1050", tax="50"):
+        from types import SimpleNamespace
+
+        line = SimpleNamespace(
+            quantity=Decimal("1"),
+            unit_price=Decimal(str(Decimal(total) - Decimal(tax))),
+            line_total=Decimal(str(Decimal(total) - Decimal(tax))),
+            product=SimpleNamespace(name="Widget"),
+            product_id=1,
+        )
+        return SimpleNamespace(
+            id=42,
+            sale_number="INV-AE-42",
+            tenant_id=None,
+            customer=SimpleNamespace(name="Buyer", tax_number=""),
+            sale_date=None,
+            currency="AED",
+            tax_rate=Decimal("5"),
+            tax_amount=Decimal(tax),
+            taxable_amount=Decimal(total) - Decimal(tax),
+            subtotal=Decimal(total) - Decimal(tax),
+            total_amount=Decimal(total),
+            amount_aed=Decimal(total),
+            lines=[line],
+        )
+
     def test_generate_einvoice_uses_total_aed(self):
         s = UAEStrategy()
-        sale = MagicMock(id=42, total_aed=Decimal("1050"))
-        result = s.generate_einvoice(sale)
-        assert "1050" in result["xml_payload"]
+        result = s.generate_einvoice(self._sale())
+        assert "1050.000" in result["xml_payload"]
         assert result["format"] == "fta_ubl_xml"
-        assert result["qr_base64"]
+        assert result["qr_base64"] == ""
+        assert len(result["invoice_hash"]) == 64
 
-    def test_generate_einvoice_falls_back_to_amount_aed(self):
+    def test_generate_einvoice_well_formed(self):
         s = UAEStrategy()
-        sale = MagicMock(spec=["id", "amount_aed"])
-        sale.id = 7
-        sale.amount_aed = Decimal("500")
-        result = s.generate_einvoice(sale)
-        assert "500" in result["xml_payload"]
+        from xml.etree import ElementTree as ET
+
+        result = s.generate_einvoice(self._sale(total="500", tax="0"))
+        root = ET.fromstring(result["xml_payload"])
+        cbc = "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}"
+        assert root.find(f"{cbc}ID").text == "INV-AE-42"
 
     def test_supports_wps(self):
         s = UAEStrategy()

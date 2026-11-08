@@ -17,8 +17,12 @@ class TestPayrollProcess:
             name=f"PR {tid}",
             name_ar=f"PR {tid}",
             slug=f"payroll-test-{tid}",
-            default_currency="AED",
-            base_currency="AED",
+            default_currency="ILS",
+            base_currency="ILS",
+            # Pin the VAT country explicitly so the statutory payroll rates
+            # under test are the Palestinian NSSF rates (7% employee / 9%
+            # employer), not whatever the environment fallback happens to be.
+            vat_country="PS",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -92,7 +96,13 @@ class TestPayrollProcess:
         tx = PayrollTransaction.query.filter_by(employee_id=employee.id, tenant_id=tenant.id).first()
         assert tx is not None, "PayrollTransaction was not created"
         assert tx.basic_amount == Decimal("3000"), f"basic={tx.basic_amount}"
-        assert tx.net_salary == Decimal("3500"), f"net={tx.net_salary}"
+        # PS statutory NSSF 7% on gross (3000 + 500 allowances) = 245.00 withheld;
+        # PS personal income tax applies only above the 48k annual exempt band
+        # (42000 annual => 0); net = 3500 - 245 = 3255.
+        assert tx.social_insurance_amount == Decimal("245.000"), f"si={tx.social_insurance_amount}"
+        assert tx.social_insurance_employer_amount == Decimal("315.000"), f"si_er={tx.social_insurance_employer_amount}"
+        assert tx.income_tax_amount == Decimal("0.000"), f"it={tx.income_tax_amount}"
+        assert tx.net_salary == Decimal("3255.000"), f"net={tx.net_salary}"
 
         from models.gl import GLJournalEntry
 
@@ -101,6 +111,25 @@ class TestPayrollProcess:
             GLJournalEntry.reference_id == tx.id,
         ).all()
         assert len(gl_entries) >= 1
+
+        from extensions import db
+
         total_debit = sum((e.total_debit or 0) for e in gl_entries)
         total_credit = sum((e.total_credit or 0) for e in gl_entries)
         assert total_debit == total_credit, f"GL unbalanced: debit={total_debit} credit={total_credit}"
+
+        from models import GLAccount, GLJournalLine
+
+        codes = {
+            account.code
+            for entry in gl_entries
+            for account, line in (
+                db.session.query(GLAccount, GLJournalLine)
+                .join(GLJournalLine, GLJournalLine.account_id == GLAccount.id)
+                .filter(GLJournalLine.entry_id == entry.id)
+                .all()
+            )
+        }
+        assert "6221" in codes, f"codes={codes}"  # employer SI expense
+        assert "2143" in codes, f"codes={codes}"  # employee SI payable
+        assert "2144" in codes, f"codes={codes}"  # employer SI payable

@@ -25,6 +25,7 @@ from .document_sequence import DocumentSequence
 from .document_snapshot import DocumentSnapshot
 from .document_verification import DocumentVerification
 from .donation import Donation
+from .einvoice import EInvoice
 from .email_marketing import (
     CampaignLog,
     EmailCampaign,
@@ -147,6 +148,7 @@ __all__ = [
     "Branch",
     "Sale",
     "SaleLine",
+    "EInvoice",
     "Purchase",
     "PurchaseLine",
     "PurchaseReturn",

@@ -355,7 +355,23 @@
 
             <label for="customs_duty"><i class="fas fa-landmark" aria-hidden="true"></i> {{ t('Customs') }}</label>
 
-            <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="0" step="0.01" min="0" aria-label="customs duty">
+            <input type="number" name="customs_duty" id="customs_duty" class="form-control" value="" step="0.001" min="0" placeholder="{{ _('تلقائي') }}" aria-label="customs duty">
+
+            <small class="text-muted">{{ _('يُحتسب تلقائياً حسب النسبة النظامية للبلد عند استيراد.') }}</small>
+
+          </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+          <div class="form-group">
+
+            <label for="excise_amount"><i class="fas fa-wine-bottle" aria-hidden="true"></i> {{ _('الضريبة الانتقائية') }}</label>
+
+            <input type="number" name="excise_amount" id="excise_amount" class="form-control" value="" step="0.001" min="0" placeholder="{{ _('تلقائي') }}" aria-label="excise duty">
+
+            <small class="text-muted">{{ _('إن وُجدت منتجات خاضعة (تبغ/مشروبات طاقة/غازية) في الاستيراد تُحتسب تلقائياً.') }}</small>
 
           </div>
 
@@ -368,6 +384,18 @@
             <label for="other_landed_cost"><i class="fas fa-ellipsis-h" aria-hidden="true"></i> {{ t('Other_Costs') }}</label>
 
             <input type="number" name="other_landed_cost" id="other_landed_cost" class="form-control" value="0" step="0.01" min="0" aria-label="other landed cost">
+
+          </div>
+
+        <div class="col-md-3">
+
+          <div class="form-group form-check mt-4">
+
+            <input type="checkbox" name="is_import" value="1" class="form-check-input" id="input_is_import">
+
+            <label for="input_is_import" class="form-check-label">{{ _('فاتورة استيراد') }}</label>
+
+            <small class="text-muted d-block">{{ _('يُطبّق الرسم الجمركي النظامي و الضريبة الانتقائية تلقائياً عند ترك الحقلين فارغين.') }}</small>
 
           </div>
 

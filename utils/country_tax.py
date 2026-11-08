@@ -40,6 +40,8 @@ __all__ = [
     "validate_tax_number",
     "compute_progressive_tax",
     "compute_corporate_tax",
+    "social_insurance_amount",
+    "payroll_income_tax_amount",
 ]
 
 # (upper_bound_inclusive, marginal_rate_percent) — progressive brackets.
@@ -51,6 +53,13 @@ _PA_BRACKETS = (
     (Decimal("384000"), Decimal("15")),
     (None, Decimal("20")),
 )
+
+# IL tax credit point (נקדת זיכוי) annual value 2025 — deducted from the tax
+# bill after brackets apply. 2.25 points for a single adult (no children).
+# The employer withholds on the assumption the employee claims the statutory
+# minimum; anything more is the employee's responsibility in the annual return.
+_IL_CREDIT_POINT_ANNUAL = Decimal("2904.00")
+_IL_DEFAULT_CREDIT_POINTS = Decimal("2.25")
 
 _IL_BRACKETS = (
     (Decimal("77480"), Decimal("10")),
@@ -79,6 +88,21 @@ NULL_PROFILE = {
     "wht_default_rate": None,
     "social_employee_rate": None,
     "social_employer_rate": None,
+    "social_employee_rate_upper": None,
+    "social_employer_rate_upper": None,
+    "social_ceiling": None,
+    "social_floor": None,
+    "pension_national_rate_employee": None,
+    "pension_national_rate_employer": None,
+    "pension_ceiling": None,
+    "pension_floor": None,
+    "gosi_joined_2024_07_03_or_later": None,
+    "gosi_joined_before": None,
+    "gosi_non_national_employer": None,
+    "gosi_ceiling": None,
+    "gosi_floor": None,
+    "income_tax_credit_points_applies": False,
+    "payroll_national_flag_required": False,
     "social_configurable": True,
     "tax_number_pattern": r"^\d{5,}$",
     "filing_note": "Country not supported: zero VAT, no statutory filing format.",
@@ -101,8 +125,12 @@ COUNTRY_TAX_PROFILES = {
         "customs_default_rate": Decimal("15"),
         "excise_rates": {},
         "wht_default_rate": None,
-        "social_employee_rate": None,
-        "social_employer_rate": None,
+        "social_employee_rate": Decimal("7.00"),
+        "social_employer_rate": Decimal("9.00"),
+        "social_ceiling": Decimal("18800"),
+        "social_floor": Decimal("1880"),
+        "income_tax_credit_points_applies": False,
+        "payroll_national_flag_required": False,
         "social_configurable": True,
         "tax_number_pattern": r"^\d{9,11}$",
         "filing_note": "VAT return: PMA MoF XML. Corporate income tax 15% standard.",
@@ -123,8 +151,14 @@ COUNTRY_TAX_PROFILES = {
         "customs_default_rate": Decimal("18"),
         "excise_rates": {},
         "wht_default_rate": None,
-        "social_employee_rate": None,
-        "social_employer_rate": None,
+        "social_employee_rate": Decimal("3.50"),
+        "social_employer_rate": Decimal("4.51"),
+        "social_employee_rate_upper": Decimal("12.00"),
+        "social_employer_rate_upper": Decimal("7.60"),
+        "social_ceiling": Decimal("50695"),
+        "social_floor": Decimal("7522"),
+        "income_tax_credit_points_applies": True,
+        "payroll_national_flag_required": False,
         "social_configurable": True,
         "tax_number_pattern": r"^\d{9}$",
         "filing_note": "VAT return: Israeli Tax Authority (Mas Hachnaasa) report.",
@@ -145,8 +179,10 @@ COUNTRY_TAX_PROFILES = {
         "customs_default_rate": Decimal("5"),
         "excise_rates": {"tobacco": Decimal("100"), "energy_drinks": Decimal("100"), "soft_drinks": Decimal("50")},
         "wht_default_rate": None,
-        "social_employee_rate": None,
-        "social_employer_rate": None,
+        "pension_national_rate_employee": Decimal("11"),
+        "pension_national_rate_employer": Decimal("15"),
+        "pension_ceiling": Decimal("70000"),
+        "pension_floor": Decimal("3000"),
         "social_configurable": True,
         "tax_number_pattern": r"^\d{15}$",
         "filing_note": (
@@ -169,10 +205,19 @@ COUNTRY_TAX_PROFILES = {
         "personal_brackets": (),
         "customs_rates": {"standard": Decimal("15")},
         "customs_default_rate": Decimal("15"),
-        "excise_rates": {},
+        "excise_rates": {"tobacco": Decimal("100"), "energy_drinks": Decimal("100"), "soft_drinks": Decimal("50")},
         "wht_default_rate": None,
-        "social_employee_rate": None,
-        "social_employer_rate": None,
+        "gosi_joined_2024_07_03_or_later": {
+            "employee": Decimal("10.25"),
+            "employer": Decimal("12.25"),
+        },
+        "gosi_joined_before": {
+            "employee": Decimal("9.75"),
+            "employer": Decimal("11.75"),
+        },
+        "gosi_non_national_employer": Decimal("2"),
+        "gosi_ceiling": Decimal("45000"),
+        "gosi_floor": Decimal("1500"),
         "social_configurable": True,
         "tax_number_pattern": r"^3\d{14}$",
         "filing_note": "VAT return: ZATCA. Corporate tax 20%; zakat 2.5% applies per ZATCA rules (tenant-configured).",
@@ -296,3 +341,136 @@ def compute_corporate_tax(taxable_profit, country_code=None, *, tenant_threshold
         "taxable": taxable,
         "country": profile.get("code"),
     }
+
+
+# --- Payroll: statutory social insurance and income tax -----------------------
+
+
+def _q3(value) -> Decimal:
+    return Decimal(str(value or 0)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+
+
+def _tier_split(gross: Decimal, threshold: Decimal, ceiling: Decimal) -> tuple[Decimal, Decimal, Decimal]:
+    """Split a contribution base into (lower_band, upper_band, capped_base)."""
+    g = min(Decimal(str(gross or 0)), Decimal(str(ceiling)))
+    lower = min(g, Decimal(str(threshold)))
+    upper = max(Decimal("0"), g - lower)
+    return lower, upper, g
+
+
+def social_insurance_amount(gross, country_code, *, is_national=False, joined_2024_07_03_or_later=False) -> dict:
+    """Statutory employee/employer social insurance contribution for one month.
+
+    Sources of truth are the ``social_*``/``gosi_*``/``pension_*`` fields on the
+    country profile in this module — never a rate remembered in a service.
+    Returns ``{"employee": Decimal, "employer": Decimal, "ceiling": Decimal|None,
+    "floor": Decimal|None, "eligible": bool}`` quantized to 3dp.
+
+    PS — NSSF (law 6/2016): employee 7%, employer 9% on the base, capped at the
+    statutory ceiling (in 2025 terms: 10x the minimum wage).
+    IL — Bituach Leumi + Mas Briut (2025): two tiers, up to the reduced-rate
+    income threshold and up to the max-insurable salary; above the maximum
+    salary both sides are zero.
+    SA — GOSI (2025): Saudi nationals; rates depend on the join date
+    (before/on-after 2024-07-03). Non-nationals: employer pays 2% occupational
+    hazards only.
+    AE — GPSSA (Federal Decree Law No. 57 of 2023): nationals only, 11%/15%.
+    """
+    code = _norm(country_code)
+    profile = get_country_profile(code)
+    g = Decimal(str(gross or 0))
+    if g <= 0:
+        return {"employee": Decimal("0"), "employer": Decimal("0"), "ceiling": None, "floor": None, "eligible": False}
+
+    if code == "PS":
+        ceiling = Decimal(str(profile.get("social_ceiling") or 0)) or None
+        base = min(g, ceiling) if ceiling is not None else g
+        employee = _q3(base * Decimal(str(profile.get("social_employee_rate") or 0)) / Decimal("100"))
+        employer = _q3(base * Decimal(str(profile.get("social_employer_rate") or 0)) / Decimal("100"))
+        return {
+            "employee": employee,
+            "employer": employer,
+            "ceiling": ceiling,
+            "floor": Decimal(str(profile.get("social_floor") or 0)),
+            "eligible": True,
+        }
+
+    if code == "IL":
+        lower = Decimal(str(profile.get("social_floor") or 0))
+        ceiling = Decimal(str(profile.get("social_ceiling") or 0))
+        lower_amt, upper_amt, capped = _tier_split(g, lower, ceiling)
+        emp_lower = Decimal(str(profile.get("social_employee_rate") or 0))
+        emp_upper = Decimal(str(profile.get("social_employee_rate_upper") or 0))
+        er_lower = Decimal(str(profile.get("social_employer_rate") or 0))
+        er_upper = Decimal(str(profile.get("social_employer_rate_upper") or 0))
+        employee = _q3(lower_amt * emp_lower / Decimal("100") + upper_amt * emp_upper / Decimal("100"))
+        employer = _q3(lower_amt * er_lower / Decimal("100") + upper_amt * er_upper / Decimal("100"))
+        return {"employee": employee, "employer": employer, "ceiling": ceiling, "floor": lower, "eligible": True}
+
+    if code == "SA":
+        gosi_ceiling = Decimal(str(profile.get("gosi_ceiling") or 0))
+        base = min(g, gosi_ceiling)
+        if not is_national:
+            # Occupational hazards only, employer side — no employee share.
+            employee = Decimal("0")
+            employer = _q3(base * Decimal(str(profile.get("gosi_non_national_employer") or 0)) / Decimal("100"))
+            eligible = employer > 0
+        else:
+            joined = bool(joined_2024_07_03_or_later)
+            rates = profile.get("gosi_joined_2024_07_03_or_later" if joined else "gosi_joined_before") or {}
+            employee = _q3(base * Decimal(str(rates.get("employee") or 0)) / Decimal("100"))
+            employer = _q3(base * Decimal(str(rates.get("employer") or 0)) / Decimal("100"))
+            eligible = True
+        return {
+            "employee": employee,
+            "employer": employer,
+            "ceiling": gosi_ceiling,
+            "floor": Decimal(str(profile.get("gosi_floor") or 0)),
+            "eligible": eligible,
+        }
+
+    if code == "AE":
+        if not is_national:
+            return {
+                "employee": Decimal("0"),
+                "employer": Decimal("0"),
+                "ceiling": None,
+                "floor": None,
+                "eligible": False,
+            }
+        ceiling = Decimal(str(profile.get("pension_ceiling") or 0))
+        base = min(g, ceiling)
+        employee = _q3(base * Decimal(str(profile.get("pension_national_rate_employee") or 0)) / Decimal("100"))
+        employer = _q3(base * Decimal(str(profile.get("pension_national_rate_employer") or 0)) / Decimal("100"))
+        return {
+            "employee": employee,
+            "employer": employer,
+            "ceiling": ceiling,
+            "floor": Decimal(str(profile.get("pension_floor") or 0)),
+            "eligible": True,
+        }
+
+    return {"employee": Decimal("0"), "employer": Decimal("0"), "ceiling": None, "floor": None, "eligible": False}
+
+
+def payroll_income_tax_amount(annual_taxable, country_code, *, credit_points=None) -> dict:
+    """Annual income tax on the taxable income for the employee's country.
+
+    Progressive schedule from ``personal_brackets``. IL deducts the statutory
+    tax credit points (נק' זיכוי) from the bill: the default is a single adult
+    with 2.25 points at the 2025 published value. PS has a 48k exempt band
+    built into its brackets and takes no credit points. AE and SA levy no
+    personal income tax.
+    """
+    code = _norm(country_code)
+    profile = get_country_profile(code)
+    brackets = personal_brackets_for_country(code)
+    t = Decimal(str(annual_taxable or 0))
+    if not brackets or t <= 0:
+        return {"tax": Decimal("0"), "effective_rate": Decimal("0"), "country": code}
+    tax = compute_progressive_tax(t, brackets)
+    if bool(profile.get("income_tax_credit_points_applies")):
+        points = Decimal(str(credit_points)) if credit_points is not None else _IL_DEFAULT_CREDIT_POINTS
+        tax = max(Decimal("0"), _q3(tax - points * _IL_CREDIT_POINT_ANNUAL))
+    rate = _q3(tax / t * Decimal("100")) if t > 0 else Decimal("0")
+    return {"tax": tax, "effective_rate": rate, "country": code}

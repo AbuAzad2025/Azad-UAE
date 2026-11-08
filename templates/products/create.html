@@ -203,6 +203,17 @@
                 <input type="number" id="warranty_days" name="warranty_days" class="form-control input-ltr" dir="ltr" min="0" value="{{ form_data.get('warranty_days', '0') }}">
               </div>
             </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="product_excise_category">{{ _('الفئة الانتقائية') }}</label>
+                <select name="excise_category" id="product_excise_category" class="form-control form-control-sm">
+                  <option value="" {% if not form_data.get('excise_category') %}selected{% endif %}>{{ _('لا شيء') }}</option>
+                  <option value="tobacco" {% if form_data.get('excise_category') == 'tobacco' %}selected{% endif %}>{{ _('تبغ ومشتقاته') }}</option>
+                  <option value="energy_drinks" {% if form_data.get('excise_category') == 'energy_drinks' %}selected{% endif %}>{{ _('مشروبات طاقة') }}</option>
+                  <option value="soft_drinks" {% if form_data.get('excise_category') == 'soft_drinks' %}selected{% endif %}>{{ _('مشروبات غازية') }}</option>
+                </select>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-md-6">

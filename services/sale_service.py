@@ -824,6 +824,12 @@ class SaleService:
 
         post_sale_commissions(sale)
 
+        # Statutory e-invoice artifact — pure computation, no network. Fails
+        # the whole transaction loudly on error in supported jurisdictions.
+        from services.einvoice_service import EInvoiceService
+
+        EInvoiceService.generate_for_sale(sale)
+
         from decimal import Decimal as _D
 
         customer.apply_sale(_D(str(sale.amount_aed or 0)))

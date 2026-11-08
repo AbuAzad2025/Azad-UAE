@@ -199,11 +199,12 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=102,
+        expected=107,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
-        note="102 base accounts + the tenant's industry extension (49 across 13 "
-        "industries) + 2 liquidity accounts per active branch. Self-healing: "
-        "matches on code and repairs name/type/parent/header/level/contra.",
+        note="107 base accounts (102 + 4 payroll statutory + 1 excise duty, Nov 2026) + the "
+        "tenant's industry extension (49 across 13 industries) + 2 liquidity "
+        "accounts per active branch. Self-healing: matches on code and repairs "
+        "name/type/parent/header/level/contra.",
         verify="utils.seed_manifest_probe.min_gl_accounts_for_active_tenant",
         tags=("finance", "gl"),
     ),
