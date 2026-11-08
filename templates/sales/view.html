@@ -33,7 +33,7 @@
     </a>
 
     {% if ita_visible %}
-    <form method="post" action="{{ url_for('sales.request_ita_allocation', id=sale.id) }}" style="display:inline">
+    <form method="post" action="{{ url_for('sales.request_ita_allocation', id=sale.id) }}" class="d-inline">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
       {% if einvoice_row and einvoice_row.ita_allocation_number %}
       <span class="badge badge-success" title="מספר הקצאה">{{ _('رقم تخصيص') }}: {{ einvoice_row.ita_allocation_number }}</span>
