@@ -409,14 +409,17 @@ are fixed.
 - `tests/integration/test_period_close_reconciliation.py` — 300 invoices, 878
   entries, closed through the real route: the trial balance, the AR/AP
   controls, both VAT accounts and the inventory account reconcile to the cent.
-  **Partly fixed:** a supplier credit note against a VAT bill now posts
+  **Fixed:** a supplier credit note against a VAT bill now posts
   balanced — `models/purchase_return.py`
   `calculate_totals(recalculate_tax=False)` preserves the total the service
   set (`inventory_credit + tax`), pinned by
   `test_purchase_return_against_a_vat_bill_is_refused` (now asserts the
-  balanced posting). **Open:** the fiscal-year close can never post its
-  closing entry (`services/gl_service.py:2023` dates the entry into the
-  period it just closed, which `assert_period_open` refuses).
+  balanced posting). **Fixed:** the fiscal-year close posts its closing entry
+  on the first day of the new fiscal year — the only date in range that is
+  open by definition, since all twelve periods of the ending year are closed
+  before the close runs. The trial balance stays balanced and the gross
+  grows by the closing amount; pinned by
+  `test_the_books_reconcile_to_the_cent` (green end-to-end through the route).
 - `tests/integration/business_scenarios/test_wave8_fx.py` (ADV-49…ADV-60) —
   **Fixed:** the settlement unwind posts
   (`revalue_sale_at_settlement` in `models/sale.py`,

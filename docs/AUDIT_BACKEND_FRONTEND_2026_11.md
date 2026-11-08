@@ -52,11 +52,16 @@ Baseline: `main` on `84ab2d52`. CI on the same push is the gate.
 
 | # | Item | Notes |
 |---|------|-------|
-| 1 | Fiscal-year-close journal entry dated inside the period it just closed — refused by `assert_period_open` | tracked in AGENTS.md; audit finding remains open by decision |
-| 2 | Statutory personal income tax for payroll; Zakat; withholding/stamp taxes | out of scope for this codebase today; payroll docs now describe exactly what the product does |
-| 3 | e-invoice integration with PS/AE/SA/IL governments | deferred by decision; copy, landing page, README, catalogues agree on this |
-| 4 | `excise`/`customs` profiles in `country_tax.py` have no executing callers yet | landed-cost customs flows are queued for a later phase |
-| 5 | Sub-threshold: two linen-color logo usages on the receipt for ILS tenants | cosmetic; kept consistent with ₪ symbol |
+| 1 | Statutory personal income tax for payroll; Zakat; withholding/stamp taxes | out of scope for this codebase today; payroll docs now describe exactly what the product does |
+| 2 | e-invoice integration with PS/AE/SA/IL governments | deferred by decision; copy, landing page, README, catalogues agree on this |
+| 3 | `excise`/`customs` profiles in `country_tax.py` have no executing callers yet | landed-cost customs flows are queued for a later phase |
+| 4 | Sub-threshold: two linen-color logo usages on the receipt for ILS tenants | cosmetic; kept consistent with ₪ symbol |
+
+## Resolved in the follow-up audit pass
+
+| # | Item | Resolution |
+|---|------|------------|
+| 1 | Fiscal-year-close cannot post when the trial balance requires an entry dated inside a year-closed period | `close_fiscal_year` now posts the closing entry on the **first day of the new fiscal year** — the only date that is open by definition when all twelve of the ending year's periods are closed; pinned by `test_the_books_reconcile_to_the_cent`. |
 
 ## Files materially changed in the pass
 

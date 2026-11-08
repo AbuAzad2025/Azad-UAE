@@ -2057,7 +2057,19 @@ class FiscalYearService:
         if not pl["lines"]:
             raise ValueError(gettext("لا توجد حسابات إيرادات أو مصروفات لإغلاقها."))
 
-        closing_date = pl["end_date"]
+        # The closing entry is dated the first day of the new fiscal year:
+        # all twelve periods of ``fiscal_year`` are closed by precondition,
+        # so posting inside them is refused by ``assert_period_open``. The
+        # new year is open by definition - and the entry stands on it before
+        # any posting for the new year is allowed through.
+        months = FiscalYearService.get_fiscal_year_months(tenant_id, fiscal_year)
+        last_year, last_month = months[-1]
+        closing_date = datetime(
+            last_year + (1 if last_month == 12 else 0),
+            (last_month % 12) + 1,
+            1,
+            tzinfo=UTC,
+        )
         retained_code = FiscalYearService.RETAINED_EARNINGS_CODE
         retained_acct = GLAccount.query.filter_by(tenant_id=int(tenant_id), code=retained_code).first()
         if not retained_acct:

@@ -910,11 +910,11 @@ def test_the_books_reconcile_to_the_cent(client, db_session, books):
 def _try_fiscal_year_close(client, close_user, tenant, fiscal_year: int, tenant_id: int) -> str:
     """Close every month of the fiscal year, then post the year-end close.
 
-    Fixed: the closing entry is dated the last day of the fiscal year and is
-    now allowed into a closed period (``allow_closed_period=True`` in
-    ``FiscalYearService.close_fiscal_year``). It zeroes revenue and expense
-    into retained earnings; the trial balance must stay balanced (debit ==
-    credit) and its gross totals must grow by the closing amount.
+    The closing entry is dated the first day of the new fiscal year — the only
+    date in that range that is open by definition, since all twelve periods of
+    the ending year are closed here. It zeroes revenue and expense into
+    retained earnings; the trial balance must stay balanced (debit == credit)
+    and its gross totals must grow by the closing amount.
     """
     from models.gl import GLPeriod
     from services.gl_service import FiscalYearService
