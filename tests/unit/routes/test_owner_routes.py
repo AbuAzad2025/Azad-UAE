@@ -31,6 +31,17 @@ def _mock_tenant(**kwargs):
     tenant.prices_include_vat = kwargs.get("prices_include_vat", False)
     tenant.logo_url = kwargs.get("logo_url", "")
     tenant.updated_at = None
+    # Compliance switches (defaults mirror the migration's server defaults)
+    tenant.enable_einvoice = kwargs.get("enable_einvoice", True)
+    tenant.enable_einvoice_credit_notes = kwargs.get("enable_einvoice_credit_notes", True)
+    tenant.zatca_phase2_enabled = kwargs.get("zatca_phase2_enabled", False)
+    tenant.enable_ita_allocation = kwargs.get("enable_ita_allocation", False)
+    tenant.ita_allocation_threshold = kwargs.get("ita_allocation_threshold", Decimal("5000"))
+    tenant.ita_environment = kwargs.get("ita_environment", "sandbox")
+    tenant.enable_il_pension = kwargs.get("enable_il_pension", False)
+    tenant.enable_zakat = kwargs.get("enable_zakat", False)
+    tenant.enable_import_duties = kwargs.get("enable_import_duties", True)
+    tenant.enable_tax_categories = kwargs.get("enable_tax_categories", False)
     return tenant
 
 
@@ -440,6 +451,8 @@ def _owner_route_patches(mock_db=None, **overrides):
         ("routes.owner.Payment", patch("routes.owner.Payment", _model_class())),
         ("routes.owner.Receipt", patch("routes.owner.Receipt", _model_class())),
         ("routes.owner.AuditLog", patch("routes.owner.AuditLog", _model_class(all=[]))),
+        ("routes.owner.TenantSecret", patch("routes.owner.TenantSecret", _model_class(all=[]))),
+        ("models.TenantSecret", patch("models.TenantSecret", _model_class(all=[]))),
         (
             "routes.owner.ArchivedRecord",
             patch("routes.owner.ArchivedRecord", _model_class()),

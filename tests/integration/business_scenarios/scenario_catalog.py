@@ -110,7 +110,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "graphql": 2,
     "hr": 17,
     "language": 1,
-    "ledger": 34,
+    "ledger": 35,
     "main": 10,
     "monitoring": 3,
     "owner/ai_training": 4,

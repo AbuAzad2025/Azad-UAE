@@ -28,6 +28,7 @@
     "e2e",
     "ecommerce",
     "econt",
+    "einvoice",
     "esnext",
     "estarta",
     "fsevents",
@@ -363,6 +364,15 @@
     "WeasyPrint",
     "yeild",
     "yesno",
-    "Yousef"
+    "Yousef",
+    "CSID",
+    "FATOORA",
+    "ZATCA",
+    "zatca",
+    "zakat",
+    "מספר",
+    "הקצאה",
+    "רשות",
+    "המסים"
   ]
 }

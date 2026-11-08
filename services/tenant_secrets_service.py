@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 def _key_bytes() -> bytes:
-    key = os.environ.get("TENANT_SECRETS_KEY") or os.environ.get("CARD_ENCRYPTION_KEY")
+    key = os.environ.get("TENANT_SECRETS_KEY") or os.environ.get("CARD_ENCRYPTION_KEY") or os.environ.get("SECRET_KEY")
     if not key:
         raise ValueError(
             "TENANT_SECRETS_KEY is not configured — encrypted tenant secrets (ZATCA CSID, ITA token) cannot be stored."

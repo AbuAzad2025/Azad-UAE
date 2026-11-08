@@ -28,7 +28,7 @@ class EInvoice(db.Model):
     sale_id = db.Column(
         db.Integer,
         db.ForeignKey("sales.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,  # credit notes reference a return, not a sale
         index=True,
     )
     country = db.Column(db.String(2), nullable=False)

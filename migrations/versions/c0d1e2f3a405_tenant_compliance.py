@@ -166,6 +166,9 @@ def upgrade():
             batch_op.add_column(sa.Column("ita_allocation_number", sa.String(30), nullable=True))
         if "invoice_counter_value" not in einv_cols:
             batch_op.add_column(sa.Column("invoice_counter_value", sa.Integer(), nullable=True))
+        # sale_id becomes nullable so credit notes (which reference a return)
+        # can be stored without a sale.
+        batch_op.alter_column("sale_id", existing_type=sa.Integer(), nullable=True)
     existing_uniques = {c["name"] for c in sa.inspect(bind).get_unique_constraints("e_invoices")}
     if "uq_einvoice_tenant_sale" in existing_uniques:
         with op.batch_alter_table("e_invoices") as batch_op:
@@ -341,6 +344,7 @@ def downgrade():
     op.drop_index("uq_einvoice_tenant_invoice", table_name="e_invoices")
     with op.batch_alter_table("e_invoices") as batch_op:
         batch_op.create_unique_constraint("uq_einvoice_tenant_sale", ["tenant_id", "sale_id"])
+        batch_op.alter_column("sale_id", existing_type=sa.Integer(), nullable=False)
         for col in ("doc_type", "return_id", "ita_allocation_number", "invoice_counter_value"):
             batch_op.drop_column(col)
 
