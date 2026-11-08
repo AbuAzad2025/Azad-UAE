@@ -705,6 +705,7 @@ def api_calculate_sale_totals():
         lines = data.get("lines", [])
         discount_amount = Decimal(str(data.get("discount_amount", 0)))
         shipping_cost = Decimal(str(data.get("shipping_cost", 0)))
+        promotion_discount = Decimal(str(data.get("promotion_discount_amount", 0)))
         # None = not specified → country/tenant default in normalize_tax_rate.
         _raw_tax = data.get("tax_rate")
         tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
@@ -740,28 +741,27 @@ def api_calculate_sale_totals():
                 current_app.logger.debug("Skipping invalid line in totals calc: %r", line, exc_info=True)
                 continue
 
-        after_discount = subtotal - discount_amount + shipping_cost
+        # Match the posted model (Sale.calculate_totals): 3-decimal rounding,
+        # promo discount off the gross, and the prices_include_vat split - so the
+        # cashier sees exactly the total the ledger will record.
+        after_discount = subtotal - discount_amount - promotion_discount + shipping_cost
         if prices_include_vat:
             if tax_rate > 0:
                 taxable_amount = (after_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
-                tax_amount = after_discount - taxable_amount
+                tax_amount = (after_discount - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
-                taxable_amount = after_discount
+                taxable_amount = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 tax_amount = Decimal("0")
-            total = (
-                after_discount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                if isinstance(after_discount, Decimal)
-                else after_discount
-            )
+            total = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
             tax_amount = (after_discount * (tax_rate / Decimal("100"))).quantize(
-                Decimal("0.01"), rounding=ROUND_HALF_UP
+                Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-            total = (after_discount + tax_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            total = (after_discount + tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-        subtotal = subtotal.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        subtotal = subtotal.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         positive_lines = 0
         for line in lines:
             try:
@@ -774,11 +774,12 @@ def api_calculate_sale_totals():
             data={
                 "subtotal": float(subtotal),
                 "discount": float(discount_amount),
+                "promotion_discount": float(promotion_discount),
                 "shipping": float(shipping_cost),
                 "tax_rate": float(tax_rate),
-                "tax_amount": float(tax_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)),
+                "tax_amount": float(tax_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)),
                 "total": float(
-                    total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total
+                    total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP) if isinstance(total, Decimal) else total
                 ),
                 "prices_include_vat": prices_include_vat,
                 "line_count": positive_lines,

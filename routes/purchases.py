@@ -461,6 +461,7 @@ def api_calculate_purchase_totals():
         # None = not specified → country/tenant default in normalize_tax_rate.
         _raw_tax = data.get("tax_rate")
         tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
+        discount_amount = Decimal(str(data.get("discount_amount", 0) or 0))
         from utils.tax_settings import normalize_tax_rate
 
         # Name the tenant explicitly - see the same fix in routes/sales.py. Omitting
@@ -497,19 +498,28 @@ def api_calculate_purchase_totals():
         landed_total = freight + insurance + customs_duty + other_landed_cost
 
         prices_include_vat = bool(data.get("prices_include_vat", False))
+        # Match the posted model (Purchase.calculate_totals): 3-decimal rounding,
+        # discount before tax, so the buyer sees what the books will record.
+        after_discount = subtotal - discount_amount
         if prices_include_vat:
             if tax_rate > 0:
-                taxable_amount = (subtotal / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                taxable_amount = (after_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
-                tax_amount = subtotal - taxable_amount
+                tax_amount = (after_discount - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             else:
-                taxable_amount = subtotal
+                taxable_amount = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 tax_amount = Decimal("0")
-            total = subtotal + landed_total
+            total = (after_discount + landed_total).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         else:
-            tax_amount = subtotal * (tax_rate / Decimal("100"))
-            total = subtotal + tax_amount + landed_total
+            taxable_amount = after_discount
+            tax_amount = (after_discount * (tax_rate / Decimal("100"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+            total = (after_discount + tax_amount + landed_total).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        taxable_amount = taxable_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        subtotal = subtotal.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        tax_amount = tax_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         positive_lines = 0
         for line in lines:
