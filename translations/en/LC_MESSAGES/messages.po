@@ -20660,3 +20660,18 @@ msgstr "Stored and encrypted"
 
 msgid "✓ مخزّن ومشفّر — أدخل قيمة جديدة للاستبدال"
 msgstr "Stored and encrypted — enter a new value to replace it"
+
+msgid "CSID (ZATCA-issued, PEM/base64)"
+msgstr "CSID (ZATCA-issued, PEM/base64)"
+
+msgid "بيئة ZATCA"
+msgstr "ZATCA environment"
+
+msgid "تقديم إلى ZATCA"
+msgstr "Submit to ZATCA"
+
+msgid "تنفعّل فقط إذا أدخلت «نسبة ضريبة الاستقطاع» في إعدادات الضرائب (owner tax settings)."
+msgstr "Applies only if you entered a 'withholding tax rate' in Tax Settings (owner tax settings)."
+
+msgid "دفع خدمة لمقيم خارج الدولة — خصم ضريبة استقطاع (WHT) حسب إعدادات الشركة"
+msgstr "Payment for a service to a non-resident — withholding tax (WHT) per company Tax Settings."
