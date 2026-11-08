@@ -899,7 +899,7 @@ Any → Cancelled
 1. إدخال أسطر مع `account_code`, `debit`, `credit`, `description`
 2. التحقق من وجود الحسابات وعدم كونها headers
 3. تحويل المبالغ إلى العملة الأساسية
-4. توازن الأسطر (rounding plug حتى 0.01)
+4. توازن الأسطر (rounded plug حتى 0.001)
 5. إنشاء القيد كـ `draft`
 6. التحقق من `validate_entry()`
 7. الترحيل `post_entry()`
