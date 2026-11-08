@@ -22,7 +22,7 @@ no filing format, generic TRN check.
 from __future__ import annotations
 
 import re
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 __all__ = [
     "COUNTRY_TAX_PROFILES",
@@ -257,7 +257,7 @@ def compute_progressive_tax(income, brackets) -> Decimal:
         if upper is None:
             break
         lower = Decimal(str(upper))
-    return tax.quantize(Decimal("0.001"))
+    return tax.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
 
 def compute_corporate_tax(taxable_profit, country_code=None, *, tenant_threshold=None) -> dict:
@@ -288,7 +288,7 @@ def compute_corporate_tax(taxable_profit, country_code=None, *, tenant_threshold
         taxable = profit - threshold
     else:
         taxable = profit
-    tax = (taxable * rate / Decimal("100")).quantize(Decimal("0.001"))
+    tax = (taxable * rate / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
     return {
         "tax": tax,
         "rate": rate,

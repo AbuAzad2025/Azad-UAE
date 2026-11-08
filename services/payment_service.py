@@ -867,7 +867,9 @@ class PaymentService:
                     allocated_amount_aed = min(requested_amount_aed, remaining_amount_aed, sale_balance_aed)
                     if allocated_amount_aed <= 0:
                         continue
-                    allocated_amount = (allocated_amount_aed / exchange_rate).quantize(Decimal("0.001"))
+                    allocated_amount = (allocated_amount_aed / exchange_rate).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
 
                     # Create Payment record linked to Sale (Crucial for recalculation)
                     from models import Payment
@@ -906,7 +908,9 @@ class PaymentService:
                     sale.paid_amount_aed += allocated_amount_aed
                     sale_rate = Decimal(str(sale.exchange_rate or 1))
                     if sale_rate > 0:
-                        sale.paid_amount += (allocated_amount_aed / sale_rate).quantize(Decimal("0.001"))
+                        sale.paid_amount += (allocated_amount_aed / sale_rate).quantize(
+                            Decimal("0.001"), rounding=ROUND_HALF_UP
+                        )
                     # sale.balance_due -= allocated_amount # Let recalculate handle this
 
                     sale.recalculate_payment_status()
@@ -1175,7 +1179,7 @@ class PaymentService:
                 if allocated_aed <= 0:
                     continue
                 sale_rate = Decimal(str(sale.exchange_rate or 1))
-                allocated = (allocated_aed / sale_rate).quantize(Decimal("0.001"))
+                allocated = (allocated_aed / sale_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
                 from models import Payment
 

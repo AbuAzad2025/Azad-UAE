@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
 
@@ -453,7 +453,7 @@ class StoreService:
             line = {"product": product, "quantity": qty, "line_total": line_total}
             if display_currency:
                 display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
-                display_line_total = (display_price * qty).quantize(Decimal("0.01"))
+                display_line_total = (display_price * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 display_subtotal += display_line_total
                 line["display_price"] = display_price
                 line["display_line_total"] = display_line_total

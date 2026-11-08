@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from sqlalchemy.orm import validates
 
@@ -195,7 +195,9 @@ class ShipmentLine(db.Model):
 
     @property
     def quantity_remaining(self):
-        return (Decimal(str(self.quantity)) - Decimal(str(self.quantity_invoiced))).quantize(Decimal("0.001"))
+        return (Decimal(str(self.quantity)) - Decimal(str(self.quantity_invoiced))).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
 
     def __repr__(self):
         return f"<ShipmentLine {self.product_id} x {self.quantity}>"

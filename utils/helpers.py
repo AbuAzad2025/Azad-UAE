@@ -5,7 +5,7 @@ import re
 import time
 import uuid
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask import current_app, request
 from sqlalchemy.exc import IntegrityError
@@ -230,14 +230,14 @@ def calculate_discount(amount, discount_percent):
     """Calculate discount amount from percentage"""
     amount = Decimal(str(amount))
     discount_percent = Decimal(str(discount_percent))
-    return (amount * discount_percent / Decimal("100")).quantize(Decimal("0.01"))
+    return (amount * discount_percent / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def calculate_vat(amount, vat_rate):
     """Calculate VAT/Tax amount from rate"""
     amount = Decimal(str(amount))
     vat_rate = Decimal(str(vat_rate))
-    return (amount * vat_rate / Decimal("100")).quantize(Decimal("0.01"))
+    return (amount * vat_rate / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _resolve_format_currency_settings():

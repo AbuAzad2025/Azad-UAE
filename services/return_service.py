@@ -393,7 +393,9 @@ class ReturnService:
                                     movement_type="return",
                                     reference_type=GLRef.PRODUCT_RETURN,
                                     reference_id=product_return.id,
-                                    old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
+                                    old_average_cost=(
+                                        old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg else None
+                                    ),
                                     new_average_cost=new_avg,
                                     quantity_change=qty_decimal,
                                     old_total_quantity=old_qty,

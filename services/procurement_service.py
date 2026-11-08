@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 
@@ -119,7 +119,9 @@ class ProcurementService:
                 product_id=pr_line.product_id,
                 quantity=pr_line.quantity,
                 unit_cost=pr_line.unit_cost_estimate or Decimal("0"),
-                line_total=(pr_line.quantity * (pr_line.unit_cost_estimate or Decimal("0"))).quantize(Decimal("0.001")),
+                line_total=(pr_line.quantity * (pr_line.unit_cost_estimate or Decimal("0"))).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                ),
             )
             db.session.add(po_line)
 

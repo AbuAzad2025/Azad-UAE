@@ -2,7 +2,7 @@
 UAEStrategy — 5% VAT, AED-only for tax reporting, FTA XML + QR, WPS SIF.
 """
 
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from utils.country_tax import vat_rate_for_country
 
@@ -19,7 +19,7 @@ class UAEStrategy(LocalizationStrategy):
 
     def calculate_tax(self, amount: Decimal, tax_rate: Decimal | None = None) -> dict:
         rate = tax_rate if tax_rate is not None else self.default_vat_rate
-        tax = (amount * rate / Decimal("100")).quantize(Decimal("0.01"))
+        tax = (amount * rate / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         total = amount + tax
         return {
             "tax_amount": tax,

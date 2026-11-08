@@ -604,7 +604,7 @@ class PurchaseOrderLine(db.Model):
     def calculate_line_total(self):
         qty = Decimal(str(self.quantity)) if self.quantity else Decimal("0")
         cost = Decimal(str(self.unit_cost)) if self.unit_cost else Decimal("0")
-        self.line_total = (qty * cost).quantize(Decimal("0.001"))
+        self.line_total = (qty * cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
 
 class GoodsReceipt(db.Model):

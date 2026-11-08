@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 
@@ -342,7 +342,9 @@ class CRMLeadService:
         total_leads = total_q.count()
         rate = Decimal("0")
         if total_leads > 0:
-            rate = (Decimal(str(total_converted)) / Decimal(str(total_leads)) * Decimal("100")).quantize(Decimal("0.1"))
+            rate = (Decimal(str(total_converted)) / Decimal(str(total_leads)) * Decimal("100")).quantize(
+                Decimal("0.1"), rounding=ROUND_HALF_UP
+            )
         return {
             "total_converted": total_converted,
             "total_leads": total_leads,
@@ -357,7 +359,9 @@ class CRMLeadService:
         if target == 0:
             rating = Decimal("100") if achieved == 0 else Decimal("0")
         else:
-            rating = (Decimal(str(achieved)) / Decimal(str(target)) * Decimal("100")).quantize(Decimal("0.1"))
+            rating = (Decimal(str(achieved)) / Decimal(str(target)) * Decimal("100")).quantize(
+                Decimal("0.1"), rounding=ROUND_HALF_UP
+            )
         return {
             "target": target,
             "achieved": achieved,

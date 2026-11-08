@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 from sqlalchemy import func
@@ -198,15 +198,19 @@ class PartnerService:
 
             if net_profit > 0:
                 if net_profit >= threshold:
-                    share_amount = (net_profit * share_pct / 100).quantize(Decimal("0.001"))
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal("0.001"))
+                    share_amount = (net_profit * share_pct / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                )
             elif net_profit < 0:
                 if loss_pct <= Decimal("0"):
                     raise ValueError(
                         gettext(f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة بينما صافي الربح سالب ({net_profit})")
                     )
-                loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal("0.001"))
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(Decimal("0.001"))
+                loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                )
 
             net_due = share_amount - expense_share - loss_share + fixed
 
@@ -381,7 +385,7 @@ class PartnerService:
         if tenant_id is not None and partner.tenant_id != tenant_id:
             return None
 
-        amount_base = (amount * exchange_rate).quantize(Decimal("0.001"))
+        amount_base = (amount * exchange_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         old_bal = Decimal(str(partner.current_balance or 0))
         new_bal = old_bal + amount_base
 

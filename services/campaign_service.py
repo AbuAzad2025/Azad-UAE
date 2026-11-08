@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from extensions import db
 
@@ -27,7 +27,7 @@ class CampaignService:
         revenue_d = Decimal(str(revenue or 0))
         if cost_d == 0:
             return Decimal("0")
-        return ((revenue_d - cost_d) / cost_d * Decimal("100")).quantize(Decimal("0.01"))
+        return ((revenue_d - cost_d) / cost_d * Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def get_campaign_roi_metrics(campaign, total_revenue=None):
@@ -59,7 +59,7 @@ class CampaignService:
     def calculate_safe_commission(total_revenue, commission_rate):
         revenue = Decimal(str(total_revenue or 0))
         rate = CampaignService.safe_commission_rate(commission_rate)
-        return (revenue * rate / Decimal("100")).quantize(Decimal("0.01"))
+        return (revenue * rate / Decimal("100")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def get_active_campaigns(tenant_id, product_ids=None, category_ids=None):
@@ -109,7 +109,7 @@ class CampaignService:
             if campaign.campaign_type == "percentage":
                 discount = (
                     Decimal(str(sale.subtotal)) * Decimal(str(campaign.discount_value)) / Decimal("100")
-                ).quantize(Decimal("0.001"))
+                ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 if campaign.max_discount_amount:
                     discount = min(discount, Decimal(str(campaign.max_discount_amount)))
             elif campaign.campaign_type == "fixed" or campaign.campaign_type == "bundle":

@@ -85,7 +85,9 @@ class _MWACHelper:
     ) -> tuple[Decimal, Decimal, Decimal]:
         new_qty = old_qty + change_qty
         new_value = old_value + (change_qty * unit_cost)
-        new_avg: Decimal = (new_value / new_qty).quantize(Decimal("0.0001")) if new_qty != 0 else Decimal("0")
+        new_avg: Decimal = (
+            (new_value / new_qty).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if new_qty != 0 else Decimal("0")
+        )
         return new_qty, new_value, new_avg
 
 
@@ -610,12 +612,16 @@ class StockService:
         src_pwc = _pwcs[from_wh.id]
         if src_pwc and src_pwc.total_quantity and src_pwc.average_cost:
             unit_cost = src_pwc.average_cost
-            transfer_value = (qty * unit_cost).quantize(Decimal("0.001"))
+            transfer_value = (qty * unit_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             # Deduct from source
-            src_pwc.total_quantity = (src_pwc.total_quantity - qty).quantize(Decimal("0.001"))
-            src_pwc.total_value = (src_pwc.total_value - transfer_value).quantize(Decimal("0.001"))
+            src_pwc.total_quantity = (src_pwc.total_quantity - qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            src_pwc.total_value = (src_pwc.total_value - transfer_value).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
             if src_pwc.total_quantity > 0:
-                src_pwc.average_cost = (src_pwc.total_value / src_pwc.total_quantity).quantize(Decimal("0.0001"))
+                src_pwc.average_cost = (src_pwc.total_value / src_pwc.total_quantity).quantize(
+                    Decimal("0.0001"), rounding=ROUND_HALF_UP
+                )
             else:
                 src_pwc.average_cost = Decimal("0.0000")
                 src_pwc.total_value = Decimal("0.001") if src_pwc.total_quantity == 0 else src_pwc.total_value
@@ -632,9 +638,13 @@ class StockService:
                 )
                 db.session.add(dest_pwc)
                 db.session.flush()
-            dest_pwc.total_quantity = (dest_pwc.total_quantity + qty).quantize(Decimal("0.001"))
-            dest_pwc.total_value = (dest_pwc.total_value + transfer_value).quantize(Decimal("0.001"))
-            dest_pwc.average_cost = (dest_pwc.total_value / dest_pwc.total_quantity).quantize(Decimal("0.0001"))
+            dest_pwc.total_quantity = (dest_pwc.total_quantity + qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            dest_pwc.total_value = (dest_pwc.total_value + transfer_value).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+            dest_pwc.average_cost = (dest_pwc.total_value / dest_pwc.total_quantity).quantize(
+                Decimal("0.0001"), rounding=ROUND_HALF_UP
+            )
             db.session.flush()
 
         out_movement = StockService.create_movement(
@@ -773,7 +783,7 @@ class StockService:
             if pwc and pwc.total_quantity > 0:
                 # Normal positive-stock case
                 avg_cost = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
-                movement_cost = avg_cost.quantize(Decimal("0.0001"))
+                movement_cost = avg_cost.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                 if tenant_id and warehouse_id and StockBatchService.batches_enabled():
                     consumed_qty, consumed_value = StockBatchService.consume_fefo(
                         product_id=line.product_id,
@@ -783,7 +793,9 @@ class StockService:
                     )
                     if consumed_qty > 0:
                         remainder_value = avg_cost * (qty - consumed_qty)
-                        movement_cost = ((consumed_value + remainder_value) / qty).quantize(Decimal("0.0001"))
+                        movement_cost = ((consumed_value + remainder_value) / qty).quantize(
+                            Decimal("0.0001"), rounding=ROUND_HALF_UP
+                        )
                 cogs = (movement_cost * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 old_qty = Decimal(str(pwc.total_quantity)) if pwc.total_quantity is not None else Decimal("0")
                 old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal("0")
@@ -791,7 +803,7 @@ class StockService:
                 new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -qty, movement_cost)
                 pwc.total_quantity = new_qty
                 pwc.total_value = new_value
-                pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
+                pwc.average_cost = new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                 pwc.last_updated = datetime.now(UTC)
                 pch = ProductCostHistory(
                     tenant_id=tenant_id,
@@ -800,7 +812,7 @@ class StockService:
                     movement_type="sale",
                     reference_type=GLRef.SALE,
                     reference_id=sale.id,
-                    old_average_cost=old_avg.quantize(Decimal("0.0001")),
+                    old_average_cost=old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
                     new_average_cost=pwc.average_cost,
                     quantity_change=-qty,
                     old_total_quantity=old_qty,
@@ -832,11 +844,11 @@ class StockService:
                     old_value = Decimal(str(pwc.total_value)) if pwc.total_value is not None else Decimal("0")
                     old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else Decimal("0")
                     new_qty, new_value, new_avg = StockService._mwac_calc(
-                        old_qty, old_value, -qty, avg_cost.quantize(Decimal("0.0001"))
+                        old_qty, old_value, -qty, avg_cost.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                     )
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
-                    pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
+                    pwc.average_cost = new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                     pwc.last_updated = datetime.now(UTC)
                 else:
                     # Create PWC with negative quantity (first negative sale for this product+warehouse)
@@ -853,7 +865,7 @@ class StockService:
                         warehouse_id=warehouse_id,
                         total_quantity=new_qty,
                         total_value=new_value,
-                        average_cost=new_avg.quantize(Decimal("0.0001")),
+                        average_cost=new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
                     )
                     db.session.add(pwc)
 
@@ -864,14 +876,16 @@ class StockService:
                     movement_type="sale",
                     reference_type=GLRef.SALE,
                     reference_id=sale.id,
-                    old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg is not None else None),
+                    old_average_cost=(
+                        old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg is not None else None
+                    ),
                     new_average_cost=pwc.average_cost,
                     quantity_change=-qty,
                     old_total_quantity=old_qty,
                     new_total_quantity=new_qty,
                     old_total_value=old_value,
                     new_total_value=new_value,
-                    movement_unit_cost=avg_cost.quantize(Decimal("0.0001")),
+                    movement_unit_cost=avg_cost.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
                 )
                 db.session.add(pch)
             else:
@@ -1003,7 +1017,7 @@ class StockService:
 
         negative_qty = abs(old_qty)
         # Variance = negative_qty * (new_cost - old_avg)
-        variance = (negative_qty * (unit_cost_aed - old_avg)).quantize(Decimal("0.001"))
+        variance = (negative_qty * (unit_cost_aed - old_avg)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         if abs(variance) <= Decimal("0.001"):
             return Decimal("0")
 
@@ -1125,7 +1139,7 @@ class StockService:
 
             pwc.total_quantity = new_qty
             pwc.total_value = new_value
-            pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
+            pwc.average_cost = new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
             pwc.last_updated = datetime.now(UTC)
 
             # Retrospective cost adjustment for negative stock
@@ -1158,7 +1172,7 @@ class StockService:
                 warehouse_id=warehouse_id,
                 total_quantity=new_qty,
                 total_value=new_value,
-                average_cost=new_avg.quantize(Decimal("0.0001")),
+                average_cost=new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
             )
             db.session.add(pwc)
 
@@ -1170,14 +1184,16 @@ class StockService:
             movement_type="purchase",
             reference_type=reference_type,
             reference_id=reference_id,
-            old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg is not None else None),
+            old_average_cost=(
+                old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg is not None else None
+            ),
             new_average_cost=pwc.average_cost,
             quantity_change=received_qty,
             old_total_quantity=old_qty,
             new_total_quantity=new_qty,
             old_total_value=old_value,
             new_total_value=new_value,
-            movement_unit_cost=unit_cost_aed.quantize(Decimal("0.0001")),
+            movement_unit_cost=unit_cost_aed.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
         )
         db.session.add(pch)
 
@@ -1252,12 +1268,16 @@ class StockService:
                         old_qty,
                         old_value,
                         qty,
-                        ((original_cogs / qty).quantize(Decimal("0.0001")) if qty > 0 else Decimal("0")),
+                        (
+                            (original_cogs / qty).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+                            if qty > 0
+                            else Decimal("0")
+                        ),
                     )
 
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
-                    pwc.average_cost = new_avg.quantize(Decimal("0.0001"))
+                    pwc.average_cost = new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                     pwc.last_updated = datetime.now(UTC)
 
                     # سجل تدقيق عكس التكلفة
@@ -1268,7 +1288,9 @@ class StockService:
                         movement_type="sale_reversal",
                         reference_type=GLRef.SALE_REVERSED,
                         reference_id=sale.id,
-                        old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
+                        old_average_cost=(
+                            old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg else None
+                        ),
                         new_average_cost=pwc.average_cost,
                         quantity_change=qty,
                         old_total_quantity=old_qty,
@@ -1276,7 +1298,9 @@ class StockService:
                         old_total_value=old_value,
                         new_total_value=new_value,
                         movement_unit_cost=(
-                            (original_cogs / qty).quantize(Decimal("0.0001")) if qty > 0 else Decimal("0")
+                            (original_cogs / qty).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+                            if qty > 0
+                            else Decimal("0")
                         ),
                     )
                     db.session.add(pch)
@@ -1354,9 +1378,9 @@ class StockService:
                     pwc.total_quantity = new_qty
                     pwc.total_value = new_value
                     pwc.average_cost = (
-                        new_avg.quantize(Decimal("0.0001"))
+                        new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                         if new_qty > 0
-                        else (original_unit_cost or new_avg).quantize(Decimal("0.0001"))
+                        else (original_unit_cost or new_avg).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
                     )
                     pwc.last_updated = datetime.now(UTC)
 
@@ -1367,14 +1391,16 @@ class StockService:
                         movement_type="purchase_reversal",
                         reference_type=GLRef.PURCHASE,
                         reference_id=purchase.id,
-                        old_average_cost=(old_avg.quantize(Decimal("0.0001")) if old_avg else None),
+                        old_average_cost=(
+                            old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg else None
+                        ),
                         new_average_cost=pwc.average_cost,
                         quantity_change=-qty,
                         old_total_quantity=old_qty,
                         new_total_quantity=pwc.total_quantity,
                         old_total_value=old_value,
                         new_total_value=pwc.total_value,
-                        movement_unit_cost=original_unit_cost.quantize(Decimal("0.0001")),
+                        movement_unit_cost=original_unit_cost.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
                     )
                     db.session.add(pch)
 

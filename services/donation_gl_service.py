@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask import current_app
 from flask_babel import gettext
@@ -142,7 +142,7 @@ class DonationGLService:
         txn = PaymentTransaction(
             tenant_id=None,
             transaction_id=receipt_id,
-            amount_usd=amount.quantize(Decimal("0.01")),
+            amount_usd=amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
             amount_crypto=Decimal(str(donation.amount_crypto or 0)),
             crypto_currency=currency,
             payment_address=getattr(donation, "final_wallet_address", None)

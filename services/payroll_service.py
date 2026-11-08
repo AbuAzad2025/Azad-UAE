@@ -1,5 +1,5 @@
 from datetime import datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 
@@ -369,7 +369,7 @@ class PayrollService:
             return Decimal("0")
         days_per_year = Decimal("30") if contract_type == "unlimited" else Decimal("21")
         monthly = (basic / Decimal("30")) * (days_per_year / Decimal("12"))
-        return monthly.quantize(Decimal("0.001"))
+        return monthly.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def _calculate_leave_monthly_accrual(basic_salary, annual_leave_days=30):
@@ -383,7 +383,7 @@ class PayrollService:
             return Decimal("0")
         days = Decimal(str(annual_leave_days or 30))
         monthly = (basic / Decimal("30")) * (days / Decimal("12"))
-        return monthly.quantize(Decimal("0.001"))
+        return monthly.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def post_payroll_accruals(employee, month, year, user_id):
@@ -525,7 +525,7 @@ class PayrollService:
         if amount > max_limit:
             amount = max_limit
 
-        return amount.quantize(Decimal("0.01"))
+        return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def settle_eosb(employee_id, user_id):

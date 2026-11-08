@@ -634,7 +634,9 @@ class PurchaseService:
 
                     pwc.total_quantity = new_qty if new_qty >= 0 else _D("0")
                     pwc.total_value = new_value if new_value >= 0 else _D("0")
-                    pwc.average_cost = new_avg.quantize(_D("0.0001")) if new_qty > 0 else _D("0")
+                    pwc.average_cost = (
+                        new_avg.quantize(_D("0.0001"), rounding=ROUND_HALF_UP) if new_qty > 0 else _D("0")
+                    )
                     pwc.last_updated = datetime.now(UTC)
 
                     pch = ProductCostHistory(
@@ -644,14 +646,14 @@ class PurchaseService:
                         movement_type="purchase_reversal",
                         reference_type=GLRef.PURCHASE,
                         reference_id=purchase_return.id,
-                        old_average_cost=(old_avg.quantize(_D("0.0001")) if old_avg else None),
+                        old_average_cost=(old_avg.quantize(_D("0.0001"), rounding=ROUND_HALF_UP) if old_avg else None),
                         new_average_cost=pwc.average_cost,
                         quantity_change=-quantity,
                         old_total_quantity=old_qty,
                         new_total_quantity=pwc.total_quantity,
                         old_total_value=old_value,
                         new_total_value=pwc.total_value,
-                        movement_unit_cost=original_unit_cost.quantize(_D("0.0001")),
+                        movement_unit_cost=original_unit_cost.quantize(_D("0.0001"), rounding=ROUND_HALF_UP),
                     )
                     db.session.add(pch)
 

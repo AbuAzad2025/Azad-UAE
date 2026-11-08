@@ -2,7 +2,7 @@
 
 import logging
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from flask_babel import gettext
@@ -312,25 +312,25 @@ def system_config():
                 # Azad Platform Fees
                 try:
                     fee_rate = Decimal(str(request.form.get("azad_platform_fee_rate") or "0"))
-                    settings.azad_platform_fee_rate = fee_rate.quantize(Decimal("0.01"))
+                    settings.azad_platform_fee_rate = fee_rate.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 except Exception:
                     logger.exception("Failed to parse azad_platform_fee_rate from form data")
                 try:
                     settings.subscription_monthly_fee_aed = Decimal(
                         str(request.form.get("subscription_monthly_fee_aed", "0") or "0")
-                    ).quantize(Decimal("0.001"))
+                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 except Exception:
                     logger.exception("Failed to parse subscription_monthly_fee_aed from form data")
                 try:
                     settings.subscription_yearly_fee_aed = Decimal(
                         str(request.form.get("subscription_yearly_fee_aed", "0") or "0")
-                    ).quantize(Decimal("0.001"))
+                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 except Exception:
                     logger.exception("Failed to parse subscription_yearly_fee_aed from form data")
                 try:
                     settings.subscription_perpetual_fee_aed = Decimal(
                         str(request.form.get("subscription_perpetual_fee_aed", "0") or "0")
-                    ).quantize(Decimal("0.001"))
+                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 except Exception:
                     logger.exception("Failed to parse subscription_perpetual_fee_aed from form data")
 

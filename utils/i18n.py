@@ -7975,7 +7975,10 @@ TRANSLATIONS = {
         "en": "Fast POS with UAE-compliant e-invoicing.",
     },
     "Touch POS interface": {"ar": "واجهة كاشير لمسية", "en": "Touch POS interface"},
-    "Document verification QR on print": {"ar": "رمز QR للتحقق من المستند عند الطباعة", "en": "Document verification QR on print"},
+    "Document verification QR on print": {
+        "ar": "رمز QR للتحقق من المستند عند الطباعة",
+        "en": "Document verification QR on print",
+    },
     "A4 / Thermal print": {"ar": "طباعة A4 / حراري", "en": "A4 / Thermal print"},
     "Sales & purchase invoices": {"ar": "فواتير مبيعات ومشتريات", "en": "Sales & purchase invoices"},
     "Returns & discounts": {"ar": "مرتجعات وخصومات", "en": "Returns & discounts"},

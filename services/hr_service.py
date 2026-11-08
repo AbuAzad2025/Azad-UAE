@@ -1,6 +1,6 @@
 import logging
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from flask_babel import gettext
@@ -300,7 +300,7 @@ class PayrollEngine:
         entry = {
             "employee_id": int(employee_id),
             "tenant_id": int(tenant_id) if tenant_id is not None else None,
-            "amount": Decimal(str(amount)).quantize(Decimal("0.01")),
+            "amount": Decimal(str(amount)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
             "month": month,
             "year": year,
             "reason": reason,
@@ -341,11 +341,15 @@ class PayrollEngine:
             leave_penalty = rate * leave_days
         else:
             earned = raw_basic
-            rate = (earned / Decimal("30")).quantize(Decimal("0.01")) if earned > 0 else Decimal("0")
+            rate = (
+                (earned / Decimal("30")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                if earned > 0
+                else Decimal("0")
+            )
             leave_penalty = rate * leave_days
 
         net = earned + allow - deduct - leave_penalty
-        return net.quantize(Decimal("0.01"))
+        return net.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def process_with_negative_guard(
@@ -692,4 +696,6 @@ class OvertimeService:
     def calculate_overtime_pay(cls, base_salary, hours, rate_multiplier, working_days_per_month=26):
         daily_rate = Decimal(str(base_salary)) / Decimal(str(working_days_per_month))
         hourly_rate = daily_rate / Decimal("8")
-        return (hourly_rate * Decimal(str(hours)) * Decimal(str(rate_multiplier))).quantize(Decimal("0.01"))
+        return (hourly_rate * Decimal(str(hours)) * Decimal(str(rate_multiplier))).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
