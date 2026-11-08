@@ -235,6 +235,9 @@ DECLARED_ROW_ADDITIONS: tuple[DeclaredRowAddition, ...] = (
         "gl_accounts", {"code": "2146"}, "c0d1e2f3a405", "Statutory pension — employer pension payable (IL)"
     ),
     DeclaredRowAddition("gl_accounts", {"code": "2148"}, "c0d1e2f3a405", "Zakat payable (SA statutory)"),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2149"}, "e2f3a4b5c6d8", "Withholding tax payable (WHT concept registration)"
+    ),
 )
 
 

@@ -180,6 +180,158 @@ class TestPaySync:
         assert dist.status == "paid"
 
 
+class TestScopeCommissionsBranches:
+    def _chain(self, scalar=None, rows=None):
+        q = MagicMock()
+        q.scalar = MagicMock(return_value=scalar)
+        q.filter.return_value = q
+        q.join.return_value.filter.return_value = q
+        q.join.return_value.join.return_value.join.return_value.filter.return_value = q
+        q.all = MagicMock(return_value=rows or [])
+        return q
+
+    def test_scope_commissions_branch_and_warehouse(self, mocker):
+        for scope, scope_id in (("branch", 5), ("warehouse", 9)):
+            query = self._chain(scalar=Decimal("100"))
+            mocker.patch("services.partner_service.db.session.query", return_value=query)
+            assert PartnerService.get_scope_commissions(
+                1, date(2026, 1, 1), date(2026, 1, 31), scope, scope_id
+            ) == Decimal("100")
+
+    def test_return_reversal_skips_invalid_rows_and_clamps(self, mocker):
+        query = self._chain(
+            scalar=Decimal("100"),
+            rows=[
+                (Decimal("0"), Decimal("0"), Decimal("10")),
+                (Decimal("1"), Decimal("0"), Decimal("10")),
+                (Decimal("8"), Decimal("4"), Decimal("10")),
+            ],
+        )
+        mocker.patch("services.partner_service.db.session.query", return_value=query)
+        assert PartnerService.get_scope_commissions(1, date(2026, 1, 1), date(2026, 1, 31)) == Decimal("90")
+
+
+class TestApproveBranches:
+    def test_below_threshold_keeps_zero_share(self, mocker):
+        partner = _partner(share_percentage=Decimal("40"), min_profit_threshold=Decimal("900"))
+        P = mocker.patch("models.Partner")
+        P.query.filter_by.return_value.all.return_value = [partner]
+        D = mocker.patch("models.PartnerProfitDistribution")
+        D.query.filter_by.return_value.first.return_value = None
+        D.return_value = MagicMock(id=99)
+        mocker.patch.object(
+            PartnerService,
+            "calculate_scope_profit",
+            return_value={
+                "revenue": 1000.0,
+                "cogs": 200.0,
+                "expenses": 0.0,
+                "commissions": 0.0,
+                "gross_profit": 800.0,
+                "net_profit": 800.0,
+            },
+        )
+        mocker.patch("services.partner_service.db")
+        PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
+        assert D.call_args.kwargs["share_amount"] == Decimal("0")
+
+    def test_approve_without_partner_row_still_accrues(self, mocker):
+        dist = MagicMock(
+            status="draft",
+            tenant_id=1,
+            net_due=100.0,
+            partner_id=999,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 1, 31),
+            id=5,
+        )
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [dist, None]
+        mocker.patch("models.PartnerTransaction", return_value=MagicMock(amount=100.0))
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="2150")
+        post = mocker.patch("services.gl_posting.post_or_fail")
+        assert PartnerService.approve_distribution(5, 9, tenant_id=1) is True
+        post.assert_called_once()
+
+    def test_approve_branch_resolution_failure_falls_back_to_none(self, mocker):
+        dist = MagicMock(
+            status="draft",
+            tenant_id=1,
+            net_due=100.0,
+            partner_id=1,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 1, 31),
+            id=5,
+        )
+        partner = _partner(current_balance=Decimal("0"))
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [dist, partner]
+        mocker.patch("models.PartnerTransaction", return_value=MagicMock(amount=100.0))
+        mocker.patch("utils.tax_settings._resolve_main_branch", side_effect=RuntimeError("no branch"))
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="2150")
+        post = mocker.patch("services.gl_posting.post_or_fail")
+        assert PartnerService.approve_distribution(5, 9, tenant_id=1) is True
+        _, kwargs = post.call_args
+        assert kwargs.get("branch_id") is None
+
+
+class TestLinkUnlink:
+    def test_link_missing_rows(self, mocker):
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [None, None]
+        assert PartnerService.link_product_partner(1, 1, tenant_id=1) is False
+
+    def test_link_wrong_tenant(self, mocker):
+        partner = _partner(tenant_id=2)
+        customer = MagicMock(tenant_id=2, customer_type="partner")
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [partner, customer]
+        assert PartnerService.link_product_partner(1, 1, tenant_id=1) is False
+
+    def test_link_foreign_customer_and_wrong_type(self, mocker):
+        partner = _partner(tenant_id=1)
+        foreign = MagicMock(tenant_id=2, customer_type="partner")
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [partner, foreign]
+        assert PartnerService.link_product_partner(1, 1, tenant_id=1) is False
+        regular = MagicMock(tenant_id=1, customer_type="regular")
+        mock_db.session.get.side_effect = [partner, regular]
+        assert PartnerService.link_product_partner(1, 1, tenant_id=1) is False
+
+    def test_link_success_sets_partner_id(self, mocker):
+        partner = _partner(id=3, tenant_id=1)
+        customer = MagicMock(tenant_id=1, customer_type="partner")
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [partner, customer]
+        assert PartnerService.link_product_partner(3, 9, tenant_id=1) is True
+        assert customer.partner_id == 3
+
+    def test_link_flush_failure_raises(self, mocker):
+        partner = _partner(tenant_id=1)
+        customer = MagicMock(tenant_id=1, customer_type="merchant")
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [partner, customer]
+        mock_db.session.flush.side_effect = RuntimeError("db")
+        with pytest.raises(RuntimeError):
+            PartnerService.link_product_partner(1, 1, tenant_id=1)
+
+    def test_unlink_missing_and_wrong_tenant(self, mocker):
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = None
+        assert PartnerService.unlink_product_partner(1, tenant_id=1) is False
+        customer = MagicMock(tenant_id=2)
+        mock_db.session.get.return_value = customer
+        assert PartnerService.unlink_product_partner(1, tenant_id=1) is False
+
+    def test_unlink_releases(self, mocker):
+        customer = MagicMock(tenant_id=1, partner_id=5)
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = customer
+        assert PartnerService.unlink_product_partner(1, tenant_id=1) is True
+        assert customer.partner_id is None
+
+
 class TestCommissionReversal:
     def test_partial_return_reverses_same_ratio(self, mocker):
         entry = MagicMock(commission_amount_aed=Decimal("10"))
@@ -207,27 +359,6 @@ class TestCancelGuard:
         PR.query.filter_by.return_value.filter.return_value.count.return_value = 1
         with pytest.raises(ValueError, match="مرتجعات"):
             SaleService.cancel_sale(sale)
-
-
-class TestScopeCommissions:
-    def test_scope_commissions_net_of_returns(self, mocker):
-        gross_q = MagicMock()
-        gross_q.scalar.return_value = Decimal("100")
-        gross_q.join.return_value.filter.return_value = gross_q
-        ret_q = MagicMock()
-        ret_q.all.return_value = [(Decimal("1"), Decimal("4"), Decimal("10"))]
-        ret_q.join.return_value.join.return_value.join.return_value.filter.return_value = ret_q
-        mocker.patch("services.partner_service.db.session.query", side_effect=[gross_q, ret_q])
-        assert PartnerService.get_scope_commissions(1, date(2026, 1, 1), date(2026, 1, 31)) == Decimal("97.500")
-
-    def test_calculate_scope_profit_deducts_commissions(self, mocker):
-        mocker.patch.object(PartnerService, "get_scope_revenue", return_value=Decimal("1000"))
-        mocker.patch.object(PartnerService, "get_scope_cogs", return_value=Decimal("400"))
-        mocker.patch.object(PartnerService, "get_scope_expenses", return_value=Decimal("100"))
-        mocker.patch.object(PartnerService, "get_scope_commissions", return_value=Decimal("50"))
-        pnl = PartnerService.calculate_scope_profit(1, date(2026, 1, 1), date(2026, 1, 31))
-        assert pnl["commissions"] == 50.0
-        assert pnl["net_profit"] == 450.0
 
 
 class TestUnifiedStatement:

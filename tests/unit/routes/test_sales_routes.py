@@ -590,6 +590,117 @@ class TestSalesApiPrice:
         assert resp.status_code == 404
 
 
+class TestSalesComplianceDocuments:
+    """E-invoice XML/QR download + ZATCA submit + ITA allocation gates."""
+
+    def test_einvoice_xml_serves_stored_artifact(self, sales_client):
+        row = MagicMock(xml_payload="<Invoice/>")
+        with (
+            _sales_patches(),
+            patch("models.EInvoice") as einvoice_model,
+        ):
+            einvoice_model.query.filter_by.return_value.first.return_value = row
+            resp = sales_client.get("/sales/1/einvoice.xml")
+        assert resp.status_code == 200
+        assert "application/xml" in resp.content_type
+        assert b"<Invoice/>" in resp.data
+
+    def test_einvoice_xml_404_without_artifact(self, sales_client):
+        with (
+            _sales_patches(),
+            patch("models.EInvoice") as einvoice_model,
+        ):
+            einvoice_model.query.filter_by.return_value.first.return_value = None
+            resp = sales_client.get("/sales/1/einvoice.xml")
+        assert resp.status_code == 404
+
+    def test_einvoice_qr_renders_png(self, sales_client):
+        row = MagicMock(qr_base64="PK\\/mock")
+        qr_image = MagicMock()
+        with (
+            _sales_patches(),
+            patch("models.EInvoice") as einvoice_model,
+            patch("qrcode.make", return_value=qr_image) as make_qr,
+        ):
+            einvoice_model.query.filter_by.return_value.first.return_value = row
+            qr_image.save.side_effect = lambda buffer, format: buffer.write(b"PNG")
+            resp = sales_client.get("/sales/1/einvoice-qr.png")
+        assert resp.status_code == 200
+        assert resp.content_type == "image/png"
+        make_qr.assert_called_once()
+
+    def test_einvoice_qr_404_without_qr(self, sales_client):
+        with (
+            _sales_patches(),
+            patch("models.EInvoice") as einvoice_model,
+        ):
+            einvoice_model.query.filter_by.return_value.first.return_value = MagicMock(qr_base64=None)
+            resp = sales_client.get("/sales/1/einvoice-qr.png")
+        assert resp.status_code == 404
+
+    def test_zatca_submit_switch_off_redirects_with_flash(self, sales_client):
+        tenant = MagicMock(zatca_phase2_enabled=False)
+        with (
+            _sales_patches(),
+            patch("routes.sales.db.session.get", return_value=tenant),
+        ):
+            resp = sales_client.post("/sales/1/submit-to-zatca", follow_redirects=False)
+        assert resp.status_code == 302
+        assert "/sales/1" in resp.headers["Location"]
+
+    def test_zatca_submit_error_flashes_and_redirects(self, sales_client):
+        from services.zatca_submission_service import ZatcaSubmissionError
+
+        tenant = MagicMock(zatca_phase2_enabled=True)
+        with (
+            _sales_patches(),
+            patch("routes.sales.db.session.get", return_value=tenant),
+            patch(
+                "services.zatca_submission_service.ZatcaSubmissionService.submit",
+                side_effect=ZatcaSubmissionError("nope"),
+            ),
+        ):
+            resp = sales_client.post("/sales/1/submit-to-zatca", follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_zatca_submit_success_redirects(self, sales_client):
+        tenant = MagicMock(zatca_phase2_enabled=True)
+        with (
+            _sales_patches(),
+            patch("routes.sales.db.session.get", return_value=tenant),
+            patch(
+                "services.zatca_submission_service.ZatcaSubmissionService.submit",
+                return_value={"status": "REPORTED"},
+            ),
+        ):
+            resp = sales_client.post("/sales/1/submit-to-zatca", follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_ita_allocation_error_flashes_and_redirects(self, sales_client):
+        from services.ita_allocation_service import ItaAllocationError
+
+        with (
+            _sales_patches(),
+            patch(
+                "services.ita_allocation_service.ItaAllocationService.request_allocation_number",
+                side_effect=ItaAllocationError("below threshold"),
+            ),
+        ):
+            resp = sales_client.post("/sales/1/request-ita-allocation", follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_ita_allocation_success_redirects(self, sales_client):
+        with (
+            _sales_patches(),
+            patch(
+                "services.ita_allocation_service.ItaAllocationService.request_allocation_number",
+                return_value={"allocation_number": "ITA-123"},
+            ),
+        ):
+            resp = sales_client.post("/sales/1/request-ita-allocation", follow_redirects=False)
+        assert resp.status_code == 302
+
+
 class TestSalesArchived:
     def test_archived_list(self, sales_client):
         archived_rec = MagicMock()
