@@ -101,9 +101,9 @@ class TestGLAccountProperties:
     def test_full_name_prefers_arabic(self, sample_tenant):
         acct = _acct(sample_tenant.id, "9080", "Cash")
         acct.name_ar = "النقدية"
-        assert acct.full_name == "1110 - النقدية"
+        assert acct.full_name == "9080 - النقدية"
         acct.name_ar = None
-        assert acct.full_name == "1110 - Cash"
+        assert acct.full_name == "9080 - Cash"
 
     @pytest.mark.parametrize(
         ("type_", "expected"),
