@@ -429,6 +429,59 @@ class TestAccountCodeForConcept:
             GLService.get_account_code_for_concept("UNKNOWN_XYZ", tenant_id=sample_tenant.id)
 
 
+class TestResolveLiquidityBranch:
+    def test_given_branch_wins(self, sample_tenant):
+        assert GLService.resolve_liquidity_branch("cash", 42, sample_tenant.id) == 42
+
+    def test_unknown_kind_refused(self, sample_tenant):
+        with pytest.raises(ValueError, match="kind|liquidity"):
+            GLService.resolve_liquidity_branch("crypto", None, sample_tenant.id)
+
+    def test_no_tenant_returns_none(self):
+        assert GLService.resolve_liquidity_branch("cash", None, None) is None
+
+    def test_single_branch_candidate_returns_its_branch(self, db_session, sample_tenant, sample_branch):
+        # the fixture tenant has exactly one branch, and the branch audit
+        # listener created its 1110-B... cash box - the only candidate
+        assert GLService.resolve_liquidity_branch("cash", None, sample_tenant.id) == sample_branch.id
+
+    def test_two_candidates_stay_ambiguous(self, db_session, sample_tenant, sample_branch):
+        from tests.factories import BranchFactory
+
+        BranchFactory(tenant=sample_tenant)
+        db_session.commit()
+        assert GLService.resolve_liquidity_branch("cash", None, sample_tenant.id) is None
+
+    def test_branchless_tenant_scope_account_returns_none(self, db_session, sample_tenant):
+        # tenant-scope liquidity rows are rare but valid; they post with branch None
+        from models import GLAccount
+
+        GLAccount.query.filter_by(tenant_id=sample_tenant.id, liquidity_kind="cash").update({"branch_id": None})
+        db_session.commit()
+        # exactly one tenant-scope cash row, and it belongs to no branch
+        assert GLService.resolve_liquidity_branch("cash", None, sample_tenant.id) is None
+
+    def test_liquidity_destination_falls_back_when_the_resolver_errors(self, sample_tenant, mocker):
+        mocker.patch(
+            "services.gl_service.GLService.resolve_liquidity_branch",
+            side_effect=RuntimeError("boom"),
+        )
+        from services.payment_service import PaymentService
+
+        assert PaymentService._liquidity_destination_branch("cash", None, sample_tenant.id) is None
+
+    def test_liquidity_destination_passes_branch_through_for_other_methods(self, sample_tenant):
+        from services.payment_service import PaymentService
+
+        assert PaymentService._liquidity_destination_branch("cheque", 7, sample_tenant.id) == 7
+
+    def test_liquidity_destination_stamps_the_single_drawer(self, sample_tenant, sample_branch):
+        from services.payment_service import PaymentService
+
+        assert PaymentService._liquidity_destination_branch("cash", None, sample_tenant.id) == sample_branch.id
+        assert PaymentService._liquidity_destination_branch("bank_transfer", None, sample_tenant.id) == sample_branch.id
+
+
 class TestReconciliationCheck:
     def test_reconciliation_returns_structure(
         self,
