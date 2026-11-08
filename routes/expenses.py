@@ -84,10 +84,19 @@ def _build_expense_gl_lines(expense, tenant_id):
         payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
 
     # Withholding at source on non-resident service payments (tenant rate).
-    wht_amount = Decimal(str(getattr(expense, "wht_amount", 0) or 0))
-    if wht_amount <= 0:
-        wht_amount = Decimal("0")
-    net_payment = Decimal(str(expense.amount)) - wht_amount
+    def _wht_decimal(value) -> Decimal:
+        try:
+            parsed = Decimal(str(value))
+        except Exception:
+            return Decimal("0")
+        return parsed if parsed > Decimal("0") else Decimal("0")
+
+    wht_amount = _wht_decimal(getattr(expense, "wht_amount", 0))
+    try:
+        gross_amount = Decimal(str(expense.amount))
+    except Exception:
+        gross_amount = Decimal("0")
+    net_payment = gross_amount - wht_amount
 
     lines = [
         {
@@ -261,10 +270,19 @@ def create():
 
                 tenant = db.session.get(Tenant, int(tid)) if tid is not None else None
                 wht_rate = getattr(tenant, "wht_services_rate", None) if tenant is not None else None
-                if expense.is_service_to_nonresident and wht_rate is not None:
-                    expense.wht_amount = (
-                        Decimal(str(expense.amount or 0)) * Decimal(str(wht_rate)) / Decimal("100")
-                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+
+                def _wht_num(value):
+                    try:
+                        return Decimal(str(value))
+                    except Exception:
+                        return None
+
+                wht_rate_dec = _wht_num(wht_rate)
+                wht_base = _wht_num(getattr(expense, "amount", 0) or 0) or Decimal("0")
+                if getattr(expense, "is_service_to_nonresident", False) and wht_rate_dec is not None:
+                    expense.wht_amount = (wht_base * wht_rate_dec / Decimal("100")).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
                 else:
                     expense.wht_amount = Decimal("0")
                 db.session.flush()

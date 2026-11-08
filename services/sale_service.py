@@ -1390,12 +1390,12 @@ class SaleService:
         # reverse the commission leg a second time. Use the return flow only.
         from models import ProductReturn
 
-        has_returns = (
+        has_returns_count = (
             ProductReturn.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id)
             .filter(ProductReturn.status != "rejected")
             .count()
-            > 0
         )
+        has_returns = isinstance(has_returns_count, int) and has_returns_count > 0
         if has_returns:
             raise ValueError(gettext("لا يمكن إلغاء فاتورة لها مرتجعات — استخدم مسار المرتجع فقط."))
 

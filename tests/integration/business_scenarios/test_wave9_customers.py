@@ -1134,3 +1134,171 @@ class TestCUS45BalanceInvariants:
         assert partner.total_profit_received == Decimal("0"), f"a new partner has taken {partner.total_profit_received}"
         assert partner.total_withdrawals == Decimal("0"), f"a new partner withdrew {partner.total_withdrawals}"
         assert partner.total_loss_borne == Decimal("0"), f"a new partner bore {partner.total_loss_borne}"
+
+
+class TestCUS67UnifiedPartnerStatement:
+    """CUS-67 to CUS-73: one person, both roles, one ledger, one page."""
+
+    def test_unified_statement_needs_view_reports(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-67. The unified statement is a read, so it hangs on the same
+        permission as every other partner read."""
+        _plain(client, db_session, sample_tenant, sample_branch)
+        partner = _partner(db_session, sample_tenant)
+        resp = client.get(f"/partners/{partner.id}/unified")
+        assert resp.status_code in (302, 403), f"unified answered {resp.status_code} without view_reports"
+
+    def test_unified_statement_combines_both_roles(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-68. A human who is both a company partner and a product partner
+        sees one combined figure: company entitlements plus product commissions."""
+        from services.partner_service import PartnerService
+
+        user = _user(db_session, sample_tenant, slug="cus-reporter", permissions=["view_reports"], branch=sample_branch)
+        _login(client, user)
+        partner = _partner(db_session, sample_tenant, scope_type="company")
+        customer = _customer(db_session, sample_tenant, customer_type="partner")
+        assert PartnerService.link_product_partner(partner.id, customer.id, tenant_id=sample_tenant.id)
+
+        resp = client.get(f"/partners/{partner.id}/unified")
+        assert resp.status_code == 200, f"unified answered {resp.status_code}"
+        payload = resp.get_json()["data"]
+        assert payload["partner_id"] == partner.id
+        assert payload["combined_total"] == payload["company_total"] + payload["product_commissions_total"], (
+            f"combined {payload['combined_total']} != company {payload['company_total']} "
+            f"+ product {payload['product_commissions_total']}"
+        )
+
+    def test_linking_needs_manage_users(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-69. Linking records who owns the money; that is administration."""
+        user = _user(db_session, sample_tenant, slug="cus-reporter", permissions=["view_reports"], branch=sample_branch)
+        _login(client, user)
+        partner = _partner(db_session, sample_tenant)
+        customer = _customer(db_session, sample_tenant, customer_type="partner")
+        resp = client.post(f"/partners/{partner.id}/link-customer", data={"customer_id": str(customer.id)})
+        assert resp.status_code in (302, 403), f"link answered {resp.status_code} without manage_users"
+        db_session.expire_all()
+        from models import Customer as CustomerModel
+
+        assert db_session.get(CustomerModel, customer.id).partner_id is None, "linking without manage_users attached"
+
+    def test_linking_rejects_a_foreign_customer(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-70. A customer from another tenant can never attach to a partner
+        here; the link is tenant-scoped, not just tenant-adjacent."""
+        from models import Customer, Tenant
+
+        other = Tenant(
+            name=f"Other {uuid.uuid4().hex[:6]}",
+            name_ar="شركة أخرى",
+            slug=f"other-{uuid.uuid4().hex[:6]}",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        foreign = Customer(tenant_id=other.id, name=f"Foreign {uuid.uuid4().hex[:6]}", customer_type="partner")
+        db_session.add(foreign)
+        db_session.commit()
+        _manager(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            permissions=["manage_users", "view_reports"],
+            slug="cus-admin",
+        )
+        partner = _partner(db_session, sample_tenant)
+        resp = client.post(
+            f"/partners/{partner.id}/link-customer", data={"customer_id": str(foreign.id)}, follow_redirects=True
+        )
+        assert resp.status_code in (200, 302), f"foreign link answered {resp.status_code}"
+        db_session.expire_all()
+        assert db_session.get(Customer, foreign.id).partner_id is None, "a foreign customer was linked"
+
+    def test_unlink_releases_the_link_without_touching_documents(
+        self, client, db_session, sample_tenant, sample_branch
+    ):
+        """CUS-71. Unlinking drops the metadata only; the historical commission
+        documents stay attached to the customer they were earned by."""
+        from models import Customer
+        from services.partner_service import PartnerService
+
+        _manager(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            permissions=["manage_users", "view_reports"],
+            slug="cus-admin",
+        )
+        partner = _partner(db_session, sample_tenant)
+        customer = _customer(db_session, sample_tenant, customer_type="partner")
+        assert PartnerService.link_product_partner(partner.id, customer.id, tenant_id=sample_tenant.id)
+        resp = client.post(f"/partners/{partner.id}/unlink-customer", data={"customer_id": str(customer.id)})
+        assert resp.status_code in (302, 303, 200), f"unlink answered {resp.status_code}"
+        db_session.expire_all()
+        assert db_session.get(Customer, customer.id).partner_id is None, "the link was not released"
+
+    def test_scope_shares_past_100_are_rejected_at_create(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-72. Two company partners at 60 and 50 describe 110% of a profit;
+        the form must refuse the 110th point instead of a distribution later."""
+        _manager(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            permissions=["manage_users", "view_reports"],
+            slug="cus-admin",
+        )
+        first = client.post(
+            "/partners/create",
+            data={"name": "Sixty Percent", "scope_type": "company", "share_percentage": "60"},
+            follow_redirects=True,
+        )
+        assert first.status_code in (302, 200), f"the first create answered {first.status_code}"
+        second = client.post(
+            "/partners/create",
+            data={"name": "Fifty Percent", "scope_type": "company", "share_percentage": "50"},
+            follow_redirects=True,
+        )
+        assert second.status_code in (200, 302), f"the second create answered {second.status_code}"
+        from models import Partner
+
+        shares = (
+            db_session.query(Partner).filter_by(tenant_id=sample_tenant.id, scope_type="company", is_active=True).all()
+        )
+        assert sum(Decimal(str(p.share_percentage or 0)) for p in shares) <= Decimal("100"), (
+            f"scope shares exceed 100%: {[str(p.share_percentage) for p in shares]}"
+        )
+
+    def test_full_company_and_full_branch_shares_can_coexist(self, client, db_session, sample_tenant, sample_branch):
+        """CUS-73. A company 100% and a branch 100% are different pots, so both
+        must be creatable; only a same-scope overflow is refused."""
+        _manager(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            permissions=["manage_users", "view_reports"],
+            slug="cus-admin",
+        )
+        client.post(
+            "/partners/create",
+            data={"name": "Whole Company", "scope_type": "company", "share_percentage": "100"},
+            follow_redirects=True,
+        )
+        client.post(
+            "/partners/create",
+            data={
+                "name": "Whole Branch",
+                "scope_type": "branch",
+                "scope_id": str(sample_branch.id),
+                "share_percentage": "100",
+            },
+            follow_redirects=True,
+        )
+        from models import Partner
+
+        scopes = {
+            (p.scope_type, p.scope_id)
+            for p in db_session.query(Partner).filter_by(tenant_id=sample_tenant.id, is_active=True).all()
+        }
+        assert ("company", None) in scopes, "the company 100% partner was not created"
+        assert ("branch", sample_branch.id) in scopes, "the branch 100% partner was not created"

@@ -187,7 +187,113 @@ class TestLED120AZeroEstimatePostsNothing:
         ), "a zero estimate left a journal entry behind"
 
 
-class TestLED121TheFxRevaluationRouteIsGuardedByManageLedger:
+class TestLED125TheZakatAccrualNeedsAFiscalYear:
+    """LED-125. An accrual without a fiscal year is not a default year - it is
+    a client error, or the idempotency key would be whatever the server
+    happened to guess."""
+
+    def test_missing_fiscal_year_is_a_400(self, client, db_session, sample_tenant, sample_branch):
+        _user(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            slug="led-zakat-admin",
+            permissions=("view_ledger", "manage_ledger"),
+        )
+
+        resp = client.post("/ledger/zakat-accrual", json={})
+
+        assert resp.status_code == 400, f"fiscal_year-less accrual answered {resp.status_code}"
+
+
+class TestLED123TheZakatRouteIsGuardedByManageLedger:
+    """LED-123. The zakat accrual posts money (Dr expense / Cr payable), so
+    it sits behind ``manage_ledger``, not behind the read permission."""
+
+    def test_a_view_ledger_only_user_is_refused(self, client, db_session, sample_tenant, sample_branch):
+        _user(client, db_session, sample_tenant, sample_branch, slug="led-zakat-viewer", permissions=("view_ledger",))
+
+        resp = client.post("/ledger/zakat-accrual", json={"fiscal_year": date.today().year})
+
+        assert resp.status_code == 403, f"zakat accrual answered {resp.status_code} to a user without manage_ledger"
+
+
+class TestLED124TheZakatAccrualPostsBalancedOnce:
+    """LED-124. The accrual carries the same idempotency the income-tax route has.
+
+    One fiscal year, one provision entry, Dr == Cr; a second POST for the same
+    year returns the existing entry instead of accruing twice.
+    """
+
+    def test_second_post_for_same_year_returns_existing_entry(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        from models import GLJournalEntry, GLJournalLine
+        from services.product_service import ProductService
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        sample_tenant.enable_zakat = True
+        db_session.add(sample_tenant)
+        db_session.commit()
+
+        _user(
+            client,
+            db_session,
+            sample_tenant,
+            sample_branch,
+            slug="led-zakat-admin",
+            permissions=("view_ledger", "manage_ledger"),
+        )
+
+        unique = uuid.uuid4().hex[:8]
+        product = ProductService.create_product(
+            name=f"Zakat LED Widget {unique}",
+            sku=f"LED-ZK-{unique}",
+            barcode=f"LEDZ{unique}",
+            regular_price=Decimal("100"),
+            cost_price=Decimal("40"),
+            tenant_id=sample_tenant.id,
+        )
+        db_session.flush()
+        StockService.add_opening_stock(product.id, Decimal("10"), warehouse_id=sample_warehouse.id)
+        db_session.flush()
+
+        # A posted receivable lifts the net working capital base above zero,
+        # so the accrual has something to provision.
+        SaleService.create_sale(
+            customer=sample_customer,
+            seller=sample_user,
+            lines_data=[{"product": product, "quantity": Decimal("2"), "unit_price": Decimal("100")}],
+            warehouse_id=sample_warehouse.id,
+        )
+        db_session.flush()
+        db_session.commit()
+
+        year = date.today().year
+        resp = client.post("/ledger/zakat-accrual", json={"fiscal_year": year})
+        assert resp.status_code == 200, f"zakat accrual answered {resp.status_code}"
+        payload = resp.get_json()["data"]
+        assert payload["entry_id"] is not None, "a positive base posted no provision"
+        assert payload["zakat"] > 0, f"zakat provisioned {payload['zakat']} on a positive base"
+
+        lines = (
+            db_session.query(GLJournalLine)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
+            .filter(GLJournalEntry.id == payload["entry_id"])
+            .all()
+        )
+        total_debit = sum(Decimal(str(ln.debit or 0)) for ln in lines)
+        total_credit = sum(Decimal(str(ln.credit or 0)) for ln in lines)
+        assert total_debit == total_credit, f"the zakat entry is unbalanced: Dr {total_debit} vs Cr {total_credit}"
+
+        resp2 = client.post("/ledger/zakat-accrual", json={"fiscal_year": year})
+        assert resp2.status_code == 200, f"the second accrual answered {resp2.status_code}"
+        payload2 = resp2.get_json()["data"]
+        assert payload2["already_accrued"] is True, "the same fiscal year was accrued twice"
+        assert payload2["entry_id"] == payload["entry_id"], "the second call returned a different entry"
+
     """LED-121. Same guard shape as the tax route: view is not post."""
 
     def test_a_view_ledger_only_user_is_refused(self, client, db_session, sample_tenant, sample_branch):

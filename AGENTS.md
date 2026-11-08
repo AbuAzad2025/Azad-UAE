@@ -284,7 +284,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
   **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
-  field definitions** (13 core + 61 across 12 industries) / 112 base GL accounts
+  field definitions** (13 core + 61 across 12 industries) / 113 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
   (`app/bootstrap.py`); `AUTO_MIGRATE=1` lets a fresh database be migrated at

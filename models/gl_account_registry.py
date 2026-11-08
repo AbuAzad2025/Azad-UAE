@@ -163,6 +163,7 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("2147", "Payroll Income Tax Payable", "ضريبة دخل الموظفين مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate("2148", "Zakat Payable", "زكاة مستحقة", "liability", 2, False, "2100"),
+    GLAccountTemplate("2149", "Withholding Tax Payable", "ضريبة استقطاع مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate(
         "2150",
         "Partner Current Accounts",
@@ -1002,6 +1003,9 @@ GL_MODULE_DEFINITIONS = {
             # bank_reconciliation module: the posting is part of ordinary
             # reconciliation work and must resolve for every tenant.
             GLConceptMappingTemplate("SUSPENSE", "2999", "core_payments"),
+            # Withholding tax at source on non-resident service payments
+            # (routes/expenses.py).
+            GLConceptMappingTemplate("WITHHOLDING_TAX_PAYABLE", "2149", "core_payments"),
         ],
     ),
     "core_inventory": GLModuleDefinition(

@@ -1170,7 +1170,301 @@ class TestSAL47SaleTotalsApi:
         assert resp.status_code in (302, 403), f"the totals API answered {resp.status_code} without manage_sales"
 
 
-class TestSAL56StructuralInvariants:
+class TestSAL66EInvoiceGuard:
+    """SAL-66 to SAL-74: statutory documents and partner commissions.
+
+    The e-invoice artifacts and the ZATCA/ITA actions live on the sales
+    blueprint and move compliance money; they must be guarded like every
+    other posting surface, tenant-scoped, and the commission leg must be
+    computed on the discounted margin and reversed on cancellation.
+    """
+
+    def _posted_sale(self, db_session, tenant, warehouse, customer, seller):
+        from services.product_service import ProductService
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        unique = uuid.uuid4().hex[:8]
+        product = ProductService.create_product(
+            name=f"SAL EInv Widget {unique}",
+            sku=f"SAL-EI-{unique}",
+            barcode=f"SALEI{unique}",
+            regular_price=Decimal("100"),
+            cost_price=Decimal("40"),
+            tenant_id=tenant.id,
+        )
+        db_session.flush()
+        StockService.add_opening_stock(product.id, Decimal("5"), warehouse_id=warehouse.id)
+        db_session.flush()
+        sale = SaleService.create_sale(
+            customer=customer,
+            seller=seller,
+            lines_data=[{"product": product, "quantity": Decimal("1"), "unit_price": Decimal("100")}],
+            warehouse_id=warehouse.id,
+        )
+        db_session.flush()
+        db_session.commit()
+        return sale
+
+    def test_einvoice_xml_requires_manage_sales(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-66."""
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        user = _user(db_session, sample_tenant, slug="sal-nobody", permissions=[], branch=sample_branch)
+        _login(client, user)
+        resp = client.get(f"/sales/{sale.id}/einvoice.xml")
+        assert resp.status_code in (302, 403), f"einvoice.xml answered {resp.status_code} without manage_sales"
+
+    def test_einvoice_xml_serves_the_posted_artifact(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-67."""
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        user = _user(db_session, sample_tenant, slug="sal-seller", permissions=["manage_sales"], branch=sample_branch)
+        _login(client, user)
+        resp = client.get(f"/sales/{sale.id}/einvoice.xml")
+        assert resp.status_code == 200, f"einvoice.xml answered {resp.status_code} with manage_sales"
+        assert "application/xml" in resp.content_type, f"einvoice.xml served {resp.content_type}, not XML"
+
+    def test_einvoice_xml_is_tenant_scoped(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-68. Another tenant's invoice is a 404, not a document."""
+        from models import Tenant
+
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        other = Tenant(
+            name=f"Other {uuid.uuid4().hex[:6]}",
+            name_ar="شركة أخرى",
+            slug=f"other-{uuid.uuid4().hex[:6]}",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        user = _user(db_session, other, slug="sal-other", permissions=["manage_sales"], branch=None)
+        _login(client, user)
+        resp = client.get(f"/sales/{sale.id}/einvoice.xml")
+        assert resp.status_code == 404, f"cross-tenant einvoice.xml answered {resp.status_code}, expected 404"
+
+    def test_submit_to_zatca_requires_manage_sales(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-69."""
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        user = _user(db_session, sample_tenant, slug="sal-nobody", permissions=[], branch=sample_branch)
+        _login(client, user)
+        resp = client.post(f"/sales/{sale.id}/submit-to-zatca")
+        assert resp.status_code in (302, 403), f"submit-to-zatca answered {resp.status_code} without manage_sales"
+
+    def test_submit_to_zatca_with_switch_off_is_a_refusal_not_a_500(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-70. The tenant switch gates the action; off means a clean refusal."""
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        user = _user(db_session, sample_tenant, slug="sal-seller", permissions=["manage_sales"], branch=sample_branch)
+        _login(client, user)
+        resp = client.post(f"/sales/{sale.id}/submit-to-zatca", follow_redirects=True)
+        assert resp.status_code == 200, (
+            f"switch-off submit answered {resp.status_code}, expected a refusal page, not a 500"
+        )
+
+    def test_cancel_refuses_a_sale_with_returns(
+        self, client, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-71. With a return on the books, cancelling would reverse the
+        commission leg twice (once in the return, once in the cancel)."""
+        from models import ProductReturn
+
+        sale = self._posted_sale(db_session, sample_tenant, sample_warehouse, sample_customer, sample_user)
+        product_return = ProductReturn(
+            tenant_id=sample_tenant.id,
+            return_number=f"SALRB-{uuid.uuid4().hex[:8]}",
+            sale_id=sale.id,
+            customer_id=sale.customer_id,
+            branch_id=sale.branch_id,
+            total_amount=Decimal("100"),
+            refund_amount=Decimal("100"),
+            amount_aed=Decimal("100"),
+            status="approved",
+        )
+        db_session.add(product_return)
+        db_session.commit()
+
+        user = _user(db_session, sample_tenant, slug="sal-seller", permissions=["manage_sales"], branch=sample_branch)
+        _login(client, user)
+        resp = client.post(f"/sales/{sale.id}/cancel", follow_redirects=True)
+        assert resp.status_code in (200, 302), f"cancel with returns answered {resp.status_code}"
+        db_session.expire_all()
+        from models import Sale as SaleModel
+
+        refreshed = db_session.get(SaleModel, sale.id)
+        assert refreshed.status != "cancelled", "a sale with returns was cancelled; its sale must stay live"
+
+    def test_commission_uses_the_discounted_margin(
+        self, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-72. A 20 invoice discount on a 200 line must shrink the
+        commission base by the same 20; otherwise the partner is paid on money
+        the tenant already gave away."""
+        from models import Customer, PartnerCommissionEntry, ProductPartner
+        from services.product_service import ProductService
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+        from utils.currency_utils import convert_and_quantize_aed
+
+        unique = uuid.uuid4().hex[:8]
+        partner_customer = Customer(
+            tenant_id=sample_tenant.id,
+            name=f"SAL Partner {unique}",
+            customer_type="partner",
+        )
+        db_session.add(partner_customer)
+        product = ProductService.create_product(
+            name=f"SAL Disc Widget {unique}",
+            sku=f"SAL-DI-{unique}",
+            barcode=f"SALDI{unique}",
+            regular_price=Decimal("100"),
+            cost_price=Decimal("50"),
+            tenant_id=sample_tenant.id,
+        )
+        db_session.flush()
+        StockService.add_opening_stock(product.id, Decimal("10"), warehouse_id=sample_warehouse.id)
+        product.partner_shares.append(
+            ProductPartner(
+                tenant_id=sample_tenant.id,
+                product_id=product.id,
+                partner_customer_id=partner_customer.id,
+                percentage=Decimal("25"),
+            )
+        )
+        db_session.flush()
+        sale = SaleService.create_sale(
+            customer=sample_customer,
+            seller=sample_user,
+            lines_data=[{"product": product, "quantity": Decimal("2"), "unit_price": Decimal("100")}],
+            warehouse_id=sample_warehouse.id,
+            discount_amount=Decimal("20"),
+        )
+        db_session.flush()
+        entries = PartnerCommissionEntry.query.filter_by(tenant_id=sample_tenant.id, sale_id=sale.id).all()
+        assert len(entries) == 1, f"expected one commission entry, got {len(entries)}"
+        entry = entries[0]
+        # revenue 200, cost 100, discount 20 -> margin 80; base is that margin
+        # converted into the tenant base currency.
+        expected_base = convert_and_quantize_aed(
+            Decimal("80"), sale.currency, sale.exchange_rate, tenant_id=sample_tenant.id
+        )
+        assert Decimal(str(entry.base_amount_aed)) == expected_base, (
+            f"commission base is {entry.base_amount_aed}, expected {expected_base}: discount was not rebased"
+        )
+        assert Decimal(str(entry.commission_amount_aed)) == (expected_base * Decimal("25") / Decimal("100")).quantize(
+            Decimal("0.001"), rounding="ROUND_HALF_UP"
+        )
+
+    def test_zero_margin_posts_no_commission(
+        self, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-73. A loss-making line owes the partner nothing, not a negative."""
+        from models import Customer, PartnerCommissionEntry, ProductPartner
+        from services.product_service import ProductService
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        unique = uuid.uuid4().hex[:8]
+        partner_customer = Customer(
+            tenant_id=sample_tenant.id,
+            name=f"SAL Partner {unique}",
+            customer_type="partner",
+        )
+        db_session.add(partner_customer)
+        product = ProductService.create_product(
+            name=f"SAL Loss Widget {unique}",
+            sku=f"SAL-LO-{unique}",
+            barcode=f"SALLO{unique}",
+            regular_price=Decimal("100"),
+            cost_price=Decimal("150"),
+            tenant_id=sample_tenant.id,
+        )
+        db_session.flush()
+        StockService.add_opening_stock(product.id, Decimal("5"), warehouse_id=sample_warehouse.id)
+        product.partner_shares.append(
+            ProductPartner(
+                tenant_id=sample_tenant.id,
+                product_id=product.id,
+                partner_customer_id=partner_customer.id,
+                percentage=Decimal("25"),
+            )
+        )
+        db_session.flush()
+        sale = SaleService.create_sale(
+            customer=sample_customer,
+            seller=sample_user,
+            lines_data=[{"product": product, "quantity": Decimal("1"), "unit_price": Decimal("100")}],
+            warehouse_id=sample_warehouse.id,
+        )
+        db_session.flush()
+        assert not PartnerCommissionEntry.query.filter_by(tenant_id=sample_tenant.id, sale_id=sale.id).first(), (
+            "a negative margin produced a commission entry"
+        )
+
+    def test_commission_gl_is_balanced(
+        self, db_session, sample_tenant, sample_branch, sample_warehouse, sample_customer, sample_user
+    ):
+        """SAL-74. The commission journal is Dr expense / Cr partner current,
+        and it posts with the sale."""
+        from models import Customer, GLJournalEntry, GLJournalLine, PartnerCommissionEntry, ProductPartner
+        from services.product_service import ProductService
+        from services.sale_service import SaleService
+        from services.stock_service import StockService
+
+        unique = uuid.uuid4().hex[:8]
+        partner_customer = Customer(
+            tenant_id=sample_tenant.id,
+            name=f"SAL GL Partner {unique}",
+            customer_type="partner",
+        )
+        db_session.add(partner_customer)
+        product = ProductService.create_product(
+            name=f"SAL GL Widget {unique}",
+            sku=f"SAL-GL-{unique}",
+            barcode=f"SALGL{unique}",
+            regular_price=Decimal("100"),
+            cost_price=Decimal("40"),
+            tenant_id=sample_tenant.id,
+        )
+        db_session.flush()
+        StockService.add_opening_stock(product.id, Decimal("5"), warehouse_id=sample_warehouse.id)
+        product.partner_shares.append(
+            ProductPartner(
+                tenant_id=sample_tenant.id,
+                product_id=product.id,
+                partner_customer_id=partner_customer.id,
+                percentage=Decimal("10"),
+            )
+        )
+        db_session.flush()
+        sale = SaleService.create_sale(
+            customer=sample_customer,
+            seller=sample_user,
+            lines_data=[{"product": product, "quantity": Decimal("1"), "unit_price": Decimal("100")}],
+            warehouse_id=sample_warehouse.id,
+        )
+        db_session.flush()
+        entries = PartnerCommissionEntry.query.filter_by(tenant_id=sample_tenant.id, sale_id=sale.id).all()
+        assert entries, "the partner sale produced no commission entry"
+        journal = (
+            db_session.query(GLJournalEntry)
+            .filter_by(tenant_id=sample_tenant.id, reference_type="PartnerCommission", reference_id=sale.id)
+            .first()
+        )
+        assert journal is not None, "the commission posted no journal"
+        lines = db_session.query(GLJournalLine).filter_by(entry_id=journal.id).all()
+        debits = sum(Decimal(str(ln.debit or 0)) for ln in lines)
+        credits = sum(Decimal(str(ln.credit or 0)) for ln in lines)
+        assert debits == credits, f"the commission journal is unbalanced: Dr {debits} vs Cr {credits}"
+        assert debits > 0, "the commission journal is empty"
+
     """SAL-56 to SAL-62: the columns the money depends on."""
 
     def test_money_columns_are_numeric(self, db_session):

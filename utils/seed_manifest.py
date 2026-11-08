@@ -201,7 +201,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         seeder="services.gl_service.GLService.ensure_core_accounts",
         expected=112,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
-        note="112 base accounts (102 + 5 payroll statutory/pension + excise + zakat, Nov 2026) + the "
+        note="113 base accounts (102 + 5 payroll statutory/pension + excise + zakat + withholding, Nov 2026) + the "
         "tenant's industry extension (49 across 13 industries) + 2 liquidity "
         "accounts per active branch. Self-healing: matches on code and repairs "
         "name/type/parent/header/level/contra.",

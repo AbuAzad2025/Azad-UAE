@@ -81,6 +81,7 @@ GL_CONCEPT_INSURANCE_IN = "INSURANCE_IN"
 GL_CONCEPT_EXCISE_DUTY = "EXCISE_DUTY"
 GL_CONCEPT_INCOME_TAX_EXPENSE = "INCOME_TAX_EXPENSE"
 GL_CONCEPT_INCOME_TAX_PAYABLE = "INCOME_TAX_PAYABLE"
+GL_CONCEPT_WITHHOLDING_TAX_PAYABLE = "WITHHOLDING_TAX_PAYABLE"
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = "mapping"
@@ -174,6 +175,7 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_EXCISE_DUTY,
     GL_CONCEPT_INCOME_TAX_EXPENSE,
     GL_CONCEPT_INCOME_TAX_PAYABLE,
+    GL_CONCEPT_WITHHOLDING_TAX_PAYABLE,
 )
 
 #: The concept registry. ``legacy_code`` is the hint the Owner panel's
@@ -271,6 +273,12 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
     GL_CONCEPT_INCOME_TAX_PAYABLE: {
         "meaning": "Income Tax Payable",
         "legacy_code": "2142",
+        "required": False,
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_WITHHOLDING_TAX_PAYABLE: {
+        "meaning": "Withholding Tax Payable",
+        "legacy_code": "2149",
         "required": False,
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },

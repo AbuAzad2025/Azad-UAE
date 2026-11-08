@@ -41,6 +41,7 @@ from models import (
     StockMovement,
     SystemSettings,
     Tenant,
+    TenantSecret,
     User,
     Warehouse,
 )
@@ -178,6 +179,7 @@ __all__ = [
     "ProductReturn",
     "CardVault",
     "Tenant",
+    "TenantSecret",
     "SystemSettings",
     "IntegrationSettings",
     "Expense",

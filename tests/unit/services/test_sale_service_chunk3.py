@@ -803,7 +803,7 @@ class TestCancelSale:
             sess.commit = MagicMock()
             SaleService.cancel_sale(sale)
             stock.reverse_sale.assert_called_once_with(sale)
-            assert gl.reverse_entry.call_count == 2
+            assert gl.reverse_entry.call_count == 3  # SALE + SALE_COGS + PARTNER_COMMISSION
             assert sale.status == "cancelled"
 
     def test_cancel_gl_reversal_failure(self, app):

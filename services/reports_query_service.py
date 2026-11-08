@@ -232,11 +232,15 @@ class ReportsQueryService:
 
                 sales_lines = sales_query.all()
 
+                def _num(value) -> Decimal:
+                    try:
+                        return Decimal(str(value))
+                    except Exception:
+                        return Decimal("0")
+
                 total_revenue = sum(line.line_total for line in sales_lines)
                 total_qty = sum(line.quantity for line in sales_lines)
-                total_cogs = sum(
-                    (Decimal(str(line.quantity)) * Decimal(str(line.cost_price or 0))) for line in sales_lines
-                )
+                total_cogs = sum((_num(line.quantity) * _num(line.cost_price)) for line in sales_lines)
 
                 avg_price = total_revenue / total_qty if total_qty > 0 else 0
 
