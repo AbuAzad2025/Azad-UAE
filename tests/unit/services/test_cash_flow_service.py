@@ -313,15 +313,22 @@ class TestCashFlowOperating:
         assert op["net_cash_from_operating"] == cf_seed["expected_operating_net"]
         assert len(op["items"]) == 4
 
-    def test_operating_zero_when_no_salary_account(self, db_session, sample_tenant, sample_branch):
-        tid = sample_tenant.id
-        GLAccount.query.filter_by(tenant_id=tid, code="6100").delete()
+    def test_operating_zero_when_no_salary_account(self, db_session):
+        """Zero salaries only when no salary account exists for the tenant.
+
+        The base chart owns 6100, so the old delete-and-hope version failed
+        against a provisioned tenant. A tenant without a chart (factory
+        tenant, no GL accounts) is what "no salary account" really is.
+        """
+        from tests.factories import TenantFactory
+
+        tenant = TenantFactory(enable_tax=False)
         db_session.commit()
 
         op = CashFlowService._get_operating_activities(
             PERIOD_START,
             PERIOD_END,
-            tenant_id=tid,
+            tenant_id=tenant.id,
         )
         assert op["payments_for_salaries"] == 0.0
         assert op["net_cash_from_operating"] == 0.0
@@ -354,16 +361,17 @@ class TestCashFlowFinancing:
         assert fin["loan_repayments"] == 1000.0
         assert fin["net_cash_from_financing"] == cf_seed["expected_financing_net"]
 
-    def test_financing_zero_without_equity_accounts(self, db_session, sample_tenant):
-        tid = sample_tenant.id
-        for code in ("3100", "3300", "2210"):
-            GLAccount.query.filter_by(tenant_id=tid, code=code).delete()
+    def test_financing_zero_without_equity_accounts(self, db_session):
+        """Zero financing only when no equity/loan account exists for the tenant."""
+        from tests.factories import TenantFactory
+
+        tenant = TenantFactory(enable_tax=False)
         db_session.commit()
 
         fin = CashFlowService._get_financing_activities(
             PERIOD_START,
             PERIOD_END,
-            tenant_id=tid,
+            tenant_id=tenant.id,
         )
         assert fin["net_cash_from_financing"] == 0.0
 

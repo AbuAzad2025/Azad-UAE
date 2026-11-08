@@ -13,16 +13,21 @@ from tests.factories import GLAccountFactory
 
 
 def _make_account(db_session, tenant, code, name="Account"):
-    acct = GLAccountFactory(
-        tenant=tenant,
-        code=code,
-        name=name,
-        name_ar=name,
-        type="expense",
-        is_active=True,
-        is_header=False,
-    )
-    db_session.commit()
+    from models import GLAccount
+
+    # the sample tenant now carries its own base chart; reuse its accounts
+    acct = GLAccount.query.filter_by(tenant_id=tenant.id, code=code).first()
+    if acct is None:
+        acct = GLAccountFactory(
+            tenant=tenant,
+            code=code,
+            name=name,
+            name_ar=name,
+            type="expense",
+            is_active=True,
+            is_header=False,
+        )
+        db_session.commit()
     return acct
 
 

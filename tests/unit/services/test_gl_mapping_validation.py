@@ -38,28 +38,47 @@ def _gl_account(
     active=True,
     header=False,
 ):
-    acct = GLAccount(
-        tenant_id=tenant.id,
-        code=code,
-        name=name,
-        type=account_type,
-        is_active=active,
-        is_header=header,
-    )
-    db_session.add(acct)
+    # the sample tenant now carries its own base chart; reuse its accounts
+    acct = GLAccount.query.filter_by(tenant_id=tenant.id, code=code).first()
+    if acct is None:
+        acct = GLAccount(
+            tenant_id=tenant.id,
+            code=code,
+            name=name,
+            type=account_type,
+            is_active=active,
+            is_header=header,
+        )
+        db_session.add(acct)
+    else:
+        acct.name = name
+        acct.type = account_type
+        acct.is_active = active
+        acct.is_header = header
     db_session.flush()
     return acct
 
 
 def _mapping(db_session, tenant, concept_code, gl_account, branch_id=None):
-    m = GLAccountMapping(
+    # provisioned tenants keep their default concept row; re-point it to the
+    # account the test pinned instead of inserting a second default row
+    m = GLAccountMapping.query.filter_by(
         tenant_id=tenant.id,
         concept_code=concept_code,
-        gl_account_id=gl_account.id,
         branch_id=branch_id,
         is_active=True,
-    )
-    db_session.add(m)
+    ).first()
+    if m is None:
+        m = GLAccountMapping(
+            tenant_id=tenant.id,
+            concept_code=concept_code,
+            gl_account_id=gl_account.id,
+            branch_id=branch_id,
+            is_active=True,
+        )
+        db_session.add(m)
+    else:
+        m.gl_account_id = gl_account.id
     db_session.flush()
     return m
 
@@ -184,8 +203,24 @@ class TestValidateTenant:
         assert len(rows) == 1
         assert rows[0].status == "invalid"
 
-    def test_missing_required_mapping(self, db_session, sample_tenant):
-        rows = GLMappingValidationService.validate_tenant(sample_tenant.id, include_ready=False)
+    def test_missing_required_mapping(self, db_session):
+        # a tenant whose chart was never provisioned reports the gaps;
+        # a fully provisioned one must not
+        from uuid import uuid4
+
+        from models import Tenant
+
+        other = Tenant(
+            name=f"Missing {uuid4().hex[:8]}",
+            name_ar=f"Missing {uuid4().hex[:8]}",
+            slug=f"missing-{uuid4().hex[:8]}",
+            email=f"missing-{uuid4().hex[:8]}@test.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+        rows = GLMappingValidationService.validate_tenant(other.id, include_ready=False)
         missing = [r for r in rows if r.status == "missing" and r.concept_code in REQUIRED_GL_CONCEPTS]
         assert missing
 
@@ -246,8 +281,36 @@ class TestValidateTenant:
         header = [r for r in rows if "header" in r.issue.lower()]
         assert header
 
-    def test_liquidity_readiness_missing(self, db_session, sample_tenant, sample_branch):
-        rows = GLMappingValidationService.validate_tenant(sample_tenant.id, include_ready=False)
+    def test_liquidity_readiness_missing(self, db_session, sample_branch):
+        """A tenant without a chart reports the readiness checks as missing.
+
+        The shared sample tenant now provisions the base chart, so the missing
+        state is only reproducible on a fresh tenant - and a fresh tenant has
+        exactly the gap this reports.
+        """
+        from models import Branch
+
+        other = Tenant(
+            name=f"Liquidity {uuid.uuid4().hex[:8]}",
+            name_ar=f"Liquidity {uuid.uuid4().hex[:8]}",
+            slug=f"liquidity-{uuid.uuid4().hex[:8]}",
+            email=f"liquidity-{uuid.uuid4().hex[:8]}@test.com",
+            phone_1="0500000000",
+            country="AE",
+            is_active=True,
+            default_currency="AED",
+            base_currency="AED",
+        )
+        db_session.add(other)
+        db_session.commit()
+        # a branch whose tenant has no chart has no liquidity accounts -
+        # the readiness checks must report it
+        db_session.add(
+            Branch(tenant_id=other.id, name=f"Liquidity Branch {uuid.uuid4().hex[:6]}", code=f"LQ{uuid.uuid4().hex[:4].upper()}")
+        )
+        db_session.commit()
+
+        rows = GLMappingValidationService.validate_tenant(other.id, include_ready=False)
         liquidity = [r for r in rows if r.concept_code in ("CASH_READINESS", "BANK_READINESS")]
         assert liquidity
 
@@ -312,11 +375,26 @@ class TestDryRun:
         assert "rows" in result
         assert "report_fields" in result
 
-    def test_dry_run_single_tenant_counts(self, mocker, db_session, sample_tenant):
+    def test_dry_run_single_tenant_counts(self, mocker, db_session):
+        from uuid import uuid4
+
+        from models import Tenant
+
+        other = Tenant(
+            name=f"Dry {uuid4().hex[:8]}",
+            name_ar=f"Dry {uuid4().hex[:8]}",
+            slug=f"dry-{uuid4().hex[:8]}",
+            email=f"dry-{uuid4().hex[:8]}@test.com",
+            country="AE",
+            is_active=True,
+        )
+        db_session.add(other)
+        db_session.commit()
+
         inspector = MagicMock()
         inspector.has_table.return_value = True
         mocker.patch("sqlalchemy.inspect", return_value=inspector)
-        result = GLMappingValidationService.dry_run(tenant_id=sample_tenant.id, include_ready=False)
+        result = GLMappingValidationService.dry_run(tenant_id=other.id, include_ready=False)
         assert result["critical_count"] >= 1
 
     def test_module_wrappers(self, mocker, sample_tenant):

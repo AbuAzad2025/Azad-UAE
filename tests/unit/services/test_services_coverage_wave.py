@@ -645,6 +645,8 @@ class TestGlServiceGaps:
             )
 
     def test_default_liquidity_multiple_without_branch(self, sample_tenant, mocker):
+        from services.gl_service import GLService
+
         a1 = MagicMock(code="C1")
         a2 = MagicMock(code="C2")
         mock_q = MagicMock()
@@ -652,7 +654,8 @@ class TestGlServiceGaps:
         mock_q.order_by.return_value = mock_q
         mock_q.all.return_value = [a1, a2]
         mocker.patch("services.gl_service.GLAccount.query", mock_q)
-        from services.gl_service import GLService
+        # the provisioning is irrelevant to the ambiguity branch - don't run it
+        mocker.patch.object(GLService, "ensure_core_accounts", return_value={})
 
         with pytest.raises(ValueError, match="Multiple"):
             GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id)

@@ -52,8 +52,10 @@ def _provision_gl_chart(tenant_id: int) -> None:
     concept-named posting is still refused.
     """
     from services.gl_service import GLService
+    from utils.tenanting import without_tenant_scope
 
-    GLService.ensure_core_accounts(tenant_id=tenant_id)
+    with without_tenant_scope():
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
 
 
 @pytest.fixture

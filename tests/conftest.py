@@ -431,8 +431,10 @@ def _ensure_mock_fk_anchors():
     # The anchor tenant serves many hardcoded tenant_id=1 GL assertions; give
     # it the chart its postings resolve against, once per session.
     from services.gl_service import GLService
+    from utils.tenanting import without_tenant_scope
 
-    GLService.ensure_core_accounts(tenant_id=int(tenant.id))
+    with without_tenant_scope():
+        GLService.ensure_core_accounts(tenant_id=int(tenant.id))
     db.session.commit()
 
     # User id=42 (mock_user.id) — used as created_by / user_id in inserts
@@ -1055,8 +1057,10 @@ def sample_tenant(db_session):
     # (utils/system_init.py); tests that post GL entries must see the same
     # chart or the resolver correctly refuses to invent account codes.
     from services.gl_service import GLService
+    from utils.tenanting import without_tenant_scope
 
-    GLService.ensure_core_accounts(tenant_id=tenant.id)
+    with without_tenant_scope():
+        GLService.ensure_core_accounts(tenant_id=tenant.id)
     db_session.commit()
     tenant.is_active = True
     tenant.is_suspended = False
@@ -1479,9 +1483,11 @@ def sample_gl_accounts(db_session, sample_tenant, app):
     GL_MODULE_DEFINITIONS source.
     """
     from services.gl_service import GLService
+    from utils.tenanting import without_tenant_scope
 
     with app.app_context():
-        GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
+        with without_tenant_scope():
+            GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
         db_session.commit()
     return sample_tenant
 

@@ -33,15 +33,19 @@ def _acct(tenant_id, code, name, *, type_="asset", sub_type=None, is_header=Fals
 
 @pytest.fixture
 def chart(db_session, sample_tenant):
-    """Cash header + two leaf children + an untyped leaf."""
-    cash_header = _acct(sample_tenant.id, "1000", "Cash", is_header=True)
-    bank = _acct(sample_tenant.id, "1010", "Bank", sub_type="bank")
-    till = _acct(sample_tenant.id, "1020", "Till", sub_type="cash")
-    off = _acct(sample_tenant.id, "1030", "ClosedLeaf", is_active=False)
+    """Sandbox tree of a header + two leaf children + an untyped leaf.
+
+    Codes outside the provisioned base chart so the fixture can pin its own
+    topology rather than the real tree.
+    """
+    cash_header = _acct(sample_tenant.id, "9010", "Cash", is_header=True)
+    bank = _acct(sample_tenant.id, "9020", "Bank", sub_type="bank")
+    till = _acct(sample_tenant.id, "9030", "Till", sub_type="cash")
+    off = _acct(sample_tenant.id, "9040", "ClosedLeaf", is_active=False)
     cash_header.children.extend([bank, till, off])
-    rev = _acct(sample_tenant.id, "4000", "Revenue", type_="revenue")
-    j1 = _acct(sample_tenant.id, "1050", "AbsorbA")
-    j2 = _acct(sample_tenant.id, "1060", "AbsorbB")
+    rev = _acct(sample_tenant.id, "9050", "Revenue", type_="revenue")
+    j1 = _acct(sample_tenant.id, "9060", "AbsorbA")
+    j2 = _acct(sample_tenant.id, "9070", "AbsorbB")
     db.session.add_all([cash_header, bank, till, off, rev, j1, j2])
     db.session.flush()
     return {"header": cash_header, "bank": bank, "till": till, "off": off, "rev": rev, "j1": j1, "j2": j2}
@@ -95,7 +99,7 @@ class TestGLAccountBalance:
 
 class TestGLAccountProperties:
     def test_full_name_prefers_arabic(self, sample_tenant):
-        acct = _acct(sample_tenant.id, "1110", "Cash")
+        acct = _acct(sample_tenant.id, "9080", "Cash")
         acct.name_ar = "النقدية"
         assert acct.full_name == "1110 - النقدية"
         acct.name_ar = None
@@ -214,9 +218,9 @@ class TestGLAccountBalanceExtras:
 
 class TestGLAccountChildrenRecursive:
     def test_collects_nested_descendants(self, db_session, sample_tenant):
-        root = _acct(sample_tenant.id, "2000", "Root", is_header=True)
-        mid = _acct(sample_tenant.id, "2010", "Mid", is_header=True)
-        leaf = _acct(sample_tenant.id, "2011", "Leaf")
+        root = _acct(sample_tenant.id, "9510", "Root", is_header=True)
+        mid = _acct(sample_tenant.id, "9520", "Mid", is_header=True)
+        leaf = _acct(sample_tenant.id, "9530", "Leaf")
         mid.children.append(leaf)
         root.children.append(mid)
         db.session.add_all([root, mid, leaf])

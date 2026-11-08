@@ -97,6 +97,29 @@ class PaymentService:
         return None
 
     @staticmethod
+    def _liquidity_destination_branch(payment_method, branch_id, tenant_id):
+        """The drawer a tenant-wide admin's cash/bank voucher lands in.
+
+        The posting validator requires the entry's ``branch_id`` to match the
+        liquidity account's own branch. When the poster named no branch but
+        the tenant has exactly one active liquidity account of that kind, the
+        money has exactly one possible drawer - stamp it so the receipt, the
+        payment row and the journal entry all agree. With several candidates
+        there is nothing to choose: this returns None, the poster names no
+        branch, and the resolver refuses loudly exactly as before.
+        """
+        method_kind = {"cash": "cash", "bank_transfer": "bank", "card": "bank"}
+        kind = method_kind.get((payment_method or "").strip().lower())
+        if kind is None or branch_id or not tenant_id:
+            return branch_id
+        try:
+            from services.gl_service import GLService
+
+            return GLService.resolve_liquidity_branch(kind, None, tenant_id)
+        except Exception:
+            return branch_id
+
+    @staticmethod
     def _post_supplier_fx_gain_loss(payment, purchase, tenant_id):
         """ترحيل فروقات العملة المحققة عند تسوية ذمة مورد (AP) بعملة أجنبية.
 
@@ -236,6 +259,9 @@ class PaymentService:
         supplier = db.session.get(Supplier, supplier_id)
         if not supplier:
             raise ValueError(gettext("المورد غير موجود"))
+
+        tenant_id = (supplier.tenant_id if supplier is not None else None) or get_active_tenant_id(current_user)
+        branch_id = PaymentService._liquidity_destination_branch(payment_method, branch_id, tenant_id)
 
         try:
             tenant_id_for_rate = supplier.tenant_id if supplier is not None else None
@@ -407,6 +433,7 @@ class PaymentService:
             raise ValueError(gettext("المورد غير موجود"))
 
         tenant_id = (supplier.tenant_id if supplier is not None else None) or get_active_tenant_id(current_user)
+        branch_id = PaymentService._liquidity_destination_branch(payment_method, branch_id, tenant_id)
 
         payment_number = generate_number("PAY", Payment, "payment_number", branch_id=branch_id, tenant_id=tenant_id)
 
@@ -616,6 +643,7 @@ class PaymentService:
                 user=(current_user if getattr(current_user, "is_authenticated", False) else None),
                 sale=source_sale,
             )
+            branch_id = PaymentService._liquidity_destination_branch(payment_method, branch_id, tenant_id)
 
             receipt_number = generate_number("REC", Receipt, "receipt_number", branch_id=branch_id, tenant_id=tenant_id)
 

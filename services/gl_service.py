@@ -751,6 +751,44 @@ class GLService:
         return entries
 
     @staticmethod
+    def resolve_liquidity_branch(liquidity_kind, branch_id=None, tenant_id=None):
+        """The branch a liquidity hit lands in when the poster has no branch context.
+
+        ``get_default_liquidity_account`` already answers "which account": one
+        active row is unambiguous. The posting validator additionally requires
+        ``branch_id`` to match the account's own branch, so returning the code
+        alone is not enough for a caller with ``branch_id=None``: the money
+        would resolve to e.g. drawer ``1110-B47`` and then be refused because
+        the post requests ``branch_id=None``.
+
+        When no branch is named and the tenant has exactly one active
+        liquidity account of this kind, its branch is returned (the money has
+        exactly one drawer); the caller stamps it on the entry and the
+        document so everything agrees. With more than one, there is nothing
+        to choose and the caller stays branchless - the resolver refuses
+        loudly, exactly as before.
+        """
+        kind = (liquidity_kind or "").strip().lower()
+        if kind not in ("cash", "bank"):
+            raise ValueError(f"Unsupported liquidity account kind: {liquidity_kind}")
+        if branch_id:
+            return int(branch_id)
+        if not tenant_id:
+            return None
+        rows = GLAccount.query.filter_by(
+            tenant_id=int(tenant_id),
+            liquidity_kind=kind,
+            is_active=True,
+            is_header=False,
+        ).all()
+        # Exactly one candidate and it is branch-scoped: the money has exactly
+        # one drawer, so the poster may use it. Anything else is ambiguous and
+        # the caller stays branchless - the resolver then refuses loudly.
+        if len(rows) == 1 and rows[0].branch_id:
+            return int(rows[0].branch_id)
+        return None
+
+    @staticmethod
     def get_default_liquidity_account(liquidity_kind, branch_id=None, tenant_id=None):
         kind = (liquidity_kind or "").strip().lower()
         if kind not in ("cash", "bank"):

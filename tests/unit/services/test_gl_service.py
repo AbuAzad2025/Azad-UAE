@@ -416,7 +416,7 @@ class TestTrialBalanceAndTree:
 
 class TestAccountCodeForConcept:
     def test_fallback_key(self, sample_tenant, mocker):
-        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
+        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
             GLService.get_account_code_for_concept(
                 "SALES_REVENUE",
@@ -424,7 +424,7 @@ class TestAccountCodeForConcept:
             )
 
     def test_no_mapping_raises(self, sample_tenant, mocker):
-        mocker.patch("services.gl_account_resolver.resolve_gl_account", return_value=None)
+        mocker.patch("services.gl_service.resolve_gl_account", return_value=None)
         with pytest.raises(GLMappingError):
             GLService.get_account_code_for_concept("UNKNOWN_XYZ", tenant_id=sample_tenant.id)
 
@@ -1174,13 +1174,15 @@ class TestGlServiceCoverageGaps:
         db_session.flush()
         assert GLService.get_default_liquidity_account("cash", tenant_id=sample_tenant.id) == "SOLO1"
 
-    def test_default_liquidity_branch_missing(self, db_session, sample_tenant, sample_branch, mocker):
+    def test_default_liquidity_branch_missing(self, db_session, sample_tenant, mocker):
         mocker.patch.object(GLService, "ensure_core_accounts", return_value={})
+        # a branch this tenant has no default cash account for: the resolver
+        # sees no matching row and must refuse, not guess
         with pytest.raises(ValueError, match="branch_id"):
             GLService.get_default_liquidity_account(
                 "cash",
                 tenant_id=sample_tenant.id,
-                branch_id=sample_branch.id,
+                branch_id=999999,
             )
 
     def test_payment_debit_bank_and_default(self, db_session, sample_tenant, sample_branch, mocker):
@@ -1356,7 +1358,7 @@ class TestGlServiceCoverageGaps:
 
     def test_account_code_for_concept_mapping_error_fallback(self, sample_tenant, mocker):
         mocker.patch(
-            "services.gl_account_resolver.resolve_gl_account",
+            "services.gl_service.resolve_gl_account",
             side_effect=GLMappingError(
                 tenant_id=sample_tenant.id,
                 concept_code="SALES_REVENUE",

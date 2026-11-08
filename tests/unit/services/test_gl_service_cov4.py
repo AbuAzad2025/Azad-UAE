@@ -177,11 +177,14 @@ class TestFiscalYear:
         with pytest.raises(ValueError, match="لإغلاقها"):
             FiscalYearService.close_fiscal_year(sample_tenant.id, 2026)
 
-    def test_close_missing_retained_raises(self, db_session, sample_tenant, mocker):
-        from models.gl import GLAccount
+    def test_close_missing_retained_raises(self, db_session, mocker):
+        from tests.factories import TenantFactory
 
-        GLAccount.query.filter_by(tenant_id=sample_tenant.id, code=FiscalYearService.RETAINED_EARNINGS_CODE).delete()
-        db_session.flush()
+        # a tenant with no chart has no retained-earnings account at all -
+        # which is the condition this pins
+        tenant = TenantFactory()
+        db_session.commit()
+
         mocker.patch.object(FiscalYearService, "validate_periods_closed", return_value=[])
         mocker.patch.object(
             FiscalYearService,
@@ -193,8 +196,7 @@ class TestFiscalYear:
             },
         )
         with pytest.raises(ValueError, match="مرحلة"):
-            FiscalYearService.close_fiscal_year(sample_tenant.id, 2026)
-        db_session.rollback()
+            FiscalYearService.close_fiscal_year(tenant.id, 2026)
 
 
 class TestReportsSmoke:

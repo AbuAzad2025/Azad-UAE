@@ -42,12 +42,17 @@ class TestModuleHelpers:
 
 
 class TestGLTreeBuilderBuild:
-    def test_build_creates_core_accounts(self, app, db_session, sample_tenant):
+    def test_build_creates_core_accounts(self, app, db_session):
+        from tests.factories import TenantFactory
+
+        tenant = TenantFactory()
+        db_session.commit()
+
         with app.app_context():
-            report = GLTreeBuilder.build(sample_tenant.id, commit=True)
-            assert report["tenant_id"] == sample_tenant.id
+            report = GLTreeBuilder.build(tenant.id, commit=True)
+            assert report["tenant_id"] == tenant.id
             assert report["created"] or report["updated"] or report["converted"]
-            codes = {a.code for a in GLAccount.query.filter_by(tenant_id=sample_tenant.id).all()}
+            codes = {a.code for a in GLAccount.query.filter_by(tenant_id=tenant.id).all()}
             assert CORE_ACCOUNT_CODES.issubset(codes)
 
     def test_build_with_industry_extension(self, app, db_session, sample_tenant):

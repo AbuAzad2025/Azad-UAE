@@ -74,7 +74,10 @@ def demo_tenant(db_session):
     """
     tenant = TenantFactory()
     db_session.commit()
-    GLService.ensure_core_accounts(tenant_id=tenant.id)
+    from utils.tenanting import without_tenant_scope
+
+    with without_tenant_scope():
+        GLService.ensure_core_accounts(tenant_id=tenant.id)
     db_session.commit()
     return tenant
 
@@ -159,6 +162,9 @@ def demo_gl_accounts(db_session, demo_tenant, app):
     ``uq_gl_accounts_tenant_code``.
     """
     with app.app_context():
-        GLService.ensure_core_accounts(tenant_id=demo_tenant.id)
+        from utils.tenanting import without_tenant_scope
+
+        with without_tenant_scope():
+            GLService.ensure_core_accounts(tenant_id=demo_tenant.id)
         db_session.commit()
     return demo_tenant

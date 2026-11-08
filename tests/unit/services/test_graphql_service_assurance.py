@@ -163,7 +163,7 @@ class TestCreateSaleMutation:
         user = MagicMock(is_authenticated=True, id=42)
         mocker.patch("services.graphql_service.current_user", user)
         mocker.patch("services.graphql_service._require_permission")
-        customer = SimpleNamespace(id=7)
+        customer = SimpleNamespace(id=7, tenant_id=3)
         chain = MagicMock()
         chain.filter_by.return_value.first.return_value = customer
         mocker.patch("services.graphql_service.tenant_query", return_value=chain)
@@ -212,7 +212,7 @@ class TestCreateSaleMutation:
         user = MagicMock(is_authenticated=True, id=1)
         mocker.patch("services.graphql_service.current_user", user)
         mocker.patch("services.graphql_service._require_permission")
-        customer = SimpleNamespace(id=1)
+        customer = SimpleNamespace(id=1, tenant_id=3)
         chain = MagicMock()
         chain.filter_by.return_value.first.return_value = customer
         mocker.patch("services.graphql_service.tenant_query", return_value=chain)

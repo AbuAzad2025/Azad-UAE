@@ -10,9 +10,13 @@ from models.gl import GLAccount
 
 
 def _account(db_session, tenant_id, code, type_="expense"):
-    acct = GLAccount(tenant_id=tenant_id, code=code, name=f"Acct {code}", type=type_)
-    db_session.add(acct)
-    db_session.flush()
+    # the sample tenant now carries its own base chart; reuse the account
+    # the chart created instead of duplicating the codes
+    acct = GLAccount.query.filter_by(tenant_id=tenant_id, code=code).first()
+    if acct is None:
+        acct = GLAccount(tenant_id=tenant_id, code=code, name=f"Acct {code}", type=type_)
+        db_session.add(acct)
+        db_session.flush()
     return acct
 
 

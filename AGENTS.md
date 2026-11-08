@@ -116,6 +116,20 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   file is a real woff2, no stylesheet or template names a third-party font
   host, and every font stack keeps a generic fallback so a font that cannot be
   loaded degrades the type and never the text.
+- **The CI red baseline was repaired in one push (6d3378c3)**: the baseline
+  911f8b94 had been red across routes/services/utils/core/integration/
+  scenarios-a/b/c/coverage-report for weeks, all on one family —
+  GLMappingError "no active GL account mapping" on test tenants that had no
+  provisioned chart, plus the statutory-VAT lock (fallback tenants resolve to
+  PS-16) silently changing fixture totals (e.g. POS checkout expected 75, now
+  78.75; a 0.175 AED drift in the period-close customer reconciliation because
+  the test computed the customer payment with two-decimal rounding while the
+  schema stores three). Fixtures now provision the chart at the right level
+  (function-scoped ``sample_tenant``, the session-wide FK-anchor tenant id=1,
+  unit ``sample_gl_accounts``, integration ``demo_tenant``), POS-style fixtures
+  explicitly opt into enable_tax=False, and the LED delivery gap (LED-26/LED-27
+  never assigned; the two month-end ledger routes added afterwards owed
+  another three) was closed with LED-118..122 through the real routes.
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → e2f3a4b5c6d7` (66 revisions)
@@ -360,11 +374,14 @@ are fixed.
   closing entry (`services/gl_service.py:2023` dates the entry into the
   period it just closed, which `assert_period_open` refuses).
 - `tests/integration/business_scenarios/test_wave8_fx.py` (ADV-49…ADV-60) —
-  **Partly fixed:** the settlement unwind posts now
+  **Fixed:** the settlement unwind posts
   (`revalue_sale_at_settlement` in `models/sale.py`,
-  `revalue_purchase_at_settlement` in `models/payment.py`). **Open:**
-  `revaluate_open_items` has no caller, so no invoice is revalued in
-  production at all.
+  `revalue_purchase_at_settlement` in `models/payment.py`), and
+  `revaluate_open_items` now has a production caller: the month-end route
+  `POST /ledger/fx-revaluation` (`manage_ledger`, idempotent per `YYYY-MM`
+  via `skipped_existing_period`). LED-122 pins the route behaviour through
+  the HTTP layer end-to-end against a planted FX move. The fiscal-year-close
+  dating finding stays open.
 - `docs/AUDIT_CHART_OF_ACCOUNTS.md` — 5 P0, 8 P1, 6 P2 in the chart of
   accounts and the concept mapping. The sharpest one was that under the
   production default `ENABLE_DYNAMIC_GL_MAPPING=True`, 19 concepts the services

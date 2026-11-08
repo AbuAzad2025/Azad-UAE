@@ -8,17 +8,27 @@ from decimal import Decimal
 from services.treasury_service import TreasuryService
 
 
-def test_liquidity_gl_fallback_empty_and_with_accounts(db_session, sample_tenant, sample_branch):
-    out = TreasuryService.get_liquidity_position(sample_tenant.id)
+def test_liquidity_gl_fallback_empty_and_with_accounts(db_session):
+    """Fallback finds no branch liquidity without a branch, and the branch's after provisioning."""
+    from tests.factories import BranchFactory, TenantFactory
+
+    # a tenant with no chart at all - the "fallback finds nothing" case
+    tenant = TenantFactory()
+    db_session.commit()
+
+    out = TreasuryService.get_liquidity_position(tenant.id)
     assert out["account_count"] == 0
     assert out["total_balance"] == 0.0
+
+    branch = BranchFactory(tenant=tenant)
+    db_session.commit()
     from services.gl_service import GLService
 
-    GLService.ensure_core_accounts(tenant_id=sample_tenant.id)
-    out = TreasuryService.get_liquidity_position(sample_tenant.id)
+    GLService.ensure_core_accounts(tenant_id=tenant.id)
+    out = TreasuryService.get_liquidity_position(tenant.id)
     assert out["account_count"] > 0
     assert set(out["kind_summary"]) <= set(TreasuryService.LIQUIDITY_KINDS)
-    out_b = TreasuryService.get_liquidity_position(sample_tenant.id, branch_id=999999)
+    out_b = TreasuryService.get_liquidity_position(tenant.id, branch_id=999999)
     assert out_b["account_count"] == 0
 
 

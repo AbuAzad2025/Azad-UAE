@@ -322,20 +322,23 @@ class TestMissingAndValidate:
         mocker.patch("services.gl_provisioning_service.db.session.get", return_value=None)
         assert GLProvisioningService.get_missing_accounts(1) == []
 
-    def test_get_missing_accounts_lists_gaps(self, db_session, sample_tenant):
+    def test_get_missing_accounts_lists_gaps(self, db_session):
         """Real gap detection, and it shrinks to empty once the tree is built.
 
-        Replaces a mock test that fed a fake empty account list in. The point of
-        the function is what a real tenant is missing, so it is asserted against
-        a real tenant - and against the repair, which is the half that was
-        untested.
+        Repinned against a factory tenant rather than the shared sample tenant:
+        the function's before/after contract only holds on a tenant that was
+        never provisioned.
         """
+        from tests.factories import TenantFactory
 
-        before = GLProvisioningService.get_missing_accounts(sample_tenant.id)
+        tenant = TenantFactory()
+        db_session.commit()
+
+        before = GLProvisioningService.get_missing_accounts(tenant.id)
         assert len(before) > 0, "a fresh tenant should be missing its chart"
 
-        GLProvisioningService.provision_tenant(sample_tenant.id)
-        assert GLProvisioningService.get_missing_accounts(sample_tenant.id) == []
+        GLProvisioningService.provision_tenant(tenant.id)
+        assert GLProvisioningService.get_missing_accounts(tenant.id) == []
 
     def test_get_missing_accounts_includes_industry_templates(self, db_session, sample_tenant):
         """A tenant in a sector that has extension accounts must be reported

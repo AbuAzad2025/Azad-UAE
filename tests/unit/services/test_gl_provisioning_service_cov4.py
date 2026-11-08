@@ -49,19 +49,19 @@ class TestProvisionTenant:
 
 
 class TestModuleMappings:
-    def test_missing_account_error(self, db_session, sample_tenant, mocker):
+    def test_missing_account_error(self, db_session):
         from models.gl_account_registry import GL_MODULE_DEFINITIONS
 
-        # Point one required mapping at a nonexistent code via real call path:
-        # delete all accounts so lookup fails for every concept.
-        GLAccount.query.filter_by(tenant_id=sample_tenant.id).delete()
-        GLAccountMapping.query.filter_by(tenant_id=sample_tenant.id).delete()
-        db_session.flush()
-        result = ProvisionResult(tenant_id=sample_tenant.id)
-        GLProvisioningService._provision_module_mappings(sample_tenant, result)
+        from tests.factories import TenantFactory
+
+        # a fresh tenant without a chart: every required mapping reports its missing account
+        tenant = TenantFactory()
+        db_session.commit()
+
+        result = ProvisionResult(tenant_id=tenant.id)
+        GLProvisioningService._provision_module_mappings(tenant, result)
         assert any("not found" in e for e in result.errors)
         assert len(GL_MODULE_DEFINITIONS) > 0
-        db_session.rollback()
 
     def test_inactive_account_error(self, db_session, sample_tenant, sample_gl_accounts):
 
