@@ -35,6 +35,16 @@ class Customer(db.Model):
     fiscal_position_id = db.Column(
         db.Integer, db.ForeignKey("fiscal_positions.id", ondelete="RESTRICT"), nullable=True, index=True
     )
+    # Optional dual-role link: when this customer is a product-level partner
+    # for the same human as a company-level Partner, point here so both
+    # earnings (per-line commissions + profit distributions) report together.
+    # Same-tenant enforced by PartnerService.link_product_partner.
+    partner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("partners.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     preferred_currency = db.Column(
         db.String(3), default=context_aware_default_currency
@@ -65,6 +75,7 @@ class Customer(db.Model):
     receipts = db.relationship("Receipt", back_populates="customer", lazy="dynamic")
     tenant = db.relationship("Tenant", backref="customers", foreign_keys=[tenant_id])
     fiscal_position = db.relationship("FiscalPosition", foreign_keys=[fiscal_position_id])
+    partner_profile = db.relationship("Partner", foreign_keys=[partner_id])
 
     def __repr__(self):
         return f"<Customer {self.name}>"

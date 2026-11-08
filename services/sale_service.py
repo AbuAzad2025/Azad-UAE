@@ -81,6 +81,50 @@ class SaleService:
             return profit_margin
 
     @staticmethod
+    def _apply_invoice_discount_to_commissions(
+        commission_context,
+        subtotal,
+        total_discount,
+        exchange_rate,
+        currency=None,
+        tenant_id=None,
+    ):
+        """Allocate the invoice-level discount across commission entries.
+
+        A sale-level discount is computed after the lines, so each line's
+        commission context (entry, line total, margin, percentage, base) is
+        reduced by its pro-rata share of the discount before the GL posting
+        in ``fulfill_sale`` reads the entries. Shipping is excluded on
+        purpose: it is a service charge, not product margin.
+        """
+        from decimal import ROUND_HALF_UP, Decimal
+
+        total_discount = Decimal(str(total_discount or 0))
+        subtotal = Decimal(str(subtotal or 0))
+        if total_discount <= Decimal("0") or subtotal <= Decimal("0"):
+            return
+        for entry, line_total_dec, profit_margin, pct, base_amount in commission_context:
+            share = (line_total_dec / subtotal * total_discount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            converted_share = SaleService._commission_base_aed(
+                share,
+                exchange_rate,
+                currency=currency,
+                tenant_id=tenant_id,
+            )
+            new_base = base_amount - converted_share
+            if new_base < Decimal("0"):
+                new_base = Decimal("0")
+            new_base = new_base.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            entry.base_amount_aed = new_base
+            new_margin = profit_margin - share
+            if new_margin < Decimal("0"):
+                new_margin = Decimal("0")
+            entry.profit_margin = new_margin.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            entry.commission_amount_aed = (new_base * pct / Decimal("100")).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+
+    @staticmethod
     def create_sale(
         customer,
         seller,
@@ -230,6 +274,7 @@ class SaleService:
             db.session.flush()  # Get ID for lines
 
             subtotal = Decimal("0")
+            commission_context = []
 
             for line_data in lines_data:
                 product = line_data["product"]
@@ -426,6 +471,7 @@ class SaleService:
                         commission_amount_aed=commission_amount,
                     )
                     db.session.add(entry)
+                    commission_context.append((entry, line_total_dec, profit_margin, pct, base_amount))
 
                 # --- Link Serials to Sale Line ---
                 if product.has_serial_number:
@@ -452,10 +498,23 @@ class SaleService:
 
             # Phase 1 promotion engine: record auto-applied promotional
             # discounts distinctly from the manual discount_amount.
+            promo_total = Decimal("0")
             if promotion_evaluation:
                 promo_total = PromotionService.record_applied_promotions(sale, promotion_evaluation)
                 if promo_total < Decimal("0") or promo_total > sale.subtotal:
                     raise ValueError(gettext("قيمة الخصم الترويجي غير صالحة"))
+
+            # Product-partner commissions are computed per line before the
+            # invoice-level discount exists; re-base them on the discounted
+            # margin so a discounted line does not inflate the payout.
+            SaleService._apply_invoice_discount_to_commissions(
+                commission_context,
+                subtotal,
+                discount_decimal + promo_total,
+                exchange_rate,
+                currency=currency,
+                tenant_id=tenant_id,
+            )
 
             sale.calculate_totals()
 
@@ -1326,6 +1385,20 @@ class SaleService:
         if sale.status == "cancelled":
             raise ValueError(gettext("الفاتورة ملغاة بالفعل"))
 
+        # A sale with a non-rejected return has already reversed its revenue,
+        # COGS and partner commissions proportionally; cancelling it too would
+        # reverse the commission leg a second time. Use the return flow only.
+        from models import ProductReturn
+
+        has_returns = (
+            ProductReturn.query.filter_by(sale_id=sale.id, tenant_id=sale.tenant_id)
+            .filter(ProductReturn.status != "rejected")
+            .count()
+            > 0
+        )
+        if has_returns:
+            raise ValueError(gettext("لا يمكن إلغاء فاتورة لها مرتجعات — استخدم مسار المرتجع فقط."))
+
         from models import Payment
 
         confirmed_payments = Payment.query.filter_by(
@@ -1378,6 +1451,12 @@ class SaleService:
                     reference_type=GLRef.SALE_COGS,
                     reference_id=sale.id,
                     description=f"Reverse COGS {sale.sale_number} (Cancelled)",
+                    tenant_id=(sale.tenant_id if sale is not None else None),
+                )
+                GLService.reverse_entry(
+                    reference_type=GLRef.PARTNER_COMMISSION,
+                    reference_id=sale.id,
+                    description=f"Reverse Partner Commissions {sale.sale_number} (Cancelled)",
                     tenant_id=(sale.tenant_id if sale is not None else None),
                 )
             except Exception as _e:

@@ -50,6 +50,64 @@ def _parse_date(s: str | None) -> date:
     return datetime.strptime(s, "%Y-%m-%d").date()
 
 
+def _parse_partner_financials(form, existing=None):
+    """Parse and range-check the financial columns of a partner.
+
+    The tenant super admin (or the owner) may set any percentage, but a
+    share must stay a percentage: each of profit share, expense share and
+    loss share sits in [0, 100]; investment, fixed and threshold are
+    non-negative amounts. ``existing`` lets edits re-read untouched fields.
+    """
+
+    def _field(name, default="0"):
+        raw = form.get(name, None)
+        if raw is None or raw == "":
+            raw = getattr(existing, name, default) if existing is not None else default
+        try:
+            return Decimal(str(raw))
+        except Exception:
+            return Decimal(default)
+
+    try:
+        investment = _field("investment_amount")
+        share = _field("share_percentage")
+        fixed = _field("fixed_monthly_amount")
+        expense = _field("expense_share_percentage")
+        loss = _field("loss_share_percentage")
+        threshold = _field("min_profit_threshold")
+    except Exception:
+        return None, gettext("قيمة مالية غير صحيحة.")
+    if not (Decimal("0") <= share <= Decimal("100")):
+        return None, gettext("نسبة الربح يجب أن تكون بين 0 و 100.")
+    if not (Decimal("0") <= expense <= Decimal("100")):
+        return None, gettext("نسبة تحمل المصاريف يجب أن تكون بين 0 و 100.")
+    if not (Decimal("0") <= loss <= Decimal("100")):
+        return None, gettext("نسبة تحمل الخسارة يجب أن تكون بين 0 و 100.")
+    if investment < Decimal("0") or fixed < Decimal("0") or threshold < Decimal("0"):
+        return None, gettext("المبالغ يجب ألا تكون سالبة.")
+    return {
+        "investment_amount": investment,
+        "share_percentage": share,
+        "fixed_monthly_amount": fixed,
+        "expense_share_percentage": expense,
+        "loss_share_percentage": loss,
+        "min_profit_threshold": threshold,
+    }, None
+
+
+def _scope_share_total_exceeds(tenant_id, scope_type, scope_id, new_share, exclude_id=None) -> bool:
+    """True when one more partner would push a scope's shares past 100%."""
+    q = Partner.query.filter_by(tenant_id=tenant_id, is_active=True, scope_type=scope_type)
+    if scope_type in ("company",):
+        q = q.filter(Partner.scope_id.is_(None))
+    elif scope_id is not None:
+        q = q.filter_by(scope_id=scope_id)
+    if exclude_id is not None:
+        q = q.filter(Partner.id != exclude_id)
+    total = sum(Decimal(str(p.share_percentage or 0)) for p in q.all())
+    return total + Decimal(str(new_share or 0)) > Decimal("100")
+
+
 # ── List ─────────────────────────────────────────────────────
 
 
@@ -82,10 +140,17 @@ def create():
 
     if request.method == "POST":
         try:
+            financials, error = _parse_partner_financials(request.form)
+            if error:
+                flash(gettext(f"❌ خطأ: {error}"), "danger")
+                return render_template("partners/create.html", branches=branches, warehouses=warehouses)
             scope_type = request.form.get("scope_type", "company")
             scope_id = request.form.get("scope_id", type=int) or None
             if scope_type == "company":
                 scope_id = None
+            if _scope_share_total_exceeds(tid, scope_type, scope_id, financials["share_percentage"]):
+                flash(gettext("❌ مجموع نسب أرباح الشركاء في هذا النطاق يتجاوز 100%."), "danger")
+                return render_template("partners/create.html", branches=branches, warehouses=warehouses)
 
             partner = Partner(
                 tenant_id=tid,
@@ -99,12 +164,12 @@ def create():
                 email=request.form.get("email", "").strip() or None,
                 address=request.form.get("address", "").strip() or None,
                 id_number=request.form.get("id_number", "").strip() or None,
-                investment_amount=Decimal(str(request.form.get("investment_amount", "0") or "0")),
-                share_percentage=Decimal(str(request.form.get("share_percentage", "0") or "0")),
-                fixed_monthly_amount=Decimal(str(request.form.get("fixed_monthly_amount", "0") or "0")),
-                expense_share_percentage=Decimal(str(request.form.get("expense_share_percentage", "0") or "0")),
-                loss_share_percentage=Decimal(str(request.form.get("loss_share_percentage", "0") or "0")),
-                min_profit_threshold=Decimal(str(request.form.get("min_profit_threshold", "0") or "0")),
+                investment_amount=financials["investment_amount"],
+                share_percentage=financials["share_percentage"],
+                fixed_monthly_amount=financials["fixed_monthly_amount"],
+                expense_share_percentage=financials["expense_share_percentage"],
+                loss_share_percentage=financials["loss_share_percentage"],
+                min_profit_threshold=financials["min_profit_threshold"],
                 notes=request.form.get("notes", "").strip() or None,
                 is_active=True,
             )
@@ -146,6 +211,7 @@ def view(**kwargs):
 def edit(**kwargs):
     record_id = kwargs.pop("id")
     partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
+    tid = _tenant_id()
     from models import Branch, Warehouse
 
     branches = tenant_query(Branch).all()
@@ -153,10 +219,19 @@ def edit(**kwargs):
 
     if request.method == "POST":
         try:
+            financials, error = _parse_partner_financials(request.form, existing=partner)
+            if error:
+                flash(gettext(f"❌ خطأ: {error}"), "danger")
+                return render_template("partners/edit.html", partner=partner, branches=branches, warehouses=warehouses)
             scope_type = request.form.get("scope_type", partner.scope_type)
             scope_id = request.form.get("scope_id", type=int) or None
             if scope_type == "company":
                 scope_id = None
+            if _scope_share_total_exceeds(
+                tid, scope_type, scope_id, financials["share_percentage"], exclude_id=record_id
+            ):
+                flash(gettext("❌ مجموع نسب أرباح الشركاء في هذا النطاق يتجاوز 100%."), "danger")
+                return render_template("partners/edit.html", partner=partner, branches=branches, warehouses=warehouses)
 
             partner.name = request.form.get("name", partner.name).strip()
             partner.name_en = request.form.get("name_en", partner.name_en).strip() or None
@@ -168,12 +243,12 @@ def edit(**kwargs):
             partner.email = request.form.get("email", "").strip() or None
             partner.address = request.form.get("address", "").strip() or None
             partner.id_number = request.form.get("id_number", "").strip() or None
-            partner.investment_amount = Decimal(str(request.form.get("investment_amount", "0") or "0"))
-            partner.share_percentage = Decimal(str(request.form.get("share_percentage", "0") or "0"))
-            partner.fixed_monthly_amount = Decimal(str(request.form.get("fixed_monthly_amount", "0") or "0"))
-            partner.expense_share_percentage = Decimal(str(request.form.get("expense_share_percentage", "0") or "0"))
-            partner.loss_share_percentage = Decimal(str(request.form.get("loss_share_percentage", "0") or "0"))
-            partner.min_profit_threshold = Decimal(str(request.form.get("min_profit_threshold", "0") or "0"))
+            partner.investment_amount = financials["investment_amount"]
+            partner.share_percentage = financials["share_percentage"]
+            partner.fixed_monthly_amount = financials["fixed_monthly_amount"]
+            partner.expense_share_percentage = financials["expense_share_percentage"]
+            partner.loss_share_percentage = financials["loss_share_percentage"]
+            partner.min_profit_threshold = financials["min_profit_threshold"]
             partner.is_active = request.form.get("is_active") == "on"
             partner.notes = request.form.get("notes", "").strip() or None
             partner.updated_at = datetime.now(UTC)
@@ -342,3 +417,88 @@ def api_preview_pnl():
 
     pnl = PartnerService.calculate_scope_profit(int(tid or 0), start, end, scope, scope_id)
     return success_response(data=pnl)
+
+
+# ── API: dual-role (company partner + product partner) ────────
+
+
+@partners_bp.route("/<int:id>/unified")
+@login_required
+@permission_required("view_reports")
+def api_unified(**kwargs):
+    """Combined one-person statement: company distributions + product commissions."""
+    record_id = kwargs.pop("id")
+    partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
+    tid = _tenant_id()
+    unified = PartnerService.get_unified_statement(partner.id, tid)
+    payload = {
+        "partner_id": unified["partner"].id,
+        "partner_name": unified["partner"].name,
+        "current_balance": unified["current_balance"],
+        "company_total": unified["company_total"],
+        "product_commissions_total": unified["product_commissions_total"],
+        "combined_total": unified["combined_total"],
+        "linked_customers": unified["linked_customers"],
+        "distributions": [
+            {
+                "id": d.id,
+                "period_start": str(d.period_start),
+                "period_end": str(d.period_end),
+                "scope_type": d.scope_type,
+                "net_profit": float(d.net_profit or 0),
+                "share_amount": float(d.share_amount or 0),
+                "net_due": float(d.net_due or 0),
+                "status": d.status,
+            }
+            for d in unified["distributions"]
+        ],
+    }
+    return success_response(data=payload)
+
+
+@partners_bp.route("/<int:id>/link-customer", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def link_customer(**kwargs):
+    """Link a product-level partner (Customer) to this company-level Partner."""
+    record_id = kwargs.pop("id")
+    partner = tenant_query(Partner).filter_by(id=record_id).first_or_404()
+    customer_id = request.form.get("customer_id", type=int) or request.get_json(silent=True, force=False)
+    if isinstance(customer_id, dict):
+        customer_id = customer_id.get("customer_id")
+    if not customer_id:
+        flash(gettext("❌ حدّد العميل الشريك أولاً."), "danger")
+        return redirect(url_for("partners.view", id=record_id))
+    try:
+        with atomic_transaction("partner_link_customer"):
+            ok = PartnerService.link_product_partner(partner.id, int(customer_id), tenant_id=_tenant_id())
+        if ok:
+            flash(gettext("✅ تم ربط الشريك المنتجي بشريك الشركة."), "success")
+        else:
+            flash(gettext("❌ تعذر الربط (النطاق أو النوع غير صالح)."), "danger")
+    except Exception as e:
+        flash(gettext(f"❌ خطأ: {e}"), "danger")
+    return redirect(url_for("partners.view", id=record_id))
+
+
+@partners_bp.route("/<int:id>/unlink-customer", methods=["POST"])
+@login_required
+@permission_required("manage_users")
+def unlink_customer(**kwargs):
+    """Remove a product-level partner link (documents stay untouched)."""
+    record_id = kwargs.pop("id")
+    tenant_query(Partner).filter_by(id=record_id).first_or_404()
+    customer_id = request.form.get("customer_id", type=int)
+    if not customer_id:
+        flash(gettext("❌ حدّد العميل الشريك أولاً."), "danger")
+        return redirect(url_for("partners.view", id=record_id))
+    try:
+        with atomic_transaction("partner_unlink_customer"):
+            ok = PartnerService.unlink_product_partner(int(customer_id), tenant_id=_tenant_id())
+        if ok:
+            flash(gettext("✅ تم فك الربط."), "success")
+        else:
+            flash(gettext("❌ تعذر فك الربط."), "danger")
+    except Exception as e:
+        flash(gettext(f"❌ خطأ: {e}"), "danger")
+    return redirect(url_for("partners.view", id=record_id))

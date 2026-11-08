@@ -33,6 +33,9 @@ class PartnerProfitDistribution(db.Model):
     total_revenue = db.Column(db.Numeric(15, 3), default=0)
     total_cogs = db.Column(db.Numeric(15, 3), default=0)
     total_expenses = db.Column(db.Numeric(15, 3), default=0)
+    # Product-level commissions accrued for the scope in this period (net of
+    # return reversals) — deducted from the distributable net profit.
+    total_commissions = db.Column(db.Numeric(15, 3), default=0, nullable=False, server_default="0")
     net_profit = db.Column(db.Numeric(15, 3), default=0)
 
     share_percentage = db.Column(db.Numeric(5, 2), default=0)

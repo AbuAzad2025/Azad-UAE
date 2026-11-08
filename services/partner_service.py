@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
+from sqlalchemy import case as sa_case
 from sqlalchemy import func
 
 from extensions import db
@@ -16,6 +17,13 @@ class PartnerService:
     # ── Period aggregation ──────────────────────────────────────
 
     @staticmethod
+    def _months_in_period(period_start: date, period_end: date) -> int:
+        """Calendar months touched by an inclusive period (minimum 1)."""
+        if period_end < period_start:
+            return 1
+        return max((period_end.year - period_start.year) * 12 + (period_end.month - period_start.month) + 1, 1)
+
+    @staticmethod
     def get_scope_revenue(
         tenant_id: int,
         period_start: date,
@@ -23,13 +31,33 @@ class PartnerService:
         scope_type: str = "company",
         scope_id: int | None = None,
     ) -> Decimal:
+        """Net revenue (VAT excluded) in base currency for a scope.
+
+        VAT is a liability, never revenue, so it is stripped per row:
+        ``amount_aed - tax_amount * exchange_rate`` (same linear conversion
+        the sale used to compute ``amount_aed``). Discounts are already
+        netted in ``amount_aed`` at sale time.
+        """
         from models import Sale
 
         if scope_type == "warehouse" and scope_id:
             from models import SaleLine
 
+            # Net of VAT: prices already including VAT are spread back with
+            # the sale's own statutory rate; otherwise the tax was extra.
             q = (
-                db.session.query(func.sum(SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1)))
+                db.session.query(
+                    func.sum(
+                        (SaleLine.line_total * func.coalesce(Sale.exchange_rate, 1))
+                        / sa_case(
+                            (
+                                Sale.prices_include_vat.is_(True),
+                                1 + func.coalesce(Sale.tax_rate, 0) / 100,
+                            ),
+                            else_=1,
+                        )
+                    )
+                )
                 .select_from(SaleLine)
                 .join(Sale, SaleLine.sale_id == Sale.id)
                 .filter(
@@ -42,7 +70,8 @@ class PartnerService:
             )
             return q.scalar() or Decimal("0")
 
-        q = db.session.query(func.sum(Sale.amount_aed)).filter(
+        net_amount = Sale.amount_aed - Sale.tax_amount * func.coalesce(Sale.exchange_rate, 1)
+        q = db.session.query(func.sum(net_amount)).filter(
             Sale.tenant_id == tenant_id,
             Sale.status == "confirmed",
             func.date(Sale.sale_date) >= period_start,
@@ -105,6 +134,73 @@ class PartnerService:
         return result
 
     @staticmethod
+    def get_scope_commissions(
+        tenant_id: int,
+        period_start: date,
+        period_end: date,
+        scope_type: str = "company",
+        scope_id: int | None = None,
+    ) -> Decimal:
+        """Product commissions accrued for a scope in a period, net of returns.
+
+        Product commissions are a real cost of the sale (Dr COMMISSION_EXPENSE
+        at order time), so a company-level distribution must not allocate a
+        profit that this leg already took. Return reversals that landed in the
+        same period reduce the figure by the same proportion the return
+        journal used.
+        """
+        from models import PartnerCommissionEntry, Sale
+
+        q = (
+            db.session.query(func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), Decimal("0")))
+            .join(Sale, PartnerCommissionEntry.sale_id == Sale.id)
+            .filter(
+                PartnerCommissionEntry.tenant_id == tenant_id,
+                Sale.status == "confirmed",
+                func.date(Sale.sale_date) >= period_start,
+                func.date(Sale.sale_date) <= period_end,
+            )
+        )
+        if scope_type == "branch" and scope_id:
+            q = q.filter(Sale.branch_id == scope_id)
+        elif scope_type == "warehouse" and scope_id:
+            q = q.filter(Sale.warehouse_id == scope_id)
+        gross = q.scalar() or Decimal("0")
+
+        from models import ProductReturn, ProductReturnLine, SaleLine
+
+        # Returns in the same period claw back their proportional share.
+        return_rows = (
+            db.session.query(
+                ProductReturnLine.quantity, SaleLine.quantity, PartnerCommissionEntry.commission_amount_aed
+            )
+            .join(ProductReturn, ProductReturn.id == ProductReturnLine.return_id)
+            .join(SaleLine, SaleLine.id == ProductReturnLine.sale_line_id)
+            .join(
+                PartnerCommissionEntry,
+                PartnerCommissionEntry.sale_line_id == SaleLine.id,
+            )
+            .filter(
+                ProductReturn.tenant_id == tenant_id,
+                ProductReturn.status != "rejected",
+                func.date(ProductReturn.return_date) >= period_start,
+                func.date(ProductReturn.return_date) <= period_end,
+            )
+        )
+        reversed_total = Decimal("0")
+        for ret_qty, sold_qty, commission in return_rows.all():
+            sold = Decimal(str(sold_qty or 0))
+            returned = Decimal(str(ret_qty or 0))
+            if sold <= Decimal("0") or returned <= Decimal("0"):
+                continue
+            ratio = returned / sold
+            if ratio > Decimal("1"):
+                ratio = Decimal("1")
+            reversed_total += Decimal(str(commission or 0)) * ratio
+        net = gross - reversed_total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        return net if net > Decimal("0") else Decimal("0")
+
+    @staticmethod
     def calculate_scope_profit(
         tenant_id: int,
         period_start: date,
@@ -116,12 +212,14 @@ class PartnerService:
         revenue = PartnerService.get_scope_revenue(tenant_id, period_start, period_end, scope_type, scope_id)
         cogs = PartnerService.get_scope_cogs(tenant_id, period_start, period_end, scope_type, scope_id)
         expenses = PartnerService.get_scope_expenses(tenant_id, period_start, period_end, scope_type, scope_id)
+        commissions = PartnerService.get_scope_commissions(tenant_id, period_start, period_end, scope_type, scope_id)
         gross_profit = revenue - cogs
-        net_profit = gross_profit - expenses
+        net_profit = gross_profit - expenses - commissions
         return {
             "revenue": float(revenue),
             "cogs": float(cogs),
             "expenses": float(expenses),
+            "commissions": float(commissions),
             "gross_profit": float(gross_profit),
             "net_profit": float(net_profit),
         }
@@ -138,7 +236,10 @@ class PartnerService:
         """Create draft distributions for ALL active partners for the period.
 
         Validates:
-        - Total profit-share percentages across partners ≤ 100 %
+        - Total profit-share percentages per scope ≤ 100 %
+          (a scope is ``(scope_type, scope_id)`` — a company-level 100%
+          partner and a branch-level 100% partner hold different scopes
+          and must not block each other)
         - Loss-sharing percentages are set when net profit < 0
         - Each partner's scope P&L can be resolved
         """
@@ -152,9 +253,18 @@ class PartnerService:
         if not partners:
             return []
 
-        total_share_pct = sum(Decimal(str(p.share_percentage or 0)) for p in partners)
-        if total_share_pct > Decimal("100"):
-            raise ValueError(gettext(f"إجمالي نسب الأرباح ({total_share_pct}%) يتجاوز 100%"))
+        scope_totals: dict[tuple[str, int | None], Decimal] = {}
+        for p in partners:
+            key = (getattr(p, "scope_type", "company") or "company", getattr(p, "scope_id", None))
+            scope_totals[key] = scope_totals.get(key, Decimal("0")) + Decimal(
+                str(getattr(p, "share_percentage", 0) or 0)
+            )
+        for (scope_type, scope_id), total_share_pct in scope_totals.items():
+            if total_share_pct > Decimal("100"):
+                scope_label = f"{scope_type}/{scope_id}"
+                raise ValueError(
+                    gettext(f"إجمالي نسب الأرباح في النطاق ({scope_label}) يتجاوز 100%: {total_share_pct}%")
+                )
 
         distribution_ids = []
         for partner in partners:
@@ -185,11 +295,16 @@ class PartnerService:
 
             net_profit = Decimal(str(pnl["net_profit"]))
             total_expenses_dec = Decimal(str(pnl["expenses"]))
+            total_commissions_dec = Decimal(str(pnl.get("commissions", 0) or 0))
 
             share_pct = Decimal(str(partner.share_percentage or 0))
             expense_pct = Decimal(str(partner.expense_share_percentage or 0))
             loss_pct = Decimal(str(partner.loss_share_percentage or 0))
-            fixed = Decimal(str(partner.fixed_monthly_amount or 0))
+            # The fixed amount is monthly: scale it by the number of months
+            # the distribution period spans so a quarter pays three months.
+            fixed = Decimal(str(partner.fixed_monthly_amount or 0)) * Decimal(
+                PartnerService._months_in_period(period_start, period_end)
+            )
             threshold = Decimal(str(partner.min_profit_threshold or 0))
 
             share_amount = Decimal("0")
@@ -224,6 +339,7 @@ class PartnerService:
                 total_revenue=pnl["revenue"],
                 total_cogs=pnl["cogs"],
                 total_expenses=pnl["expenses"],
+                total_commissions=total_commissions_dec,
                 net_profit=pnl["net_profit"],
                 share_percentage=share_pct,
                 share_amount=share_amount,
@@ -249,6 +365,12 @@ class PartnerService:
         return distribution_ids
 
     # ── Distribution lifecycle ──────────────────────────────────
+
+    @staticmethod
+    def _distribution_branch(tenant_id) -> int | None:
+        from utils.tax_settings import _resolve_main_branch
+
+        return _resolve_main_branch(tenant_id)
 
     @staticmethod
     def approve_distribution(dist_id: int, approved_by: int, tenant_id: int | None = None) -> bool:
@@ -290,6 +412,65 @@ class PartnerService:
                 )
                 tx.balance_after = new_bal
 
+            # Gl accrual: credit the partner's current account so the GL and
+            # the partner ledger agree, instead of only debiting at payment
+            # time (which left the GL partner account permanently short).
+            # Positive entitlements accrue a commission expense; a loss share
+            # nets against the same expense (the partner funds the loss).
+            from services.gl_posting import post_or_fail
+            from services.gl_service import GLService
+            from utils.gl_reference_types import GLRef
+
+            amt = Decimal(str(abs(net))).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            try:
+                branch_id = PartnerService._distribution_branch(dist.tenant_id)
+            except Exception:
+                branch_id = None
+            partner_account = GLService.get_account_code_for_concept(
+                "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id
+            )
+            commission_account = GLService.get_account_code_for_concept(
+                "COMMISSION_EXPENSE", tenant_id=dist.tenant_id, branch_id=branch_id
+            )
+            if net > 0:
+                lines = [
+                    {
+                        "account": commission_account,
+                        "concept_code": "COMMISSION_EXPENSE",
+                        "debit": amt,
+                        "description": gettext(f"استحقاق توزيع شريك #{dist.id}"),
+                    },
+                    {
+                        "account": partner_account,
+                        "concept_code": "PARTNER_CURRENT_ACCOUNT",
+                        "credit": amt,
+                        "description": gettext(f"استحقاق توزيع شريك #{dist.id}"),
+                    },
+                ]
+            else:
+                lines = [
+                    {
+                        "account": partner_account,
+                        "concept_code": "PARTNER_CURRENT_ACCOUNT",
+                        "debit": amt,
+                        "description": gettext(f"تحميل خسارة شريك #{dist.id}"),
+                    },
+                    {
+                        "account": commission_account,
+                        "concept_code": "COMMISSION_EXPENSE",
+                        "credit": amt,
+                        "description": gettext(f"تحميل خسارة شريك #{dist.id}"),
+                    },
+                ]
+            post_or_fail(
+                lines,
+                description=gettext(f"استحقاق توزيع شريك #{dist.id}"),
+                reference_type=GLRef.PARTNER_DISTRIBUTION,
+                reference_id=dist.id,
+                tenant_id=dist.tenant_id,
+                branch_id=branch_id,
+            )
+
         try:
             db.session.flush()
         except Exception:
@@ -313,11 +494,9 @@ class PartnerService:
 
         dist.status = "paid"
         net = float(dist.net_due)
-        if net != 0:
+        if net > 0:
             amount = abs(net)
-            from utils.tax_settings import _resolve_main_branch
-
-            branch_id = _resolve_main_branch(dist.tenant_id)
+            branch_id = PartnerService._distribution_branch(dist.tenant_id)
             try:
                 partner_account = GLService.get_account_code_for_concept(
                     "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id
@@ -352,6 +531,31 @@ class PartnerService:
                 tenant_id=dist.tenant_id,
                 branch_id=branch_id,
             )
+            # Settle the partner ledger: payment reduces the accrued balance
+            # and is written to the statement so current_balance, the
+            # transaction ledger and the GL all agree.
+            from models import Partner, PartnerTransaction
+
+            partner = db.session.get(Partner, dist.partner_id)
+            if partner:
+                amt = Decimal(str(amount)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                new_bal = Decimal(str(partner.current_balance or 0)) - amt
+                tx = PartnerTransaction(
+                    tenant_id=dist.tenant_id,
+                    partner_id=dist.partner_id,
+                    distribution_id=dist.id,
+                    transaction_type="withdrawal",
+                    amount=-amt,
+                    amount_base=-amt,
+                    balance_after=new_bal,
+                    transaction_date=datetime.now(UTC).date(),
+                    notes=gettext(f"دفع توزيع {dist.period_start} – {dist.period_end}"),
+                )
+                db.session.add(tx)
+                partner.current_balance = new_bal
+                partner.total_withdrawals = Decimal(str(partner.total_withdrawals or 0)) + amt
+        # A negative (loss) entitlement is absorbed at accrual time — there
+        # is no cash leg, so marking it paid only closes the lifecycle.
         try:
             db.session.flush()
         except Exception:
@@ -526,6 +730,97 @@ class PartnerService:
         latest_txs = txs_q.order_by(PartnerTransaction.transaction_date.desc()).limit(20).all()
 
         return latest_dists, latest_txs
+
+    @staticmethod
+    def link_product_partner(partner_id: int, customer_id: int, tenant_id: int | None = None) -> bool:
+        """Link a product-level partner (Customer) to a company-level Partner.
+
+        The same human can hold both roles; this records that fact so the
+        unified statement can report both earnings streams together. The link
+        is tenant-scoped: a customer from another tenant can never attach.
+        """
+        from models import Customer, Partner
+
+        partner = db.session.get(Partner, partner_id)
+        customer = db.session.get(Customer, customer_id)
+        if not partner or not customer:
+            return False
+        if tenant_id is not None and partner.tenant_id != tenant_id:
+            return False
+        if customer.tenant_id != partner.tenant_id:
+            return False
+        if customer.customer_type not in ("partner", "merchant"):
+            return False
+        customer.partner_id = partner.id
+        try:
+            db.session.flush()
+        except Exception:
+            logger.exception("Failed to flush product-partner link")
+            raise
+        return True
+
+    @staticmethod
+    def unlink_product_partner(customer_id: int, tenant_id: int | None = None) -> bool:
+        from models import Customer
+
+        customer = db.session.get(Customer, customer_id)
+        if not customer:
+            return False
+        if tenant_id is not None and customer.tenant_id != tenant_id:
+            return False
+        customer.partner_id = None
+        try:
+            db.session.flush()
+        except Exception:
+            logger.exception("Failed to flush product-partner unlink")
+            raise
+        return True
+
+    @staticmethod
+    def get_unified_statement(partner_id: int, tenant_id: int | None = None) -> dict:
+        """One-person view mixing both roles.
+
+        Company-level earnings (distributions + current balance) plus
+        product-level earnings (per-line commissions of every linked
+        customer), tenant-scoped. Returns amounts in base currency; a partner
+        with no linked customer still returns their company figures alone.
+        """
+        from models import Customer, Partner, PartnerCommissionEntry, PartnerProfitDistribution
+
+        partner = db.session.get(Partner, partner_id)
+        if not partner:
+            return {}
+        if tenant_id is not None and partner.tenant_id != tenant_id:
+            return {}
+
+        dists = (
+            PartnerProfitDistribution.query.filter_by(partner_id=partner.id, tenant_id=partner.tenant_id)
+            .order_by(PartnerProfitDistribution.period_start.desc())
+            .all()
+        )
+        linked_customers = Customer.query.filter_by(partner_id=partner.id, tenant_id=partner.tenant_id).all()
+        customer_ids = [c.id for c in linked_customers]
+        product_commissions = Decimal("0")
+        if customer_ids:
+            product_commissions = db.session.query(
+                func.coalesce(func.sum(PartnerCommissionEntry.commission_amount_aed), Decimal("0"))
+            ).filter(
+                PartnerCommissionEntry.tenant_id == partner.tenant_id,
+                PartnerCommissionEntry.partner_customer_id.in_(customer_ids),
+            ).scalar() or Decimal("0")
+        company_total = sum((Decimal(str(d.share_amount or 0)) for d in dists), Decimal("0"))
+        return {
+            "partner": partner,
+            "distributions": dists,
+            "linked_customers": [
+                {"id": c.id, "name": c.name, "customer_type": c.customer_type} for c in linked_customers
+            ],
+            "company_total": float(company_total),
+            "current_balance": float(partner.current_balance or 0),
+            "product_commissions_total": float(product_commissions),
+            # Lifetime earned across both roles (entitlements, not cash).
+            "combined_total": float(company_total + product_commissions),
+        }
 
     @staticmethod
     def list_distributions(tid, status=""):

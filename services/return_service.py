@@ -7,6 +7,7 @@ from flask_babel import gettext
 
 from extensions import db
 from models import (
+    PartnerCommissionEntry,
     Product,
     ProductReturn,
     ProductReturnLine,
@@ -50,6 +51,32 @@ class ReturnService:
         if amount < 0:
             raise ValueError(f"{field_name} cannot be negative.")
         return amount
+
+    @staticmethod
+    def _commission_reversal_total(sale_line, quantity, tenant_id) -> Decimal:
+        """Partner commission for the returned share of a sale line.
+
+        Each ``PartnerCommissionEntry`` was computed on the whole line, so a
+        partial return reverses the same proportion.
+        """
+        try:
+            sold_qty = Decimal(str(sale_line.quantity or 0))
+            ret_qty = Decimal(str(quantity or 0))
+        except Exception:
+            return Decimal("0")
+        if sold_qty <= Decimal("0") or ret_qty <= Decimal("0"):
+            return Decimal("0")
+        ratio = ret_qty / sold_qty
+        if ratio > Decimal("1"):
+            ratio = Decimal("1")
+        total = Decimal("0")
+        entries = PartnerCommissionEntry.query.filter_by(
+            sale_line_id=sale_line.id,
+            tenant_id=tenant_id,
+        ).all()
+        for entry in entries or []:
+            total += Decimal(str(entry.commission_amount_aed or 0)) * ratio
+        return total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod
     def _validate_sale_access(sale, user=None):
@@ -161,6 +188,10 @@ class ReturnService:
             revenue_lines = []
             cost_lines = []
             lines_added = 0
+            # Partner commissions reverse in the same proportion as the
+            # returned quantity; the journal is posted once, after the
+            # revenue/COGS legs, with the return as its reference.
+            total_commission_reversal = Decimal("0")
 
             for line_data in return_lines_data:
                 sale_line_id = line_data.get("sale_line_id")
@@ -283,6 +314,8 @@ class ReturnService:
                 )
                 db.session.add(return_line)
                 lines_added += 1
+
+                total_commission_reversal += ReturnService._commission_reversal_total(sale_line, quantity, tenant_id)
 
                 if is_good:
                     StockService.create_movement(
@@ -571,6 +604,44 @@ class ReturnService:
                         f"عكس تكلفة مرتجع بيع {product_return.return_number} للبيع {sale.sale_number} (Sales Return COGS)"
                     ),
                     reference_type=GLRef.PRODUCT_RETURN,
+                    reference_id=product_return.id,
+                    exchange_rate=1.0,
+                    branch_id=product_return.branch_id,
+                    user_id=processed_by,
+                    tenant_id=tenant_id,
+                )
+
+            if total_commission_reversal > Decimal("0"):
+                GLService.ensure_core_accounts(tenant_id=tenant_id)
+                post_or_fail(
+                    lines=[
+                        {
+                            "account": GLService.get_account_code_for_concept(
+                                "PARTNER_CURRENT_ACCOUNT",
+                                branch_id=product_return.branch_id,
+                                tenant_id=tenant_id,
+                            ),
+                            "concept_code": "PARTNER_CURRENT_ACCOUNT",
+                            "debit": total_commission_reversal,
+                            "credit": 0,
+                            "description": gettext(f"عكس عمولة شريك مرتجع بيع {product_return.return_number}"),
+                        },
+                        {
+                            "account": GLService.get_account_code_for_concept(
+                                "COMMISSION_EXPENSE",
+                                branch_id=product_return.branch_id,
+                                tenant_id=tenant_id,
+                            ),
+                            "concept_code": "COMMISSION_EXPENSE",
+                            "debit": 0,
+                            "credit": total_commission_reversal,
+                            "description": gettext(f"عكس عمولة شريك مرتجع بيع {product_return.return_number}"),
+                        },
+                    ],
+                    description=gettext(
+                        f"عكس عمولة شريك مرتجع بيع {product_return.return_number} للبيع {sale.sale_number}"
+                    ),
+                    reference_type=GLRef.PARTNER_COMMISSION,
                     reference_id=product_return.id,
                     exchange_rate=1.0,
                     branch_id=product_return.branch_id,

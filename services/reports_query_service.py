@@ -234,13 +234,21 @@ class ReportsQueryService:
 
                 total_revenue = sum(line.line_total for line in sales_lines)
                 total_qty = sum(line.quantity for line in sales_lines)
+                total_cogs = sum(
+                    (Decimal(str(line.quantity)) * Decimal(str(line.cost_price or 0))) for line in sales_lines
+                )
 
                 avg_price = total_revenue / total_qty if total_qty > 0 else 0
 
                 if total_revenue > 0:
+                    # Margin method (same basis as sold-entry commissions):
+                    # partner share is on profit, not gross revenue.
+                    margin = total_revenue - total_cogs
+                    if margin < Decimal("0"):
+                        margin = Decimal("0")
                     for share in product.partner_shares:
                         percentage = Decimal(str(share.percentage))
-                        partner_amount = total_revenue * (percentage / Decimal("100"))
+                        partner_amount = margin * (percentage / Decimal("100"))
                         partners_data.append(
                             {
                                 "product_name": product.name,

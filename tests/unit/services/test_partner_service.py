@@ -201,7 +201,14 @@ class TestDistributionLifecycle:
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.side_effect = [dist, partner]
         mocker.patch("models.PartnerTransaction", return_value=MagicMock(amount=100.0))
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            return_value="2150",
+        )
+        post = mocker.patch("services.gl_posting.post_or_fail")
         assert PartnerService.approve_distribution(1, 5, tenant_id=1) is True
+        post.assert_called_once()
         mock_db.session.flush.assert_called()
 
     def test_approve_distribution_negative_net(self, mocker):
@@ -217,7 +224,14 @@ class TestDistributionLifecycle:
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.side_effect = [dist, partner]
         mocker.patch("models.PartnerTransaction", return_value=MagicMock(amount=-50.0))
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            return_value="2150",
+        )
+        post = mocker.patch("services.gl_posting.post_or_fail")
         assert PartnerService.approve_distribution(1, 5) is True
+        post.assert_called_once()
 
     def test_approve_rollback(self, mocker):
         dist = MagicMock(status="draft", tenant_id=1, net_due=0.0)
@@ -229,8 +243,9 @@ class TestDistributionLifecycle:
 
     def test_pay_distribution_success(self, mocker):
         dist = MagicMock(status="approved", tenant_id=1, net_due=200.0, id=7)
+        partner = _partner(current_balance=Decimal("200"))
         mock_db = mocker.patch("services.partner_service.db")
-        mock_db.session.get.return_value = dist
+        mock_db.session.get.side_effect = [dist, partner]
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
@@ -241,13 +256,16 @@ class TestDistributionLifecycle:
             return_value="1120",
         )
         mocker.patch("services.gl_posting.post_or_fail")
+        mocker.patch("models.PartnerTransaction", return_value=MagicMock(amount=-200.0))
         assert PartnerService.pay_distribution(7, tenant_id=1) is True
+        assert partner.current_balance == Decimal("0")
         mock_db.session.flush.assert_called()
 
     def test_pay_distribution_gl_fallback(self, mocker):
         dist = MagicMock(status="approved", tenant_id=1, net_due=50.0, id=3)
+        partner = _partner(current_balance=Decimal("50"))
         mock_db = mocker.patch("services.partner_service.db")
-        mock_db.session.get.return_value = dist
+        mock_db.session.get.side_effect = [dist, partner]
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
