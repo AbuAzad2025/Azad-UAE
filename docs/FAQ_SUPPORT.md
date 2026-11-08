@@ -106,8 +106,8 @@
 
 **Q (EN):** How do I calculate payroll?
 **Q (AR):** كيف أحسب الرواتب؟
-**A (EN):** Go to Payroll → Process. Select the month and employees. The system calculates basic salary, allowances, deductions, tax, and insurance. Review and confirm.
-**A (AR):** اذهب إلى الرواتب → معالجة. اختر الشهر والموظفين. يحسب النظام الراتب الأساسي والبدلات والاستقطاعات والضريبة والتأمين. راجع وأكد.
+**A (EN):** Go to Payroll → Process. Select the month and employees. The system calculates basic salary, allowances, deductions and advances, and auto-posts the GL accruals. Personal income tax and social insurance are on the roadmap and are not computed yet. Review and confirm.
+**A (AR):** اذهب إلى الرواتب → معالجة. اختر الشهر والموظفين. يحسب النظام الراتب الأساسي والبدلات والخصومات والسلف، ويُرحّل قيود GL آلياً للمسير. ضريبة الدخل الشخصية واشتراكات التأمين غير محتسبة حاليًا وستصل في إصدار لاحق. راجع وأكد.
 
 **Q (EN):** Can I export payroll to WPS?
 **Q (AR):** هل يمكنني تصدير الرواتب إلى WPS؟

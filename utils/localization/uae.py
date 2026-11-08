@@ -4,13 +4,15 @@ UAEStrategy — 5% VAT, AED-only for tax reporting, FTA XML + QR, WPS SIF.
 
 from decimal import Decimal
 
+from utils.country_tax import vat_rate_for_country
+
 from .engine import LocalizationStrategy
 
 
 class UAEStrategy(LocalizationStrategy):
     country_code = "AE"
     country_name = "UAE"
-    default_vat_rate = Decimal("5.00")
+    default_vat_rate = vat_rate_for_country("AE")
     currency = "AED"
     supports_qr = True
     supports_wps = True

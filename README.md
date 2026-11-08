@@ -74,7 +74,7 @@ Each tenant (company) operates in full isolation with its own chart of accounts,
 
 | Plan | Price | Users | Includes |
 |------|-------|-------|----------|
-| **Starter** | $29/mo | Up to 3 | Sales, purchases, inventory, e-invoices, basic reports |
+| **Starter** | $29/mo | Up to 3 | Sales, purchases, inventory, invoices with QR verification, basic reports |
 | **Professional** | $79/mo | Up to 10 | All Starter + GL, POS, online store, AI features, advanced reports |
 | **Enterprise** | $249/mo | Unlimited | All features + HR/payroll, AI insights, daily backups, 24/7 support |
 

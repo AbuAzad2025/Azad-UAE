@@ -7975,7 +7975,7 @@ TRANSLATIONS = {
         "en": "Fast POS with UAE-compliant e-invoicing.",
     },
     "Touch POS interface": {"ar": "واجهة كاشير لمسية", "en": "Touch POS interface"},
-    "E-invoice with QR": {"ar": "فاتورة إلكترونية + QR", "en": "E-invoice with QR"},
+    "Document verification QR on print": {"ar": "رمز QR للتحقق من المستند عند الطباعة", "en": "Document verification QR on print"},
     "A4 / Thermal print": {"ar": "طباعة A4 / حراري", "en": "A4 / Thermal print"},
     "Sales & purchase invoices": {"ar": "فواتير مبيعات ومشتريات", "en": "Sales & purchase invoices"},
     "Returns & discounts": {"ar": "مرتجعات وخصومات", "en": "Returns & discounts"},
@@ -8112,9 +8112,9 @@ TRANSLATIONS = {
         "en": "Azadexa uses double-entry accounting — not single-entry. Complete financial cycle: journal entries, trial balance, balance sheet, income statement, cash flow, fixed-asset depreciation.",
     },
     "Does it support UAE VAT?": {"ar": "هل تدعم ضريبة القيمة المضافة في الإمارات؟", "en": "Does it support UAE VAT?"},
-    "Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes.": {
-        "ar": "نعم، تدعم VAT بنسبة 5% وفق متطلبات الهيئة الاتحادية للضرائب. توفر تقارير ضريبية شاملة وفواتير إلكترونية مع QR Code.",
-        "en": "Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes.",
+    "Yes. Statutory tax per your country profile, enforced server-side. Full tax reports, a verification QR on printed documents, and government e-invoice integration is on the roadmap.": {
+        "ar": "نعم. ضريبة نظامية حسب ملف بلدك تُفرض في الخادم. تقارير ضريبية كاملة ورمز QR للتحقق على المستندات المطبوعة، وتكامل الفوترة الإلكترونية مع الحكومات قادم في إصدار لاحق.",
+        "en": "Yes. Statutory tax per your country profile, enforced server-side. Full tax reports, a verification QR on printed documents, and government e-invoice integration is on the roadmap.",
     },
     "Is there a built-in online store?": {
         "ar": "هل يوجد متجر إلكتروني مدمج؟",

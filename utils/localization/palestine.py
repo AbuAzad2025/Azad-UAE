@@ -5,6 +5,8 @@ PalestineStrategy — 16% VAT, multi-currency (ILS/JOD/USD), PMA XML, WPS SIF.
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
+from utils.country_tax import vat_rate_for_country
+
 from .engine import LocalizationStrategy, coerce_decimal
 
 _VAT_ID_PATTERN = re.compile(r"^\d{9,11}$")
@@ -15,7 +17,7 @@ _SUPPORTED_CURRENCIES = frozenset({"ILS", "JOD", "USD"})
 class PalestineStrategy(LocalizationStrategy):
     country_code = "PS"
     country_name = "Palestine"
-    default_vat_rate = Decimal("16.00")
+    default_vat_rate = vat_rate_for_country("PS")
     currency = "ILS"
     supports_wps = True
 

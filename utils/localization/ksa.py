@@ -7,6 +7,8 @@ import hashlib
 import re
 from decimal import ROUND_HALF_UP, Decimal
 
+from utils.country_tax import vat_rate_for_country
+
 from .engine import LocalizationStrategy, coerce_decimal
 
 _TRN_PATTERN = re.compile(r"^3\d{14}$")
@@ -16,7 +18,7 @@ _TWO_PLACES = Decimal("0.01")
 class KSAStrategy(LocalizationStrategy):
     country_code = "SA"
     country_name = "Saudi Arabia"
-    default_vat_rate = Decimal("15.00")
+    default_vat_rate = vat_rate_for_country("SA")
     currency = "SAR"
     supports_qr = True
     zatca_phase = 2

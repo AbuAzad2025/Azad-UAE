@@ -48,7 +48,7 @@
 
 **EN:** Employee profiles, contracts, and documents. Attendance tracking with check-in/check-out. Leave requests and approvals. Payroll calculation: basic, allowances, deductions, tax, insurance. Automated GL accruals for payroll. Salary advances and repayment tracking.
 
-**AR:** ملفات الموظفين، العقود، والمستندات. تتبع الحضور مع تسجيل الدخول/الخروج. طلبات الإجازة والموافقات. حساب الرواتب: الأساسي، البدلات، الاستقطاعات، الضريبة، التأمين. استحقاقات GL آلية للرواتب. السلف والتتبع المسترد.
+**AR:** ملفات الموظفين، العقود، والمستندات. تتبع الحضور مع تسجيل الدخول/الخروج. طلبات الإجازة والموافقات. حساب الرواتب: الأساسي، البدلات، السلف والخصومات مع الترحيل الآلي للقيود المحاسبية (GL) لكل مسير. حساب ضريبة الدخل الشخصية واشتراكات التأمين الاجتماعي غير محتسب حاليًا وسيصل في إصدار لاحق.
 
 ### 2.6 CRM & Projects | إدارة العملاء والمشاريع
 

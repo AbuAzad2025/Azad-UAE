@@ -3505,8 +3505,8 @@ msgstr "E-Wallet"
 msgid "E-Wallet"
 msgstr "E-Wallet"
 
-msgid "E-invoice with QR"
-msgstr "E-invoice with QR"
+msgid "Document verification QR on print"
+msgstr "Document verification QR on print"
 
 msgid "E-invoices + printing"
 msgstr "E-invoices + printing"
@@ -11071,8 +11071,8 @@ msgstr "Yearly"
 msgid "Yes"
 msgstr "Yes"
 
-msgid "Yes. Full 5% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes."
-msgstr "Yes. Full 5%% VAT compliance per FTA requirements. Tax reports, e-invoices with QR codes."
+msgid "Yes. Statutory tax per your country profile, enforced server-side. Full tax reports, a verification QR on printed documents, and government e-invoice integration is on the roadmap."
+msgstr "Yes. Statutory tax per your country profile, enforced server-side. Full tax reports, a verification QR on printed documents, and government e-invoice integration is on the roadmap."
 
 msgid "Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting."
 msgstr "Yes. Full e-commerce: cart, reviews, wishlist, loyalty points, discount coupons, bookings. Linked to inventory and accounting."

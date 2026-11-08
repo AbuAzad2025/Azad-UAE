@@ -289,6 +289,11 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   IL corrected to 18% effective 2025-01-01 by the Knesset): the tax rate is taken from the
   country profile on the server; the tax settings UI reads it via `statutory_rates`
   injected by `routes/owner/settings.py`; no JS hardcodes a rate.
+- **A statutory rate is never private to one module (audit follow-up)** — the localization
+  strategies (PS/KSA/UAE) carried their own copies of the same 16/5/15 and would have
+  drifted exactly the way IL did from 17 to 18. All four strategies now read
+  `utils/country_tax.vat_rate_for_country`, pinned by
+  `tests/unit/utils/test_localization_registry_assurance.py::test_every_strategy_rate_is_sourced_from_country_tax`.
 
 ### Verification policy — CI is the gate, not the local machine
 - **Do not run the full local test suite.** A single unit slice takes 10-40
