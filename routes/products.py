@@ -665,6 +665,9 @@ def create():
                 excise_category = (request.form.get("excise_category") or "").strip().lower()
                 if excise_category not in ("tobacco", "energy_drinks", "soft_drinks"):
                     excise_category = None
+                tax_category = (request.form.get("tax_category") or "standard").strip().lower()
+                if tax_category not in ("standard", "zero", "exempt"):
+                    tax_category = "standard"
 
                 # Check tenant product limit
                 from utils.tenant_limits import TenantLimitError, check_products_limit
@@ -698,6 +701,7 @@ def create():
                     warranty_days=warranty_days,
                     industry=request.form.get("industry", default_industry) or default_industry,
                     excise_category=excise_category,
+                    tax_category=tax_category,
                 )
                 extra_fields = {}
                 for key in request.form:
@@ -931,6 +935,8 @@ def edit(**kwargs):
             product.excise_category = (
                 excise_category if excise_category in ("tobacco", "energy_drinks", "soft_drinks") else None
             )
+            tax_category = (request.form.get("tax_category") or "standard").strip().lower()
+            product.tax_category = tax_category if tax_category in ("standard", "zero", "exempt") else "standard"
             extra_fields = dict(product.extra_fields or {})
             for key in request.form:
                 if key.startswith("extra_"):

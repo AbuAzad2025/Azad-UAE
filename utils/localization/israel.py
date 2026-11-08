@@ -94,7 +94,6 @@ class IsraelStrategy(LocalizationStrategy):
             country="IL",
             currency=currency,
             profile_id="reporting",
-            doc_type_code="388",
         )
         return {
             "xml_payload": xml_payload,

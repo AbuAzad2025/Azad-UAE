@@ -219,6 +219,7 @@ class TestFulfillSaleSplitWiring:
             patch("services.sale_service.GLService"),
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch.object(SaleService, "create_payment_for_sale") as create_payment,
             patch("services.sale_service.db"),
         ):
@@ -240,6 +241,7 @@ class TestFulfillSaleSplitWiring:
             patch("services.sale_service.GLService"),
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch.object(SaleService, "create_payment_for_sale") as create_payment,
             patch("services.sale_service.db"),
         ):
@@ -267,6 +269,7 @@ class TestFulfillSaleSplitWiring:
             patch("services.sale_service.GLService"),
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch("services.sale_service.db"),
         ):
             stock.check_availability_in_warehouse.return_value = (True, "")

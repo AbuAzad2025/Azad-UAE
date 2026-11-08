@@ -423,6 +423,7 @@ class TestFulfillSaleGlBranches:
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail") as post,
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch(
                 "services.sale_service.should_post_vat_gl",
                 return_value=defaults["vat_gl"],

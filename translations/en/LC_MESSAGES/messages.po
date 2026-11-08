@@ -20492,3 +20492,171 @@ msgstr "⭐ Most popular"
 msgid "🧭 Can\\'t find the right plan?"
 msgstr "🧭 Can\\'t find the right plan?"
 
+
+msgid "OAuth2 access token"
+msgstr "OAuth2 access token"
+
+msgid "Phase 2 (توقيع + سلسلة الهاش + QR بوسوم 1–9) يتطلب CSID صادر من ZATCA — الشهادة والمفتاح الخاص يُخزّنان مشفّرين ولا تُعرض قيمهما بعد الحفظ. التقديم إلى FATOORA خطوة منفصلة تتطلب بيانات اعتمادك."
+msgstr "Phase 2 (signing + hash chain + QR tags 1-9) requires a CSID issued by ZATCA — the certificate and private key are stored encrypted and their values are never shown after saving. Submission to FATOORA is a separate step that requires your credentials."
+
+msgid "ZATCA المرحلة الثانية (KSA)"
+msgstr "ZATCA Phase 2 (KSA)"
+
+msgid "إجمالي الفاتورة دون الحد الأدنى"
+msgstr "The invoice total is below the minimum"
+
+msgid "إن وُجدت منتجات خاضعة (تبغ/مشروبات طاقة/غازية) في الاستيراد تُحتسب تلقائياً."
+msgstr "If the import contains excise-taxed products (tobacco / energy / soft drinks), it is computed automatically."
+
+msgid "اتركها فارغة للإبقاء على القيمة المخزنة"
+msgstr "Leave blank to keep the stored value"
+
+msgid "احتساب وترحيل الزكاة السنوية (2.5% من الوعاء الزكوي — أساس صافي رأس المال العامل)"
+msgstr "Compute and post the annual zakat (2.5% of the zakat base — net working capital basis)"
+
+msgid "الامتثال الضريبي والفواتير الإلكترونية"
+msgstr "Tax compliance & e-invoices"
+
+msgid "البيئة"
+msgstr "Environment"
+
+msgid "التأمينات الاجتماعية (حصة الموظف)"
+msgstr "Social insurance (employee share)"
+
+msgid "التطبيق التلقائي للرسوم الجمركية والضريبة الانتقائية على فواتير الاستيراد (حسب نسب الدولة)"
+msgstr "Automatic application of customs duty and excise tax on import invoices (at the country's rates)"
+
+msgid "التقاعد (حصة الموظف)"
+msgstr "Pension (employee share)"
+
+msgid "الحد الأدنى (₪) — فوقه يُطلب الرقم"
+msgstr "Minimum (₪) — above it the number is required"
+
+msgid "الزكاة السعودية"
+msgstr "Saudi zakat"
+
+msgid "الشهادة (CSID certificate, PEM)"
+msgstr "Certificate (CSID certificate, PEM)"
+
+msgid "الضريبة الانتقائية"
+msgstr "Excise tax"
+
+msgid "الفئة الانتقائية"
+msgstr "Excise category"
+
+msgid "الفواتير الإلكترونية"
+msgstr "E-invoices"
+
+msgid "الفواتير الائتمانية الإلكترونية عند المرتجعات"
+msgstr "Electronic credit notes on returns"
+
+msgid "الفواتير فوق الحد تتطلب מספר הקצאה من רשות המסים. الطلب يدوي من صفحة البيع — لن يفشل أي بيع بسبب خدمة خارجية."
+msgstr "Invoices above the threshold require an allocation number from the Israel Tax Authority. The request is manual from the sale page — a sale never fails because of an external service."
+
+msgid "المفتاح الخاص (CSID private key, PKCS8 PEM)"
+msgstr "Private key (CSID private key, PKCS8 PEM)"
+
+msgid "الوعاء = الأصول المتداولة (1100–1179) − الخصوم المتداولة (2100–2199). يُرحَّل يدوياً من صفحة Ledger → zakat accrual."
+msgstr "The base = current assets (1100-1179) − current liabilities (2100-2199). Posted manually from the Ledger page → zakat accrual."
+
+msgid "تبغ ومشتقاته"
+msgstr "Tobacco products"
+
+msgid "تصدير/إعفاء — تتفعّل فقط إذا فُعّلت «فئات الضريبة لكل سطر» في إعدادات الشركة."
+msgstr "Export/exempt — applies only when 'Per-line VAT categories' is enabled in company settings."
+
+msgid "تفعيل ZATCA Phase 2 للسعوديين (تصريح عن البيع يُوقَّع ويُسلسل تلقائياً)"
+msgstr "Enable ZATCA Phase 2 for Saudi tenants (sale declarations are signed and chained automatically)"
+
+msgid "تفعيل زر طلب מספר הקצאה من صفحة البيع"
+msgstr "Enable the ITA allocation-number request button on the sale page"
+
+msgid "تفعيل صندوق التقاعد الإسرائيلي الإلزامي (6% الموظف + 6.5% صاحب العمل من الراتب الأساسي)"
+msgstr "Enable the mandatory Israeli pension fund (6% employee + 6.5% employer of the basic salary)"
+
+msgid "تفعيل فئات الضريبة لكل سطر — للفواتير المختلطة (تصدير/إعفاء مع 18% أو 5% أو 15%)"
+msgstr "Enable per-line VAT categories — for mixed invoices (export/exempt alongside 18% / 5% / 15%)"
+
+msgid "تنطبق على الاستيراد فقط (تبغ / مشروبات طاقة / مشروبات غازية)"
+msgstr "Applies to imports only (tobacco / energy / soft drinks)"
+
+msgid "تنفعّل الفئات فقط إذا فُعّلت «فئات الضريبة لكل سطر» في إعدادات الشركة."
+msgstr "Categories apply only when 'Per-line VAT categories' is enabled in company settings."
+
+msgid "توليد المستند القانوني للفاتورة الإلكترونية عند كل بيع"
+msgstr "Generate the statutory e-invoice document for every sale"
+
+msgid "حفظ إعدادات الامتثال"
+msgstr "Save compliance settings"
+
+msgid "رقم تخصيص"
+msgstr "Allocation number"
+
+msgid "رقم تخصيص الفاتورة — ITA (IL)"
+msgstr "Invoice allocation number — ITA (IL)"
+
+msgid "صفرية"
+msgstr "Zero-rated"
+
+msgid "ضريبة الدخل المستقطعة"
+msgstr "Withheld income tax"
+
+msgid "ضريبة الدخل على الموظفين (IL)"
+msgstr "Employee income tax (IL)"
+
+msgid "طلب מספר הקצאה"
+msgstr "Request allocation number"
+
+msgid "عند الإيقاف تُبقى القيم اليدوية كما هي، ولا يُطبَّق أي افتراضي نظامي."
+msgstr "When disabled, manual values are kept and no statutory default is applied."
+
+msgid "عند الإيقاف تُرحَّل كل الأسطر كنسبة عادية. المنتجات تحمل الفئة في بطاقة المنتج (standard/zero/exempt)."
+msgstr "When disabled, every line posts at the standard rate. Products carry the category on the product card (standard/zero/exempt)."
+
+msgid "غير مخزّن"
+msgstr "Not stored"
+
+msgid "فئات الضريبة لكل سطر (Standard / Zero / Exempt)"
+msgstr "Per-line VAT categories (Standard / Zero / Exempt)"
+
+msgid "فئة الضريبة (VAT)"
+msgstr "VAT category"
+
+msgid "فاتورة إلكترونية"
+msgstr "E-invoice"
+
+msgid "فاتورة استيراد"
+msgstr "Import invoice"
+
+msgid "مشروبات طاقة"
+msgstr "Energy drinks"
+
+msgid "مشروبات غازية"
+msgstr "Soft drinks"
+
+msgid "مطلوب للموظفين السعوديين والإماراتيين — GOSI/GPSSA تنطبق على المواطنين فقط."
+msgstr "Required for Saudi and Emirati employees — GOSI/GPSSA apply to nationals only."
+
+msgid "معفى"
+msgstr "Exempt"
+
+msgid "مكوّن نهاية الخدمة (6%) تغطيه مخصصات نهاية الخدمة القائمة — لا يوجد احتساب مزدوج."
+msgstr "The severance component (6%) is covered by the existing end-of-service provision — no double counting."
+
+msgid "مواطن (لأهلية التأمينات/التقاعد)"
+msgstr "National (for social insurance/pension eligibility)"
+
+msgid "يحفظ المستند UBL 2.1 + QR (حيث يتطلب) على كل بيع مضمون — أوقفه فقط إذا كنت لا تريد أي مستند."
+msgstr "Stores the UBL 2.1 document + QR (where required) for every confirmed sale — turn it off only if you do not want any document."
+
+msgid "يُحتسب تلقائياً حسب النسبة النظامية للبلد عند استيراد."
+msgstr "Computed automatically at the country's statutory rate on import."
+
+msgid "يُطبّق الرسم الجمركي النظامي و الضريبة الانتقائية تلقائياً عند ترك الحقلين فارغين."
+msgstr "The statutory customs duty and excise tax are applied automatically when both fields are left blank."
+
+msgid "✓ مخزّن ومشفّر"
+msgstr "Stored and encrypted"
+
+msgid "✓ مخزّن ومشفّر — أدخل قيمة جديدة للاستبدال"
+msgstr "Stored and encrypted — enter a new value to replace it"

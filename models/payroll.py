@@ -153,6 +153,8 @@ class PayrollTransaction(db.Model):
     income_tax_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
     social_insurance_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
     social_insurance_employer_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    pension_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
+    pension_employer_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
 
     net_salary = db.Column(db.Numeric(10, 2), nullable=False)
 

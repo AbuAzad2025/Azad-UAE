@@ -205,10 +205,13 @@ class PayrollService:
         deductions_amount = Decimal(str(deductions or "0"))
         annual_taxable = gross_amount * Decimal("12")
 
-        from utils.country_tax import payroll_income_tax_amount, social_insurance_amount
+        from models import Tenant
+        from utils.country_tax import il_pension_amount, payroll_income_tax_amount, social_insurance_amount
         from utils.tax_settings import vat_country
 
         country = vat_country(tenant_id)
+        tenant_row = db.session.get(Tenant, int(tenant_id)) if tenant_id is not None else None
+        il_pension_enabled = bool(getattr(tenant_row, "enable_il_pension", False)) if tenant_row else False
         is_national = bool(getattr(employee, "is_national", False))
         joined = getattr(employee, "joined_date", None)
         if isinstance(joined, datetime):
@@ -224,6 +227,17 @@ class PayrollService:
             is_national=is_national,
             joined_2024_07_03_or_later=joined_after_2024_07_03,
         )
+        # Israel mandatory pension — benefits components only (employee 6% /
+        # employer 6.5%), computed on the pensionable (basic) salary. The
+        # employer severance component is covered by the end-of-service
+        # provision, not here. Both legs honour the tenant's IL pension switch.
+        pension = (
+            il_pension_amount(basic_amount)
+            if (country == "IL" and il_pension_enabled)
+            else {"employee": Decimal("0"), "employer": Decimal("0")}
+        )
+        pension_employee_amount = pension["employee"]
+        pension_employer_amount = pension["employer"]
         # Progressive annual tax, withheld as 1/12 each month. The withholding
         # is an estimate of the employee's annual liability; the final true-up is
         # settled in the year-end return — same convention as withholding in IL.
@@ -232,7 +246,7 @@ class PayrollService:
         social_employee_amount = social["employee"]
         social_employer_amount = social["employer"]
 
-        withholding_total = social_employee_amount + income_tax_monthly
+        withholding_total = social_employee_amount + pension_employee_amount + income_tax_monthly
         net_salary = gross_amount - deductions_amount - advance_deduction_total - withholding_total
 
         # التحقق من عدم وجود راتب مكرر لنفس الموظف/الشهر/السنة
@@ -271,6 +285,8 @@ class PayrollService:
             income_tax_amount=income_tax_monthly,
             social_insurance_amount=social_employee_amount,
             social_insurance_employer_amount=social_employer_amount,
+            pension_amount=pension_employee_amount,
+            pension_employer_amount=pension_employer_amount,
             branch_id=employee.branch_id,
             tenant_id=tenant_id,
             created_by=user_id,
@@ -352,6 +368,49 @@ class PayrollService:
                     "debit": 0,
                     "credit": Decimal(str(social_employer_amount)),
                     "description": "Employer social insurance payable",
+                }
+            )
+
+        if pension_employer_amount > Decimal("0"):
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYER_PENSION_EXPENSE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYER_PENSION_EXPENSE",
+                    "debit": Decimal(str(pension_employer_amount)),
+                    "credit": 0,
+                    "description": "Employer pension contribution",
+                }
+            )
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYER_PENSION_PAYABLE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYER_PENSION_PAYABLE",
+                    "debit": 0,
+                    "credit": Decimal(str(pension_employer_amount)),
+                    "description": "Employer pension payable",
+                }
+            )
+
+        if pension_employee_amount > Decimal("0"):
+            lines.append(
+                {
+                    "account": GLService.get_account_code_for_concept(
+                        "EMPLOYEE_PENSION_PAYABLE",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "EMPLOYEE_PENSION_PAYABLE",
+                    "debit": 0,
+                    "credit": Decimal(str(pension_employee_amount)),
+                    "description": "Employee pension withheld",
                 }
             )
 

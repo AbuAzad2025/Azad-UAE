@@ -107,7 +107,6 @@ class PalestineStrategy(LocalizationStrategy):
             country="PS",
             currency=(getattr(sale, "currency", None) or self.currency).strip() or self.currency,
             profile_id="reporting",
-            doc_type_code="388",
         )
         return {
             "xml_payload": xml_payload,

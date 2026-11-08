@@ -198,6 +198,56 @@ MONEY_TOLERANCE = Decimal("0.001")
 
 
 @dataclass(frozen=True)
+class DeclaredRowAddition:
+    """Rows the chain is *allowed* to insert, with the reason."""
+
+    table: str
+    match: dict[str, str]  # matched on the added row's columns
+    revision: str
+    reason: str
+
+
+#: The only INSERTs the upgrade chain may perform on seeded tables, with the
+#: reason for each. These are the charts-of-accounts rows the compliance
+#: migrations backfill for tenants that already had a chart.
+DECLARED_ROW_ADDITIONS: tuple[DeclaredRowAddition, ...] = (
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "6221"}, "f6a7b8c9d012", "Payroll statutory — employer social insurance expense"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2143"}, "f6a7b8c9d012", "Payroll statutory — employee social insurance payable"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2144"}, "f6a7b8c9d012", "Payroll statutory — employer social insurance payable"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2147"}, "f6a7b8c9d012", "Payroll statutory — employee income tax payable"
+    ),
+    DeclaredRowAddition("gl_accounts", {"code": "5304"}, "a8b9c0d1e203", "Import landed cost — excise duty expense"),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "6222"}, "c0d1e2f3a405", "Statutory pension — employer pension expense (IL)"
+    ),
+    DeclaredRowAddition("gl_accounts", {"code": "6351"}, "c0d1e2f3a405", "Zakat expense (SA statutory)"),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2145"}, "c0d1e2f3a405", "Statutory pension — employee pension payable (IL)"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2146"}, "c0d1e2f3a405", "Statutory pension — employer pension payable (IL)"
+    ),
+    DeclaredRowAddition("gl_accounts", {"code": "2148"}, "c0d1e2f3a405", "Zakat payable (SA statutory)"),
+)
+
+
+def _declared_addition_matches(table: str, row: dict[str, Any]) -> DeclaredRowAddition | None:
+    for addition in DECLARED_ROW_ADDITIONS:
+        if addition.table != table:
+            continue
+        if all(str(row.get(column)) == expected for column, expected in addition.match.items()):
+            return addition
+    return None
+
+
+@dataclass(frozen=True)
 class DeclaredChange:
     """A difference the chain is *allowed* to produce, with the reason."""
 
@@ -1372,6 +1422,17 @@ def compare(before: dict[str, Any], after: dict[str, Any], context: dict[str, An
         elif a is None:
             count_diffs.append({"table": table, "before": b, "after": None})
         elif b != a:
+            # A count difference is explained when the only new rows are
+            # declared additions for this table.
+            after_rows = after["tables"].get(table, {}).get("rows", {})
+            before_rows = before["tables"].get(table, {}).get("rows", {})
+            additions = [
+                key
+                for key in after_rows
+                if key not in before_rows and _declared_addition_matches(table, after_rows[key])
+            ]
+            if (a - b) == len(additions):
+                continue
             count_diffs.append({"table": table, "before": b, "after": a})
 
     value_diffs: list[dict[str, Any]] = []
@@ -1396,6 +1457,8 @@ def compare(before: dict[str, Any], after: dict[str, Any], context: dict[str, An
             b_row = before_rows.get(key)
             a_row = after_rows.get(key)
             if b_row is None:
+                if _declared_addition_matches(table, a_row):
+                    continue
                 added_rows.append({"table": table, "pk": key})
                 continue
             if a_row is None:

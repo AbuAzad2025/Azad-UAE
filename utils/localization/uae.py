@@ -52,9 +52,7 @@ class UAEStrategy(LocalizationStrategy):
 
         tenant = tenant_for_sale(sale)
         currency = (getattr(sale, "currency", None) or self.currency).strip() or self.currency
-        xml_payload = build_invoice_xml(
-            sale, tenant, country="AE", currency=currency, profile_id="reporting", doc_type_code="388"
-        )
+        xml_payload = build_invoice_xml(sale, tenant, country="AE", currency=currency, profile_id="reporting")
         return {
             "xml_payload": xml_payload,
             "qr_base64": "",

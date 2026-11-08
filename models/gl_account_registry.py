@@ -157,7 +157,12 @@ BASE_ACCOUNTS = [
         False,
         "2100",
     ),
+    GLAccountTemplate("2145", "Employee Pension Payable", "اشتراكات التقاعد للموظف", "liability", 2, False, "2100"),
+    GLAccountTemplate(
+        "2146", "Employer Pension Payable", "اشتراكات التقاعد لصاحب العمل", "liability", 2, False, "2100"
+    ),
     GLAccountTemplate("2147", "Payroll Income Tax Payable", "ضريبة دخل الموظفين مستحقة", "liability", 2, False, "2100"),
+    GLAccountTemplate("2148", "Zakat Payable", "زكاة مستحقة", "liability", 2, False, "2100"),
     GLAccountTemplate(
         "2150",
         "Partner Current Accounts",
@@ -359,6 +364,9 @@ BASE_ACCOUNTS = [
         False,
         "6200",
     ),
+    GLAccountTemplate(
+        "6222", "Employer Pension Expense", "مصروف مساهمات التقاعد لصاحب العمل", "expense", 2, False, "6200"
+    ),
     GLAccountTemplate("6230", "Utilities", "الكهرباء والمياه", "expense", 2, False, "6200"),
     GLAccountTemplate("6240", "Maintenance & Repairs", "صيانة وإصلاحات", "expense", 2, False, "6200"),
     GLAccountTemplate("6250", "Office Supplies", "قرطاسية ومستلزمات", "expense", 2, False, "6200"),
@@ -368,6 +376,7 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("6290", "Communication", "اتصالات", "expense", 2, False, "6200"),
     GLAccountTemplate("6300", "Depreciation Expense", "مصروف الإهلاك", "expense", 1, False, "6000"),
     GLAccountTemplate("6350", "Income Tax Expense", "مصروف ضريبة الدخل", "expense", 1, False, "6000"),
+    GLAccountTemplate("6351", "Zakat Expense", "مصروف الزكاة", "expense", 1, False, "6000"),
     GLAccountTemplate("6400", "Warranty Claims", "مطالبات الضمان", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6410",
@@ -1058,6 +1067,7 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate("PAYROLL_EXPENSE", "6220", "payroll"),
             GLConceptMappingTemplate("EMPLOYER_SOCIAL_INSURANCE_EXPENSE", "6221", "payroll"),
+            GLConceptMappingTemplate("EMPLOYER_PENSION_EXPENSE", "6222", "payroll"),
             # PAYROLL_EXPENSE_2 has no mapping row and cannot have one: the
             # database constrains gl_account_mappings.concept_code to a fixed
             # list (ck_gl_account_mappings_concept_code, created by
@@ -1070,6 +1080,8 @@ GL_MODULE_DEFINITIONS = {
             GLConceptMappingTemplate("PAYROLL_PAYABLE", "2141", "payroll"),
             GLConceptMappingTemplate("EMPLOYEE_SOCIAL_INSURANCE_PAYABLE", "2143", "payroll"),
             GLConceptMappingTemplate("EMPLOYER_SOCIAL_INSURANCE_PAYABLE", "2144", "payroll"),
+            GLConceptMappingTemplate("EMPLOYEE_PENSION_PAYABLE", "2145", "payroll"),
+            GLConceptMappingTemplate("EMPLOYER_PENSION_PAYABLE", "2146", "payroll"),
             GLConceptMappingTemplate("EMPLOYEE_INCOME_TAX_PAYABLE", "2147", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_PROVISION", "6190", "payroll"),
             GLConceptMappingTemplate("END_OF_SERVICE_LIABILITY", "2140", "payroll"),
@@ -1123,6 +1135,8 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate("INCOME_TAX_EXPENSE", "6350", "income_tax"),
             GLConceptMappingTemplate("INCOME_TAX_PAYABLE", "2142", "income_tax"),
+            GLConceptMappingTemplate("ZAKAT_EXPENSE", "6351", "income_tax"),
+            GLConceptMappingTemplate("ZAKAT_PAYABLE", "2148", "income_tax"),
         ],
     ),
     "warranty": GLModuleDefinition(

@@ -16,10 +16,7 @@ from extensions import db
 class EInvoice(db.Model):
     __tablename__ = "e_invoices"
 
-    __table_args__ = (
-        db.UniqueConstraint("tenant_id", "sale_id", name="uq_einvoice_tenant_sale"),
-        db.Index("idx_einvoice_tenant_created", "tenant_id", "created_at"),
-    )
+    __table_args__ = (db.Index("idx_einvoice_tenant_created", "tenant_id", "created_at"),)
 
     id = db.Column(db.Integer, primary_key=True)
     tenant_id = db.Column(
@@ -36,6 +33,19 @@ class EInvoice(db.Model):
     )
     country = db.Column(db.String(2), nullable=False)
     format = db.Column(db.String(50), nullable=False)
+    # "invoice" (388) or "credit_note" (381, issued for returns)
+    doc_type = db.Column(db.String(20), nullable=False, server_default="invoice", default="invoice")
+    # Set when this row is the statutory document of a product return.
+    return_id = db.Column(
+        db.Integer,
+        db.ForeignKey("product_returns.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    # Israel Tax Authority — allocation number (מספר הקצאה) once requested.
+    ita_allocation_number = db.Column(db.String(30))
+    # ZATCA Phase 2 chain — set for KSA simplified invoices when the tenant
+    # enables Phase 2: counter (1-based).
+    invoice_counter_value = db.Column(db.Integer)
     xml_payload = db.Column(db.Text, nullable=False)
     qr_base64 = db.Column(db.Text)
     invoice_hash = db.Column(db.String(64), nullable=False)

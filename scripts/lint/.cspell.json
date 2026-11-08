@@ -33,6 +33,8 @@
     "fsevents",
     "financials",
     "gitleaks",
+    "GOSI",
+    "GPSSA",
     "gitlint",
     "hadolint",
     "hbs",

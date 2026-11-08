@@ -8,6 +8,7 @@ from extensions import db
 from models import PartnerCommissionEntry, Payment, Sale, SaleLine, Tenant
 from services.commission_gl_service import post_sale_commissions
 from services.document_sequence_service import DocumentSequenceService
+from services.einvoice_service import EInvoiceService
 from services.exchange_rate_service import ExchangeRateService
 from services.gl_posting import post_or_fail
 from services.gl_service import GLService
@@ -313,6 +314,10 @@ class SaleService:
                     cost_price=(Decimal(str(product.cost_price)) if product.cost_price else Decimal("0")),
                     line_total=Decimal("0"),  # Initialize with 0
                     notes=line_data.get("notes"),  # Pass notes if any
+                    # Per-line VAT category — taken from the product; the
+                    # tenant's enable_tax_categories switch gates whether
+                    # zero/exempt products post as anything other than standard.
+                    tax_category=((getattr(product, "tax_category", None) or "standard").strip().lower()),
                 )
 
                 # Calculate total before flush
@@ -826,8 +831,6 @@ class SaleService:
 
         # Statutory e-invoice artifact — pure computation, no network. Fails
         # the whole transaction loudly on error in supported jurisdictions.
-        from services.einvoice_service import EInvoiceService
-
         EInvoiceService.generate_for_sale(sale)
 
         from decimal import Decimal as _D
@@ -882,6 +885,7 @@ class SaleService:
             quantity=quantity,
             unit_price=Decimal(str(unit_price)),
             line_total=Decimal(str(unit_price)) * Decimal(str(quantity)),
+            tax_category=((getattr(product, "tax_category", None) or "standard").strip().lower()),
         )
         db.session.add(sale_line)
         db.session.flush()

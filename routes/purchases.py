@@ -13,7 +13,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db, limiter
-from models import Purchase
+from models import Product, Purchase
 from services.currency_service import CurrencyService
 from services.logging_core import LoggingCore
 from services.purchase_service import PurchaseService
@@ -479,21 +479,52 @@ def api_calculate_purchase_totals():
         except (LookupError, AttributeError, TypeError, ValueError):
             tax_rate = normalize_tax_rate(tax_rate)
 
-        subtotal = Decimal("0")
+        # Single pass over the lines — totals feed both the landed-cost
+        # import levy and the mixed-category tax split.
+        line_records = []
         for line in lines:
             try:
                 qty = Decimal(str(line.get("quantity", 0)))
                 cost = Decimal(str(line.get("unit_cost", 0)))
                 discount_percent = Decimal(str(line.get("discount_percent", 0)))
-
-                if qty > 0 and cost > 0:
-                    line_subtotal = qty * cost
-                    line_discount = line_subtotal * (discount_percent / Decimal("100"))
-                    line_total = line_subtotal - line_discount
-                    subtotal += line_total
+                if qty <= 0 or cost <= 0:
+                    continue
+                line_records.append(
+                    {
+                        "quantity": qty,
+                        "unit_cost": cost,
+                        "discount_percent": discount_percent,
+                        "line_total": qty * cost * (Decimal("1") - discount_percent / Decimal("100")),
+                        "product_id": line.get("product_id"),
+                    }
+                )
             except (ValueError, TypeError, KeyError, InvalidOperation):
                 current_app.logger.debug("Skipping invalid purchase line: %r", line, exc_info=True)
                 continue
+        subtotal = sum((record["line_total"] for record in line_records), Decimal("0"))
+
+        # One query fetches everything the lines need from products.
+        product_ids = [record["product_id"] for record in line_records if record["product_id"]]
+        excise_categories: dict[int, str] = {}
+        tax_category_map: dict[int, str] = {}
+        if product_ids:
+            rows = (
+                db.session.query(Product.id, Product.excise_category, Product.tax_category)
+                .filter(Product.id.in_(product_ids))
+                .all()
+            )
+            excise_categories = {int(row.id): (row.excise_category or "") for row in rows}
+            tax_category_map = {int(row.id): (row.tax_category or "standard") for row in rows}
+
+        preview_lines = [
+            {
+                "line_total": record["line_total"],
+                "tax_category": tax_category_map.get(int(record["product_id"]), "standard")
+                if record["product_id"]
+                else "standard",
+            }
+            for record in line_records
+        ]
 
         is_import = bool(data.get("is_import", False))
         freight = Decimal(str(data.get("freight", 0) or 0))
@@ -505,24 +536,28 @@ def api_calculate_purchase_totals():
             None if excise_amount is None or str(excise_amount).strip() == "" else Decimal(str(excise_amount))
         )
         other_landed_cost = Decimal(str(data.get("other_landed_cost", 0) or 0))
-        if is_import:
-            from models import Product
+        from models import Tenant as _Tenant
+
+        _tenant_row = (
+            db.session.get(_Tenant, int(get_active_tenant_id(current_user)))
+            if get_active_tenant_id(current_user)
+            else None
+        )
+        import_duties_enabled = (
+            bool(getattr(_tenant_row, "enable_import_duties", True)) if _tenant_row is not None else True
+        )
+        if is_import and import_duties_enabled:
             from services.purchase_service import compute_import_levy_defaults
             from utils.tax_settings import vat_country
 
-            product_ids = [line.get("product_id") for line in lines if line.get("product_id")]
-            categories: dict[int, str] = {}
-            if product_ids:
-                rows = db.session.query(Product.id, Product.excise_category).filter(Product.id.in_(product_ids)).all()
-                categories = {int(row.id): (row.excise_category or "") for row in rows}
             line_inputs = [
                 (
-                    line.get("quantity"),
-                    line.get("unit_cost"),
-                    line.get("discount_percent"),
-                    categories.get(int(line["product_id"])) if line.get("product_id") else None,
+                    record["quantity"],
+                    record["unit_cost"],
+                    record["discount_percent"],
+                    excise_categories.get(int(record["product_id"]) or 0) if record["product_id"] else None,
                 )
-                for line in lines
+                for record in line_records
             ]
             customs_duty, excise_amount = compute_import_levy_defaults(
                 line_inputs,
@@ -536,25 +571,18 @@ def api_calculate_purchase_totals():
         landed_total = freight + insurance + customs_duty + excise_amount + other_landed_cost
 
         prices_include_vat = bool(data.get("prices_include_vat", False))
-        # Match the posted model (Purchase.calculate_totals): 3-decimal rounding,
-        # discount before tax, so the buyer sees what the books will record.
-        after_discount = subtotal - discount_amount
-        if prices_include_vat:
-            if tax_rate > 0:
-                taxable_amount = (after_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                tax_amount = (after_discount - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            else:
-                taxable_amount = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                tax_amount = Decimal("0")
-            total = (after_discount + landed_total).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        else:
-            taxable_amount = after_discount
-            tax_amount = (after_discount * (tax_rate / Decimal("100"))).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
-            total = (after_discount + tax_amount + landed_total).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        # Match the posted model (Purchase.calculate_totals): the shared
+        # mixed-category helper computes tax on the same base the books use.
+        from utils.tax_categories import compute_amounts
+
+        taxable_amount, tax_amount, total_before_landed, _after_discount = compute_amounts(
+            preview_lines,
+            tax_rate=tax_rate,
+            discount_amount=discount_amount,
+            prices_include_vat=prices_include_vat,
+            tenant_id=get_active_tenant_id(current_user),
+        )
+        total = (total_before_landed + landed_total).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         taxable_amount = taxable_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         subtotal = subtotal.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         tax_amount = tax_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)

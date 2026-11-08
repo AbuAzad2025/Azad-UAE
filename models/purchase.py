@@ -209,31 +209,23 @@ class Purchase(db.Model):
 
         # Ensure all amounts are Decimal
         discount = Decimal(str(self.discount_amount)) if self.discount_amount else Decimal("0")
-        tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
 
-        # Calculate tax based on pricing method (inclusive vs exclusive VAT)
-        if self.prices_include_vat:
-            # Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: Ù†ÙØµÙ„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ù…Ù† Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ
-            gross = self.subtotal - discount
-            if tax_rate_decimal > 0:
-                taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            else:
-                taxable_amount = gross
-                self.tax_amount = Decimal("0")
-            self.total_amount = (gross + self.total_landed_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        else:
-            # Ø§Ù„Ø£Ø³Ø¹Ø§Ø± Ù„Ø§ ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©: Ù†Ø¶ÙŠÙ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© ÙÙˆÙ‚ Ø§Ù„ØµØ§ÙÙŠ
-            taxable_amount = self.subtotal - discount
-            self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
-            self.total_amount = (taxable_amount + self.tax_amount + self.total_landed_cost).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+        # Per-line VAT categories — identical semantics to the sale path and
+        # to the shared helper used by the basket preview.
+        from utils.tax_categories import compute_amounts
+
+        taxable_amount, tax_amount, total_before_extras, _after_discount = compute_amounts(
+            self.lines,
+            tax_rate=self.tax_rate,
+            discount_amount=discount,
+            prices_include_vat=self.prices_include_vat,
+            tenant_id=self.tenant_id,
+        )
+        self.tax_amount = tax_amount
+        self.total_amount = (total_before_extras + self.total_landed_cost).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
 
         self.taxable_amount = taxable_amount
 
@@ -300,6 +292,8 @@ class PurchaseLine(db.Model):
     discount_percent = db.Column(db.Numeric(5, 2), default=0)
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
     landed_cost = db.Column(db.Numeric(15, 3), default=0, nullable=False)
+    # Per-line VAT category — copied from the product at line creation.
+    tax_category = db.Column(db.String(10), nullable=False, server_default="standard", default="standard")
 
     notes = db.Column(db.String(255))
 

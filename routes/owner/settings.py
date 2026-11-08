@@ -837,6 +837,54 @@ def tax_settings():
         flash(gettext("لا توجد شركة نشطة."), "danger")
         return redirect(url_for("owner.dashboard"))
 
+    from services.tenant_secrets_service import TenantSecretsService
+
+    def _secret_state():
+        return {
+            name: TenantSecretsService.is_set(tenant.id, name)
+            for name in ("zatca_private_key", "zatca_certificate", "ita_oauth_token")
+        }
+
+    if request.method == "POST" and request.form.get("section") == "compliance":
+        try:
+            with atomic_transaction("tenant_compliance_settings"):
+                tenant.enable_einvoice = request.form.get("enable_einvoice") == "on"
+                tenant.enable_einvoice_credit_notes = request.form.get("enable_einvoice_credit_notes") == "on"
+                tenant.zatca_phase2_enabled = request.form.get("zatca_phase2_enabled") == "on"
+                tenant.enable_ita_allocation = request.form.get("enable_ita_allocation") == "on"
+                environment = (request.form.get("ita_environment") or "sandbox").strip().lower()
+                if environment not in ("sandbox", "production"):
+                    raise ValueError(gettext("بيئة ITA غير صالحة."))
+                tenant.ita_environment = environment
+                threshold = request.form.get("ita_allocation_threshold", type=Decimal)
+                if threshold is None or threshold <= 0:
+                    raise ValueError(gettext("حد عدد التخصيص يجب أن يكون موجباً."))
+                tenant.ita_allocation_threshold = threshold
+                tenant.enable_il_pension = request.form.get("enable_il_pension") == "on"
+                tenant.enable_zakat = request.form.get("enable_zakat") == "on"
+                tenant.enable_import_duties = request.form.get("enable_import_duties") == "on"
+                tenant.enable_tax_categories = request.form.get("enable_tax_categories") == "on"
+                for secret_name in ("zatca_private_key", "zatca_certificate", "ita_oauth_token"):
+                    clear = request.form.get("clear_secret")
+                    if clear == secret_name:
+                        TenantSecretsService.delete(tenant.id, secret_name)
+                    value = (request.form.get(f"secret_{secret_name}") or "").strip()
+                    if value:
+                        TenantSecretsService.set(tenant.id, secret_name, value, user_id=current_user.id)
+                # The Phase 2 integration runs inside the sale transaction —
+                # refuse to enable it without both halves of the CSID stored.
+                secrets = _secret_state()
+                if tenant.zatca_phase2_enabled and not (secrets["zatca_private_key"] and secrets["zatca_certificate"]):
+                    raise ValueError(
+                        gettext("ZATCA Phase 2 يتطلب تخزين المفتاح الخاص والشهادة (CSID) — أدخلهما في هذا القسم أولاً.")
+                    )
+        except ValueError as exc:
+            refuse(exc, context="tenant compliance settings save")
+            return redirect(url_for("owner.tax_settings"))
+        _invalidate_owner_changes()
+        flash(gettext("✅ تم تحديث إعدادات الامتثال والفواتير الإلكترونية"), "success")
+        return redirect(url_for("owner.tax_settings"))
+
     if request.method == "POST":
         try:
             with atomic_transaction("tax_settings"):
@@ -872,6 +920,7 @@ def tax_settings():
         tenant=tenant,
         vat_countries=VAT_COUNTRY_LABELS,
         statutory_rates={code: str(p["vat_rate"]) for code, p in COUNTRY_TAX_PROFILES.items()},
+        secret_state=_secret_state(),
     )
 
 

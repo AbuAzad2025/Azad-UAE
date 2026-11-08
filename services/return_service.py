@@ -590,6 +590,17 @@ class ReturnService:
             except Exception:
                 raise
 
+            # Statutory credit-note document (e-invoice) — pure computation,
+            # same transaction as the return. Rollback propagates on failure.
+            from services.einvoice_service import EInvoiceService
+
+            EInvoiceService.generate_for_return(
+                product_return,
+                net_return_amount=net_return_amount,
+                tax_amount=tax_amount,
+                refund_amount=final_refund_amount,
+            )
+
             return product_return
 
         except Exception as e:

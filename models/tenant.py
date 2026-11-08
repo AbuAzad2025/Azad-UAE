@@ -6,6 +6,8 @@ Tenant Model - Multi-Tenant System
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from sqlalchemy import text
+
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
 from utils.regional_defaults import (
@@ -138,6 +140,19 @@ class Tenant(db.Model):
     enable_cheques = db.Column(db.Boolean, default=True)
     enable_expenses = db.Column(db.Boolean, default=True)
     enable_store = db.Column(db.Boolean, default=False)
+    # ── Statutory compliance switches (every compliance feature is opt-out) ──
+    enable_einvoice = db.Column(db.Boolean, nullable=False, server_default=text("true"), default=True)
+    enable_einvoice_credit_notes = db.Column(db.Boolean, nullable=False, server_default=text("true"), default=True)
+    zatca_phase2_enabled = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
+    enable_ita_allocation = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
+    ita_environment = db.Column(db.String(12), nullable=False, server_default="sandbox", default="sandbox")
+    ita_allocation_threshold = db.Column(
+        db.Numeric(15, 3), nullable=False, server_default=text("5000"), default=Decimal("5000")
+    )
+    enable_import_duties = db.Column(db.Boolean, nullable=False, server_default=text("true"), default=True)
+    enable_tax_categories = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
+    enable_il_pension = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
+    enable_zakat = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
     # POS Phase 4 — SaaS sub-feature flags. NULL means "inherit from the
     # subscription plan" (pro/enterprise tiers enable them, basic does not);
     # an explicit True/False is a per-tenant override (utils/pos_features.py).

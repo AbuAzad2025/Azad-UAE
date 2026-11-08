@@ -313,8 +313,36 @@ def view(**kwargs):
         return redirect(url_for("sales.index"))
 
     from datetime import date as _date
+    from decimal import Decimal
 
-    return render_template("sales/view.html", sale=sale, now_date=_date.today())
+    from models import EInvoice, Tenant
+
+    tenant = db.session.get(Tenant, sale.tenant_id) if sale.tenant_id else None
+    einv = (
+        EInvoice.query.filter_by(tenant_id=sale.tenant_id, sale_id=sale.id, doc_type="invoice").first()
+        if sale.tenant_id
+        else None
+    )
+    from utils.tax_settings import vat_country
+
+    ita_visible = bool(
+        tenant
+        and (vat_country(tenant.id) == "IL")
+        and getattr(tenant, "enable_ita_allocation", False)
+        and sale.status != "cancelled"
+    )
+    ita_eligible = ita_visible and Decimal(str(sale.total_amount or 0)) >= Decimal(
+        str(getattr(tenant, "ita_allocation_threshold", 0) or 0)
+    )
+
+    return render_template(
+        "sales/view.html",
+        sale=sale,
+        now_date=_date.today(),
+        ita_visible=ita_visible,
+        ita_eligible=ita_eligible,
+        einvoice_row=einv,
+    )
 
 
 @sales_bp.route("/<int:id>/print")
@@ -430,6 +458,40 @@ def _sale_scope_or_403(sale):
     if current_user.is_seller() and sale.seller_id != current_user.id:
         return render_template("errors/403.html"), 403
     return None
+
+
+@sales_bp.route("/<int:id>/request-ita-allocation", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def request_ita_allocation(**kwargs):
+    """Request the Israel Tax Authority allocation number (מספר הקצאה).
+
+    Manual, explicit action — never part of the sale transaction. The ITA
+    thresholds apply only above them, and only for IL tenants who enabled
+    the switch in Tax Settings.
+    """
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
+    denial = _sale_scope_or_403(sale)
+    if denial is not None:
+        return denial
+
+    from models import Tenant
+
+    tenant = db.session.get(Tenant, sale.tenant_id)
+    if tenant is None:
+        flash(gettext("الشركة غير موجودة."), "danger")
+        return redirect(url_for("sales.view", id=sale.id))
+
+    from services.ita_allocation_service import ItaAllocationError, ItaAllocationService
+
+    try:
+        result = ItaAllocationService.request_allocation_number(sale, user_id=current_user.id)
+    except ItaAllocationError as exc:
+        flash(gettext(str(exc)), "danger")
+        return redirect(url_for("sales.view", id=sale.id))
+    flash(gettext(f"מספר הקצאה: {result['allocation_number']} — تم طلبه من רשות המסים بنجاح"), "success")
+    return redirect(url_for("sales.view", id=sale.id))
 
 
 @sales_bp.route("/<int:id>/einvoice.xml")
@@ -788,41 +850,59 @@ def api_calculate_sale_totals():
         except (LookupError, AttributeError, TypeError, ValueError):
             tax_rate = normalize_tax_rate(tax_rate)
 
-        subtotal = Decimal("0")
+        # Single pass — the same structure the posted model uses.
+        line_records = []
         for line in lines:
             try:
                 qty = Decimal(str(line.get("quantity", 0)))
                 price = Decimal(str(line.get("unit_price", 0)))
                 discount_percent = Decimal(str(line.get("discount_percent", 0)))
-
-                if qty > 0:
-                    line_subtotal = qty * price
-                    line_discount = line_subtotal * (discount_percent / Decimal("100"))
-                    line_total = line_subtotal - line_discount
-                    subtotal += line_total
+                if qty <= 0 or price <= 0:
+                    continue
+                line_records.append(
+                    {
+                        "line_total": qty * price * (Decimal("1") - discount_percent / Decimal("100")),
+                        "product_id": line.get("product_id"),
+                    }
+                )
             except (ValueError, TypeError, KeyError, InvalidOperation):
                 current_app.logger.debug("Skipping invalid line in totals calc: %r", line, exc_info=True)
                 continue
+        subtotal = sum((record["line_total"] for record in line_records), Decimal("0"))
 
-        # Match the posted model (Sale.calculate_totals): 3-decimal rounding,
-        # promo discount off the gross, and the prices_include_vat split - so the
-        # cashier sees exactly the total the ledger will record.
-        after_discount = subtotal - discount_amount - promotion_discount + shipping_cost
-        if prices_include_vat:
-            if tax_rate > 0:
-                taxable_amount = (after_discount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                tax_amount = (after_discount - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            else:
-                taxable_amount = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                tax_amount = Decimal("0")
-            total = after_discount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        else:
-            tax_amount = (after_discount * (tax_rate / Decimal("100"))).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
-            total = (after_discount + tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        # Per-line tax categories from the products in one query (zero/exempt
+        # honor the tenant's enable_tax_categories switch).
+        product_ids = [record["product_id"] for record in line_records if record["product_id"]]
+        tax_category_map: dict[int, str] = {}
+        if product_ids:
+            from models import Product
+
+            rows = db.session.query(Product.id, Product.tax_category).filter(Product.id.in_(product_ids)).all()
+            tax_category_map = {int(row.id): (row.tax_category or "standard") for row in rows}
+        preview_lines = [
+            {
+                "line_total": record["line_total"],
+                "tax_category": tax_category_map.get(int(record["product_id"]), "standard")
+                if record["product_id"]
+                else "standard",
+            }
+            for record in line_records
+        ]
+
+        # Match the posted model (Sale.calculate_totals): the shared
+        # mixed-category helper computes tax on the same base.
+        from utils.tax_categories import compute_amounts
+
+        taxable_amount, tax_amount, total, _after_discount = compute_amounts(
+            preview_lines,
+            tax_rate=tax_rate,
+            discount_amount=discount_amount,
+            promotion_discount=promotion_discount,
+            shipping_cost=shipping_cost,
+            prices_include_vat=prices_include_vat,
+            tenant_id=get_active_tenant_id(current_user),
+        )
+        taxable_amount = taxable_amount.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
         subtotal = subtotal.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         positive_lines = 0

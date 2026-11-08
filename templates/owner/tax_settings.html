@@ -85,6 +85,130 @@
     </div>
   </div>
 </div>
+  <div class="card mt-4">
+    <div class="card-header">
+      <h3><i class="fas fa-shield-alt" aria-hidden="true"></i> {{ _('الامتثال الضريبي والفواتير الإلكترونية') }}</h3>
+    </div>
+    <div class="card-body">
+      <form class="needs-validation" method="post" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+        <input type="hidden" name="section" value="compliance">
+
+        <h5 class="text-primary"><i class="fas fa-file-invoice" aria-hidden="true"></i> {{ _('الفواتير الإلكترونية') }}</h5>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_einvoice" name="enable_einvoice" {% if tenant.enable_einvoice|default(true) %}checked{% endif %} aria-label="enable e-invoice">
+            <label class="custom-control-label" for="enable_einvoice">{{ _('توليد المستند القانوني للفاتورة الإلكترونية عند كل بيع') }}</label>
+          </div>
+          <small class="text-muted">{{ _('يحفظ المستند UBL 2.1 + QR (حيث يتطلب) على كل بيع مضمون — أوقفه فقط إذا كنت لا تريد أي مستند.') }}</small>
+        </div>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_einvoice_credit_notes" name="enable_einvoice_credit_notes" {% if tenant.enable_einvoice_credit_notes|default(true) %}checked{% endif %} aria-label="enable credit notes">
+            <label class="custom-control-label" for="enable_einvoice_credit_notes">{{ _('الفواتير الائتمانية الإلكترونية عند المرتجعات') }}</label>
+          </div>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-certificate" aria-hidden="true"></i> {{ _('ZATCA المرحلة الثانية (KSA)') }}</h5>
+        <div class="alert alert-warning">
+          <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>
+          {{ _('Phase 2 (توقيع + سلسلة الهاش + QR بوسوم 1–9) يتطلب CSID صادر من ZATCA — الشهادة والمفتاح الخاص يُخزّنان مشفّرين ولا تُعرض قيمهما بعد الحفظ. التقديم إلى FATOORA خطوة منفصلة تتطلب بيانات اعتمادك.') }}
+        </div>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="zatca_phase2_enabled" name="zatca_phase2_enabled" {% if tenant.zatca_phase2_enabled|default(false) %}checked{% endif %} aria-label="enable zatca phase 2">
+            <label class="custom-control-label" for="zatca_phase2_enabled">{{ _('تفعيل ZATCA Phase 2 للسعوديين (تصريح عن البيع يُوقَّع ويُسلسل تلقائياً)') }}</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="secret_zatca_private_key">{{ _('المفتاح الخاص (CSID private key, PKCS8 PEM)') }}</label>
+            <textarea class="form-control" id="secret_zatca_private_key" name="secret_zatca_private_key" rows="2" placeholder="{{ _('اتركها فارغة للإبقاء على القيمة المخزنة') }}" autocomplete="off" aria-label="zatca private key"></textarea>
+            <small class="text-muted">{% if secret_state.get('zatca_private_key') %}{{ _('✓ مخزّن ومشفّر — أدخل قيمة جديدة للاستبدال') }} <button type="submit" name="clear_secret" value="zatca_private_key" class="btn btn-sm btn-outline-danger">{{ _('مسح') }}</button>{% else %}{{ _('غير مخزّن') }}{% endif %}</small>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="secret_zatca_certificate">{{ _('الشهادة (CSID certificate, PEM)') }}</label>
+            <textarea class="form-control" id="secret_zatca_certificate" name="secret_zatca_certificate" rows="2" placeholder="{{ _('اتركها فارغة للإبقاء على القيمة المخزنة') }}" autocomplete="off" aria-label="zatca certificate"></textarea>
+            <small class="text-muted">{% if secret_state.get('zatca_certificate') %}{{ _('✓ مخزّن ومشفّر — أدخل قيمة جديدة للاستبدال') }} <button type="submit" name="clear_secret" value="zatca_certificate" class="btn btn-sm btn-outline-danger">{{ _('مسح') }}</button>{% else %}{{ _('غير مخزّن') }}{% endif %}</small>
+          </div>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-stamp" aria-hidden="true"></i> {{ _('ضريبة الدخل على الموظفين (IL)') }}</h5>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_il_pension" name="enable_il_pension" {% if tenant.enable_il_pension|default(false) %}checked{% endif %} aria-label="enable israeli pension">
+            <label class="custom-control-label" for="enable_il_pension">{{ _('تفعيل صندوق التقاعد الإسرائيلي الإلزامي (6% الموظف + 6.5% صاحب العمل من الراتب الأساسي)') }}</label>
+          </div>
+          <small class="text-muted">{{ _('مكوّن نهاية الخدمة (6%) تغطيه مخصصات نهاية الخدمة القائمة — لا يوجد احتساب مزدوج.') }}</small>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-kaaba" aria-hidden="true"></i> {{ _('الزكاة السعودية') }}</h5>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_zakat" name="enable_zakat" {% if tenant.enable_zakat|default(false) %}checked{% endif %} aria-label="enable zakat">
+            <label class="custom-control-label" for="enable_zakat">{{ _('احتساب وترحيل الزكاة السنوية (2.5% من الوعاء الزكوي — أساس صافي رأس المال العامل)') }}</label>
+          </div>
+          <small class="text-muted">{{ _('الوعاء = الأصول المتداولة (1100–1179) − الخصوم المتداولة (2100–2199). يُرحَّل يدوياً من صفحة Ledger → zakat accrual.') }}</small>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-ship" aria-hidden="true"></i> {{ _('الاستيراد') }}</h5>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_import_duties" name="enable_import_duties" {% if tenant.enable_import_duties|default(true) %}checked{% endif %} aria-label="enable import duties">
+            <label class="custom-control-label" for="enable_import_duties">{{ _('التطبيق التلقائي للرسوم الجمركية والضريبة الانتقائية على فواتير الاستيراد (حسب نسب الدولة)') }}</label>
+          </div>
+          <small class="text-muted">{{ _('عند الإيقاف تُبقى القيم اليدوية كما هي، ولا يُطبَّق أي افتراضي نظامي.') }}</small>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-percent" aria-hidden="true"></i> {{ _('فئات الضريبة لكل سطر (Standard / Zero / Exempt)') }}</h5>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_tax_categories" name="enable_tax_categories" {% if tenant.enable_tax_categories|default(false) %}checked{% endif %} aria-label="enable tax categories">
+            <label class="custom-control-label" for="enable_tax_categories">{{ _('تفعيل فئات الضريبة لكل سطر — للفواتير المختلطة (تصدير/إعفاء مع 18% أو 5% أو 15%)') }}</label>
+          </div>
+          <small class="text-muted">{{ _('عند الإيقاف تُرحَّل كل الأسطر كنسبة عادية. المنتجات تحمل الفئة في بطاقة المنتج (standard/zero/exempt).') }}</small>
+        </div>
+
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-hashtag" aria-hidden="true"></i> {{ _('رقم تخصيص الفاتورة — ITA (IL)') }}</h5>
+        <p class="text-muted">{{ _('الفواتير فوق الحد تتطلب מספר הקצאה من רשות המסים. الطلب يدوي من صفحة البيع — لن يفشل أي بيع بسبب خدمة خارجية.') }}</p>
+        <div class="form-group">
+          <div class="custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="enable_ita_allocation" name="enable_ita_allocation" {% if tenant.enable_ita_allocation|default(false) %}checked{% endif %} aria-label="enable ita allocation">
+            <label class="custom-control-label" for="enable_ita_allocation">{{ _('تفعيل زر طلب מספר הקצאה من صفحة البيع') }}</label>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-4">
+            <label for="ita_allocation_threshold">{{ _('الحد الأدنى (₪) — فوقه يُطلب الرقم') }}</label>
+            <input type="number" class="form-control" id="ita_allocation_threshold" name="ita_allocation_threshold" min="1" step="0.01" value="{{ tenant.ita_allocation_threshold|default(5000) }}" aria-label="allocation threshold">
+          </div>
+          <div class="form-group col-md-4">
+            <label for="ita_environment">{{ _('البيئة') }}</label>
+            <select class="form-control" id="ita_environment" name="ita_environment" aria-label="ita environment">
+              <option value="sandbox" {% if (tenant.ita_environment|default('sandbox')) == 'sandbox' %}selected{% endif %}>sandbox</option>
+              <option value="production" {% if (tenant.ita_environment|default('sandbox')) == 'production' %}selected{% endif %}>production</option>
+            </select>
+          </div>
+          <div class="form-group col-md-4">
+            <label for="secret_ita_oauth_token">{{ _('OAuth2 access token') }}</label>
+            <textarea class="form-control" id="secret_ita_oauth_token" name="secret_ita_oauth_token" rows="2" placeholder="{{ _('اتركها فارغة للإبقاء على القيمة المخزنة') }}" autocomplete="off" aria-label="ita token"></textarea>
+            <small class="text-muted">{% if secret_state.get('ita_oauth_token') %}{{ _('✓ مخزّن ومشفّر') }} <button type="submit" name="clear_secret" value="ita_oauth_token" class="btn btn-sm btn-outline-danger">{{ _('مسح') }}</button>{% else %}{{ _('غير مخزّن') }}{% endif %}</small>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-save" aria-hidden="true"></i> {{ _('حفظ إعدادات الامتثال') }}
+        </button>
+      </form>
+    </div>
+  </div>
+
 <script nonce="{{ csp_nonce() }}">
 (() => {
   const toggle = document.getElementById('enable_tax');

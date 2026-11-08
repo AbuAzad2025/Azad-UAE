@@ -125,6 +125,7 @@ from .supplier import Supplier
 from .sync_batch import SyncBatch
 from .system_settings import SystemSettings
 from .tenant import Tenant
+from .tenant_secret import TenantSecret
 from .tenant_store import TenantStore
 from .user import Permission, Role, User
 from .warehouse import ProductWarehouseStock, Warehouse
@@ -185,6 +186,7 @@ __all__ = [
     "ExpenseCategory",
     "InvoiceSettings",
     "Tenant",
+    "TenantSecret",
     "TenantStore",
     "StorePaymentMethod",
     "ShopCustomerAccount",

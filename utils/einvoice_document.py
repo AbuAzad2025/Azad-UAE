@@ -17,27 +17,37 @@ from __future__ import annotations
 import base64
 import hashlib
 from decimal import ROUND_HALF_UP, Decimal
-from xml.etree import ElementTree as ET
+
+from lxml import etree as ET
 
 UBL_NS = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
 CBC_NS = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
 CAC_NS = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
 
-ET.register_namespace("", UBL_NS)
-ET.register_namespace("cac", CAC_NS)
-ET.register_namespace("cbc", CBC_NS)
+
+def _num(value, default=Decimal("0")) -> Decimal:
+    """Coerce anything to a finite Decimal, never raise.
+
+    The document builder runs on real POSTs, but also on mocked sales in unit
+    tests — a value we cannot parse must degrade to zero, never crash a sale.
+    """
+    try:
+        out = Decimal(str(value if value is not None else default))
+        return out if out.is_finite() else Decimal(str(default))
+    except Exception:
+        return Decimal(str(default))
 
 
 def _q2(value) -> Decimal:
-    return Decimal(str(value or 0)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return _num(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _q3(value) -> Decimal:
-    return Decimal(str(value or 0)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    return _num(value).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
 
 def _text(parent, tag, value, ns=None, **attrib):
-    el = ET.SubElement(parent, f"{{{ns}}}{tag}" if ns else tag, {k: str(v) for k, v in attrib.items()})
+    el = ET.SubElement(parent, f"{{{ns}}}{tag}" if ns else tag, attrib={k: str(v) for k, v in attrib.items()})
     el.text = str(value)
     return el
 
@@ -71,14 +81,20 @@ def zatca_tlv_base64(
 
 
 def build_invoice_xml(
-    sale, tenant, *, country: str, currency: str, profile_id: str = "reporting", doc_type_code: str = "388"
+    sale,
+    tenant,
+    *,
+    country: str,
+    currency: str,
+    profile_id: str = "reporting",
+    doc_type: str = "invoice",
+    billing_reference: str | None = None,
 ) -> str:
-    """UBL 2.1-shaped invoice document for a posted sale.
+    """UBL 2.1-shaped document for a posted sale or a sales credit note.
 
-    ``profile_id``/``doc_type_code`` carry the jurisdiction's document
-    vocabulary — KSA asks for ``reporting``/388, the others accept the
-    generic values. Statutory fields (seller TRN, buyer TRN when present,
-    lines, VAT breakdown, totals) are always populated from the sale.
+    ``doc_type`` is ``invoice`` (388) or ``credit_note`` (381); a credit note
+    carries ``BillingReference`` naming the original invoice — the exact
+    UBL 2.1 construct for that relationship.
     """
     tenant_name = (
         (getattr(tenant, "name_en", None) or "").strip()
@@ -106,14 +122,18 @@ def build_invoice_xml(
         or sum((Decimal(str(getattr(ln, "line_total", 0) or 0)) for ln in getattr(sale, "lines", [])), Decimal("0"))
     )
 
-    root = ET.Element(f"{{{UBL_NS}}}Invoice")
+    root = ET.Element(f"{{{UBL_NS}}}Invoice", nsmap={None: UBL_NS, "cac": CAC_NS, "cbc": CBC_NS})
     _text(root, "ProfileID", profile_id, CBC_NS)
     _text(root, "ID", getattr(sale, "sale_number", ""), CBC_NS)
     _text(root, "IssueDate", issue_date, CBC_NS)
     _text(root, "IssueTime", issue_time, CBC_NS)
-    _text(root, "InvoiceTypeCode", doc_type_code, CBC_NS)
+    _text(root, "InvoiceTypeCode", "381" if doc_type == "credit_note" else "388", CBC_NS)
     _text(root, "DocumentCurrencyCode", currency, CBC_NS)
     _text(root, "TaxCurrencyCode", currency, CBC_NS)
+    if billing_reference:
+        billing_ref = ET.SubElement(root, f"{{{CAC_NS}}}BillingReference")
+        adoc = ET.SubElement(billing_ref, f"{{{CAC_NS}}}AdditionalDocumentReference")
+        _text(adoc, "ID", billing_reference, CBC_NS)
 
     supplier = ET.SubElement(root, f"{{{CAC_NS}}}AccountingSupplierParty")
     party = ET.SubElement(supplier, f"{{{CAC_NS}}}Party")
@@ -178,7 +198,7 @@ def build_invoice_xml(
     _text(monetary, "TaxInclusiveAmount", f"{_q3(total)}", CBC_NS, currencyID=currency)
     _text(monetary, "PayableAmount", f"{_q3(total)}", CBC_NS, currencyID=currency)
 
-    return ET.tostring(root, encoding="unicode", xml_declaration=True)
+    return ET.tostring(root, xml_declaration=True, encoding="UTF-8").decode("utf-8")
 
 
 def tenant_for_sale(sale):
@@ -196,10 +216,23 @@ def invoice_sha256_hex(xml_payload: str) -> str:
     return hashlib.sha256(xml_payload.encode("utf-8")).hexdigest()
 
 
-def zatca_document(sale, tenant, *, currency: str = "SAR") -> dict:
-    """KSA simplified invoice: UBL 2.1 XML + TLV QR (tags 1-6)."""
+def zatca_document(
+    sale,
+    tenant,
+    *,
+    currency: str = "SAR",
+    doc_type: str = "invoice",
+    billing_reference: str | None = None,
+) -> dict:
+    """KSA simplified invoice/credit note: UBL 2.1 XML + TLV QR (tags 1-6)."""
     xml_payload = build_invoice_xml(
-        sale, tenant, country="SA", currency=currency, profile_id="reporting", doc_type_code="388"
+        sale,
+        tenant,
+        country="SA",
+        currency=currency,
+        profile_id="reporting",
+        doc_type=doc_type,
+        billing_reference=billing_reference,
     )
     xml_sha256_b64 = base64.b64encode(hashlib.sha256(xml_payload.encode("utf-8")).digest()).decode("ascii")
     issue_dt = getattr(sale, "sale_date", None)

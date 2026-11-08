@@ -125,7 +125,7 @@ class TestManifestMatchesSource:
     def test_base_chart_of_accounts(self):
         import models.gl_account_registry as registry
 
-        assert len(registry.BASE_ACCOUNTS) == 107
+        assert len(registry.BASE_ACCOUNTS) == 112
 
     def test_document_sequence_count(self):
         """The manifest must name every document type the source can create.

@@ -83,6 +83,7 @@ class TestFulfillSale:
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch("services.sale_service.should_post_vat_gl", return_value=False),
         ):
             stock.check_availability_in_warehouse.return_value = (True, "")
@@ -112,6 +113,7 @@ class TestFulfillSale:
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch("services.sale_service.should_post_vat_gl", return_value=False),
         ):
             stock.check_availability_in_warehouse.return_value = (True, "")
@@ -139,6 +141,7 @@ class TestFulfillSale:
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail"),
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch("services.sale_service.should_post_vat_gl", return_value=False),
             patch("services.sale_service.generate_number", return_value="PRE-1"),
             patch("services.sale_service.db.session") as mock_db,
@@ -180,6 +183,7 @@ class TestFulfillSale:
             patch("services.sale_service.GLService") as gl,
             patch("services.sale_service.post_or_fail") as post,
             patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
             patch("services.sale_service.should_post_vat_gl", return_value=True),
         ):
             stock.check_availability_in_warehouse.return_value = (True, "")

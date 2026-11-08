@@ -91,7 +91,7 @@ class TestStaticArtifacts:
         from utils.einvoice_document import build_invoice_xml, invoice_sha256_hex
 
         xml_text = build_invoice_xml(
-            ae_sale, None, country="AE", currency="AED", profile_id="reporting", doc_type_code="388"
+            ae_sale, None, country="AE", currency="AED", profile_id="reporting", doc_type="invoice"
         )
         root = ET.fromstring(xml_text)
         cbc = "{urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2}"
@@ -151,6 +151,7 @@ class TestGenerateForSale:
 
     def test_unsupported_country_is_a_noop(self, db_session, ae_sale, mocker):
         mocker.patch("utils.tax_settings.vat_country", return_value="XX")
+        ae_sale.tenant.vat_country = "XX"
         from services.einvoice_service import EInvoiceService
 
         assert EInvoiceService.generate_for_sale(ae_sale) is None

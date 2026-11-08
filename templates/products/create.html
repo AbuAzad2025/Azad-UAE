@@ -214,6 +214,17 @@
                 </select>
               </div>
             </div>
+            <div class="col-md-3">
+              <div class="form-group">
+                <label for="product_tax_category">{{ _('فئة الضريبة (VAT)') }}</label>
+                <select name="tax_category" id="product_tax_category" class="form-control form-control-sm">
+                  <option value="standard" {% if form_data.get('tax_category', 'standard') == 'standard' %}selected{% endif %}>{{ _('عادي') }}</option>
+                  <option value="zero" {% if form_data.get('tax_category') == 'zero' %}selected{% endif %}>{{ _('صفرية') }}</option>
+                  <option value="exempt" {% if form_data.get('tax_category') == 'exempt' %}selected{% endif %}>{{ _('معفى') }}</option>
+                </select>
+                <small class="text-muted">{{ _('تصدير/إعفاء — تتفعّل فقط إذا فُعّلت «فئات الضريبة لكل سطر» في إعدادات الشركة.') }}</small>
+              </div>
+            </div>
           </div>
           <div class="row">
             <div class="col-md-6">

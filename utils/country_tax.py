@@ -41,6 +41,7 @@ __all__ = [
     "compute_progressive_tax",
     "compute_corporate_tax",
     "social_insurance_amount",
+    "il_pension_amount",
     "payroll_income_tax_amount",
 ]
 
@@ -92,6 +93,8 @@ NULL_PROFILE = {
     "social_employer_rate_upper": None,
     "social_ceiling": None,
     "social_floor": None,
+    "pension_employee_rate": None,
+    "pension_employer_rate": None,
     "pension_national_rate_employee": None,
     "pension_national_rate_employer": None,
     "pension_ceiling": None,
@@ -157,6 +160,12 @@ COUNTRY_TAX_PROFILES = {
         "social_employer_rate_upper": Decimal("7.60"),
         "social_ceiling": Decimal("50695"),
         "social_floor": Decimal("7522"),
+        # Mandatory pension (Extension Order, benefits components only) —
+        # employee 6.0% from gross, employer 6.5% on top of it. The employer
+        # severance component (6%) is covered by the end-of-service provision
+        # this system already accrues; computing it here would double-count.
+        "pension_employee_rate": Decimal("6.00"),
+        "pension_employer_rate": Decimal("6.50"),
         "income_tax_credit_points_applies": True,
         "payroll_national_flag_required": False,
         "social_configurable": True,
@@ -451,6 +460,29 @@ def social_insurance_amount(gross, country_code, *, is_national=False, joined_20
         }
 
     return {"employee": Decimal("0"), "employer": Decimal("0"), "ceiling": None, "floor": None, "eligible": False}
+
+
+def il_pension_amount(pensionable_salary) -> dict:
+    """IL mandatory pension — benefits components (Extension Order), 2025.
+
+    Employee 6.0% (withheld from the pensionable/basic salary) and employer
+    6.5% (additional expense). The employer severance component (6%) is not
+    returned here on purpose: the codebase accrues severance through the
+    end-of-service provision, which is the legally correct vehicle for it.
+    IL-only; returns zeros elsewhere. Uses the country profile rates.
+    """
+    profile = get_country_profile("IL")
+    base = Decimal(str(pensionable_salary or 0))
+    if base <= 0:
+        return {"employee": Decimal("0"), "employer": Decimal("0"), "base": Decimal("0"), "eligible": False}
+    emp_rate = Decimal(str(profile.get("pension_employee_rate") or 0))
+    er_rate = Decimal(str(profile.get("pension_employer_rate") or 0))
+    return {
+        "employee": _q3(base * emp_rate / Decimal("100")),
+        "employer": _q3(base * er_rate / Decimal("100")),
+        "base": base,
+        "eligible": base > 0,
+    }
 
 
 def payroll_income_tax_amount(annual_taxable, country_code, *, credit_points=None) -> dict:

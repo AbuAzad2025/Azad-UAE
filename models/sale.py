@@ -221,29 +221,26 @@ class Sale(db.Model):
             Decimal(str(self.promotion_discount_amount)) if self.promotion_discount_amount else Decimal("0")
         )
         shipping = Decimal(str(self.shipping_cost)) if self.shipping_cost else Decimal("0")
-        tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
         exchange_rate_decimal = Decimal(str(self.exchange_rate)) if self.exchange_rate else Decimal("1")
 
-        # Calculate tax based on pricing method (inclusive vs exclusive VAT)
-        if self.prices_include_vat:
-            # الأسعار تشمل الضريبة: نفصل الضريبة من الإجمالي
-            gross = self.subtotal - discount - promo_discount + shipping
-            if tax_rate_decimal > 0:
-                taxable_amount = (gross / (Decimal("1") + (tax_rate_decimal / Decimal("100")))).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
-                self.tax_amount = (gross - taxable_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-            else:
-                taxable_amount = gross
-                self.tax_amount = Decimal("0")
-            self.total_amount = gross.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        else:
-            # الأسعار لا تشمل الضريبة: نضيف الضريبة فوق الصافي
-            taxable_amount = self.subtotal - discount - promo_discount + shipping
-            self.tax_amount = (taxable_amount * (tax_rate_decimal / Decimal("100"))).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
-            self.total_amount = (taxable_amount + self.tax_amount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        # Per-line VAT categories (standard / zero / exempt) — the single
+        # implementation is shared with the basket preview, so the buyer and
+        # the books always agree. Zero/exempt lines only differ from standard
+        # when the tenant enabled tax categories.
+        from utils.tax_categories import compute_amounts
+
+        taxable_base, tax_amount, total_before_extras, after_discount = compute_amounts(
+            self.lines,
+            tax_rate=self.tax_rate,
+            discount_amount=discount,
+            promotion_discount=promo_discount,
+            shipping_cost=shipping,
+            prices_include_vat=self.prices_include_vat,
+            tenant_id=self.tenant_id,
+        )
+        self.tax_amount = tax_amount
+        self.total_amount = total_before_extras
+        taxable_amount = taxable_base
 
         self.taxable_amount = taxable_amount
 
@@ -447,6 +444,8 @@ class SaleLine(db.Model):
     cost_price = db.Column(db.Numeric(15, 3), default=0)
     warranty_start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     warranty_end_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    # Per-line VAT category — copied from the product at line creation.
+    tax_category = db.Column(db.String(10), nullable=False, server_default="standard", default="standard")
 
     notes = db.Column(db.String(255))
 

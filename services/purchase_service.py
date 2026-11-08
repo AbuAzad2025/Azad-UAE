@@ -246,8 +246,14 @@ class PurchaseService:
 
         # Import-time statutory levies — computed here because the goods value
         # is only known from lines_data, and the Purchase header needs it at
-        # construction time. Explicitly provided values always win.
-        if is_import:
+        # construction time. Explicitly provided values always win. The
+        # tenant's enable_import_duties switch turns the automatic statutory
+        # defaulting off entirely (explicit inputs still win).
+        tenant_row = db.session.get(Tenant, int(tenant_id)) if tenant_id is not None else None
+        import_duties_enabled = (
+            bool(getattr(tenant_row, "enable_import_duties", True)) if tenant_row is not None else True
+        )
+        if is_import and import_duties_enabled:
             from utils.tax_settings import vat_country
 
             country = vat_country(tenant_id)
@@ -326,6 +332,7 @@ class PurchaseService:
                         quantity=quantity,
                         unit_cost=unit_cost,
                         discount_percent=discount_percent,
+                        tax_category=((getattr(product, "tax_category", None) or "standard").strip().lower()),
                     )
 
                     # Calculate line totals

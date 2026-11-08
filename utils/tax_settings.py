@@ -54,6 +54,30 @@ def is_tax_enabled(tenant_id=None) -> bool:
     return bool(getattr(tenant, "enable_tax", False))
 
 
+TAX_CATEGORIES = frozenset({"standard", "zero", "exempt"})
+
+
+def tenant_tax_categories_enabled(tenant_id=None) -> bool:
+    tenant = _resolve_tenant(tenant_id)
+    if tenant is None:
+        return False
+    return bool(getattr(tenant, "enable_tax_categories", False))
+
+
+def effective_tax_category(category, tenant_id=None, *, enabled=None) -> str:
+    """The category that governs posting: zero/exempt only when the tenant
+    enabled tax categories; otherwise every line posts as standard."""
+    normalized = (category or "standard").strip().lower()
+    if normalized not in TAX_CATEGORIES:
+        normalized = "standard"
+    if normalized != "standard":
+        if enabled is None:
+            enabled = tenant_tax_categories_enabled(tenant_id)
+        if not enabled:
+            return "standard"
+    return normalized
+
+
 def vat_country(tenant_id=None) -> str:
     tenant = _resolve_tenant(tenant_id)
     if tenant is None:

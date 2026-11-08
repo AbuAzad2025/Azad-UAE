@@ -296,6 +296,44 @@ def run_income_tax_accrual():
     )
 
 
+@ledger_bp.route("/zakat-accrual", methods=["POST"])
+@login_required
+@permission_required("manage_ledger")
+def run_zakat_accrual():
+    """Accrue the yearly zakat provision (enable_zakat tenants only).
+
+    Idempotent per (tenant, fiscal_year) — same semantics as the income-tax
+    accrual: a second call returns the existing entry instead of double-accruing.
+    """
+    from utils.tenanting import require_active_tenant_id
+
+    tenant_id = require_active_tenant_id()
+    from services.zakat_service import ZakatService
+
+    data = request.get_json(silent=True) or {}
+    fiscal_year = data.get("fiscal_year") or request.form.get("fiscal_year", type=int)
+    if fiscal_year is None:
+        return error_response(message="fiscal_year is required", status_code=400)
+    with atomic_transaction("zakat_accrual"):
+        result = ZakatService.accrue(
+            tenant_id,
+            int(fiscal_year),
+            branch_id=_effective_branch_id(),
+            user_id=current_user.id,
+        )
+        db.session.flush()
+    zakat = result.get("zakat")
+    estimate = result.get("estimate") or {}
+    return success_response(
+        data={
+            "already_accrued": bool(result.get("already_accrued")),
+            "zakat": float(zakat) if zakat is not None else None,
+            "entry_id": result["entry"].id if result.get("entry") else None,
+            "zakat_base": float(estimate["zakat_base"]) if estimate.get("zakat_base") is not None else None,
+        }
+    )
+
+
 @ledger_bp.route("/income-statement")
 @login_required
 @permission_required("view_ledger")
