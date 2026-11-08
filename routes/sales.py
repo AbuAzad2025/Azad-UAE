@@ -334,6 +334,14 @@ def view(**kwargs):
     ita_eligible = ita_visible and Decimal(str(sale.total_amount or 0)) >= Decimal(
         str(getattr(tenant, "ita_allocation_threshold", 0) or 0)
     )
+    zatca_submit_visible = bool(
+        tenant
+        and (vat_country(tenant.id) == "SA")
+        and getattr(tenant, "zatca_phase2_enabled", False)
+        and sale.status != "cancelled"
+        and einv is not None
+        and einv.status != "submitted"
+    )
 
     return render_template(
         "sales/view.html",
@@ -342,6 +350,7 @@ def view(**kwargs):
         ita_visible=ita_visible,
         ita_eligible=ita_eligible,
         einvoice_row=einv,
+        zatca_submit_visible=zatca_submit_visible,
     )
 
 
@@ -458,6 +467,39 @@ def _sale_scope_or_403(sale):
     if current_user.is_seller() and sale.seller_id != current_user.id:
         return render_template("errors/403.html"), 403
     return None
+
+
+@sales_bp.route("/<int:id>/submit-to-zatca", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def submit_to_zatca(**kwargs):
+    """Submit the Phase 2 signed invoice to the ZATCA FATOORA platform.
+
+    Manual, explicit action — never inside the sale transaction. The sale
+    already carries its signed artifact; this step only reports it.
+    """
+    record_id = kwargs.pop("id")
+    sale = tenant_get_or_404(Sale, record_id)
+    denial = _sale_scope_or_403(sale)
+    if denial is not None:
+        return denial
+
+    from models import Tenant
+
+    tenant = db.session.get(Tenant, sale.tenant_id)
+    if tenant is None or not getattr(tenant, "zatca_phase2_enabled", False):
+        flash(gettext("ZATCA Phase 2 is not enabled for this tenant."), "danger")
+        return redirect(url_for("sales.view", id=sale.id))
+
+    from services.zatca_submission_service import ZatcaSubmissionError, ZatcaSubmissionService
+
+    try:
+        result = ZatcaSubmissionService.submit(sale)
+    except ZatcaSubmissionError as exc:
+        flash(gettext(str(exc)), "danger")
+        return redirect(url_for("sales.view", id=sale.id))
+    flash(gettext(f"تم تقديم الفاتورة إلى ZATCA بنجاح — الحالة: {result['status']}"), "success")
+    return redirect(url_for("sales.view", id=sale.id))
 
 
 @sales_bp.route("/<int:id>/request-ita-allocation", methods=["POST"])

@@ -101,6 +101,9 @@ def upgrade():
         if "ita_environment" not in tenant_cols:
             # sandbox | production — where ITA allocation requests go.
             batch_op.add_column(sa.Column("ita_environment", sa.String(12), nullable=False, server_default="sandbox"))
+        if "zatca_environment" not in tenant_cols:
+            # sandbox | production — where ZATCA submission goes.
+            batch_op.add_column(sa.Column("zatca_environment", sa.String(12), nullable=False, server_default="sandbox"))
 
     # 2. tenant_secrets — Fernet-encrypted key/value store for integration
     #    credentials (ZATCA CSID, ITA access token). Values are never
@@ -136,7 +139,17 @@ def upgrade():
             if "tax_category" not in line_cols:
                 batch_op.add_column(sa.Column("tax_category", sa.String(10), nullable=False, server_default="standard"))
 
-    # 4. payroll_transactions — IL statutory pension columns
+    # 4. expenses — withholding tax at source on non-resident service payments
+    expense_cols = {c["name"] for c in inspector.get_columns("expenses")}
+    with op.batch_alter_table("expenses") as batch_op:
+        if "is_service_to_nonresident" not in expense_cols:
+            batch_op.add_column(
+                sa.Column("is_service_to_nonresident", sa.Boolean(), nullable=False, server_default=sa.text("false"))
+            )
+        if "wht_amount" not in expense_cols:
+            batch_op.add_column(sa.Column("wht_amount", sa.Numeric(15, 3), nullable=False, server_default=sa.text("0")))
+
+    # 5. payroll_transactions — IL statutory pension columns
     payroll_cols = {c["name"] for c in inspector.get_columns("payroll_transactions")}
     with op.batch_alter_table("payroll_transactions") as batch_op:
         if "pension_amount" not in payroll_cols:
@@ -348,6 +361,10 @@ def downgrade():
         for col in ("doc_type", "return_id", "ita_allocation_number", "invoice_counter_value"):
             batch_op.drop_column(col)
 
+    with op.batch_alter_table("expenses") as batch_op:
+        batch_op.drop_column("is_service_to_nonresident")
+        batch_op.drop_column("wht_amount")
+
     with op.batch_alter_table("payroll_transactions") as batch_op:
         batch_op.drop_column("pension_amount")
         batch_op.drop_column("pension_employer_amount")
@@ -365,4 +382,5 @@ def downgrade():
         for name in _TENANT_BOOL_COLUMNS:
             batch_op.drop_column(name)
         batch_op.drop_column("ita_allocation_threshold")
+        batch_op.drop_column("zatca_environment")
         batch_op.drop_column("ita_environment")

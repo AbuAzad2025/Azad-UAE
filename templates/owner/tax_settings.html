@@ -134,6 +134,21 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="secret_zatca_csid">{{ _('CSID (ZATCA-issued, PEM/base64)') }}</label>
+            <textarea class="form-control" id="secret_zatca_csid" name="secret_zatca_csid" rows="2" placeholder="{{ _('اتركها فارغة للإبقاء على القيمة المخزنة') }}" autocomplete="off" aria-label="zatca csid"></textarea>
+            <small class="text-muted">{% if secret_state.get('zatca_csid') %}{{ _('✓ مخزّن ومشفّر') }} <button type="submit" name="clear_secret" value="zatca_csid" class="btn btn-sm btn-outline-danger">{{ _('مسح') }}</button>{% else %}{{ _('غير مخزّن') }}{% endif %}</small>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="zatca_environment">{{ _('بيئة ZATCA') }}</label>
+            <select class="form-control" id="zatca_environment" name="zatca_environment" aria-label="zatca environment">
+              <option value="sandbox" {% if (tenant.zatca_environment|default('sandbox')) == 'sandbox' %}selected{% endif %}>sandbox</option>
+              <option value="production" {% if (tenant.zatca_environment|default('sandbox')) == 'production' %}selected{% endif %}>production</option>
+            </select>
+          </div>
+        </div>
+
         <hr>
         <h5 class="text-primary"><i class="fas fa-stamp" aria-hidden="true"></i> {{ _('ضريبة الدخل على الموظفين (IL)') }}</h5>
         <div class="form-group">

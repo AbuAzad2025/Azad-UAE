@@ -842,7 +842,7 @@ def tax_settings():
     def _secret_state():
         return {
             name: TenantSecretsService.is_set(tenant.id, name)
-            for name in ("zatca_private_key", "zatca_certificate", "ita_oauth_token")
+            for name in ("zatca_private_key", "zatca_certificate", "zatca_csid", "ita_oauth_token")
         }
 
     if request.method == "POST" and request.form.get("section") == "compliance":
@@ -851,6 +851,10 @@ def tax_settings():
                 tenant.enable_einvoice = request.form.get("enable_einvoice") == "on"
                 tenant.enable_einvoice_credit_notes = request.form.get("enable_einvoice_credit_notes") == "on"
                 tenant.zatca_phase2_enabled = request.form.get("zatca_phase2_enabled") == "on"
+                zatca_environment = (request.form.get("zatca_environment") or "sandbox").strip().lower()
+                if zatca_environment not in ("sandbox", "production"):
+                    raise ValueError(gettext("بيئة ZATCA غير صالحة."))
+                tenant.zatca_environment = zatca_environment
                 tenant.enable_ita_allocation = request.form.get("enable_ita_allocation") == "on"
                 environment = (request.form.get("ita_environment") or "sandbox").strip().lower()
                 if environment not in ("sandbox", "production"):
@@ -864,7 +868,7 @@ def tax_settings():
                 tenant.enable_zakat = request.form.get("enable_zakat") == "on"
                 tenant.enable_import_duties = request.form.get("enable_import_duties") == "on"
                 tenant.enable_tax_categories = request.form.get("enable_tax_categories") == "on"
-                for secret_name in ("zatca_private_key", "zatca_certificate", "ita_oauth_token"):
+                for secret_name in ("zatca_private_key", "zatca_certificate", "zatca_csid", "ita_oauth_token"):
                     clear = request.form.get("clear_secret")
                     if clear == secret_name:
                         TenantSecretsService.delete(tenant.id, secret_name)

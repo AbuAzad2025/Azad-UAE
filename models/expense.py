@@ -1,4 +1,7 @@
 from datetime import UTC, datetime
+from decimal import Decimal
+
+from sqlalchemy import text
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
@@ -71,6 +74,9 @@ class Expense(db.Model):
 
     payment_method = db.Column(db.String(20), nullable=False)
     reference_number = db.Column(db.String(100))
+    # Withholding tax at source on non-resident service payments (tenant rate).
+    is_service_to_nonresident = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
+    wht_amount = db.Column(db.Numeric(15, 3), nullable=False, server_default=text("0"), default=Decimal("0"))
 
     cheque_number = db.Column(db.String(50))
     cheque_date = db.Column(db.Date)

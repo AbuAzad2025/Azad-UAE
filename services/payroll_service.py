@@ -220,9 +220,9 @@ class PayrollService:
         # 2024-07-03 (new law) vs before; employees without a parseable hire
         # date default to the current law (the safest reading for a 2026
         # payroll run).
-        joined_after_2024_07_03 = joined is None or (
-            isinstance(joined, date) and joined >= date(2024, 7, 3)
-        ) or not isinstance(joined, date)
+        joined_after_2024_07_03 = (
+            joined is None or (isinstance(joined, date) and joined >= date(2024, 7, 3)) or not isinstance(joined, date)
+        )
 
         social = social_insurance_amount(
             gross_amount,

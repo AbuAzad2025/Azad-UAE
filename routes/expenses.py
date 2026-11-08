@@ -82,7 +82,14 @@ def _build_expense_gl_lines(expense, tenant_id):
             tenant_id=tid,
         )
         payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
-    return [
+
+    # Withholding at source on non-resident service payments (tenant rate).
+    wht_amount = Decimal(str(getattr(expense, "wht_amount", 0) or 0))
+    if wht_amount <= 0:
+        wht_amount = Decimal("0")
+    net_payment = Decimal(str(expense.amount)) - wht_amount
+
+    lines = [
         {
             "account": expense_account,
             "concept_code": expense_concept,
@@ -93,10 +100,20 @@ def _build_expense_gl_lines(expense, tenant_id):
         {
             "account": payment_account,
             "concept_code": payment_concept,
-            "credit": expense.amount,
+            "credit": net_payment,
             "description": gettext(f"دفع {expense.payment_method}"),
         },
     ]
+    if wht_amount > 0:
+        lines.append(
+            {
+                "account": GLService.get_account_code_for_concept("WITHHOLDING_TAX_PAYABLE", tenant_id=tid),
+                "concept_code": "WITHHOLDING_TAX_PAYABLE",
+                "credit": wht_amount,
+                "description": gettext(f"ضريبة استقطاع (WHT) — {expense.description or ''}"),
+            }
+        )
+    return lines
 
 
 @expenses_bp.route("/")
@@ -197,6 +214,7 @@ def create():
                     cheque_date=cheque_date_obj,
                     bank_name=request.form.get("bank_name"),
                     supplier_name=request.form.get("supplier_name"),
+                    is_service_to_nonresident=(request.form.get("is_service_to_nonresident") == "on"),
                     notes=request.form.get("notes"),
                     user_id=current_user.id,
                     branch_id=expense_branch_id,
@@ -235,6 +253,21 @@ def create():
                     tenant_id=getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
                 )
                 tid = getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
+
+                # Withholding at source on non-resident service payments.
+                from decimal import ROUND_HALF_UP
+
+                from models import Tenant
+
+                tenant = db.session.get(Tenant, int(tid)) if tid is not None else None
+                wht_rate = getattr(tenant, "wht_services_rate", None) if tenant is not None else None
+                if expense.is_service_to_nonresident and wht_rate is not None:
+                    expense.wht_amount = (
+                        Decimal(str(expense.amount or 0)) * Decimal(str(wht_rate)) / Decimal("100")
+                    ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                else:
+                    expense.wht_amount = Decimal("0")
+                db.session.flush()
 
                 # Budget enforcement check
                 from services.budget_enforcement import check_budget_for_account

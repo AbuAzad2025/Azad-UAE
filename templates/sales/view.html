@@ -32,6 +32,13 @@
 
     </a>
 
+    {% if zatca_submit_visible %}
+    <form method="post" action="{{ url_for('sales.submit_to_zatca', id=sale.id) }}" class="d-inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane mr-2" aria-hidden="true"></i>{{ _('تقديم إلى ZATCA') }}</button>
+    </form>
+    {% endif %}
+
     {% if ita_visible %}
     <form method="post" action="{{ url_for('sales.request_ita_allocation', id=sale.id) }}" class="d-inline">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
