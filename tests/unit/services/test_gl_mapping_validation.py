@@ -306,7 +306,11 @@ class TestValidateTenant:
         # a branch whose tenant has no chart has no liquidity accounts -
         # the readiness checks must report it
         db_session.add(
-            Branch(tenant_id=other.id, name=f"Liquidity Branch {uuid.uuid4().hex[:6]}", code=f"LQ{uuid.uuid4().hex[:4].upper()}")
+            Branch(
+                tenant_id=other.id,
+                name=f"Liquidity Branch {uuid.uuid4().hex[:6]}",
+                code=f"LQ{uuid.uuid4().hex[:4].upper()}",
+            )
         )
         db_session.commit()
 

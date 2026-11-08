@@ -51,7 +51,6 @@ class TestProvisionTenant:
 class TestModuleMappings:
     def test_missing_account_error(self, db_session):
         from models.gl_account_registry import GL_MODULE_DEFINITIONS
-
         from tests.factories import TenantFactory
 
         # a fresh tenant without a chart: every required mapping reports its missing account

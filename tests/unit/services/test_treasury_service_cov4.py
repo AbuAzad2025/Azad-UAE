@@ -20,7 +20,7 @@ def test_liquidity_gl_fallback_empty_and_with_accounts(db_session):
     assert out["account_count"] == 0
     assert out["total_balance"] == 0.0
 
-    branch = BranchFactory(tenant=tenant)
+    BranchFactory(tenant=tenant)
     db_session.commit()
     from services.gl_service import GLService
 
