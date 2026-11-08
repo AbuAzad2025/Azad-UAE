@@ -116,20 +116,59 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   file is a real woff2, no stylesheet or template names a third-party font
   host, and every font stack keeps a generic fallback so a font that cannot be
   loaded degrades the type and never the text.
-- **The CI red baseline was repaired in one push (6d3378c3)**: the baseline
-  911f8b94 had been red across routes/services/utils/core/integration/
-  scenarios-a/b/c/coverage-report for weeks, all on one family —
-  GLMappingError "no active GL account mapping" on test tenants that had no
-  provisioned chart, plus the statutory-VAT lock (fallback tenants resolve to
-  PS-16) silently changing fixture totals (e.g. POS checkout expected 75, now
-  78.75; a 0.175 AED drift in the period-close customer reconciliation because
-  the test computed the customer payment with two-decimal rounding while the
-  schema stores three). Fixtures now provision the chart at the right level
-  (function-scoped ``sample_tenant``, the session-wide FK-anchor tenant id=1,
-  unit ``sample_gl_accounts``, integration ``demo_tenant``), POS-style fixtures
-  explicitly opt into enable_tax=False, and the LED delivery gap (LED-26/LED-27
-  never assigned; the two month-end ledger routes added afterwards owed
-  another three) was closed with LED-118..122 through the real routes.
+- **The CI red baseline is closed, and main is green again (run 42443216117 @
+  139b2f1f): all 26 jobs pass — routes/services/utils/core/integration/
+  models/scenarios-a/b/c/d/coverage-report — the first fully green run of the
+  campaign after weeks of red since 911f8b94.**
+  The backlog was repaired in three batches:
+  - **6d3378c3** — the base family: test tenants had no provisioned GL chart
+    while the resolver went fail-fast (`ENABLE_DYNAMIC_GL_MAPPING=True`), plus
+    the statutory-VAT lock (fallback tenants resolve to PS-16) silently
+    changing fixture totals (POS expected 75, now 78.75; a 0.175 AED drift in
+    the period-close customer reconciliation because the test computed the
+    customer payment with two-decimal rounding while the schema stores
+    three). Fixtures now provision the chart at the right level
+    (function-scoped ``sample_tenant`` with chart + concepts, the session-wide
+    FK-anchor tenant id=1, unit ``sample_gl_accounts``, integration
+    ``demo_tenant`` — all wrapped in ``without_tenant_scope()`` because the
+    before_flush write guard sees a leaked active tenant as a cross-tenant
+    INSERT otherwise), POS-style fixtures explicitly opt into
+    enable_tax=False, and the LED delivery gap (LED-26/LED-27 never
+    assigned; two month-end ledger routes added afterwards) was closed with
+    LED-118..122 through the real routes (`test_wave8_ledger_part3.py`);
+    `_ROUTE_COUNTS` for ledger 32→34.
+  - **5e7ac517** — production fix for a live defect the suite found: a
+    **tenant-wide admin** (no branch) posting a **cash/bank voucher** on a
+    tenant whose only liquidity accounts are branch-scoped (every provisioned
+    tenant — the branch-audit listener creates `1110-B<id>`/`1120-B<id>` per
+    branch) could not post at all: the resolver picks the single candidate
+    and the branch-aware posting validator then refuses it against
+    ``branch_id=None``. ``GLService.get_default_liquidity_account`` answered
+    *which* account but not *which branch* the entry had to carry, so the
+    receipt/payment/refund paths rolled back on every cash voucher from a
+    branchless poster. ``GLService.resolve_liquidity_branch()`` now returns
+    the sole candidate's branch (the money has exactly one possible drawer);
+    the receipt and payment paths stamp it on the document and the journal
+    entry so all three agree. Multi-candidate tenants stay refused loudly,
+    exactly as before. Wave12 scenarios pinned this: 3 failed in CI, green
+    locally (100/100 wave12 + 154 payment unit tests) before the push.
+  - **5e7ac517…139b2f1f** — the collisions the fixture change caused: unit
+    tests inserted duplicate ``1130``/``6100`` etc. against the provisioned
+    base chart (uq_gl_accounts_tenant_code ×8 models, plus ~31 services) —
+    each now reuses the provisioned account or runs against a fresh factory
+    tenant (the correct shape for "never-provisioned" cases); the session-wide
+    anchor's provisioning moved under ``without_tenant_scope()``; the two
+    weak mappers moved to ``services.gl_service.resolve_gl_account`` mocks;
+    graphql ``CreateSale`` passes the customer tenant to the sequence.
+    ``test_full_name_prefers_arabic`` renumbered to its own sandbox codes.
+    **Coverage-report failed on the services floor in the same run**
+    (96.97 < 97) — closed by pinning the new resolver paths
+    (``TestResolveLiquidityBranch``, 11 tests, 112 passed in the file) —
+    the floor restored without moving any budget or touching
+    ``.coveragerc``.
+  Alembic Round-Trip did not fire on these pushes (it is gated to
+  migration-relevant changes; the Alembic graph gate inside Static quality
+  passed every time).
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → e2f3a4b5c6d7` (66 revisions)
