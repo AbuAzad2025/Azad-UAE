@@ -1196,6 +1196,7 @@ def _process_user_action(message, user):
                         Payment,
                         "payment_number",
                         branch_id=getattr(user, "branch_id", None),
+                        tenant_id=tid,
                     )
                     payment = Payment(
                         payment_number=payment_number,
@@ -2741,6 +2742,7 @@ http://localhost:5000/ai/assistant
                         Payment,
                         "payment_number",
                         branch_id=getattr(user, "branch_id", None),
+                        tenant_id=tid,
                     )
                     payment = Payment(
                         payment_number=payment_number,

@@ -66,6 +66,8 @@ def _bootstrap(db_session, *, qty="100", cost="10", price="50"):
         name_ar=f"POSGL {tid}",
         slug=f"posgl-{tid}",
         default_currency="AED",
+        vat_country="AE",
+        enable_tax=False,  # tax-exempt tenant: these scenarios pin GL posting mechanics, not VAT splits
         subscription_plan="pro",
         enable_pos_promotions=False,
         enable_pos_multi_tender=True,

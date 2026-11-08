@@ -842,7 +842,13 @@ class TestBuildExpenseGlLines:
 
         expense = _mock_expense(payment_method="cheque")
         account = MagicMock(is_header=False)
-        with patch("models.GLAccount") as gl:
+        with (
+            patch("models.GLAccount") as gl,
+            patch(
+                "services.gl_service.GLService.get_account_code_for_concept",
+                return_value="2120",
+            ),
+        ):
             gl.query.filter_by.return_value.first.return_value = account
             lines = _build_expense_gl_lines(expense, tenant_id=1)
         assert lines[1]["account"] == "2120"
@@ -862,6 +868,10 @@ class TestBuildExpenseGlLines:
             patch(
                 "services.gl_service.GLService.get_payment_credit_concept",
                 return_value="CASH",
+            ),
+            patch(
+                "services.gl_service.GLService.get_account_code_for_concept",
+                return_value="6500",
             ),
         ):
             gl.query.filter_by.return_value.first.return_value = header

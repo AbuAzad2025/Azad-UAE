@@ -40,7 +40,7 @@ from __future__ import annotations
 import time
 import uuid
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
@@ -350,10 +350,13 @@ def books(app, db_session, demo_tenant, demo_branch, demo_warehouse, demo_user, 
             payment_data = None
             if i % 3 == 0:
                 # The invoice total the customer pays: net of a 5% tax the
-                # product rounds to the cent, which is what the sale will
-                # compute too.
+                # product rounds to three decimals - the same quantization
+                # (half-up) the sale itself posts with. Quantizing to cents
+                # here would overpay every invoice by up to half a fils,
+                # and the reconciliation would blame the ledger for the
+                # difference.
                 net = spec["price"] * qty
-                tax = (net * VAT_RATE / Decimal("100")).quantize(Decimal("0.01"))
+                tax = (net * VAT_RATE / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
                 payment_data = {
                     "amount": net + tax,
                     "currency": "AED",

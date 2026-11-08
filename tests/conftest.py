@@ -428,6 +428,13 @@ def _ensure_mock_fk_anchors():
             db.session.rollback()
             tenant = db.session.get(Tenant, 1)
 
+    # The anchor tenant serves many hardcoded tenant_id=1 GL assertions; give
+    # it the chart its postings resolve against, once per session.
+    from services.gl_service import GLService
+
+    GLService.ensure_core_accounts(tenant_id=int(tenant.id))
+    db.session.commit()
+
     # User id=42 (mock_user.id) — used as created_by / user_id in inserts
     user = db.session.get(User, 42)
     if user is None:
@@ -1039,10 +1046,18 @@ def sample_tenant(db_session):
         subscription_plan="basic",
         default_currency="AED",
         base_currency="AED",
+        vat_country="AE",  # stored 5.00 is the AE statutory rate, not a custom one
     )
     db_session.add(tenant)
     db_session.commit()
     db_session.refresh(tenant)
+    # Production provisions the GL chart for every new tenant at onboarding
+    # (utils/system_init.py); tests that post GL entries must see the same
+    # chart or the resolver correctly refuses to invent account codes.
+    from services.gl_service import GLService
+
+    GLService.ensure_core_accounts(tenant_id=tenant.id)
+    db_session.commit()
     tenant.is_active = True
     tenant.is_suspended = False
     tenant.suspension_reason = None

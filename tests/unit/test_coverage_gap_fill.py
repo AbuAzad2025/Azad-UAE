@@ -196,10 +196,11 @@ def test_advanced_journal_manager_lines(app, db_session, sample_tenant):
         )
 
 
-def test_aging_service_lines(app):
+def test_aging_service_lines(app, sample_gl_accounts):
     from services.aging_analysis_service import AgingAnalysisService
 
-    AgingAnalysisService.get_receivables_aging(as_of_date="2026-09-01", branch_id=None, tenant_id=1)
-    AgingAnalysisService.get_payables_aging(as_of_date="2026-09-01", branch_id=None, tenant_id=1)
-    AgingAnalysisService.verify_receivables_with_gl(as_of_date="2026-09-01", tenant_id=1)
-    AgingAnalysisService.verify_payables_with_gl(as_of_date="2026-09-01", tenant_id=1)
+    tid = sample_gl_accounts.id
+    AgingAnalysisService.get_receivables_aging(as_of_date="2026-09-01", branch_id=None, tenant_id=tid)
+    AgingAnalysisService.get_payables_aging(as_of_date="2026-09-01", branch_id=None, tenant_id=tid)
+    AgingAnalysisService.verify_receivables_with_gl(as_of_date="2026-09-01", tenant_id=tid)
+    AgingAnalysisService.verify_payables_with_gl(as_of_date="2026-09-01", tenant_id=tid)

@@ -73,6 +73,10 @@ def _make_tenant(db_session, name, slug, currency="AED", piv=False):
         default_currency=currency,
         base_currency=currency,
         prices_include_vat=piv,
+        # These scenarios pin the 5% case, so the tenant sits under the AE
+        # statutory profile (the stored 5.00 rate is then the compliant rate,
+        # not a custom one the statutory lock would refuse).
+        vat_country="AE",
     )
     db_session.add(t)
     db_session.flush()
@@ -225,9 +229,9 @@ class TestPricesIncludeVatEndToEnd:
 
         assert sale.prices_include_vat is True
         assert sale.subtotal == Decimal("200")
-        assert sale.tax_amount == Decimal("9.52")
+        assert sale.tax_amount == Decimal("9.524")
         assert sale.total_amount == Decimal("200")
-        assert sale.taxable_amount == Decimal("190.48")
+        assert sale.taxable_amount == Decimal("190.476")
 
     def test_branch_override_tenant_prices_include_vat(self, app, db_session):
         from services.sale_service import SaleService
@@ -260,7 +264,7 @@ class TestPricesIncludeVatEndToEnd:
 
         assert sale.prices_include_vat is True
         assert sale.total_amount == Decimal("100")
-        assert sale.tax_amount == Decimal("4.76")
+        assert sale.tax_amount == Decimal("4.762")
 
 
 class TestWarehouseAllowNegativeInventory:
@@ -1504,6 +1508,7 @@ class TestPOSSessionAndDrawerIsolation:
             name_ar="POS-TA-" + str(uuid.uuid4())[:4],
             slug="pos-test-a-" + str(uuid.uuid4())[:4],
             default_currency="AED",
+            base_currency="AED",
         )
         db_session.add(t)
         db_session.flush()
@@ -1588,6 +1593,7 @@ class TestPOSSessionAndDrawerIsolation:
             name_ar="POS-TO-" + str(uuid.uuid4())[:4],
             slug="pos-test-o-" + str(uuid.uuid4())[:4],
             default_currency="AED",
+            base_currency="AED",
         )
         db_session.add(t)
         db_session.flush()
@@ -1655,6 +1661,7 @@ class TestPOSSessionAndDrawerIsolation:
             name_ar="POS-WH-" + str(uuid.uuid4())[:4],
             slug="pos-wh-" + str(uuid.uuid4())[:4],
             default_currency="AED",
+            base_currency="AED",
         )
         db_session.add(t)
         db_session.flush()
@@ -1780,6 +1787,7 @@ class TestPOSSessionAndDrawerIsolation:
             name_ar="POS-NEG-" + str(uuid.uuid4())[:4],
             slug="pos-neg-" + str(uuid.uuid4())[:4],
             default_currency="AED",
+            base_currency="AED",
         )
         db_session.add(t)
         db_session.flush()

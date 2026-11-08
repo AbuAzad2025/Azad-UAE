@@ -44,6 +44,7 @@ class TenantFactory(factory.alchemy.SQLAlchemyModelFactory):
     email = Sequence(lambda n: f"factory-tenant-{n:04d}@example.com")
     phone_1 = "0500000000"
     country = "AE"
+    vat_country = "AE"
     subscription_plan = "basic"
     default_currency = "AED"
     base_currency = "AED"

@@ -38,4 +38,4 @@ class TestLocalizationRegistry:
 
     def test_list_supported_countries(self):
         countries = list_supported_countries()
-        assert set(countries) == {"PS", "AE", "SA"}
+        assert set(countries) == {"PS", "IL", "AE", "SA"}

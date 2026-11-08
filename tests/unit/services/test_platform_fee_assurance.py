@@ -131,6 +131,10 @@ class TestRecordStoreOnlineFee:
         settings = MagicMock(azad_platform_fee_rate=Decimal("1"))
         mocker.patch("models.SystemSettings.get_current", return_value=settings)
         mocker.patch("services.azad_platform_fee_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.azad_platform_fee_service.GLService.get_account_code_for_concept",
+            return_value="2180",
+        )
         mock_post = mocker.patch("services.azad_platform_fee_service.post_or_fail")
         mocker.patch("services.azad_platform_fee_service.db.session")
 
@@ -213,6 +217,10 @@ class TestPlatformFeeReporting:
         mock_q.filter_by.return_value.all.return_value = [fee]
         mocker.patch("services.azad_platform_fee_service.AzadPlatformFee.query", mock_q)
         mocker.patch("services.azad_platform_fee_service._resolve_main_branch", return_value=1)
+        mocker.patch(
+            "services.azad_platform_fee_service.GLService.get_account_code_for_concept",
+            return_value="2180",
+        )
         mock_post = mocker.patch("services.azad_platform_fee_service.post_or_fail")
         mocker.patch("services.azad_platform_fee_service.db.session")
         from services.azad_platform_fee_service import AzadPlatformFeeService

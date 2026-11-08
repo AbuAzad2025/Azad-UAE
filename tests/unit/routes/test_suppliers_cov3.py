@@ -155,6 +155,10 @@ class TestCreateGuards:
             patch("services.supplier_service.SupplierService.create_supplier", return_value=supplier),
             patch("services.gl_service.GLService.ensure_core_accounts") as ensure,
             patch("services.gl_posting.post_or_fail") as post,
+            patch(
+                "services.gl_service.GLService.get_account_code_for_concept",
+                side_effect=lambda concept_code, **kwargs: {"AP": "2110"}.get(concept_code, "3130"),
+            ),
         ):
             resp = suppliers_cov3_client.post(
                 "/suppliers/create",

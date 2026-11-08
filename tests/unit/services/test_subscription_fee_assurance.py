@@ -66,6 +66,10 @@ class TestCreateSubscriptionFee:
 
     def test_creates_fee_with_explicit_amount(self, app, mocker):
         mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_account_code_for_concept",
+            return_value="6410",
+        )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")
         mocker.patch("services.azad_subscription_fee_service.db.session")
@@ -118,6 +122,10 @@ class TestRecordPayment:
         mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
         mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
         mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_account_code_for_concept",
+            return_value="6410",
+        )
+        mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value="BANK",
         )
@@ -156,6 +164,10 @@ class TestRecordPayment:
         )
         mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
         mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_account_code_for_concept",
+            return_value="6410",
+        )
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value=None,
@@ -266,6 +278,10 @@ class TestRecordPaymentFallbacks:
         )
         mocker.patch("services.azad_subscription_fee_service.db.session.get", return_value=fee)
         mocker.patch("services.azad_subscription_fee_service.GLService.ensure_core_accounts")
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_account_code_for_concept",
+            return_value="6410",
+        )
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value=None,

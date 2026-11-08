@@ -28,7 +28,9 @@ class TestPurchasesCreate:
             name_ar=f"PT {tid}",
             slug=f"pur-test-{tid}",
             default_currency="AED",
+            vat_country="AE",
             base_currency="AED",
+            enable_tax=False,  # tax-exempt tenant: pin the stock/GL path, not VAT
         )
         db_session.add(tenant)
         db_session.flush()

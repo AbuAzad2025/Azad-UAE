@@ -668,7 +668,7 @@ class TestADV58TenantIsolation:
             WarehouseFactory,
         )
 
-        other = TenantFactory(base_currency=BASE, default_currency=BASE)
+        other = TenantFactory(base_currency=BASE, default_currency=BASE, enable_tax=False)
         db_session.commit()
         other_branch = BranchFactory(tenant=other)
         other_warehouse = WarehouseFactory(tenant=other, branch=other_branch)

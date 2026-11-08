@@ -68,6 +68,8 @@ def demo_tenant(db_session, app):
     from tests.factories import TenantFactory
 
     tenant = TenantFactory()
+    tenant.enable_tax = False
+    tenant.vat_country = "AE"
     db_session.commit()
     with app.app_context():
         _provision_gl_chart(tenant.id)

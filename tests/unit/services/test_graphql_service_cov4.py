@@ -101,9 +101,13 @@ def test_mutate_success_and_flush_error(monkeypatch, db_session, sample_customer
     fq.filter_by.return_value.first.return_value = sample_customer
     monkeypatch.setattr(g, "assign_tenant_id", lambda sale: setattr(sale, "tenant_id", sample_tenant.id))
     with patch.object(g, "tenant_query", return_value=fq):
-        with patch.object(g.db.session, "flush", side_effect=[None, RuntimeError("flush boom")]):
-            out = g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25, amount=25)
-            assert out.success is True
+        out = g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25, amount=25)
+        assert out.success is True
+        # A flush failure anywhere in the mutation path propagates out of it:
+        # the sequence provisioning flushes internally before the mutation's
+        # own flush runs, so pin behaviour (an exception bubbles) rather than
+        # a specific flush call index, which moves with the service design.
+        with patch.object(g.db.session, "flush", side_effect=RuntimeError("flush boom")):
             with pytest.raises(RuntimeError):
                 g.CreateSale.mutate(None, customer_id=sample_customer.id, total_amount=25, amount=25)
 

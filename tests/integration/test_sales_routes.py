@@ -42,7 +42,9 @@ class TestSalesCreate:
             name_ar=f"ST {tid}",
             slug=f"sales-test-{tid}",
             default_currency="AED",
+            vat_country="AE",
             base_currency="AED",
+            enable_tax=False,  # tax-exempt tenant: pin the GL/stock posting path, not VAT
         )
         db_session.add(tenant)
         db_session.flush()
@@ -177,6 +179,7 @@ class TestSalesCreate:
             name_ar=f"TAX {tid}",
             slug=f"tax-test-{tid}",
             default_currency="AED",
+            vat_country="AE",
             base_currency="AED",
         )
         db_session.add(tenant)

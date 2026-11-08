@@ -160,7 +160,12 @@ class CreateSale(graphene.Mutation):
 
         total_amount = Decimal(str(data["total_amount"]))
         sale = Sale(
-            sale_number=generate_number("INV", Sale, "sale_number"),
+            sale_number=generate_number(
+                "INV",
+                Sale,
+                "sale_number",
+                tenant_id=customer.tenant_id,
+            ),
             customer_id=customer.id,
             seller_id=seller_id,
             total_amount=total_amount,

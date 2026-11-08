@@ -206,6 +206,10 @@ class TestSuppliersCreate:
             patch("utils.tenant_limits.check_suppliers_limit"),
             patch("services.gl_posting.post_or_fail"),
             patch("services.gl_service.GLService.ensure_core_accounts"),
+            patch(
+                "services.gl_service.GLService.get_account_code_for_concept",
+                side_effect=lambda concept_code, **kwargs: {"AP": "2110"}.get(concept_code, "3130"),
+            ),
         ):
             resp = suppliers_client.post(
                 "/suppliers/create",

@@ -268,6 +268,10 @@ class TestPaymentsCovBCreatePaymentCard:
                 return_value="CASH",
             ),
             patch("routes.payments.db.session", session),
+            patch(
+                "services.gl_service.GLService.get_account_code_for_concept",
+                return_value="2110",
+            ),
             patch("utils.decorators.branch_scope_id", return_value=None),
             _atomic_ok(),
         ):

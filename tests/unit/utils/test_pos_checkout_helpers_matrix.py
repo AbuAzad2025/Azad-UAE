@@ -165,14 +165,14 @@ class TestPromotionEvaluationJson:
 
 class TestAccumulateSessionTender:
     def test_cash_chunk_accumulates_cash_total(self):
-        session = SimpleNamespace(total_cash_sales=Decimal("10"), total_card_sales=Decimal("0"))
+        session = SimpleNamespace(id=1, total_cash_sales=Decimal("10"), total_card_sales=Decimal("0"))
         chunk = {"amount": Decimal("5"), "payment_method": "cash", "currency": "AED", "exchange_rate": 1}
         _accumulate_session_tender(session, chunk, tenant_id=None)
         assert session.total_cash_sales == Decimal("15.000")
         assert session.total_card_sales == Decimal("0")
 
     def test_card_family_accumulates_card_total(self):
-        session = SimpleNamespace(total_cash_sales=Decimal("0"), total_card_sales=Decimal("7"))
+        session = SimpleNamespace(id=1, total_cash_sales=Decimal("0"), total_card_sales=Decimal("7"))
         for method in ("card", "bank_transfer", "e_wallet"):
             chunk = {"amount": Decimal("1"), "payment_method": method, "currency": "AED", "exchange_rate": 1}
             _accumulate_session_tender(session, chunk, tenant_id=None)
@@ -185,7 +185,7 @@ class TestAccumulateSessionTender:
         assert session.total_cash_sales == Decimal("1")
 
     def test_none_starting_totals_treated_as_zero(self):
-        session = SimpleNamespace(total_cash_sales=None, total_card_sales=None)
+        session = SimpleNamespace(id=1, total_cash_sales=None, total_card_sales=None)
         chunk = {"amount": Decimal("2"), "payment_method": "cash", "currency": "AED", "exchange_rate": 1}
         _accumulate_session_tender(session, chunk, tenant_id=None)
         assert session.total_cash_sales == Decimal("2.000")

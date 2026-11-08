@@ -113,6 +113,18 @@ class TestARBuildReport:
             side_effect=lambda q, **kw: q,
         )
         mocker.patch(
+            "services.ar_reconciliation_service._get_receivable_concept_account",
+            return_value="1130",
+        )
+        mocker.patch(
+            "services.ar_reconciliation_service._get_partner_account",
+            return_value="3350",
+        )
+        mocker.patch(
+            "services.ar_reconciliation_service._get_merchant_account",
+            return_value="2115",
+        )
+        mocker.patch(
             "services.ar_reconciliation_service.ARReconciliationService._gl_balance",
             return_value=Decimal(str(gl_bal)),
         )
@@ -157,9 +169,21 @@ class TestARBuildReport:
                 "services.ar_reconciliation_service.ARReconciliationService._ops_unpaid",
                 return_value=Decimal("100"),
             )
+            mocker.patch(
+                "services.ar_reconciliation_service._get_receivable_concept_account",
+                return_value="1130",
+            )
+            mocker.patch(
+                "services.ar_reconciliation_service._get_partner_account",
+                return_value="3350",
+            )
+            mocker.patch(
+                "services.ar_reconciliation_service._get_merchant_account",
+                return_value="2115",
+            )
             from services.ar_reconciliation_service import ARReconciliationService
 
-            report = ARReconciliationService.build_report()
+            report = ARReconciliationService.build_report(tenant_id=1)
         assert report["rows"][0]["gl_balance"] == 0.0
         assert report["total_ops"] == 300.0
 

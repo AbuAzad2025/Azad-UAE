@@ -18,6 +18,7 @@ class TestPOSSession:
             name_ar=f"POS {tid}",
             slug=f"pos-{tid}",
             default_currency="AED",
+            vat_country="AE",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -100,6 +101,7 @@ class TestPOSSession:
             name_ar=f"PSC {tid}",
             slug=f"psc-{tid}",
             default_currency="AED",
+            vat_country="AE",
             subscription_plan="pro",
         )
         db_session.add(tenant)
@@ -226,7 +228,7 @@ class TestPOSSession:
 
         sale = db_session.get(Sale, sale_id)
         assert sale is not None
-        assert sale.total_amount == 75
+        assert sale.total_amount == Decimal("78.75")  # 75 + 5% AE statutory VAT
         assert sale.warehouse_id == wh.id
 
         payment = Payment.query.filter_by(sale_id=sale.id).first()
@@ -255,6 +257,7 @@ class TestPOSSession:
             name_ar=f"PCL {tid}",
             slug=f"pcl-{tid}",
             default_currency="AED",
+            vat_country="AE",
             subscription_plan="pro",
         )
         db_session.add(tenant)
@@ -409,6 +412,7 @@ class TestPOSSession:
             name_ar=f"POV {tid}",
             slug=f"pov-{tid}",
             default_currency="AED",
+            vat_country="AE",
             subscription_plan="pro",
         )
         db_session.add(tenant)
@@ -570,6 +574,7 @@ class TestPOSSession:
             name_ar=f"PPR {tid}",
             slug=f"ppr-{tid}",
             default_currency="AED",
+            vat_country="AE",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -705,6 +710,7 @@ class TestPOSSession:
             name_ar=f"PCR {tid}",
             slug=f"pcr-{tid}",
             default_currency="AED",
+            vat_country="AE",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -832,9 +838,9 @@ class TestPOSSession:
 
         sale = db_session.get(Sale, data["sale_id"])
         assert sale is not None
-        assert sale.total_amount == 100
+        assert sale.total_amount == Decimal("105.000")  # 100 + 5% AE statutory VAT
         assert sale.customer_id == customer.id
-        assert sale.balance_due == 100
+        assert sale.balance_due == Decimal("105.000")
 
         db_session.refresh(customer)
         assert float(customer.balance or 0) <= -100
@@ -849,6 +855,7 @@ class TestPOSSession:
             name_ar=f"PIS {tid}",
             slug=f"pis-{tid}",
             default_currency="AED",
+            vat_country="AE",
         )
         db_session.add(tenant)
         db_session.flush()
@@ -930,6 +937,7 @@ class TestPOSSession:
             name_ar=f"PWC {tid}",
             slug=f"pwc-{tid}",
             default_currency="AED",
+            vat_country="AE",
         )
         db_session.add(tenant)
         db_session.flush()

@@ -373,6 +373,7 @@ class TestInvoiceWizardWave:
     def test_option_two_empty(self, mock_user):
         ctx = {"last_action": "فاتورة"}
         chain = MagicMock()
+        chain.filter_by.return_value = chain
         chain.all.return_value = []
         with patch("models.sale.Sale") as Sale:
             Sale.query.filter_by.return_value = chain
@@ -655,6 +656,7 @@ class TestPurchaseWizardWave:
         ctx = {"last_action": "مشتريات"}
         purchase = _obj(id=1, total_amount=Decimal("500"), supplier=_obj(name="Sup"))
         chain = MagicMock()
+        chain.filter_by.return_value = chain
         chain.all.return_value = [purchase]
         with patch("models.purchase.Purchase") as Purchase:
             Purchase.query.filter_by.return_value = chain

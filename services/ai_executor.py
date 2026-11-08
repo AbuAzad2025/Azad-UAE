@@ -339,7 +339,7 @@ class AIExecutor:
         amount_dec = Decimal(str(amount))
 
         user_id = self._require_user_id()
-        payment_number = self._generate_number("PAY", Payment)
+        payment_number = self._generate_number("PAY", Payment, tenant_id=self.tenant_id)
         with atomic_transaction("ai_receive_payment"):
             payment = Payment(
                 tenant_id=self.tenant_id,
@@ -650,15 +650,16 @@ class AIExecutor:
     # ── INTERNAL ──────────────────────────────────────────────
 
     @staticmethod
-    def _generate_number(prefix: str, model_class) -> str:
+    def _generate_number(prefix: str, model_class, tenant_id=None) -> str:
         from utils.helpers import generate_number as gn
 
+        tid = tenant_id if tenant_id is not None else getattr(flask_user, "tenant_id", None)
         try:
             return gn(
                 prefix,
                 model_class,
                 f"{prefix.lower()}_number",
-                tenant_id=getattr(flask_user, "tenant_id", None),
+                tenant_id=tid,
             )
         except Exception:
             import secrets

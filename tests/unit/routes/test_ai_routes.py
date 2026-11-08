@@ -2084,6 +2084,7 @@ class TestInvoiceWizardFlow:
         ctx = {"last_action": "فاتورة"}
         sale = _obj(id=1, total_amount=100, customer=_obj(name="C"))
         chain = MagicMock()
+        chain.filter_by.return_value = chain
         chain.all.return_value = [sale]
         with patch("models.sale.Sale") as Sale:
             Sale.query.filter_by.return_value = chain
@@ -2610,6 +2611,7 @@ class TestWizardOptionTwoLists:
         ctx = {"last_action": "مصروف"}
         expense = _obj(description="Rent", amount=Decimal("100"), category="office")
         chain = MagicMock()
+        chain.filter_by.return_value = chain
         chain.all.return_value = [expense]
         with patch("models.expense.Expense") as Expense:
             Expense.query.filter_by.return_value = chain
@@ -2624,6 +2626,7 @@ class TestWizardOptionTwoLists:
             due_date=_obj(strftime=lambda f: "2026-01-01"),
         )
         chain = MagicMock()
+        chain.filter_by.return_value = chain
         chain.all.return_value = [cheque]
         with patch("models.cheque.Cheque") as Cheque:
             Cheque.query.filter_by.return_value = chain

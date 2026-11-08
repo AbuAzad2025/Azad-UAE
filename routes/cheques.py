@@ -240,7 +240,8 @@ def create():
     if request.method == "POST":
         try:
             cheque_branch_id = branch_scope_id() or getattr(current_user, "branch_id", None)
-            cheque_number = generate_number("CHQ", Cheque, "cheque_number", branch_id=cheque_branch_id)
+            tid = get_active_tenant_id(current_user)
+            cheque_number = generate_number("CHQ", Cheque, "cheque_number", branch_id=cheque_branch_id, tenant_id=tid)
 
             cheque_type = (request.form.get("cheque_type") or "").strip()
             if not cheque_type:

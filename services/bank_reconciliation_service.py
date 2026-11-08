@@ -517,7 +517,6 @@ class BankReconciliationService:
         """
         from decimal import Decimal as _D
 
-        from models import GLAccount
         from services.gl_posting import UnbalancedJournalEntryError, post_or_fail
 
         orphans = BankStatementLine.query.filter(

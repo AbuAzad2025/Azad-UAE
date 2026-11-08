@@ -1100,6 +1100,13 @@ class TestSAL47SaleTotalsApi:
     def test_a_header_discount_applies_after_the_lines(self, client, db_session, sample_tenant, sample_branch):
         """SAL-51. Line discounts then header discount - the order matters."""
         _seller(client, db_session, sample_tenant, sample_branch)
+        # No tax_rate in the body, so the tenant's statutory rate applies on
+        # top of the discount; switch VAT off so the arithmetic under test is
+        # the discount alone.
+        sample_tenant.enable_tax = False
+        db_session.add(sample_tenant)
+        db_session.commit()
+        db_session.refresh(sample_tenant)
         body = self._totals(
             client,
             {

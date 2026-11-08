@@ -121,15 +121,13 @@ class TestViewPrintEdit:
             assert pur_client.get("/purchases/5").status_code == 403
 
     def test_print_qr_branches(self, pur_client):
-        from models.invoice_settings import InvoiceSettings
-
         p = _purchase()
         settings = MagicMock(enable_qr_code=True)
         ver = MagicMock(public_token="tok")
         with (
             patch("routes.purchases.tenant_get_or_404", return_value=p),
             patch("utils.decorators.branch_scope_id", return_value=None),
-            patch.object(InvoiceSettings, "company_print_context", return_value=(None, settings, None)),
+            patch("services.invoice_profile_service.get_company_print_context", return_value=(None, settings, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch(
                 "services.document_verification_service.DocumentVerificationService.get_or_create_verification",
@@ -142,7 +140,7 @@ class TestViewPrintEdit:
         with (
             patch("routes.purchases.tenant_get_or_404", return_value=p),
             patch("utils.decorators.branch_scope_id", return_value=None),
-            patch.object(InvoiceSettings, "company_print_context", return_value=(None, settings, None)),
+            patch("services.invoice_profile_service.get_company_print_context", return_value=(None, settings, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch(
                 "services.document_verification_service.DocumentVerificationService.get_or_create_verification",
@@ -389,14 +387,12 @@ class TestMatch:
 
 class TestRemainingArcs:
     def test_print_qr_disabled(self, pur_client):
-        from models.invoice_settings import InvoiceSettings
-
         p = _purchase()
         settings = MagicMock(enable_qr_code=False)
         with (
             patch("routes.purchases.tenant_get_or_404", return_value=p),
             patch("utils.decorators.branch_scope_id", return_value=None),
-            patch.object(InvoiceSettings, "company_print_context", return_value=(None, settings, None)),
+            patch("services.invoice_profile_service.get_company_print_context", return_value=(None, settings, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch("routes.purchases.render_template", return_value="ok"),
         ):

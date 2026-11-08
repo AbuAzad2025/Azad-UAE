@@ -68,7 +68,6 @@ class TestOwnerDashboardAccess:
         import uuid
 
         from models import Role, Tenant, User
-        from models.invoice_settings import InvoiceSettings
 
         uid = str(uuid.uuid4())[:8]
         tenant = Tenant(
@@ -95,10 +94,6 @@ class TestOwnerDashboardAccess:
         )
         owner.set_password("password123")
         db_session.add(owner)
-        db_session.commit()
-
-        inv = InvoiceSettings(is_active=True, tenant_id=tenant.id)
-        db_session.add(inv)
         db_session.commit()
 
         with client:

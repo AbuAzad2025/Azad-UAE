@@ -132,6 +132,8 @@ def _seed_money_tenant(label, *, stock=STOCK_QTY, price=UNIT_PRICE, cost=UNIT_CO
         slug=f"load-{label}-{unique}",
         default_currency="AED",
         base_currency="AED",
+        vat_country="AE",
+        enable_tax=False,  # these storms pin money concurrency, not tax math
         subscription_plan="pro",
         enable_pos=True,
         enable_pos_promotions=True,

@@ -327,6 +327,7 @@ class TestPostAdjustmentGl:
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
 
@@ -348,6 +349,7 @@ class TestPostAdjustmentGl:
         session.get.return_value = product
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
 
@@ -372,6 +374,7 @@ class TestAddOpeningStock:
         mocker.patch("services.stock_service.StockService.create_movement", return_value=movement)
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mock_post = mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
 
@@ -1168,6 +1171,7 @@ class TestPostRetrospectiveCostAdjustment:
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
 
@@ -1191,6 +1195,7 @@ class TestPostRetrospectiveCostAdjustment:
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mocker.patch("services.gl_posting.post_or_fail")
         from services.stock_service import StockService
 
@@ -1214,6 +1219,7 @@ class TestPostRetrospectiveCostAdjustment:
         session.get.side_effect = lambda model, pk: product if pk == 1 else warehouse
         mocker.patch("services.stock_service._resolve_gl_concept_account", return_value="1140")
         mocker.patch("services.gl_service.GLService.ensure_core_accounts")
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="1140")
         mocker.patch("services.gl_posting.post_or_fail", side_effect=RuntimeError("gl fail"))
         mock_logger = mocker.patch("services.stock_service.current_app.logger")
         from services.stock_service import StockService

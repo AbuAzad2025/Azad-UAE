@@ -96,7 +96,7 @@ class TestListShipments:
     def test_renders_with_shipments(self, shipments_client):
         mock_q = _chain_query(all=[_mock_shipment(1), _mock_shipment(2)])
         with (
-            patch("routes.shipments.db.session.query", return_value=mock_q),
+            patch("routes.shipments.tenant_query", return_value=mock_q),
             patch("routes.shipments.render_template", return_value="ok") as render,
         ):
             resp = shipments_client.get("/shipments")
@@ -107,7 +107,7 @@ class TestListShipments:
     def test_filters_by_status(self, shipments_client):
         mock_q = _chain_query(all=[_mock_shipment(status="draft")])
         with (
-            patch("routes.shipments.db.session.query", return_value=mock_q),
+            patch("routes.shipments.tenant_query", return_value=mock_q),
             patch("routes.shipments.render_template", return_value="ok"),
         ):
             resp = shipments_client.get("/shipments?status=draft")
@@ -116,30 +116,45 @@ class TestListShipments:
         assert mock_q.filter.called
 
     def test_tenant_isolation_uses_tenant_id(self, shipments_client):
+        """The route must read through utils/tenanting.tenant_query.
+
+        The scope filter itself lives in utils/tenanting (apply_tenant_scope),
+        which the unit suite pins; this test pins the route's half of the
+        contract: the query really goes through that one choke point and not
+        an ad-hoc query that could drift apart from it.
+        """
+        from models.shipment import Shipment
+
         mock_q = _chain_query(all=[])
         with (
-            patch("routes.shipments.db.session.query", return_value=mock_q),
+            patch("routes.shipments.tenant_query", return_value=mock_q) as importing_tenant_query,
             patch("routes.shipments.get_active_tenant_id", return_value=5),
             patch("routes.shipments.render_template", return_value="ok"),
         ):
             resp = shipments_client.get("/shipments")
         assert resp.status_code == 200
-        # first filter is tenant_id == 5: check that filter was invoked
-        assert mock_q.filter.called
+        importing_tenant_query.assert_called_once_with(Shipment)
 
-    def test_view_tenant_mismatch_403(self, shipments_client):
-        other = _mock_shipment(sid=99, tenant_id=999)
+    def test_view_tenant_mismatch_404(self, shipments_client):
+        """Another tenant's record is invisible, never served.
+
+        tenant_get_or_404 applies the scope the same way utils/tenanting.py
+        does: the mismatch aborts 404, never 403, so the response never
+        reveals that a record exists.
+        """
+        import werkzeug.exceptions
+
         with (
-            patch("routes.shipments.db.get_or_404", return_value=other),
+            patch("routes.shipments.tenant_get_or_404", side_effect=werkzeug.exceptions.NotFound),
             patch("routes.shipments.get_active_tenant_id", return_value=1),
         ):
             resp = shipments_client.get("/shipments/99")
-        assert resp.status_code == 403
+        assert resp.status_code == 404
 
     def test_view_success(self, shipments_client):
         s = _mock_shipment(sid=7, tenant_id=1)
         with (
-            patch("routes.shipments.db.get_or_404", return_value=s),
+            patch("routes.shipments.tenant_get_or_404", return_value=s),
             patch("routes.shipments.db.session.query", return_value=_chain_query(all=[])),
             patch("routes.shipments.render_template", return_value="ok") as render,
         ):
@@ -153,7 +168,7 @@ class TestListShipments:
         mock_sale = MagicMock(id=100, shipment_id=7)
         mock_sales_q = _chain_query(all=[mock_sale])
         with (
-            patch("routes.shipments.db.get_or_404", return_value=s),
+            patch("routes.shipments.tenant_get_or_404", return_value=s),
             patch("routes.shipments.db.session.query", return_value=mock_sales_q),
             patch("routes.shipments.render_template", return_value="ok"),
         ):
@@ -389,7 +404,7 @@ class TestShipmentApis:
         mock_q = _chain_query(all=[_mock_warehouse(1, "WH-A"), _mock_warehouse(2, "WH-B")])
         # api_warehouses uses db.session.query(Warehouse).filter_by(is_active=True)...filter(...).limit(20).all()
         # So we patch db.session.query to return mock_q
-        with patch("routes.shipments.db.session.query", return_value=mock_q):
+        with patch("routes.shipments.tenant_query", return_value=mock_q):
             resp = shipments_client.get("/shipments/api/warehouses")
         assert resp.status_code == 200
         data = resp.get_json()
@@ -399,25 +414,26 @@ class TestShipmentApis:
 
     def test_api_warehouses_filters_by_q(self, shipments_client):
         mock_q = _chain_query(all=[_mock_warehouse(1, "WH-A")])
-        with patch("routes.shipments.db.session.query", return_value=mock_q):
+        with patch("routes.shipments.tenant_query", return_value=mock_q):
             resp = shipments_client.get("/shipments/api/warehouses?q=WH-A")
         assert resp.status_code == 200
         assert mock_q.filter.called
 
     def test_api_warehouses_tenant_isolation(self, shipments_client):
+        from models.warehouse import Warehouse
+
         mock_q = _chain_query(all=[])
         with (
-            patch("routes.shipments.db.session.query", return_value=mock_q),
+            patch("routes.shipments.tenant_query", return_value=mock_q) as importing_tenant_query,
             patch("routes.shipments.get_active_tenant_id", return_value=7),
         ):
             resp = shipments_client.get("/shipments/api/warehouses")
         assert resp.status_code == 200
-        # tenant filter applied via query.filter(Warehouse.tenant_id == tid)
-        assert mock_q.filter.called
+        importing_tenant_query.assert_called_once_with(Warehouse)
 
     def test_api_products_returns_json(self, shipments_client):
         mock_q = _chain_query(all=[_mock_product(5, "Prod X"), _mock_product(6, "Prod Y")])
-        with patch("routes.shipments.db.session.query", return_value=mock_q):
+        with patch("routes.shipments.tenant_query", return_value=mock_q):
             resp = shipments_client.get("/shipments/api/products")
         assert resp.status_code == 200
         data = resp.get_json()
@@ -427,20 +443,22 @@ class TestShipmentApis:
 
     def test_api_products_filters_by_q(self, shipments_client):
         mock_q = _chain_query(all=[_mock_product(5, "Prod X")])
-        with patch("routes.shipments.db.session.query", return_value=mock_q):
+        with patch("routes.shipments.tenant_query", return_value=mock_q):
             resp = shipments_client.get("/shipments/api/products?q=Prod")
         assert resp.status_code == 200
         assert mock_q.filter.called
 
     def test_api_products_tenant_isolation(self, shipments_client):
+        from models.product import Product
+
         mock_q = _chain_query(all=[])
         with (
-            patch("routes.shipments.db.session.query", return_value=mock_q),
+            patch("routes.shipments.tenant_query", return_value=mock_q) as importing_tenant_query,
             patch("routes.shipments.get_active_tenant_id", return_value=9),
         ):
             resp = shipments_client.get("/shipments/api/products")
         assert resp.status_code == 200
-        assert mock_q.filter.called
+        importing_tenant_query.assert_called_once_with(Product)
 
     def test_api_requires_login(self, shipments_client):
         with unauthenticated_client(shipments_client):
@@ -524,7 +542,7 @@ class TestDirectInvoicePreserved:
     def test_view_shipment_no_sales_does_not_crash(self, shipments_client):
         s = _mock_shipment(sid=10, tenant_id=1)
         with (
-            patch("routes.shipments.db.get_or_404", return_value=s),
+            patch("routes.shipments.tenant_get_or_404", return_value=s),
             patch("routes.shipments.db.session.query", return_value=_chain_query(all=[])),
             patch("routes.shipments.render_template", return_value="ok"),
         ):

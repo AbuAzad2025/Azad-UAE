@@ -8,7 +8,7 @@ def test_public_sitemap_lastmod_branch(client):
     assert "<lastmod>" in data
 
 
-def test_reports_before_request_exit_and_inventory_403(auth_client):
+def test_reports_before_request_exit_and_inventory_403(auth_client, sample_gl_accounts):
     resp = auth_client.get("/reports/")
     assert resp.status_code in (200, 302)
     resp_inv = auth_client.get("/reports/inventory-reconciliation/export?format=csv")

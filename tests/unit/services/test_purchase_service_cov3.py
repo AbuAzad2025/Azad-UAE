@@ -548,7 +548,7 @@ class TestReturnFlows:
         assert out.subtotal == Decimal("10.000")
 
     def test_supplier_take_reduces_total(self):
-        supplier = SimpleNamespace(total_purchases_aed=Decimal("500"))
+        supplier = MagicMock(total_purchases_aed=Decimal("500"), _locked=MagicMock())
         out, _ = self._run_return(
             _purchase_mock(supplier=supplier),
             [{"purchase_line_id": 1, "product_id": 5, "quantity": 1, "unit_cost": "10"}],

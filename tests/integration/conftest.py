@@ -64,8 +64,17 @@ def _seed_permissions(app):
 
 @pytest.fixture
 def demo_tenant(db_session):
-    """A fresh tenant created through the factory."""
+    """A fresh tenant created through the factory, with its GL chart.
+
+    Production provisions the chart for every new tenant at onboarding; an
+    integration test that posts to the ledger without one fails in
+    GLService.resolve_gl_account with "No active GL account mapping" - a
+    refusal to invent account codes, which is the resolver doing its job
+    against a tenant the fixture never opened for business.
+    """
     tenant = TenantFactory()
+    db_session.commit()
+    GLService.ensure_core_accounts(tenant_id=tenant.id)
     db_session.commit()
     return tenant
 
