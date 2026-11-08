@@ -154,10 +154,6 @@ class Tenant(db.Model):
     enable_import_duties = db.Column(db.Boolean, nullable=False, server_default=text("true"), default=True)
     enable_tax_categories = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
     enable_il_pension = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
-    enable_zakat = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
-    # NULL = withholding disabled; an explicit value is the withheld percentage
-    # on service payments to non-resident suppliers (tenant-configured rate).
-    wht_services_rate = db.Column(db.Numeric(5, 2), nullable=True)
     # POS Phase 4 — SaaS sub-feature flags. NULL means "inherit from the
     # subscription plan" (pro/enterprise tiers enable them, basic does not);
     # an explicit True/False is a per-tenant override (utils/pos_features.py).
