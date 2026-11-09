@@ -494,7 +494,8 @@ def submit_to_zatca(**kwargs):
     from services.zatca_submission_service import ZatcaSubmissionError, ZatcaSubmissionService
 
     try:
-        result = ZatcaSubmissionService.submit(sale)
+        with atomic_transaction("zatca_invoice_submission"):
+            result = ZatcaSubmissionService.submit(sale)
     except ZatcaSubmissionError as exc:
         flash(gettext(str(exc)), "danger")
         return redirect(url_for("sales.view", id=sale.id))
@@ -528,7 +529,8 @@ def request_ita_allocation(**kwargs):
     from services.ita_allocation_service import ItaAllocationError, ItaAllocationService
 
     try:
-        result = ItaAllocationService.request_allocation_number(sale, user_id=current_user.id)
+        with atomic_transaction("ita_invoice_allocation"):
+            result = ItaAllocationService.request_allocation_number(sale, user_id=current_user.id)
     except ItaAllocationError as exc:
         flash(gettext(str(exc)), "danger")
         return redirect(url_for("sales.view", id=sale.id))

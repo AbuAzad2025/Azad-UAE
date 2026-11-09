@@ -78,6 +78,7 @@ class TestItaAllocationService:
 
         TenantSecretsService.set(tenant.id, "ita_oauth_token", "tok-123", user_id=sample_user.id)
         sale = _make_sale(db_session, tenant, sample_branch, sample_user)
+
         with pytest.raises(ItaAllocationError, match="9 digits"):
             ItaAllocationService.request_allocation_number(sale)
 
@@ -126,6 +127,10 @@ class TestItaAllocationService:
         TenantSecretsService.set(tenant.id, "ita_oauth_token", "tok-123", user_id=sample_user.id)
         sale = _make_sale(db_session, tenant, sample_branch, sample_user)
 
+        from services.einvoice_service import EInvoiceService
+
+        assert EInvoiceService.generate_for_sale(sale) is not None
+
         mock_resp = mocker.MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {
@@ -148,6 +153,10 @@ class TestItaAllocationService:
 
         TenantSecretsService.set(tenant.id, "ita_oauth_token", "tok-123", user_id=sample_user.id)
         sale = _make_sale(db_session, tenant, sample_branch, sample_user)
+
+        from services.einvoice_service import EInvoiceService
+
+        assert EInvoiceService.generate_for_sale(sale) is not None
 
         import requests
 

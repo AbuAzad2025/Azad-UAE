@@ -57,6 +57,7 @@ class ItaAllocationService:
     def request_allocation_number(sale, *, user_id=None) -> dict:
         from models import EInvoice, Tenant
         from services.tenant_secrets_service import TenantSecretsService
+        from utils.tenanting import tenant_query
 
         tenant = db.session.get(Tenant, int(sale.tenant_id)) if sale.tenant_id is not None else None
         if tenant is None:
@@ -89,6 +90,19 @@ class ItaAllocationService:
             raise ItaAllocationError(
                 "The customer's VAT number must be exactly 9 digits (or empty for a private customer)."
             )
+
+        # Lock the destination before calling the authority. The route owns the
+        # transaction, so concurrent requests wait and refuse an existing number.
+        einv = (
+            tenant_query(EInvoice)
+            .filter_by(tenant_id=tenant.id, sale_id=sale.id, doc_type="invoice")
+            .with_for_update()
+            .first()
+        )
+        if einv is None:
+            raise ItaAllocationError("An e-invoice artifact is required to store the allocation number.")
+        if einv.ita_allocation_number:
+            raise ItaAllocationError("An allocation number is already recorded; verify it before resending.")
 
         base = (
             PRODUCTION_URL
@@ -130,6 +144,8 @@ class ItaAllocationService:
             body = response.json()
         except ValueError:
             body = {}
+        if not isinstance(body, dict):
+            body = {}
 
         # The ITA returns the same fields with different casing depending on
         # environment/version — accept both.
@@ -147,12 +163,16 @@ class ItaAllocationService:
         approved = pick("approved", "Approved")
         message = pick("Message", "message") or ""
         confirmation = pick("Confirmation_Number", "confirmation_number", "ConfirmationNumber")
-        http_ok = 200 <= response.status_code < 300
-        approved_flag = (
-            str(approved).lower() in ("true", "1", "yes")
-            or (status is not None and int(status) == 200 and str(confirmation) not in (None, "", "0"))
-            or (approved is None and status is None and http_ok and confirmation not in (None, "", "0"))
+        number = (
+            str(confirmation).strip()
+            if isinstance(confirmation, str | int) and not isinstance(confirmation, bool)
+            else ""
         )
+        all_zero = number.isdigit() and not number.strip("0")
+        valid_number = bool(number) and number.lower() != "none" and not all_zero and len(number) <= 30
+        status_ok = status is None or str(status).strip() == "200"
+        approved_ok = approved is None or str(approved).strip().lower() in ("true", "1")
+        approved_flag = response.status_code == 200 and valid_number and status_ok and approved_ok
         if not approved_flag:
             error_bits = [
                 bit
@@ -167,14 +187,8 @@ class ItaAllocationService:
                 "The Israel Tax Authority did not approve the invoice allocation: " + "; ".join(error_bits)
             )
 
-        number = str(confirmation)
-        if not number.strip():
-            raise ItaAllocationError("The ITA approved the request but returned no allocation number.")
-
-        einv = EInvoice.query.filter_by(tenant_id=tenant.id, sale_id=sale.id, doc_type="invoice").first()
-        if einv is not None:
-            einv.ita_allocation_number = number
-            db.session.flush()
+        einv.ita_allocation_number = number
+        db.session.flush()
         return {
             "allocation_number": number,
             "approved": True,

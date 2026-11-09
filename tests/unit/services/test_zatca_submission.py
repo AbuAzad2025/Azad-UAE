@@ -57,7 +57,7 @@ class TestSubmitGuards:
         mock_db.session.get.return_value = _tenant()
         self._secrets(mocker)
         einvoice_model = mocker.patch("models.EInvoice")
-        einvoice_model.query.filter_by.return_value.first.return_value = None
+        einvoice_model.query.filter_by.return_value.with_for_update.return_value.first.return_value = None
         with pytest.raises(ZatcaSubmissionError, match="artifact"):
             ZatcaSubmissionService.submit(SALE)
 
@@ -66,7 +66,9 @@ class TestSubmitGuards:
         mock_db.session.get.return_value = _tenant()
         self._secrets(mocker)
         einvoice_model = mocker.patch("models.EInvoice")
-        einvoice_model.query.filter_by.return_value.first.return_value = MagicMock(xml_payload="")
+        einvoice_model.query.filter_by.return_value.with_for_update.return_value.first.return_value = MagicMock(
+            xml_payload=""
+        )
         with pytest.raises(ZatcaSubmissionError, match="payload"):
             ZatcaSubmissionService.submit(SALE)
 
@@ -81,7 +83,7 @@ class TestSubmitHttp:
         )
         einvoice_model = mocker.patch("models.EInvoice")
         einvoice_row = MagicMock(xml_payload="<x/>", status="draft")
-        einvoice_model.query.filter_by.return_value.first.return_value = einvoice_row
+        einvoice_model.query.filter_by.return_value.with_for_update.return_value.first.return_value = einvoice_row
         response = MagicMock(status_code=status_code, text=str(body))
         response.json.return_value = body
         post = mocker.patch("services.zatca_submission_service.requests.post", return_value=response)
@@ -97,7 +99,9 @@ class TestSubmitHttp:
             side_effect=lambda tid, name: "x",
         )
         einvoice_model = mocker.patch("models.EInvoice")
-        einvoice_model.query.filter_by.return_value.first.return_value = MagicMock(xml_payload="<x/>")
+        einvoice_model.query.filter_by.return_value.with_for_update.return_value.first.return_value = MagicMock(
+            xml_payload="<x/>", status="generated"
+        )
         mocker.patch(
             "services.zatca_submission_service.requests.post",
             side_effect=requests.RequestException("down"),
@@ -122,18 +126,18 @@ class TestSubmitHttp:
         assert headers["Authorization"] == "Bearer x"
 
     def test_production_environment_url(self, mocker):
-        einvoice_row, post = self._post_setup(mocker, {"clearanceStatus": "CLEARED"}, environment="production")
+        einvoice_row, post = self._post_setup(mocker, {"reportingStatus": "REPORTED"}, environment="production")
         result = ZatcaSubmissionService.submit(SALE)
-        assert result["status"] == "CLEARED"
+        assert result["status"] == "REPORTED"
         assert "core/invoices" in post.call_args.args[0]
 
-    def test_http_ok_without_status_word(self, mocker):
+    def test_http_ok_without_status_is_not_confirmation(self, mocker):
         einvoice_row, post = self._post_setup(mocker, {})
-        assert ZatcaSubmissionService.submit(SALE)["status"] == "SUCCESS"
+        with pytest.raises(ZatcaSubmissionError, match="did not accept"):
+            ZatcaSubmissionService.submit(SALE)
+        assert einvoice_row.status == "draft"
 
-    def test_non_json_body_falls_back_to_raw(self, mocker):
-        import requests  # noqa: F401
-
+    def test_non_json_response_is_not_confirmation(self, mocker):
         mock_db = mocker.patch("services.zatca_submission_service.db")
         mock_db.session.get.return_value = _tenant()
         mocker.patch(
@@ -141,10 +145,40 @@ class TestSubmitHttp:
             side_effect=lambda tid, name: "x",
         )
         einvoice_model = mocker.patch("models.EInvoice")
-        einvoice_model.query.filter_by.return_value.first.return_value = MagicMock(xml_payload="<x/>")
+        einvoice_model.query.filter_by.return_value.with_for_update.return_value.first.return_value = MagicMock(
+            xml_payload="<x/>", status="generated"
+        )
         response = MagicMock(status_code=200, text="plain ok")
         response.json.side_effect = ValueError("not json")
         mocker.patch("services.zatca_submission_service.requests.post", return_value=response)
-        result = ZatcaSubmissionService.submit(SALE)
-        assert result["status"] == "SUCCESS"
-        assert result["response"] == {"raw": "plain ok"}
+        with pytest.raises(ZatcaSubmissionError, match="unrecognized response"):
+            ZatcaSubmissionService.submit(SALE)
+
+    @pytest.mark.parametrize("body", [[], None, "ok"])
+    def test_non_object_json_is_not_confirmation(self, mocker, body):
+        row, post = self._post_setup(mocker, body)
+        with pytest.raises(ZatcaSubmissionError, match="unrecognized response"):
+            ZatcaSubmissionService.submit(SALE)
+        assert row.status == "draft"
+
+    @pytest.mark.parametrize(
+        ("body", "status_code"),
+        [
+            ({"clearanceStatus": "CLEARED"}, 200),
+            ({"reportingStatus": "REPORTED"}, 500),
+            ({"reportingStatus": "REPORTED", "validationResults": "unknown"}, 200),
+            ({"reportingStatus": "REPORTED", "validationResults": {"errorMessages": [{"message": "bad"}]}}, 200),
+        ],
+    )
+    def test_rejected_or_contradictory_response_is_not_confirmation(self, mocker, body, status_code):
+        row, post = self._post_setup(mocker, body, status_code=status_code)
+        with pytest.raises(ZatcaSubmissionError, match="did not accept"):
+            ZatcaSubmissionService.submit(SALE)
+        assert row.status == "draft"
+
+    def test_previously_submitted_requires_review_before_resend(self, mocker):
+        row, post = self._post_setup(mocker, {"reportingStatus": "REPORTED"})
+        row.status = "submitted"
+        with pytest.raises(ZatcaSubmissionError, match="verify"):
+            ZatcaSubmissionService.submit(SALE)
+        post.assert_not_called()
