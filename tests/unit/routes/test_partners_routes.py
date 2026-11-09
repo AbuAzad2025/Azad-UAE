@@ -374,6 +374,89 @@ class TestPartnersApiPreviewPnl:
         partners_client._partners_mocks["service"].calculate_scope_profit.assert_called_once()
 
 
+class TestPartnersUnifiedLink:
+    def test_unified_returns_combined_json(self, partners_client):
+        partner = _partner_mock(4)
+        unified = {
+            "partner": partner,
+            "distributions": [],
+            "linked_customers": [{"id": 9, "name": "N", "customer_type": "partner"}],
+            "company_total": 100.0,
+            "current_balance": 25.0,
+            "product_commissions_total": 40.0,
+            "combined_total": 140.0,
+        }
+        partners_client._partners_mocks["service"].get_unified_statement.return_value = unified
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.get("/partners/4/unified")
+        assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["success"] is True
+        assert body["data"]["combined_total"] == 140.0
+        partners_client._partners_mocks["service"].get_unified_statement.assert_called_once_with(4, 1)
+
+    def test_unified_404_for_foreign_partner(self, partners_client):
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(not_found=True),
+        ):
+            resp = partners_client.get("/partners/987650/unified")
+        assert resp.status_code == 404
+
+    def test_link_customer_success(self, partners_client):
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/link-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
+        partners_client._partners_mocks["service"].link_product_partner.assert_called_once_with(4, 9, tenant_id=1)
+
+    def test_link_customer_missing_id(self, partners_client):
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/link-customer", data={})
+        assert resp.status_code in (302, 303)
+        partners_client._partners_mocks["service"].link_product_partner.assert_not_called()
+
+    def test_link_customer_rejected_by_service_flashes(self, partners_client):
+        partner = _partner_mock(4)
+        partners_client._partners_mocks["service"].link_product_partner.return_value = False
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/link-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
+
+    def test_link_customer_exception(self, partners_client):
+        partner = _partner_mock(4)
+        partners_client._partners_mocks["service"].link_product_partner.side_effect = RuntimeError("db")
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/link-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
+
+    def test_unlink_customer_success(self, partners_client):
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/unlink-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
+        partners_client._partners_mocks["service"].unlink_product_partner.assert_called_once_with(9, tenant_id=1)
+
+
 class TestPartnersAuth:
     def test_unauthenticated_index_returns_401(self, partners_client):
         with unauthenticated_client(partners_client):

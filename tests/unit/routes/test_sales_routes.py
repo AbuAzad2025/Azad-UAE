@@ -701,6 +701,69 @@ class TestSalesComplianceDocuments:
         assert resp.status_code == 302
 
 
+    def test_einvoice_xml_denied_for_foreign_branch(self, sales_client):
+        with (
+            _sales_patches(branch_scope=9),
+        ):
+            resp = sales_client.get("/sales/1/einvoice.xml")
+        assert resp.status_code == 403
+
+    def test_create_get_unknown_preselected_customer(self, sales_client):
+        with (
+            _sales_patches(),
+            patch("routes.sales.tenant_get", return_value=None),
+        ):
+            resp = sales_client.get("/sales/create?customer_id=999")
+        assert resp.status_code == 200
+
+    def test_create_post_manual_exchange_rate_audited(self, sales_client):
+        with _sales_patches():
+            resp = sales_client.post(
+                "/sales/create",
+                data={
+                    "customer_id": "5",
+                    "line_count": "1",
+                    "lines[0][product_id]": "10",
+                    "lines[0][quantity]": "1",
+                    "lines[0][unit_price]": "100",
+                    "warehouse_id": "1",
+                    "exchange_rate": "0.90",
+                    "exchange_rate_manual": "true",
+                    "exchange_rate_server": "1.0",
+                    "exchange_rate_difference": "-10.0",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+
+    def test_calculate_totals_with_product_ids(self, sales_client):
+        product = MagicMock(id=10, tax_category="standard")
+        with (
+            _sales_patches(),
+            patch(
+                "routes.sales.db.session.query",
+                return_value=MagicMock(all=MagicMock(return_value=[product])),
+            ),
+        ):
+            resp = sales_client.post(
+                "/sales/api/calculate-totals",
+                json={
+                    "lines": [{"product_id": 10, "quantity": 2, "unit_price": 50}],
+                    "tax_rate": 5,
+                },
+            )
+        assert resp.get_json()["success"] is True
+
+    def test_restore_audit_failure_refuses(self, sales_client):
+        archived_rec = MagicMock()
+        with (
+            _sales_patches(archived_record=archived_rec),
+            patch("routes.sales.LoggingCore.log_audit", side_effect=RuntimeError("audit down")),
+        ):
+            resp = sales_client.post("/sales/1/restore", follow_redirects=False)
+        assert resp.status_code == 302
+
+
 class TestSalesArchived:
     def test_archived_list(self, sales_client):
         archived_rec = MagicMock()
