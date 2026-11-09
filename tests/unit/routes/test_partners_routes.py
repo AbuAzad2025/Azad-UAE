@@ -454,7 +454,9 @@ class TestPartnersUnifiedLink:
         ):
             resp = partners_client.post("/partners/4/unlink-customer", data={"customer_id": "9"})
         assert resp.status_code in (302, 303)
-        partners_client._partners_mocks["service"].unlink_product_partner.assert_called_once_with(9, tenant_id=1)
+        partners_client._partners_mocks["service"].unlink_product_partner.assert_called_once_with(
+            9, partner_id=4, tenant_id=1
+        )
 
     def test_create_rejects_share_over_100(self, partners_client):
         resp = partners_client.post(

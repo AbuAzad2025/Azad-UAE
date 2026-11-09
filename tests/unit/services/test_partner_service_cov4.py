@@ -53,8 +53,9 @@ class TestScopeAggregations:
         sess.query.return_value = q
         assert PartnerService.get_scope_cogs(1, *_period(), scope_type="warehouse", scope_id=4) == Decimal("10")
 
-    def test_expenses_warehouse_returns_zero(self):
-        assert PartnerService.get_scope_expenses(1, *_period(), scope_type="warehouse") == Decimal("0")
+    def test_expenses_warehouse_requires_scope_id(self):
+        with pytest.raises(ValueError, match="warehouse ID"):
+            PartnerService.get_scope_expenses(1, *_period(), scope_type="warehouse")
 
     def test_calculate_profit_math(self, mocker):
         mocker.patch.object(PartnerService, "get_scope_revenue", return_value=Decimal("100"))

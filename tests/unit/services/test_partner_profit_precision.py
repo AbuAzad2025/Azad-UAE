@@ -185,8 +185,7 @@ class TestScopeCommissionsBranches:
         q = MagicMock()
         q.scalar = MagicMock(return_value=scalar)
         q.filter.return_value = q
-        q.join.return_value.filter.return_value = q
-        q.join.return_value.join.return_value.join.return_value.filter.return_value = q
+        q.join.return_value = q
         q.all = MagicMock(return_value=rows or [])
         return q
 
@@ -210,13 +209,31 @@ class TestScopeCommissionsBranches:
         query = self._chain(
             scalar=Decimal("100"),
             rows=[
-                (Decimal("0"), Decimal("0"), Decimal("10")),
-                (Decimal("1"), Decimal("0"), Decimal("10")),
-                (Decimal("8"), Decimal("4"), Decimal("10")),
+                (1, Decimal("0"), Decimal("0"), Decimal("10")),
+                (2, Decimal("1"), Decimal("0"), Decimal("10")),
+                (3, Decimal("8"), Decimal("4"), Decimal("10")),
             ],
         )
         mocker.patch("services.partner_service.db.session.query", return_value=query)
         assert PartnerService.get_scope_commissions(1, date(2026, 1, 1), date(2026, 1, 31)) == Decimal("90")
+
+    def test_return_in_later_period_can_make_commissions_negative(self, mocker):
+        query = self._chain(scalar=Decimal("0"), rows=[(1, Decimal("1"), Decimal("2"), Decimal("10"))])
+        mocker.patch("services.partner_service.db.session.query", return_value=query)
+        assert PartnerService.get_scope_commissions(1, date(2026, 2, 1), date(2026, 2, 28), "warehouse", 9) == Decimal(
+            "-5.000"
+        )
+
+    def test_commission_reversal_rounds_each_return_line(self, mocker):
+        query = self._chain(
+            scalar=Decimal("0"),
+            rows=[
+                (1, Decimal("1"), Decimal("2"), Decimal("0.001")),
+                (2, Decimal("1"), Decimal("2"), Decimal("0.001")),
+            ],
+        )
+        mocker.patch("services.partner_service.db.session.query", return_value=query)
+        assert PartnerService.get_scope_commissions(1, date(2026, 2, 1), date(2026, 2, 28)) == Decimal("-0.002")
 
 
 class TestApproveBranches:
@@ -327,17 +344,25 @@ class TestLinkUnlink:
     def test_unlink_missing_and_wrong_tenant(self, mocker):
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = None
-        assert PartnerService.unlink_product_partner(1, tenant_id=1) is False
+        assert PartnerService.unlink_product_partner(1, partner_id=5, tenant_id=1) is False
         customer = MagicMock(tenant_id=2)
         mock_db.session.get.return_value = customer
-        assert PartnerService.unlink_product_partner(1, tenant_id=1) is False
+        assert PartnerService.unlink_product_partner(1, partner_id=5, tenant_id=1) is False
 
     def test_unlink_releases(self, mocker):
         customer = MagicMock(tenant_id=1, partner_id=5)
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.return_value = customer
-        assert PartnerService.unlink_product_partner(1, tenant_id=1) is True
+        assert PartnerService.unlink_product_partner(1, partner_id=5, tenant_id=1) is True
         assert customer.partner_id is None
+
+    def test_unlink_refuses_another_partner(self, mocker):
+        customer = MagicMock(tenant_id=1, partner_id=5)
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = customer
+        assert PartnerService.unlink_product_partner(1, partner_id=6, tenant_id=1) is False
+        assert customer.partner_id == 5
+        mock_db.session.flush.assert_not_called()
 
 
 class TestFlushFailures:
@@ -392,7 +417,7 @@ class TestFlushFailures:
         mock_db.session.get.return_value = customer
         mock_db.session.flush.side_effect = RuntimeError("db")
         with pytest.raises(RuntimeError):
-            PartnerService.unlink_product_partner(1, tenant_id=1)
+            PartnerService.unlink_product_partner(1, partner_id=5, tenant_id=1)
 
 
 class TestUnifiedGuards:

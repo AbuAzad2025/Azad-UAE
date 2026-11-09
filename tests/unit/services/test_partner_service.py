@@ -76,7 +76,8 @@ class TestScopeAggregation:
         assert PartnerService.get_scope_cogs(1, date(2026, 1, 1), date(2026, 1, 31), "branch", 1) == Decimal("200")
         assert PartnerService.get_scope_cogs(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1) == Decimal("200")
 
-    def test_get_scope_expenses_warehouse_zero(self):
+    def test_get_scope_expenses_warehouse_zero(self, mocker):
+        mocker.patch("services.partner_service.db.session.query", return_value=_query_chain(None))
         assert PartnerService.get_scope_expenses(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 1) == Decimal("0")
 
     def test_get_scope_expenses_branch(self, mocker):

@@ -119,9 +119,12 @@ class PartnerService:
     ) -> Decimal:
         from models import Expense
 
+        if scope_type == "warehouse" and not scope_id:
+            raise ValueError("A warehouse scope requires a warehouse ID.")
         q = db.session.query(func.sum(Expense.amount_aed)).filter(
             Expense.tenant_id == tenant_id,
             Expense.is_reversed.is_(False),
+            Expense.status == "confirmed",
             func.date(Expense.expense_date) >= period_start,
             func.date(Expense.expense_date) <= period_end,
         )
@@ -144,9 +147,9 @@ class PartnerService:
 
         Product commissions are a real cost of the sale (Dr COMMISSION_EXPENSE
         at order time), so a company-level distribution must not allocate a
-        profit that this leg already took. Return reversals that landed in the
-        same period reduce the figure by the same proportion the return
-        journal used.
+        profit that this leg already took. Returns reverse the original
+        commission in the period of the return, using the same rounding as
+        the return journal.
         """
         from models import PartnerCommissionEntry, Sale
 
@@ -155,6 +158,7 @@ class PartnerService:
             .join(Sale, PartnerCommissionEntry.sale_id == Sale.id)
             .filter(
                 PartnerCommissionEntry.tenant_id == tenant_id,
+                Sale.tenant_id == tenant_id,
                 Sale.status == "confirmed",
                 func.date(Sale.sale_date) >= period_start,
                 func.date(Sale.sale_date) <= period_end,
@@ -168,26 +172,42 @@ class PartnerService:
 
         from models import ProductReturn, ProductReturnLine, SaleLine
 
-        # Returns in the same period claw back their proportional share.
+        # Returns in this period claw back their proportional share, including
+        # returns of sales made in an earlier period.
         return_rows = (
             db.session.query(
-                ProductReturnLine.quantity, SaleLine.quantity, PartnerCommissionEntry.commission_amount_aed
+                ProductReturnLine.id,
+                ProductReturnLine.quantity,
+                SaleLine.quantity,
+                PartnerCommissionEntry.commission_amount_aed,
             )
             .join(ProductReturn, ProductReturn.id == ProductReturnLine.return_id)
             .join(SaleLine, SaleLine.id == ProductReturnLine.sale_line_id)
+            .join(Sale, Sale.id == SaleLine.sale_id)
             .join(
                 PartnerCommissionEntry,
                 PartnerCommissionEntry.sale_line_id == SaleLine.id,
             )
             .filter(
                 ProductReturn.tenant_id == tenant_id,
-                ProductReturn.status != "rejected",
+                ProductReturnLine.tenant_id == tenant_id,
+                SaleLine.tenant_id == tenant_id,
+                Sale.tenant_id == tenant_id,
+                PartnerCommissionEntry.tenant_id == tenant_id,
+                PartnerCommissionEntry.sale_id == Sale.id,
+                ProductReturn.sale_id == Sale.id,
+                Sale.status == "confirmed",
+                ProductReturn.status.in_(("approved", "completed")),
                 func.date(ProductReturn.return_date) >= period_start,
                 func.date(ProductReturn.return_date) <= period_end,
             )
         )
-        reversed_total = Decimal("0")
-        for ret_qty, sold_qty, commission in return_rows.all():
+        if scope_type == "branch" and scope_id:
+            return_rows = return_rows.filter(Sale.branch_id == scope_id)
+        elif scope_type == "warehouse" and scope_id:
+            return_rows = return_rows.filter(Sale.warehouse_id == scope_id)
+        reversed_by_line: dict[int, Decimal] = {}
+        for return_line_id, ret_qty, sold_qty, commission in return_rows.all():
             sold = Decimal(str(sold_qty or 0))
             returned = Decimal(str(ret_qty or 0))
             if sold <= Decimal("0") or returned <= Decimal("0"):
@@ -195,9 +215,16 @@ class PartnerService:
             ratio = returned / sold
             if ratio > Decimal("1"):
                 ratio = Decimal("1")
-            reversed_total += Decimal(str(commission or 0)) * ratio
-        net = gross - reversed_total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        return net if net > Decimal("0") else Decimal("0")
+            reversed_by_line[return_line_id] = (
+                reversed_by_line.get(return_line_id, Decimal("0")) + Decimal(str(commission or 0)) * ratio
+            )
+        reversed_total = sum(
+            (value.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP) for value in reversed_by_line.values()),
+            Decimal("0"),
+        )
+        # A return can occur in a later period than the original commission.
+        # Its reversal is then a negative commission expense for this period.
+        return gross - reversed_total
 
     @staticmethod
     def calculate_scope_profit(
@@ -759,13 +786,15 @@ class PartnerService:
         return True
 
     @staticmethod
-    def unlink_product_partner(customer_id: int, tenant_id: int | None = None) -> bool:
+    def unlink_product_partner(customer_id: int, *, partner_id: int, tenant_id: int | None = None) -> bool:
         from models import Customer
 
         customer = db.session.get(Customer, customer_id)
         if not customer:
             return False
         if tenant_id is not None and customer.tenant_id != tenant_id:
+            return False
+        if customer.partner_id != partner_id:
             return False
         customer.partner_id = None
         try:

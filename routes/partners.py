@@ -498,7 +498,7 @@ def unlink_customer(**kwargs):
         return redirect(url_for("partners.view", id=record_id))
     try:
         with atomic_transaction("partner_unlink_customer"):
-            ok = PartnerService.unlink_product_partner(int(customer_id), tenant_id=_tenant_id())
+            ok = PartnerService.unlink_product_partner(int(customer_id), partner_id=record_id, tenant_id=_tenant_id())
         if ok:
             flash(gettext("✅ تم فك الربط."), "success")
         else:
