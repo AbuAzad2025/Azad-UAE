@@ -65,7 +65,7 @@
             <span>{{ _('نسبة الربح') }}</span><strong>{{ "%.2f"|format(partner.share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
-            <span>{{ _('نسبة المصاريف') }}</span><strong>{{ "%.2f"|format(partner.expense_share_percentage or 0) }}%</strong>
+            <span>{{ _('نسبة المصاريف (معلوماتية؛ المصاريف مخصومة من صافي الربح)') }}</span><strong>{{ "%.2f"|format(partner.expense_share_percentage or 0) }}%</strong>
           </li>
           <li class="list-group-item d-flex justify-content-between">
             <span>{{ _('نسبة الخسارة') }}</span><strong>{{ "%.2f"|format(partner.loss_share_percentage or 0) }}%</strong>

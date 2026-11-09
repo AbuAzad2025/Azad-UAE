@@ -20759,3 +20759,6 @@ msgstr "Sales by tax category are not yet available; review mixed invoices and r
 
 msgid "تحتاج التوزيعات إلى مراجعة محاسبية قبل الاعتماد أو الدفع؛ معالجة المرتجعات وتداخل نطاقات الشركاء غير مكتملة."
 msgstr "Distributions require accounting review before approval or payment; returns and overlapping partner scopes are not fully handled."
+
+msgid "نسبة المصاريف (معلوماتية؛ المصاريف مخصومة من صافي الربح)"
+msgstr "Expense percentage (informational; expenses are included in net profit)"

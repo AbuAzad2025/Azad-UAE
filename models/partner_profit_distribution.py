@@ -41,7 +41,8 @@ class PartnerProfitDistribution(db.Model):
     share_percentage = db.Column(db.Numeric(5, 2), default=0)
     share_amount = db.Column(db.Numeric(15, 3), default=0)
 
-    # Expense share (if partner bears part of expenses)
+    # Historical contract percentage. New distributions do not deduct the
+    # expense a second time: it is already included in net_profit.
     expense_share_percentage = db.Column(db.Numeric(5, 2), default=0)
     expense_share_amount = db.Column(db.Numeric(15, 3), default=0)
 

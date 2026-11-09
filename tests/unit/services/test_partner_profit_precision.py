@@ -117,6 +117,28 @@ class TestPerScopeValidation:
         fixed_arg = D.call_args.kwargs["fixed_amount"]
         assert fixed_arg == Decimal("300")
 
+    def test_loss_does_not_deduct_expenses_twice(self, mocker):
+        partner = _partner(
+            share_percentage=Decimal("50"),
+            expense_share_percentage=Decimal("20"),
+            loss_share_percentage=Decimal("50"),
+        )
+        P = mocker.patch("models.Partner")
+        P.query.filter_by.return_value.all.return_value = [partner]
+        D = mocker.patch("models.PartnerProfitDistribution")
+        D.query.filter_by.return_value.first.return_value = None
+        D.return_value = MagicMock(id=1)
+        mocker.patch.object(
+            PartnerService,
+            "calculate_scope_profit",
+            return_value={"revenue": 100, "cogs": 100, "expenses": 200, "net_profit": -200},
+        )
+        mocker.patch("services.partner_service.db")
+        PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
+        assert D.call_args.kwargs["loss_share_amount"] == Decimal("100.000")
+        assert D.call_args.kwargs["expense_share_amount"] == Decimal("0")
+        assert D.call_args.kwargs["net_due"] == Decimal("-100.000")
+
 
 class TestApproveAccrual:
     def test_positive_net_accrues_expense_and_partner_liability(self, mocker):

@@ -320,7 +320,6 @@ class PartnerService:
                 ) from exc
 
             net_profit = Decimal(str(pnl["net_profit"]))
-            total_expenses_dec = Decimal(str(pnl["expenses"]))
             total_commissions_dec = Decimal(str(pnl.get("commissions", 0) or 0))
 
             share_pct = Decimal(str(partner.share_percentage or 0))
@@ -334,24 +333,22 @@ class PartnerService:
             threshold = Decimal(str(partner.min_profit_threshold or 0))
 
             share_amount = Decimal("0")
+            # Scope net profit already includes the complete operating expense.
+            # Deducting a second expense share from the partner's net share
+            # would charge the same cost twice. Keep the percentage on the
+            # distribution as historical contract metadata, not a second debit.
             expense_share = Decimal("0")
             loss_share = Decimal("0")
 
             if net_profit > 0:
                 if net_profit >= threshold:
                     share_amount = (net_profit * share_pct / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
             elif net_profit < 0:
                 if loss_pct <= Decimal("0"):
                     raise ValueError(
                         gettext(f"الشريك {partner.id} ليس لديه نسبة تحمل خسارة بينما صافي الربح سالب ({net_profit})")
                     )
                 loss_share = (abs(net_profit) * loss_pct / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                expense_share = (total_expenses_dec * expense_pct / 100).quantize(
-                    Decimal("0.001"), rounding=ROUND_HALF_UP
-                )
 
             net_due = share_amount - expense_share - loss_share + fixed
 
