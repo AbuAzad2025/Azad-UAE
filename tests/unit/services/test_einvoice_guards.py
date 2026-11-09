@@ -92,6 +92,17 @@ class TestGuardBranches:
 
 
 class TestClassicPhase0:
+    def test_sa_classic_credit_note_format(self, mocker):
+        tenant = SimpleNamespace(id=1, enable_einvoice=True, vat_country="SA", zatca_phase2_enabled=False)
+        sale = SimpleNamespace(id=7, tenant_id=1, currency="SAR")
+        mocker.patch(
+            "utils.einvoice_document.zatca_document",
+            return_value={"xml_payload": "<x/>", "qr_base64": "q", "invoice_hash": "h", "format": "zatca_xml"},
+        )
+        mocker.patch("utils.tax_settings.vat_country", return_value="SA")
+        doc = EInvoiceService._build_document(tenant, sale, doc_type="credit_note", billing_reference="S-1")
+        assert doc["format"] == "zatca_credit_note_xml"
+
     def test_phase2_without_secrets_raises(self, mocker):
         tenant = SimpleNamespace(id=1, enable_einvoice=True, vat_country="SA", zatca_phase2_enabled=True)
         sale = SimpleNamespace(id=7, tenant_id=1, currency="SAR")
