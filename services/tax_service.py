@@ -6,8 +6,6 @@ Dispatches to country-specific strategy based on Tenant.vat_country.
 import logging
 from decimal import Decimal
 
-from extensions import db
-
 logger = logging.getLogger(__name__)
 
 
@@ -97,52 +95,8 @@ class TaxService:
         result = strategy.format_tax_return(output_vat, input_vat, date_from, date_to)
         result["source"] = "gl"
         result["unresolved_accounts"] = unresolved
-        result["category_totals"] = cls._category_sales_totals(tenant_id, date_from, date_to)
+        # Historical lines did not snapshot whether categories were enabled at
+        # posting, and returns do not yet reverse VAT per category. Reporting
+        # the raw line totals as net taxable sales would be misleading.
+        result["category_totals"] = None
         return result
-
-    @staticmethod
-    def _category_sales_totals(tenant_id, date_from, date_to) -> dict:
-        """Net sales per line VAT category for the return period.
-
-        The authority form asks for net amounts per category (standard /
-        zero-rated / exempt); the GL totals alone cannot say what zero-rated
-        output was. Confirmed sales carry the same category the invoice was
-        posted with, so the split is derivable per period.
-        """
-        from sqlalchemy import func
-
-        from models import Sale, SaleLine
-        from utils.currency_utils import convert_and_quantize_aed
-
-        categories = {"standard": Decimal("0"), "zero": Decimal("0"), "exempt": Decimal("0")}
-        if tenant_id is None:
-            return {key: float(value) for key, value in categories.items()}
-        query = (
-            db.session.query(
-                SaleLine.tax_category,
-                SaleLine.line_total,
-                Sale.currency,
-                Sale.exchange_rate,
-            )
-            .outerjoin(Sale, SaleLine.sale_id == Sale.id)
-            .filter(
-                Sale.tenant_id == tenant_id,
-                Sale.status == "confirmed",
-            )
-        )
-        if date_from:
-            query = query.filter(func.date(Sale.sale_date) >= date_from)
-        if date_to:
-            query = query.filter(func.date(Sale.sale_date) <= date_to)
-        for category, line_total, currency, rate in query.all():
-            key = (category or "standard").strip().lower()
-            if key not in categories:
-                key = "standard"
-            converted = convert_and_quantize_aed(
-                Decimal(str(line_total or 0)),
-                currency or "AED",
-                Decimal(str(rate or 1)),
-                tenant_id=tenant_id,
-            )
-            categories[key] += converted
-        return {key: float(value) for key, value in categories.items()}
