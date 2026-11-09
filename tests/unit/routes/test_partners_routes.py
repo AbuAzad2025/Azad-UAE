@@ -456,6 +456,109 @@ class TestPartnersUnifiedLink:
         assert resp.status_code in (302, 303)
         partners_client._partners_mocks["service"].unlink_product_partner.assert_called_once_with(9, tenant_id=1)
 
+    def test_create_rejects_share_over_100(self, partners_client):
+        resp = partners_client.post(
+            "/partners/create",
+            data={"name": "Too Much", "scope_type": "company", "share_percentage": "150"},
+        )
+        assert resp.status_code == 200
+
+    def test_create_rejects_invalid_number(self, partners_client):
+        resp = partners_client.post(
+            "/partners/create",
+            data={"name": "Bad Num", "scope_type": "company", "share_percentage": "abc"},
+        )
+        assert resp.status_code == 200
+
+    def test_create_rejects_negative_amount(self, partners_client):
+        resp = partners_client.post(
+            "/partners/create",
+            data={"name": "Neg", "scope_type": "company", "investment_amount": "-5"},
+        )
+        assert resp.status_code == 200
+
+    def test_create_scope_exceed_rerenders(self, partners_client):
+        partner = MagicMock(share_percentage=Decimal("90"))
+        with patch(
+            "routes.partners.Partner",
+        ) as partner_cls:
+            query = partner_cls.query.filter_by.return_value
+            query.filter.return_value = query
+            query.filter_by.return_value = query
+            query.all.return_value = [partner]
+            resp = partners_client.post(
+                "/partners/create",
+                data={"name": "Over", "scope_type": "branch", "scope_id": "5", "share_percentage": "50"},
+            )
+            assert resp.status_code == 200
+            partners_client._partners_mocks["session"].add.assert_not_called()
+
+    def test_edit_rejects_out_of_range(self, partners_client):
+        partner = _partner_mock(2)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post(
+                "/partners/2/edit",
+                data={"name": "X", "scope_type": "company", "share_percentage": "200"},
+            )
+        assert resp.status_code == 200
+
+    def test_edit_scope_exceed_rerenders(self, partners_client):
+        partner = _partner_mock(2)
+        partner.share_percentage = Decimal("90")
+        with (
+            patch(
+                "routes.partners.tenant_query",
+                return_value=_tenant_query_chain(first=partner),
+            ),
+            patch("routes.partners.Partner") as partner_cls,
+        ):
+            query = partner_cls.query.filter_by.return_value
+            query.filter.return_value = query
+            query.filter_by.return_value = query
+            query.all.return_value = [partner]
+            resp = partners_client.post(
+                "/partners/2/edit",
+                data={"name": "X", "scope_type": "company", "share_percentage": "50"},
+            )
+        assert resp.status_code == 200
+
+    def test_link_customer_json_dict_body(self, partners_client):
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post(
+                "/partners/4/link-customer",
+                json={"customer_id": 9},
+                follow_redirects=False,
+            )
+        assert resp.status_code in (302, 303)
+        partners_client._partners_mocks["service"].link_product_partner.assert_called_once_with(4, 9, tenant_id=1)
+
+    def test_unlink_customer_missing_id(self, partners_client):
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/unlink-customer", data={}, follow_redirects=False)
+        assert resp.status_code in (302, 303)
+        partners_client._partners_mocks["service"].unlink_product_partner.assert_not_called()
+
+    def test_unlink_customer_rejected(self, partners_client):
+        partner = _partner_mock(4)
+        partners_client._partners_mocks["service"].unlink_product_partner.return_value = False
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/unlink-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
+
 
 class TestPartnersAuth:
     def test_unauthenticated_index_returns_401(self, partners_client):

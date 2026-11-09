@@ -61,12 +61,16 @@ def _parse_partner_financials(form, existing=None):
 
     def _field(name, default="0"):
         raw = form.get(name, None)
-        if raw is None or raw == "":
-            raw = getattr(existing, name, default) if existing is not None else default
-        try:
+        if raw is not None and raw != "":
+            # A value typed by the user must be a valid number - silently
+            # coercing it to zero would let a typo become a 0% share.
             return Decimal(str(raw))
-        except Exception:
-            return Decimal(default)
+        if existing is not None:
+            try:
+                return Decimal(str(getattr(existing, name, default)))
+            except Exception:
+                return Decimal(default)
+        return Decimal(default)
 
     try:
         investment = _field("investment_amount")
