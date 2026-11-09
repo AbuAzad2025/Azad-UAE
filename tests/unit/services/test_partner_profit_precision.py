@@ -332,6 +332,86 @@ class TestLinkUnlink:
         assert customer.partner_id is None
 
 
+class TestFlushFailures:
+    def test_create_flush_failure_raises(self, mocker):
+        partner = _partner(loss_share_percentage=Decimal("50"))
+        P = mocker.patch("models.Partner")
+        P.query.filter_by.return_value.all.return_value = [partner]
+        D = mocker.patch("models.PartnerProfitDistribution")
+        D.query.filter_by.return_value.first.return_value = None
+        D.return_value = MagicMock(id=1)
+        mocker.patch.object(
+            PartnerService,
+            "calculate_scope_profit",
+            return_value={
+                "revenue": 0.0,
+                "cogs": 0.0,
+                "expenses": 0.0,
+                "commissions": 0.0,
+                "gross_profit": 0.0,
+                "net_profit": -1000.0,
+            },
+        )
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.flush.side_effect = RuntimeError("fail")
+        with pytest.raises(RuntimeError):
+            PartnerService.create_distributions(1, date(2026, 1, 1), date(2026, 1, 31))
+
+    def test_pay_without_partner_row_still_marks_paid(self, mocker):
+        dist = MagicMock(status="approved", tenant_id=1, net_due=200.0, id=7, partner_id=999)
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.side_effect = [dist, None]
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="2150")
+        mocker.patch("services.gl_service.GLService.get_default_liquidity_account", return_value="1120")
+        mocker.patch("services.gl_posting.post_or_fail")
+        assert PartnerService.pay_distribution(7, tenant_id=1) is True
+
+    def test_add_transaction_flush_failure(self, mocker):
+        partner = _partner(current_balance=Decimal("0"))
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = partner
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
+        mocker.patch("models.PartnerTransaction", return_value=MagicMock(id=1))
+        mocker.patch("services.gl_posting.post_or_fail")
+        mock_db.session.flush.side_effect = RuntimeError("fail")
+        with pytest.raises(RuntimeError):
+            PartnerService.add_transaction(1, "adjustment", Decimal("10"))
+
+    def test_unlink_flush_failure(self, mocker):
+        customer = MagicMock(tenant_id=1, partner_id=5)
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = customer
+        mock_db.session.flush.side_effect = RuntimeError("db")
+        with pytest.raises(RuntimeError):
+            PartnerService.unlink_product_partner(1, tenant_id=1)
+
+
+class TestUnifiedGuards:
+    def test_missing_partner(self, mocker):
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = None
+        assert PartnerService.get_unified_statement(1, 1) == {}
+
+    def test_wrong_tenant(self, mocker):
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = _partner(tenant_id=2)
+        assert PartnerService.get_unified_statement(1, 1) == {}
+
+    def test_no_linked_customers(self, mocker):
+        partner = _partner(current_balance=Decimal("15"))
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = partner
+        D = mocker.patch("models.PartnerProfitDistribution")
+        D.query.filter_by.return_value.order_by.return_value.all.return_value = []
+        C = mocker.patch("models.Customer")
+        C.query.filter_by.return_value.all.return_value = []
+        mocker.patch("models.PartnerCommissionEntry")
+        out = PartnerService.get_unified_statement(1, 1)
+        assert out["product_commissions_total"] == 0.0
+        assert out["combined_total"] == 0.0
+
+
 class TestCommissionReversal:
     def test_partial_return_reverses_same_ratio(self, mocker):
         entry = MagicMock(commission_amount_aed=Decimal("10"))
