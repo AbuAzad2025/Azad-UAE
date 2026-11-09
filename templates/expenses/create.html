@@ -174,6 +174,20 @@
             <input type="text" name="supplier_name" id="expense_supplier_name" class="form-control" placeholder="{{ t('Name_2') }} {{ t('المستفيد') }}..." minlength="2" maxlength="100">
           </div>
         </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label for="expense_warehouse_id">
+              <i class="fas fa-warehouse text-warning" aria-hidden="true"></i> {{ _('المستودع المسؤول (اختياري)') }}
+            </label>
+            <select name="warehouse_id" id="expense_warehouse_id" class="form-control" aria-label="warehouse">
+              <option value="">— {{ _('بدون مستودع (مصروف فرع عام)') }} —</option>
+              {% for warehouse in (warehouses|default([])) %}
+              <option value="{{ warehouse.id }}">{{ warehouse.name|default('') }}</option>
+              {% endfor %}
+            </select>
+            <small class="text-muted">{{ _('توزيع أرباح شريك المستودع يخصم المصاريف المسجلة على هذا المستودع.') }}</small>
+          </div>
+        </div>
       </div>
 
       <div class="row">

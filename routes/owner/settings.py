@@ -866,6 +866,17 @@ def tax_settings():
                 tenant.ita_allocation_threshold = threshold
                 tenant.enable_il_pension = request.form.get("enable_il_pension") == "on"
                 tenant.enable_zakat = request.form.get("enable_zakat") == "on"
+                wht_raw = (request.form.get("wht_services_rate") or "").strip()
+                if not wht_raw:
+                    tenant.wht_services_rate = None
+                else:
+                    try:
+                        wht_value = Decimal(wht_raw)
+                    except Exception:
+                        raise ValueError(gettext("نسبة ضريبة الاستقطاع يجب أن تكون رقمًا."))
+                    if wht_value < Decimal("0") or wht_value > Decimal("100"):
+                        raise ValueError(gettext("نسبة ضريبة الاستقطاع يجب أن تكون بين 0 و 100."))
+                    tenant.wht_services_rate = wht_value
                 tenant.enable_import_duties = request.form.get("enable_import_duties") == "on"
                 tenant.enable_tax_categories = request.form.get("enable_tax_categories") == "on"
                 for secret_name in ("zatca_private_key", "zatca_certificate", "zatca_csid", "ita_oauth_token"):

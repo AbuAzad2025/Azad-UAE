@@ -131,6 +131,64 @@ def _archived_records_query(records):
     return root
 
 
+class TestWhtAndWarehouseDetails:
+    def test_create_with_wht_rate_posts_withholding_leg(self, expenses_client):
+        expense = _mock_expense(amount=Decimal("100"), category=MagicMock(gl_account_code="6500"))
+        tenant = MagicMock(wht_services_rate=Decimal("5"))
+        with (
+            _expense_patches(),
+            patch("routes.expenses.Expense", return_value=expense),
+            patch("extensions.db.session.get", return_value=tenant),
+            patch("routes.expenses._build_expense_gl_lines", return_value=[
+                {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
+                {"account": "1110", "concept_code": "CASH", "credit": Decimal("95")},
+                {
+                    "account": "2149",
+                    "concept_code": "WITHHOLDING_TAX_PAYABLE",
+                    "credit": Decimal("5"),
+                },
+            ]),
+        ):
+            resp = expenses_client.post(
+                "/expenses/create",
+                data={
+                    "amount": "100",
+                    "category_id": "1",
+                    "payment_method": "cash",
+                    "is_service_to_nonresident": "on",
+                    "warehouse_id": "7",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+        assert expense.wht_amount == Decimal("5.000")
+
+    def test_create_without_rate_keeps_wht_zero(self, expenses_client):
+        expense = _mock_expense(amount=Decimal("100"), category=MagicMock(gl_account_code="6500"))
+        tenant = MagicMock(wht_services_rate=None)
+        with (
+            _expense_patches(),
+            patch("routes.expenses.Expense", return_value=expense),
+            patch("extensions.db.session.get", return_value=tenant),
+            patch("routes.expenses._build_expense_gl_lines", return_value=[
+                {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
+                {"account": "1110", "concept_code": "CASH", "credit": Decimal("100")},
+            ]),
+        ):
+            resp = expenses_client.post(
+                "/expenses/create",
+                data={
+                    "amount": "100",
+                    "category_id": "1",
+                    "payment_method": "cash",
+                    "is_service_to_nonresident": "on",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+        assert expense.wht_amount == Decimal("0")
+
+
 class TestExpensesAuth:
     def test_index_requires_login(self, expenses_client):
         with unauthenticated_client(expenses_client):

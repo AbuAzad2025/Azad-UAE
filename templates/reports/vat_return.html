@@ -86,6 +86,26 @@
     <div class="col-md-12">
       <div class="card card-outline card-secondary">
         <div class="card-header">
+          <h3 class="card-title">{{ _('المبيعات حسب فئة الضريبة') }}</h3>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive"><table class="table table-bordered">
+            <thead><tr><th>{{ _('الفئة') }}</th><th>{{ _('صافي المبيعات') }}</th></tr></thead>
+            <tbody>
+              <tr><td>standard</td><td>{{ format_currency((report.category_totals|default({})).get('standard', 0), report.currency) }}</td></tr>
+              <tr><td>zero</td><td>{{ format_currency((report.category_totals|default({})).get('zero', 0), report.currency) }}</td></tr>
+              <tr><td>exempt</td><td>{{ format_currency((report.category_totals|default({})).get('exempt', 0), report.currency) }}</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card card-outline card-secondary">
+        <div class="card-header">
           <h3 class="card-title">{{ t('Details') }} {{ t('الإقرار') }}</h3>
         </div>
         <div class="card-body">

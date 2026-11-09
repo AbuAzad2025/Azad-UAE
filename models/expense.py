@@ -78,6 +78,15 @@ class Expense(db.Model):
     is_service_to_nonresident = db.Column(db.Boolean, nullable=False, server_default=text("false"), default=False)
     wht_amount = db.Column(db.Numeric(15, 3), nullable=False, server_default=text("0"), default=Decimal("0"))
 
+    # Optional warehouse attribution: when set, the expense belongs to this
+    # warehouse's P&L (partner distributions) instead of only the branch's.
+    warehouse_id = db.Column(
+        db.Integer,
+        db.ForeignKey("warehouses.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     cheque_number = db.Column(db.String(50))
     cheque_date = db.Column(db.Date)
     bank_name = db.Column(db.String(100))

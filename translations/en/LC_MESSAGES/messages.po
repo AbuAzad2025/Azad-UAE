@@ -20711,3 +20711,27 @@ msgstr "✅ Link removed."
 
 msgid "❌ تعذر فك الربط."
 msgstr "❌ Could not remove the link."
+
+msgid "نسبة ضريبة الاستقطاع على خدمات غير المقيمين (WHT)"
+msgstr "Withholding tax on non-resident services (WHT)"
+
+msgid "نسبة الخصم من المنبع (%) — فارغة = معطلة"
+msgstr "Withholding rate (%) — blank = disabled"
+
+msgid "النسبة تتبع الدولة ونوع الخدمة والمعاهدة — تدخلها بنفسك كلما تغيرت؛ عند حجز مصروف مع «دفع خدمة لمقيم خارج الدولة» تُخصم هذه النسبة وتُرحّل إلى ضريبة استقطاع مستحقة."
+msgstr "The rate follows country/service-type/treaty — enter it yourself whenever it changes; on expenses flagged as payments to non-residents this rate is withheld and booked to withholding tax payable."
+
+msgid "المستودع المسؤول (اختياري)"
+msgstr "Warehousing responsible (optional)"
+
+msgid "بدون مستودع (مصروف فرع عام)"
+msgstr "No warehouse (general branch expense)"
+
+msgid "توزيع أرباح شريك المستودع يخصم المصاريف المسجلة على هذا المستودع."
+msgstr "A warehouse partner's profit share deducts the expenses recorded against that warehouse."
+
+msgid "المبيعات حسب فئة الضريبة"
+msgstr "Sales by VAT category"
+
+msgid "صافي المبيعات"
+msgstr "Net sales"

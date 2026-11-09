@@ -119,9 +119,6 @@ class PartnerService:
     ) -> Decimal:
         from models import Expense
 
-        if scope_type == "warehouse":
-            return Decimal("0")
-
         q = db.session.query(func.sum(Expense.amount_aed)).filter(
             Expense.tenant_id == tenant_id,
             Expense.is_reversed.is_(False),
@@ -130,6 +127,8 @@ class PartnerService:
         )
         if scope_type == "branch" and scope_id:
             q = q.filter(Expense.branch_id == scope_id)
+        elif scope_type == "warehouse" and scope_id:
+            q = q.filter(Expense.warehouse_id == scope_id)
         result = q.scalar() or Decimal("0")
         return result
 

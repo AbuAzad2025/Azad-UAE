@@ -217,6 +217,16 @@
           </div>
         </div>
 
+        <hr>
+        <h5 class="text-primary"><i class="fas fa-hand-holding-usd" aria-hidden="true"></i> {{ _('ضريبة الاستقطاع على خدمات غير المقيمين (WHT)') }}</h5>
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="wht_services_rate">{{ _('نسبة الخصم من المنبع (%) — فارغة = معطلة') }}</label>
+            <input type="number" class="form-control" id="wht_services_rate" name="wht_services_rate" min="0" max="100" step="0.01" value="{{ tenant.wht_services_rate|default('') }}" aria-label="wht services rate">
+            <small class="text-muted">{{ _('النسبة تتبع الدولة ونوع الخدمة والمعاهدة — تدخلها بنفسك كلما تغيرت؛ عند حجز مصروف مع «دفع خدمة لمقيم خارج الدولة» تُخصم هذه النسبة وتُرحّل إلى ضريبة استقطاع مستحقة.') }}</small>
+          </div>
+        </div>
+
         <button type="submit" class="btn btn-success">
           <i class="fas fa-save" aria-hidden="true"></i> {{ _('حفظ إعدادات الامتثال') }}
         </button>

@@ -206,6 +206,14 @@ def create():
                 except ValueError:
                     current_app.logger.debug("Invalid cheque date format: %s", cheque_date_str)
 
+            warehouse_id = request.form.get("warehouse_id", type=int)
+            if warehouse_id:
+                from models import Warehouse
+
+                wh = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
+                if wh is None:
+                    warehouse_id = None
+
             with atomic_transaction("expense_create"):
                 expense = Expense(
                     tenant_id=tenant_id,
@@ -223,6 +231,7 @@ def create():
                     cheque_date=cheque_date_obj,
                     bank_name=request.form.get("bank_name"),
                     supplier_name=request.form.get("supplier_name"),
+                    warehouse_id=warehouse_id,
                     is_service_to_nonresident=(request.form.get("is_service_to_nonresident") == "on"),
                     notes=request.form.get("notes"),
                     user_id=current_user.id,
@@ -331,11 +340,15 @@ def create():
         _dc = get_system_default_currency()
     expense_categories = tenant_query(ExpenseCategory).filter_by(is_active=True).all()
     exchange_rates = CurrencyService.get_all_rates(_dc)
+    from models import Warehouse
+
+    expense_warehouses = tenant_query(Warehouse).filter_by(is_active=True).all()
 
     return render_template(
         "expenses/create.html",
         categories=expense_categories,
         exchange_rates=exchange_rates,
+        warehouses=expense_warehouses,
     )
 
 
