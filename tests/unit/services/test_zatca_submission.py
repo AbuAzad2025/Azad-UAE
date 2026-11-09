@@ -130,3 +130,21 @@ class TestSubmitHttp:
     def test_http_ok_without_status_word(self, mocker):
         einvoice_row, post = self._post_setup(mocker, {})
         assert ZatcaSubmissionService.submit(SALE)["status"] == "SUCCESS"
+
+    def test_non_json_body_falls_back_to_raw(self, mocker):
+        import requests  # noqa: F401
+
+        mock_db = mocker.patch("services.zatca_submission_service.db")
+        mock_db.session.get.return_value = _tenant()
+        mocker.patch(
+            "services.tenant_secrets_service.TenantSecretsService.get",
+            side_effect=lambda tid, name: "x",
+        )
+        einvoice_model = mocker.patch("models.EInvoice")
+        einvoice_model.query.filter_by.return_value.first.return_value = MagicMock(xml_payload="<x/>")
+        response = MagicMock(status_code=200, text="plain ok")
+        response.json.side_effect = ValueError("not json")
+        mocker.patch("services.zatca_submission_service.requests.post", return_value=response)
+        result = ZatcaSubmissionService.submit(SALE)
+        assert result["status"] == "SUCCESS"
+        assert result["response"] == {"raw": "plain ok"}
