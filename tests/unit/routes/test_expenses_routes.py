@@ -139,15 +139,18 @@ class TestWhtAndWarehouseDetails:
             _expense_patches(),
             patch("routes.expenses.Expense", return_value=expense),
             patch("extensions.db.session.get", return_value=tenant),
-            patch("routes.expenses._build_expense_gl_lines", return_value=[
-                {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
-                {"account": "1110", "concept_code": "CASH", "credit": Decimal("95")},
-                {
-                    "account": "2149",
-                    "concept_code": "WITHHOLDING_TAX_PAYABLE",
-                    "credit": Decimal("5"),
-                },
-            ]),
+            patch(
+                "routes.expenses._build_expense_gl_lines",
+                return_value=[
+                    {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
+                    {"account": "1110", "concept_code": "CASH", "credit": Decimal("95")},
+                    {
+                        "account": "2149",
+                        "concept_code": "WITHHOLDING_TAX_PAYABLE",
+                        "credit": Decimal("5"),
+                    },
+                ],
+            ),
         ):
             resp = expenses_client.post(
                 "/expenses/create",
@@ -170,10 +173,13 @@ class TestWhtAndWarehouseDetails:
             _expense_patches(),
             patch("routes.expenses.Expense", return_value=expense),
             patch("extensions.db.session.get", return_value=tenant),
-            patch("routes.expenses._build_expense_gl_lines", return_value=[
-                {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
-                {"account": "1110", "concept_code": "CASH", "credit": Decimal("100")},
-            ]),
+            patch(
+                "routes.expenses._build_expense_gl_lines",
+                return_value=[
+                    {"account": "6500", "concept_code": "MISC_EXPENSE", "debit": Decimal("100")},
+                    {"account": "1110", "concept_code": "CASH", "credit": Decimal("100")},
+                ],
+            ),
         ):
             resp = expenses_client.post(
                 "/expenses/create",

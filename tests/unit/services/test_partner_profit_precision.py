@@ -202,7 +202,9 @@ class TestScopeCommissionsBranches:
         q = MagicMock()
         q.filter.return_value.filter.return_value.scalar.return_value = Decimal("25")
         mocker.patch("services.partner_service.db.session.query", return_value=q)
-        assert PartnerService.get_scope_expenses(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 9) == Decimal("25")
+        assert PartnerService.get_scope_expenses(1, date(2026, 1, 1), date(2026, 1, 31), "warehouse", 9) == Decimal(
+            "25"
+        )
 
     def test_return_reversal_skips_invalid_rows_and_clamps(self, mocker):
         query = self._chain(

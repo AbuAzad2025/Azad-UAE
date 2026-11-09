@@ -37,7 +37,9 @@ class TestCategoryTotals:
     def test_totals_appear_in_vat_return(self, mocker):
         gl_report = {"vat_output": "10", "vat_input": "2", "unresolved_accounts": []}
         mocker.patch("services.gl_service.GLService.get_vat_report", return_value=gl_report)
-        mocker.patch.object(TaxService, "_category_sales_totals", return_value={"standard": 120.0, "zero": 0.0, "exempt": 0.0})
+        mocker.patch.object(
+            TaxService, "_category_sales_totals", return_value={"standard": 120.0, "zero": 0.0, "exempt": 0.0}
+        )
         strategy = MagicMock()
         strategy.format_tax_return.return_value = {"output_vat": Decimal("10"), "input_vat": Decimal("2")}
         mocker.patch.object(TaxService, "_get_strategy", return_value=strategy)
