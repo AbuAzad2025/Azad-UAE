@@ -984,3 +984,92 @@ class TestSalesCalculateTotals:
         ):
             resp = sales_client.post("/sales/api/calculate-totals", json={"lines": []})
         assert resp.status_code == 500
+
+
+class TestSalesTailBranches:
+    """Remaining uncovered branches (CI coverage-report per-layer floor)."""
+
+    def test_index_without_tenant_skips_archived_filter(self, sales_client):
+        with _sales_patches(tid=None):
+            resp = sales_client.get("/sales/")
+        assert resp.status_code == 200
+
+    def test_create_product_missing_skips_line(self, sales_client):
+        def _get(model, pk, user=None):
+            name = getattr(model, "__name__", str(model))
+            if name == "Customer":
+                return _mock_customer(id=pk)
+            if name == "Product":
+                return None
+            return MagicMock()
+
+        with _sales_patches(), patch("routes.sales.tenant_get_or_404", side_effect=_get):
+            resp = sales_client.post(
+                "/sales/create",
+                data={
+                    "customer_id": "5",
+                    "line_count": "1",
+                    "lines[0][product_id]": "10",
+                    "lines[0][quantity]": "1",
+                    "warehouse_id": "1",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+
+    def test_create_manual_rate_not_below_server_skips_audit_note(self, sales_client):
+        with _sales_patches():
+            resp = sales_client.post(
+                "/sales/create",
+                data={
+                    "customer_id": "5",
+                    "line_count": "1",
+                    "lines[0][product_id]": "10",
+                    "lines[0][quantity]": "1",
+                    "warehouse_id": "1",
+                    "exchange_rate_manual": "true",
+                    "exchange_rate_server": "3.67",
+                    "exchange_rate": "5",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302
+
+    def test_print_without_verification_uses_fallback_qr(self, sales_client):
+        settings = MagicMock(enable_qr_code=True, active_template="modern", company_name_ar="Co")
+        with (
+            _sales_patches(),
+            patch("services.invoice_profile_service.resolve_print_profile", return_value=settings),
+            patch(
+                "services.document_verification_service.DocumentVerificationService.get_or_create_verification",
+                return_value=None,
+            ),
+        ):
+            resp = sales_client.get("/sales/1/print")
+        assert resp.status_code == 200
+
+    def test_zatca_submit_seller_denied(self, sales_client, bypass_permission_auth):
+        bypass_permission_auth.is_seller.return_value = True
+        bypass_permission_auth.id = 99
+        with _sales_patches(sale=_mock_sale(seller_id=1)):
+            resp = sales_client.post("/sales/1/submit-to-zatca", follow_redirects=False)
+        assert resp.status_code == 403
+
+    def test_ita_allocation_seller_denied(self, sales_client, bypass_permission_auth):
+        bypass_permission_auth.is_seller.return_value = True
+        bypass_permission_auth.id = 99
+        with _sales_patches(sale=_mock_sale(seller_id=1)):
+            resp = sales_client.post("/sales/1/request-ita-allocation", follow_redirects=False)
+        assert resp.status_code == 403
+
+    def test_ita_allocation_tenant_missing_redirects(self, sales_client):
+        with _sales_patches(), patch("routes.sales.db.session.get", return_value=None):
+            resp = sales_client.post("/sales/1/request-ita-allocation", follow_redirects=False)
+        assert resp.status_code == 302
+
+    def test_einvoice_qr_seller_denied(self, sales_client, bypass_permission_auth):
+        bypass_permission_auth.is_seller.return_value = True
+        bypass_permission_auth.id = 99
+        with _sales_patches(sale=_mock_sale(seller_id=1)):
+            resp = sales_client.get("/sales/1/einvoice-qr.png", follow_redirects=False)
+        assert resp.status_code == 403

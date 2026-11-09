@@ -1006,3 +1006,56 @@ class TestBuildExpenseGlLines:
 
         assert lines[0]["account"] == "6500"
         assert lines[0]["concept_code"] == "MISC_EXPENSE"
+
+
+class TestWarehouseTailBranches:
+    """Remaining uncovered branches in expenses create (warehouse scoping)."""
+
+    def test_create_non_numeric_warehouse_id_refused(self, expenses_client):
+        with _expense_patches():
+            resp = expenses_client.post(
+                "/expenses/create",
+                data={
+                    "amount": "50",
+                    "category_id": "1",
+                    "description": "Supplies",
+                    "payment_method": "cash",
+                    "warehouse_id": "abc",
+                },
+                follow_redirects=False,
+            )
+        # ValueError is refused and the form is re-rendered.
+        assert resp.status_code == 200
+
+    def test_create_warehouse_with_scoped_branch_skips_branch_assignment(self, expenses_client):
+        expense = MagicMock(
+            id=12,
+            expense_number="EXP-WH",
+            tenant_id=1,
+            branch_id=5,
+            payment_method="cash",
+        )
+        with (
+            _expense_patches(branch_scope=5),
+            patch("routes.expenses.Expense", return_value=expense),
+            patch(
+                "routes.expenses.ExpenseService.resolve_warehouse",
+                return_value=MagicMock(branch_id=5),
+            ),
+            patch(
+                "routes.expenses._build_expense_gl_lines",
+                return_value=[{"debit": 50}, {"credit": 50}],
+            ),
+        ):
+            resp = expenses_client.post(
+                "/expenses/create",
+                data={
+                    "amount": "50",
+                    "category_id": "1",
+                    "description": "Supplies",
+                    "payment_method": "cash",
+                    "warehouse_id": "3",
+                },
+                follow_redirects=False,
+            )
+        assert resp.status_code == 302

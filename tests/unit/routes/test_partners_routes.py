@@ -614,3 +614,57 @@ class TestPartnersAuth:
                 },
             )
         assert resp.status_code == 403
+
+
+class TestPartnersTailBranches:
+    """Remaining uncovered branches (CI coverage-report per-layer floor)."""
+
+    def test_parse_financials_expense_share_over_100(self):
+        from routes.partners import _parse_partner_financials
+
+        form = {
+            "investment_amount": "0",
+            "share_percentage": "10",
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": "150",
+            "loss_share_percentage": "0",
+            "min_profit_threshold": "0",
+        }
+        values, error = _parse_partner_financials(form)
+        assert values is None
+        assert error
+
+    def test_parse_financials_loss_share_over_100(self):
+        from routes.partners import _parse_partner_financials
+
+        form = {
+            "investment_amount": "0",
+            "share_percentage": "10",
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": "0",
+            "loss_share_percentage": "150",
+            "min_profit_threshold": "0",
+        }
+        values, error = _parse_partner_financials(form)
+        assert values is None
+        assert error
+
+    def test_scope_share_total_branch_without_scope_id(self):
+        from routes.partners import _scope_share_total_exceeds
+
+        query = MagicMock()
+        query.all.return_value = []
+        query.filter.return_value = query
+        with patch("routes.partners.Partner") as partner_model:
+            partner_model.query.filter_by.return_value = query
+            assert _scope_share_total_exceeds(1, "branch", None, Decimal("10")) is False
+
+    def test_unlink_customer_exception_flashes(self, partners_client):
+        partners_client._partners_mocks["service"].unlink_product_partner.side_effect = RuntimeError("db")
+        partner = _partner_mock(4)
+        with patch(
+            "routes.partners.tenant_query",
+            return_value=_tenant_query_chain(first=partner),
+        ):
+            resp = partners_client.post("/partners/4/unlink-customer", data={"customer_id": "9"})
+        assert resp.status_code in (302, 303)
