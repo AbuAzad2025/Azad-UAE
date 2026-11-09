@@ -700,7 +700,6 @@ class TestSalesComplianceDocuments:
             resp = sales_client.post("/sales/1/request-ita-allocation", follow_redirects=False)
         assert resp.status_code == 302
 
-
     def test_einvoice_xml_denied_for_foreign_branch(self, sales_client):
         with (
             _sales_patches(branch_scope=9),
