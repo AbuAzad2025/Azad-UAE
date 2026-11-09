@@ -7,6 +7,8 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from services.einvoice_service import EInvoiceService
 
 
@@ -87,3 +89,23 @@ class TestGuardBranches:
         einvoice_model.query.filter_by.return_value = query
         assert EInvoiceService.get_for_return(1) == "row"
         assert EInvoiceService.get_for_return(1, tenant_id=2) == "row"
+
+
+class TestClassicPhase0:
+    def test_phase2_without_secrets_raises(self, mocker):
+        tenant = SimpleNamespace(id=1, enable_einvoice=True, vat_country="SA", zatca_phase2_enabled=True)
+        sale = SimpleNamespace(id=7, tenant_id=1, currency="SAR")
+        mocker.patch("services.tenant_secrets_service.TenantSecretsService.get", return_value=None)
+        with pytest.raises(ValueError, match="private key"):
+            EInvoiceService._build_document(tenant, sale, doc_type="invoice", billing_reference=None)
+
+    def test_sa_classic_document(self, mocker):
+        tenant = SimpleNamespace(id=1, enable_einvoice=True, vat_country="SA", zatca_phase2_enabled=False)
+        sale = SimpleNamespace(id=7, tenant_id=1, currency="SAR")
+        mocker.patch(
+            "utils.einvoice_document.zatca_document",
+            return_value={"xml_payload": "<x/>", "qr_base64": "q", "invoice_hash": "h", "format": "z"},
+        )
+        mocker.patch("utils.tax_settings.vat_country", return_value="SA")
+        doc = EInvoiceService._build_document(tenant, sale, doc_type="invoice", billing_reference=None)
+        assert doc["format"] == "z"

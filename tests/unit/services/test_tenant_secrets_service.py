@@ -62,3 +62,5 @@ class TestService:
         TenantSecretsService.delete(1, "zatca_csid")
         chain.delete.assert_called_once()
         assert TenantSecretsService.is_set(1, "zatca_csid") is True
+        TenantSecretsService.clear(1, "zatca_csid")
+        assert chain.delete.call_count == 2
