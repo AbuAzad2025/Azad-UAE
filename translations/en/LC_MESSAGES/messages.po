@@ -20712,7 +20712,7 @@ msgstr "✅ Link removed."
 msgid "❌ تعذر فك الربط."
 msgstr "❌ Could not remove the link."
 
-msgid "نسبة ضريبة الاستقطاع على خدمات غير المقيمين (WHT)"
+msgid "ضريبة الاستقطاع على خدمات غير المقيمين (WHT)"
 msgstr "Withholding tax on non-resident services (WHT)"
 
 msgid "نسبة الخصم من المنبع (%) — فارغة = معطلة"
@@ -20735,3 +20735,27 @@ msgstr "Sales by VAT category"
 
 msgid "صافي المبيعات"
 msgstr "Net sales"
+
+msgid "حدد نسبة ضريبة الاستقطاع قبل تسجيل المصروف."
+msgstr "Set the withholding tax rate before recording this expense."
+
+msgid "المصروف معكوس أو يتطلب مراجعة قيوده."
+msgstr "This expense is reversed or its journal entries require review."
+
+msgid "نسبة أو مبلغ ضريبة الاستقطاع غير صالح."
+msgstr "The withholding rate or amount is invalid."
+
+msgid "المستودع غير متاح ضمن نطاق الشركة والفرع."
+msgstr "The warehouse is not available in this company and branch."
+
+msgid "الاستقطاع على مصروف مدفوع بشيك غير متاح حالياً."
+msgstr "Withholding on an expense paid by cheque is not currently available."
+
+msgid "لا يمكن تعديل مبلغ مصروف الاستقطاع؛ ألغِ المصروف وأنشئه مجدداً."
+msgstr "A withholding expense cannot be financially amended; cancel and recreate it."
+
+msgid "تفصيل المبيعات حسب الفئة غير متاح حالياً؛ راجع يدوياً الفواتير المختلطة والمرتجعات قبل تقديم الإقرار."
+msgstr "Sales by tax category are not yet available; review mixed invoices and returns manually before filing."
+
+msgid "تحتاج التوزيعات إلى مراجعة محاسبية قبل الاعتماد أو الدفع؛ معالجة المرتجعات وتداخل نطاقات الشركاء غير مكتملة."
+msgstr "Distributions require accounting review before approval or payment; returns and overlapping partner scopes are not fully handled."

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+
+from flask_babel import gettext
 
 from extensions import db
 
@@ -11,6 +14,37 @@ logger = logging.getLogger(__name__)
 
 class ExpenseService:
     """Pure business logic for expense operations. Uses flush only — callers manage transactions."""
+
+    @staticmethod
+    def calculate_withholding(amount, rate, applies):
+        """Calculate an explicitly configured withholding, in document currency.
+
+        No statutory rate is inferred. A flagged payment must have an explicit
+        rate, including an explicit zero when no withholding is applicable.
+        """
+        if not applies:
+            return Decimal("0.000")
+        if rate is None:
+            raise ValueError(gettext("حدد نسبة ضريبة الاستقطاع قبل تسجيل المصروف."))
+        try:
+            rate = Decimal(str(rate))
+            amount = Decimal(str(amount))
+            if not rate.is_finite() or not amount.is_finite() or not 0 <= rate <= 100 or amount <= 0:
+                raise ValueError
+            return (amount * rate / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        except (InvalidOperation, ValueError):
+            raise ValueError(gettext("نسبة أو مبلغ ضريبة الاستقطاع غير صالح.")) from None
+
+    @staticmethod
+    def resolve_warehouse(warehouse_id, tenant_id, branch_id):
+        """Reject unknown, inactive, cross-tenant or cross-branch attribution."""
+        from models import Warehouse
+        from utils.tenanting import tenant_query
+
+        warehouse = tenant_query(Warehouse).filter_by(id=warehouse_id, tenant_id=tenant_id, is_active=True).first()
+        if warehouse is None or (branch_id is not None and warehouse.branch_id != branch_id):
+            raise ValueError(gettext("المستودع غير متاح ضمن نطاق الشركة والفرع."))
+        return warehouse
 
     @staticmethod
     def create_expense(

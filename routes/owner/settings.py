@@ -874,7 +874,7 @@ def tax_settings():
                         wht_value = Decimal(wht_raw)
                     except Exception:
                         raise ValueError(gettext("نسبة ضريبة الاستقطاع يجب أن تكون رقمًا."))
-                    if wht_value < Decimal("0") or wht_value > Decimal("100"):
+                    if not wht_value.is_finite() or wht_value < Decimal("0") or wht_value > Decimal("100"):
                         raise ValueError(gettext("نسبة ضريبة الاستقطاع يجب أن تكون بين 0 و 100."))
                     tenant.wht_services_rate = wht_value
                 tenant.enable_import_duties = request.form.get("enable_import_duties") == "on"

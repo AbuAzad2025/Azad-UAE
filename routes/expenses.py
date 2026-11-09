@@ -83,19 +83,10 @@ def _build_expense_gl_lines(expense, tenant_id):
         )
         payment_concept = GLService.get_payment_credit_concept(expense.payment_method)
 
-    # Withholding at source on non-resident service payments (tenant rate).
-    def _wht_decimal(value) -> Decimal:
-        try:
-            parsed = Decimal(str(value))
-        except Exception:
-            return Decimal("0")
-        return parsed if parsed > Decimal("0") else Decimal("0")
-
-    wht_amount = _wht_decimal(getattr(expense, "wht_amount", 0))
-    try:
-        gross_amount = Decimal(str(expense.amount))
-    except Exception:
-        gross_amount = Decimal("0")
+    wht_amount = Decimal(str(expense.wht_amount or 0))
+    gross_amount = Decimal(str(expense.amount))
+    if not wht_amount.is_finite() or wht_amount < 0 or wht_amount > gross_amount:
+        raise ValueError(gettext("نسبة أو مبلغ ضريبة الاستقطاع غير صالح."))
     net_payment = gross_amount - wht_amount
 
     lines = [
@@ -105,14 +96,17 @@ def _build_expense_gl_lines(expense, tenant_id):
             "explicit_account_allowed": expense_concept is None,
             "debit": expense.amount,
             "description": expense.description or "",
-        },
-        {
-            "account": payment_account,
-            "concept_code": payment_concept,
-            "credit": net_payment,
-            "description": gettext(f"دفع {expense.payment_method}"),
-        },
+        }
     ]
+    if net_payment > 0:
+        lines.append(
+            {
+                "account": payment_account,
+                "concept_code": payment_concept,
+                "credit": net_payment,
+                "description": gettext(f"دفع {expense.payment_method}"),
+            }
+        )
     if wht_amount > 0:
         lines.append(
             {
@@ -206,13 +200,20 @@ def create():
                 except ValueError:
                     current_app.logger.debug("Invalid cheque date format: %s", cheque_date_str)
 
-            warehouse_id = request.form.get("warehouse_id", type=int)
-            if warehouse_id:
-                from models import Warehouse
+            warehouse_raw = (request.form.get("warehouse_id") or "").strip()
+            warehouse_id = None
+            if warehouse_raw:
+                try:
+                    warehouse_id = int(warehouse_raw)
+                except ValueError:
+                    raise ValueError(gettext("المستودع غير متاح ضمن نطاق الشركة والفرع.")) from None
+                warehouse = ExpenseService.resolve_warehouse(warehouse_id, tenant_id, expense_branch_id)
+                if expense_branch_id is None:
+                    expense_branch_id = warehouse.branch_id
 
-                wh = Warehouse.query.filter_by(id=warehouse_id, tenant_id=tenant_id).first()
-                if wh is None:
-                    warehouse_id = None
+            applies_wht = request.form.get("is_service_to_nonresident") == "on"
+            if applies_wht and request.form.get("payment_method") == "cheque":
+                raise ValueError(gettext("الاستقطاع على مصروف مدفوع بشيك غير متاح حالياً."))
 
             with atomic_transaction("expense_create"):
                 expense = Expense(
@@ -232,13 +233,20 @@ def create():
                     bank_name=request.form.get("bank_name"),
                     supplier_name=request.form.get("supplier_name"),
                     warehouse_id=warehouse_id,
-                    is_service_to_nonresident=(request.form.get("is_service_to_nonresident") == "on"),
+                    is_service_to_nonresident=applies_wht,
                     notes=request.form.get("notes"),
                     user_id=current_user.id,
                     branch_id=expense_branch_id,
                 )
                 db.session.add(expense)
                 db.session.flush()
+
+                from models import Tenant
+
+                tenant = db.session.get(Tenant, tenant_id) if applies_wht else None
+                expense.wht_amount = ExpenseService.calculate_withholding(
+                    amount, getattr(tenant, "wht_services_rate", None), applies_wht
+                )
 
                 cheque = None
                 if expense.payment_method == "cheque":
@@ -272,28 +280,6 @@ def create():
                 )
                 tid = getattr(expense, "tenant_id", None) or get_active_tenant_id(current_user)
 
-                # Withholding at source on non-resident service payments.
-                from decimal import ROUND_HALF_UP
-
-                from models import Tenant
-
-                tenant = db.session.get(Tenant, int(tid)) if tid is not None else None
-                wht_rate = getattr(tenant, "wht_services_rate", None) if tenant is not None else None
-
-                def _wht_num(value):
-                    try:
-                        return Decimal(str(value))
-                    except Exception:
-                        return None
-
-                wht_rate_dec = _wht_num(wht_rate)
-                wht_base = _wht_num(getattr(expense, "amount", 0) or 0) or Decimal("0")
-                if getattr(expense, "is_service_to_nonresident", False) and wht_rate_dec is not None:
-                    expense.wht_amount = (wht_base * wht_rate_dec / Decimal("100")).quantize(
-                        Decimal("0.001"), rounding=ROUND_HALF_UP
-                    )
-                else:
-                    expense.wht_amount = Decimal("0")
                 db.session.flush()
 
                 # Budget enforcement check
@@ -342,7 +328,11 @@ def create():
     exchange_rates = CurrencyService.get_all_rates(_dc)
     from models import Warehouse
 
-    expense_warehouses = tenant_query(Warehouse).filter_by(is_active=True).all()
+    warehouse_query = tenant_query(Warehouse).filter_by(is_active=True)
+    scoped_branch = branch_scope_id() or getattr(current_user, "branch_id", None)
+    if scoped_branch is not None:
+        warehouse_query = warehouse_query.filter(Warehouse.branch_id == scoped_branch)
+    expense_warehouses = warehouse_query.all()
 
     return render_template(
         "expenses/create.html",
@@ -417,6 +407,8 @@ def edit(**kwargs):
                 or new_currency != expense.currency
                 or new_category_id != expense.category_id
             )
+            if financial_change and expense.is_service_to_nonresident is True:
+                raise ValueError(gettext("لا يمكن تعديل مبلغ مصروف الاستقطاع؛ ألغِ المصروف وأنشئه مجدداً."))
 
             with atomic_transaction("expense_edit"):
                 expense.category_id = new_category_id
@@ -427,11 +419,12 @@ def edit(**kwargs):
                 expense.supplier_name = new_supplier_name
                 expense.notes = new_notes
 
-                exchange_rate = _resolve_transaction_rate(expense.currency)
-                expense.exchange_rate = exchange_rate
-                expense.amount_aed = convert_and_quantize_aed(
-                    new_amount, expense.currency, exchange_rate, tenant_id=expense.tenant_id
-                )
+                if financial_change:
+                    exchange_rate = _resolve_transaction_rate(expense.currency)
+                    expense.exchange_rate = exchange_rate
+                    expense.amount_aed = convert_and_quantize_aed(
+                        new_amount, expense.currency, exchange_rate, tenant_id=expense.tenant_id
+                    )
 
                 if financial_change and expense.status == "confirmed":
                     from utils.gl_tenant import reverse_document_gl
@@ -458,7 +451,9 @@ def edit(**kwargs):
                         currency=expense.currency,
                         exchange_rate=expense.exchange_rate,
                         branch_id=expense.branch_id,
+                        tenant_id=tid,
                     )
+                    expense.is_reversed = False
 
             LoggingCore.log_audit("update", "expenses", record_id)
             flash(gettext("✅ تم تحديث المصروف بنجاح!"), "success")
@@ -549,6 +544,9 @@ def cancel(**kwargs):
     expense = tenant_get_or_404(Expense, record_id)
     if not _expense_in_scope(expense):
         return render_template("errors/403.html"), 403
+    if expense.is_reversed:
+        flash(gettext("المصروف معكوس أو يتطلب مراجعة قيوده."), "warning")
+        return redirect(url_for("expenses.view", id=record_id))
 
     try:
         from services.gl_helpers import assert_period_open

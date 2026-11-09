@@ -28,6 +28,8 @@ def _mock_expense(**kwargs):
     exp.description = kwargs.get("description", "Office supplies")
     exp.expense_date = kwargs.get("expense_date", date(2026, 1, 15))
     exp.is_reversed = False
+    exp.is_service_to_nonresident = False
+    exp.wht_amount = Decimal("0")
     category = kwargs.get("category")
     if category is None:
         category = MagicMock(gl_account_code="5100")
@@ -159,14 +161,13 @@ class TestWhtAndWarehouseDetails:
                     "category_id": "1",
                     "payment_method": "cash",
                     "is_service_to_nonresident": "on",
-                    "warehouse_id": "7",
                 },
                 follow_redirects=False,
             )
         assert resp.status_code == 302
         assert expense.wht_amount == Decimal("5.000")
 
-    def test_create_without_rate_keeps_wht_zero(self, expenses_client):
+    def test_create_without_rate_is_refused(self, expenses_client):
         expense = _mock_expense(amount=Decimal("100"), category=MagicMock(gl_account_code="6500"))
         tenant = MagicMock(wht_services_rate=None)
         with (
@@ -191,7 +192,7 @@ class TestWhtAndWarehouseDetails:
                 },
                 follow_redirects=False,
             )
-        assert resp.status_code == 302
+        assert resp.status_code == 200
         assert expense.wht_amount == Decimal("0")
 
 
@@ -444,6 +445,29 @@ class TestExpensesViewScope:
 
 
 class TestExpensesEdit:
+    def test_description_edit_keeps_original_exchange_rate(self, expenses_client):
+        expense = _mock_expense(amount=Decimal("100"), currency="USD", category_id=1)
+        expense.exchange_rate = Decimal("3.670000")
+        expense.amount_aed = Decimal("367.000")
+        expense.is_service_to_nonresident = True
+        expense.wht_amount = Decimal("5.000")
+        with (
+            _expense_patches(expense=expense),
+            patch("models.ArchivedRecord") as archived,
+            patch("services.gl_helpers.assert_period_open"),
+            patch("routes.expenses._resolve_transaction_rate") as rate,
+        ):
+            archived.query.filter_by.return_value.first.return_value = None
+            response = expenses_client.post(
+                "/expenses/1/edit",
+                data={"amount": "100", "currency": "USD", "category_id": "1", "description": "Updated"},
+            )
+        assert response.status_code == 302
+        rate.assert_not_called()
+        assert expense.exchange_rate == Decimal("3.670000")
+        assert expense.amount_aed == Decimal("367.000")
+        assert expense.wht_amount == Decimal("5.000")
+
     def test_edit_get(self, expenses_client):
         archived_cls = MagicMock()
         archived_cls.query.filter_by.return_value.first.return_value = None
@@ -901,6 +925,39 @@ class TestArchivedExpenseRow:
 
 
 class TestBuildExpenseGlLines:
+    def test_full_withholding_has_no_zero_payment_line(self):
+        from routes.expenses import _build_expense_gl_lines
+
+        expense = _mock_expense(amount=Decimal("100"), category=MagicMock(gl_account_code="6500"))
+        expense.wht_amount = Decimal("100")
+        with (
+            patch("services.expense_service.ExpenseService.find_gl_account", return_value=None),
+            patch("services.gl_service.GLService.get_account_code_for_concept", return_value="2149"),
+            patch("services.gl_service.GLService.get_payment_credit_account", return_value="1110"),
+            patch("services.gl_service.GLService.get_payment_credit_concept", return_value="CASH"),
+        ):
+            lines = _build_expense_gl_lines(expense, tenant_id=1)
+        assert [(line.get("debit"), line.get("credit")) for line in lines] == [
+            (Decimal("100"), None),
+            (None, Decimal("100")),
+        ]
+        assert lines[1]["concept_code"] == "WITHHOLDING_TAX_PAYABLE"
+
+    @pytest.mark.parametrize("amount", [Decimal("101"), Decimal("-1"), Decimal("NaN")])
+    def test_invalid_withholding_never_posts(self, amount):
+        from routes.expenses import _build_expense_gl_lines
+
+        expense = _mock_expense(amount=Decimal("100"))
+        expense.wht_amount = amount
+        with (
+            patch("services.expense_service.ExpenseService.find_gl_account", return_value=None),
+            patch("services.gl_service.GLService.get_account_code_for_concept", return_value="6500"),
+            patch("services.gl_service.GLService.get_payment_credit_account", return_value="1110"),
+            patch("services.gl_service.GLService.get_payment_credit_concept", return_value="CASH"),
+            pytest.raises(ValueError),
+        ):
+            _build_expense_gl_lines(expense, tenant_id=1)
+
     def test_cheque_payment_lines(self):
         from routes.expenses import _build_expense_gl_lines
 
