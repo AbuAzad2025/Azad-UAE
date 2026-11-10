@@ -79,6 +79,20 @@ class ReturnService:
         return total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod
+    def _line_tax_rate(sale_line, sale, tenant_id) -> Decimal:
+        """Effective VAT rate for one returned line.
+
+        Zero/exempt categories carry no VAT; standard lines use the sale's
+        rate (the tenant's VAT posting switch still gates everything).
+        """
+        category = (getattr(sale_line, "tax_category", None) or "standard").strip().lower()
+        if category in ("zero", "exempt"):
+            return Decimal("0")
+        if not should_post_vat_gl(tenant_id):
+            return Decimal("0")
+        return Decimal(str(getattr(sale, "tax_rate", 0) or 0))
+
+    @staticmethod
     def _validate_sale_access(sale, user=None):
         if not user or not getattr(user, "is_authenticated", False):
             return
@@ -182,6 +196,7 @@ class ReturnService:
             # full revenue; returns must credit that expense back in the same
             # proportion so GL parity with the original invoice is exact.
             total_promo_reversal = Decimal("0")
+            total_line_tax = Decimal("0")
             promo_raw = sale.__dict__.get("promotion_discount_amount")
             sale_promo_total = Decimal(str(promo_raw)) if promo_raw else Decimal("0")
             sale_subtotal_for_promo = Decimal(str(sale.subtotal or 0))
@@ -289,6 +304,7 @@ class ReturnService:
                     )
                     net_line_return += shipping_share
 
+                promo_share = Decimal("0")
                 if sale_subtotal_for_promo > 0 and sale_promo_total > 0:
                     promo_share = (line_total / sale_subtotal_for_promo * sale_promo_total).quantize(
                         Decimal("0.001"), rounding=ROUND_HALF_UP
@@ -297,6 +313,19 @@ class ReturnService:
 
                 if net_line_return < Decimal("0"):
                     net_line_return = Decimal("0")
+
+                # Per-line VAT: the returned line's own tax category decides
+                # the rate (zero/exempt lines contribute no VAT), not the
+                # sale-level rate applied to the whole return. When prices
+                # include VAT the returned amount is already gross, so the
+                # VAT slice is gross − gross/(1+rate), not rate on top.
+                taxable_line = max(net_line_return - promo_share, Decimal("0"))
+                line_rate = ReturnService._line_tax_rate(sale_line, sale, tenant_id)
+                if line_rate > 0 and getattr(sale, "prices_include_vat", False) is True:
+                    line_tax = taxable_line - taxable_line / (Decimal("1") + line_rate / Decimal("100"))
+                else:
+                    line_tax = taxable_line * line_rate / Decimal("100")
+                total_line_tax += line_tax.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
                 total_gross_return += line_total
                 total_net_return += net_line_return
@@ -469,10 +498,6 @@ class ReturnService:
 
             product_return.total_amount = total_gross_return.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
-            tax_rate = Decimal(str(sale.tax_rate or 0))
-            if not should_post_vat_gl(tenant_id):
-                tax_rate = Decimal("0")
-
             auto_net_return_amount = total_net_return.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             # The customer only ever paid the net AFTER the promotional
             # discount; the tax at sale time was computed on that same base.
@@ -481,16 +506,24 @@ class ReturnService:
             promo_reversal_amount = min(total_promo_reversal, auto_net_return_amount).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
             )
-            customer_net_return_amount = auto_net_return_amount - promo_reversal_amount
-            auto_tax_amount = (customer_net_return_amount * (tax_rate / Decimal("100"))).quantize(
-                Decimal("0.001"), rounding=ROUND_HALF_UP
-            )
+            gross_customer_amount = auto_net_return_amount - promo_reversal_amount
+            customer_net_return_amount = gross_customer_amount
+            auto_tax_amount = total_line_tax.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            if getattr(sale, "prices_include_vat", False) is True:
+                # Returned amounts are gross (VAT included): the customer
+                # gets back exactly what was paid, split net + tax slice.
+                customer_net_return_amount = gross_customer_amount - auto_tax_amount
             auto_gross_return_amount = customer_net_return_amount + auto_tax_amount
 
             final_refund_amount = manual_refund_amount if manual_refund_amount is not None else auto_gross_return_amount
             if manual_refund_amount is not None:
-                if tax_rate > 0:
-                    net_return_amount = (final_refund_amount / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
+                blended_rate = (
+                    (auto_tax_amount / customer_net_return_amount * Decimal("100"))
+                    if customer_net_return_amount > 0
+                    else Decimal("0")
+                )
+                if blended_rate > 0:
+                    net_return_amount = (final_refund_amount / (Decimal("1") + blended_rate / Decimal("100"))).quantize(
                         Decimal("0.001"), rounding=ROUND_HALF_UP
                     )
                     tax_amount = final_refund_amount - net_return_amount
@@ -498,7 +531,11 @@ class ReturnService:
                     net_return_amount = final_refund_amount
                     tax_amount = Decimal("0")
             else:
-                net_return_amount = auto_net_return_amount
+                net_return_amount = (
+                    auto_net_return_amount - auto_tax_amount
+                    if getattr(sale, "prices_include_vat", False) is True
+                    else auto_net_return_amount
+                )
                 tax_amount = auto_tax_amount
 
             product_return.refund_amount = final_refund_amount

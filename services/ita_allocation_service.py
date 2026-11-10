@@ -54,6 +54,45 @@ class ItaAllocationService:
         return "".join(ch for ch in str(value or "") if ch.isdigit())
 
     @staticmethod
+    def _build_payload(tenant, sale, seller: str, buyer: str) -> dict:
+        """Allocation request body per the ITA Approval schema.
+
+        Mandatory per the published field table: Invoice_Issuance_Date,
+        Amount_Before_Discount and Discount are required alongside the
+        amounts; omitting them is a rejection, not a default.
+        """
+        from datetime import UTC, datetime
+
+        def _dec(value) -> Decimal:
+            try:
+                return Decimal(str(value or 0))
+            except Exception:
+                return Decimal("0")
+
+        net = _dec(getattr(sale, "taxable_amount", 0))
+        tax = _dec(getattr(sale, "tax_amount", 0))
+        total_amount = _dec(getattr(sale, "total_amount", 0))
+        discount = _dec(getattr(sale, "discount_amount", 0))
+        subtotal = _dec(getattr(sale, "subtotal", 0))
+        before_discount = subtotal if subtotal > 0 else net + discount
+        issue = getattr(sale, "sale_date", None)
+        payload = {
+            "Invoice_ID": f"{tenant.id}-{sale.sale_number}"[:50],
+            "Invoice_Type": INVOICE_TYPE_TAX_INVOICE,
+            "Vat_Number": seller,
+            "Invoice_Reference_Number": str(sale.sale_number)[:20],
+            "Customer_VAT_Number": buyer,
+            "Invoice_Date": issue.strftime("%Y-%m-%d") if issue else "",
+            "Invoice_Issuance_Date": datetime.now(UTC).strftime("%Y-%m-%d"),
+            "Amount_Before_Discount": f"{before_discount:.2f}",
+            "Discount": f"{abs(discount):.2f}",
+            "Payment_Amount": f"{net:.2f}",
+            "VAT_Amount": f"{tax:.2f}",
+            "Payment_Amount_Including_VAT": f"{total_amount:.2f}",
+        }
+        return {key: value for key, value in payload.items() if value != ""}
+
+    @staticmethod
     def request_allocation_number(sale, *, user_id=None) -> dict:
         from models import EInvoice, Tenant
         from services.tenant_secrets_service import TenantSecretsService
@@ -109,22 +148,7 @@ class ItaAllocationService:
             if (getattr(tenant, "ita_environment", "sandbox") or "sandbox").lower() == "production"
             else SANDBOX_URL
         )
-        net = Decimal(str(getattr(sale, "taxable_amount", 0) or 0))
-        tax = Decimal(str(getattr(sale, "tax_amount", 0) or 0))
-        total_amount = Decimal(str(getattr(sale, "total_amount", 0) or 0))
-        issue = getattr(sale, "sale_date", None)
-        payload = {
-            "Invoice_ID": f"{tenant.id}-{sale.sale_number}"[:50],
-            "Invoice_Type": INVOICE_TYPE_TAX_INVOICE,
-            "Vat_Number": seller,
-            "Invoice_Reference_Number": str(sale.sale_number)[:20],
-            "Customer_VAT_Number": buyer,
-            "Invoice_Date": issue.strftime("%Y-%m-%d") if issue else "",
-            "Payment_Amount": f"{net:.2f}",
-            "VAT_Amount": f"{tax:.2f}",
-            "Payment_Amount_Including_VAT": f"{total_amount:.2f}",
-        }
-        payload = {key: value for key, value in payload.items() if value != ""}
+        payload = ItaAllocationService._build_payload(tenant, sale, seller, buyer)
 
         try:
             response = requests.post(

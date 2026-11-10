@@ -66,6 +66,56 @@ class SaleService:
             )
 
     @staticmethod
+    def _commission_margin(revenue_excl_vat, cost_basis_base, exchange_rate):
+        """Profit margin in invoice currency.
+
+        Cost is recorded in base currency, so it is converted INTO the
+        invoice currency first — subtracting base cost from foreign revenue
+        (or vice versa) would corrupt the margin. FX identity (rate 1, e.g.
+        domestic-currency invoices) leaves the cost untouched.
+        """
+        fx_rate = Decimal(str(exchange_rate or 1))
+        cost = Decimal(str(cost_basis_base or 0))
+        if fx_rate > 0 and fx_rate != Decimal("1"):
+            cost = (cost / fx_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        return (Decimal(str(revenue_excl_vat or 0)) - cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+
+    @staticmethod
+    def recompute_commission_basis(entry, sale, line):
+        """Re-derive one historical commission entry on the current basis.
+
+        Returns ``(profit_margin, base_amount_aed, commission_amount_aed)``
+        in the invoice/base currencies per the FX-consistent margin and
+        per-line VAT category rules. Used by the explicit re-basis script
+        for test data — never called silently by the application.
+        """
+        from decimal import ROUND_HALF_UP, Decimal
+
+        line_total = Decimal(str(line.line_total or 0))
+        category = ((getattr(line, "tax_category", None) or "standard").strip().lower())
+        rate = Decimal(str(getattr(sale, "tax_rate", 0) or 0))
+        if getattr(sale, "prices_include_vat", False) is True and rate > 0 and category not in ("zero", "exempt"):
+            revenue_excl = (line_total / (Decimal("1") + rate / Decimal("100"))).quantize(
+                Decimal("0.001"), rounding=ROUND_HALF_UP
+            )
+        else:
+            revenue_excl = line_total
+        margin = SaleService._commission_margin(
+            revenue_excl, Decimal(str(entry.cost_basis or 0)), getattr(sale, "exchange_rate", 1)
+        )
+        base = SaleService._commission_base_aed(
+            margin,
+            getattr(sale, "exchange_rate", 1),
+            currency=getattr(entry, "currency", None),
+            tenant_id=getattr(entry, "tenant_id", None),
+        )
+        pct = Decimal(str(entry.percentage or 0))
+        commission = (base * pct / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        if commission <= Decimal("0"):
+            commission = Decimal("0")
+        return margin, base, commission
+
+    @staticmethod
     def _commission_base_aed(profit_margin, exchange_rate, currency=None, tenant_id=None):
         if profit_margin <= Decimal("0"):
             return Decimal("0")
@@ -88,6 +138,8 @@ class SaleService:
         exchange_rate,
         currency=None,
         tenant_id=None,
+        prices_include_vat=False,
+        tax_rate=None,
     ):
         """Allocate the invoice-level discount across commission entries.
 
@@ -95,7 +147,9 @@ class SaleService:
         commission context (entry, line total, margin, percentage, base) is
         reduced by its pro-rata share of the discount before the GL posting
         in ``fulfill_sale`` reads the entries. Shipping is excluded on
-        purpose: it is a service charge, not product margin.
+        purpose: it is a service charge, not product margin. When prices
+        include VAT the discount share is stripped of VAT first, because
+        the margin it reduces is already VAT-excluded.
         """
         from decimal import ROUND_HALF_UP, Decimal
 
@@ -103,8 +157,13 @@ class SaleService:
         subtotal = Decimal(str(subtotal or 0))
         if total_discount <= Decimal("0") or subtotal <= Decimal("0"):
             return
+        rate = Decimal(str(tax_rate or 0))
         for entry, line_total_dec, profit_margin, pct, base_amount in commission_context:
             share = (line_total_dec / subtotal * total_discount).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            if prices_include_vat and rate > 0:
+                share = (share / (Decimal("1") + rate / Decimal("100"))).quantize(
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
+                )
             converted_share = SaleService._commission_base_aed(
                 share,
                 exchange_rate,
@@ -391,9 +450,11 @@ class SaleService:
                 subtotal += line.line_total
 
                 # --- Partner Commission: calculated on NET PROFIT MARGIN (revenue - COGS) ---
-                # Revenue excl VAT
+                # Revenue excl VAT. Zero/exempt lines carry no VAT, so their
+                # (possibly VAT-inclusive) total is never grossed down.
                 line_total_dec = Decimal(str(line.line_total))
-                if sale.prices_include_vat and sale.tax_rate > 0:
+                line_category = (getattr(line, "tax_category", None) or "standard").strip().lower()
+                if sale.prices_include_vat and sale.tax_rate > 0 and line_category not in ("zero", "exempt"):
                     revenue_excl_vat = (
                         line_total_dec / (Decimal("1") + Decimal(str(sale.tax_rate)) / Decimal("100"))
                     ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -418,7 +479,7 @@ class SaleService:
 
                 qty_dec = Decimal(str(line.quantity)) if line.quantity else Decimal("0")
                 cost_basis = (unit_cost * qty_dec).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-                profit_margin = (revenue_excl_vat - cost_basis).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                profit_margin = SaleService._commission_margin(revenue_excl_vat, cost_basis, exchange_rate)
 
                 base_amount = SaleService._commission_base_aed(
                     profit_margin,
@@ -514,6 +575,8 @@ class SaleService:
                 exchange_rate,
                 currency=currency,
                 tenant_id=tenant_id,
+                prices_include_vat=bool(getattr(sale, "prices_include_vat", False)),
+                tax_rate=sale.tax_rate,
             )
 
             sale.calculate_totals()

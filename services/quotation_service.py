@@ -155,6 +155,25 @@ class QuotationService:
             raise ValueError(gettext("فقط عروض الأسعار المقبولة يمكن تحويلها."))
         if quotation.sale_id:
             raise ValueError(gettext("تم تحويل هذا العرض مسبقاً."))
+        if quotation.is_expired:
+            raise ValueError(gettext("عرض الأسعار منتهي الصلاحية."))
+
+        # Stock must still be there at conversion time: a quote is a price
+        # promise, not a reservation. Refuse loudly instead of creating a
+        # sale that cannot be fulfilled.
+        from services.stock_service import StockService
+
+        for q_line in quotation.lines:
+            available = StockService.get_product_stock(
+                q_line.product_id, warehouse_id=quotation.warehouse_id
+            )
+            if Decimal(str(available or 0)) < Decimal(str(q_line.quantity or 0)):
+                raise ValueError(
+                    gettext(
+                        f"المخزون غير كافٍ لتحويل العرض: منتج #{q_line.product_id} "
+                        f"مطلوب {q_line.quantity} والمتاح {available}."
+                    )
+                )
 
         from models import Sale, SaleLine
 

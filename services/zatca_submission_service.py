@@ -69,6 +69,28 @@ class ZatcaSubmissionService:
             )
         if not einv.xml_payload:
             raise ZatcaSubmissionError("The stored e-invoice artifact has no XML payload.")
+        payload_xml = einv.xml_payload
+        if "Signature" not in payload_xml:
+            # FATOORA reporting expects a signed invoice. Sign with the
+            # tenant's CSID key when it parses; otherwise warn loudly and
+            # fall back to the stored (unsigned) payload so the flow is not
+            # silently dead for tenants who have not stored a key yet.
+            try:
+                from utils.zatca_signing import sign_xml
+
+                payload_xml = sign_xml(payload_xml, private_key, certificate)
+                logger.info(
+                    "Signed e-invoice XML for tenant %s sale %s before ZATCA submission.",
+                    tenant.id,
+                    sale.id,
+                )
+            except ValueError:
+                logger.warning(
+                    "Submitting unsigned e-invoice XML for tenant %s sale %s to ZATCA; "
+                    "FATOORA expects a signed document and may reject it.",
+                    tenant.id,
+                    sale.id,
+                )
         if einv.status == "submitted":
             raise ZatcaSubmissionError(
                 "This invoice is marked submitted; verify the authority response before resending."
@@ -83,7 +105,7 @@ class ZatcaSubmissionService:
         try:
             response = requests.post(
                 base,
-                data=einv.xml_payload.encode("utf-8"),
+                data=payload_xml.encode("utf-8"),
                 headers={
                     "Authorization": f"Bearer {csid}",
                     "Content-Type": "application/xml",
