@@ -74,7 +74,10 @@ class SaleService:
         (or vice versa) would corrupt the margin. FX identity (rate 1, e.g.
         domestic-currency invoices) leaves the cost untouched.
         """
+        fx_rate = Decimal(str(exchange_rate or 1))
         cost = Decimal(str(cost_basis_base or 0))
+        if fx_rate > 0 and fx_rate != Decimal("1"):
+            cost = (cost / fx_rate).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         return (Decimal(str(revenue_excl_vat or 0)) - cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
     @staticmethod

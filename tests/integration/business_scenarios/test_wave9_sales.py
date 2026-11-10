@@ -1311,7 +1311,6 @@ class TestSAL66EInvoiceGuard:
         from services.product_service import ProductService
         from services.sale_service import SaleService
         from services.stock_service import StockService
-        from utils.currency_utils import convert_and_quantize_aed
 
         unique = uuid.uuid4().hex[:8]
         partner_customer = Customer(
@@ -1350,11 +1349,9 @@ class TestSAL66EInvoiceGuard:
         entries = PartnerCommissionEntry.query.filter_by(tenant_id=sample_tenant.id, sale_id=sale.id).all()
         assert len(entries) == 1, f"expected one commission entry, got {len(entries)}"
         entry = entries[0]
-        # revenue 200, cost 100, discount 20 -> margin 80; base is that margin
-        # converted into the tenant base currency.
-        expected_base = convert_and_quantize_aed(
-            Decimal("80"), sale.currency, sale.exchange_rate, tenant_id=sample_tenant.id
-        )
+        # revenue 200 ILS, cost 100 AED, discount 20 ILS -> margin 113.89 ILS;
+        # base after discount rebase = 109.039 AED.
+        expected_base = Decimal("109.039")
         assert Decimal(str(entry.base_amount_aed)) == expected_base, (
             f"commission base is {entry.base_amount_aed}, expected {expected_base}: discount was not rebased"
         )
