@@ -2,6 +2,10 @@
 
 This is an engineering risk register, not a legal or tax opinion. Do not
 describe these paths as production-certified merely because tests or CI pass.
+Claims and test names below describe earlier work; they have not all been
+independently reconciled against the current implementation. In particular,
+multi-line return allocation, payments in the unified statement, historical
+tax categories, and concurrent quotation conversion remain open for review.
 
 ## Withholding and warehouse expenses
 
@@ -42,12 +46,12 @@ describe these paths as production-certified merely because tests or CI pass.
   tenant switch. A complete implementation needs a durable effective-category
   and allocation snapshot, category-aware returns, explicit handling of legacy
   ambiguity, and reconciliation to the posted journal entries.
-- The ZATCA reporting request sends the stored XML with Bearer credentials;
-  the stored artifact is now genuinely signed with the tenant's CSID key
-  (`utils/zatca_signing.py` — enveloped SHA-256 + RSA/ECDSA signature,
-  verified locally in `tests/unit/utils/test_zatca_signing.py`), with a
-  loud warning fallback for unparseable keys. Full FATOORA C14N
-  canonicalization and a live sandbox round-trip have not been validated
+- The ZATCA reporting request sends XML with Bearer credentials. The local
+  `utils/zatca_signing.py` prototype creates a cryptographic signature, but
+  its self-verification is not proof of XMLDSig or ZATCA compliance. If the
+  private key cannot be parsed, the current submission service logs a warning
+  and may send the unsigned XML. Full FATOORA C14N canonicalization and a
+  live sandbox round-trip have not been validated
   against ZATCA's SDK and sandbox. Likewise, the ITA v2 request has not been
   validated live: the official v2 description lists lower-case field names
   and mandatory fields absent from the current request. A mocked response is not

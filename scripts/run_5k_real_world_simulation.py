@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""5,000-scenario real-world simulation suite (Azadexa).
+"""Unfinished 5,000-case simulation prototype; direct execution is disabled.
 
-Executes concrete transactional scenarios against a real database and the
-real services — no mocked business logic in the hot paths:
+This prototype writes to the configured database, its concurrency phase is
+broken, and its counts do not establish distinct real-world workflows. It must
+not be used as a test report or run against operational data. Keep the source
+only for review until the runner and its database isolation are redesigned.
+
+The original proposed phases were:
 
   A. 2000 GL double-entry postings (balanced Dr==Cr, tenant-tagged)
   B. 1000 tax & margin scenarios (VAT modes, cost snapshots, levies)
@@ -11,8 +15,6 @@ real services — no mocked business logic in the hot paths:
   E. 500 concurrency probes (FOR UPDATE counter + sequence locks)
   F. 500 RBAC / IDOR boundary attempts (cross-tenant reads blocked)
 
-Usage:
-    python scripts/run_5k_real_world_simulation.py [--db URL] [--report PATH]
 """
 
 import argparse
@@ -334,4 +336,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit("Simulation disabled: unfinished runner; database safety and results are not verified.")

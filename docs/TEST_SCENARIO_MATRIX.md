@@ -1,8 +1,14 @@
 # Azadexa — Test Scenario Matrix (QA Lead)
 
-Execution-ready matrix of real-world scenarios across tenant roles.
-Status meanings: **P** = implemented & passing locally, **M** = mocked
-boundary, **O** = open (documented gap, not claimed).
+Scenario catalogue across tenant roles. The status labels below were recorded
+during earlier work and are **not** a verified execution report for the current
+revision: some cases use mocks or parameter grids, and some runs were interrupted.
+Do not add the rows or parameter values up as independent real-world workflows.
+**P** means previously reported passing, **M** denotes a mocked boundary,
+**R** means the implementation is under verification, and **O** is an open gap.
+`scripts/run_5k_real_world_simulation.py` did not complete a verified run; its
+direct execution is disabled because its database safety and counting are not
+established.
 
 Legend for vectors: IDOR = cross-tenant object reference, ESC = privilege
 escalation, RCE = rollback/atomicity, CC = concurrency, FX = currency.
@@ -51,7 +57,7 @@ escalation, RCE = rollback/atomicity, CC = concurrency, FX = currency.
 | TX-04 | Statutory VAT single source (PS16/IL18/AE5/SA15) | strategy == country_tax | P |
 | TX-05 | E-invoice UBL persisted w/ hash; QR for KSA | artifact served under print guard | P |
 | TX-06 | ITA payload carries all mandatory fields | IssuanceDate/BeforeDiscount/Discount present | P |
-| TX-07 | ZATCA submission signed + fail-closed responses | signed XML; unconfirmed never saved | P/M |
+| TX-07 | ZATCA submission signature and responses | Local prototype; XML signature compliance and sandbox acceptance unverified | R/M |
 | TX-08 | Import levies: customs default + excise on CIF+duty | AE tobacco 1050 etc. | P |
 | TX-09 | Statutory payroll withholdings (PS/IL/SA/AE) | employee/employer per tables | P |
 | TX-10 | Live authority round-trip (ZATCA/ITA) | credentials required | **O** |
@@ -61,8 +67,8 @@ escalation, RCE = rollback/atomicity, CC = concurrency, FX = currency.
 | ID | Scenario | Expected | St |
 |---|---|---|---|
 | OP-01 | Quotation draft→sent→accepted→converted | status guards each step | P |
-| OP-02 | Expired quotation cannot be accepted/converted | is_expired refuses | P |
-| OP-03 | Conversion refuses on insufficient stock | loud error, no sale | **O→P** (this release) |
+| OP-02 | Expired quotation cannot be accepted/converted | Reject expired accepted quote using its expiry date | R |
+| OP-03 | Conversion checks stock for a selected warehouse | Reject insufficient stock; the created draft does not reserve it | R |
 | OP-04 | Double conversion refused | sale_id set → refused | P |
 | OP-05 | Concurrent writers: no oversell/double charge | 30 writers, ledger balances | P |
 | OP-06 | Sequence numbers row-locked | unique, no gaps/duplicates | P |
@@ -70,6 +76,10 @@ escalation, RCE = rollback/atomicity, CC = concurrency, FX = currency.
 | OP-08 | Session switch requires logout first | second login no-op | P |
 | OP-09 | Stock-sync / POS idempotency keys | no double posting | P |
 | OP-10 | Cheque bounce/withholding integrity | balanced reversal | P |
+
+The selected-warehouse check in OP-03 is only a point-in-time precheck. It is
+not a reservation or a concurrency guarantee. With no warehouse selected, a
+draft can be created without a stock check; fulfillment must enforce inventory.
 
 ## 5. Currency / FX
 
