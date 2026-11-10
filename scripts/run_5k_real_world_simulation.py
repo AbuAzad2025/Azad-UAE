@@ -15,8 +15,6 @@ Usage:
     python scripts/run_5k_real_world_simulation.py [--db URL] [--report PATH]
 """
 
-from typing import Any, cast
-
 import argparse
 import json
 import sys
@@ -25,6 +23,7 @@ import time
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 

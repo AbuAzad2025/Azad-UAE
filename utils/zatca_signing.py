@@ -11,11 +11,10 @@ signed and tamper-evident rather than claiming government acceptance.
 
 from __future__ import annotations
 
-from typing import Any, cast
-
 import base64
 import hashlib
 import re
+from typing import Any, cast
 
 _SIGNATURE_RE = re.compile(r"<ds:Signature.*?</ds:Signature>", re.DOTALL)
 
