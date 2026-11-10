@@ -1343,15 +1343,18 @@ class TestSAL66EInvoiceGuard:
             seller=sample_user,
             lines_data=[{"product": product, "quantity": Decimal("2"), "unit_price": Decimal("100")}],
             warehouse_id=sample_warehouse.id,
+            currency="ILS",
+            user_exchange_rate=Decimal("1.25"),
             discount_amount=Decimal("20"),
         )
         db_session.flush()
         entries = PartnerCommissionEntry.query.filter_by(tenant_id=sample_tenant.id, sale_id=sale.id).all()
         assert len(entries) == 1, f"expected one commission entry, got {len(entries)}"
         entry = entries[0]
-        # revenue 200 ILS, cost 100 AED, discount 20 ILS -> margin 113.89 ILS;
-        # base after discount rebase = 109.039 AED.
-        expected_base = Decimal("109.039")
+        # (200 ILS revenue - 20 ILS discount) * 1.25 AED/ILS - 100 AED cost.
+        assert sale.currency == "ILS"
+        assert Decimal(str(sale.exchange_rate)) == Decimal("1.25")
+        expected_base = Decimal("125.000")
         assert Decimal(str(entry.base_amount_aed)) == expected_base, (
             f"commission base is {entry.base_amount_aed}, expected {expected_base}: discount was not rebased"
         )

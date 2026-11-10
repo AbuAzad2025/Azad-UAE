@@ -70,8 +70,7 @@ class TestMoneyMegaF:
     )
     def test_margin(self, revenue, cost, rate):
         fx = Decimal(rate)
-        fx_rate = Decimal(str(fx))
-        expected_cost = Decimal(cost) / fx_rate if fx_rate != 1 else Decimal(cost)
+        expected_cost = (Decimal(cost) / fx).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         assert SaleService._commission_margin(Decimal(revenue), Decimal(cost), fx) == (
             Decimal(revenue) - expected_cost
         ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
