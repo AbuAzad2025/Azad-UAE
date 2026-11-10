@@ -155,6 +155,38 @@ class QuotationService:
             raise ValueError(gettext("فقط عروض الأسعار المقبولة يمكن تحويلها."))
         if quotation.sale_id:
             raise ValueError(gettext("تم تحويل هذا العرض مسبقاً."))
+        # is_expired only applies to draft/sent quotations. An accepted quote
+        # can expire between acceptance and conversion, so check its date here.
+        if quotation.expiry_date and datetime.now(UTC).date() > quotation.expiry_date:
+            raise ValueError(gettext("عرض الأسعار منتهي الصلاحية."))
+
+        # Conversion produces a draft, not a reservation. When a warehouse is
+        # selected, reject already-unfulfillable quantities, but still enforce
+        # stock at fulfillment because it may change after this check.
+        if quotation.warehouse_id is not None:
+            from services.stock_service import StockService
+            from utils.branching import get_accessible_warehouses_query
+
+            warehouse = (
+                get_accessible_warehouses_query(user)
+                .filter_by(id=quotation.warehouse_id, tenant_id=quotation.tenant_id)
+                .first()
+            )
+            if warehouse is None:
+                raise ValueError(gettext("المستودع المحدد غير متاح."))
+            quantities = {}
+            for line in quotation.lines:
+                quantities[line.product_id] = quantities.get(line.product_id, Decimal("0")) + Decimal(
+                    str(line.quantity or 0)
+                )
+            for product_id, required in quantities.items():
+                available = StockService.get_product_stock(product_id, warehouse_id=quotation.warehouse_id, user=user)
+                if Decimal(str(available or 0)) < required:
+                    raise ValueError(
+                        gettext(
+                            f"المخزون غير كافٍ لتحويل العرض: منتج #{product_id} مطلوب {required} والمتاح {available}."
+                        )
+                    )
 
         from models import Sale, SaleLine
 

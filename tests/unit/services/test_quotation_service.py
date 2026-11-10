@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -125,6 +125,84 @@ class TestQuotationWorkflow:
         assert sale.status == "draft"
         assert q.status == "converted_to_sale"
         assert q.sale_id == sale.id
+
+    def test_accepted_quote_expiring_before_conversion_is_refused(
+        self, db_session, sample_tenant, sample_user, sample_product
+    ):
+        from models import Sale
+
+        customer = _customer(db_session, sample_tenant, "expired-conversion")
+        q = QuotationService.create_quotation(
+            {
+                "customer_id": customer.id,
+                "expiry_date": datetime.now(UTC).date() + timedelta(days=1),
+                "lines": [{"product_id": sample_product.id, "quantity": 1, "unit_price": 50}],
+            },
+            sample_user,
+        )
+        QuotationService.send_quotation(q)
+        QuotationService.accept_quotation(q)
+        q.expiry_date = datetime.now(UTC).date() - timedelta(days=1)
+        assert q.is_expired is False  # Model property applies only to draft/sent.
+        count = db_session.query(Sale).filter_by(tenant_id=sample_tenant.id).count()
+
+        with pytest.raises(ValueError, match="منتهي الصلاحية"):
+            QuotationService.convert_to_sale(q, sample_user)
+
+        assert db_session.query(Sale).filter_by(tenant_id=sample_tenant.id).count() == count
+        assert q.status == "accepted"
+        assert q.sale_id is None
+
+    def test_conversion_checks_selected_warehouse_stock(
+        self, db_session, sample_tenant, sample_user, sample_warehouse, sample_product
+    ):
+        from models import Sale
+
+        customer = _customer(db_session, sample_tenant, "stock-conversion")
+        q = QuotationService.create_quotation(
+            {
+                "customer_id": customer.id,
+                "warehouse_id": sample_warehouse.id,
+                "lines": [{"product_id": sample_product.id, "quantity": 1, "unit_price": 50}],
+            },
+            sample_user,
+        )
+        QuotationService.send_quotation(q)
+        QuotationService.accept_quotation(q)
+        # sample_product has a display stock value but no warehouse movements.
+        count = db_session.query(Sale).filter_by(tenant_id=sample_tenant.id).count()
+
+        with pytest.raises(ValueError, match="المخزون غير كاف"):
+            QuotationService.convert_to_sale(q, sample_user)
+
+        assert db_session.query(Sale).filter_by(tenant_id=sample_tenant.id).count() == count
+        assert q.status == "accepted"
+        assert q.sale_id is None
+
+    def test_conversion_with_stock_creates_draft_without_reservation(
+        self, db_session, sample_tenant, sample_user, sample_warehouse, sample_product_with_stock
+    ):
+        from services.stock_service import StockService
+
+        customer = _customer(db_session, sample_tenant, "stocked-conversion")
+        q = QuotationService.create_quotation(
+            {
+                "customer_id": customer.id,
+                "warehouse_id": sample_warehouse.id,
+                "lines": [{"product_id": sample_product_with_stock.id, "quantity": 3, "unit_price": 50}],
+            },
+            sample_user,
+        )
+        QuotationService.send_quotation(q)
+        QuotationService.accept_quotation(q)
+        before = StockService.get_product_stock(sample_product_with_stock.id, warehouse_id=sample_warehouse.id)
+        assert before == Decimal("100")
+
+        sale = QuotationService.convert_to_sale(q, sample_user)
+
+        assert sale.status == "draft"
+        assert q.sale_id == sale.id
+        assert StockService.get_product_stock(sample_product_with_stock.id, warehouse_id=sample_warehouse.id) == before
 
     def test_convert_not_accepted_raises(self, db_session, sample_tenant, sample_user, sample_product):
         customer = Customer(tenant_id=sample_tenant.id, name="C7", name_ar="C7")
