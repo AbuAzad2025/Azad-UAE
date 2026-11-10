@@ -11,6 +11,8 @@ signed and tamper-evident rather than claiming government acceptance.
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import base64
 import hashlib
 import re
@@ -134,7 +136,7 @@ def verify_xml(xml_payload: str, public_key_pem: str | None = None) -> bool:
             return False
     else:
         try:
-            public_key = serialization.load_pem_public_key(public_key_pem.encode("utf-8"))
+            public_key = cast(Any, serialization.load_pem_public_key(public_key_pem.encode("utf-8")))
         except Exception:
             return False
 

@@ -15,7 +15,7 @@ Usage:
     python scripts/run_5k_real_world_simulation.py [--db URL] [--report PATH]
 """
 
-from __future__ import annotations
+from typing import Any, cast
 
 import argparse
 import json
@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-RESULTS = {"passed": 0, "failed": 0, "failures": []}
+RESULTS: dict[str, int | list] = {"passed": 0, "failed": 0, "failures": []}
 STARTED = time.time()
 
 
@@ -297,10 +297,11 @@ def main() -> int:
     for t in threads:
         t.join()
     ok_count = sum(1 for r in results if r)
-    final = db.session.query(DocumentSequence).filter_by(id=seq.id).first().counter
+    final_row = db.session.query(DocumentSequence).filter_by(id=seq.id).first()
+    final = int(getattr(final_row, "counter", 0) or 0) if final_row is not None else 0
     # Each successful worker must have incremented exactly once.
     record("E", ok_count > 0 and int(final or 0) == ok_count, f"ok={ok_count} final={final}")
-    RESULTS["passed"] += ok_count - 1 if ok_count else 0
+    RESULTS["passed"] = int(cast(int, RESULTS["passed"])) + (ok_count - 1 if ok_count else 0)
     print(f"  concurrency: {ok_count}/500 workers succeeded, counter={final}", flush=True)
 
     # ── F. 500 RBAC/IDOR attempts ────────────────────────────────────────
@@ -323,11 +324,11 @@ def main() -> int:
         progress("F", i + 1, 500)
 
     elapsed = time.time() - STARTED
-    total = RESULTS["passed"] + RESULTS["failed"]
+    total = int(cast(int, RESULTS["passed"])) + int(cast(int, RESULTS["failed"]))
     print("\n===== FINAL REPORT =====", flush=True)
     print(f"total={total} passed={RESULTS['passed']} failed={RESULTS['failed']} duration={elapsed:.1f}s", flush=True)
     if RESULTS["failures"]:
-        print("first failures:", *RESULTS["failures"][:10], sep="\n  ", flush=True)
+        print("first failures:", *cast(list, RESULTS["failures"])[:10], sep="\n  ", flush=True)
     with open(args.report, "w", encoding="utf-8") as fh:
         json.dump({**RESULTS, "total": total, "duration": round(elapsed, 1)}, fh, indent=2)
     return 0 if RESULTS["failed"] == 0 else 1

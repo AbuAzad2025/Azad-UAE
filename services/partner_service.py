@@ -465,7 +465,7 @@ class PartnerService:
 
             scope_net = Decimal(str(pnl["net_profit"]))
             if scope_type == "branch":
-                base_net = scope_net - branch_alloc.get(scope_id, Decimal("0"))
+                base_net = scope_net - branch_alloc.get(int(scope_id) if scope_id is not None else 0, Decimal("0"))
             elif scope_type == "company":
                 base_net = scope_net - company_alloc
             else:
