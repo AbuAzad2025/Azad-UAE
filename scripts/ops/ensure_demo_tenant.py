@@ -1,10 +1,15 @@
 """Create demo tenant with all features + all user types (idempotent)."""
 
-import os
+from urllib.parse import unquote
+
+from sqlalchemy.engine import make_url
 
 from app.factory import create_app
+from config import Config
 
-os.environ["DATABASE_URL"] = "postgresql+psycopg2://azad_app:azad_app_pass@localhost:5432/erp_azad_full"
+database_name = unquote(make_url(Config.SQLALCHEMY_DATABASE_URI).database or "").casefold()
+if database_name in {"erp-full", "erp-lite"}:
+    raise SystemExit("Demo data is not allowed in ERP-full or ERP-lite; use an isolated demo database.")
 
 app = create_app()
 with app.app_context():

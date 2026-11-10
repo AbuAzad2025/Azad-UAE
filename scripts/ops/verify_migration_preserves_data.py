@@ -11,7 +11,7 @@ balancing, a stock row that vanishes under a rebuilt table.
 This probe answers the second question, on a scratch database it owns:
 
 1. create a scratch database (never ``azad_uae``, ``azad_uae_test`` or
-   ``erp_azad_full``), and migrate it to an EARLY revision of the chain;
+   ``erp_azad_full``, ``ERP-full`` or ``ERP-lite``), and migrate it to an EARLY revision of the chain;
 2. insert a small but representative dataset - tenant, user, branch, warehouse,
    products, customer, supplier, sale + lines, payment, cheque, receipt,
    shipment, budget, GL chart of accounts, two balanced journal entries with
@@ -111,6 +111,8 @@ FORBIDDEN_DATABASES = frozenset(
         "azad_uae",
         "azad_uae_test",
         "erp_azad_full",
+        "erp-full",
+        "erp-lite",
         "azad-finance",
         "azad_finance",
         "postgres",

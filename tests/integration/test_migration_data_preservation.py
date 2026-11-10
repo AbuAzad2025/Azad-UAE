@@ -56,7 +56,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PROBE_SCRIPT = PROJECT_ROOT / "scripts" / "ops" / "verify_migration_preserves_data.py"
 
 #: The script under test refuses these names; the test asserts that it does.
-PROTECTED_DATABASES = ("azad_uae", "azad_uae_test", "erp_azad_full", "azad-finance", "postgres")
+PROTECTED_DATABASES = (
+    "azad_uae",
+    "azad_uae_test",
+    "erp_azad_full",
+    "ERP-full",
+    "ERP-lite",
+    "azad-finance",
+    "postgres",
+)
 
 #: Exit codes of the probe script.
 EXIT_OK = 0

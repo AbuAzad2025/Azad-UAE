@@ -1,8 +1,5 @@
 """Store banners / demo tenant / visitor browsing — real 100% coverage (mocked for CI test DB)."""
 
-import os
-
-os.environ["DATABASE_URL"] = "postgresql+psycopg2://azad_app:azad_app_pass@localhost:5432/erp_azad_full"
 from unittest.mock import MagicMock, patch
 
 
@@ -22,10 +19,7 @@ def test_active_stores_returns_demo():
         assert "demo" in slugs
 
 
-def test_landing_contains_banner():
-    from app.factory import create_app
-
-    app = create_app()
+def test_landing_contains_banner(app):
     mock_tenant = MagicMock()
     mock_tenant.slug = "demo"
     mock_tenant.name_ar = "متجر تجريبي"
@@ -42,10 +36,7 @@ def test_landing_contains_banner():
             assert "azad-stores-banner" in html
 
 
-def test_pricing_contains_banner():
-    from app.factory import create_app
-
-    app = create_app()
+def test_pricing_contains_banner(app):
     mock_tenant = MagicMock()
     mock_tenant.slug = "demo"
     mock_tenant.name_ar = "متجر تجريبي"
@@ -61,10 +52,7 @@ def test_pricing_contains_banner():
             assert "azad-stores-banner" in r.data.decode("utf-8", errors="ignore")
 
 
-def test_features_contains_banner():
-    from app.factory import create_app
-
-    app = create_app()
+def test_features_contains_banner(app):
     mock_tenant = MagicMock()
     mock_tenant.slug = "demo"
     mock_tenant.name_ar = "متجر تجريبي"
@@ -80,10 +68,7 @@ def test_features_contains_banner():
             assert "azad-stores-banner" in r.data.decode("utf-8", errors="ignore")
 
 
-def test_auth_login_contains_demo_banner():
-    from app.factory import create_app
-
-    app = create_app()
+def test_auth_login_contains_demo_banner(app):
     mock_tenant = MagicMock()
     mock_tenant.slug = "demo"
     mock_tenant.id = 1
@@ -99,10 +84,7 @@ def test_auth_login_contains_demo_banner():
             assert "storeSearchInput" in html
 
 
-def test_shop_visitor_browsing_no_login():
-    from app.factory import create_app
-
-    app = create_app()
+def test_shop_visitor_browsing_no_login(app):
     mock_store = MagicMock()
     mock_store.is_enabled = True
     mock_store.tenant_id = 1
@@ -139,10 +121,7 @@ def test_shop_visitor_browsing_no_login():
                 assert r2.status_code in (200, 302, 503)
 
 
-def test_demo_tenant_all_features():
-    from app.factory import create_app
-
-    app = create_app()
+def test_demo_tenant_all_features(app):
     with app.app_context():
         mock_demo = MagicMock()
         mock_demo.is_active = True

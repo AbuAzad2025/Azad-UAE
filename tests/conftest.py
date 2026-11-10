@@ -10,7 +10,7 @@ import sys
 from datetime import UTC
 from pathlib import Path
 from unittest.mock import MagicMock, NonCallableMock
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import unquote, urlparse, urlunparse
 
 import dotenv
 import pytest
@@ -52,6 +52,14 @@ create_app, db, LoggingCore = _init_project_imports()
 
 _DEV_DB_NAME = "azad_uae"
 _TEST_DB_NAME = os.environ.get("PYTEST_DB_NAME", "azad_uae_test")
+_PROTECTED_DATABASE_NAMES = frozenset(
+    {"azad_uae", "erp-full", "erp-lite", "erp_azad_full", "azad-finance", "postgres", "template0", "template1"}
+)
+
+
+def _assert_test_database_name_safe(name: str) -> None:
+    if unquote(name).casefold() in _PROTECTED_DATABASE_NAMES:
+        raise RuntimeError(f"Refusing to use protected database for tests: {name}")
 
 
 def _parse_database_url(url: str):
@@ -70,15 +78,11 @@ def _admin_database_url(url: str) -> str:
 
 
 def _resolve_test_database_url() -> str:
-    """Never run pytest against the local dev database (azad_uae)."""
+    """Never run pytest against a protected application or system database."""
     explicit = (os.environ.get("TEST_DATABASE_URL") or "").strip()
     if explicit:
         _, name = _parse_database_url(explicit)
-        if name == _DEV_DB_NAME:
-            raise RuntimeError(
-                "TEST_DATABASE_URL must not point at the dev database 'azad_uae'. "
-                f"Use '{_TEST_DB_NAME}' or another *_test database."
-            )
+        _assert_test_database_name_safe(name)
         return explicit
 
     base = (os.environ.get("DATABASE_URL") or "").strip()
@@ -87,8 +91,10 @@ def _resolve_test_database_url() -> str:
 
     _, current_name = _parse_database_url(base)
     if current_name.endswith("_test"):
+        _assert_test_database_name_safe(current_name)
         return base
 
+    _assert_test_database_name_safe(_TEST_DB_NAME)
     return _build_database_url(base, _TEST_DB_NAME)
 
 
@@ -107,6 +113,7 @@ def _ensure_postgres_database(url: str) -> None:
     parsed, db_name = _parse_database_url(url)
     if not db_name:
         raise RuntimeError(f"Invalid database URL (no database name): {url}")
+    _assert_test_database_name_safe(db_name)
 
     from sqlalchemy.exc import IntegrityError
 
@@ -126,6 +133,7 @@ def _ensure_postgres_database(url: str) -> None:
 
 def _terminate_database_connections(url: str) -> None:
     _, db_name = _parse_database_url(url)
+    _assert_test_database_name_safe(db_name)
     admin_engine = _admin_engine(url)
     try:
         with admin_engine.connect() as conn:
@@ -142,10 +150,7 @@ def _terminate_database_connections(url: str) -> None:
 
 def _drop_postgres_database(url: str) -> None:
     parsed, db_name = _parse_database_url(url)
-    if db_name in ("postgres", "template0", "template1", _DEV_DB_NAME):
-        raise RuntimeError(f"Refusing to drop protected database: {db_name}")
-    if db_name.lower() == "azad-finance":
-        raise RuntimeError(f"Refusing to drop production database: {db_name}")
+    _assert_test_database_name_safe(db_name)
 
     _terminate_database_connections(url)
     admin_engine = _admin_engine(url)

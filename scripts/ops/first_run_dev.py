@@ -18,6 +18,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -45,10 +46,13 @@ def _ensure_db(db_url: str) -> None:
 
     # postgres — use admin connection to drop/create
     from sqlalchemy import create_engine, text
+    from sqlalchemy.engine import make_url
     from sqlalchemy.pool import NullPool
 
     admin_url = "postgresql+psycopg2://postgres:123@localhost:5432/postgres"
-    dbname = db_url.rsplit("/", 1)[-1].split("?")[0]
+    dbname = make_url(db_url).database or ""
+    if not dbname or unquote(dbname).casefold() in {"erp-full", "erp-lite", "erp_azad_full"}:
+        raise RuntimeError(f"Refusing to reset protected database: {dbname or '(empty)'}")
     eng = create_engine(
         admin_url, isolation_level="AUTOCOMMIT", poolclass=NullPool, connect_args={"connect_timeout": 3}
     )
