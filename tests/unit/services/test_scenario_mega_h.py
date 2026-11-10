@@ -380,9 +380,8 @@ class TestMarginH:
     @pytest.mark.parametrize("revenue,cost,rate", [(r, c, f) for r in MARGIN_R for c in MARGIN_C for f in MARGIN_FX])
     def test_grid(self, revenue, cost, rate):
         fx = Decimal(rate)
-        expected_cost = Decimal(cost) / fx if fx != 1 else Decimal(cost)
         assert SaleService._commission_margin(Decimal(revenue), Decimal(cost), fx) == (
-            Decimal(revenue) - expected_cost
+            Decimal(revenue) - Decimal(cost)
         ).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
 

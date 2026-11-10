@@ -57,8 +57,7 @@ class TestMarginMega:
     )
     def test_grid(self, revenue, cost, rate):
         fx = Decimal(rate)
-        expected_cost = Decimal(cost) / fx if fx != 1 else Decimal(cost)
-        expected = (Decimal(revenue) - expected_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        expected = (Decimal(revenue) - Decimal(cost)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         assert SaleService._commission_margin(Decimal(revenue), Decimal(cost), fx) == expected
 
 
