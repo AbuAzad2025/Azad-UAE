@@ -93,7 +93,9 @@ class TestLevyGrids:
         goods = Decimal(qty) * Decimal(cost)
         customs, excise = compute_import_levy_defaults(
             [(Decimal(qty), Decimal(cost), Decimal("0"), cat)],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * Decimal("5") / Decimal("100")).quantize(Decimal("0.001"))
         rate = Decimal("100") if cat == "tobacco" else Decimal("50")
@@ -118,9 +120,7 @@ class TestGuardGrids:
 
     @pytest.mark.parametrize(
         "start,end,expected",
-        [
-            (date(2026, m, 1), date(2026, m, 28), 1) for m in range(1, 13)
-        ],
+        [(date(2026, m, 1), date(2026, m, 28), 1) for m in range(1, 13)],
     )
     def test_months_grid(self, start, end, expected):
         assert PartnerService._months_in_period(start, end) == expected

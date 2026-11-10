@@ -60,8 +60,12 @@ class TestEinvoiceDocuments:
 
     def test_credit_note_shape(self):
         xml = build_invoice_xml(
-            _sale("105", "5"), _tenant(), country="AE", currency="AED",
-            doc_type="credit_note", billing_reference="S-ORIG",
+            _sale("105", "5"),
+            _tenant(),
+            country="AE",
+            currency="AED",
+            doc_type="credit_note",
+            billing_reference="S-ORIG",
         )
         assert "381" in xml
         assert "S-ORIG" in xml
@@ -89,9 +93,12 @@ class TestSaleLineTotals:
     @pytest.mark.parametrize(
         "qty,price,disc,expected",
         [
-            ("2", "50", "0", "100.000"), ("3", "33.33", "10", "89.991"),
-            ("1", "100", "50", "50.000"), ("10", "9.99", "0", "99.900"),
-            ("5", "20", "25", "75.000"), ("0", "100", "0", "0.000"),
+            ("2", "50", "0", "100.000"),
+            ("3", "33.33", "10", "89.991"),
+            ("1", "100", "50", "50.000"),
+            ("10", "9.99", "0", "99.900"),
+            ("5", "20", "25", "75.000"),
+            ("0", "100", "0", "0.000"),
         ],
     )
     def test_line_total_golden(self, qty, price, disc, expected):

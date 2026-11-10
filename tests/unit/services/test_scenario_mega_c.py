@@ -47,7 +47,11 @@ class TestTaxStrategyMega:
 class TestMwacMega:
     @pytest.mark.parametrize(
         "change,unit",
-        [(str(c), str(u)) for c in (5, 25, 50, 100, 500, 1000, -10, -50, -100, 7) for u in (5, 20, 50, 60, 100, 250, 80, 15, 33, 99)],
+        [
+            (str(c), str(u))
+            for c in (5, 25, 50, 100, 500, 1000, -10, -50, -100, 7)
+            for u in (5, 20, 50, 60, 100, 250, 80, 15, 33, 99)
+        ],
     )
     def test_grid(self, change, unit):
         qty, value, avg = _MWACHelper.calc(Decimal("200"), Decimal("10000"), Decimal(change), Decimal(unit))

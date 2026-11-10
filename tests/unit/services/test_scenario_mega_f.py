@@ -91,7 +91,9 @@ class TestLevyMegaF:
         goods = Decimal(qty) * Decimal(cost)
         customs, excise = compute_import_levy_defaults(
             [(Decimal(qty), Decimal(cost), Decimal("0"), "tobacco")],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * Decimal("5") / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         assert excise == (goods + goods * Decimal("5") / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -100,7 +102,9 @@ class TestLevyMegaF:
     def test_customs_countries(self, country, rate):
         customs, _ = compute_import_levy_defaults(
             [(10, Decimal("10"), Decimal("0"), "")],
-            country=country, customs_duty=None, excise_amount=None,
+            country=country,
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (Decimal("100") * Decimal(rate) / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
 
@@ -125,17 +129,15 @@ class TestStrategyMegaF:
     def test_grid(self, amount, rate):
         strategy = TaxService._get_strategy(tenant_id=None)
         result = strategy.calculate_tax(Decimal(amount), Decimal(rate))
-        assert Decimal(str(result["tax_amount"])) == (Decimal(amount) * Decimal(rate) / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        assert Decimal(str(result["tax_amount"])) == (Decimal(amount) * Decimal(rate) / 100).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
 
 
 class TestWindowsMegaF:
     @pytest.mark.parametrize(
         "start,end",
-        [
-            (date(2026, m, d), date(2026, m, d))
-            for m in (1, 2, 3, 4, 5, 6, 7, 8)
-            for d in (2, 9, 16, 23, 28)
-        ],
+        [(date(2026, m, d), date(2026, m, d)) for m in (1, 2, 3, 4, 5, 6, 7, 8) for d in (2, 9, 16, 23, 28)],
     )
     def test_days(self, start, end):
         partner = MagicMock(start_date=start, end_date=end)
@@ -152,12 +154,19 @@ class TestWindowsMegaF:
 
 
 class TestEinvoiceMegaF:
-    @pytest.mark.parametrize("country,total", [("AE", "75"), ("PS", "232"), ("IL", "236"), ("SA", "230"), ("AE", "1050")])
+    @pytest.mark.parametrize(
+        "country,total", [("AE", "75"), ("PS", "232"), ("IL", "236"), ("SA", "230"), ("AE", "1050")]
+    )
     def test_grid(self, country, total):
         sale = MagicMock(
-            sale_number="S-1", sale_date=None, tax_rate=Decimal("5"),
-            total_amount=Decimal(total), tax_amount=Decimal("5"),
-            taxable_amount=Decimal(total) - Decimal("5"), subtotal=Decimal(total), lines=[],
+            sale_number="S-1",
+            sale_date=None,
+            tax_rate=Decimal("5"),
+            total_amount=Decimal(total),
+            tax_amount=Decimal("5"),
+            taxable_amount=Decimal(total) - Decimal("5"),
+            subtotal=Decimal(total),
+            lines=[],
         )
         sale.customer = MagicMock(name="B", tax_number="")
         tenant = MagicMock(name="S", name_en="S", tax_number="1", address_en="", city="")

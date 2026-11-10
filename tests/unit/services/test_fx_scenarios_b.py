@@ -15,11 +15,35 @@ from services.currency_service import CurrencyService
 from utils.currency_utils import convert_and_quantize_aed
 
 FALLBACK = {
-    "AED": Decimal("1.00"), "USD": Decimal("0.27"), "EUR": Decimal("0.25"), "GBP": Decimal("0.22"),
-    "SAR": Decimal("1.02"), "KWD": Decimal("0.08"), "BHD": Decimal("0.10"), "OMR": Decimal("0.10"),
-    "QAR": Decimal("0.99"), "ILS": Decimal("1.05"),
+    "AED": Decimal("1.00"),
+    "USD": Decimal("0.27"),
+    "EUR": Decimal("0.25"),
+    "GBP": Decimal("0.22"),
+    "SAR": Decimal("1.02"),
+    "KWD": Decimal("0.08"),
+    "BHD": Decimal("0.10"),
+    "OMR": Decimal("0.10"),
+    "QAR": Decimal("0.99"),
+    "ILS": Decimal("1.05"),
 }
-COMMON = ["AED", "USD", "EUR", "GBP", "SAR", "QAR", "KWD", "BHD", "OMR", "ILS", "JPY", "CNY", "INR", "TRY", "EGP", "JOD"]
+COMMON = [
+    "AED",
+    "USD",
+    "EUR",
+    "GBP",
+    "SAR",
+    "QAR",
+    "KWD",
+    "BHD",
+    "OMR",
+    "ILS",
+    "JPY",
+    "CNY",
+    "INR",
+    "TRY",
+    "EGP",
+    "JOD",
+]
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +65,31 @@ def _fail_http(mocker):
 class TestManualEntryGrid:
     @pytest.mark.parametrize(
         "rate",
-        [str(v) for v in (0.5, 1, 2, 3.65, 4.5, 0.27, 11.95, 0.98, 1.05, 99.99, 0.0001, 123.456789, 7, 8.88, 0.1234, 456.789, 1000, 0.001, 5.5, 9.99)],
+        [
+            str(v)
+            for v in (
+                0.5,
+                1,
+                2,
+                3.65,
+                4.5,
+                0.27,
+                11.95,
+                0.98,
+                1.05,
+                99.99,
+                0.0001,
+                123.456789,
+                7,
+                8.88,
+                0.1234,
+                456.789,
+                1000,
+                0.001,
+                5.5,
+                9.99,
+            )
+        ],
     )
     def test_user_rates(self, rate):
         details = CurrencyService.get_exchange_rate_details("USD", "AED", user_rate=rate)
@@ -59,12 +107,8 @@ class TestManualEntryGrid:
 class TestOnlineGrid:
     @pytest.mark.parametrize(
         "base,target,rate",
-        [
-            (b, t, "3.65") for b in ("USD", "EUR", "GBP") for t in ("AED",)
-        ]
-        + [
-            (b, t, "0.27") for b in ("AED",) for t in ("USD", "EUR", "GBP")
-        ]
+        [(b, t, "3.65") for b in ("USD", "EUR", "GBP") for t in ("AED",)]
+        + [(b, t, "0.27") for b in ("AED",) for t in ("USD", "EUR", "GBP")]
         + [("SAR", "AED", "0.98"), ("KWD", "AED", "11.95"), ("ILS", "AED", "0.95"), ("QAR", "AED", "1.01")],
     )
     def test_provider_rates(self, mocker, base, target, rate):
@@ -91,7 +135,9 @@ class TestFallbackGrid:
             details = CurrencyService.get_exchange_rate_details("AED", currency)
         assert details["source"] == "needs_input"
 
-    @pytest.mark.parametrize("amount,rate", [(str(a), str(r)) for a in (5, 50, 500, 5000) for r in ("0.27", "3.65", "1.05", "0.98")])
+    @pytest.mark.parametrize(
+        "amount,rate", [(str(a), str(r)) for a in (5, 50, 500, 5000) for r in ("0.27", "3.65", "1.05", "0.98")]
+    )
     def test_convert_grid(self, amount, rate):
         assert convert_and_quantize_aed(Decimal(amount), "USD", Decimal(rate), base_currency="AED") == (
             Decimal(amount) * Decimal(rate)

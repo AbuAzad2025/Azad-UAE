@@ -74,32 +74,20 @@ class TestRecomputeHistoricalBasis:
         # Historical row: revenue 100 USD, base cost 365 AED stored as
         # cost_basis; old code booked margin 100 - 365 = -265 (floored to 0
         # commission via base 0). New basis: cost 100 USD → margin 0.
-        entry = MagicMock(
-            cost_basis=Decimal("365"), percentage=Decimal("20"), tenant_id=1, currency="USD"
-        )
-        sale = MagicMock(
-            tax_rate=Decimal("0"), prices_include_vat=False, exchange_rate=Decimal("3.65")
-        )
+        entry = MagicMock(cost_basis=Decimal("365"), percentage=Decimal("20"), tenant_id=1, currency="USD")
+        sale = MagicMock(tax_rate=Decimal("0"), prices_include_vat=False, exchange_rate=Decimal("3.65"))
         line = MagicMock(line_total=Decimal("100"), tax_category="standard")
-        mocker.patch.object(
-            SaleService, "_commission_base_aed", side_effect=lambda margin, *a, **k: margin
-        )
+        mocker.patch.object(SaleService, "_commission_base_aed", side_effect=lambda margin, *a, **k: margin)
         margin, base, commission = SaleService.recompute_commission_basis(entry, sale, line)
         assert margin == Decimal("0.000")
         assert base == Decimal("0.000")
         assert commission == Decimal("0.000")
 
     def test_foreign_entry_positive_margin(self, mocker):
-        entry = MagicMock(
-            cost_basis=Decimal("365"), percentage=Decimal("25"), tenant_id=1, currency="USD"
-        )
-        sale = MagicMock(
-            tax_rate=Decimal("0"), prices_include_vat=False, exchange_rate=Decimal("3.65")
-        )
+        entry = MagicMock(cost_basis=Decimal("365"), percentage=Decimal("25"), tenant_id=1, currency="USD")
+        sale = MagicMock(tax_rate=Decimal("0"), prices_include_vat=False, exchange_rate=Decimal("3.65"))
         line = MagicMock(line_total=Decimal("120"), tax_category="standard")
-        mocker.patch.object(
-            SaleService, "_commission_base_aed", side_effect=lambda margin, *a, **k: margin
-        )
+        mocker.patch.object(SaleService, "_commission_base_aed", side_effect=lambda margin, *a, **k: margin)
         margin, base, commission = SaleService.recompute_commission_basis(entry, sale, line)
         assert margin == Decimal("20.000")
         assert commission == Decimal("5.000")

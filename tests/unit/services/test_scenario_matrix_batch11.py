@@ -56,9 +56,7 @@ class TestPayrollGridExpanded:
     def test_sa_nonnational_expanded(self, gross):
         r = social_insurance_amount(Decimal(gross), "SA", is_national=False)
         assert r["employee"] == Decimal("0.000")
-        assert r["employer"] == (min(Decimal(gross), Decimal("45000")) * Decimal("2") / 100).quantize(
-            Decimal("0.001")
-        )
+        assert r["employer"] == (min(Decimal(gross), Decimal("45000")) * Decimal("2") / 100).quantize(Decimal("0.001"))
 
 
 class TestMoneyExpanded:
@@ -93,7 +91,9 @@ class TestMoneyExpanded:
         goods = Decimal(qty) * Decimal(cost)
         customs, excise = compute_import_levy_defaults(
             [(Decimal(qty), Decimal(cost), Decimal("0"), "tobacco")],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * Decimal("5") / 100).quantize(Decimal("0.001"))
         base = goods + goods * Decimal("5") / 100
@@ -123,8 +123,12 @@ class TestGuardsExpanded:
     @pytest.mark.parametrize("share", [f"{v}.5" for v in range(0, 100, 15)])
     def test_share_decimals(self, share):
         form = {
-            "investment_amount": "0", "share_percentage": share, "fixed_monthly_amount": "0",
-            "expense_share_percentage": "0", "loss_share_percentage": "0", "min_profit_threshold": "0",
+            "investment_amount": "0",
+            "share_percentage": share,
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": "0",
+            "loss_share_percentage": "0",
+            "min_profit_threshold": "0",
         }
         values, error = _parse_partner_financials(form)
         assert error is None
@@ -168,9 +172,14 @@ class TestEinvoiceExpanded:
     @pytest.mark.parametrize("total", ["50", "500", "5000"])
     def test_amounts(self, total):
         sale = MagicMock(
-            sale_number="S-1", sale_date=None, tax_rate=Decimal("5"),
-            total_amount=Decimal(total), tax_amount=Decimal("5"),
-            taxable_amount=Decimal(total) - Decimal("5"), subtotal=Decimal(total), lines=[],
+            sale_number="S-1",
+            sale_date=None,
+            tax_rate=Decimal("5"),
+            total_amount=Decimal(total),
+            tax_amount=Decimal("5"),
+            taxable_amount=Decimal(total) - Decimal("5"),
+            subtotal=Decimal(total),
+            lines=[],
         )
         sale.customer = MagicMock(name="B", tax_number="")
         tenant = MagicMock(name="S", name_en="S", tax_number="1", address_en="", city="")

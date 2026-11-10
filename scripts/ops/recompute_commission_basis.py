@@ -46,7 +46,6 @@ def main() -> int:
         if args.tenant_id:
             query = query.filter_by(tenant_id=args.tenant_id)
         entries = query.all()
-        draft_periods: set[tuple[int, object, object]] = set()
         for entry in entries:
             sale = db.session.get(Sale, entry.sale_id)
             line = db.session.get(SaleLine, entry.sale_line_id) if entry.sale_line_id else None
@@ -75,21 +74,20 @@ def main() -> int:
             db.session.flush()
             db.session.commit()
             # Recreate draft distributions so they use the new basis.
-            from models import Partner
 
             tenants = {e.tenant_id for e in entries}
             for tenant_id in tenants:
-                drafts = (
-                    PartnerProfitDistribution.query.filter_by(tenant_id=tenant_id, status="draft").all()
-                )
+                drafts = PartnerProfitDistribution.query.filter_by(tenant_id=tenant_id, status="draft").all()
                 periods = {(d.period_start, d.period_end) for d in drafts}
                 for dist in drafts:
                     db.session.delete(dist)
                 db.session.flush()
                 for period_start, period_end in periods:
                     created = PartnerService.create_distributions(tenant_id, period_start, period_end)
-                    print(f"tenant {tenant_id}: recreated {len(created)} draft distributions "
-                          f"for {period_start}..{period_end}")
+                    print(
+                        f"tenant {tenant_id}: recreated {len(created)} draft distributions "
+                        f"for {period_start}..{period_end}"
+                    )
             print(f"rewrote {affected} commission entries")
         else:
             print(f"dry-run: {changed} entries would change (run with --apply to rewrite)")

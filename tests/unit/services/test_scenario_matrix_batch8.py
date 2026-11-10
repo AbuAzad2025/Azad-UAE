@@ -26,8 +26,14 @@ class TestWithholdingRefusals:
     @pytest.mark.parametrize(
         "amount,rate",
         [
-            ("100", None), ("100", "-1"), ("100", "101"), ("100", "abc"),
-            ("0", "5"), ("-5", "5"), ("100", "NaN"), ("100", "Infinity"),
+            ("100", None),
+            ("100", "-1"),
+            ("100", "101"),
+            ("100", "abc"),
+            ("0", "5"),
+            ("-5", "5"),
+            ("100", "NaN"),
+            ("100", "Infinity"),
         ],
     )
     def test_invalid_refused(self, amount, rate):
@@ -99,15 +105,16 @@ class TestMwacReceipts:
     @pytest.mark.parametrize(
         "old_qty,old_value,change,unit_cost",
         [
-            ("100", "5000", "25", "70"), ("100", "5000", "200", "40"),
-            ("0", "0", "5", "100"), ("1000", "20000", "1000", "20"),
-            ("10", "300", "90", "10"), ("75", "1500", "25", "60"),
+            ("100", "5000", "25", "70"),
+            ("100", "5000", "200", "40"),
+            ("0", "0", "5", "100"),
+            ("1000", "20000", "1000", "20"),
+            ("10", "300", "90", "10"),
+            ("75", "1500", "25", "60"),
         ],
     )
     def test_receipt_invariants(self, old_qty, old_value, change, unit_cost):
-        qty, value, avg = _MWACHelper.calc(
-            Decimal(old_qty), Decimal(old_value), Decimal(change), Decimal(unit_cost)
-        )
+        qty, value, avg = _MWACHelper.calc(Decimal(old_qty), Decimal(old_value), Decimal(change), Decimal(unit_cost))
         assert qty == Decimal(old_qty) + Decimal(change)
         assert value == Decimal(old_value) + Decimal(change) * Decimal(unit_cost)
         assert avg == (value / qty).quantize(Decimal("0.0001")) if qty else Decimal("0")
@@ -116,9 +123,13 @@ class TestMwacReceipts:
 class TestItaVariants:
     def _sale(self):
         return MagicMock(
-            sale_number="S-1", taxable_amount=Decimal("100"), tax_amount=Decimal("18"),
-            total_amount=Decimal("118"), discount_amount=Decimal("0"),
-            subtotal=Decimal("100"), sale_date=None,
+            sale_number="S-1",
+            taxable_amount=Decimal("100"),
+            tax_amount=Decimal("18"),
+            total_amount=Decimal("118"),
+            discount_amount=Decimal("0"),
+            subtotal=Decimal("100"),
+            sale_date=None,
         )
 
     @pytest.mark.parametrize(

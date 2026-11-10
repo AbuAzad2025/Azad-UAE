@@ -21,13 +21,25 @@ class TestMultiCurrencyRevenue:
     @pytest.mark.parametrize(
         "amount,rate,currency",
         [
-            ("100", "3.65", "USD"), ("200", "3.65", "USD"), ("50", "4.00", "EUR"),
-            ("1000", "0.98", "SAR"), ("75", "11.95", "KWD"), ("300", "0.95", "ILS"),
+            ("100", "3.65", "USD"),
+            ("200", "3.65", "USD"),
+            ("50", "4.00", "EUR"),
+            ("1000", "0.98", "SAR"),
+            ("75", "11.95", "KWD"),
+            ("300", "0.95", "ILS"),
         ],
     )
     def test_revenue_in_base_currency(
-        self, db_session, sample_tenant, sample_warehouse, sample_user, sample_customer,
-        sample_product, amount, rate, currency,
+        self,
+        db_session,
+        sample_tenant,
+        sample_warehouse,
+        sample_user,
+        sample_customer,
+        sample_product,
+        amount,
+        rate,
+        currency,
     ):
         expected = convert_and_quantize_aed(Decimal(amount), currency, Decimal(rate), base_currency="AED")
         sale = Sale(
@@ -51,8 +63,12 @@ class TestMultiCurrencyRevenue:
         db_session.flush()
         db_session.add(
             SaleLine(
-                tenant_id=sample_tenant.id, sale_id=sale.id, product_id=sample_product.id,
-                quantity=Decimal("1"), unit_price=Decimal(amount), line_total=Decimal(amount),
+                tenant_id=sample_tenant.id,
+                sale_id=sale.id,
+                product_id=sample_product.id,
+                quantity=Decimal("1"),
+                unit_price=Decimal(amount),
+                line_total=Decimal(amount),
                 cost_price=Decimal("0"),
             )
         )

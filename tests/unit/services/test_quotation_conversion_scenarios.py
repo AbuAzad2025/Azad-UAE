@@ -43,8 +43,13 @@ def _quotation(**overrides):
     defaults.update(overrides)
     for key, value in defaults.items():
         setattr(q, key, value)
-    line = MagicMock(product_id=50, quantity=Decimal("3"), unit_price=Decimal("40"),
-                     discount_percent=Decimal("0"), line_total=Decimal("120"))
+    line = MagicMock(
+        product_id=50,
+        quantity=Decimal("3"),
+        unit_price=Decimal("40"),
+        discount_percent=Decimal("0"),
+        line_total=Decimal("120"),
+    )
     q.lines = [line]
     return q
 
@@ -53,18 +58,14 @@ class TestConvertGuards:
     def test_insufficient_stock_refuses(self, mocker, app):
         quotation = _quotation()
         user = MagicMock(id=10)
-        mocker.patch(
-            "services.stock_service.StockService.get_product_stock", return_value=Decimal("2")
-        )
+        mocker.patch("services.stock_service.StockService.get_product_stock", return_value=Decimal("2"))
         with app.app_context(), pytest.raises(ValueError, match="المخزون غير كاف"):
             QuotationService.convert_to_sale(quotation, user)
 
     def test_sufficient_stock_converts(self, mocker, app):
         quotation = _quotation()
         user = MagicMock(id=10)
-        mocker.patch(
-            "services.stock_service.StockService.get_product_stock", return_value=Decimal("10")
-        )
+        mocker.patch("services.stock_service.StockService.get_product_stock", return_value=Decimal("10"))
         mocker.patch("services.quotation_service.generate_number", return_value="SALE-NEW")
         mocker.patch("services.quotation_service.db.session.add")
         mocker.patch("services.quotation_service.db.session.flush")
@@ -76,9 +77,7 @@ class TestConvertGuards:
     def test_expired_refuses(self, mocker, app):
         quotation = _quotation(is_expired=True)
         user = MagicMock(id=10)
-        mocker.patch(
-            "services.stock_service.StockService.get_product_stock", return_value=Decimal("10")
-        )
+        mocker.patch("services.stock_service.StockService.get_product_stock", return_value=Decimal("10"))
         with app.app_context(), pytest.raises(ValueError, match="منتهي الصلاحية"):
             QuotationService.convert_to_sale(quotation, user)
 

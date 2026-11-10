@@ -45,9 +45,14 @@ class TestCustomsExciseRates:
     @pytest.mark.parametrize(
         "code,category,expected",
         [
-            ("AE", "tobacco", "100"), ("AE", "energy_drinks", "100"), ("AE", "soft_drinks", "50"),
-            ("SA", "tobacco", "100"), ("SA", "energy_drinks", "100"), ("SA", "soft_drinks", "50"),
-            ("AE", "", "0"), ("PS", "tobacco", "0"),
+            ("AE", "tobacco", "100"),
+            ("AE", "energy_drinks", "100"),
+            ("AE", "soft_drinks", "50"),
+            ("SA", "tobacco", "100"),
+            ("SA", "energy_drinks", "100"),
+            ("SA", "soft_drinks", "50"),
+            ("AE", "", "0"),
+            ("PS", "tobacco", "0"),
         ],
     )
     def test_excise_rate(self, code, category, expected):
@@ -59,16 +64,20 @@ class TestCurrencyConversion:
     @pytest.mark.parametrize(
         "amount,rate,expected",
         [
-            ("100", "3.65", "365.000"), ("100", "1", "100.000"), ("50", "0.27", "13.500"),
-            ("0", "3.65", "0.000"), ("1000", "0.5", "500.000"), ("33.33", "3", "99.990"),
-            ("123.456", "2", "246.912"), ("999.999", "1.5", "1499.999"),
-            ("10", "0.0027", "0.027"), ("250", "4", "1000.000"),
+            ("100", "3.65", "365.000"),
+            ("100", "1", "100.000"),
+            ("50", "0.27", "13.500"),
+            ("0", "3.65", "0.000"),
+            ("1000", "0.5", "500.000"),
+            ("33.33", "3", "99.990"),
+            ("123.456", "2", "246.912"),
+            ("999.999", "1.5", "1499.999"),
+            ("10", "0.0027", "0.027"),
+            ("250", "4", "1000.000"),
         ],
     )
     def test_convert_golden(self, amount, rate, expected):
-        result = convert_and_quantize_aed(
-            Decimal(amount), "USD", Decimal(rate), base_currency="AED"
-        )
+        result = convert_and_quantize_aed(Decimal(amount), "USD", Decimal(rate), base_currency="AED")
         assert result == Decimal(expected)
 
 
@@ -76,8 +85,12 @@ class TestProgressiveTax:
     @pytest.mark.parametrize(
         "income,expected",
         [
-            ("0", "0.000"), ("10000", "0.000"), ("50000", "0.000"), ("100000", "5000.000"),
-            ("200000", "20000.000"), ("50000.50", "0.050"),
+            ("0", "0.000"),
+            ("10000", "0.000"),
+            ("50000", "0.000"),
+            ("100000", "5000.000"),
+            ("200000", "20000.000"),
+            ("50000.50", "0.050"),
         ],
     )
     def test_progressive_golden(self, income, expected):
@@ -112,7 +125,9 @@ class TestImportLevyExpanded:
         goods = Decimal(str(qty)) * Decimal(str(cost)) * (Decimal("1") - Decimal(str(disc)) / Decimal("100"))
         customs, excise = compute_import_levy_defaults(
             [(qty, Decimal(str(cost)), Decimal(str(disc)), "")],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * Decimal("5") / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         assert excise == Decimal("0.000")
@@ -121,11 +136,15 @@ class TestImportLevyExpanded:
     def test_excise_matrix(self, category):
         customs, excise = compute_import_levy_defaults(
             [(10, Decimal("100"), Decimal("0"), category)],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == Decimal("50.000")
         rate = {"tobacco": 100, "energy_drinks": 100, "soft_drinks": 50, "": 0}[category]
-        assert excise == (Decimal("1050") * Decimal(str(rate)) / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        assert excise == (Decimal("1050") * Decimal(str(rate)) / Decimal("100")).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
 
 
 class TestCommissionMarginExpanded:

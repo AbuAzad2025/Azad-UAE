@@ -22,7 +22,6 @@ import json
 import sys
 import threading
 import time
-import traceback
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -59,7 +58,7 @@ def main() -> int:
     ctx = app.app_context()
     ctx.push()
 
-    from models import Branch, Customer, Partner, Product, Quotation, QuotationLine, Sale, Tenant, User, Warehouse
+    from models import Branch, Customer, Partner, Product, Quotation, QuotationLine, Tenant, User, Warehouse
     from services.gl_posting import post_or_fail
     from services.gl_service import GLService
     from services.partner_service import PartnerService
@@ -70,8 +69,10 @@ def main() -> int:
     def progress(phase, done, total):
         if done % 500 == 0:
             elapsed = time.time() - STARTED
-            print(f"[{phase}] {done}/{total} passed={RESULTS['passed']} failed={RESULTS['failed']} ({elapsed:.0f}s)",
-                  flush=True)
+            print(
+                f"[{phase}] {done}/{total} passed={RESULTS['passed']} failed={RESULTS['failed']} ({elapsed:.0f}s)",
+                flush=True,
+            )
 
     # ── Setup: tenant, branch, warehouse, users ──────────────────────────
     tenant = Tenant(name="SimCo", name_ar="محاكاة", slug="simco", country="AE", default_currency="AED")
@@ -126,7 +127,8 @@ def main() -> int:
     from services.expense_service import ExpenseService
     from services.purchase_service import compute_import_levy_defaults
     from services.tax_service import TaxService
-    from utils.einvoice_document import build_invoice_xml, invoice_sha256_hex as invoice_hash
+    from utils.einvoice_document import build_invoice_xml
+    from utils.einvoice_document import invoice_sha256_hex as invoice_hash
 
     for i in range(1000):
         mode = i % 5
@@ -147,7 +149,9 @@ def main() -> int:
             elif mode == 2:  # levy
                 customs, excise = compute_import_levy_defaults(
                     [(Decimal("10"), Decimal("100"), Decimal("0"), "tobacco")],
-                    country="AE", customs_duty=None, excise_amount=None,
+                    country="AE",
+                    customs_duty=None,
+                    excise_amount=None,
                 )
                 ok = customs == Decimal("50.000") and excise == Decimal("1050.000")
             elif mode == 3:  # strategy tax
@@ -165,8 +169,9 @@ def main() -> int:
                 sale.subtotal = Decimal("105")
                 sale.lines = []
                 sale.customer = type("C", (), {"name": "B", "tax_number": ""})()
-                tenant_mock = type("T", (), {"name": "S", "name_en": "S", "tax_number": "1",
-                                              "address_en": "", "city": ""})()
+                tenant_mock = type(
+                    "T", (), {"name": "S", "name_en": "S", "tax_number": "1", "address_en": "", "city": ""}
+                )()
                 xml = build_invoice_xml(sale, tenant_mock, country="AE", currency="AED")
                 ok = len(invoice_hash(xml)) == 64 and "105.000" in xml
             record("B", ok, f"mode {mode}")
@@ -177,8 +182,9 @@ def main() -> int:
     # ── C. 500 quotation transitions ─────────────────────────────────────
     print("Phase C: 500 quotations", flush=True)
     customer = Customer(tenant_id=tenant.id, name="Sim Customer", is_active=True)
-    product = Product(tenant_id=tenant.id, name="Sim Widget", sku="SIM-W1", cost_price=Decimal("50"),
-                      regular_price=Decimal("100"))
+    product = Product(
+        tenant_id=tenant.id, name="Sim Widget", sku="SIM-W1", cost_price=Decimal("50"), regular_price=Decimal("100")
+    )
     db.session.add_all([customer, product])
     db.session.flush()
     from services.stock_service import StockService
@@ -188,18 +194,33 @@ def main() -> int:
     for i in range(500):
         try:
             q = Quotation(
-                tenant_id=tenant.id, quotation_number=f"SIMQ-{i}", customer_id=customer.id,
-                branch_id=branch.id, warehouse_id=warehouse.id, status="draft",
-                expiry_date=date(2026, 12, 31), created_by=user.id,
-                subtotal=Decimal("100"), total_amount=Decimal("105"), amount_aed=Decimal("105"),
-                currency="AED", exchange_rate=Decimal("1"), tax_rate=Decimal("5"),
+                tenant_id=tenant.id,
+                quotation_number=f"SIMQ-{i}",
+                customer_id=customer.id,
+                branch_id=branch.id,
+                warehouse_id=warehouse.id,
+                status="draft",
+                expiry_date=date(2026, 12, 31),
+                created_by=user.id,
+                subtotal=Decimal("100"),
+                total_amount=Decimal("105"),
+                amount_aed=Decimal("105"),
+                currency="AED",
+                exchange_rate=Decimal("1"),
+                tax_rate=Decimal("5"),
                 tax_amount=Decimal("5"),
             )
             db.session.add(q)
             db.session.flush()
             db.session.add(
-                QuotationLine(tenant_id=tenant.id, quotation_id=q.id, product_id=product.id,
-                             quantity=Decimal("1"), unit_price=Decimal("100"), line_total=Decimal("100"))
+                QuotationLine(
+                    tenant_id=tenant.id,
+                    quotation_id=q.id,
+                    product_id=product.id,
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("100"),
+                    line_total=Decimal("100"),
+                )
             )
             db.session.commit()
             QuotationService.send_quotation(q)
@@ -217,8 +238,11 @@ def main() -> int:
     for i in range(500):
         try:
             partner = Partner(
-                tenant_id=tenant.id, name=f"P{i}", scope_type="company",
-                share_percentage=Decimal("10"), start_date=date(2026, 1, 1),
+                tenant_id=tenant.id,
+                name=f"P{i}",
+                scope_type="company",
+                share_percentage=Decimal("10"),
+                start_date=date(2026, 1, 1),
             )
             db.session.add(partner)
             db.session.commit()

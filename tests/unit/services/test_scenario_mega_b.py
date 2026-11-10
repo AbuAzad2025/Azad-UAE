@@ -13,7 +13,31 @@ import pytest
 from services.purchase_service import compute_import_levy_defaults
 from utils.country_tax import social_insurance_amount
 
-GROSSES = [str(v) for v in (500, 1000, 1500, 1880, 3000, 5000, 7522, 10000, 15000, 18800, 25000, 30000, 40000, 45000, 50695, 60000, 70000, 80000, 150000, 200000)]
+GROSSES = [
+    str(v)
+    for v in (
+        500,
+        1000,
+        1500,
+        1880,
+        3000,
+        5000,
+        7522,
+        10000,
+        15000,
+        18800,
+        25000,
+        30000,
+        40000,
+        45000,
+        50695,
+        60000,
+        70000,
+        80000,
+        150000,
+        200000,
+    )
+]
 
 
 class TestSocialMega:
@@ -55,9 +79,7 @@ class TestSocialMega:
     def test_sa_non_nat(self, gross):
         r = social_insurance_amount(Decimal(gross), "SA", is_national=False)
         assert r["employee"] == Decimal("0.000")
-        assert r["employer"] == (min(Decimal(gross), Decimal("45000")) * Decimal("2") / 100).quantize(
-            Decimal("0.001")
-        )
+        assert r["employer"] == (min(Decimal(gross), Decimal("45000")) * Decimal("2") / 100).quantize(Decimal("0.001"))
 
 
 class TestLevyMega:
@@ -76,7 +98,9 @@ class TestLevyMega:
         customs_rate = Decimal("5") if country == "AE" else Decimal("15")
         customs, excise = compute_import_levy_defaults(
             [(Decimal(qty), Decimal(cost), Decimal("0"), cat)],
-            country=country, customs_duty=None, excise_amount=None,
+            country=country,
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * customs_rate / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         excise_rate = Decimal("100") if cat == "tobacco" else Decimal("50")

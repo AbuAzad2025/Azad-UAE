@@ -52,9 +52,7 @@ class TestSocialInsuranceSa:
         ],
     )
     def test_sa_gosi(self, gross, national, employee, employer):
-        result = social_insurance_amount(
-            Decimal(gross), "SA", is_national=national, joined_2024_07_03_or_later=True
-        )
+        result = social_insurance_amount(Decimal(gross), "SA", is_national=national, joined_2024_07_03_or_later=True)
         assert result["employee"] == Decimal(employee)
         assert result["employer"] == Decimal(employer)
 
@@ -111,9 +109,13 @@ class TestPartnerFinancialRanges:
     @pytest.mark.parametrize(
         "field,bad",
         [
-            ("share_percentage", "101"), ("share_percentage", "-1"), ("expense_share_percentage", "150"),
-            ("loss_share_percentage", "100.01"), ("investment_amount", "-5"),
-            ("fixed_monthly_amount", "-1"), ("min_profit_threshold", "-0.01"),
+            ("share_percentage", "101"),
+            ("share_percentage", "-1"),
+            ("expense_share_percentage", "150"),
+            ("loss_share_percentage", "100.01"),
+            ("investment_amount", "-5"),
+            ("fixed_monthly_amount", "-1"),
+            ("min_profit_threshold", "-0.01"),
             ("share_percentage", "abc"),
         ],
     )

@@ -30,9 +30,7 @@ class TestMwacGrid:
         ],
     )
     def test_mwac_golden(self, old_qty, old_value, change, unit_cost, exp_qty, exp_value, exp_avg):
-        qty, value, avg = _MWACHelper.calc(
-            Decimal(old_qty), Decimal(old_value), Decimal(change), Decimal(unit_cost)
-        )
+        qty, value, avg = _MWACHelper.calc(Decimal(old_qty), Decimal(old_value), Decimal(change), Decimal(unit_cost))
         assert qty == Decimal(exp_qty)
         assert value == Decimal(exp_value)
         assert avg == Decimal(exp_avg)

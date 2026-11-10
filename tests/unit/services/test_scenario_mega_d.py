@@ -27,8 +27,12 @@ class TestFinancialsMega:
     )
     def test_grid(self, share, expense, loss):
         form = {
-            "investment_amount": "0", "share_percentage": share, "fixed_monthly_amount": "0",
-            "expense_share_percentage": expense, "loss_share_percentage": loss, "min_profit_threshold": "0",
+            "investment_amount": "0",
+            "share_percentage": share,
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": expense,
+            "loss_share_percentage": loss,
+            "min_profit_threshold": "0",
         }
         values, error = _parse_partner_financials(form)
         assert error is None
@@ -40,8 +44,12 @@ class TestFinancialsMega:
     @pytest.mark.parametrize("bad", ["-1", "101", "150", "abc", ""])
     def test_bad_grid(self, field, bad):
         form = {
-            "investment_amount": "0", "share_percentage": "10", "fixed_monthly_amount": "0",
-            "expense_share_percentage": "0", "loss_share_percentage": "0", "min_profit_threshold": "0",
+            "investment_amount": "0",
+            "share_percentage": "10",
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": "0",
+            "loss_share_percentage": "0",
+            "min_profit_threshold": "0",
         }
         form[field] = bad
         values, error = _parse_partner_financials(form)
@@ -56,11 +64,7 @@ class TestFinancialsMega:
 class TestWindowsMega:
     @pytest.mark.parametrize(
         "start,end",
-        [
-            (date(2026, m, d), date(2026, m, d))
-            for m in range(1, 13)
-            for d in (1, 7, 15, 21, 28)
-        ],
+        [(date(2026, m, d), date(2026, m, d)) for m in range(1, 13) for d in (1, 7, 15, 21, 28)],
     )
     def test_single_days(self, start, end):
         partner = MagicMock(start_date=start, end_date=end)
@@ -77,7 +81,9 @@ class TestWindowsMega:
         ]
         assert_balanced_lines(lines, currency="AED")
 
-    @pytest.mark.parametrize("debit,credit", [(str(d), str(c)) for d, c in [(5, 6), (50, 49), (500, 505), (5000, 4999)]])
+    @pytest.mark.parametrize(
+        "debit,credit", [(str(d), str(c)) for d, c in [(5, 6), (50, 49), (500, 505), (5000, 4999)]]
+    )
     def test_unbalanced_mega(self, debit, credit):
         lines = [
             {"account": "1110", "debit": Decimal(debit), "credit": Decimal("0")},
@@ -92,9 +98,14 @@ class TestEinvoiceMega:
     @pytest.mark.parametrize("total", ["100", "250", "1000", "9999"])
     def test_grid(self, country, total):
         sale = MagicMock(
-            sale_number="S-1", sale_date=None, tax_rate=Decimal("5"),
-            total_amount=Decimal(total), tax_amount=Decimal("5"),
-            taxable_amount=Decimal(total) - Decimal("5"), subtotal=Decimal(total), lines=[],
+            sale_number="S-1",
+            sale_date=None,
+            tax_rate=Decimal("5"),
+            total_amount=Decimal(total),
+            tax_amount=Decimal("5"),
+            taxable_amount=Decimal(total) - Decimal("5"),
+            subtotal=Decimal(total),
+            lines=[],
         )
         sale.customer = MagicMock(name="B", tax_number="")
         tenant = MagicMock(name="S", name_en="S", tax_number="1", address_en="", city="")

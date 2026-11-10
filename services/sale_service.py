@@ -92,7 +92,7 @@ class SaleService:
         from decimal import ROUND_HALF_UP, Decimal
 
         line_total = Decimal(str(line.line_total or 0))
-        category = ((getattr(line, "tax_category", None) or "standard").strip().lower())
+        category = (getattr(line, "tax_category", None) or "standard").strip().lower()
         rate = Decimal(str(getattr(sale, "tax_rate", 0) or 0))
         if getattr(sale, "prices_include_vat", False) is True and rate > 0 and category not in ("zero", "exempt"):
             revenue_excl = (line_total / (Decimal("1") + rate / Decimal("100"))).quantize(

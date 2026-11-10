@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 import pytest
 
@@ -76,9 +76,16 @@ class TestLevyM:
         goods = Decimal(qty) * Decimal(cost)
         customs, excise = compute_import_levy_defaults(
             [(Decimal(qty), Decimal(cost), Decimal("0"), cat)],
-            country="AE", customs_duty=None, excise_amount=None,
+            country="AE",
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (goods * Decimal("5") / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
-        rates = {"tobacco": Decimal("100"), "energy_drinks": Decimal("100"), "soft_drinks": Decimal("50"), "": Decimal("0")}
+        rates = {
+            "tobacco": Decimal("100"),
+            "energy_drinks": Decimal("100"),
+            "soft_drinks": Decimal("50"),
+            "": Decimal("0"),
+        }
         base = goods + goods * Decimal("5") / 100
         assert excise == (base * rates[cat] / 100).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)

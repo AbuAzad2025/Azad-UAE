@@ -61,7 +61,9 @@ class TestLevyGridB:
         rates = {"PS": "15", "IL": "18", "SA": "15"}
         customs, excise = compute_import_levy_defaults(
             [(4, Decimal("50"), Decimal("0"), "")],
-            country=country, customs_duty=None, excise_amount=None,
+            country=country,
+            customs_duty=None,
+            excise_amount=None,
         )
         assert customs == (Decimal("200") * Decimal(rates[country]) / Decimal("100")).quantize(Decimal("0.001"))
         assert excise == Decimal("0.000")
@@ -70,7 +72,9 @@ class TestLevyGridB:
     def test_sa_excise_grid(self, cat):
         _customs, excise = compute_import_levy_defaults(
             [(2, Decimal("100"), Decimal("0"), cat)],
-            country="SA", customs_duty=None, excise_amount=None,
+            country="SA",
+            customs_duty=None,
+            excise_amount=None,
         )
         rate = Decimal("100") if cat != "soft_drinks" else Decimal("50")
         base = Decimal("200") + Decimal("200") * Decimal("15") / Decimal("100")
@@ -81,8 +85,12 @@ class TestFinancialGridB:
     @pytest.mark.parametrize("loss", ["0", "25", "50", "100"])
     def test_loss_grid(self, loss):
         form = {
-            "investment_amount": "0", "share_percentage": "0", "fixed_monthly_amount": "0",
-            "expense_share_percentage": "0", "loss_share_percentage": loss, "min_profit_threshold": "0",
+            "investment_amount": "0",
+            "share_percentage": "0",
+            "fixed_monthly_amount": "0",
+            "expense_share_percentage": "0",
+            "loss_share_percentage": loss,
+            "min_profit_threshold": "0",
         }
         values, error = _parse_partner_financials(form)
         assert error is None
@@ -114,9 +122,14 @@ class TestEinvoiceGrid:
     @pytest.mark.parametrize("country", ["AE", "PS", "IL", "SA"])
     def test_hash_stable_per_country(self, country):
         sale = MagicMock(
-            sale_number="S-1", sale_date=None, tax_rate=Decimal("5"),
-            total_amount=Decimal("105"), tax_amount=Decimal("5"),
-            taxable_amount=Decimal("100"), subtotal=Decimal("105"), lines=[],
+            sale_number="S-1",
+            sale_date=None,
+            tax_rate=Decimal("5"),
+            total_amount=Decimal("105"),
+            tax_amount=Decimal("5"),
+            taxable_amount=Decimal("100"),
+            subtotal=Decimal("105"),
+            lines=[],
         )
         sale.customer = MagicMock(name="B", tax_number="")
         tenant = MagicMock(name="S", name_en="S", tax_number="1", address_en="", city="")

@@ -41,9 +41,16 @@ class TestUserInputPriority:
     @pytest.mark.parametrize(
         "rate,expected",
         [
-            ("3.65", "3.650000"), ("0.27", "0.270000"), ("1", "1.000000"), ("4.5", "4.500000"),
-            ("0.0027", "0.002700"), ("999.9999", "999.999900"), ("0.000001", "0.000001"),
-            ("123.4567", "123.456700"), ("2.5", "2.500000"), ("7.77", "7.770000"),
+            ("3.65", "3.650000"),
+            ("0.27", "0.270000"),
+            ("1", "1.000000"),
+            ("4.5", "4.500000"),
+            ("0.0027", "0.002700"),
+            ("999.9999", "999.999900"),
+            ("0.000001", "0.000001"),
+            ("123.4567", "123.456700"),
+            ("2.5", "2.500000"),
+            ("7.77", "7.770000"),
         ],
     )
     def test_user_rate_wins(self, rate, expected):
@@ -100,9 +107,7 @@ class TestOnlineFetch:
         elif scenario == "timeout":
             import requests as _rq
 
-            mocker.patch(
-                "services.currency_service.requests.get", side_effect=_rq.Timeout("slow")
-            )
+            mocker.patch("services.currency_service.requests.get", side_effect=_rq.Timeout("slow"))
             with _no_forex(mocker):
                 details = CurrencyService.get_exchange_rate_details("USD", "AED")
             assert details["source"] == "fallback_static"
@@ -185,9 +190,7 @@ class TestAccountingConversion:
         ],
     )
     def test_convert_bases(self, amount, currency, rate, base, expected):
-        result = convert_and_quantize_aed(
-            Decimal(amount), currency, Decimal(rate), base_currency=base
-        )
+        result = convert_and_quantize_aed(Decimal(amount), currency, Decimal(rate), base_currency=base)
         assert result == Decimal(expected)
 
     def test_wrapper_matches_details(self):

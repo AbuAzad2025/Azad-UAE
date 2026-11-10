@@ -28,20 +28,30 @@ JAN = (date(2026, 1, 1), date(2026, 1, 31))
 
 def _sale(db_session, tenant, warehouse, user, customer, product, number, *, qty=2, price=100, cost=50):
     sale = Sale(
-        tenant_id=tenant.id, sale_number=number, customer_id=customer.id, seller_id=user.id,
-        branch_id=warehouse.branch_id, warehouse_id=warehouse.id,
-        sale_date=datetime(2026, 1, 10, tzinfo=UTC), status="confirmed",
+        tenant_id=tenant.id,
+        sale_number=number,
+        customer_id=customer.id,
+        seller_id=user.id,
+        branch_id=warehouse.branch_id,
+        warehouse_id=warehouse.id,
+        sale_date=datetime(2026, 1, 10, tzinfo=UTC),
+        status="confirmed",
         subtotal=Decimal(str(qty)) * Decimal(str(price)),
         total_amount=Decimal(str(qty)) * Decimal(str(price)),
         amount=Decimal(str(qty)) * Decimal(str(price)),
         amount_aed=Decimal(str(qty)) * Decimal(str(price)),
-        tax_amount=Decimal("0"), currency="AED",
+        tax_amount=Decimal("0"),
+        currency="AED",
     )
     db_session.add(sale)
     db_session.flush()
     line = SaleLine(
-        tenant_id=tenant.id, sale_id=sale.id, product_id=product.id, quantity=Decimal(str(qty)),
-        unit_price=Decimal(str(price)), line_total=Decimal(str(qty)) * Decimal(str(price)),
+        tenant_id=tenant.id,
+        sale_id=sale.id,
+        product_id=product.id,
+        quantity=Decimal(str(qty)),
+        unit_price=Decimal(str(price)),
+        line_total=Decimal(str(qty)) * Decimal(str(price)),
         cost_price=Decimal(str(cost)),
     )
     db_session.add(line)
@@ -51,40 +61,73 @@ def _sale(db_session, tenant, warehouse, user, customer, product, number, *, qty
 
 class TestEndToEndReconciliation:
     def test_full_pnl_reconciles(
-        self, db_session, sample_tenant, sample_warehouse, sample_user, sample_customer,
-        sample_product, sample_expense_category,
+        self,
+        db_session,
+        sample_tenant,
+        sample_warehouse,
+        sample_user,
+        sample_customer,
+        sample_product,
+        sample_expense_category,
     ):
         sale, line = _sale(
-            db_session, sample_tenant, sample_warehouse, sample_user, sample_customer,
-            sample_product, "E2E-1",
+            db_session,
+            sample_tenant,
+            sample_warehouse,
+            sample_user,
+            sample_customer,
+            sample_product,
+            "E2E-1",
         )
         db_session.add(
             Expense(
-                tenant_id=sample_tenant.id, expense_number="E2E-EXP", category_id=sample_expense_category.id,
-                description="ops", amount=Decimal("20"), amount_aed=Decimal("20"), payment_method="cash",
-                user_id=sample_user.id, expense_date=datetime(2026, 1, 12, tzinfo=UTC), status="confirmed",
-                is_reversed=False, branch_id=sample_warehouse.branch_id, warehouse_id=sample_warehouse.id,
+                tenant_id=sample_tenant.id,
+                expense_number="E2E-EXP",
+                category_id=sample_expense_category.id,
+                description="ops",
+                amount=Decimal("20"),
+                amount_aed=Decimal("20"),
+                payment_method="cash",
+                user_id=sample_user.id,
+                expense_date=datetime(2026, 1, 12, tzinfo=UTC),
+                status="confirmed",
+                is_reversed=False,
+                branch_id=sample_warehouse.branch_id,
+                warehouse_id=sample_warehouse.id,
             )
         )
         ret = ProductReturn(
-            tenant_id=sample_tenant.id, return_number="E2E-R", sale_id=sale.id,
-            customer_id=sample_customer.id, branch_id=sale.branch_id,
-            return_date=datetime(2026, 1, 20, tzinfo=UTC), status="approved",
-            total_amount=Decimal("100"), refund_amount=Decimal("100"), amount_aed=Decimal("100"),
+            tenant_id=sample_tenant.id,
+            return_number="E2E-R",
+            sale_id=sale.id,
+            customer_id=sample_customer.id,
+            branch_id=sale.branch_id,
+            return_date=datetime(2026, 1, 20, tzinfo=UTC),
+            status="approved",
+            total_amount=Decimal("100"),
+            refund_amount=Decimal("100"),
+            amount_aed=Decimal("100"),
             currency="AED",
         )
         db_session.add(ret)
         db_session.flush()
         db_session.add(
             ProductReturnLine(
-                tenant_id=sample_tenant.id, return_id=ret.id, sale_line_id=line.id,
-                product_id=sample_product.id, quantity=Decimal("1"), unit_price=Decimal("100"),
+                tenant_id=sample_tenant.id,
+                return_id=ret.id,
+                sale_line_id=line.id,
+                product_id=sample_product.id,
+                quantity=Decimal("1"),
+                unit_price=Decimal("100"),
                 line_total=Decimal("100"),
             )
         )
         partner = Partner(
-            tenant_id=sample_tenant.id, name="E2E Partner", scope_type="company",
-            share_percentage=Decimal("50"), start_date=date(2026, 1, 1),
+            tenant_id=sample_tenant.id,
+            name="E2E Partner",
+            scope_type="company",
+            share_percentage=Decimal("50"),
+            start_date=date(2026, 1, 1),
         )
         db_session.add(partner)
         db_session.flush()
@@ -123,16 +166,23 @@ class TestBudgetEnforcement:
         account = GLAccount.query.filter_by(tenant_id=sample_tenant.id, code="6500").first()
         assert account is not None
         budget = Budget(
-            tenant_id=sample_tenant.id, budget_number="B-2026", name_ar="موازنة العمليات",
-            fiscal_year=2026, period_start=date(2026, 1, 1), period_end=date(2026, 12, 31),
-            status="active", enforcement="hard",
+            tenant_id=sample_tenant.id,
+            budget_number="B-2026",
+            name_ar="موازنة العمليات",
+            fiscal_year=2026,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 12, 31),
+            status="active",
+            enforcement="hard",
         )
         db_session.add(budget)
         db_session.flush()
         db_session.add(
             BudgetLine(
-                tenant_id=sample_tenant.id, budget_id=budget.id,
-                account_id=account.id, budgeted_amount=Decimal("100"),
+                tenant_id=sample_tenant.id,
+                budget_id=budget.id,
+                account_id=account.id,
+                budgeted_amount=Decimal("100"),
             )
         )
         db_session.flush()

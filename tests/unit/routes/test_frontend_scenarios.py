@@ -45,7 +45,9 @@ class TestSalesUiMatrix:
             patch("routes.sales.tenant_get_or_404", return_value=MagicMock(id=1, sale_date=None, total_amount=0)),
             patch("routes.sales.should_show_all_branch_columns", return_value=False),
             patch("routes.sales.db.session.get", return_value=None),
-            patch("services.invoice_profile_service.resolve_print_profile", return_value=MagicMock(enable_qr_code=False)),
+            patch(
+                "services.invoice_profile_service.resolve_print_profile", return_value=MagicMock(enable_qr_code=False)
+            ),
             patch("routes.sales.number_to_arabic_words", return_value=""),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
         ):

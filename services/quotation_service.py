@@ -164,9 +164,7 @@ class QuotationService:
         from services.stock_service import StockService
 
         for q_line in quotation.lines:
-            available = StockService.get_product_stock(
-                q_line.product_id, warehouse_id=quotation.warehouse_id
-            )
+            available = StockService.get_product_stock(q_line.product_id, warehouse_id=quotation.warehouse_id)
             if Decimal(str(available or 0)) < Decimal(str(q_line.quantity or 0)):
                 raise ValueError(
                     gettext(
