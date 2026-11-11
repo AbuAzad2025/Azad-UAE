@@ -33,6 +33,12 @@
               <input type="text" name="slug" class="form-control" required id="input_slug" aria-label="slug">
             </div>
             <div class="col-md-6">
+              <label class="form-label fw-semibold" for="input_admin_password">{{ t('Admin_Password') }}</label>
+              <input type="password" name="admin_password" class="form-control" required id="input_admin_password"
+                     aria-label="admin password" minlength="8">
+              <small class="form-text text-muted">{{ t('Initial password for the company admin (username: {slug}-admin).', slug='company-slug') }}</small>
+            </div>
+            <div class="col-md-6">
               <label class="form-label fw-semibold" for="input_business_type">{{ t('Business_Type') }}</label>
               <select name="business_type" class="form-select" id="input_business_type" aria-label="business type">
                 {% from 'macros/industry_choices.html' import industry_options %}

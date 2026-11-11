@@ -3,6 +3,7 @@
 import logging
 from datetime import UTC, date, datetime
 
+from flask import current_app
 from flask_babel import gettext
 
 from services.logging_core import LoggingCore
@@ -334,6 +335,48 @@ def tenant_create():
                 # In the same cross-tenant situation as above.
                 with without_tenant_scope():
                     GLService.ensure_gl_mappings(tenant_id=tenant.id)
+
+            # Default users for the new tenant. The usernames are prefixed
+            # with the tenant slug so they never collide with another
+            # tenant's users, and the set that is created follows the
+            # features the tenant actually owns: a tenant without POS gets
+            # no cashier, a tenant without GL gets no accountant. The
+            # password is the one the owner set on the form; it is shown
+            # once and the tenant is expected to change it.
+            admin_password = (request.form.get("admin_password") or "").strip()
+            if not admin_password:
+                raise ValueError(gettext("كلمة مرور مدير الشركة مطلوبة."))
+
+            from models import Role, User
+
+            default_users = [
+                ("super_admin", f"{slug}-admin", "مدير الشركة", "Company Admin"),
+            ]
+            if request.form.get("enable_pos") == "on":
+                default_users.append(("cashier", f"{slug}-cashier", "أمين الصندوق", "Cashier"))
+            if request.form.get("enable_gl") == "on" or request.form.get("enable_reports") == "on":
+                default_users.append(("accountant", f"{slug}-accountant", "محاسب", "Accountant"))
+
+            with without_tenant_scope():
+                for role_slug, username, name_ar, name_en in default_users:
+                    role = Role.query.filter_by(slug=role_slug).first()
+                    if role is None:
+                        current_app.logger.warning("Default user %s skipped: role %s not seeded.", username, role_slug)
+                        continue
+                    if User.query.filter_by(username=username).first():
+                        continue
+                    user = User(
+                        username=username,
+                        email=f"{username}@{slug}.local",
+                        full_name=name_en,
+                        full_name_ar=name_ar,
+                        tenant_id=tenant.id,
+                        role_id=role.id,
+                        is_active=True,
+                    )
+                    user.set_password(admin_password)
+                    db.session.add(user)
+                    db.session.flush()
 
             # Optional subscription scenario: activate a purchased package
             # (applies the plan label, duration window, and the package's
