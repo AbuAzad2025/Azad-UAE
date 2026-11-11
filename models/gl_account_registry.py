@@ -1044,6 +1044,7 @@ GL_MODULE_DEFINITIONS = {
         accounts=[],
         mappings=[
             GLConceptMappingTemplate("SHOP_SALES_REVENUE", "4103", "shop_online"),
+            GLConceptMappingTemplate("SHOP_COGS", "5103", "shop_online"),
             GLConceptMappingTemplate("COUPON_EXPENSE", "6130", "shop_online"),
             GLConceptMappingTemplate("LOYALTY_LIABILITY", "2161", "shop_online"),
         ],

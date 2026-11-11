@@ -152,7 +152,11 @@ class StoreOrderService:
             raise ValueError(gettext("الطلب مؤكد مسبقاً."))
 
         if not StoreOrderService.is_fulfilled(sale):
-            SaleService.fulfill_sale(sale)
+            SaleService.fulfill_sale(
+                sale,
+                revenue_concept="SHOP_SALES_REVENUE",
+                cogs_concept="SHOP_COGS",
+            )
 
         sale.status = "confirmed"
 

@@ -175,6 +175,11 @@ class Product(db.Model):
 
     is_active = db.Column(db.Boolean, default=True, nullable=False, index=True)
 
+    # منتج يظهر على واجهة المتجر الإلكتروني فقط إذا كان نشطاً، وله رصيد في
+    # مستودع الأونلاين، وهذا العلم مفعل. 제품 مخفي من المتجر إذا أُطفئ العلم
+    # حتى لو كان له رصيد — للتحكم اليدوي من لوحة المتجر.
+    is_visible_on_store = db.Column(db.Boolean, default=True, nullable=False, index=True)
+
     industry = db.Column(db.String(50), default="general")  # overrides tenant.business_type
     extra_fields = db.Column(db.JSON, default=dict)
 

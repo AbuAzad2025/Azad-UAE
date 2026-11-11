@@ -668,7 +668,15 @@ class SaleService:
             raise
 
     @staticmethod
-    def fulfill_sale(sale, payment_data=None, paid_amount_aed=None, payments_data=None):
+    def fulfill_sale(
+        sale,
+        payment_data=None,
+        paid_amount_aed=None,
+        payments_data=None,
+        *,
+        revenue_concept="SALES_REVENUE",
+        cogs_concept="COGS",
+    ):
         """
         Deduct stock, post GL, commissions, and customer balances for an existing sale.
         Used at POS checkout and when confirming deferred online store orders.
@@ -834,11 +842,11 @@ class SaleService:
             },
             {
                 "account": GLService.get_account_code_for_concept(
-                    "SALES_REVENUE",
+                    revenue_concept,
                     branch_id=sale.branch_id,
                     tenant_id=tenant_id,
                 ),
-                "concept_code": "SALES_REVENUE",
+                "concept_code": revenue_concept,
                 "credit": revenue_credit,
                 "description": gettext("إيرادات المبيعات"),
             },
@@ -915,11 +923,11 @@ class SaleService:
             cogs_lines = [
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "COGS",
+                        cogs_concept,
                         branch_id=sale.branch_id,
                         tenant_id=tenant_id,
                     ),
-                    "concept_code": "COGS",
+                    "concept_code": cogs_concept,
                     "debit": cogs_total_aed,
                     "description": gettext("تكلفة البضاعة المباعة"),
                 },

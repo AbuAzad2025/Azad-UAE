@@ -169,7 +169,11 @@ class StoreService:
         if not online_wh:
             return [], {}
 
-        products = Product.query.filter_by(tenant_id=int(tenant_id), is_active=True).order_by(Product.name.asc()).all()
+        products = (
+            Product.query.filter_by(tenant_id=int(tenant_id), is_active=True, is_visible_on_store=True)
+            .order_by(Product.name.asc())
+            .all()
+        )
         stock_map = StoreService.online_stock_map(tenant_id, [p.id for p in products])
 
         if not include_zero:
