@@ -219,21 +219,27 @@
             {% endif %}
           {{ _end(_sale) }}
 
-          {% set _mnt = current_user.is_authenticated and current_user.has_permission('manage_maintenance') %}
-          {{ _tree('fas fa-screwdriver-wrench', t('Maintenance'), 'maintenance', _mnt) }}
-            {% if _mnt %}
+          {% set _mnt_mgmt = current_user.is_authenticated and current_user.has_permission('manage_maintenance') %}
+          {% set _mnt_recv = current_user.is_authenticated and current_user.has_permission('maintenance_receive') %}
+          {% set _mnt_any = _mnt_mgmt or _mnt_recv %}
+          {{ _tree('fas fa-screwdriver-wrench', t('Maintenance'), 'maintenance', _mnt_any) }}
+            {% if _mnt_mgmt %}
             <li class="nav-item">
               <a href="{{ url_for('maintenance.index') }}" class="nav-link">
                 <i class="fas fa-list nav-icon text-info" aria-hidden="true"></i>
                 <p>{{ t('Maintenance Orders') }}</p>
               </a>
             </li>
+            {% endif %}
+            {% if _mnt_recv %}
             <li class="nav-item">
               <a href="{{ url_for('maintenance.create') }}" class="nav-link">
                 <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
                 <p>{{ t('New Maintenance Order') }}</p>
               </a>
             </li>
+            {% endif %}
+            {% if _mnt_mgmt %}
             <li class="nav-item">
               <a href="{{ url_for('maintenance.report') }}" class="nav-link">
                 <i class="fas fa-chart-bar nav-icon text-primary" aria-hidden="true"></i>
@@ -277,7 +283,7 @@
               </a>
             </li>
             {% endif %}
-          {{ _end(_mnt) }}
+          {{ _end(_mnt_any) }}
 
           {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
           {{ _tree('fas fa-warehouse', t('Warehouses'), 'warehouse', _wh) }}
