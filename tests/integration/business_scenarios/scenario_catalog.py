@@ -112,6 +112,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "language": 1,
     "ledger": 35,
     "main": 10,
+    "maintenance": 32,
     "monitoring": 3,
     "owner/ai_training": 4,
     "owner/ai_training_advanced": 8,
@@ -495,6 +496,20 @@ WAVES: tuple[Wave, ...] = (
             ),
         ),
         delivered=True,
+    ),
+    Wave(
+        number=17,
+        title="Maintenance module - workshop orders, parts, warranty and sub-ledger",
+        domains=(
+            Domain(
+                "MNT",
+                "Maintenance orders, parts, warranty and sub-ledger",
+                ("maintenance",),
+                2.0,
+                "maintenance consumes real stock and posts to its own GL sub-ledger",
+            ),
+        ),
+        delivered=False,
     ),
 )
 

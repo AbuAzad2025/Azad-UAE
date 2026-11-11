@@ -644,7 +644,20 @@ class TestSystemInitWave10:
         assert cashier.permissions is not None
 
     def test_functional_roles_all_exist_skips_creation(self, clean_app):
-        slugs = ("manager", "seller", "branch_manager", "accountant", "kitchen", "cashier")
+        slugs = (
+            "manager",
+            "seller",
+            "branch_manager",
+            "accountant",
+            "kitchen",
+            "cashier",
+            "maintenance_reception",
+            "maintenance_engineer",
+            "maintenance_cashier",
+            "maintenance_closer",
+            "maintenance_discount",
+            "maintenance_settings",
+        )
         roles = {slug: MagicMock(slug=slug, permissions=[]) for slug in slugs}
 
         def _filter_by(**kwargs):

@@ -240,6 +240,21 @@ DECLARED_ROW_ADDITIONS: tuple[DeclaredRowAddition, ...] = (
     DeclaredRowAddition(
         "gl_accounts", {"code": "2149"}, "e2f3a4b5c6d8", "Withholding tax payable (WHT concept registration)"
     ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "1134"}, "m3a4b5c6d7e8", "Maintenance module — AR Maintenance"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "2171"}, "m3a4b5c6d7e8", "Maintenance module — Maintenance Customer Deposits"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "4119"}, "m3a4b5c6d7e8", "Maintenance module — Maintenance Revenue"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "5119"}, "m3a4b5c6d7e8", "Maintenance module — Maintenance Cost of Parts"
+    ),
+    DeclaredRowAddition(
+        "gl_accounts", {"code": "6560"}, "m3a4b5c6d7e8", "Maintenance module — Maintenance Cash Difference"
+    ),
 )
 
 
