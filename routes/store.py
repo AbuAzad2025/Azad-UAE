@@ -1,4 +1,4 @@
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask import (
     Blueprint,
@@ -13,6 +13,10 @@ from flask import (
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
+from extensions import db
+from models import Product
+from models.store_provisional_order import StoreProvisionalOrder
+from models.tenant import Tenant
 from services.azad_platform_fee_service import AzadPlatformFeeService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService
@@ -20,8 +24,11 @@ from services.store_analytics_service import StoreAnalyticsService
 from services.store_coupon_service import StoreCouponService
 from services.store_order_service import STATUS_LABELS_AR, StoreOrderService
 from services.store_payment_method_service import StorePaymentMethodService
+from services.store_pricing_service import StorePricingService
 from services.store_service import StoreService
+from services.store_whatsapp_service import StoreWhatsAppService
 from utils.branching import get_branch_stock_map
+from utils.currency_utils import convert_and_quantize_aed
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import ErrorMessages
@@ -475,3 +482,164 @@ def admin_coupons():
 
     coupons = StoreCouponService.list_for_tenant(tenant_id)
     return render_template("store/admin_coupons.html", store=store, coupons=coupons)
+
+
+# ─── WhatsApp checkout flow ──────────────────────────────────────────────
+
+
+@store_bp.route("/checkout", methods=["POST"])
+@login_required
+def whatsapp_checkout():
+    """Customer clicks Buy: create a provisional order and redirect to WhatsApp.
+
+    Expects JSON body:
+        {
+            "customer_name": "...",
+            "customer_phone": "...",
+            "customer_email": "...",
+            "currency_code": "USD",
+            "cart": [{"product_id": 1, "quantity": 2}, ...]
+        }
+    """
+    tenant_id = _tenant_id()
+    store = StoreService.get_tenant_store(tenant_id, create=True)
+    online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
+    if not online_wh:
+        flash(gettext("المتجر الإلكتروني غير مفعل بعد."), "danger")
+        return redirect(url_for("store.admin_index"))
+
+    data = request.get_json(silent=True) or {}
+    customer_name = (data.get("customer_name") or "").strip()
+    customer_phone = (data.get("customer_phone") or "").strip()
+    customer_email = (data.get("customer_email") or "").strip()
+    currency_code = (data.get("currency_code") or "USD").strip().upper()
+    cart = data.get("cart") or []
+
+    if not customer_phone:
+        flash(gettext("رقم الهاتف مطلوب لإرسال الطلب عبر الواتساب."), "danger")
+        return redirect(url_for("store.admin_index"))
+
+    if not cart:
+        flash(gettext("السلة فارغة."), "danger")
+        return redirect(url_for("store.admin_index"))
+
+    tenant = db.session.get(Tenant, tenant_id)
+    base_currency = StorePricingService._base_currency(tenant)
+
+    # Resolve exchange rate
+    rate = Decimal("1")
+    if currency_code != base_currency:
+        stored = StoreOrderService._latest_stored_rate(tenant_id, currency_code, base_currency)
+        if stored is not None and Decimal(str(stored)) > 0:
+            rate = Decimal(str(stored))
+
+    lines = []
+    subtotal_tx = Decimal("0")
+    for item in cart:
+        pid = item.get("product_id")
+        qty = Decimal(str(item.get("quantity", 1)))
+        if not pid or qty <= 0:
+            continue
+        product = Product.query.filter_by(id=int(pid), tenant_id=tenant_id, is_active=True).first()
+        if not product:
+            continue
+        unit_price = StorePricingService.resolve_store_price(product, tenant, currency_code)
+        if unit_price is None:
+            unit_price = Decimal(str(product.regular_price or 0))
+        line_total = (unit_price * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        subtotal_tx += line_total
+        lines.append(
+            {
+                "product_id": int(pid),
+                "product_name": product.name or product.name_ar or f"Product {pid}",
+                "quantity": str(qty),
+                "unit_price": str(unit_price),
+                "line_total": str(line_total),
+            }
+        )
+
+    if not lines:
+        flash(gettext("لا توجد منتجات صالحة في السلة."), "danger")
+        return redirect(url_for("store.admin_index"))
+
+    subtotal_aed = convert_and_quantize_aed(
+        subtotal_tx, currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
+    )
+
+    provisional_number = StoreWhatsAppService.generate_provisional_number(tenant_id)
+
+    provisional = StoreProvisionalOrder(
+        tenant_id=tenant_id,
+        provisional_number=provisional_number,
+        customer_name=customer_name or None,
+        customer_phone=customer_phone or None,
+        customer_email=customer_email or None,
+        cart_json=lines,
+        currency_code=currency_code,
+        exchange_rate=rate,
+        subtotal_tx_ccy=subtotal_tx,
+        subtotal_aed=subtotal_aed,
+        status=StoreProvisionalOrder.STATUS_PENDING,
+    )
+    db.session.add(provisional)
+    db.session.flush()
+
+    # Build WhatsApp message
+    message = StoreWhatsAppService.build_message(provisional, tenant, store)
+    provisional.whatsapp_message = message
+    db.session.flush()
+
+    whatsapp_url = StoreWhatsAppService.whatsapp_url(customer_phone, message)
+
+    current_app.logger.info(
+        "Provisional order %s created for tenant %s, WhatsApp URL generated",
+        provisional_number,
+        tenant_id,
+    )
+
+    return redirect(whatsapp_url)
+
+
+@store_bp.route("/admin/provisional/<int:provisional_id>/approve", methods=["POST"])
+@login_required
+@permission_required("manage_store")
+def approve_provisional_order(provisional_id: int):
+    """Tenant admin approves a provisional order and converts it to a real Sale."""
+    tenant_id = _tenant_id()
+    provisional = StoreProvisionalOrder.query.filter_by(id=int(provisional_id), tenant_id=tenant_id).first_or_404()
+
+    if provisional.status != StoreProvisionalOrder.STATUS_PENDING:
+        flash(gettext("هذا الطلب غير قابل للموافقة (الحالة الحالية: {}).").format(provisional.status), "warning")
+        return redirect(url_for("store.admin_orders"))
+
+    try:
+        with atomic_transaction("approve_provisional_order"):
+            sale = StoreOrderService.convert_provisional_to_sale(provisional, current_user)
+            LoggingCore.log_audit("approve", "store_provisional_orders", provisional.id)
+        flash(gettext("تم اعتماد الطلب وتحويله إلى فاتورة مبيعات: {}").format(sale.sale_number), "success")
+    except ValueError as exc:
+        current_app.logger.warning(f"ValueError approving provisional {provisional_id}: {exc}")
+        flash(str(exc), "warning")
+    except Exception as exc:
+        current_app.logger.error(f"Error approving provisional {provisional_id}: {exc}")
+        flash(ErrorMessages.action_failed(gettext("اعتماد الطلب المؤقت")), "danger")
+    return redirect(url_for("store.admin_order_detail", order_id=sale.id))
+
+
+@store_bp.route("/admin/provisional/<int:provisional_id>/cancel", methods=["POST"])
+@login_required
+@permission_required("manage_store")
+def cancel_provisional_order(provisional_id: int):
+    """Tenant admin cancels a provisional order."""
+    tenant_id = _tenant_id()
+    provisional = StoreProvisionalOrder.query.filter_by(id=int(provisional_id), tenant_id=tenant_id).first_or_404()
+
+    if provisional.status != StoreProvisionalOrder.STATUS_PENDING:
+        flash(gettext("لا يمكن إلغاء طلب بحالة غير الانتظار."), "warning")
+        return redirect(url_for("store.admin_orders"))
+
+    provisional.status = StoreProvisionalOrder.STATUS_CANCELLED
+    db.session.flush()
+    LoggingCore.log_audit("cancel", "store_provisional_orders", provisional.id)
+    flash(gettext("تم إلغاء الطلب المؤقت."), "success")
+    return redirect(url_for("store.admin_orders"))

@@ -9,8 +9,10 @@ from flask_babel import gettext
 
 from extensions import db
 from models import Sale
+from models.store_provisional_order import StoreProvisionalOrder
 from services.sale_service import SaleService
 from services.stock_service import StockService
+from services.store_service import StoreService
 from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
 from utils.payment_constants import normalize_payment_method_code
 
@@ -498,3 +500,143 @@ class StoreOrderService:
         except Exception:
             current_app.logger.debug("ExchangeRateRecord lookup failed", exc_info=True)
         return None
+
+    @staticmethod
+    def convert_provisional_to_sale(provisional: StoreProvisionalOrder, approver_user) -> Sale:
+        """Convert a pending provisional order into a real online-store Sale.
+
+        Steps:
+        1. Validate stock availability in the online warehouse for each cart line
+        2. Create a Sale with source="online_store", currency and amounts from the provisional order
+        3. Create SaleLines
+        4. Call SaleService.fulfill_sale with SHOP_SALES_REVENUE / SHOP_COGS concepts
+           (posts GL: Dr Customer AR / Cr SHOP_SALES_REVENUE, Dr SHOP_COGS / Cr INVENTORY_ASSET)
+        5. Mark the provisional order as converted with the new sale_id
+        """
+        from models import Customer, SaleLine
+
+        tenant_id = int(provisional.tenant_id)
+        currency_code = provisional.currency_code or "USD"
+        rate = provisional.exchange_rate or Decimal("1")
+
+        # Resolve base currency for accounting
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+
+        online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
+        if not online_wh:
+            raise ValueError(gettext("لا يوجد مستودع أونلاين نشط لهذا المتجر."))
+
+        warehouse_id = online_wh.id
+
+        # Validate stock for each line
+        cart = provisional.cart_json or []
+        if not cart:
+            raise ValueError(gettext("الطلب المؤقت لا يحتوي على منتجات."))
+
+        # Build sale lines and check stock
+        sale_lines_data = []
+        for item in cart:
+            pid = int(item["product_id"])
+            qty = Decimal(str(item["quantity"]))
+            unit_price = Decimal(str(item["unit_price"]))
+            line_total = Decimal(str(item["line_total"]))
+
+            available, msg = StockService.check_availability_in_warehouse(pid, qty, warehouse_id)
+            if not available:
+                product_name = item.get("product_name", f"Product {pid}")
+                raise ValueError(gettext("المוצר {name}: {msg}").format(name=product_name, msg=msg))
+
+            sale_lines_data.append(
+                {
+                    "product_id": pid,
+                    "quantity": qty,
+                    "unit_price": unit_price,
+                    "line_total": line_total,
+                }
+            )
+
+        # Create the Sale
+        customer = None
+        customer_id = None
+        if provisional.customer_email:
+            from models import Customer
+
+            customer = Customer.query.filter_by(email=provisional.customer_email, tenant_id=tenant_id).first()
+            if customer:
+                customer_id = customer.id
+
+        sale = Sale(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            seller_id=int(approver_user.id) if approver_user and hasattr(approver_user, "id") else None,
+            warehouse_id=warehouse_id,
+            source="online_store",
+            currency=currency_code,
+            exchange_rate=rate,
+            base_currency=base_currency,
+            subtotal=provisional.subtotal_tx_ccy,
+            discount_amount=Decimal("0"),
+            shipping_cost=Decimal("0"),
+            tax_rate=Decimal("0"),
+            tax_amount=Decimal("0"),
+            taxable_amount=provisional.subtotal_tx_ccy,
+            total_amount=provisional.subtotal_tx_ccy,
+            amount=provisional.subtotal_tx_ccy,
+            paid_amount=Decimal("0"),
+            balance_due=provisional.subtotal_tx_ccy,
+            amount_aed=provisional.subtotal_aed,
+            paid_amount_aed=Decimal("0"),
+            payment_status="unpaid",
+            status="confirmed",  # approved by tenant -> confirmed
+            is_active=True,
+            notes=gettext("طلب متجر إلكتروني معتمد من الطلب المؤقت {number}").format(
+                number=provisional.provisional_number
+            ),
+        )
+        db.session.add(sale)
+        db.session.flush()
+
+        # Create sale lines
+        for line_data in sale_lines_data:
+            line_total_aed = convert_and_quantize_aed(
+                line_data["line_total"], currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
+            )
+            sl = SaleLine(
+                tenant_id=tenant_id,
+                sale_id=sale.id,
+                product_id=line_data["product_id"],
+                quantity=line_data["quantity"],
+                unit_price=line_data["unit_price"],
+                discount_percent=Decimal("0"),
+                line_total=line_data["line_total"],
+                cost_price=Decimal("0"),
+                unit_price_aed=(line_total_aed / line_data["quantity"] if line_data["quantity"] > 0 else Decimal("0")),
+                line_total_aed=line_total_aed,
+            )
+            db.session.add(sl)
+        db.session.flush()
+
+        # Deduct stock and post GL using SHOP_SALES_REVENUE / SHOP_COGS concepts
+        SaleService.fulfill_sale(
+            sale,
+            revenue_concept="SHOP_SALES_REVENUE",
+            cogs_concept="SHOP_COGS",
+        )
+
+        # Update sale status to confirmed (fulfill_sale may have set it)
+        sale.status = "confirmed"
+        db.session.flush()
+
+        # Mark provisional as converted
+        provisional.status = StoreProvisionalOrder.STATUS_CONVERTED
+        provisional.converted_sale_id = sale.id
+        provisional.approved_by = int(approver_user.id) if approver_user and hasattr(approver_user, "id") else None
+        from datetime import UTC, datetime
+
+        provisional.approved_at = datetime.now(UTC)
+        db.session.flush()
+
+        current_app.logger.info(
+            "Provisional order %s converted to Sale %s", provisional.provisional_number, sale.sale_number
+        )
+        return sale

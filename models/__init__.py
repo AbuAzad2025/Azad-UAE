@@ -143,6 +143,7 @@ from .stock_transfer import WarehouseTransfer, WarehouseTransferLine
 from .store_coupon import StoreCoupon
 from .store_payment_method import StorePaymentMethod
 from .store_product_price import StoreProductPrice
+from .store_provisional_order import StoreProvisionalOrder
 from .supplier import Supplier
 from .sync_batch import SyncBatch
 from .system_settings import SystemSettings
@@ -212,6 +213,7 @@ __all__ = [
     "TenantStore",
     "StorePaymentMethod",
     "StoreProductPrice",
+    "StoreProvisionalOrder",
     "ShopCustomerAccount",
     "ShopWishlist",
     "ShopReview",
