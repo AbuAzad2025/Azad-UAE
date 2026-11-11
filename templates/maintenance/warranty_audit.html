@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Warranty Audit') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-shield-halved mr-2" aria-hidden="true"></i>{{ t('Warranty Audit Trail') }}</h2>
+      <p class="text-muted mb-0">{{ t('Every warranty change is recorded and cannot be edited or deleted.') }}</p>
+    </div>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="card">
+    <div class="card-body table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Action') }}</th>
+            <th>{{ t('Order') }}</th>
+            <th>{{ t('Device') }}</th>
+            <th>{{ t('From') }}</th>
+            <th>{{ t('To') }}</th>
+            <th>{{ t('Reason') }}</th>
+            <th>{{ t('By') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for audit in audits %}
+          <tr>
+            <td>{{ audit.performed_at.strftime('%Y-%m-%d %H:%M') if audit.performed_at else '-' }}</td>
+            <td><span class="badge bg-secondary">{{ audit.action }}</span></td>
+            <td>
+              {% if audit.order %}
+              <a href="{{ url_for('maintenance.detail', order_id=audit.order.id) }}">{{ audit.order.order_number }}</a>
+              {% else %}-{% endif %}
+            </td>
+            <td>
+              {% if audit.serial_number %}<div>SN: {{ audit.serial_number }}</div>{% endif %}
+              {% if audit.imei %}<div>IMEI: {{ audit.imei }}</div>{% endif %}
+              {% if not audit.serial_number and not audit.imei %}-{% endif %}
+            </td>
+            <td>{{ audit.from_status or '-' }}</td>
+            <td>{{ audit.to_status or '-' }}</td>
+            <td class="small">{{ audit.reason or '-' }}</td>
+            <td>{{ audit.user.full_name if audit.user else '-' }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">{{ t('No warranty changes recorded') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

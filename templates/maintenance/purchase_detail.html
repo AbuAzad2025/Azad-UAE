@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Purchase Order') }} {{ order.po_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1">{{ t('Purchase Order') }} {{ order.po_number }}</h2>
+      <span class="badge mnt-status-badge
+        {% if order.status == 'received' %}bg-success
+        {% elif order.status == 'cancelled' %}bg-secondary
+        {% else %}bg-light text-dark{% endif %}">{{ order.status }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      {% if order.status == 'draft' and lines %}
+      <form method="POST" action="{{ url_for('maintenance.receive_purchase', purchase_order_id=order.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-success">
+          <i class="fas fa-box-open mr-1" aria-hidden="true"></i>{{ t('Receive Goods') }}
+        </button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('maintenance.purchases') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title mb-0">{{ t('Parts') }}</h3>
+          <span class="badge bg-secondary">{{ lines|length }}</span>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-sm mnt-line-table mb-3">
+            <thead>
+              <tr>
+                <th>{{ t('Part') }}</th>
+                <th class="text-end">{{ t('Quantity') }}</th>
+                <th class="text-end">{{ t('Unit Cost') }}</th>
+                <th class="text-end">{{ t('Total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in lines %}
+              <tr>
+                <td>{{ line.product.name if line.product else line.product_id }}</td>
+                <td class="text-end">{{ '%.3f'|format(line.quantity|float) }}</td>
+                <td class="text-end">{{ '%.4f'|format(line.unit_cost|float) }}</td>
+                <td class="text-end fw-semibold">{{ '%.3f'|format(line.line_total|float) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="text-center py-3 text-muted">{{ t('No parts yet') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% if order.status == 'draft' %}
+          <form method="POST" action="{{ url_for('maintenance.add_purchase_line', purchase_order_id=order.id) }}"
+                class="row g-2 align-items-end needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-5">
+              <label class="form-label" for="mntPoPart">{{ t('Part') }}</label>
+              <select class="form-select" id="mntPoPart" name="product_id" required>
+                <option value="">{{ t('Select') }}</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }} ({{ product.sku or product.id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPoQty">{{ t('Qty') }}</label>
+              <input type="number" step="0.001" min="0.001" class="form-control mnt-qty-input" id="mntPoQty"
+                     name="quantity" value="1" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label" for="mntPoCost">{{ t('Unit Cost') }}</label>
+              <input type="number" step="0.0001" min="0" class="form-control mnt-price-input" id="mntPoCost"
+                     name="unit_cost" value="0" required>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Add') }}
+              </button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-4 mnt-total-box">
+        <div class="card-body">
+          <h3 class="card-title h6">{{ t('Summary') }}</h3>
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><td>{{ t('Supplier') }}</td>
+                  <td class="text-end">{{ order.supplier_name or '-' }}</td></tr>
+              <tr><td>{{ t('Warehouse') }}</td>
+                  <td class="text-end">{{ order.warehouse.name if order.warehouse else '-' }}</td></tr>
+              <tr><td>{{ t('Date') }}</td>
+                  <td class="text-end">{{ order.order_date.strftime('%Y-%m-%d') if order.order_date else '-' }}</td></tr>
+              <tr><td>{{ t('Subtotal') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.subtotal|float) }}</td></tr>
+              <tr><td>{{ t('Tax') }} ({{ '%.2f'|format(order.tax_rate|float) }}%)</td>
+                  <td class="text-end">{{ '%.3f'|format(order.tax_amount|float) }}</td></tr>
+              <tr class="fw-bold"><td>{{ t('Total') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.total_amount|float) }} {{ order.currency }}</td></tr>
+              {% if order.received_at %}
+              <tr><td>{{ t('Received At') }}</td>
+                  <td class="text-end">{{ order.received_at.strftime('%Y-%m-%d %H:%M') }}</td></tr>
+              {% endif %}
+              <tr><td>{{ t('GL') }}</td>
+                  <td class="text-end">
+                    {% if order.gl_posted %}<span class="badge bg-success">{{ t('Posted') }}</span>
+                    {% else %}<span class="badge bg-secondary">{{ t('Not Posted') }}</span>{% endif %}
+                  </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

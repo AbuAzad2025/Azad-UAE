@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Warranty Report') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+<style nonce="{{ csp_nonce() }}">
+{% for state, color in warranty_colors.items() %}
+.mnt-warranty-{{ state }} { --mnt-tag-color: {{ color }}; }
+{% endfor %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="mb-0"><i class="fas fa-shield-halved mr-2" aria-hidden="true"></i>{{ t('Warranty Report') }}</h2>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Under Warranty') }}</div>
+          <div class="h4 mb-0">{{ report.under_warranty }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Expired') }}</div>
+          <div class="h4 mb-0">{{ report.expired }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Void') }}</div>
+          <div class="h4 mb-0">{{ report.void }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Unknown') }}</div>
+          <div class="h4 mb-0">{{ report.unknown }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title mb-0">{{ t('Devices') }}</h3></div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm mnt-line-table">
+        <thead>
+          <tr>
+            <th>{{ t('Device') }}</th>
+            <th>{{ t('Serial Number') }}</th>
+            <th>{{ t('IMEI') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Warranty Type') }}</th>
+            <th>{{ t('Warranty End Date') }}</th>
+            <th>{{ t('Warranty') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for device in report.devices %}
+          <tr>
+            <td>{{ device.brand or '-' }} {{ device.model or '' }}</td>
+            <td>{{ device.serial_number or '-' }}</td>
+            <td>{{ device.imei or '-' }}</td>
+            <td>{{ device.customer_name or '-' }}</td>
+            <td>{{ device.warranty_type or '-' }}</td>
+            <td>{{ device.warranty_end_date[:10] if device.warranty_end_date else '-' }}</td>
+            <td>
+              <span class="mnt-warranty-dot mnt-warranty-{{ device.warranty_status }}"
+                    aria-hidden="true"></span>
+              <span class="ms-1">
+                {% if device.warranty_status == 'under_warranty' %}{{ t('Under Warranty') }}
+                {% elif device.warranty_status == 'expired' %}{{ t('Expired') }}
+                {% elif device.warranty_status == 'void' %}{{ t('Void') }}
+                {% else %}{{ t('Unknown') }}{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">{{ t('No devices in the warranty registry') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

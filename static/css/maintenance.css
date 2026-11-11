@@ -1,0 +1,147 @@
+/* ==========================================================================
+   Maintenance module — styles
+   The warranty colour tag is the module's visual language: a row under
+   warranty is green, an expired one red, an unknown one amber. The colour
+   comes from the tenant's own settings, so the tag is written inline by
+   the template and this sheet only lays it out.
+   ========================================================================== */
+
+.mnt-order-card {
+  border-right: 5px solid var(--mnt-tag-color, #f59e0b);
+  transition: box-shadow 0.15s ease-in-out;
+}
+
+.mnt-order-card:hover {
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.12);
+}
+
+.mnt-warranty-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--mnt-tag-color, #f59e0b);
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  vertical-align: -1px;
+}
+
+/* The warranty colour is the tenant's own choice (the settings page), so
+   the stylesheet cannot hardcode it. The page emits one <style> block that
+   sets the custom property from the tenant's settings, and the row picks it
+   up through the state class. */
+.mnt-warranty-under_warranty {
+  --mnt-tag-color: #10b981;
+}
+
+.mnt-warranty-expired {
+  --mnt-tag-color: #ef4444;
+}
+
+.mnt-warranty-void {
+  --mnt-tag-color: #ef4444;
+}
+
+.mnt-warranty-unknown {
+  --mnt-tag-color: #f59e0b;
+}
+
+.mnt-print-warranty-strip.mnt-warranty-under_warranty {
+  background: #10b981;
+}
+
+.mnt-print-warranty-strip.mnt-warranty-expired,
+.mnt-print-warranty-strip.mnt-warranty-void {
+  background: #ef4444;
+}
+
+.mnt-print-warranty-strip.mnt-warranty-unknown {
+  background: #f59e0b;
+}
+
+.mnt-tag-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.mnt-tag-legend .mnt-tag-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.mnt-status-badge {
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+}
+
+.mnt-device-box {
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+
+.mnt-timeline {
+  position: relative;
+  padding-inline-start: 1.25rem;
+}
+
+.mnt-timeline::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0.35rem;
+  top: 0.35rem;
+  bottom: 0.35rem;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.mnt-timeline-item {
+  position: relative;
+  padding-bottom: 0.85rem;
+}
+
+.mnt-timeline-item::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -1.1rem;
+  top: 0.35rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0e5a3a;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+.mnt-total-box {
+  background: #f8fafc;
+  border-inline-start: 4px solid #0e5a3a;
+  border-radius: 6px;
+}
+
+.mnt-line-table td {
+  vertical-align: middle;
+}
+
+.mnt-line-table .mnt-qty-input,
+.mnt-line-table .mnt-price-input {
+  max-width: 7.5rem;
+}
+
+.mnt-return-qty {
+  max-width: 8rem;
+}
+
+.mnt-fact-label {
+  width: 40%;
+}
+
+.mnt-print-actions {
+  position: fixed;
+  top: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 50;
+}

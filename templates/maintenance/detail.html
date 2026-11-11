@@ -1,0 +1,671 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Maintenance Order') }} {{ order.order_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+<style nonce="{{ csp_nonce() }}">
+{% for state, color in warranty_colors.items() %}
+.mnt-warranty-{{ state }} { --mnt-tag-color: {{ color }}; }
+{% endfor %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" data-maintenance-root>
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1">{{ t('Maintenance Order') }} {{ order.order_number }}</h2>
+      <span class="badge mnt-status-badge
+        {% if order.status == 'closed' %}bg-success
+        {% elif order.status == 'cancelled' %}bg-secondary
+        {% elif order.status == 'ready' %}bg-info
+        {% elif order.status == 'in_progress' %}bg-primary
+        {% elif order.status == 'on_hold' %}bg-warning
+        {% else %}bg-light text-dark{% endif %}">{{ order.status }}</span>
+      <span class="mnt-warranty-dot mnt-warranty-{{ order.warranty_status }} ms-2"
+            title="{{ t('Warranty') }}" aria-hidden="true"></span>
+      <span class="ms-1">
+        {% if order.warranty_status == 'under_warranty' %}{{ t('Under Warranty') }}
+        {% elif order.warranty_status == 'expired' %}{{ t('Expired') }}
+        {% elif order.warranty_status == 'void' %}{{ t('Void') }}
+        {% else %}{{ t('Unknown') }}{% endif %}
+      </span>
+    </div>
+    <div class="d-flex gap-2">
+      {% if invoice %}
+      <a href="{{ url_for('maintenance.print_invoice', order_id=order.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-print mr-1" aria-hidden="true"></i>{{ t('Print Invoice') }}
+      </a>
+      {% endif %}
+      {% if receipts %}
+      <a href="{{ url_for('maintenance.print_receipt', order_id=order.id) }}" class="btn btn-outline-secondary">
+        <i class="fas fa-receipt mr-1" aria-hidden="true"></i>{{ t('Print Receipt') }}
+      </a>
+      {% endif %}
+      <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+      </a>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <!-- Order facts -->
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Order Details') }}</h3></div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mnt-device-box">
+                <div class="fw-semibold mb-1"><i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>{{ t('Device') }}</div>
+                <div>{{ order.device_brand or '-' }} {{ order.device_model or '' }}</div>
+                {% if order.device_serial_number %}<div class="text-muted">SN: {{ order.device_serial_number }}</div>{% endif %}
+                {% if order.device_imei %}<div class="text-muted">IMEI: {{ order.device_imei }}</div>{% endif %}
+                {% if order.device_plate %}<div class="text-muted">{{ t('Plate') }}: {{ order.device_plate }}</div>{% endif %}
+                {% if order.device_km %}<div class="text-muted">{{ t('Odometer') }}: {{ order.device_km }} km</div>{% endif %}
+                {% if order.device_fault_description %}
+                <div class="mt-2"><strong>{{ t('Reported Fault') }}:</strong> {{ order.device_fault_description }}</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-md-6">
+              <table class="table table-sm mb-0">
+                <tbody>
+                  <tr><th scope="row" class="mnt-fact-label">{{ t('Customer') }}</th>
+                      <td>{{ order.customer_name or (order.customer.name if order.customer else '-') }}</td></tr>
+                  <tr><th scope="row">{{ t('Phone') }}</th><td>{{ order.customer_phone or '-' }}</td></tr>
+                  <tr><th scope="row">{{ t('Received By') }}</th>
+                      <td>{{ order.received_by_user.full_name if order.received_by_user else '-' }}</td></tr>
+                  <tr><th scope="row">{{ t('Engineer') }}</th>
+                      <td>{{ order.engineer.full_name if order.engineer else '-' }}</td></tr>
+                  <tr><th scope="row">{{ t('Branch') }}</th>
+                      <td>{{ order.branch.name if order.branch else '-' }}</td></tr>
+                  <tr><th scope="row">{{ t('Warehouse') }}</th>
+                      <td>{{ order.warehouse.name if order.warehouse else '-' }}</td></tr>
+                  <tr><th scope="row">{{ t('Order Date') }}</th>
+                      <td>{{ order.order_date.strftime('%Y-%m-%d') if order.order_date else '-' }}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parts -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title mb-0">{{ t('Spare Parts') }}</h3>
+          <span class="badge bg-secondary">{{ lines|length }}</span>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-sm mnt-line-table mb-3">
+            <thead>
+              <tr>
+                <th>{{ t('Part') }}</th>
+                <th class="text-end">{{ t('Qty') }}</th>
+                <th class="text-end">{{ t('Price') }}</th>
+                <th class="text-end">{{ t('Discount') }}</th>
+                <th class="text-end">{{ t('Tax') }}</th>
+                <th class="text-end">{{ t('Total') }}</th>
+                <th class="text-center">{{ t('Stock') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for line in lines %}
+              <tr data-line-row>
+                <td>{{ line.product.name if line.product else line.product_id }}</td>
+                <td class="text-end">{{ '%.3f'|format(line.quantity|float) }}</td>
+                <td class="text-end">{{ '%.3f'|format(line.unit_price|float) }}</td>
+                <td class="text-end">
+                  {% if line.discount_mode == 'percent' %}
+                  {{ '%.2f'|format(line.discount_percent|float) }}%
+                  {% else %}
+                  {{ '%.3f'|format(line.discount_value|float) }}
+                  {% endif %}
+                </td>
+                <td class="text-end">{{ '%.3f'|format(line.tax_amount|float) }}</td>
+                <td class="text-end fw-semibold" data-line-total>{{ '%.3f'|format(line.line_total|float) }}</td>
+                <td class="text-center">
+                  {% if line.movement_id %}
+                  <span class="badge bg-success" title="{{ t('Issued') }}">{{ t('Issued') }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ t('Pending') }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center py-3 text-muted">{{ t('No spare parts yet') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% if current_user.has_permission('maintenance_work') and order.status in ['received', 'diagnosis', 'in_progress'] %}
+          <form method="POST" action="{{ url_for('maintenance.add_line', order_id=order.id) }}"
+                class="row g-2 align-items-end needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-4">
+              <label class="form-label" for="mntPartProduct">{{ t('Part') }}</label>
+              <select class="form-select" id="mntPartProduct" name="product_id" required>
+                <option value="">{{ t('Select') }}</option>
+                {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }} ({{ product.sku or product.id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPartQty">{{ t('Qty') }}</label>
+              <input type="number" step="0.001" min="0.001" class="form-control mnt-qty-input" id="mntPartQty"
+                     name="quantity" value="1" data-line-qty required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPartPrice">{{ t('Price') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control mnt-price-input" id="mntPartPrice"
+                     name="unit_price" value="0" data-line-price required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPartDiscMode">{{ t('Discount Type') }}</label>
+              <select class="form-select" id="mntPartDiscMode" name="discount_mode" data-line-disc-mode>
+                <option value="percent">%</option>
+                <option value="value">{{ t('Value') }}</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPartDiscPct">{{ t('Discount') }}</label>
+              <input type="number" step="0.01" min="0" max="100" class="form-control" id="mntPartDiscPct"
+                     name="discount_percent" value="0" data-line-disc-pct>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntPartDiscVal">{{ t('Discount Value') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntPartDiscVal"
+                     name="discount_value" value="0" data-line-disc-val>
+            </div>
+            <div class="col-md-10">
+              <label class="form-label" for="mntPartWarehouse">{{ t('Warehouse') }}</label>
+              <select class="form-select" id="mntPartWarehouse" name="warehouse_id">
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse.id }}" {% if order.warehouse_id == warehouse.id %}selected{% endif %}>
+                  {{ warehouse.name_ar or warehouse.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Add') }}
+              </button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h3 class="card-title mb-0">{{ t('Services') }}</h3>
+          <span class="badge bg-secondary">{{ services_lines|length }}</span>
+        </div>
+        <div class="card-body table-responsive">
+          <table class="table table-sm mnt-line-table mb-3">
+            <thead>
+              <tr>
+                <th>{{ t('Service') }}</th>
+                <th>{{ t('Category') }}</th>
+                <th class="text-end">{{ t('Duration') }}</th>
+                <th class="text-end">{{ t('Price') }}</th>
+                <th class="text-end">{{ t('Discount') }}</th>
+                <th class="text-end">{{ t('Tax') }}</th>
+                <th class="text-end">{{ t('Total') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for svc in services_lines %}
+              <tr>
+                <td>{{ svc.service_name_ar or svc.service_name }}</td>
+                <td>{{ svc.service_category or '-' }}</td>
+                <td class="text-end">{{ svc.duration_minutes }} {{ t('min') }}</td>
+                <td class="text-end">{{ '%.3f'|format(svc.unit_price|float) }}</td>
+                <td class="text-end">
+                  {% if svc.discount_mode == 'percent' %}
+                  {{ '%.2f'|format(svc.discount_percent|float) }}%
+                  {% else %}
+                  {{ '%.3f'|format(svc.discount_value|float) }}
+                  {% endif %}
+                </td>
+                <td class="text-end">{{ '%.3f'|format(svc.tax_amount|float) }}</td>
+                <td class="text-end fw-semibold">{{ '%.3f'|format(svc.line_total|float) }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="text-center py-3 text-muted">{{ t('No services yet') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+          {% if current_user.has_permission('maintenance_work') and order.status in ['received', 'diagnosis', 'in_progress'] and templates %}
+          <form method="POST" action="{{ url_for('maintenance.add_service', order_id=order.id) }}"
+                class="row g-2 align-items-end needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="col-md-4">
+              <label class="form-label" for="mntSvcCode">{{ t('Service Template') }}</label>
+              <select class="form-select" id="mntSvcCode" name="service_code" required>
+                <option value="">{{ t('Select') }}</option>
+                {% for template in templates %}
+                <option value="{{ template.service_code }}" data-price="{{ template.fixed_price }}">
+                  {{ template.name_ar or template.name }} ({{ template.service_code }})
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntSvcPrice">{{ t('Price') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control mnt-price-input" id="mntSvcPrice"
+                     name="unit_price" value="0" data-line-price required>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntSvcMode">{{ t('Discount Type') }}</label>
+              <select class="form-select" id="mntSvcMode" name="discount_mode" data-line-disc-mode>
+                <option value="percent">%</option>
+                <option value="value">{{ t('Value') }}</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntSvcPct">{{ t('Discount') }}</label>
+              <input type="number" step="0.01" min="0" max="100" class="form-control" id="mntSvcPct"
+                     name="discount_percent" value="0" data-line-disc-pct>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label" for="mntSvcVal">{{ t('Discount Value') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntSvcVal"
+                     name="discount_value" value="0" data-line-disc-val>
+            </div>
+            <div class="col-md-2">
+              <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Add') }}
+              </button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Status History') }}</h3></div>
+        <div class="card-body">
+          <div class="mnt-timeline">
+            {% for log in logs %}
+            <div class="mnt-timeline-item">
+              <div class="fw-semibold">
+                {% if log.from_status %}{{ log.from_status }} &rarr; {% endif %}{{ log.to_status }}
+              </div>
+              <div class="text-muted small">
+                {{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '' }}
+                {% if log.user %} — {{ log.user.full_name }}{% endif %}
+              </div>
+              {% if log.note %}<div class="small">{{ log.note }}</div>{% endif %}
+            </div>
+            {% else %}
+            <div class="text-muted">{{ t('No history') }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {% if receipts or invoice %}
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Documents') }}</h3></div>
+        <div class="card-body table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr><th>{{ t('Number') }}</th><th>{{ t('Type') }}</th><th>{{ t('Date') }}</th>
+                  <th class="text-end">{{ t('Amount') }}</th><th class="text-center">{{ t('GL') }}</th></tr>
+            </thead>
+            <tbody>
+              {% if invoice %}
+              <tr>
+                <td>{{ invoice.invoice_number }}</td>
+                <td>{{ t('Invoice') }}</td>
+                <td>{{ invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '-' }}</td>
+                <td class="text-end">{{ '%.3f'|format(invoice.total_amount|float) }} {{ invoice.currency }}</td>
+                <td class="text-center">
+                  {% if invoice.gl_posted %}<span class="badge bg-success">{{ t('Posted') }}</span>
+                  {% else %}<span class="badge bg-secondary">{{ t('Not Posted') }}</span>{% endif %}
+                </td>
+              </tr>
+              {% endif %}
+              {% for receipt in receipts %}
+              <tr>
+                <td>{{ receipt.receipt_number }}</td>
+                <td>{% if receipt.is_deposit %}{{ t('Deposit') }}{% else %}{{ t('Receipt') }}{% endif %}</td>
+                <td>{{ receipt.receipt_date.strftime('%Y-%m-%d') if receipt.receipt_date else '-' }}</td>
+                <td class="text-end">{{ '%.3f'|format(receipt.amount|float) }} {{ order.currency }}</td>
+                <td class="text-center">
+                  {% if receipt.gl_posted %}<span class="badge bg-success">{{ t('Posted') }}</span>
+                  {% else %}<span class="badge bg-secondary">{{ t('Not Posted') }}</span>{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+      <!-- Totals -->
+      <div class="card mb-4 mnt-total-box">
+        <div class="card-body">
+          <h3 class="card-title h6">{{ t('Summary') }}</h3>
+          <table class="table table-sm mb-0">
+            <tbody>
+              <tr><td>{{ t('Subtotal') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.subtotal|float) }}</td></tr>
+              <tr><td>{{ t('Line Discounts') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.discount_line_total|float) }}</td></tr>
+              <tr><td>{{ t('Order Discount') }}</td>
+                  <td class="text-end">
+                    {% if order.discount_total_percent %}
+                    {{ '%.2f'|format(order.discount_total_percent|float) }}%
+                    {% else %}
+                    {{ '%.3f'|format(order.discount_total_value|float) }}
+                    {% endif %}
+                  </td></tr>
+              <tr><td>{{ t('Taxable') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.taxable_amount|float) }}</td></tr>
+              <tr><td>{{ t('Tax') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.tax_amount|float) }}</td></tr>
+              <tr class="fw-bold"><td>{{ t('Total') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.total_amount|float) }} {{ order.currency }}</td></tr>
+              <tr><td>{{ t('Deposit') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.deposit_amount|float) }}</td></tr>
+              <tr><td>{{ t('Paid') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.paid_amount|float) }}</td></tr>
+              <tr class="fw-bold"><td>{{ t('Balance Due') }}</td>
+                  <td class="text-end">{{ '%.3f'|format(order.balance_due|float) }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order discount -->
+      {% if current_user.has_permission('maintenance_discount') and order.status not in ['closed', 'cancelled'] %}
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Order Discount') }}</h3></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.set_order_discount', order_id=order.id) }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntOrderDiscMode">{{ t('Discount Type') }}</label>
+              <select class="form-select" id="mntOrderDiscMode" name="discount_mode">
+                <option value="percent" {% if not order.discount_total_value %}selected{% endif %}>%</option>
+                <option value="value" {% if order.discount_total_value %}selected{% endif %}>{{ t('Value') }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="mntOrderDiscPct">{{ t('Discount') }} (%)</label>
+              <input type="number" step="0.01" min="0" max="100" class="form-control" id="mntOrderDiscPct"
+                     name="discount_percent" value="{{ '%.2f'|format(order.discount_total_percent|float) }}">
+            </div>
+            <div>
+              <label class="form-label" for="mntOrderDiscVal">{{ t('Discount Value') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntOrderDiscVal"
+                     name="discount_value" value="{{ '%.3f'|format(order.discount_total_value|float) }}">
+            </div>
+            <button type="submit" class="btn btn-outline-primary">
+              <i class="fas fa-tag mr-1" aria-hidden="true"></i>{{ t('Apply') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Warranty -->
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Warranty') }}</h3></div>
+        <div class="card-body">
+          <p class="mb-2">
+            <span class="mnt-warranty-dot mnt-warranty-{{ order.warranty_status }}"
+                  aria-hidden="true"></span>
+            <span class="ms-1">
+              {% if order.warranty_status == 'under_warranty' %}{{ t('Under Warranty') }}
+              {% elif order.warranty_status == 'expired' %}{{ t('Expired') }}
+              {% elif order.warranty_status == 'void' %}{{ t('Void') }}
+              {% else %}{{ t('Unknown') }}{% endif %}
+            </span>
+          </p>
+          {% if order.warranty_checked %}
+          <p class="text-muted small mb-2">
+            {{ t('Checked') }}:
+            {{ order.warranty_checked_at.strftime('%Y-%m-%d %H:%M') if order.warranty_checked_at else '-' }}
+            {% if order.warranty_checked_by_user %}({{ order.warranty_checked_by_user.full_name }}){% endif %}
+          </p>
+          {% else %}
+          <p class="text-warning small mb-2">{{ t('Warranty not checked yet') }}</p>
+          {% endif %}
+          {% if order.warranty_notes %}
+          <p class="small text-muted">{{ order.warranty_notes }}</p>
+          {% endif %}
+
+          {% if device %}
+          <p class="small text-muted mb-2">
+            {{ t('Device') }}: {{ device.brand or '-' }} {{ device.model or '' }}
+            {% if device.warranty_end_date %}
+            &mdash; {{ t('Warranty') }} {{ t('To') }} {{ device.warranty_end_date.strftime('%Y-%m-%d') }}
+            {% endif %}
+          </p>
+          {% else %}
+          <p class="small text-warning mb-2">{{ t('Device is not in the warranty registry') }}</p>
+          {% endif %}
+
+          <div class="d-grid gap-2 mt-3">
+            {% if not device and current_user.has_permission('maintenance_receive')
+                   and (order.device_serial_number or order.device_imei or order.device_plate) %}
+            <form method="POST" action="{{ url_for('maintenance.register_device', order_id=order.id) }}"
+                  class="d-grid gap-2 mnt-device-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="row g-2">
+                <div class="col-6">
+                  <label class="form-label" for="mntDeviceWarrantyStart">{{ t('Warranty Start Date') }}</label>
+                  <input type="date" class="form-control form-control-sm" id="mntDeviceWarrantyStart"
+                         name="warranty_start_date">
+                </div>
+                <div class="col-6">
+                  <label class="form-label" for="mntDeviceWarrantyEnd">{{ t('Warranty End Date') }}</label>
+                  <input type="date" class="form-control form-control-sm" id="mntDeviceWarrantyEnd"
+                         name="warranty_end_date">
+                </div>
+              </div>
+              <div>
+                <label class="form-label" for="mntDeviceWarrantyType">{{ t('Warranty Type') }}</label>
+                <input type="text" class="form-control form-control-sm" id="mntDeviceWarrantyType"
+                       name="warranty_type" maxlength="50" placeholder="{{ t('Warranty Type') }}">
+              </div>
+              <button type="submit" class="btn btn-outline-info btn-sm">
+                <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Register Device') }}
+              </button>
+            </form>
+            {% endif %}
+            {% if current_user.has_permission('maintenance_receive') and order.status not in ['closed', 'cancelled'] %}
+            <form method="POST" action="{{ url_for('maintenance.check_warranty', order_id=order.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-shield-halved mr-1" aria-hidden="true"></i>{{ t('Check Warranty') }}
+              </button>
+            </form>
+            {% endif %}
+            {% if current_user.has_permission('manage_maintenance') and order.warranty_checked %}
+            <form method="POST" action="{{ url_for('maintenance.cancel_warranty', order_id=order.id) }}"
+                  class="d-flex gap-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="mntCancelReason">{{ t('Reason') }}</label>
+              <input type="text" class="form-control form-control-sm" id="mntCancelReason" name="reason"
+                     placeholder="{{ t('Reason') }}" required>
+              <button type="submit" class="btn btn-outline-danger btn-sm text-nowrap">
+                {{ t('Cancel Warranty') }}
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('maintenance.restore_warranty', order_id=order.id) }}"
+                  class="d-flex gap-1">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <label class="sr-only" for="mntRestoreReason">{{ t('Reason') }}</label>
+              <input type="text" class="form-control form-control-sm" id="mntRestoreReason" name="reason"
+                     placeholder="{{ t('Reason') }}" required>
+              <button type="submit" class="btn btn-outline-success btn-sm text-nowrap">
+                {{ t('Restore Warranty') }}
+              </button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Status transition -->
+      {% if current_user.has_permission('maintenance_work') and order.status not in ['closed', 'cancelled'] %}
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Change Status') }}</h3></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.change_status', order_id=order.id) }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntNewStatus">{{ t('Status') }}</label>
+              <select class="form-select" id="mntNewStatus" name="status" required>
+                <option value="">{{ t('Select') }}</option>
+                <option value="diagnosis">{{ t('Diagnosis') }}</option>
+                <option value="waiting_approval">{{ t('Waiting Approval') }}</option>
+                <option value="in_progress">{{ t('In Progress') }}</option>
+                <option value="waiting_parts">{{ t('Waiting Parts') }}</option>
+                <option value="ready">{{ t('Ready') }}</option>
+                <option value="on_hold">{{ t('On Hold') }}</option>
+                <option value="cancelled">{{ t('Cancelled') }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="mntStatusNote">{{ t('Note') }}</label>
+              <input type="text" class="form-control" id="mntStatusNote" name="note">
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('Save') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Deposit -->
+      {% if current_user.has_permission('maintenance_close') and order.status not in ['closed', 'cancelled'] %}
+      <div class="card mb-4">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Collect Deposit') }}</h3></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.collect_deposit', order_id=order.id) }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntDepositAmount">{{ t('Amount') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntDepositAmount"
+                     name="amount" value="0" required>
+            </div>
+            <div>
+              <label class="form-label" for="mntDepositMode">{{ t('Payment Method') }}</label>
+              <select class="form-select" id="mntDepositMode" name="payment_mode">
+                <option value="cash">{{ t('Cash') }}</option>
+                <option value="card">{{ t('Card') }}</option>
+                <option value="bank_transfer">{{ t('Bank Transfer') }}</option>
+                <option value="e_wallet">{{ t('E-Wallet') }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="mntDepositRef">{{ t('Reference Number') }}</label>
+              <input type="text" class="form-control" id="mntDepositRef" name="payment_reference">
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-coins mr-1" aria-hidden="true"></i>{{ t('Collect') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Close and collect -->
+      {% if current_user.has_permission('maintenance_close') and order.status == 'ready' %}
+      <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+          <h3 class="card-title mb-0">{{ t('Close and Collect') }}</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.close', order_id=order.id) }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntCloseAmount">{{ t('Amount Received') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntCloseAmount"
+                     name="amount_received" value="{{ '%.3f'|format(order.total_amount|float) }}" required>
+            </div>
+            <div>
+              <label class="form-label" for="mntCloseMode">{{ t('Payment Method') }}</label>
+              <select class="form-select" id="mntCloseMode" name="payment_mode">
+                <option value="cash">{{ t('Cash') }}</option>
+                <option value="card">{{ t('Card') }}</option>
+                <option value="bank_transfer">{{ t('Bank Transfer') }}</option>
+                <option value="e_wallet">{{ t('E-Wallet') }}</option>
+                <option value="account">{{ t('On Account') }}</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label" for="mntCloseRef">{{ t('Reference Number') }}</label>
+              <input type="text" class="form-control" id="mntCloseRef" name="payment_reference">
+            </div>
+            <div>
+              <label class="form-label" for="mntCloseNotes">{{ t('Notes') }}</label>
+              <input type="text" class="form-control" id="mntCloseNotes" name="notes">
+            </div>
+            <button type="submit" class="btn btn-success">
+              <i class="fas fa-lock mr-1" aria-hidden="true"></i>{{ t('Close Order and Collect') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Return -->
+      {% if current_user.has_permission('maintenance_close') and order.status in ['closed', 'ready'] and lines %}
+      <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+          <h3 class="card-title mb-0">{{ t('Return Parts') }}</h3>
+        </div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.create_return', order_id=order.id) }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntReturnReason">{{ t('Reason') }}</label>
+              <input type="text" class="form-control" id="mntReturnReason" name="reason" required>
+            </div>
+            {% for line in lines %}
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <label class="form-label mb-0" for="mntReturn{{ line.id }}">
+                {{ line.product.name if line.product else line.product_id }}
+              </label>
+              <input type="number" step="0.001" min="0" max="{{ line.net_quantity }}"
+                     class="form-control form-control-sm mnt-return-qty"
+                     id="mntReturn{{ line.id }}" name="return_qty_{{ line.id }}"
+                     value="0" aria-label="{{ t('Return quantity') }}">
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-warning">
+              <i class="fas fa-undo mr-1" aria-hidden="true"></i>{{ t('Create Return') }}
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ dist_url('js/maintenance.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Service Templates') }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-list-check mr-2" aria-hidden="true"></i>{{ t('Service Templates') }}</h2>
+      <p class="text-muted mb-0">{{ t('Fixed-price services the workshop can add to a maintenance order.') }}</p>
+    </div>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Templates') }}</h3></div>
+        <div class="card-body table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>{{ t('Code') }}</th>
+                <th>{{ t('Name') }}</th>
+                <th>{{ t('Category') }}</th>
+                <th class="text-end">{{ t('Price') }}</th>
+                <th class="text-end">{{ t('Duration') }}</th>
+                <th class="text-center">{{ t('Parts') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for template in templates %}
+              <tr>
+                <td><code>{{ template.service_code }}</code></td>
+                <td>{{ template.name_ar or template.name }}</td>
+                <td>{{ template.service_category or '-' }}</td>
+                <td class="text-end">{{ '%.3f'|format(template.fixed_price|float) }}</td>
+                <td class="text-end">{{ template.duration_minutes }} {{ t('min') }}</td>
+                <td class="text-center">
+                  {% if template.requires_parts %}
+                  <span class="badge bg-info">{{ t('Yes') }}</span>
+                  {% else %}
+                  <span class="badge bg-secondary">{{ t('No') }}</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="text-center py-4 text-muted">{{ t('No service templates yet') }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header"><h3 class="card-title mb-0">{{ t('Add Service Template') }}</h3></div>
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('maintenance.service_templates') }}"
+                class="d-grid gap-2 needs-validation" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div>
+              <label class="form-label" for="mntTplCode">{{ t('Code') }}</label>
+              <input type="text" class="form-control" id="mntTplCode" name="service_code"
+                     maxlength="50" placeholder="MECH-002" required>
+            </div>
+            <div>
+              <label class="form-label" for="mntTplName">{{ t('Name') }}</label>
+              <input type="text" class="form-control" id="mntTplName" name="name" maxlength="200" required>
+            </div>
+            <div>
+              <label class="form-label" for="mntTplNameAr">{{ t('Name (Arabic)') }}</label>
+              <input type="text" class="form-control" id="mntTplNameAr" name="name_ar" maxlength="200">
+            </div>
+            <div>
+              <label class="form-label" for="mntTplCategory">{{ t('Category') }}</label>
+              <select class="form-select" id="mntTplCategory" name="service_category">
+                <option value="mechanical">{{ t('Mechanical') }}</option>
+                <option value="electrical">{{ t('Electrical') }}</option>
+                <option value="labor">{{ t('Labor') }}</option>
+                <option value="diagnostic">{{ t('Diagnostic') }}</option>
+                <option value="other">{{ t('Other') }}</option>
+              </select>
+            </div>
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label" for="mntTplPrice">{{ t('Fixed Price') }}</label>
+                <input type="number" step="0.001" min="0" class="form-control" id="mntTplPrice"
+                       name="fixed_price" value="0" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label" for="mntTplDuration">{{ t('Duration (minutes)') }}</label>
+                <input type="number" step="1" min="0" class="form-control" id="mntTplDuration"
+                       name="duration_minutes" value="0">
+              </div>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="mntTplParts" name="requires_parts">
+              <label class="form-check-label" for="mntTplParts">{{ t('Requires Spare Parts') }}</label>
+            </div>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('Add Template') }}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

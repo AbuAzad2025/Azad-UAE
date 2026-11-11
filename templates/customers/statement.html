@@ -309,6 +309,7 @@ table.statement-table thead th {
         <option value="all" {% if active_filters.transaction_type == 'all' %}selected{% endif %}>{{ t('كل الحركات') }}</option>
         <option value="sale" {% if active_filters.transaction_type == 'sale' %}selected{% endif %}>{{ t('فواتير فقط') }}</option>
         <option value="payment" {% if active_filters.transaction_type == 'payment' %}selected{% endif %}>{{ t('الدفعات فقط') }}</option>
+        <option value="maintenance" {% if active_filters.transaction_type == 'maintenance' %}selected{% endif %}>{{ t('حركات الصيانة فقط') }}</option>
       </select>
     </div>
     <div class="form-group mx-1 mb-2">
@@ -347,6 +348,8 @@ table.statement-table thead th {
                       {{ t('Invoices') }}
                     {% elif active_filters.transaction_type == 'payment' %}
                       {{ t('الدفعات') }}
+                    {% elif active_filters.transaction_type == 'maintenance' %}
+                      {{ t('حركات الصيانة') }}
                     {% else %}
                       {{ t('جميع') }} {{ t('Movements') }}
                     {% endif %}
@@ -405,6 +408,20 @@ table.statement-table thead th {
                       <span>{{ t('Amount') }} {{ t('الأصلي') }}: {{ format_currency(trans.payment.amount_original, trans.payment.currency) }}</span>
                       <span>{{ t('محول') }}: {{ format_currency(trans.payment.base_amount) }}</span>
                       <span>{{ t('الطريقة') }}: {{ trans.payment.payment_method_display }}</span>
+                    {% elif trans.type == 'maintenance' %}
+                      {% if trans.order_number %}
+                        <span>{{ t('Maintenance') }} {{ t('Order Number') }}: {{ trans.order_number }}</span>
+                      {% endif %}
+                      {% if trans.device %}
+                        <span>{{ t('Device') }}: {{ trans.device }}</span>
+                      {% endif %}
+                      <span>{{ t('Paid_2') }}: {{ format_currency(trans.paid_amount) }}</span>
+                      <span>{{ t('متبقي') }}: {{ format_currency(trans.balance_due) }}</span>
+                    {% elif trans.type == 'maintenance_receipt' %}
+                      {% if trans.order_number %}
+                        <span>{{ t('Maintenance') }} {{ t('Order Number') }}: {{ trans.order_number }}</span>
+                      {% endif %}
+                      <span>{{ t('الطريقة') }}: {{ trans.payment_method }}</span>
                       {% if trans.payment.payment_method == 'cheque' %}
                         {% if trans.payment.payment_confirmed %}
                           <span>{{ t('History') }} {{ t('Exchange') }}: {{ trans.payment.cheque_clearance_date.strftime('%Y-%m-%d') if trans.payment.cheque_clearance_date else '-' }}</span>

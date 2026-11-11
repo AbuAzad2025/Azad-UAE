@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Maintenance Report') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="mb-0"><i class="fas fa-chart-bar mr-2" aria-hidden="true"></i>{{ t('Maintenance Revenue Report') }}</h2>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end needs-validation" novalidate>
+        <div class="col-md-4">
+          <label class="form-label" for="mntReportFrom">{{ t('From') }}</label>
+          <input type="date" class="form-control" id="mntReportFrom" name="date_from"
+                 value="{{ report.date_from[:10] if report.date_from else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="mntReportTo">{{ t('To') }}</label>
+          <input type="date" class="form-control" id="mntReportTo" name="date_to"
+                 value="{{ report.date_to[:10] if report.date_to else '' }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('Apply') }}
+          </button>
+          <a href="{{ url_for('maintenance.report') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Invoice Count') }}</div>
+          <div class="h4 mb-0">{{ report.invoice_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Net Revenue') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_revenue|float) }} {{ report.base_currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Tax') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_tax|float) }} {{ report.base_currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Outstanding') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_due|float) }} {{ report.base_currency }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title mb-0">{{ t('Invoices') }}</h3></div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>{{ t('Invoice Number') }}</th>
+            <th>{{ t('Order Number') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th class="text-end">{{ t('Total') }}</th>
+            <th class="text-end">{{ t('Paid') }}</th>
+            <th class="text-end">{{ t('Balance Due') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for invoice in report.invoices %}
+          <tr>
+            <td>{{ invoice.invoice_number }}</td>
+            <td>{{ invoice.order_number or '-' }}</td>
+            <td>{{ invoice.customer_name or '-' }}</td>
+            <td>{{ invoice.invoice_date[:10] if invoice.invoice_date else '-' }}</td>
+            <td class="text-end">{{ '%.3f'|format(invoice.total_amount|float) }} {{ invoice.currency }}</td>
+            <td class="text-end">{{ '%.3f'|format(invoice.paid_amount|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(invoice.balance_due|float) }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">{{ t('No invoices in this period') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

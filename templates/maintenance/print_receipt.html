@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('Maintenance Receipt') }} {{ receipts[0].receipt_number }}</title>
+  <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/print-utilities.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/maintenance-print.css') }}">
+  {% include 'partials/print_styles.html' %}
+</head>
+<body class="mnt-print-body invoice-print">
+<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
+
+<div class="mnt-print-actions d-print-none">
+  <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+    <i class="fas fa-print me-1" aria-hidden="true"></i>{{ t('Print') }}
+  </button>
+</div>
+
+{% for receipt in receipts %}
+<div class="mnt-print-receipt">
+  <div class="mnt-print-receipt-header">
+    <h2><i class="fas fa-receipt" aria-hidden="true"></i> {{ t('Maintenance Receipt') }}</h2>
+    <div class="mnt-print-company">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+    <div class="mnt-print-meta">
+      {{ settings.phone_1 or tenant_phone or '' }}
+      {% if settings and settings.tax_number %} | {{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}{% endif %}
+    </div>
+  </div>
+
+  <table class="mnt-print-receipt-table">
+    <tbody>
+      <tr><td>{{ t('Receipt Number') }}</td><td>{{ receipt.receipt_number }}</td></tr>
+      <tr><td>{{ t('Date') }}</td>
+          <td>{{ receipt.receipt_date.strftime('%Y-%m-%d %H:%M') if receipt.receipt_date else '-' }}</td></tr>
+      <tr><td>{{ t('Order Number') }}</td><td>{{ order.order_number }}</td></tr>
+      <tr><td>{{ t('Customer') }}</td>
+          <td>{{ order.customer_name or (order.customer.name if order.customer else '-') }}</td></tr>
+      {% if order.device_serial_number %}
+      <tr><td>SN</td><td>{{ order.device_serial_number }}</td></tr>
+      {% endif %}
+      <tr><td>{{ t('Payment Method') }}</td><td>{{ receipt.payment_mode }}</td></tr>
+      {% if receipt.reference_number %}
+      <tr><td>{{ t('Reference Number') }}</td><td>{{ receipt.reference_number }}</td></tr>
+      {% endif %}
+      <tr><td>{{ t('Type') }}</td>
+          <td>{% if receipt.is_deposit %}{{ t('Deposit') }}{% else %}{{ t('Receipt') }}{% endif %}</td></tr>
+      <tr><td>{{ t('Cashier') }}</td>
+          <td>{{ receipt.cashier.full_name if receipt.cashier else '-' }}</td></tr>
+    </tbody>
+  </table>
+
+  <div class="mnt-print-receipt-total">
+    <span>{{ t('Amount') }}</span>
+    <span>{{ '%.3f'|format(receipt.amount|float) }} {{ order.currency }}</span>
+  </div>
+
+  <div class="mnt-print-receipt-footer">
+    {{ settings.footer_text_ar or '' }}
+    <div class="mnt-print-receipt-signature">{{ t('Customer Signature') }}</div>
+  </div>
+</div>
+{% endfor %}
+</body>
+</html>

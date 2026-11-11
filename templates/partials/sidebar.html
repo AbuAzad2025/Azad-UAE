@@ -219,6 +219,66 @@
             {% endif %}
           {{ _end(_sale) }}
 
+          {% set _mnt = current_user.is_authenticated and current_user.has_permission('manage_maintenance') %}
+          {{ _tree('fas fa-screwdriver-wrench', t('Maintenance'), 'maintenance', _mnt) }}
+            {% if _mnt %}
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.index') }}" class="nav-link">
+                <i class="fas fa-list nav-icon text-info" aria-hidden="true"></i>
+                <p>{{ t('Maintenance Orders') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.create') }}" class="nav-link">
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
+                <p>{{ t('New Maintenance Order') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.report') }}" class="nav-link">
+                <i class="fas fa-chart-bar nav-icon text-primary" aria-hidden="true"></i>
+                <p>{{ t('Maintenance Report') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.parts_report') }}" class="nav-link">
+                <i class="fas fa-boxes nav-icon text-info" aria-hidden="true"></i>
+                <p>{{ t('Parts Issued Report') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.warranty_report') }}" class="nav-link">
+                <i class="fas fa-shield-halved nav-icon text-success" aria-hidden="true"></i>
+                <p>{{ t('Warranty Report') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.warranty_audit') }}" class="nav-link">
+                <i class="fas fa-shield-halved nav-icon text-warning" aria-hidden="true"></i>
+                <p>{{ t('Warranty Audit') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.purchases') }}" class="nav-link">
+                <i class="fas fa-cart-arrow-down nav-icon text-secondary" aria-hidden="true"></i>
+                <p>{{ t('Maintenance Purchases') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.service_templates') }}" class="nav-link">
+                <i class="fas fa-list-check nav-icon text-secondary" aria-hidden="true"></i>
+                <p>{{ t('Service Templates') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('maintenance.settings') }}" class="nav-link">
+                <i class="fas fa-cog nav-icon text-secondary" aria-hidden="true"></i>
+                <p>{{ t('Maintenance Settings') }}</p>
+              </a>
+            </li>
+            {% endif %}
+          {{ _end(_mnt) }}
+
           {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
           {{ _tree('fas fa-warehouse', t('Warehouses'), 'warehouse', _wh) }}
             {% if _wh %}

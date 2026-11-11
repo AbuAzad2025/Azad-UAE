@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Maintenance Settings') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="fas fa-cog mr-2" aria-hidden="true"></i>{{ t('Maintenance Settings') }}</h2>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <form method="POST" action="{{ url_for('maintenance.settings') }}" class="needs-validation" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="row">
+      <div class="col-lg-6">
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title mb-0">{{ t('General') }}</h3></div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label" for="mntSetWarehouse">{{ t('Default Maintenance Warehouse') }}</label>
+              <select class="form-select" id="mntSetWarehouse" name="default_warehouse_id">
+                <option value="">{{ t('Select') }}</option>
+                {% for warehouse in warehouses %}
+                <option value="{{ warehouse.id }}"
+                        {% if setting.default_warehouse_id == warehouse.id %}selected{% endif %}>
+                  {{ warehouse.name_ar or warehouse.name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="mntSetWarrantyCheck"
+                     name="require_warranty_check" {% if setting.require_warranty_check %}checked{% endif %}>
+              <label class="form-check-label" for="mntSetWarrantyCheck">
+                {{ t('Require Warranty Check Before Delivery') }}
+              </label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="mntSetEngineerDiscount"
+                     name="allow_engineer_discount" {% if setting.allow_engineer_discount %}checked{% endif %}>
+              <label class="form-check-label" for="mntSetEngineerDiscount">
+                {{ t('Allow Engineers to Apply Discounts') }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title mb-0">{{ t('Discount Limits') }}</h3></div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label" for="mntSetMaxPct">{{ t('Maximum Discount Percent') }}</label>
+              <input type="number" step="0.01" min="0" max="100" class="form-control" id="mntSetMaxPct"
+                     name="max_discount_percent" value="{{ '%.2f'|format(setting.max_discount_percent|float) }}">
+            </div>
+            <div class="mb-3">
+              <label class="form-label" for="mntSetMaxValue">{{ t('Maximum Discount Value') }}</label>
+              <input type="number" step="0.001" min="0" class="form-control" id="mntSetMaxValue"
+                     name="max_discount_value" value="{{ '%.3f'|format(setting.max_discount_value|float) }}">
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="mntSetApproval"
+                     name="require_manager_approval_above_discount"
+                     {% if setting.require_manager_approval_above_discount %}checked{% endif %}>
+              <label class="form-check-label" for="mntSetApproval">
+                {{ t('Require Manager Approval Above the Limit') }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card mb-4">
+          <div class="card-header"><h3 class="card-title mb-0">{{ t('Warranty Colors') }}</h3></div>
+          <div class="card-body">
+            <p class="text-muted small">{{ t('These colours tag each order so the counter can see the warranty state at a glance.') }}</p>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="mntColorWarranty">{{ t('Under Warranty') }}</label>
+                <input type="color" class="form-control form-control-color w-100" id="mntColorWarranty"
+                       name="color_warranty" value="{{ setting.color_warranty }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="mntColorNonWarranty">{{ t('Not Under Warranty') }}</label>
+                <input type="color" class="form-control form-control-color w-100" id="mntColorNonWarranty"
+                       name="color_non_warranty" value="{{ setting.color_non_warranty }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="mntColorUnknown">{{ t('Unknown') }}</label>
+                <input type="color" class="form-control form-control-color w-100" id="mntColorUnknown"
+                       name="color_unknown_warranty" value="{{ setting.color_unknown_warranty }}">
+              </div>
+            </div>
+            <hr>
+            <div class="form-check mb-2">
+              <input type="checkbox" class="form-check-input" id="mntSetCancelWarranty"
+                     name="allow_engineer_cancel_warranty"
+                     {% if setting.allow_engineer_cancel_warranty %}checked{% endif %}>
+              <label class="form-check-label" for="mntSetCancelWarranty">
+                {{ t('Allow Engineers to Cancel a Warranty') }}
+              </label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input" id="mntSetRestoreWarranty"
+                     name="allow_engineer_restore_warranty"
+                     {% if setting.allow_engineer_restore_warranty %}checked{% endif %}>
+              <label class="form-check-label" for="mntSetRestoreWarranty">
+                {{ t('Allow Engineers to Restore a Warranty') }}
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body d-flex justify-content-end gap-2">
+        <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">{{ t('Cancel') }}</a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save mr-1" aria-hidden="true"></i>{{ t('Save') }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

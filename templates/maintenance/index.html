@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Maintenance') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+<style nonce="{{ csp_nonce() }}">
+{% for state, color in warranty_colors.items() %}
+.mnt-warranty-{{ state }} { --mnt-tag-color: {{ color }}; }
+{% endfor %}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" data-maintenance-root>
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h2 class="mb-0"><i class="fas fa-screwdriver-wrench mr-2" aria-hidden="true"></i>{{ t('Maintenance Orders') }}</h2>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('maintenance.report') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-chart-bar mr-1" aria-hidden="true"></i>{{ t('Report') }}
+      </a>
+      <a href="{{ url_for('maintenance.parts_report') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-boxes mr-1" aria-hidden="true"></i>{{ t('Parts Issued Report') }}
+      </a>
+      <a href="{{ url_for('maintenance.margin_report') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-chart-line mr-1" aria-hidden="true"></i>{{ t('Margin Report') }}
+      </a>
+      <a href="{{ url_for('maintenance.engineer_report') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-users-gear mr-1" aria-hidden="true"></i>{{ t('Engineer Performance Report') }}
+      </a>
+      <a href="{{ url_for('maintenance.warranty_report') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-shield-halved mr-1" aria-hidden="true"></i>{{ t('Warranty Report') }}
+      </a>
+      <a href="{{ url_for('maintenance.warranty_audit') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-list-check mr-1" aria-hidden="true"></i>{{ t('Warranty Audit') }}
+      </a>
+      <a href="{{ url_for('maintenance.service_templates') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-list-check mr-1" aria-hidden="true"></i>{{ t('Service Templates') }}
+      </a>
+      <a href="{{ url_for('maintenance.settings') }}" class="btn btn-outline-secondary">
+        <i class="fas fa-cog mr-1" aria-hidden="true"></i>{{ t('Settings') }}
+      </a>
+      <a href="{{ url_for('maintenance.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus mr-1" aria-hidden="true"></i>{{ t('New Maintenance Order') }}
+      </a>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end needs-validation" novalidate>
+        <div class="col-md-4">
+          <label class="form-label" for="mntSearch">{{ t('Search') }}</label>
+          <input type="text" class="form-control" id="mntSearch" name="search" value="{{ search }}"
+                 placeholder="{{ t('Order number, customer, serial') }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="mntStatus">{{ t('Status') }}</label>
+          <select class="form-select" id="mntStatus" name="status">
+            <option value="">{{ t('All') }}</option>
+            <option value="received" {% if status == 'received' %}selected{% endif %}>{{ t('Received') }}</option>
+            <option value="diagnosis" {% if status == 'diagnosis' %}selected{% endif %}>{{ t('Diagnosis') }}</option>
+            <option value="waiting_approval" {% if status == 'waiting_approval' %}selected{% endif %}>{{ t('Waiting Approval') }}</option>
+            <option value="in_progress" {% if status == 'in_progress' %}selected{% endif %}>{{ t('In Progress') }}</option>
+            <option value="waiting_parts" {% if status == 'waiting_parts' %}selected{% endif %}>{{ t('Waiting Parts') }}</option>
+            <option value="ready" {% if status == 'ready' %}selected{% endif %}>{{ t('Ready') }}</option>
+            <option value="closed" {% if status == 'closed' %}selected{% endif %}>{{ t('Closed') }}</option>
+            <option value="on_hold" {% if status == 'on_hold' %}selected{% endif %}>{{ t('On Hold') }}</option>
+            <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>{{ t('Cancelled') }}</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="mntWarranty">{{ t('Warranty') }}</label>
+          <select class="form-select" id="mntWarranty" name="warranty">
+            <option value="">{{ t('All') }}</option>
+            <option value="under_warranty" {% if warranty == 'under_warranty' %}selected{% endif %}>{{ t('Under Warranty') }}</option>
+            <option value="expired" {% if warranty == 'expired' %}selected{% endif %}>{{ t('Expired') }}</option>
+            <option value="void" {% if warranty == 'void' %}selected{% endif %}>{{ t('Void') }}</option>
+            <option value="unknown" {% if warranty == 'unknown' %}selected{% endif %}>{{ t('Unknown') }}</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('Filter') }}
+          </button>
+          <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary" aria-label="{{ t('Clear') }}">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body table-responsive">
+      <table class="table table-hover mnt-line-table">
+        <thead>
+          <tr>
+            <th>{{ t('Order Number') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Device') }}</th>
+            <th>{{ t('Warranty') }}</th>
+            <th>{{ t('Status') }}</th>
+            <th class="text-end">{{ t('Total') }}</th>
+            <th class="text-end">{{ t('Balance Due') }}</th>
+            <th class="text-center">{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td>
+              <a href="{{ url_for('maintenance.detail', order_id=order.id) }}" class="fw-semibold">
+                {{ order.order_number }}
+              </a>
+              <small class="d-block text-muted">{{ order.created_at.strftime('%Y-%m-%d') if order.created_at else '' }}</small>
+            </td>
+            <td>
+              {{ order.customer_name or (order.customer.name if order.customer else '-') }}
+              {% if order.customer_phone %}
+              <small class="d-block text-muted">{{ order.customer_phone }}</small>
+              {% endif %}
+            </td>
+            <td>
+              {% if order.device_brand or order.device_model %}
+              {{ order.device_brand }} {{ order.device_model }}
+              {% endif %}
+              {% if order.device_serial_number %}
+              <small class="d-block text-muted">SN: {{ order.device_serial_number }}</small>
+              {% endif %}
+              {% if order.device_plate %}
+              <small class="d-block text-muted">{{ t('Plate') }}: {{ order.device_plate }}</small>
+              {% endif %}
+              {% if not order.device_brand and not order.device_serial_number and not order.device_plate %}
+              <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="mnt-warranty-dot mnt-warranty-{{ order.warranty_status }}"
+                    aria-hidden="true"></span>
+              <span class="ms-1">
+                {% if order.warranty_status == 'under_warranty' %}{{ t('Under Warranty') }}
+                {% elif order.warranty_status == 'expired' %}{{ t('Expired') }}
+                {% elif order.warranty_status == 'void' %}{{ t('Void') }}
+                {% else %}{{ t('Unknown') }}{% endif %}
+              </span>
+              {% if not order.warranty_checked %}
+              <small class="d-block text-warning">{{ t('Not Checked') }}</small>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge mnt-status-badge
+                {% if order.status == 'closed' %}bg-success
+                {% elif order.status == 'cancelled' %}bg-secondary
+                {% elif order.status == 'ready' %}bg-info
+                {% elif order.status == 'in_progress' %}bg-primary
+                {% elif order.status == 'on_hold' %}bg-warning
+                {% else %}bg-light text-dark{% endif %}">{{ order.status }}</span>
+            </td>
+            <td class="text-end">{{ '%.3f'|format(order.total_amount|float) }} {{ order.currency }}</td>
+            <td class="text-end">{{ '%.3f'|format(order.balance_due|float) }} {{ order.currency }}</td>
+            <td class="text-center">
+              <a href="{{ url_for('maintenance.detail', order_id=order.id) }}"
+                 class="btn btn-sm btn-outline-primary" aria-label="{{ t('View') }}">
+                <i class="fas fa-eye" aria-hidden="true"></i>
+              </a>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" class="text-center py-4 text-muted">{{ t('No maintenance orders found') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ dist_url('js/maintenance.js') }}"></script>
+{% endblock %}

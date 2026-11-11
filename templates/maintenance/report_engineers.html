@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Engineer Performance Report') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-users-gear mr-2" aria-hidden="true"></i>{{ t('Engineer Performance Report') }}</h2>
+      <p class="text-muted mb-0">
+        {{ t('The time is the planned duration of the service lines, not the time the bench actually took.') }}
+      </p>
+    </div>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end needs-validation" novalidate>
+        <div class="col-md-4">
+          <label class="form-label" for="mntEngFrom">{{ t('From') }}</label>
+          <input type="date" class="form-control" id="mntEngFrom" name="date_from"
+                 value="{{ report.date_from[:10] if report.date_from else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="mntEngTo">{{ t('To') }}</label>
+          <input type="date" class="form-control" id="mntEngTo" name="date_to"
+                 value="{{ report.date_to[:10] if report.date_to else '' }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('Apply') }}
+          </button>
+          <a href="{{ url_for('maintenance.engineer_report') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-4">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Orders') }}</div>
+          <div class="h4 mb-0">{{ report.order_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Engineers') }}</div>
+          <div class="h4 mb-0">{{ report.engineer_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Total Duration') }}</div>
+          <div class="h4 mb-0">{{ report.total_minutes }} {{ t('min') }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title mb-0">{{ t('Engineers') }}</h3></div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm mnt-line-table">
+        <thead>
+          <tr>
+            <th>{{ t('Engineer') }}</th>
+            <th class="text-center">{{ t('Orders') }}</th>
+            <th class="text-end">{{ t('Net Revenue') }}</th>
+            <th class="text-end">{{ t('Parts Cost') }}</th>
+            <th class="text-end">{{ t('Margin') }}</th>
+            <th class="text-end">{{ t('Margin Percent') }}</th>
+            <th class="text-end">{{ t('Total Duration') }}</th>
+            <th class="text-end">{{ t('Average Duration') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for engineer in report.engineers %}
+          <tr>
+            <td>{{ engineer.engineer_name or t('Unassigned') }}</td>
+            <td class="text-center">{{ engineer.order_count }}</td>
+            <td class="text-end">{{ '%.3f'|format(engineer.revenue|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(engineer.parts_cost|float) }}</td>
+            <td class="text-end fw-semibold">{{ '%.3f'|format(engineer.margin|float) }}</td>
+            <td class="text-end">{{ '%.2f'|format(engineer.margin_percent|float) }}%</td>
+            <td class="text-end">{{ engineer.minutes }} {{ t('min') }}</td>
+            <td class="text-end">{{ engineer.average_minutes }} {{ t('min') }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">{{ t('No orders in this period') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

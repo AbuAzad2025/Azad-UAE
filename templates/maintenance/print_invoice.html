@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="{{ current_language or 'ar' }}" dir="{{ 'rtl' if is_rtl else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t('Maintenance Invoice') }} {{ invoice.invoice_number }}</title>
+  <link rel="stylesheet" href="{{ dist_url('css/erp-theme-unified.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/print-utilities.css') }}">
+  <link rel="stylesheet" href="{{ dist_url('css/maintenance-print.css') }}">
+  {% include 'partials/print_styles.html' %}
+  <style nonce="{{ csp_nonce() }}">
+  {% for state, color in warranty_colors.items() %}
+  .mnt-warranty-{{ state }} { --mnt-tag-color: {{ color }}; }
+  .mnt-print-warranty-strip.mnt-warranty-{{ state }} { background: {{ color }}; }
+  {% endfor %}
+  </style>
+</head>
+<body class="mnt-print-body invoice-print">
+<div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
+
+<div class="mnt-print-actions d-print-none">
+  <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+    <i class="fas fa-print me-1" aria-hidden="true"></i>{{ t('Print') }}
+  </button>
+</div>
+
+<div class="mnt-print-invoice">
+  <div class="mnt-print-header">
+    {% include 'partials/print_tenant_logo.html' %}
+    <div class="mnt-print-company">{{ settings.company_name_ar or tenant_name_ar or company_name_ar }}</div>
+    <div class="mnt-print-company-info">
+      <div>{{ settings.address_ar or tenant_address or '' }}</div>
+      <div><i class="fas fa-phone" aria-hidden="true"></i> {{ settings.phone_1 or tenant_phone or '' }}
+        {% if settings.email %} | <i class="fas fa-envelope" aria-hidden="true"></i> {{ settings.email }}{% endif %}</div>
+      {% if settings and settings.tax_number %}
+      <div>{{ t('الرقم') }} {{ t('الضريبي') }}: {{ settings.tax_number }}</div>
+      {% endif %}
+      {% if order.branch %}<div><i class="fas fa-building" aria-hidden="true"></i> {{ t('Branch') }}: {{ order.branch.name }}</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="mnt-print-title">
+    <h2><i class="fas fa-screwdriver-wrench" aria-hidden="true"></i> {{ t('Maintenance Invoice') }}</h2>
+    <div class="mnt-print-title-meta">
+      {{ t('Invoice Number') }}: <strong>{{ invoice.invoice_number }}</strong> |
+      {{ t('Order Number') }}: <strong>{{ order.order_number }}</strong> |
+      {{ t('Date') }}: <strong>{{ invoice.invoice_date.strftime('%Y-%m-%d') if invoice.invoice_date else '' }}</strong>
+    </div>
+  </div>
+
+  <div class="mnt-print-content">
+    <div class="mnt-print-grid">
+      <div class="mnt-print-box">
+        <h3><i class="fas fa-user" aria-hidden="true"></i> {{ t('Customer') }}</h3>
+        <p><strong>{{ order.customer_name or (order.customer.name if order.customer else '-') }}</strong></p>
+        {% if order.customer_phone %}<p>{{ t('Phone') }}: {{ order.customer_phone }}</p>{% endif %}
+        {% if order.customer %}<p>{{ order.customer.address or '' }}</p>{% endif %}
+      </div>
+      <div class="mnt-print-box">
+        <h3><i class="fas fa-mobile-alt" aria-hidden="true"></i> {{ t('Device') }}</h3>
+        <p><strong>{{ order.device_brand or '-' }} {{ order.device_model or '' }}</strong></p>
+        {% if order.device_serial_number %}<p>SN: {{ order.device_serial_number }}</p>{% endif %}
+        {% if order.device_imei %}<p>IMEI: {{ order.device_imei }}</p>{% endif %}
+        {% if order.device_plate %}<p>{{ t('Plate') }}: {{ order.device_plate }}</p>{% endif %}
+        <p>
+          <span class="mnt-print-warranty-strip mnt-warranty-{{ order.warranty_status }}">
+            {% if order.warranty_status == 'under_warranty' %}{{ t('Under Warranty') }}
+            {% elif order.warranty_status == 'expired' %}{{ t('Expired') }}
+            {% elif order.warranty_status == 'void' %}{{ t('Void') }}
+            {% else %}{{ t('Unknown') }}{% endif %}
+          </span>
+        </p>
+      </div>
+    </div>
+
+    {% if order.device_fault_description %}
+    <div class="mnt-print-box">
+      <h3>{{ t('Reported Fault') }}</h3>
+      <p>{{ order.device_fault_description }}</p>
+    </div>
+    {% endif %}
+
+    <table class="mnt-print-table">
+      <thead>
+        <tr>
+          <th>{{ t('Description') }}</th>
+          <th>{{ t('Type') }}</th>
+          <th>{{ t('Qty') }}</th>
+          <th>{{ t('Price') }}</th>
+          <th>{{ t('Discount') }}</th>
+          <th>{{ t('Tax') }}</th>
+          <th>{{ t('Total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for line in lines %}
+        <tr>
+          <td>{{ line.product.name if line.product else line.product_id }}</td>
+          <td>{{ t('Spare Part') }}</td>
+          <td>{{ '%.3f'|format(line.quantity|float) }}</td>
+          <td>{{ '%.3f'|format(line.unit_price|float) }}</td>
+          <td>
+            {% if line.discount_mode == 'percent' %}{{ '%.2f'|format(line.discount_percent|float) }}%
+            {% else %}{{ '%.3f'|format(line.discount_value|float) }}{% endif %}
+          </td>
+          <td>{{ '%.3f'|format(line.tax_amount|float) }}</td>
+          <td>{{ '%.3f'|format(line.line_total|float) }}</td>
+        </tr>
+        {% endfor %}
+        {% for svc in services_lines %}
+        <tr>
+          <td>{{ svc.service_name_ar or svc.service_name }}</td>
+          <td>{{ t('Service') }}</td>
+          <td>1</td>
+          <td>{{ '%.3f'|format(svc.unit_price|float) }}</td>
+          <td>
+            {% if svc.discount_mode == 'percent' %}{{ '%.2f'|format(svc.discount_percent|float) }}%
+            {% else %}{{ '%.3f'|format(svc.discount_value|float) }}{% endif %}
+          </td>
+          <td>{{ '%.3f'|format(svc.tax_amount|float) }}</td>
+          <td>{{ '%.3f'|format(svc.line_total|float) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="mnt-print-amounts">
+      <table>
+        <tbody>
+          <tr><td>{{ t('Subtotal') }}</td>
+              <td>{{ '%.3f'|format(invoice.subtotal|float) }}</td></tr>
+          <tr><td>{{ t('Taxable') }}</td>
+              <td>{{ '%.3f'|format(invoice.taxable_amount|float) }}</td></tr>
+          <tr><td>{{ t('Tax') }} ({{ '%.2f'|format(invoice.tax_rate|float) }}%)</td>
+              <td>{{ '%.3f'|format(invoice.tax_amount|float) }}</td></tr>
+          <tr class="is-total"><td>{{ t('Total') }}</td>
+              <td>{{ '%.3f'|format(invoice.total_amount|float) }} {{ invoice.currency }}</td></tr>
+          <tr><td>{{ t('Paid') }}</td>
+              <td>{{ '%.3f'|format(invoice.paid_amount|float) }}</td></tr>
+          <tr class="is-due"><td>{{ t('Balance Due') }}</td>
+              <td>{{ '%.3f'|format(invoice.balance_due|float) }} {{ invoice.currency }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% if order.terms_and_conditions %}
+    <div class="mnt-print-box">
+      <h3>{{ t('Terms and Conditions') }}</h3>
+      <p>{{ order.terms_and_conditions }}</p>
+    </div>
+    {% endif %}
+
+    <div class="mnt-print-signatures">
+      <div>{{ t('Customer Signature') }}</div>
+      <div>{{ t('Company Stamp') }}</div>
+    </div>
+  </div>
+
+  <div class="mnt-print-footer">
+    <div>{{ settings.footer_text_ar or tenant_name_ar or company_name_ar }}</div>
+    {% include 'partials/print_developer_footer.html' %}
+  </div>
+</div>
+</body>
+</html>

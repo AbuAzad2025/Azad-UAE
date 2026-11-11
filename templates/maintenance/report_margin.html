@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('Margin Report') }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ dist_url('css/maintenance.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-chart-line mr-2" aria-hidden="true"></i>{{ t('Margin Report') }}</h2>
+      <p class="text-muted mb-0">{{ t('The margin is the revenue less the cost of the parts the job consumed.') }}</p>
+    </div>
+    <a href="{{ url_for('maintenance.index') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('Back') }}
+    </a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-body">
+      <form method="GET" class="row g-3 align-items-end needs-validation" novalidate>
+        <div class="col-md-4">
+          <label class="form-label" for="mntMarginFrom">{{ t('From') }}</label>
+          <input type="date" class="form-control" id="mntMarginFrom" name="date_from"
+                 value="{{ report.date_from[:10] if report.date_from else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label" for="mntMarginTo">{{ t('To') }}</label>
+          <input type="date" class="form-control" id="mntMarginTo" name="date_to"
+                 value="{{ report.date_to[:10] if report.date_to else '' }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1">
+            <i class="fas fa-filter mr-1" aria-hidden="true"></i>{{ t('Apply') }}
+          </button>
+          <a href="{{ url_for('maintenance.margin_report') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Net Revenue') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_revenue|float) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Parts Cost') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_parts_cost|float) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Margin') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_margin|float) }} {{ report.base_currency }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ t('Margin Percent') }}</div>
+          <div class="h4 mb-0">{{ '%.2f'|format(report.margin_percent|float) }}%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h3 class="card-title mb-0">{{ t('Orders') }}</h3></div>
+    <div class="card-body table-responsive">
+      <table class="table table-sm mnt-line-table">
+        <thead>
+          <tr>
+            <th>{{ t('Order Number') }}</th>
+            <th>{{ t('Date') }}</th>
+            <th>{{ t('Customer') }}</th>
+            <th>{{ t('Engineer') }}</th>
+            <th class="text-end">{{ t('Net Revenue') }}</th>
+            <th class="text-end">{{ t('Parts Cost') }}</th>
+            <th class="text-end">{{ t('Margin') }}</th>
+            <th class="text-end">{{ t('Margin Percent') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in report.orders %}
+          <tr>
+            <td>
+              <a href="{{ url_for('maintenance.detail', order_id=order.order_id) }}"
+                 class="fw-semibold">{{ order.order_number }}</a>
+            </td>
+            <td>{{ order.order_date.strftime('%Y-%m-%d') if order.order_date else '-' }}</td>
+            <td>{{ order.customer_name or '-' }}</td>
+            <td>{{ order.engineer_name or '-' }}</td>
+            <td class="text-end">{{ '%.3f'|format(order.revenue|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(order.parts_cost|float) }}</td>
+            <td class="text-end fw-semibold">{{ '%.3f'|format(order.margin|float) }}</td>
+            <td class="text-end">{{ '%.2f'|format(order.margin_percent|float) }}%</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8" class="text-center py-4 text-muted">{{ t('No orders in this period') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

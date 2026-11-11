@@ -209,7 +209,73 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   `a8b9c0d1e203`. Base chart = 107 accounts (`test_seed_manifest.py`).
 - Payslip shows the statutory breakdown; `HR compute_net_salary` is documented as a
   pre-statutory estimator (the posted path deducts withholdings).
-- Migrations in the chain now run to `b9c0d1e2f304` (69 revisions, single head).
+
+### Maintenance module — LIVE (tenant-scoped, own sub-ledger)
+- **Migration `m3a4b5c6d7e8_maintenance_module`** is the head (74 revisions). It
+  creates the 12 maintenance tables, widens `ck_gl_account_mappings_concept_code`
+  for the six maintenance concepts, widens `ck_stock_movement_type` for
+  `maintenance` / `maintenance_return`, inserts the five maintenance accounts into
+  every tenant that already has a chart, and installs the archive-only and
+  append-only triggers (PostgreSQL and SQLite).
+- **Its own sub-ledger, never the trade one:** `MAINTENANCE_AR` 1134,
+  `MAINTENANCE_REVENUE` 4119, `MAINTENANCE_COGS` 5119, `MAINTENANCE_DEPOSIT` 2171,
+  `MAINTENANCE_CASH_DIFFERENCE` 6560, `MAINTENANCE_AP` → 2110. The accounts are in
+  `BASE_ACCOUNTS` (so every chart carries them) and the mappings live in the
+  `maintenance` GL module, gated on the tenant's `enable_maintenance` flag.
+- **The parts cost is the real cost.** Consumption goes through
+  `StockService.create_movement` (locked `ProductWarehouseStock`, negative-stock
+  guard, `current_stock` sync) and the cost is the warehouse's moving average
+  (`ProductWarehouseCost`), written to `ProductCostHistory` for the audit trail;
+  FEFO batch consumption applies when the tenant has batches enabled.
+- **One close, one transaction.** `close_and_collect` consumes the parts, issues
+  the invoice, takes the receipt and posts three balanced entries (parts cost,
+  revenue, receipt) in the caller's `atomic_transaction`. A deposit is a
+  liability credited to 2171 and is applied against the invoice (Dr 2171 /
+  Cr 1134) when the order closes, so the receivable reconciles with the order's
+  balance due. A return reverses the revenue, the tax and the parts cost
+  together.
+- **Only the close path may close an order.** `transition_status` refuses
+  `closed` unless the close flow asks for it, so the status screen cannot close
+  an order that was never invoiced and collected.
+- **The warranty trail is append-only in the database**, not just in the service:
+  PostgreSQL and SQLite triggers refuse an UPDATE or a DELETE on
+  `maintenance_warranty_audit`.
+- **The device registry is what makes the warranty check work.** Reception
+  registers the device on the order (`POST /maintenance/<id>/device`,
+  permission `maintenance_receive`); the identifiers must be unique per
+  tenant, and the registration is itself an audit row. `is_under_warranty`
+  means "not cancelled" — a warranty that simply ran out is EXPIRED, not
+  VOID.
+- **The module buys its parts too.** A maintenance purchase order names the
+  supplier and the maintenance warehouse; receiving it puts the goods on the
+  shelf at the supplier's cost, rebuilds the warehouse's moving average, and
+  posts Dr INVENTORY_ASSET (net) / Cr MAINTENANCE_AP (gross) with the
+  recoverable tax on VAT_INPUT. The tax is never capitalised into the
+  stock — that would inflate the moving average every part is issued at.
+- **The customer has one balance.** The maintenance receivable is its own
+  account (1134), but `CustomerStatementService` carries the maintenance
+  invoice and the maintenance receipt into the customer's statement, and
+  the statement can be filtered to the maintenance movements alone.
+- **A maintenance invoice is a sale for the tax authority.** The statutory
+  UBL 2.1 document (and the KSA TLV QR) is produced by
+  `EInvoiceService.generate_for_maintenance_invoice` inside the close
+  transaction; the artifact hangs off `e_invoices.maintenance_invoice_id`,
+  so the two ledgers never share a key.
+- Six permissions are seeded: `manage_maintenance`, `maintenance_receive`,
+  `maintenance_work`, `maintenance_close`, `maintenance_discount`,
+  `maintenance_override_discount`. The two discount permissions are enforced
+  in the service layer (only the service knows the amount): a line discount,
+  the order-level discount and a price override all check the tenant's caps
+  against the actor's permissions before the order is recalculated.
+- Proof: `tests/integration/test_maintenance_money_path.py` (the money path end
+  to end against the database), `tests/unit/services/test_maintenance_*`,
+  `tests/unit/routes/test_maintenance_routes.py`. `docs/MAINTENANCE_READINESS.md`
+  records the module's scope and its known limits.
+- **Three reports** answer the workshop's own questions: the revenue report
+  (invoices, tax, outstanding), the parts-issued report (which part went into
+  which job, and at what cost) and the warranty report (covered, expired,
+  void, unknown).
+- Migrations in the chain now run to `m3a4b5c6d7e8` (74 revisions, single head).
 
 ### Accounting & Schema Audit — COMPLETE (F-01…F-14 + 19 financial defects D-C1…D-C19)
 - **Migration chain (single head):** `squash_001 → … → b9c0d1e2f304` (69 revisions); `f6a7b8c9d012` payroll statutory columns + concept allow-list widening + account INSERTs for existing charts, `a8b9c0d1e203` excise/customs landed cost (`purchases.excise_amount`, `products.excise_category`, account 5304, `EXCISE_DUTY`), `b9c0d1e2f304` `e_invoices` table
@@ -283,8 +349,8 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   logs `UNDER-SEEDED` for any data set below its expected count. The manifest
   therefore cannot drift the way a prose claim in this file did.
 - Current counts, asserted by `tests/unit/utils/test_seed_manifest.py`:
-  **48 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
-  field definitions** (13 core + 61 across 12 industries) / 113 base GL accounts
+  **54 permissions / 9 roles / 3 currencies (ILS base, AED, USD) / 74 industry
+  field definitions** (13 core + 61 across 12 industries) / 118 base GL accounts
   + 49 industry-extension accounts across 13 industries.
 - Boot provisioning also covers storage paths and schema health
   (`app/bootstrap.py`); `AUTO_MIGRATE=1` lets a fresh database be migrated at
