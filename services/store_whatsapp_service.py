@@ -12,6 +12,10 @@ Builds an Arabic message containing:
 
 from __future__ import annotations
 
+import os
+from typing import Any
+
+from flask import current_app
 from flask_babel import gettext
 
 from models.store_provisional_order import StoreProvisionalOrder
@@ -137,3 +141,68 @@ class StoreWhatsAppService:
             except (ValueError, IndexError):
                 seq = 1
         return f"{prefix}-{seq:03d}"
+
+    @staticmethod
+    def send_message(phone: str, message: str) -> bool:
+        """Send a WhatsApp message via configured provider.
+
+        Tries in order:
+        1. Twilio WhatsApp API (if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are set)
+        2. WhatsApp Business API (if WHATSAPP_API_URL and WHATSAPP_API_TOKEN are set)
+        3. Falls back to False - caller can generate wa.me link instead.
+
+        Args:
+            phone: Customer phone number (with country code).
+            message: The message text to send.
+
+        Returns:
+            True if message was sent successfully, False otherwise.
+        """
+        clean_phone = "".join(ch for ch in phone if ch.isdigit() or ch == "+")
+        if clean_phone.startswith("+"):
+            clean_phone = clean_phone[1:]
+
+        # Option 1: Twilio WhatsApp API
+        try:
+            account_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+            auth_token = os.environ.get("TWILIO_AUTH_TOKEN")
+            twilio_from = os.environ.get("TWILIO_WHATSAPP_FROM", "whatsapp:+14155238886")
+
+            if account_sid and auth_token:
+                from twilio.rest import Client
+
+                client = Client(account_sid, auth_token)
+                client.messages.create(
+                    body=message,
+                    from_=twilio_from,
+                    to=f"whatsapp:{clean_phone}",
+                )
+                return True
+        except Exception as exc:
+            current_app.logger.debug(f"Twilio WhatsApp send failed: {exc}")
+
+        # Option 2: WhatsApp Business API (direct HTTP)
+        try:
+            api_url = os.environ.get("WHATSAPP_API_URL")
+            api_token = os.environ.get("WHATSAPP_API_TOKEN")
+
+            if api_url and api_token:
+                import requests
+
+                payload: Any = {
+                    "messaging_product": "whatsapp",
+                    "to": clean_phone,
+                    "type": "text",
+                    "text": {"body": message},
+                }
+                headers = {
+                    "Authorization": f"Bearer {api_token}",
+                    "Content-Type": "application/json",
+                }
+                requests.post(api_url, json=payload, headers=headers, timeout=10)
+                return True
+        except Exception as exc:
+            current_app.logger.debug(f"WhatsApp Business API send failed: {exc}")
+
+        # Option 3: No API configured - caller should use wa.me link instead
+        return False

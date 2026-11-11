@@ -393,9 +393,10 @@ class StoreOrderService:
             qty = Decimal(str(qty))
             if qty <= 0:
                 continue
-            unit_price = StorePricingService.resolve_store_price(
-                product, tenant_id=tenant_id, currency_code=currency_code
-            )
+            from models import Tenant
+
+            _tenant = db.session.get(Tenant, tenant_id)
+            unit_price = StorePricingService.resolve_store_price(product, _tenant, currency_code=currency_code)
             if unit_price is None:
                 unit_price = Decimal(str(product.regular_price or 0))
             line_total = (unit_price * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -610,7 +611,11 @@ class StoreOrderService:
                 discount_percent=Decimal("0"),
                 line_total=line_data["line_total"],
                 cost_price=Decimal("0"),
-                unit_price_aed=(line_total_aed / line_data["quantity"] if line_data["quantity"] > 0 else Decimal("0")),
+                unit_price_aed=(
+                    line_total_aed / Decimal(str(line_data["quantity"]))
+                    if Decimal(str(line_data["quantity"])) > 0
+                    else Decimal("0")
+                ),
                 line_total_aed=line_total_aed,
             )
             db.session.add(sl)

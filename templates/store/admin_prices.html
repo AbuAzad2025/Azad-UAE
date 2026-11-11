@@ -85,7 +85,7 @@
             <label class="col-sm-3 col-form-label">{{ ccy }}</label>
             <div class="col-sm-9">
               {% set pp = price_map.get(product.id, {}).get(ccy) %}
-              <input type="text" name="price_{{ ccy }}" class="form-control"
+              <input type="text" name="price_{{ ccy }}" class="form-control" aria-label="Price"
                      placeholder="0.000"
                      value="{{ pp.price if pp else '' }}">
               <div class="form-check mt-1">

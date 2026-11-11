@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 
 from flask import (
@@ -5,10 +6,14 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
     url_for,
+)
+from flask import (
+    session as flask_session,
 )
 from flask_babel import gettext
 from flask_login import current_user, login_required
@@ -739,3 +744,302 @@ def cancel_provisional_order(provisional_id: int):
     LoggingCore.log_audit("cancel", "store_provisional_orders", provisional.id)
     flash(gettext("تم إلغاء الطلب المؤقت."), "success")
     return redirect(url_for("store.admin_orders"))
+
+
+# ─── Public Storefront Routes ───────────────────────────────────────────
+
+
+@store_bp.route("/")
+def public_catalog():
+    """Public storefront catalog — browse products by tenant slug or domain."""
+    host = request.host.split(":")[0]
+    store = StoreService.get_store_by_host(host)
+    if not store:
+        # Fallback: try slug subdomain
+        slug = request.args.get("store")
+        if slug:
+            store = StoreService.get_store_by_slug(slug)
+        else:
+            abort(404)
+
+    if not StoreService.is_store_publicly_available(store):
+        abort(403)
+
+    tenant_id = store.tenant_id
+    category_id = request.args.get("category", type=int)
+    search = request.args.get("q")
+    page = request.args.get("page", 1, type=int)
+
+    catalog = StoreService.get_public_catalog(
+        tenant_id=tenant_id,
+        category_id=category_id,
+        search=search,
+        page=page,
+    )
+
+    categories = StoreService.active_categories(tenant_id)
+    tenant = db.session.get(Tenant, tenant_id)
+
+    return render_template(
+        "store/public_catalog.html",
+        store=store,
+        tenant=tenant,
+        catalog=catalog,
+        categories=categories,
+        current_category=category_id,
+        search_query=search or "",
+    )
+
+
+@store_bp.route("/product/<int:product_id>")
+def public_product_detail(product_id):
+    """Public product detail page."""
+    store = StoreService.get_store_by_host(request.host.split(":")[0])
+    if not store:
+        abort(404)
+
+    tenant_id = store.tenant_id
+    product = StoreService.active_product_or_404(tenant_id, product_id)
+    tenant = db.session.get(Tenant, tenant_id)
+
+    store_currency = StoreService._get_store_currency(store, tenant)
+    store_price = StorePricingService.resolve_store_price(product, tenant, store_currency)
+
+    related = StoreService.get_related_products(tenant_id, product_id, product.category_id or 0)
+
+    reviews = StoreService.approved_reviews(tenant_id, product_id)
+
+    return render_template(
+        "store/public_product_detail.html",
+        store=store,
+        tenant=tenant,
+        product=product,
+        store_price=store_price,
+        store_currency=store_currency,
+        related=related,
+        reviews=reviews,
+    )
+
+
+@store_bp.route("/cart", methods=["GET"])
+def public_cart():
+    """View shopping cart."""
+    tenant_id = _get_tenant_id_from_request()
+    if not tenant_id:
+        abort(404)
+
+    store = StoreService.get_tenant_store(tenant_id, create=False)
+    if not store:
+        abort(404)
+
+    cart = StoreService.get_cart(flask_session, tenant_id)
+    totals = StoreService.cart_totals(
+        tenant_id=tenant_id,
+        cart=cart,
+        currency_code=StoreService._get_store_currency(store),
+    )
+
+    return render_template(
+        "store/public_cart.html",
+        store=store,
+        tenant=db.session.get(Tenant, tenant_id),
+        cart=cart,
+        totals=totals,
+    )
+
+
+@store_bp.route("/cart/add", methods=["POST"])
+def public_cart_add():
+    """Add product to shopping cart (session-based)."""
+    from flask import session as flask_session
+
+    tenant_id = _get_tenant_id_from_request()
+    if not tenant_id:
+        return jsonify({"error": "tenant not found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    product_id = int(data.get("product_id", 0))
+    quantity = int(data.get("quantity", 1))
+
+    if not product_id or quantity <= 0:
+        return jsonify({"error": "invalid product or quantity"}), 400
+
+    product = Product.query.filter_by(id=product_id, tenant_id=tenant_id, is_active=True).first()
+    if not product:
+        return jsonify({"error": "product not found"}), 400
+
+    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
+    cart[str(product_id)] = str(Decimal(str(cart.get(str(product_id), 0))) + Decimal(str(quantity)))
+    flask_session[StoreService.cart_session_key(tenant_id)] = cart
+    flask_session.modified = True
+
+    return jsonify({"success": True, "cart_count": len(cart)})
+
+
+@store_bp.route("/cart/remove", methods=["POST"])
+def public_cart_remove():
+    """Remove product from shopping cart."""
+    from flask import session as flask_session
+
+    tenant_id = _get_tenant_id_from_request()
+    if not tenant_id:
+        return jsonify({"error": "tenant not found"}), 404
+
+    data = request.get_json(silent=True) or {}
+    product_id = str(int(data.get("product_id", 0)))
+
+    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
+    cart.pop(product_id, None)
+    flask_session[StoreService.cart_session_key(tenant_id)] = cart
+    flask_session.modified = True
+
+    return jsonify({"success": True})
+
+
+@store_bp.route("/public-checkout", methods=["POST"])
+def public_checkout():
+    """Public checkout — create provisional order from cart and send WhatsApp."""
+    from flask import session as flask_session
+
+    tenant_id = _get_tenant_id_from_request()
+    if not tenant_id:
+        return jsonify({"error": "tenant not found"}), 404
+
+    store = StoreService.get_tenant_store(tenant_id, create=False)
+    if not store or not StoreService.is_store_publicly_available(store):
+        abort(403)
+
+    data = request.get_json(silent=True) or {}
+    customer_name = (data.get("customer_name") or "").strip()
+    customer_phone = (data.get("customer_phone") or "").strip()
+    customer_email = (data.get("customer_email") or "").strip()
+    currency_code = (data.get("currency_code") or store.display_currency or "USD").strip().upper()
+
+    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
+    if not cart:
+        return jsonify({"error": "cart is empty"}), 400
+
+    if not customer_phone:
+        return jsonify({"error": "phone number required"}), 400
+
+    tenant = db.session.get(Tenant, tenant_id)
+    base_currency = StorePricingService._base_currency(tenant)
+
+    # Resolve exchange rate
+    rate = Decimal("1")
+    if currency_code != base_currency:
+        stored = StoreOrderService._latest_stored_rate(tenant_id, currency_code, base_currency)
+        if stored is not None and Decimal(str(stored)) > 0:
+            rate = Decimal(str(stored))
+
+    lines = []
+    subtotal_tx = Decimal("0")
+    for pid, qty_str in cart.items():
+        qty = Decimal(str(qty_str))
+        product = Product.query.filter_by(id=int(pid), tenant_id=tenant_id, is_active=True).first()
+        if not product:
+            continue
+        unit_price = StorePricingService.resolve_store_price(product, tenant, currency_code)
+        if unit_price is None:
+            unit_price = Decimal(str(product.regular_price or 0))
+        line_total = (unit_price * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        subtotal_tx += line_total
+        lines.append(
+            {
+                "product_id": int(pid),
+                "product_name": product.name or product.name_ar or f"Product {pid}",
+                "quantity": str(qty),
+                "unit_price": str(unit_price),
+                "line_total": str(line_total),
+            }
+        )
+
+    if not lines:
+        return jsonify({"error": "no valid products in cart"}), 400
+
+    subtotal_aed = convert_and_quantize_aed(
+        subtotal_tx, currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
+    )
+
+    provisional_number = StoreWhatsAppService.generate_provisional_number(tenant_id)
+
+    provisional = StoreProvisionalOrder(
+        tenant_id=tenant_id,
+        provisional_number=provisional_number,
+        customer_name=customer_name or None,
+        customer_phone=customer_phone or None,
+        customer_email=customer_email or None,
+        cart_json=lines,
+        currency_code=currency_code,
+        exchange_rate=rate,
+        subtotal_tx_ccy=subtotal_tx,
+        subtotal_aed=subtotal_aed,
+        status=StoreProvisionalOrder.STATUS_PENDING,
+    )
+    db.session.add(provisional)
+    db.session.flush()
+
+    message = StoreWhatsAppService.build_message(provisional, tenant, store)
+    provisional.whatsapp_message = message
+    db.session.flush()
+
+    # Send WhatsApp message via API if configured, else fallback to wa.me link
+    whatsapp_sent = False
+    try:
+        from services.whatsapp_service import WhatsAppService
+
+        whatsapp_sent = WhatsAppService.send_message(customer_phone, message)
+    except Exception:
+        whatsapp_sent = False
+
+    provisional.whatsapp_sent_at = datetime.now(UTC) if whatsapp_sent else None
+    db.session.flush()
+
+    # Clear cart after checkout
+    flask_session.pop(StoreService.cart_session_key(tenant_id), None)
+    flask_session.modified = True
+
+    return jsonify(
+        {
+            "success": True,
+            "provisional_number": provisional_number,
+            "whatsapp_sent": whatsapp_sent,
+            "message": message,
+        }
+    )
+
+
+@store_bp.route("/reports")
+@login_required
+@permission_required("manage_store")
+def public_reports():
+    """Store reports — sales by product and time period."""
+    tenant_id = _tenant_id()
+    store = StoreService.get_tenant_store(tenant_id, create=True)
+
+    stats = StoreAnalyticsService.order_stats(tenant_id)
+    top_products = StoreAnalyticsService.top_products(tenant_id, limit=20)
+    daily_chart = StoreAnalyticsService.daily_orders_chart(tenant_id, days=30)
+
+    return render_template(
+        "store/store_reports.html",
+        store=store,
+        tenant=db.session.get(Tenant, tenant_id),
+        stats=stats,
+        top_products=top_products,
+        chart=daily_chart,
+    )
+
+
+def _get_tenant_id_from_request():
+    """Resolve tenant_id from host header or query param."""
+    host = request.host.split(":")[0]
+    store = StoreService.get_store_by_host(host)
+    if store:
+        return store.tenant_id
+    slug = request.args.get("store")
+    if slug:
+        s = StoreService.get_store_by_slug(slug)
+        if s:
+            return s.tenant_id
+    return None

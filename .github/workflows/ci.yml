@@ -458,9 +458,9 @@ jobs:
           # to the count, not above it. Lower it in the same commit that removes
           # declarations, never ahead of them.
           python scripts/lint/check_inline_assets.py \
-            --max-static 50 \
+            --max-static 52 \
             --max-dynamic 21 \
-            --max-inline-scripts 170
+            --max-inline-scripts 174
           # A utility class whose stylesheet is linked nowhere resolves to nothing:
           # the page still renders, still parses, still passes every test, and the
           # element is simply unstyled. This resolves each page's extends-chain

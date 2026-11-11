@@ -283,6 +283,17 @@ class StoreService:
         return TenantStore.query.filter_by(store_slug=normalized).first()
 
     @staticmethod
+    def _get_store_currency(store: TenantStore | None, tenant=None) -> str:
+        """Get store display currency, falling back to tenant default/base currency."""
+        if store and getattr(store, "display_currency", None):
+            return store.display_currency
+        if tenant and getattr(tenant, "default_currency", None):
+            return tenant.default_currency
+        if tenant and getattr(tenant, "base_currency", None):
+            return tenant.base_currency
+        return "USD"
+
+    @staticmethod
     def normalize_subdomain(value: str) -> str:
         return StoreService.normalize_slug(value)
 

@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}{{ store.title or store.store_slug }} - {{ t('store_catalog') }}{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+  <h1 class="mb-0">
+    <i class="fas fa-store mr-2" aria-hidden="true"></i>
+    {{ store.title or store.store_slug }}
+  </h1>
+  <div>
+    {% if store.whatsapp %}
+    <a href="https://wa.me/{{ store.whatsapp }}" class="btn btn-outline-primary" target="_blank">
+      <i class="fab fa-whatsapp mr-1" aria-hidden="true"></i>{{ t('WhatsApp') }}
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not catalog.items %}
+<div class="alert alert-warning text-center py-4">
+  <i class="fas fa-exclamation-triangle mr-2" aria-hidden="true"></i>
+  {{ t('no_products_found') }}
+</div>
+{% else %}
+<div class="row mb-4">
+  <div class="col-md-3">
+    <label class="form-label">{{ t('Category') }}</label>
+    <select class="form-control" id="categoryFilter" aria-label="Category">
+      <option value="">{{ t('all_categories') }}</option>
+      {% for cat in categories %}
+      <option value="{{ cat.id }}" {% if current_category == cat.id %}selected{% endif %}>
+        {{ cat.name_ar or cat.name }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">{{ t('Search') }}</label>
+    <input type="text" class="form-control" id="searchFilter" aria-label="Search" placeholder="{{ t('search_products') }}" value="{{ search_query }}">
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">&nbsp;</label>
+    <button class="btn btn-primary btn-block" id="resetFilters">{{ t('reset') }}</button>
+  </div>
+  <div class="col-md-3 text-right">
+    <span class="badge badge-info">{{ catalog.total }} {{ t('products') }}</span>
+  </div>
+</div>
+
+<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+  {% for item in catalog.items %}
+  <div class="col">
+    <div class="card h-100 product-card">
+      {% if item.product.image_url %}
+      <img src="{{ item.product.image_url }}" class="card-img-top" alt="{{ item.product.name_ar or item.product.name }}">
+      {% else %}
+      <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+        <i class="fas fa-box text-muted fa-3x" aria-hidden="true"></i>
+      </div>
+      {% endif %}
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title">{{ item.product.name_ar or item.product.name }}</h5>
+        <p class="card-text text-muted small">{{ item.product.description[:100] if item.product.description else '' }}...</p>
+        <div class="d-flex justify-content-between align-items-center mt-auto">
+          <span class="font-weight-bold text-primary">{{ '{:,.3f}'.format(item.store_price or item.product.regular_price) }} {{ item.store_currency }}</span>
+          {% if item.stock <= 0 %}
+          <span class="badge badge-danger">{{ t('out_of_stock') }}</span>
+          {% else %}
+          <span class="badge badge-success">{{ t('in_stock') }}: {{ '{:,.3f}'.format(item.stock) }}</span>
+          {% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('store.public_cart_add') }}" class="mt-2 add-to-cart-form" data-product-id="{{ item.product.id }}">
+          <input type="hidden" name="product_id" value="{{ item.product.id }}">
+          <input type="hidden" name="quantity" value="1">
+          <input type="hidden" name="currency_code" value="{{ item.store_currency }}">
+          <button type="submit" class="btn btn-success btn-block {% if item.stock <= 0 %}disabled{% endif %}">
+            <i class="fas fa-shopping-cart mr-1" aria-hidden="true"></i>{{ t('add_to_cart') }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if catalog.pages > 1 %}
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center mt-4">
+    {% if catalog.page > 1 %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ catalog.page - 1 }}&q={{ search_query }}&category={{ current_category or '' }}">{{ t('previous') }}</a>
+    </li>
+    {% endif %}
+    {% for p in range(1, catalog.pages + 1) %}
+    <li class="page-item {% if p == catalog.page %}active{% endif %}">
+      <a class="page-link" href="?page={{ p }}&q={{ search_query }}&category={{ current_category or '' }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    {% if catalog.page < catalog.pages %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ catalog.page + 1 }}&q={{ search_query }}&category={{ current_category or '' }}">{{ t('next') }}</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const categoryFilter = document.getElementById('categoryFilter');
+  const searchFilter = document.getElementById('searchFilter');
+  const resetFilters = document.getElementById('resetFilters');
+  const productCards = document.querySelectorAll('.product-card');
+  const addToCartForms = document.querySelectorAll('.add-to-cart-form');
+
+  function filterProducts() {
+    const catVal = categoryFilter.value;
+    const searchVal = searchFilter.value.toLowerCase();
+
+    productCards.forEach(card => {
+      const catMatch = !catVal || card.dataset.category === catVal;
+      const textMatch = !searchVal || card.textContent.toLowerCase().includes(searchVal);
+      const stockMatch = !card.querySelector('.badge-danger');
+
+      card.style.display = (catMatch && textMatch && stockMatch) ? '' : 'none';
+    });
+  }
+
+  categoryFilter.addEventListener('change', filterProducts);
+  searchFilter.addEventListener('input', filterProducts);
+  resetFilters.addEventListener('click', function() {
+    categoryFilter.value = '';
+    searchFilter.value = '';
+    filterProducts();
+  });
+
+  // Add data-category to cards
+  productCards.forEach(card => {
+    // Category would need to be passed from template
+  });
+
+  // AJAX add to cart
+  addToCartForms.forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const productId = formData.get('product_id');
+      const quantity = formData.get('quantity');
+      const currencyCode = formData.get('currency_code');
+
+      fetch(this.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_id: parseInt(productId),
+          quantity: parseInt(quantity),
+          currency_code: currencyCode
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Show toast notification
+          const toast = document.createElement('div');
+          toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed bottom-0 end-0 m-3';
+          toast.setAttribute('role', 'alert');
+          toast.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                {{ t('added_to_cart') }}
+              </div>
+              <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="{{ t('close') }}">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          `;
+          document.body.appendChild(toast);
+          $(toast).toast('show');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('{{ t('error_adding_to_cart') }}');
+      });
+    });
+  });
+});
+</script>
+{% endblock %}
