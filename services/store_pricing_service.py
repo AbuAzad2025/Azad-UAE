@@ -125,3 +125,46 @@ class StorePricingService:
             tenant,
             StorePricingService.resolve_display_currency(store, tenant),
         )
+
+    @staticmethod
+    def resolve_store_price(product, tenant, currency_code: str | None = None) -> Decimal | None:
+        """Resolve the storefront price for a product in a given currency.
+
+        Priority:
+        1. Explicit StoreProductPrice for (tenant, product, currency) if active
+        2. Fallback: product.regular_price (tenant base currency) converted via
+           the live/stored exchange rate to currency_code
+
+        Returns a 3-decimal Decimal (store pricing precision), or None when no
+        price can be resolved.
+        """
+        currency_code = StorePricingService._as_currency_code(currency_code)
+        if not currency_code:
+            currency_code = StorePricingService._base_currency(tenant)
+
+        # 1. Explicit per-currency store price
+        try:
+            from models.store_product_price import StoreProductPrice
+
+            price_row = (
+                StoreProductPrice.query.filter_by(
+                    tenant_id=int(tenant.id),
+                    product_id=int(product.id),
+                    currency_code=currency_code,
+                    is_active=True,
+                )
+                .order_by(StoreProductPrice.is_default.desc(), StoreProductPrice.updated_at.desc())
+                .first()
+            )
+            if price_row:
+                return Decimal(str(price_row.price)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        except Exception:
+            logger.warning(
+                "StoreProductPrice lookup failed for product %s ccy %s", product.id, currency_code, exc_info=True
+            )
+
+        # 2. Fallback: convert base-currency regular_price
+        base_price = Decimal(str(getattr(product, "regular_price", None) or 0))
+        return StorePricingService.convert_amount(base_price, tenant, currency_code).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )

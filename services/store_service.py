@@ -13,6 +13,7 @@ from flask_babel import gettext
 
 from models import Branch, Product, Tenant, TenantStore, Warehouse
 from models.system_settings import SystemSettings
+from services.store_pricing_service import StorePricingService
 from utils.branching import get_accessible_warehouses, get_branch_stock_map
 from utils.db_safety import atomic_transaction
 from utils.tenanting import require_active_tenant_id
@@ -161,6 +162,21 @@ class StoreService:
         if not online_wh:
             return {}
         return get_branch_stock_map(product_ids=product_ids, warehouse_ids=[online_wh.id])
+
+    @staticmethod
+    def get_store_product_price(tenant_id: int, product_id: int, currency_code: str | None = None) -> Decimal | None:
+        """Resolve the storefront price for a product in a given currency.
+
+        Uses StorePricingService.resolve_store_price which checks explicit
+        StoreProductPrice first, then falls back to base-currency conversion.
+        """
+        from models import Product
+
+        tenant = db.session.get(Tenant, int(tenant_id))
+        product = Product.query.filter_by(id=int(product_id), tenant_id=int(tenant_id)).first()
+        if not product or not tenant:
+            return None
+        return StorePricingService.resolve_store_price(product, tenant, currency_code)
 
     @staticmethod
     def get_catalog_products(tenant_id: int, *, include_zero: bool = False):
@@ -361,12 +377,20 @@ class StoreService:
         """Storefront catalog — in-stock online warehouse, no serial-tracked products.
 
         display_price is resolved through StorePricingService (single pricing
-        engine) so the catalog matches product/cart/checkout exactly.
+        engine) so the catalog matches product/cart/checkout exactly. Each item
+        also carries ``store_price`` (price in store's display currency) and
+        ``store_currency`` so the frontend can show dual pricing.
         """
         from services.store_pricing_service import StorePricingService
 
         products, stock_map = StoreService.get_catalog_products(tenant_id, include_zero=False)
         tenant = db.session.get(Tenant, int(tenant_id))
+        store = TenantStore.query.filter_by(tenant_id=int(tenant_id)).first()
+        store_ccy = (
+            StorePricingService.resolve_display_currency(store, tenant)
+            if store and tenant
+            else (display_currency or StorePricingService._base_currency(tenant))
+        )
         items = []
         q = (search or "").strip().lower()
         for product in products:
@@ -381,23 +405,28 @@ class StoreService:
             qty = stock_map.get(product.id, Decimal("0"))
             if qty <= 0:
                 continue
-            display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
+            store_price = StorePricingService.resolve_store_price(product, tenant, store_ccy)
+            display_price = StorePricingService.convert_amount(
+                Decimal(str(product.regular_price or 0)), tenant, store_ccy
+            )
             items.append(
                 {
                     "product": product,
                     "stock": qty,
                     "quantity": qty,
+                    "store_price": store_price,
+                    "store_currency": store_ccy,
                     "display_price": display_price,
                 }
             )
         if min_price is not None:
-            items = [i for i in items if float(i["display_price"]) >= float(min_price)]
+            items = [i for i in items if float(i["store_price"] or 0) >= float(min_price)]
         if max_price is not None:
-            items = [i for i in items if float(i["display_price"]) <= float(max_price)]
+            items = [i for i in items if float(i["store_price"] or 0) <= float(max_price)]
         if sort == "price_asc":
-            items.sort(key=lambda x: float(x["display_price"]))
+            items.sort(key=lambda x: float(x["store_price"] or 0))
         elif sort == "price_desc":
-            items.sort(key=lambda x: float(x["display_price"]), reverse=True)
+            items.sort(key=lambda x: float(x["store_price"] or 0), reverse=True)
         elif sort == "name_asc":
             items.sort(key=lambda x: (x["product"].get_display_name("en") or "").lower())
         elif sort == "name_desc":
@@ -417,6 +446,7 @@ class StoreService:
             "page": page,
             "per_page": per_page,
             "pages": (total + per_page - 1) // per_page,
+            "store_currency": store_ccy,
         }
 
     @staticmethod
@@ -425,19 +455,21 @@ class StoreService:
         cart: dict,
         display_currency: str | None = None,
         customer_type: str = "regular",
+        currency_code: str | None = None,
     ) -> dict:
-        """Cart lines + totals. When display_currency is provided, each line also
-        carries display_price / display_line_total and the dict display_subtotal —
-        resolved via the unified StorePricingService.
+        """Cart lines + totals.
 
-        Prices come from ``product.get_price_for_customer(customer_type)`` — the
-        same source checkout charges — so tiered (partner/merchant) customers see
-        the amount they will actually pay.
+        When ``currency_code`` is provided (e.g. "USD"), each line carries
+        ``store_price`` in that currency and ``store_line_total``. When
+        ``display_currency`` is also provided, an additional converted display
+        price is added. The ``subtotal`` is always in the tenant base currency
+        for accounting; ``store_subtotal`` is in ``currency_code`` when given.
         """
         from services.store_pricing_service import StorePricingService
 
         lines = []
         subtotal = Decimal("0")
+        store_subtotal = Decimal("0")
         display_subtotal = Decimal("0")
         tenant = db.session.get(Tenant, int(tenant_id))
         stock_map = StoreService.online_stock_map(tenant_id, [int(k) for k in cart] if cart else None)
@@ -455,8 +487,18 @@ class StoreService:
             line_total = unit_price * qty
             subtotal += line_total
             line = {"product": product, "quantity": qty, "line_total": line_total}
+
+            # Store currency price (explicit StoreProductPrice or converted)
+            store_price = StorePricingService.resolve_store_price(product, tenant, currency_code)
+            if store_price is not None:
+                store_line_total = (store_price * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+                store_subtotal += store_line_total
+                line["store_price"] = store_price
+                line["store_line_total"] = store_line_total
+                line["store_currency"] = currency_code or StorePricingService._base_currency(tenant)
+
             if display_currency:
-                display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
+                display_price = StorePricingService.convert_amount(unit_price, tenant, display_currency)
                 display_line_total = (display_price * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 display_subtotal += display_line_total
                 line["display_price"] = display_price
@@ -465,6 +507,8 @@ class StoreService:
         result = {
             "lines": lines,
             "subtotal": subtotal,
+            "store_subtotal": store_subtotal,
+            "store_currency": currency_code or StorePricingService._base_currency(tenant),
             "count": sum(line["quantity"] for line in lines),
         }
         if display_currency:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import ROUND_HALF_UP, Decimal
+
 from flask import current_app
 from flask_babel import gettext
 
@@ -9,6 +11,7 @@ from extensions import db
 from models import Sale
 from services.sale_service import SaleService
 from services.stock_service import StockService
+from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
 from utils.payment_constants import normalize_payment_method_code
 
 STATUS_LABELS_AR = {
@@ -326,3 +329,172 @@ class StoreOrderService:
                 name = line.product.name if line.product else str(line.product_id)
                 issues.append(f"{name}: {msg}")
         return issues
+
+    @staticmethod
+    def create_store_order_from_cart(
+        tenant_id: int,
+        *,
+        customer_id: int | None,
+        cart: dict[int, Decimal],
+        currency_code: str,
+        warehouse_id: int | None = None,
+        branch_id: int | None = None,
+        payment_method: str = "cod",
+        notes: str | None = None,
+        seller_id: int | None = None,
+    ) -> Sale:
+        """Create an online-store order from a shopping cart in a given currency.
+
+        Each cart line price is resolved via StorePricingService.resolve_store_price
+        (explicit StoreProductPrice if present, else base-currency conversion).
+        The order total is converted to the tenant base currency for accounting
+        using the live/stored exchange rate (ExchangeRateRecord).
+
+        The Sale is created with ``source="online_store"`` so it flows through
+        the store order lifecycle (confirm/cancel/fulfill) and the Azad platform
+        fee is accrued on confirmation.
+        """
+        from models import Product, SaleLine
+
+        tenant_id = int(tenant_id)
+        currency_code = (currency_code or "").strip().upper()
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
+
+        from services.store_pricing_service import StorePricingService
+        from services.store_service import StoreService
+
+        # Resolve exchange rate from currency_code -> base_currency
+        rate = Decimal("1")
+        if currency_code != base_currency:
+            stored = StoreOrderService._latest_stored_rate(tenant_id, currency_code, base_currency)
+            if stored is not None and Decimal(str(stored)) > 0:
+                rate = Decimal(str(stored))
+            else:
+                current_app.logger.warning(
+                    "No exchange rate %s -> %s for tenant %s; using rate=1",
+                    currency_code,
+                    base_currency,
+                    tenant_id,
+                )
+
+        online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
+        if warehouse_id is None:
+            warehouse_id = online_wh.id if online_wh else None
+
+        # Build sale lines and compute totals in transaction currency
+        lines: list[dict] = []
+        subtotal_tx_ccy = Decimal("0")
+        for pid, qty in cart.items():
+            product = Product.query.filter_by(id=int(pid), tenant_id=tenant_id, is_active=True).first()
+            if not product:
+                continue
+            qty = Decimal(str(qty))
+            if qty <= 0:
+                continue
+            unit_price = StorePricingService.resolve_store_price(
+                product, tenant_id=tenant_id, currency_code=currency_code
+            )
+            if unit_price is None:
+                unit_price = Decimal(str(product.regular_price or 0))
+            line_total = (unit_price * qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            subtotal_tx_ccy += line_total
+            lines.append(
+                {
+                    "product": product,
+                    "quantity": qty,
+                    "unit_price": unit_price,
+                    "line_total": line_total,
+                }
+            )
+
+        if not lines:
+            raise ValueError(gettext("السلة فارغة أو لا تحتوي على منتجات صالحة."))
+
+        # Convert subtotal to tenant base currency for accounting
+        subtotal_aed = convert_and_quantize_aed(
+            subtotal_tx_ccy, currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
+        )
+        tax_amount = Decimal("0")  # store tax handled separately if enabled
+        total_amount = subtotal_tx_ccy
+        total_amount_aed = subtotal_aed
+
+        sale = Sale(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            seller_id=seller_id,
+            warehouse_id=warehouse_id,
+            branch_id=branch_id,
+            source="online_store",
+            currency=currency_code,
+            exchange_rate=rate,
+            base_currency=base_currency,
+            subtotal=subtotal_tx_ccy,
+            discount_amount=Decimal("0"),
+            shipping_cost=Decimal("0"),
+            tax_rate=Decimal("0"),
+            tax_amount=tax_amount,
+            taxable_amount=subtotal_tx_ccy,
+            total_amount=total_amount,
+            amount=total_amount,
+            paid_amount=Decimal("0"),
+            balance_due=total_amount,
+            amount_aed=total_amount_aed,
+            paid_amount_aed=Decimal("0"),
+            currency_rate_source="stored" if currency_code != base_currency else "same",
+            payment_status="unpaid",
+            status="pending",
+            is_active=True,
+            notes=notes or gettext("طلب من المتجر الإلكتروني"),
+        )
+        db.session.add(sale)
+        db.session.flush()
+
+        for line in lines:
+            line_total_aed = convert_and_quantize_aed(
+                line["line_total"], currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
+            )
+            sl = SaleLine(
+                tenant_id=tenant_id,
+                sale_id=sale.id,
+                product_id=line["product"].id,
+                quantity=line["quantity"],
+                unit_price=line["unit_price"],
+                discount_percent=Decimal("0"),
+                line_total=line["line_total"],
+                cost_price=Decimal("0"),
+                unit_price_aed=line_total_aed / line["quantity"] if line["quantity"] > 0 else Decimal("0"),
+                line_total_aed=line_total_aed,
+            )
+            db.session.add(sl)
+        db.session.flush()
+
+        current_app.logger.info(
+            "Store order created: %s (currency=%s rate=%s total_tx=%s total_aed=%s)",
+            sale.sale_number,
+            currency_code,
+            rate,
+            subtotal_tx_ccy,
+            subtotal_aed,
+        )
+        return sale
+
+    @staticmethod
+    def _latest_stored_rate(tenant_id: int, from_currency: str, to_currency: str) -> Decimal | None:
+        """Latest stored ExchangeRateRecord rate from from_currency -> to_currency."""
+        try:
+            from models.exchange_rate_record import ExchangeRateRecord
+
+            row = (
+                ExchangeRateRecord.query.filter_by(
+                    tenant_id=int(tenant_id),
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                )
+                .order_by(ExchangeRateRecord.effective_date.desc(), ExchangeRateRecord.created_at.desc())
+                .first()
+            )
+            if row:
+                return Decimal(str(row.rate))
+        except Exception:
+            current_app.logger.debug("ExchangeRateRecord lookup failed", exc_info=True)
+        return None
