@@ -143,6 +143,39 @@ def _column_exists(table: str, column: str) -> bool:
         return False
 
 
+def _add_serial_tracking_columns() -> None:
+    """Let a serial hang off a maintenance order line as well as a sale line.
+
+    The trade path records which serial went with which sale line; the
+    maintenance path needs the same trace, so the serial carries a second
+    foreign key. It is nullable, so a serial that is not tied to either
+    ledger (opening stock, a transfer) stays unlinked.
+    """
+    if _table_exists("product_serials") and not _column_exists("product_serials", "maintenance_order_line_id"):
+        with op.batch_alter_table("product_serials", schema=None) as batch_op:
+            batch_op.add_column(
+                sa.Column(
+                    "maintenance_order_line_id",
+                    sa.Integer(),
+                    sa.ForeignKey("maintenance_order_lines.id", ondelete="SET NULL"),
+                    nullable=True,
+                )
+            )
+            batch_op.create_index(
+                "ix_product_serials_maintenance_order_line_id",
+                ["maintenance_order_line_id"],
+                unique=False,
+            )
+
+    if _table_exists("sale_lines") and not _column_exists("sale_lines", "serial_numbers"):
+        with op.batch_alter_table("sale_lines", schema=None) as batch_op:
+            batch_op.add_column(sa.Column("serial_numbers", sa.JSON(), nullable=True))
+
+    if _table_exists("maintenance_order_lines") and not _column_exists("maintenance_order_lines", "serial_numbers"):
+        with op.batch_alter_table("maintenance_order_lines", schema=None) as batch_op:
+            batch_op.add_column(sa.Column("serial_numbers", sa.JSON(), nullable=True))
+
+
 def _add_maintenance_einvoice_link() -> None:
     """Let an e-invoice artifact hang off a maintenance invoice.
 
@@ -426,6 +459,7 @@ def upgrade() -> None:
             sa.Column("aggregate_discount", sa.Numeric(precision=15, scale=3), nullable=False, default=0),
             sa.Column("taxable_amount", sa.Numeric(precision=15, scale=3), nullable=False, default=0),
             sa.Column("is_archived", sa.Boolean(), nullable=False, default=False, index=True),
+            sa.Column("serial_numbers", sa.JSON(), nullable=True),
             sa.Column(
                 "created_at",
                 sa.DateTime(timezone=True),
@@ -1105,6 +1139,9 @@ def upgrade() -> None:
     # The statutory artifact of a maintenance invoice hangs off the
     # maintenance document, so the e-invoice table carries the link.
     _add_maintenance_einvoice_link()
+    # Serial trace: a serial can hang off a maintenance order line as
+    # well as a sale line.
+    _add_serial_tracking_columns()
 
 
 def downgrade() -> None:
@@ -1116,6 +1153,16 @@ def downgrade() -> None:
         with op.batch_alter_table("e_invoices", schema=None) as batch_op:
             batch_op.drop_index("ix_e_invoices_maintenance_invoice_id")
             batch_op.drop_column("maintenance_invoice_id")
+    if _table_exists("product_serials") and _column_exists("product_serials", "maintenance_order_line_id"):
+        with op.batch_alter_table("product_serials", schema=None) as batch_op:
+            batch_op.drop_index("ix_product_serials_maintenance_order_line_id")
+            batch_op.drop_column("maintenance_order_line_id")
+    if _table_exists("sale_lines") and _column_exists("sale_lines", "serial_numbers"):
+        with op.batch_alter_table("sale_lines", schema=None) as batch_op:
+            batch_op.drop_column("serial_numbers")
+    if _table_exists("maintenance_order_lines") and _column_exists("maintenance_order_lines", "serial_numbers"):
+        with op.batch_alter_table("maintenance_order_lines", schema=None) as batch_op:
+            batch_op.drop_column("serial_numbers")
     bind = op.get_bind()
     for code, _name, _name_ar, _type, _level, _parent in _MAINTENANCE_ACCOUNTS:
         bind.execute(

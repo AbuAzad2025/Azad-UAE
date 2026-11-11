@@ -33,6 +33,7 @@ from models import (
     Warehouse,
 )
 from services.gl_posting import GlPostingError
+from services.serial_tracking_service import SerialTrackingService
 from services.stock_batch_service import StockBatchService
 from services.stock_service import StockService, _safe_for_update
 from utils.gl_reference_types import GLRef
@@ -190,6 +191,27 @@ class MaintenanceStockService:
         line.movement_id = movement.id
         line.cost_price = unit_cost
         line.cost_aed = total_cost
+
+        # Serial trace: if the part is serial-tracked, the individual units
+        # that left the shelf are recorded against the line. A product
+        # with no serials registered returns an empty list, and the
+        # quantity alone describes what was consumed - the same contract
+        # the trade path uses.
+        try:
+            issued_serials = SerialTrackingService.issue_serials(
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+                quantity=int(qty) if qty == qty.to_integral_value() else 0,
+                tenant_id=tid,
+                reference_type="maintenance",
+                reference_id=line.id,
+            )
+        except Exception:
+            logger.debug("Serial tracking unavailable for maintenance line %s", line.id, exc_info=True)
+            issued_serials = []
+        if issued_serials:
+            line.serial_numbers = issued_serials
+
         db.session.flush()
 
         log_financial(
@@ -361,6 +383,18 @@ class MaintenanceStockService:
 
         return_line.unit_cost = unit_cost
         return_line.line_total_cost = total_cost
+
+        # The parts went back on the shelf, so their serials are
+        # available again.
+        if order_line.serial_numbers:
+            try:
+                SerialTrackingService.restore_serials(
+                    order_line.serial_numbers,
+                    tenant_id=tid,
+                )
+            except Exception:
+                logger.debug("Serial restore unavailable for maintenance return", exc_info=True)
+
         db.session.flush()
 
         log_financial(

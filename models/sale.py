@@ -449,6 +449,13 @@ class SaleLine(db.Model):
 
     notes = db.Column(db.String(255))
 
+    # The serial numbers of the individual units sold, when the product
+    # is serial-tracked. Optional: a non-serial product leaves an empty
+    # list, and the quantity alone describes what was sold. Kept in
+    # parallel with the maintenance module so the two ledgers agree on
+    # which physical unit went where.
+    serial_numbers = db.Column(db.JSON, nullable=True)  # list[str] of sold serial numbers
+
     sale = db.relationship("Sale", back_populates="lines")
     product = db.relationship("Product", back_populates="sale_lines")
     tenant = db.relationship("Tenant", backref="sale_lines", foreign_keys=[tenant_id])

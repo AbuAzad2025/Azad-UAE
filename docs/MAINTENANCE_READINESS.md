@@ -106,14 +106,15 @@ exactly the share that line carried.
   than posted somewhere approximate.
 * Deleting a tenant that has maintenance records is refused by the
   archive-only triggers. The tenant lifecycle must account for that.
-* **A part's own serial number is not tracked through the maintenance
-  issue.** The module moves the quantity and the cost, and lot tracking
-  is handled by the FEFO batch path. The core serial-tracking service
-  is a warehouse-assignment concern that the trade path does not use on
-  issue either, so the maintenance path stays consistent with it. This
-  is a deliberate non-feature: introducing serial tracking here would
-  make the maintenance module differ from the trade path, which is the
-  wrong direction.
+* **A part's own serial number is tracked through the maintenance
+  issue.** ``MaintenanceStockService`` calls
+  ``SerialTrackingService.issue_serials`` when a part is consumed and
+  ``restore_serials`` when it is returned, and the serial numbers are
+  stored on ``MaintenanceOrderLine.serial_numbers``. The same path is
+  wired into the sales module's ``process_sale_lines``, so the two
+  ledgers agree on which physical unit went where. A product with no
+  serials registered returns an empty list, and the quantity alone
+  describes what was consumed — the same contract as before.
 * **A return after the customer has paid leaves a credit balance that is
   settled by an explicit refund.** ``MaintenanceService.refund_credit``
   pays it back out of the maintenance drawer (Dr receivable, Cr cash) so

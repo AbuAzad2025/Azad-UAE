@@ -54,6 +54,15 @@ class ProductSerial(db.Model):
         db.Integer, db.ForeignKey("sale_lines.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # Who did we sell it to?
 
+    # The maintenance order line that consumed this serial, if any. Kept
+    # separate from sale_line_id so the two ledgers never share a key.
+    maintenance_order_line_id = db.Column(
+        db.Integer,
+        db.ForeignKey("maintenance_order_lines.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )  # Which maintenance job consumed it?
+
     # Warranty Info (Calculated from Sale Date)
     warranty_start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     warranty_end_date = db.Column(db.DateTime(timezone=True), nullable=True)
@@ -69,6 +78,9 @@ class ProductSerial(db.Model):
     product = db.relationship("Product", backref="serials")
     purchase_line = db.relationship("PurchaseLine", backref="serials")
     sale_line = db.relationship("SaleLine", backref="serials")
+    maintenance_order_line = db.relationship(
+        "MaintenanceOrderLine", foreign_keys=[maintenance_order_line_id], backref="serials"
+    )
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
 
     def __repr__(self):

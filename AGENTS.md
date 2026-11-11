@@ -267,6 +267,13 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   in the service layer (only the service knows the amount): a line discount,
   the order-level discount and a price override all check the tenant's caps
   against the actor's permissions before the order is recalculated.
+- **Serial tracking is now consistent across both ledgers.** ``SerialTrackingService.issue_serials``
+  marks available serials as issued (status ``sold`` for a sale, ``issued`` for a
+  maintenance job) and links them to the line; ``restore_serials`` puts them
+  back on the shelf. Both ledgers store the serial numbers on their line, so
+  the two agree on which physical unit went where. A product with no serials
+  registered returns an empty list, and the quantity alone describes what was
+  consumed.
 - Proof: `tests/integration/test_maintenance_money_path.py` (the money path end
   to end against the database), `tests/unit/services/test_maintenance_*`,
   `tests/unit/routes/test_maintenance_routes.py`. `docs/MAINTENANCE_READINESS.md`

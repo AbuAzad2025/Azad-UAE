@@ -336,6 +336,13 @@ class MaintenanceOrderLine(db.Model):
         db.Integer, db.ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True
     )  # مستودع الصيانة الذي أُخذت منه القطعة
 
+    # The serial numbers of the individual units consumed, when the product
+    # is serial-tracked. Optional: a non-serial product (or a product with
+    # no serials registered) leaves an empty list, and the quantity alone
+    # describes what was consumed. The list is what lets the workshop trace
+    # which physical unit went into which job.
+    serial_numbers = db.Column(db.JSON, nullable=True)  # list[str] of consumed serial numbers
+
     movement_id = db.Column(
         db.Integer, db.ForeignKey("stock_movements.id", ondelete="SET NULL"), nullable=True, index=True
     )  # حركة المخزون المرتبطة

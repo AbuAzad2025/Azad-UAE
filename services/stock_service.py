@@ -702,6 +702,28 @@ class StockService:
                 warehouse_id=warehouse_id,  # ← تمرير المستودع
             )
 
+            # Serial trace: if the product is serial-tracked, the units
+            # that left the shelf are recorded against the sale line. A
+            # product with no serials registered returns an empty list,
+            # and the quantity alone describes what was sold — the same
+            # contract the maintenance path uses, so the two ledgers
+            # agree on which physical unit went where.
+            try:
+                from services.serial_tracking_service import SerialTrackingService
+
+                issued = SerialTrackingService.issue_serials(
+                    product_id=line.product_id,
+                    warehouse_id=warehouse_id,
+                    quantity=int(Decimal(str(line.quantity))),
+                    tenant_id=sale.tenant_id,
+                    reference_type="sale",
+                    reference_id=line.id,
+                )
+                if issued:
+                    line.serial_numbers = issued
+            except Exception:
+                current_app.logger.debug("Serial tracking unavailable for sale line %s", line.id, exc_info=True)
+
     @staticmethod
     def _resolve_cogs_unit_cost(product_id, warehouse_id, tenant_id, line_cost_price=None):
         """Resolve unit cost for COGS using Odoo-style fallback chain:
