@@ -232,7 +232,19 @@ class User(UserMixin, db.Model):
         if self.is_owner:
             return True
         code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
-        return self.role and self.role.has_permission(code)
+        if not (self.role and self.role.has_permission(code)):
+            return False
+        # A permission whose feature is disabled is not usable, so a tenant
+        # that does not own the maintenance module never sees a maintenance
+        # role in the sidebar or in the role management page, even if the
+        # role still carries the code. The feature gate on the blueprint is
+        # the second line of defence; this is the first.
+        from utils.constants import PERMISSION_FEATURE_MAP
+
+        feature = PERMISSION_FEATURE_MAP.get(code)
+        if feature is None or self.tenant is None:
+            return True
+        return bool(getattr(self.tenant, feature, True))
 
     def can_see_costs(self):
         return self.is_owner or self.is_super_admin() or self.is_manager()

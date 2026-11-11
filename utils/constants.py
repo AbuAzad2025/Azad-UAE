@@ -209,6 +209,44 @@ ROLE_LEVELS = {
     RoleEnum.CASHIER.value: 8,
 }
 
+# Mapping from permission code to the tenant feature flag that gates it.
+# A permission with no entry (or None) is always available; a permission
+# whose feature is disabled is neither granted nor visible, so a tenant
+# that does not own the maintenance module never sees a maintenance role.
+PERMISSION_FEATURE_MAP: dict[str, str | None] = {
+    "manage_store": "enable_store",
+    "override_sale_price": "enable_pos",
+    "pos_void_line": "enable_pos",
+    "pos_discount_override": "enable_pos",
+    "pos_no_sale_drawer": "enable_pos",
+    "pos_pay_in_out": "enable_pos",
+    "pos_authorize_override": "enable_pos",
+    "pos_view_expected": "enable_pos",
+    "pos_return": "enable_pos",
+    "view_kds": "enable_pos",
+    "hr.view": "enable_payroll",
+    "hr.manage": "enable_payroll",
+    "hr:leave_manage": "enable_payroll",
+    "manage_payroll": "enable_payroll",
+    "assets:view": "enable_fixed_assets",
+    "assets:manage": "enable_fixed_assets",
+    "assets:depreciate": "enable_fixed_assets",
+    "grn:manage": "enable_shipments",
+    "manage_expenses": "enable_expenses",
+    "view_ledger": "enable_gl",
+    "manage_ledger": "enable_gl",
+    "view_reports": "enable_reports",
+    # CRM, support, projects and marketing have no feature flag of their own
+    # yet, so their permissions are always available. When a flag is added
+    # for one of them, list it here so the roles follow.
+    "manage_maintenance": "enable_maintenance",
+    "maintenance_receive": "enable_maintenance",
+    "maintenance_work": "enable_maintenance",
+    "maintenance_close": "enable_maintenance",
+    "maintenance_discount": "enable_maintenance",
+    "maintenance_override_discount": "enable_maintenance",
+}
+
 PERMISSIONS = {
     "manage_sales": {"ar": "إدارة المبيعات", "en": "Manage Sales"},
     "manage_purchases": {"ar": "إدارة المشتريات", "en": "Manage Purchases"},
