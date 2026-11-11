@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block title %}{{ t('store_prices') }}{% endblock %}
+
+{% block page_title %}
+<div class="d-flex justify-content-between align-items-center flex-wrap">
+  <h1 class="mb-0"><i class="fas fa-tag mr-2" aria-hidden="true"></i>{{ t('store_prices') }}</h1>
+  <div>
+    <a href="{{ url_for('store.admin_catalog') }}" class="btn btn-outline-secondary">{{ t('Back') }} {{ t('catalog') }}</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+{% if not online_warehouse %}
+<div class="alert alert-warning">{{ t('online_warehouse_not_created_before') }} <a href="{{ url_for('store.admin_settings') }}">{{ t('settings') }}</a> {{ t('online_warehouse_not_created_after') }}</div>
+{% else %}
+<div class="alert alert-info py-2">
+  <i class="fas fa-warehouse mr-1" aria-hidden="true"></i>
+  {{ t('source') }}: <strong>{{ online_warehouse.name_ar or online_warehouse.name }}</strong>
+</div>
+
+<div class="card mt-3">
+  <div class="card-header">{{ t('product_store_prices') }}</div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="thead-light">
+          <tr>
+            <th>{{ t('Product') }}</th>
+            <th>SKU</th>
+            {% for ccy in currencies %}
+            <th>{{ ccy }}</th>
+            {% endfor %}
+            <th>{{ t('Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ product.name_ar or product.name }}</td>
+            <td><code>{{ product.sku or '—' }}</code></td>
+            {% for ccy in currencies %}
+            <td>
+              {% set pp = price_map.get(product.id, {}).get(ccy) %}
+              {% if pp %}
+              <span class="badge badge-{% if pp.is_active %}success{% else %}warning{% endif %}">
+                {{ '{:,.3f}'.format(pp.price) }}
+                {% if pp.is_default %} <span class="badge badge-pill badge-info ml-1">{{ t('default') }}</span>{% endif %}
+              </span>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+            <td>
+              <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#priceModal{{ product.id }}">
+                {{ t('Edit') }}
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="{{ 3 + currencies|length }}" class="text-center text-muted py-4">{{ t('no_products_found') }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% for product in products %}
+<div class="modal fade" id="priceModal{{ product.id }}" tabindex="-1" role="dialog" aria-labelledby="priceModalLabel{{ product.id }}">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('store.admin_prices') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="priceModalLabel{{ product.id }}">{{ t('set_price_for') }} {{ product.name_ar or product.name }}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="{{ t('close') }}">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="product_id" value="{{ product.id }}">
+          {% for ccy in currencies %}
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label">{{ ccy }}</label>
+            <div class="col-sm-9">
+              {% set pp = price_map.get(product.id, {}).get(ccy) %}
+              <input type="text" name="price_{{ ccy }}" class="form-control"
+                     placeholder="0.000"
+                     value="{{ pp.price if pp else '' }}">
+              <div class="form-check mt-1">
+                <input type="checkbox" class="form-check-input" name="default_{{ ccy }}" id="default_{{ ccy }}_{{ product.id }}"
+                       {% if pp and pp.is_default %}checked{% endif %}>
+                <label class="form-check-label" for="default_{{ ccy }}_{{ product.id }}">{{ t('default_price') }}</label>
+              </div>
+              <div class="form-check mt-1">
+                <input type="checkbox" class="form-check-input" name="active_{{ ccy }}" id="active_{{ ccy }}_{{ product.id }}"
+                       {% if pp is none or pp.is_active %}checked{% endif %}>
+                <label class="form-check-label" for="active_{{ ccy }}_{{ product.id }}">{{ t('active') }}</label>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ t('close') }}</button>
+          <button type="submit" class="btn btn-primary">{{ t('save') }}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

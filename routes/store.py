@@ -228,6 +228,102 @@ def admin_catalog():
     )
 
 
+@store_bp.route("/admin/prices", methods=["GET", "POST"])
+@login_required
+@permission_required("manage_store")
+def admin_prices():
+    """Manage per-currency store prices for products.
+
+    GET:  Show the price management table with current StoreProductPrice rows.
+    POST: Create or update a StoreProductPrice for a product + currency.
+    """
+    from models.store_product_price import StoreProductPrice
+
+    tenant_id = _tenant_id()
+    store = StoreService.get_tenant_store(tenant_id, create=True)
+    online_wh = StoreService.get_online_warehouse(tenant_id, create=False)
+
+    # Build product -> prices map
+    products = Product.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(Product.name.asc()).all()
+    prices = StoreProductPrice.query.filter_by(tenant_id=tenant_id).all()
+    price_map: dict[int, dict[str, StoreProductPrice]] = {}
+    for p in prices:
+        price_map.setdefault(p.product_id, {})[p.currency_code] = p
+
+    currencies = ["USD", "AED", "ILS", "SAR", "AED"]
+
+    if request.method == "POST":
+        try:
+            with atomic_transaction("store_price_save"):
+                product_id = int(request.form.get("product_id", 0))
+                currency_code = (request.form.get("currency_code") or "").strip().upper()
+                price_raw = (request.form.get("price") or "").strip()
+                is_default = request.form.get("is_default") == "on"
+                is_active = request.form.get("is_active") == "on"
+
+                if not product_id or not currency_code or not price_raw:
+                    raise ValueError(gettext("المنتج والعملة والسعر مطلوبان."))
+
+                product = Product.query.filter_by(id=product_id, tenant_id=tenant_id).first()
+                if not product:
+                    raise ValueError(gettext("المنتج غير موجود."))
+
+                price_val = Decimal(price_raw)
+                if price_val < 0:
+                    raise ValueError(gettext("السعر لا يمكن أن يكون سالباً."))
+
+                # If setting default, unset other defaults for this product+currency
+                if is_default:
+                    StoreProductPrice.query.filter_by(
+                        tenant_id=tenant_id,
+                        product_id=product_id,
+                        currency_code=currency_code,
+                        is_default=True,
+                    ).update({"is_default": False})
+
+                existing = StoreProductPrice.query.filter_by(
+                    tenant_id=tenant_id,
+                    product_id=product_id,
+                    currency_code=currency_code,
+                ).first()
+
+                if existing:
+                    existing.price = price_val
+                    existing.is_active = is_active
+                    existing.is_default = is_default
+                    existing.source = "manual"
+                else:
+                    new_price = StoreProductPrice(
+                        tenant_id=tenant_id,
+                        product_id=product_id,
+                        currency_code=currency_code,
+                        price=price_val,
+                        is_active=is_active,
+                        is_default=is_default,
+                        source="manual",
+                    )
+                    db.session.add(new_price)
+                db.session.flush()
+                LoggingCore.log_audit("update", "store_product_prices", product_id)
+            flash(gettext("تم حفظ السعر بنجاح."), "success")
+        except ValueError as exc:
+            current_app.logger.warning(f"ValueError saving store price: {exc}")
+            flash(str(exc), "warning")
+        except Exception as exc:
+            current_app.logger.error(f"Error saving store price: {exc}")
+            flash(ErrorMessages.action_failed(gettext("حفظ السعر")), "danger")
+        return redirect(url_for("store.admin_prices"))
+
+    return render_template(
+        "store/admin_prices.html",
+        store=store,
+        online_warehouse=online_wh,
+        products=products,
+        price_map=price_map,
+        currencies=currencies,
+    )
+
+
 @store_bp.route("/admin/transfer", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_store")

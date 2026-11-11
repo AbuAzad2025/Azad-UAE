@@ -285,6 +285,42 @@
             {% endif %}
           {{ _end(_mnt_any) }}
 
+          {% set _store = current_user.is_authenticated and current_user.has_permission('manage_store') %}
+          {{ _tree('fas fa-store', t('Online_Store'), 'store', _store) }}
+            {% if _store %}
+            <li class="nav-item">
+              <a href="{{ url_for('store.admin_index') }}" class="nav-link">
+                <i class="fas fa-tachometer-alt nav-icon text-info" aria-hidden="true"></i>
+                <p>{{ t('Dashboard') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
+                <i class="fas fa-boxes nav-icon text-info" aria-hidden="true"></i>
+                <p>{{ t('Catalog') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('store.admin_prices') }}" class="nav-link">
+                <i class="fas fa-tag nav-icon text-warning" aria-hidden="true"></i>
+                <p>{{ t('Prices') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('store.admin_orders') }}" class="nav-link">
+                <i class="fas fa-shopping-cart nav-icon text-primary" aria-hidden="true"></i>
+                <p>{{ t('Orders') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
+                <i class="fas fa-cog nav-icon text-secondary" aria-hidden="true"></i>
+                <p>{{ t('Settings') }}</p>
+              </a>
+            </li>
+            {% endif %}
+          {{ _end(_store) }}
+
           {% set _wh = current_user.is_authenticated and current_user.has_permission('manage_warehouse') %}
           {{ _tree('fas fa-warehouse', t('Warehouses'), 'warehouse', _wh) }}
             {% if _wh %}
