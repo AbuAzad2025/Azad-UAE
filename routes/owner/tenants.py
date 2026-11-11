@@ -343,19 +343,58 @@ def tenant_create():
             # no cashier, a tenant without GL gets no accountant. The
             # password is the one the owner set on the form; it is shown
             # once and the tenant is expected to change it.
-            admin_password = (request.form.get("admin_password") or "").strip()
-            if not admin_password:
-                raise ValueError(gettext("كلمة مرور مدير الشركة مطلوبة."))
-
             from models import Role, User
 
-            default_users = [
-                ("super_admin", f"{slug}-admin", "مدير الشركة", "Company Admin"),
-            ]
-            if request.form.get("enable_pos") == "on":
-                default_users.append(("cashier", f"{slug}-cashier", "أمين الصندوق", "Cashier"))
-            if request.form.get("enable_gl") == "on" or request.form.get("enable_reports") == "on":
-                default_users.append(("accountant", f"{slug}-accountant", "محاسب", "Accountant"))
+            admin_password = (request.form.get("admin_password") or "").strip()
+
+            default_users = []
+            if admin_password:
+                default_users.append(("super_admin", f"{slug}-admin", "مدير الشركة", "Company Admin"))  # i18n-ignore
+                if request.form.get("enable_pos") == "on":
+                    default_users.append(("cashier", f"{slug}-cashier", "أمين الصندوق", "Cashier"))  # i18n-ignore
+                if request.form.get("enable_gl") == "on" or request.form.get("enable_reports") == "on":
+                    default_users.append(("accountant", f"{slug}-accountant", "محاسب", "Accountant"))  # i18n-ignore
+                if getattr(tenant, "enable_maintenance", True):
+                    default_users.extend(
+                        [
+                            (
+                                "maintenance_reception",
+                                f"{slug}-maintenance-reception",
+                                "استقبال الصيانة",  # i18n-ignore
+                                "Maintenance Reception",
+                            ),
+                            (
+                                "maintenance_engineer",
+                                f"{slug}-maintenance-engineer",
+                                "مهندس الصيانة",  # i18n-ignore
+                                "Maintenance Engineer",
+                            ),
+                            (
+                                "maintenance_cashier",
+                                f"{slug}-maintenance-cashier",
+                                "صندوق الصيانة",  # i18n-ignore
+                                "Maintenance Cashier",
+                            ),
+                            (
+                                "maintenance_closer",
+                                f"{slug}-maintenance-closer",
+                                "إغلاق الصيانة",  # i18n-ignore
+                                "Maintenance Closer",
+                            ),  # i18n-ignore
+                            (
+                                "maintenance_discount",
+                                f"{slug}-maintenance-discount",
+                                "خصم الصيانة",  # i18n-ignore
+                                "Maintenance Discount",
+                            ),
+                            (
+                                "maintenance_settings",
+                                f"{slug}-maintenance-settings",
+                                "إعدادات الصيانة",  # i18n-ignore
+                                "Maintenance Settings",
+                            ),
+                        ]
+                    )
 
             with without_tenant_scope():
                 for role_slug, username, name_ar, name_en in default_users:

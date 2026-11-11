@@ -220,6 +220,42 @@ def _ensure_functional_roles():
                 "slug": "cashier",
                 "description": "POS cashier - processes sales and receipts, opens/closes register; no reports, costs, or ledger access",
             },
+            {
+                "name": "Maintenance Reception",
+                "name_ar": "استقبال الصيانة",
+                "slug": "maintenance_reception",
+                "description": "Maintenance reception - creates orders, checks warranty, registers devices",
+            },
+            {
+                "name": "Maintenance Engineer",
+                "name_ar": "مهندس الصيانة",
+                "slug": "maintenance_engineer",
+                "description": "Maintenance engineer - performs work, adds parts and services, changes status",
+            },
+            {
+                "name": "Maintenance Cashier",
+                "name_ar": "صندوق الصيانة",
+                "slug": "maintenance_cashier",
+                "description": "Maintenance cashier - collects deposits, closes orders, handles refunds",
+            },
+            {
+                "name": "Maintenance Closer",
+                "name_ar": "إغلاق الصيانة",
+                "slug": "maintenance_closer",
+                "description": "Maintenance closer - finalizes orders with discounts and returns",
+            },
+            {
+                "name": "Maintenance Discount",
+                "name_ar": "خصم الصيانة",
+                "slug": "maintenance_discount",
+                "description": "Maintenance discount approver - applies discounts within caps",
+            },
+            {
+                "name": "Maintenance Settings",
+                "name_ar": "إعدادات الصيانة",
+                "slug": "maintenance_settings",
+                "description": "Maintenance settings - manages settings, purchases, and overrides",
+            },
         ]
         for r_data in roles:
             role = Role.query.filter((Role.slug == r_data["slug"]) | (Role.name == r_data["name"])).first()
@@ -263,6 +299,12 @@ def _ensure_functional_roles():
                 "pos_authorize_override",
                 "pos_view_expected",
                 "pos_return",
+                "manage_maintenance",
+                "maintenance_receive",
+                "maintenance_work",
+                "maintenance_close",
+                "maintenance_discount",
+                "maintenance_override_discount",
             ]
             manager_role.permissions = get_perms(*manager_codes)
 
@@ -300,8 +342,13 @@ def _ensure_functional_roles():
                 "pos_no_sale_drawer",
                 "pos_pay_in_out",
                 "pos_authorize_override",
-                "pos_view_expected",
                 "pos_return",
+                "manage_maintenance",
+                "maintenance_receive",
+                "maintenance_work",
+                "maintenance_close",
+                "maintenance_discount",
+                "maintenance_override_discount",
             ]
             branch_mgr_role.permissions = get_perms(*branch_mgr_codes)
 
@@ -315,6 +362,7 @@ def _ensure_functional_roles():
                 "manage_ledger",
                 "manage_payroll",
                 "pos_view_expected",
+                "manage_maintenance",
             ]
             acc_role.permissions = get_perms(*acc_codes)
 
@@ -338,8 +386,35 @@ def _ensure_functional_roles():
                 "pos_pay_in_out",
                 "pos_view_expected",
                 "pos_return",
+                "maintenance_close",
             ]
             cashier_role.permissions = get_perms(*cashier_codes)
+
+        maintenance_reception_role = Role.query.filter_by(slug="maintenance_reception").first()
+        if maintenance_reception_role:
+            maintenance_reception_role.permissions = get_perms("manage_maintenance", "maintenance_receive")
+
+        maintenance_engineer_role = Role.query.filter_by(slug="maintenance_engineer").first()
+        if maintenance_engineer_role:
+            maintenance_engineer_role.permissions = get_perms("manage_maintenance", "maintenance_work")
+
+        maintenance_cashier_role = Role.query.filter_by(slug="maintenance_cashier").first()
+        if maintenance_cashier_role:
+            maintenance_cashier_role.permissions = get_perms("manage_maintenance", "maintenance_close")
+
+        maintenance_closer_role = Role.query.filter_by(slug="maintenance_closer").first()
+        if maintenance_closer_role:
+            maintenance_closer_role.permissions = get_perms(
+                "manage_maintenance", "maintenance_close", "maintenance_discount"
+            )
+
+        maintenance_discount_role = Role.query.filter_by(slug="maintenance_discount").first()
+        if maintenance_discount_role:
+            maintenance_discount_role.permissions = get_perms("manage_maintenance", "maintenance_discount")
+
+        maintenance_settings_role = Role.query.filter_by(slug="maintenance_settings").first()
+        if maintenance_settings_role:
+            maintenance_settings_role.permissions = get_perms("manage_maintenance", "maintenance_override_discount")
 
 
 def _ensure_platform_reference_data():
