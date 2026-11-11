@@ -82,6 +82,12 @@ GL_CONCEPT_EXCISE_DUTY = "EXCISE_DUTY"
 GL_CONCEPT_INCOME_TAX_EXPENSE = "INCOME_TAX_EXPENSE"
 GL_CONCEPT_INCOME_TAX_PAYABLE = "INCOME_TAX_PAYABLE"
 GL_CONCEPT_WITHHOLDING_TAX_PAYABLE = "WITHHOLDING_TAX_PAYABLE"
+GL_CONCEPT_MAINTENANCE_REVENUE = "MAINTENANCE_REVENUE"
+GL_CONCEPT_MAINTENANCE_AR = "MAINTENANCE_AR"
+GL_CONCEPT_MAINTENANCE_AP = "MAINTENANCE_AP"
+GL_CONCEPT_MAINTENANCE_COGS = "MAINTENANCE_COGS"
+GL_CONCEPT_MAINTENANCE_CASH_DIFFERENCE = "MAINTENANCE_CASH_DIFFERENCE"
+GL_CONCEPT_MAINTENANCE_DEPOSIT = "MAINTENANCE_DEPOSIT"
 
 # Resolution modes for GL authority model
 RESOLUTION_MODE_MAPPING = "mapping"
@@ -176,6 +182,12 @@ GL_CONCEPT_CODES = (
     GL_CONCEPT_INCOME_TAX_EXPENSE,
     GL_CONCEPT_INCOME_TAX_PAYABLE,
     GL_CONCEPT_WITHHOLDING_TAX_PAYABLE,
+    GL_CONCEPT_MAINTENANCE_REVENUE,
+    GL_CONCEPT_MAINTENANCE_AR,
+    GL_CONCEPT_MAINTENANCE_AP,
+    GL_CONCEPT_MAINTENANCE_COGS,
+    GL_CONCEPT_MAINTENANCE_CASH_DIFFERENCE,
+    GL_CONCEPT_MAINTENANCE_DEPOSIT,
 )
 
 #: The concept registry. ``legacy_code`` is the hint the Owner panel's
@@ -721,6 +733,48 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
         "legacy_code": "5303",
         "required": False,
         "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_REVENUE: {
+        "meaning": "Maintenance Revenue",
+        "legacy_code": "4119",
+        "required": False,
+        "normal_balance": "credit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_AR: {
+        "meaning": "Maintenance Accounts Receivable",
+        "legacy_code": "1134",
+        "required": False,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_AP: {
+        "meaning": "Maintenance Accounts Payable",
+        "legacy_code": "2110",
+        "required": False,
+        "normal_balance": "credit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_COGS: {
+        "meaning": "Maintenance Cost of Goods Sold",
+        "legacy_code": "5119",
+        "required": False,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_CASH_DIFFERENCE: {
+        "meaning": "Maintenance Cash Difference",
+        "legacy_code": "6560",
+        "required": False,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
+    GL_CONCEPT_MAINTENANCE_DEPOSIT: {
+        "meaning": "Maintenance Customer Deposit",
+        "legacy_code": "2171",
+        "required": False,
+        "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
 }

@@ -56,6 +56,27 @@ from .integration_settings import IntegrationSettings
 from .invoice_settings import InvoiceSettings
 from .journal_entry_audit import JournalEntryAudit
 from .login_history import LoginHistory
+from .maintenance import (
+    MaintenanceDeviceRegistry,
+    MaintenanceDiscountMode,
+    MaintenanceInvoice,
+    MaintenanceOrder,
+    MaintenanceOrderLine,
+    MaintenanceOrderService,
+    MaintenanceOrderStatus,
+    MaintenanceOrderStatusLog,
+    MaintenanceOrderWarrantyStatus,
+    MaintenancePaymentMode,
+    MaintenancePurchaseOrder,
+    MaintenancePurchaseOrderLine,
+    MaintenancePurchaseOrderStatus,
+    MaintenanceReceipt,
+    MaintenanceReturn,
+    MaintenanceReturnLine,
+    MaintenanceServiceTemplate,
+    MaintenanceSetting,
+    MaintenanceWarrantyAudit,
+)
 from .package import Package, PackagePurchase
 from .partner import Partner
 from .partner_commission import PartnerCommissionEntry
@@ -226,6 +247,25 @@ __all__ = [
     "AdvancedExpense",
     "TaxCalculationRule",
     "LoginHistory",
+    "MaintenanceOrder",
+    "MaintenanceOrderLine",
+    "MaintenanceOrderService",
+    "MaintenanceOrderStatus",
+    "MaintenanceOrderStatusLog",
+    "MaintenanceOrderWarrantyStatus",
+    "MaintenanceDiscountMode",
+    "MaintenancePaymentMode",
+    "MaintenanceReceipt",
+    "MaintenanceInvoice",
+    "MaintenanceReturn",
+    "MaintenanceReturnLine",
+    "MaintenanceSetting",
+    "MaintenanceServiceTemplate",
+    "MaintenanceDeviceRegistry",
+    "MaintenanceWarrantyAudit",
+    "MaintenancePurchaseOrder",
+    "MaintenancePurchaseOrderLine",
+    "MaintenancePurchaseOrderStatus",
     "SecurityAlert",
     "APIKey",
     "SyncBatch",

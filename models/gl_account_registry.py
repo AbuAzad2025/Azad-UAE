@@ -65,6 +65,10 @@ BASE_ACCOUNTS = [
     GLAccountTemplate("1131", "AR - Trade Customers", "عملاء التجارة", "asset", 3, False, "1130"),
     GLAccountTemplate("1132", "AR - Partners", "عملاء الشراكة", "asset", 3, False, "1130"),
     GLAccountTemplate("1133", "AR - Staff", "ذمم الموظفين", "asset", 3, False, "1130"),
+    # Maintenance receivables are a sub-ledger of their own: a maintenance
+    # order is not a trade sale, so its balance must not sit in 1130 where the
+    # sales reconciliation reads it. The maintenance reconciliation reads 1134.
+    GLAccountTemplate("1134", "AR - Maintenance", "ذمم صيانة", "asset", 3, False, "1130"),
     GLAccountTemplate("1140", "Inventory", "المخزون", "asset", 2, False, "1100"),
     GLAccountTemplate(
         "1141",
@@ -211,6 +215,9 @@ BASE_ACCOUNTS = [
         "2100",
     ),
     GLAccountTemplate("2170", "Customer Deposits", "عربون العملاء", "liability", 2, False, "2100"),
+    # A deposit taken at reception against a maintenance order is a liability
+    # of this module, not of the sales module's deposit account.
+    GLAccountTemplate("2171", "Maintenance Customer Deposits", "عربون صيانة", "liability", 3, False, "2170"),
     GLAccountTemplate(
         "2180",
         "Azad Platform Payable",
@@ -267,6 +274,9 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("4104", "Sales - Services", "إيرادات الخدمات", "revenue", 2, False, "4100"),
     GLAccountTemplate("4200", "Shipping Revenue", "إيرادات الشحن", "revenue", 1, False, "4000"),
+    # Maintenance revenue is reported separately from sales revenue: the
+    # service volume of a workshop is not a trading margin.
+    GLAccountTemplate("4119", "Maintenance Revenue", "إيرادات الصيانة", "revenue", 2, False, "4100"),
     GLAccountTemplate("4300", "Other Revenue", "إيرادات أخرى", "revenue", 1, False, "4000"),
     GLAccountTemplate("4400", "FX Gains", "أرباح صرف العملات", "revenue", 1, False, "4000"),
     GLAccountTemplate("4500", "Donation Revenue", "إيرادات التبرعات", "revenue", 1, False, "4000"),
@@ -316,6 +326,9 @@ BASE_ACCOUNTS = [
         False,
         "5000",
     ),
+    # The cost of the spare parts a maintenance job consumed. Kept apart from
+    # trading COGS so a workshop's gross margin is readable on its own.
+    GLAccountTemplate("5119", "Maintenance Cost of Parts", "تكلفة قطع الصيانة", "expense", 2, False, "5100"),
     GLAccountTemplate("5300", "Landed Costs", "تكاليف الشحن والجمارك", "expense", 1, True, "5000"),
     GLAccountTemplate("5301", "Freight In", "شحن وارد", "expense", 2, False, "5300"),
     GLAccountTemplate("5302", "Customs Duty", "رسوم جمركية", "expense", 2, False, "5300"),
@@ -390,6 +403,9 @@ BASE_ACCOUNTS = [
     ),
     GLAccountTemplate("6500", "Miscellaneous Expenses", "مصروفات متنوعة", "expense", 1, False, "6000"),
     GLAccountTemplate("6550", "POS Cash Difference", "فروقات صندوق نقاط البيع", "expense", 1, False, "6000"),
+    # The reception drawer of the maintenance counter is a different drawer
+    # from the POS register, so its difference is a different account.
+    GLAccountTemplate("6560", "Maintenance Cash Difference", "فروقات صندوق الصيانة", "expense", 1, False, "6000"),
     GLAccountTemplate("6600", "FX Losses", "خسائر صرف العملات", "expense", 1, False, "6000"),
     GLAccountTemplate(
         "6190",
@@ -1050,6 +1066,28 @@ GL_MODULE_DEFINITIONS = {
         mappings=[
             GLConceptMappingTemplate("CAMPAIGN_DISCOUNT_EXPENSE", "6131", "campaigns"),
             GLConceptMappingTemplate("CAMPAIGN_DISCOUNT_REVERSAL", "6131", "campaigns"),
+        ],
+    ),
+    "maintenance": GLModuleDefinition(
+        "maintenance",
+        False,
+        "enable_maintenance",
+        accounts=[],
+        mappings=[
+            # The maintenance sub-ledger. 1134/4119/5119/2171/6560 are
+            # maintenance's own accounts, never a trade account: a workshop's
+            # receivable, revenue, parts cost, deposit and drawer difference
+            # must not mix with the sales module's balances.
+            GLConceptMappingTemplate("MAINTENANCE_AR", "1134", "maintenance"),
+            GLConceptMappingTemplate("MAINTENANCE_REVENUE", "4119", "maintenance"),
+            GLConceptMappingTemplate("MAINTENANCE_COGS", "5119", "maintenance"),
+            GLConceptMappingTemplate("MAINTENANCE_DEPOSIT", "2171", "maintenance"),
+            GLConceptMappingTemplate("MAINTENANCE_CASH_DIFFERENCE", "6560", "maintenance"),
+            # MAINTENANCE_AP is the module's own payable to the spare-parts
+            # supplier. It resolves to the trade AP account the tenant
+            # already reconciles: the counterparty is a supplier either way,
+            # and a second payable ledger would have to be reconciled too.
+            GLConceptMappingTemplate("MAINTENANCE_AP", "2110", "maintenance"),
         ],
     ),
     "partners": GLModuleDefinition(

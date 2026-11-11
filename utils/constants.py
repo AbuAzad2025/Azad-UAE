@@ -48,6 +48,11 @@ STOCK_MOVEMENT_TYPES = [
     ("adjustment", {"ar": "تسوية", "en": "Adjustment"}),
     ("return", {"ar": "إرجاع", "en": "Return"}),
     ("damage", {"ar": "تالف", "en": "Damage"}),
+    # The maintenance module issues spare parts from the maintenance
+    # warehouse and takes them back on a return. They are their own movement
+    # types so the inventory report can separate them from trading stock.
+    ("maintenance", {"ar": "صرف صيانة", "en": "Maintenance Issue"}),
+    ("maintenance_return", {"ar": "إرجاع صيانة", "en": "Maintenance Return"}),
 ]
 
 USER_ROLES = [
@@ -157,6 +162,12 @@ PERMISSION_CODES = [
     "purchase_req:create",
     "purchase_req:approve",
     "hr:leave_manage",
+    "manage_maintenance",
+    "maintenance_receive",
+    "maintenance_work",
+    "maintenance_close",
+    "maintenance_discount",
+    "maintenance_override_discount",
 ]
 
 # --- Unified Enums (canonical values only) ---
@@ -261,4 +272,10 @@ PERMISSIONS = {
     "purchase_req:create": {"ar": "إنشاء طلبات الشراء", "en": "Create Purchase Requisitions"},
     "purchase_req:approve": {"ar": "اعتماد طلبات الشراء", "en": "Approve Purchase Requisitions"},
     "hr:leave_manage": {"ar": "إدارة سجل الإجازات", "en": "Manage Leave Ledger"},
+    "manage_maintenance": {"ar": "إدارة الصيانة", "en": "Manage Maintenance"},
+    "maintenance_receive": {"ar": "استلام أجهزة الصيانة", "en": "Receive Maintenance Devices"},
+    "maintenance_work": {"ar": "تنفيذ أعمال الصيانة", "en": "Perform Maintenance Work"},
+    "maintenance_close": {"ar": "إغلاق وقبض الصيانة", "en": "Close and Collect Maintenance"},
+    "maintenance_discount": {"ar": "تطبيق خصم الصيانة", "en": "Apply Maintenance Discounts"},
+    "maintenance_override_discount": {"ar": "تجاوز حد خصم الصيانة", "en": "Override Maintenance Discount Limit"},
 }

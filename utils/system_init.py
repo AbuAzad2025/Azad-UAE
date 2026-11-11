@@ -457,6 +457,12 @@ def _ensure_permissions():
             "pos_pay_in_out": "pos",
             "pos_authorize_override": "pos",
             "pos_view_expected": "pos",
+            "manage_maintenance": "maintenance",
+            "maintenance_receive": "maintenance",
+            "maintenance_work": "maintenance",
+            "maintenance_close": "maintenance",
+            "maintenance_discount": "maintenance",
+            "maintenance_override_discount": "maintenance",
         }
         permissions_data = [
             {

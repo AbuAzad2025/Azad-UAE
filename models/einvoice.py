@@ -41,6 +41,15 @@ class EInvoice(db.Model):
         db.ForeignKey("product_returns.id", ondelete="CASCADE"),
         nullable=True,
     )
+    # Set when this row is the statutory document of a maintenance invoice.
+    # A maintenance job is a sale for the tax authority, so it carries the
+    # same UBL document - but it hangs off its own document, not a sale.
+    maintenance_invoice_id = db.Column(
+        db.Integer,
+        db.ForeignKey("maintenance_invoices.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
     # Israel Tax Authority — allocation number (מספר הקצאה) once requested.
     ita_allocation_number = db.Column(db.String(30))
     # ZATCA Phase 2 chain — set for KSA simplified invoices when the tenant
@@ -54,6 +63,11 @@ class EInvoice(db.Model):
 
     tenant = db.relationship("Tenant", foreign_keys=[tenant_id])
     sale = db.relationship("Sale", foreign_keys=[sale_id], backref=db.backref("einvoice", uselist=False))
+    maintenance_invoice = db.relationship(
+        "MaintenanceInvoice",
+        foreign_keys=[maintenance_invoice_id],
+        backref=db.backref("einvoice", uselist=False),
+    )
 
     def __repr__(self):
         return f"<EInvoice {self.country} sale={self.sale_id} {self.format}>"

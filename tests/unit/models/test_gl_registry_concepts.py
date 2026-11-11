@@ -79,6 +79,7 @@ EXPECTED_MODULE_FEATURE_FLAGS = {
     "warranty": "enable_warranty_tracking",
     "bank_reconciliation": "enable_bank_reconciliation",
     "azad_platform": "enable_azad_platform",
+    "maintenance": "enable_maintenance",
 }
 
 # Concepts whose resolution is not the mapping table: liquidity concepts are

@@ -189,6 +189,7 @@ class Tenant(db.Model):
     enable_warranty_tracking = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
     enable_bank_reconciliation = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
     enable_azad_platform = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
+    enable_maintenance = db.Column(db.Boolean, default=True, nullable=False, server_default="1")
 
     # Preferences - التفضيلات
     default_currency = db.Column(

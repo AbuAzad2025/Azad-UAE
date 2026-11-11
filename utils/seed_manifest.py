@@ -126,7 +126,7 @@ PLATFORM_SEEDS: tuple[SeedSet, ...] = (
         label="Role permissions",
         scope="platform",
         seeder="utils.system_init._ensure_permissions",
-        expected=48,
+        expected=54,
         source="utils/constants.py:PERMISSION_CODES",
         note="Re-applied on every boot; the owner role is granted all of them.",
         verify="utils.seed_manifest_probe.count_permissions",
@@ -199,9 +199,10 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=112,
+        expected=117,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
-        note="113 base accounts (102 + 5 payroll statutory/pension + excise + zakat + withholding, Nov 2026) + the "
+        note="118 base accounts (102 + 5 payroll statutory/pension + excise + zakat + withholding, Nov 2026 "
+        "+ 5 maintenance accounts: AR/revenue/parts-cost/deposit/cash-difference, Nov 2026) + the "
         "tenant's industry extension (49 across 13 industries) + 2 liquidity "
         "accounts per active branch. Self-healing: matches on code and repairs "
         "name/type/parent/header/level/contra.",

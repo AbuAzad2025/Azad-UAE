@@ -38,6 +38,14 @@ class GLRef:
     FX_GAIN_LOSS = "FxGainLoss"
     INCOME_TAX = "IncomeTax"
     ZAKAT = "Zakat"
+    # Maintenance: the revenue/invoice leg, the receipt leg, the parts cost
+    # leg and the return leg. They are separate reference types so a
+    # maintenance entry can never be confused with a sale entry that happens
+    # to carry the same order id, and so each leg can be reversed on its own.
+    MAINTENANCE = "Maintenance"
+    MAINTENANCE_RECEIPT = "MaintenanceReceipt"
+    MAINTENANCE_COGS = "MaintenanceCOGS"
+    MAINTENANCE_RETURN = "MaintenanceReturn"
 
 
 LEGACY_REF_MAP: dict[str, str] = {

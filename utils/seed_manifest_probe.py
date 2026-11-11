@@ -89,11 +89,11 @@ def min_gl_accounts_for_active_tenant() -> int:
     Returns 0 when there are no active tenants, because an empty platform has
     nothing to seed yet.
 
-    The manifest asserts ``>= 112`` against this, which is the count of
+    The manifest asserts ``>= 117`` against this, which is the count of
     ``BASE_ACCOUNTS``. That floor is unconditional: ``GLTreeBuilder.build`` calls
     ``_get_core_account_tree()`` for every tenant regardless of its
     ``business_type``, and the industry tree on top of it is additive, so a
-    tenant below 112 is genuinely broken rather than merely minimal.
+    tenant below 117 is genuinely broken rather than merely minimal.
     """
     from models.gl import GLAccount
     from models.tenant import Tenant
