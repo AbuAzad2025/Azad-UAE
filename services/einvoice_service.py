@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import base64
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,17 @@ class EInvoiceService:
         else:
             query = query.filter_by(return_id=return_id, doc_type="credit_note")
         return query.first()
+
+    @staticmethod
+    def _upsert_maintenance_row(tenant_id, maintenance_invoice_id):
+        """The artifact of a maintenance invoice, if it has one."""
+        from models import EInvoice
+
+        return EInvoice.query.filter_by(
+            tenant_id=int(tenant_id),
+            maintenance_invoice_id=maintenance_invoice_id,
+            doc_type="invoice",
+        ).first()
 
     @staticmethod
     def _last_phase2_row(tenant_id):
@@ -97,6 +109,48 @@ class EInvoiceService:
             result = row
         else:
             result = EInvoice(tenant_id=int(tenant_id), sale_id=sale_id, return_id=return_id, **fields)
+            db.session.add(result)
+        db.session.flush()
+        return result
+
+    @staticmethod
+    def _save_maintenance(tenant_id, tenant, document, maintenance_invoice_id):
+        """Persist the artifact of a maintenance invoice.
+
+        The row hangs off the maintenance document, so the two ledgers never
+        share a key and a maintenance artifact can never be mistaken for
+        the artifact of a sale.
+        """
+        from extensions import db
+        from models import EInvoice
+
+        xml_payload = document["xml_payload"]
+        invoice_hash = EInvoiceService._hash_or_fallback(xml_payload, document)
+        phase2 = document.get("format", "").startswith("zatca_phase2")
+
+        row = EInvoiceService._upsert_maintenance_row(tenant_id, maintenance_invoice_id)
+        fields = {
+            "country": tenant.vat_country if tenant is not None else "XX",
+            "format": document["format"],
+            "doc_type": "invoice",
+            "xml_payload": xml_payload,
+            "qr_base64": document.get("qr_base64") or None,
+            "invoice_hash": invoice_hash,
+            "status": "generated",
+        }
+        if phase2:
+            fields["invoice_counter_value"] = document.get("invoice_counter_value")
+
+        if row is not None:
+            for key, value in fields.items():
+                setattr(row, key, value)
+            result = row
+        else:
+            result = EInvoice(
+                tenant_id=int(tenant_id),
+                maintenance_invoice_id=maintenance_invoice_id,
+                **fields,
+            )
             db.session.add(result)
         db.session.flush()
         return result
@@ -208,6 +262,89 @@ class EInvoiceService:
             )
             return None
         return EInvoiceService._save(tenant_id, tenant, document, sale_id=sale.id, doc_type="invoice")
+
+    @staticmethod
+    def generate_for_maintenance_invoice(invoice):
+        """Generate/regenerate the statutory e-invoice for a maintenance invoice.
+
+        A maintenance job is a sale for the tax authority: the customer
+        receives a service, pays a tax, and is entitled to the same
+        document. So the same UBL builder and the same ZATCA TLV QR are
+        used - only the document it hangs off is different.
+
+        The maintenance invoice is adapted to the shape the document
+        builder expects (a sale-like object) rather than the builder
+        learning a second shape: one statutory document, one builder.
+        """
+        from types import SimpleNamespace
+
+        try:
+            int(invoice.id)
+        except (TypeError, ValueError, AttributeError):
+            return None
+
+        tenant_id = getattr(invoice, "tenant_id", None)
+        if tenant_id is None:
+            from utils.tenanting import get_active_tenant_id
+
+            tenant_id = get_active_tenant_id()
+        tenant = EInvoiceService._tenant(tenant_id)
+        if tenant is None or not getattr(tenant, "enable_einvoice", True):
+            return None
+
+        order = invoice.order
+        if order is None:
+            return None
+
+        lines = []
+        for line in list(order.lines):
+            lines.append(
+                SimpleNamespace(
+                    quantity=line.quantity,
+                    unit_price=line.unit_price,
+                    line_total=line.line_total,
+                    product=line.product,
+                    product_id=line.product_id,
+                    tax_category=getattr(line.product, "tax_category", "standard") or "standard",
+                )
+            )
+        for service_line in list(order.services_lines):
+            lines.append(
+                SimpleNamespace(
+                    quantity=Decimal("1"),
+                    unit_price=service_line.unit_price,
+                    line_total=service_line.line_total,
+                    product=None,
+                    product_id=None,
+                    tax_category="standard",
+                )
+            )
+
+        sale_like = SimpleNamespace(
+            id=invoice.id,
+            tenant_id=tenant_id,
+            customer=order.customer,
+            sale_number=invoice.invoice_number,
+            sale_date=invoice.invoice_date,
+            currency=invoice.currency,
+            exchange_rate=invoice.exchange_rate,
+            tax_rate=invoice.tax_rate,
+            subtotal=invoice.subtotal,
+            taxable_amount=invoice.taxable_amount,
+            tax_amount=invoice.tax_amount,
+            total_amount=invoice.total_amount,
+            lines=lines,
+        )
+
+        document = EInvoiceService._build_document(tenant, sale_like, doc_type="invoice", billing_reference=None)
+        if document is None:
+            logger.warning(
+                "E-invoice not generated for maintenance invoice %s: jurisdiction %s has no e-invoice profile",
+                getattr(invoice, "id", None),
+                getattr(tenant, "vat_country", None),
+            )
+            return None
+        return EInvoiceService._save_maintenance(tenant_id, tenant, document, invoice.id)
 
     @staticmethod
     def generate_for_return(product_return, *, net_return_amount=None, tax_amount=None, refund_amount=None):
