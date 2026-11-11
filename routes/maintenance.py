@@ -363,6 +363,43 @@ def set_order_discount(order_id):
 
 
 # ============================================================================
+# استرداد للعميل
+# ============================================================================
+@maintenance_bp.route("/<int:order_id>/refund", methods=["POST"])
+@login_required
+@permission_required("maintenance_close")
+def refund_credit(order_id):
+    """استرداد للعميل بعد مرتجع أبقی رصيدًا دائنًا."""
+    tid = require_active_tenant_id()
+    _order_or_404(order_id, tid)
+
+    try:
+        with atomic_transaction("maintenance_refund"):
+            receipt = MaintenanceService.refund_credit(
+                order_id=order_id,
+                tenant_id=tid,
+                cashier_id=current_user.id,
+                amount=_decimal_or_zero("amount"),
+                payment_mode=request.form.get("payment_mode", "cash"),
+                payment_reference=request.form.get("payment_reference") or None,
+                notes=request.form.get("notes") or None,
+            )
+            flash(
+                gettext("تم استرداد {amount} - سند {number}").format(
+                    amount=receipt.amount, number=receipt.receipt_number
+                ),
+                "success",
+            )
+    except ValueError as e:
+        flash(str(e), "danger")
+    except Exception as e:
+        current_app.logger.exception("Maintenance refund failed")
+        flash(gettext("فشل الاسترداد: {error}").format(error=str(e)), "danger")
+
+    return redirect(url_for("maintenance.detail", order_id=order_id))
+
+
+# ============================================================================
 # فحص الكفالة
 # ============================================================================
 @maintenance_bp.route("/<int:order_id>/warranty/check", methods=["POST"])

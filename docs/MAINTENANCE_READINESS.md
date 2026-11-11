@@ -107,15 +107,15 @@ exactly the share that line carried.
   handled by the FEFO batch path. The core serial-tracking service is a
   warehouse-assignment concern that the trade path does not use on issue
   either, so the maintenance path stays consistent with it.
-* **A return after the customer has paid leaves a credit balance, not a
-  refund.** The return reverses the revenue, the tax and the parts cost
-  and credits the maintenance receivable — which is right — but there is
-  no refund voucher in the module, so a customer who paid in full and
-  then returned a part ends up with a negative receivable that nobody can
-  settle. A refund path (paying the credit back, or offsetting it
-  against the next order) is not implemented; the credit balance is the
-  honest representation of what is owed, and it has to be worked off by
-  hand.
+* **A return after the customer has paid leaves a credit balance that is
+  settled by an explicit refund.** The return reverses the revenue, the
+  tax and the parts cost and credits the maintenance receivable — which
+  is right — and ``MaintenanceService.refund_credit`` pays it back out of
+  the maintenance drawer (Dr receivable, Cr cash) so the credit is
+  settled rather than left hanging. The amount defaults to the credit
+  balance and is capped by it, so the same credit cannot be refunded
+  twice. What is **not** implemented is offsetting the credit against a
+  later order — the credit has to be paid back, not carried.
 
 ## What proves it
 

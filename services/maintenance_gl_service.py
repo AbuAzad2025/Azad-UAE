@@ -545,6 +545,82 @@ class MaintenanceGLService:
 
         return entry
 
+    @staticmethod
+    def post_refund(receipt, user_id: int) -> GLJournalEntry:
+        """ترحيل استرداد للعميل.
+
+        A return after the customer has paid leaves a credit balance in
+        the maintenance receivable - the customer is owed money. The
+        refund pays it back out of the maintenance drawer.
+
+        Dr: MAINTENANCE_AR (ذمم صيانة مدينة) - يقلّ الرصيد الدائن
+        Cr: CASH / BANK (صندوق الاستقبال)
+
+        It is the mirror image of post_receipt and it is what turns a
+        credit balance into a settled one.
+        """
+        if receipt is None:
+            raise ValueError(gettext("لا يمكن ترحيل استرداد بدون سند"))
+
+        tid = receipt.tenant_id
+        order = receipt.order
+        amount = Decimal(str(receipt.amount or 0))
+        if amount <= 0:
+            raise GlPostingError(gettext("لا يمكن ترحيل استرداد بقيمة صفرية"))
+
+        cash_account, cash_concept, resolved_branch = MaintenanceGLService._liquidity_account(
+            receipt.payment_mode, tid, order.branch_id if order is not None else None
+        )
+        ar_account = MaintenanceGLService._require_account("MAINTENANCE_AR", tid, resolved_branch)
+
+        lines = [
+            {
+                "account": ar_account,
+                "concept_code": "MAINTENANCE_AR",
+                "debit": amount,
+                "description": gettext("استرداد صيانة - سند {number}").format(number=receipt.receipt_number),
+            },
+            {
+                "account": cash_account,
+                "concept_code": cash_concept,
+                "credit": amount,
+                "description": gettext("صرف استرداد - سند {number}").format(number=receipt.receipt_number),
+            },
+        ]
+
+        entry = post_or_fail(
+            lines=lines,
+            description=gettext("استرداد صيانة - سند {number}").format(number=receipt.receipt_number),
+            reference_type=GLRef.MAINTENANCE_RECEIPT,
+            reference_id=receipt.id,
+            date=receipt.receipt_date,
+            currency=order.currency if order is not None else "AED",
+            exchange_rate=order.exchange_rate if order is not None else Decimal("1"),
+            branch_id=resolved_branch,
+            user_id=user_id,
+            tenant_id=tid,
+        )
+
+        receipt.gl_posted = True
+        receipt.gl_posted_at = datetime.now(UTC)
+        receipt.gl_entry_id = entry.id
+        db.session.flush()
+
+        log_financial(
+            message=f"Maintenance refund posted: {receipt.receipt_number} amount {amount}",
+            tenant_id=tid,
+            level="INFO",
+            source="services.maintenance_gl_service.MaintenanceGLService.post_refund",
+            extra={
+                "receipt_id": receipt.id,
+                "tenant_id": tid,
+                "gl_entry_id": entry.id,
+                "amount": float(amount),
+            },
+        )
+
+        return entry
+
     # ── return ───────────────────────────────────────────────────────────
     @staticmethod
     def post_return(maintenance_return, user_id: int) -> GLJournalEntry:

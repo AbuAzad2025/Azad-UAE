@@ -131,6 +131,11 @@ class MaintenanceOrder(db.Model):
     paid_amount = db.Column(db.Numeric(15, 3), default=0)
     balance_due = db.Column(db.Numeric(15, 3), default=0)
     deposit_amount = db.Column(db.Numeric(15, 3), default=0)  # دفعة مقدمة عند الاستلام
+    # The amount refunded to the customer after a return left a credit
+    # balance. A return credits the maintenance receivable; the refund
+    # pays it back out of the maintenance drawer, so the two together
+    # settle the credit.
+    refunded_amount = db.Column(db.Numeric(15, 3), default=0)  # مبلغ مسترد للعميل
 
     currency = db.Column(db.String(3), default="AED", nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
@@ -516,6 +521,10 @@ class MaintenanceReceipt(db.Model):
     # A deposit is a liability, not a payment against the invoice: it is
     # credited to the maintenance deposit account and applied later.
     is_deposit = db.Column(db.Boolean, default=False, nullable=False, index=True)
+    # A refund is a payment the workshop makes to the customer, because a
+    # returned part left a credit balance. It is posted in the opposite
+    # direction of a receipt: Dr receivable, Cr cash.
+    is_refund = db.Column(db.Boolean, default=False, nullable=False, index=True)
 
     gl_posted = db.Column(db.Boolean, default=False, nullable=False)
     gl_posted_at = db.Column(db.DateTime(timezone=True))

@@ -775,6 +775,113 @@ class MaintenanceService:
 
         return WarrantyService.check_warranty_on_receipt(order_id, tenant_id, checked_by=checked_by)
 
+    # ── استرداد للعميل بعد مرتجع ──
+    @staticmethod
+    def refund_credit(
+        order_id: int,
+        tenant_id: int,
+        *,
+        cashier_id: int,
+        amount: Decimal | None = None,
+        payment_mode: str = "cash",
+        payment_reference: str | None = None,
+        notes: str | None = None,
+    ) -> MaintenanceReceipt:
+        """استرداد للعميل после مرتجع أبقی رصيدًا دائنًا.
+
+        A return after the customer has paid leaves a credit balance in
+        the maintenance receivable — the customer is owed money. This
+        method pays it back out of the maintenance drawer, so the
+        credit is settled rather than left hanging.
+
+        The amount defaults to the credit balance, and the order's
+        refunded amount is increased by it so a second refund cannot
+        double-pay the same credit.
+        """
+        tid = _require_tenant_id(tenant_id)
+        order = _locked_order(order_id, tid)
+        if order.is_archived:
+            raise ValueError(gettext("لا يمكن استرداد على أمر مؤرشف"))
+
+        # The credit balance is the money the customer is owed: the
+        # value of what was returned less what was already refunded.
+        returned_value = sum(
+            (Decimal(str(r.total_value or 0)) for r in cast(Any, order.returns) if not r.is_archived),
+            Decimal("0"),
+        )
+        already_refunded = Decimal(str(order.refunded_amount or 0))
+        credit_balance = returned_value - already_refunded
+        if credit_balance <= 0:
+            raise ValueError(gettext("لا يوجد رصيد دائن للعميل"))
+
+        payment_mode = (payment_mode or "").strip().lower()
+        if payment_mode not in _PAYMENT_MODES or payment_mode == "account":
+            raise ValueError(gettext("طريقة دفع غير مدعومة: {mode}").format(mode=payment_mode))
+
+        amount_to_refund = Decimal(str(amount if amount is not None else credit_balance)).quantize(
+            _BASE_QUANTUM, rounding=ROUND_HALF_UP
+        )
+        if amount_to_refund <= 0:
+            raise ValueError(gettext("مبلغ الاسترداد يجب أن يكون أكبر من صفر"))
+        if amount_to_refund > credit_balance:
+            raise ValueError(gettext("مبلغ الاسترداد يتجاوز الرصيد الدائن"))
+
+        if not tenant_query(User).filter_by(id=cashier_id, tenant_id=tid, is_active=True).first():
+            raise ValueError(gettext("موظف الاستقبال غير موجود"))
+
+        DocumentSequenceService.get_or_create(
+            tenant_id=tid,
+            code="maintenance_receipt",
+            prefix="PT",
+            pattern="{prefix}-{year}-{counter:04d}",
+            counter_reset="year",
+        )
+        receipt_number = DocumentSequenceService.next_number(
+            tenant_id=tid,
+            code="maintenance_receipt",
+            prefix="PT",
+        )
+
+        from datetime import UTC, datetime
+
+        receipt = MaintenanceReceipt(
+            tenant_id=tid,
+            order_id=order.id,
+            receipt_number=receipt_number,
+            amount=amount_to_refund,
+            payment_mode=payment_mode,
+            reference_number=payment_reference,
+            cashier_id=cashier_id,
+            is_refund=True,
+            receipt_date=datetime.now(UTC),
+        )
+        db.session.add(receipt)
+        db.session.flush()
+
+        MaintenanceGLService.post_refund(receipt, cashier_id)
+
+        order.refunded_amount = already_refunded + amount_to_refund
+        db.session.flush()
+
+        log_financial(
+            message=(
+                f"Maintenance refund: order {order.order_number} "
+                f"amount {amount_to_refund} credit_balance {credit_balance}"
+            ),
+            tenant_id=tid,
+            level="INFO",
+            source="services.maintenance_order_service.MaintenanceService.refund_credit",
+            extra={
+                "order_id": order.id,
+                "tenant_id": tid,
+                "receipt_number": receipt.receipt_number,
+                "amount": float(amount_to_refund),
+                "notes": notes,
+            },
+        )
+
+        return receipt
+
     # ── إلغاء كفالة المنتج ──
     @staticmethod
     def cancel_warranty(
