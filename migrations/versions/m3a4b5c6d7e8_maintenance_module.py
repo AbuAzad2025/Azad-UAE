@@ -782,6 +782,7 @@ def upgrade() -> None:
             sa.Column("color_warranty", sa.String(length=7), nullable=False, default="#10b981"),
             sa.Column("color_non_warranty", sa.String(length=7), nullable=False, default="#ef4444"),
             sa.Column("color_unknown_warranty", sa.String(length=7), nullable=False, default="#f59e0b"),
+            sa.Column("engineer_hourly_rate", sa.Numeric(precision=15, scale=3), nullable=False, default=0),
             sa.Column("allow_engineer_cancel_warranty", sa.Boolean(), nullable=False, default=False),
             sa.Column("allow_engineer_restore_warranty", sa.Boolean(), nullable=False, default=False),
             sa.Column("invoice_prefix", sa.String(length=20), nullable=False, default="MINV"),

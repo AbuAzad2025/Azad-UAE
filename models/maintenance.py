@@ -773,6 +773,14 @@ class MaintenanceSetting(db.Model):
     color_warranty = db.Column(db.String(7), default="#10b981")  # لون تحت الكفالة
     color_non_warranty = db.Column(db.String(7), default="#ef4444")  # لون خارج الكفالة
     color_unknown_warranty = db.Column(db.String(7), default="#f59e0b")  # لون غير محدد
+
+    # The rate used to cost the time an engineer spends on a job. The
+    # module has no wage table of its own and the HR module has no
+    # hourly rate, so the workshop sets one rate for the tenant and the
+    # margin report charges every service line's duration against it.
+    # A job's true margin is the revenue less the parts cost less the
+    # labour cost; without this the report would overstate the margin.
+    engineer_hourly_rate = db.Column(db.Numeric(15, 3), default=0)  # سعر ساعة العمل
     allow_engineer_cancel_warranty = db.Column(
         db.Boolean, default=False, nullable=False
     )  # هل يمكن للمهندس إلغاء كفالة؟

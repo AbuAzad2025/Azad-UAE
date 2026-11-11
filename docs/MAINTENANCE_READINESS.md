@@ -93,8 +93,12 @@ exactly the share that line carried.
 
 ## Known limits
 
-* Pricing is in the tenant's default currency. A foreign-currency order is
-  refused rather than priced at a rate the module cannot defend.
+* **Multi-currency pricing is allowed.** The operator prices the parts and
+  the services in the order's own currency; the cost of the parts is the
+  warehouse's moving average in the base currency, posted the same way
+  the trade path posts its COGS. The operator converts the part prices
+  themselves — the same burden the trade path places on its own cashier —
+  and the GL entry carries the order's currency and rate.
 * A cheque receipt is refused: a cheque is a receivable and belongs to the
   cheque module's lifecycle, not to a cash receipt here.
 * The parts-cost entry assumes the tenant has mapped `MAINTENANCE_COGS` and
@@ -102,20 +106,26 @@ exactly the share that line carried.
   than posted somewhere approximate.
 * Deleting a tenant that has maintenance records is refused by the
   archive-only triggers. The tenant lifecycle must account for that.
-* A part's own serial number is not tracked through the maintenance
-  issue: the module moves the quantity and the cost, and lot tracking is
-  handled by the FEFO batch path. The core serial-tracking service is a
-  warehouse-assignment concern that the trade path does not use on issue
-  either, so the maintenance path stays consistent with it.
+* **A part's own serial number is not tracked through the maintenance
+  issue.** The module moves the quantity and the cost, and lot tracking
+  is handled by the FEFO batch path. The core serial-tracking service
+  is a warehouse-assignment concern that the trade path does not use on
+  issue either, so the maintenance path stays consistent with it. This
+  is a deliberate non-feature: introducing serial tracking here would
+  make the maintenance module differ from the trade path, which is the
+  wrong direction.
 * **A return after the customer has paid leaves a credit balance that is
-  settled by an explicit refund.** The return reverses the revenue, the
-  tax and the parts cost and credits the maintenance receivable — which
-  is right — and ``MaintenanceService.refund_credit`` pays it back out of
-  the maintenance drawer (Dr receivable, Cr cash) so the credit is
-  settled rather than left hanging. The amount defaults to the credit
-  balance and is capped by it, so the same credit cannot be refunded
-  twice. What is **not** implemented is offsetting the credit against a
-  later order — the credit has to be paid back, not carried.
+  settled by an explicit refund.** ``MaintenanceService.refund_credit``
+  pays it back out of the maintenance drawer (Dr receivable, Cr cash) so
+  the credit is settled rather than left hanging. The amount defaults to
+  the credit balance and is capped by it, so the same credit cannot be
+  refunded twice. What is **not** implemented is offsetting the credit
+  against a later order — the credit has to be paid back, not carried.
+* **The margin is the true margin.** The engineer's hourly rate is set
+  on the maintenance settings, and the margin report charges every
+  service line's planned duration against it. Without a rate the report
+  shows the parts margin only — the honest answer when the workshop has
+  not set a rate.
 
 ## What proves it
 

@@ -62,6 +62,14 @@
     <div class="col-md-3">
       <div class="card mnt-total-box h-100">
         <div class="card-body">
+          <div class="text-muted small">{{ t('Labour Cost') }}</div>
+          <div class="h4 mb-0">{{ '%.3f'|format(report.total_labour_cost|float) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mnt-total-box h-100">
+        <div class="card-body">
           <div class="text-muted small">{{ t('Margin') }}</div>
           <div class="h4 mb-0">{{ '%.3f'|format(report.total_margin|float) }} {{ report.base_currency }}</div>
         </div>
@@ -89,6 +97,7 @@
             <th>{{ t('Engineer') }}</th>
             <th class="text-end">{{ t('Net Revenue') }}</th>
             <th class="text-end">{{ t('Parts Cost') }}</th>
+            <th class="text-end">{{ t('Labour Cost') }}</th>
             <th class="text-end">{{ t('Margin') }}</th>
             <th class="text-end">{{ t('Margin Percent') }}</th>
           </tr>
@@ -105,6 +114,7 @@
             <td>{{ order.engineer_name or '-' }}</td>
             <td class="text-end">{{ '%.3f'|format(order.revenue|float) }}</td>
             <td class="text-end">{{ '%.3f'|format(order.parts_cost|float) }}</td>
+            <td class="text-end">{{ '%.3f'|format(order.labour_cost|float) }}</td>
             <td class="text-end fw-semibold">{{ '%.3f'|format(order.margin|float) }}</td>
             <td class="text-end">{{ '%.2f'|format(order.margin_percent|float) }}%</td>
           </tr>

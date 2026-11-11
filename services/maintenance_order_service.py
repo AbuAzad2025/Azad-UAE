@@ -205,9 +205,16 @@ def _authorize_price_override(tenant_id, actor_id, requested_price, standard_pri
 
 
 def _require_pricing_currency(order: MaintenanceOrder, tenant_id: int) -> None:
-    tenant = tenant_query(Tenant).filter_by(id=tenant_id).first()
-    if tenant is None or order.currency != (tenant.default_currency or "").strip().upper():
-        raise ValueError(gettext("تسعير الصيانة بعملة مختلفة غير متاح حتى اكتمال تحويل الأسعار"))
+    """Multi-currency pricing is allowed, like the trade path.
+
+    The operator prices the parts and the services in the order's own
+    currency; the cost of the parts is always the warehouse's moving
+    average, which is carried in the tenant's base currency, and it is
+    posted the same way the trade path posts its COGS - in base, under
+    the order's currency and rate. A foreign-currency order therefore
+    needs the operator to convert the part prices themselves, which is
+    the same burden the trade path places on its own cashier.
+    """
 
 
 def _is_hex_color(value: str) -> bool:
@@ -388,7 +395,6 @@ class MaintenanceService:
         ):
             raise ValueError(gettext(f"لا يمكن إضافة قطع لأمر بحالة {order.status}"))
 
-        _require_pricing_currency(order, tid)
         product = tenant_query(Product).filter_by(id=product_id, tenant_id=tid, is_active=True).first()
         if product is None:
             raise ValueError(gettext("المنتج غير موجود"))
@@ -458,7 +464,9 @@ class MaintenanceService:
             MaintenanceOrderStatus.IN_PROGRESS,
         ):
             raise ValueError(gettext("لا يمكن إضافة خدمات في حالة الأمر الحالية"))
-        _require_pricing_currency(order, tid)
+        # Multi-currency is allowed: the operator prices the parts and the
+        # services in the order's own currency, and the cost of the parts is
+        # always the warehouse's moving average in the base currency.
         template = (
             tenant_query(MaintenanceServiceTemplate)
             .filter_by(tenant_id=tid, service_code=service_code, is_active=True)
@@ -1454,6 +1462,16 @@ class MaintenanceService:
         setting.allow_engineer_cancel_warranty = bool(fields.get("allow_engineer_cancel_warranty"))
         setting.allow_engineer_restore_warranty = bool(fields.get("allow_engineer_restore_warranty"))
 
+        # The engineer's hourly rate costs the labour on the margin
+        # report. A negative rate is refused because a negative wage is
+        # not a wage; a blank rate is zero, which makes the margin report
+        # show the parts margin only - the honest answer when the
+        # workshop has not set a rate.
+        rate = Decimal(str(fields.get("engineer_hourly_rate") or 0))
+        if rate < 0:
+            raise ValueError(gettext("سعر ساعة العمل لا يمكن أن يكون سالباً"))
+        setting.engineer_hourly_rate = rate
+
         for field, fallback in (
             ("color_warranty", "#10b981"),
             ("color_non_warranty", "#ef4444"),
@@ -1658,19 +1676,30 @@ class MaintenanceService:
 
         orders = query.order_by(MaintenanceOrder.order_date.desc()).all()
 
+        setting = tenant_query(MaintenanceSetting).filter_by(tenant_id=tid).first()
+        hourly_rate = Decimal(str(setting.engineer_hourly_rate if setting else 0))
+
         rows = []
         total_revenue = Decimal("0")
         total_cost = Decimal("0")
+        total_labour = Decimal("0")
         for order in orders:
             revenue = Decimal(str(order.taxable_amount or 0))
             cost = Decimal("0")
+            minutes = 0
             for line in cast(Any, order.lines):
                 if line.is_archived:
                     continue
                 cost += Decimal(str(line.cost_aed or 0))
-            margin = revenue - cost
+            for service_line in cast(Any, order.services_lines):
+                if service_line.is_archived:
+                    continue
+                minutes += int(service_line.duration_minutes or 0)
+            labour = (Decimal(minutes) / Decimal("60") * hourly_rate).quantize(_BASE_QUANTUM, rounding=ROUND_HALF_UP)
+            margin = revenue - cost - labour
             total_revenue += revenue
             total_cost += cost
+            total_labour += labour
             rows.append(
                 {
                     "order_id": order.id,
@@ -1680,6 +1709,7 @@ class MaintenanceService:
                     "status": order.status,
                     "revenue": revenue,
                     "parts_cost": cost,
+                    "labour_cost": labour,
                     "margin": margin,
                     "margin_percent": (
                         (margin / revenue * Decimal("100")).quantize(Decimal("0.01")) if revenue > 0 else Decimal("0")
@@ -1688,7 +1718,7 @@ class MaintenanceService:
                 }
             )
 
-        total_margin = total_revenue - total_cost
+        total_margin = total_revenue - total_cost - total_labour
         return {
             "tenant_id": tid,
             "date_from": date_from.isoformat() if date_from else None,
@@ -1697,7 +1727,9 @@ class MaintenanceService:
             "order_count": len(orders),
             "total_revenue": total_revenue,
             "total_parts_cost": total_cost,
+            "total_labour_cost": total_labour,
             "total_margin": total_margin,
+            "engineer_hourly_rate": hourly_rate,
             "margin_percent": (
                 (total_margin / total_revenue * Decimal("100")).quantize(Decimal("0.01"))
                 if total_revenue > 0

@@ -723,6 +723,7 @@ def settings():
                     color_warranty=request.form.get("color_warranty") or "#10b981",
                     color_non_warranty=request.form.get("color_non_warranty") or "#ef4444",
                     color_unknown_warranty=request.form.get("color_unknown_warranty") or "#f59e0b",
+                    engineer_hourly_rate=_decimal_or_zero("engineer_hourly_rate"),
                     allow_engineer_cancel_warranty=(request.form.get("allow_engineer_cancel_warranty") == "on"),
                     allow_engineer_restore_warranty=(request.form.get("allow_engineer_restore_warranty") == "on"),
                 )
