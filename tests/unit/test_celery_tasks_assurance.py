@@ -203,12 +203,15 @@ class TestCeleryMaintenanceTasks:
         assert train_neural_models() == {"models": 2}
 
     def test_send_payment_reminders_counts_sent(self, mocker, mock_app_context):
-        c1 = MagicMock(phone="0501111111", name="A")
+        c1 = MagicMock(phone="0501111111", name="A", tenant_id=1)
         c1.get_balance_aed.return_value = Decimal("2000")
-        c2 = MagicMock(phone=None, name="B")
+        c2 = MagicMock(phone=None, name="B", tenant_id=1)
         c2.get_balance_aed.return_value = Decimal("5000")
         customer = mocker.patch("models.Customer")
         customer.query.filter_by.return_value.all.return_value = [c1, c2]
+        # The task now reads the tenant list from the database first.
+        mock_session = mocker.patch("extensions.db.session")
+        mock_session.query.return_value.filter.return_value.distinct.return_value.all.return_value = [(1,)]
         mocker.patch(
             "services.whatsapp_service.WhatsAppService.send_payment_reminder",
             return_value={"success": True},
