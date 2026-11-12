@@ -143,7 +143,9 @@ class BudgetService:
     def delete_budget(cls, budget):
         if budget.status not in ("draft",):
             raise ValueError(gettext("لا يمكن حذف ميزانية نشطة أو مغلقة."))
-        BudgetLine.query.filter_by(budget_id=budget.id).delete()
+        # A bulk delete is invisible to the ORM tenant guard AND to the
+        # SELECT criteria, so it carries its own tenant predicate.
+        BudgetLine.query.filter_by(budget_id=budget.id, tenant_id=budget.tenant_id).delete()
         db.session.delete(budget)
         db.session.flush()
 

@@ -510,7 +510,7 @@ def real_time_events():
 def events_stream_api():
     """API لتيار الأحداث"""
     event_type = request.args.get("type")
-    limit = int(request.args.get("limit", 50))
+    limit = request.args.get("limit", 50, type=int) or 50
 
     if event_type:
         events = accounting_event_stream.get_events_by_type(event_type)
@@ -653,7 +653,7 @@ def api_financial_ratios():
 @permission_required("view_ledger")
 def api_trend_analysis():
     """API لتحليل الاتجاهات"""
-    months = int(request.args.get("months", 12))
+    months = request.args.get("months", 12, type=int) or 12
 
     trends = AdvancedFinancialAnalytics.get_trend_analysis(months=months)
 
@@ -665,7 +665,7 @@ def api_trend_analysis():
 @admin_required
 def api_forecasting():
     """API للتوقعات المالية"""
-    months_ahead = int(request.args.get("months", 6))
+    months_ahead = request.args.get("months", 6, type=int) or 6
 
     forecast = AdvancedFinancialAnalytics.get_forecasting_data(months_ahead=months_ahead)
 

@@ -228,8 +228,13 @@ def cron_check_subscriptions():
     if not cron_secret:
         logger.critical("Cron endpoint invoked but CRON_SECRET not configured")
         abort(503)
-    provided = request.headers.get("X-Cron-Secret", "") or request.args.get("key", "")
-    if provided != cron_secret:
+    # Header only: a secret in the query string lands in the access log, the
+    # proxy log and the browser history. Compared with compare_digest so the
+    # comparison does not leak the secret's length through its timing.
+    import hmac
+
+    provided = request.headers.get("X-Cron-Secret", "")
+    if not provided or not hmac.compare_digest(provided, cron_secret):
         abort(403)
 
     try:

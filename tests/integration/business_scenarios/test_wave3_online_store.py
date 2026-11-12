@@ -414,7 +414,11 @@ class TestS18DeferredFulfilment:
         from models import Sale, StockMovement
 
         sale = online_order["sale"]
-        revenue_before = ledger.balance("4100", demo_tenant.id)
+        # The online store posts to its OWN revenue account (4103, "Sales -
+        # Online Store"), not to the general sales account (4100): the tenant
+        # has to be able to read the online channel on its own. The concept is
+        # SHOP_SALES_REVENUE and the mapping lives in the shop_online module.
+        revenue_before = ledger.balance("4103", demo_tenant.id)
 
         first = client.post(f"/store/admin/orders/{sale.id}/confirm", follow_redirects=True)
         assert first.status_code in (200, 302), first.get_data(as_text=True)[:300]
@@ -436,7 +440,7 @@ class TestS18DeferredFulfilment:
         assert after_first == 1, f"confirming moved stock {after_first} times, expected once"
 
         # Revenue is recognised on fulfilment, not on placement.
-        revenue_after = ledger.balance("4100", demo_tenant.id)
+        revenue_after = ledger.balance("4103", demo_tenant.id)
         assert revenue_after != revenue_before, "confirming the order recognised no revenue"
 
         second = client.post(f"/store/admin/orders/{sale.id}/confirm", follow_redirects=True)

@@ -1,3 +1,15 @@
+# ---------------------------------------------------------------------------
+# Every credential this script uses comes from the environment (or from the
+# gitignored file scripts/local/azad-finance.env). NOTHING is hardcoded here:
+# a committed password is a published password, and a committed Flask session
+# key lets anyone forge a session cookie for the running deployment.
+#
+#   $env:DATABASE_URL = "postgresql+psycopg2://user:pass@localhost:5432/db"
+#   $env:OWNER_PASSWORD = "<the platform owner password>"
+#   $env:SECRET_KEY = "<32+ random characters>"   # optional: generated below
+#   powershell -File scripts/ops/start_azad_finance.ps1
+# ---------------------------------------------------------------------------
+#
 # verify_azad_finance.ps1 - health-check the running server.
 #
 # 1. Anonymous probes (/, /auth/login).
@@ -6,7 +18,27 @@
 
 $ErrorActionPreference = "Stop"
 $Base    = "http://127.0.0.1:5000"
-$Owner   = "AlHazem-Finance-MasterKey-2026!"
+
+# The owner password is NEVER hardcoded: it comes from the environment (or
+# from the gitignored scripts/local/azad-finance.env).
+$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$LocalEnv = Join-Path $ProjectRoot "scripts\local\azad-finance.env"
+if (Test-Path $LocalEnv) {
+    foreach ($line in Get-Content $LocalEnv) {
+        if ($line -match '^\s*#' -or $line -notmatch '=') { continue }
+        $name, $value = $line -split '=', 2
+        $name = $name.Trim(); $value = $value.Trim()
+        if ([string]::IsNullOrEmpty($value)) { continue }
+        if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable($name))) {
+            Set-Item -Path "Env:$name" -Value $value
+        }
+    }
+}
+$Owner = $env:OWNER_PASSWORD
+if ([string]::IsNullOrEmpty($Owner)) {
+    Write-Host "[!] OWNER_PASSWORD is not set (env or scripts/local/azad-finance.env)"
+    exit 1
+}
 
 function Step([string]$Label) { Write-Host "" ; Write-Host "== $Label ==" }
 function ProbeAnon([string]$Label, [string]$Url) {

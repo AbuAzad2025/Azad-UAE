@@ -376,7 +376,7 @@ def scheduled_backups():
             "enabled": request.form.get("enabled") == "on",
             "frequency": request.form.get("frequency", "daily"),
             "backup_time": request.form.get("backup_time", "02:00"),
-            "keep_count": int(request.form.get("keep_count", 5)),
+            "keep_count": request.form.get("keep_count", 5, type=int) or 5,
         }
         BackupService.save_schedule_settings(settings)
 

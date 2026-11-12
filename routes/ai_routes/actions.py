@@ -49,7 +49,7 @@ def _user_can_ai_execute_actions(user):
         "manage_expenses",
         "manage_customers",
         "manage_products",
-        "manage_cheques",
+        "manage_payments",
         "manage_warehouse",
     )
     return any(user.has_permission(code) for code in mutation_perms)
@@ -86,7 +86,7 @@ def _process_user_action(message, user):
             gettext("مصروف"): "manage_expenses",
             gettext("مورد"): "manage_suppliers",
             gettext("مشتريات"): "manage_purchases",
-            gettext("شيك"): "manage_cheques",
+            gettext("شيك"): "manage_payments",
             gettext("دفتر"): "manage_ledger",
             gettext("مستودع"): "manage_warehouse",
             gettext("مستخدم"): "manage_users",

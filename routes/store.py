@@ -1,5 +1,6 @@
+import re
 from datetime import UTC, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from flask import (
     Blueprint,
@@ -18,7 +19,7 @@ from flask import (
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
-from extensions import db
+from extensions import db, limiter
 from models import Product
 from models.store_provisional_order import StoreProvisionalOrder
 from models.tenant import Tenant
@@ -273,7 +274,12 @@ def admin_prices():
                 if not product:
                     raise ValueError(gettext("المنتج غير موجود."))
 
-                price_val = Decimal(price_raw)
+                try:
+                    price_val = Decimal(price_raw)
+                except (InvalidOperation, ValueError):
+                    raise ValueError(gettext("السعر يجب أن يكون رقماً.")) from None
+                if not price_val.is_finite():
+                    raise ValueError(gettext("السعر يجب أن يكون رقماً."))
                 if price_val < 0:
                     raise ValueError(gettext("السعر لا يمكن أن يكون سالباً."))
 
@@ -590,6 +596,7 @@ def admin_coupons():
 
 @store_bp.route("/checkout", methods=["POST"])
 @login_required
+@permission_required("manage_store")
 def whatsapp_checkout():
     """Customer clicks Buy: create a provisional order and redirect to WhatsApp.
 
@@ -669,26 +676,31 @@ def whatsapp_checkout():
 
     provisional_number = StoreWhatsAppService.generate_provisional_number(tenant_id)
 
-    provisional = StoreProvisionalOrder(
-        tenant_id=tenant_id,
-        provisional_number=provisional_number,
-        customer_name=customer_name or None,
-        customer_phone=customer_phone or None,
-        customer_email=customer_email or None,
-        cart_json=lines,
-        currency_code=currency_code,
-        exchange_rate=rate,
-        subtotal_tx_ccy=subtotal_tx,
-        subtotal_aed=subtotal_aed,
-        status=StoreProvisionalOrder.STATUS_PENDING,
-    )
-    db.session.add(provisional)
-    db.session.flush()
+    # The provisional order is a DATABASE WRITE, so it belongs inside the
+    # transaction boundary. Without it the row is flushed and then discarded
+    # when the request's session is torn down - the customer gets a WhatsApp
+    # message about an order the tenant can never see.
+    with atomic_transaction("store_whatsapp_checkout"):
+        provisional = StoreProvisionalOrder(
+            tenant_id=tenant_id,
+            provisional_number=provisional_number,
+            customer_name=customer_name or None,
+            customer_phone=customer_phone or None,
+            customer_email=customer_email or None,
+            cart_json=lines,
+            currency_code=currency_code,
+            exchange_rate=rate,
+            subtotal_tx_ccy=subtotal_tx,
+            subtotal_aed=subtotal_aed,
+            status=StoreProvisionalOrder.STATUS_PENDING,
+        )
+        db.session.add(provisional)
+        db.session.flush()
 
-    # Build WhatsApp message
-    message = StoreWhatsAppService.build_message(provisional, tenant, store)
-    provisional.whatsapp_message = message
-    db.session.flush()
+        # Build WhatsApp message
+        message = StoreWhatsAppService.build_message(provisional, tenant, store)
+        provisional.whatsapp_message = message
+        db.session.flush()
 
     whatsapp_url = StoreWhatsAppService.whatsapp_url(customer_phone, message)
 
@@ -739,193 +751,254 @@ def cancel_provisional_order(provisional_id: int):
         flash(gettext("لا يمكن إلغاء طلب بحالة غير الانتظار."), "warning")
         return redirect(url_for("store.admin_orders"))
 
-    provisional.status = StoreProvisionalOrder.STATUS_CANCELLED
-    db.session.flush()
-    LoggingCore.log_audit("cancel", "store_provisional_orders", provisional.id)
+    with atomic_transaction("cancel_provisional_order"):
+        provisional.status = StoreProvisionalOrder.STATUS_CANCELLED
+        db.session.flush()
+        LoggingCore.log_audit("cancel", "store_provisional_orders", provisional.id)
     flash(gettext("تم إلغاء الطلب المؤقت."), "success")
     return redirect(url_for("store.admin_orders"))
 
 
-# ─── Public Storefront Routes ───────────────────────────────────────────
+# ─── Public Storefront Routes ─────────────────────────────────────────────
+#
+# These three pages are the customer-facing window into the tenant's online
+# warehouse. They are deliberately UNAUTHENTICATED (a customer has no login),
+# which makes them the most abused surface in the blueprint, so:
+#   * every endpoint is rate limited;
+#   * every POST is CSRF protected (the shop shell ships the meta tag);
+#   * the WhatsApp phone number is validated against E.164 before it is used;
+#   * the provisional order is written inside ``atomic_transaction``.
+
+# A WhatsApp destination must be a real international number. Without this a
+# caller could relay the tenant's paid messages to an arbitrary short code or
+# premium number.
+_PHONE_RE = re.compile(r"^\+?[1-9]\d{6,14}$")
+
+
+def _safe_hex_color(value, fallback: str) -> str:
+    text = (value or "").strip()
+    if re.fullmatch(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?", text or ""):
+        return text
+    return fallback
+
+
+def _storefront_context(store):
+    """Template context for the public storefront (mirrors the shop shell)."""
+    from utils.shop_i18n import shop_lang
+    from utils.shop_i18n import t as shop_t
+
+    tenant = db.session.get(Tenant, store.tenant_id)
+    lang = shop_lang()
+    store_currency = StorePricingService.resolve_display_currency(store, tenant)
+    try:
+        cart_count = int(sum(StoreService.get_cart(flask_session, store.tenant_id).values()) or 0)
+    except (TypeError, ValueError):
+        cart_count = 0
+    return {
+        "store": store,
+        "tenant": tenant,
+        "lang": lang,
+        "is_rtl": lang == "ar",
+        "t": lambda key: shop_t(key, lang),
+        "theme_primary": _safe_hex_color(getattr(tenant, "brand_color_primary", None), "#1B7A4E"),
+        "theme_secondary": _safe_hex_color(getattr(tenant, "brand_color_secondary", None), "#CE1126"),
+        "cart_count": cart_count,
+        "shop_account": None,
+        "is_shop_logged_in": False,
+        "analytics_id": "",
+        "store_currency": store_currency,
+        "dp": lambda product: StorePricingService.resolve_display_price(product, tenant, store_currency),
+        "conv": lambda amount: StorePricingService.convert_amount(amount, tenant, store_currency),
+    }
+
+
+def _resolve_public_store():
+    """Resolve the tenant store behind the current request (host, then slug)."""
+    host = request.host.split(":")[0]
+    store = StoreService.get_store_by_host(host)
+    if store is None:
+        slug = (request.args.get("store") or "").strip()
+        if slug:
+            store = StoreService.get_store_by_slug(slug)
+    if store is None:
+        abort(404)
+    if not StoreService.is_store_publicly_available(store):
+        abort(403)
+    return store
+
+
+def _parse_int(value, default=None):
+    """Parse an int from untrusted input — returns *default* on garbage."""
+    try:
+        if value is None or (isinstance(value, str) and not value.strip()):
+            return default
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return default
 
 
 @store_bp.route("/")
+@limiter.limit("60 per minute")
 def public_catalog():
     """Public storefront catalog — browse products by tenant slug or domain."""
-    host = request.host.split(":")[0]
-    store = StoreService.get_store_by_host(host)
-    if not store:
-        # Fallback: try slug subdomain
-        slug = request.args.get("store")
-        if slug:
-            store = StoreService.get_store_by_slug(slug)
-        else:
-            abort(404)
-
-    if not StoreService.is_store_publicly_available(store):
-        abort(403)
-
+    store = _resolve_public_store()
     tenant_id = store.tenant_id
-    category_id = request.args.get("category", type=int)
-    search = request.args.get("q")
-    page = request.args.get("page", 1, type=int)
 
+    category_id = request.args.get("category", type=int)
+    search = (request.args.get("q") or "").strip() or None
+    page = max(1, min(request.args.get("page", 1, type=int) or 1, 1000))
+
+    ctx = _storefront_context(store)
     catalog = StoreService.get_public_catalog(
         tenant_id=tenant_id,
         category_id=category_id,
         search=search,
         page=page,
+        display_currency=ctx["store_currency"],
     )
-
     categories = StoreService.active_categories(tenant_id)
-    tenant = db.session.get(Tenant, tenant_id)
 
     return render_template(
         "store/public_catalog.html",
-        store=store,
-        tenant=tenant,
         catalog=catalog,
         categories=categories,
         current_category=category_id,
         search_query=search or "",
+        **ctx,
     )
 
 
 @store_bp.route("/product/<int:product_id>")
+@limiter.limit("60 per minute")
 def public_product_detail(product_id):
     """Public product detail page."""
-    store = StoreService.get_store_by_host(request.host.split(":")[0])
-    if not store:
-        abort(404)
-
+    store = _resolve_public_store()
     tenant_id = store.tenant_id
+
+    ctx = _storefront_context(store)
+    tenant = ctx["tenant"]
     product = StoreService.active_product_or_404(tenant_id, product_id)
-    tenant = db.session.get(Tenant, tenant_id)
 
-    store_currency = StoreService._get_store_currency(store, tenant)
-    store_price = StorePricingService.resolve_store_price(product, tenant, store_currency)
-
+    store_price = StorePricingService.resolve_store_price(product, tenant, ctx["store_currency"])
     related = StoreService.get_related_products(tenant_id, product_id, product.category_id or 0)
-
     reviews = StoreService.approved_reviews(tenant_id, product_id)
 
     return render_template(
         "store/public_product_detail.html",
-        store=store,
-        tenant=tenant,
         product=product,
         store_price=store_price,
-        store_currency=store_currency,
+        store_currency=ctx["store_currency"],
         related=related,
         reviews=reviews,
+        **ctx,
     )
 
 
 @store_bp.route("/cart", methods=["GET"])
+@limiter.limit("60 per minute")
 def public_cart():
-    """View shopping cart."""
-    tenant_id = _get_tenant_id_from_request()
-    if not tenant_id:
-        abort(404)
+    """View the shopping cart."""
+    store = _resolve_public_store()
+    tenant_id = store.tenant_id
 
-    store = StoreService.get_tenant_store(tenant_id, create=False)
-    if not store:
-        abort(404)
-
+    ctx = _storefront_context(store)
     cart = StoreService.get_cart(flask_session, tenant_id)
     totals = StoreService.cart_totals(
         tenant_id=tenant_id,
         cart=cart,
-        currency_code=StoreService._get_store_currency(store),
+        currency_code=ctx["store_currency"],
     )
 
     return render_template(
         "store/public_cart.html",
-        store=store,
-        tenant=db.session.get(Tenant, tenant_id),
         cart=cart,
         totals=totals,
+        **ctx,
     )
 
 
 @store_bp.route("/cart/add", methods=["POST"])
+@limiter.limit("30 per minute")
 def public_cart_add():
-    """Add product to shopping cart (session-based)."""
-    from flask import session as flask_session
-
-    tenant_id = _get_tenant_id_from_request()
-    if not tenant_id:
-        return jsonify({"error": "tenant not found"}), 404
+    """Add a product to the shopping cart (session-based)."""
+    store = _resolve_public_store()
+    tenant_id = store.tenant_id
 
     data = request.get_json(silent=True) or {}
-    product_id = int(data.get("product_id", 0))
-    quantity = int(data.get("quantity", 1))
-
-    if not product_id or quantity <= 0:
-        return jsonify({"error": "invalid product or quantity"}), 400
+    product_id = _parse_int(data.get("product_id"))
+    quantity = _parse_int(data.get("quantity"), 1)
+    if not product_id or not quantity or quantity <= 0 or quantity > 999:
+        return jsonify({"success": False, "error": "invalid product or quantity"}), 400
 
     product = Product.query.filter_by(id=product_id, tenant_id=tenant_id, is_active=True).first()
-    if not product:
-        return jsonify({"error": "product not found"}), 400
+    if product is None:
+        return jsonify({"success": False, "error": "product not found"}), 404
 
-    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
-    cart[str(product_id)] = str(Decimal(str(cart.get(str(product_id), 0))) + Decimal(str(quantity)))
-    flask_session[StoreService.cart_session_key(tenant_id)] = cart
-    flask_session.modified = True
+    cart = StoreService.get_cart(flask_session, tenant_id)
+    current = int(cart.get(str(product_id), 0) or 0)
+    cart[str(product_id)] = current + quantity
+    StoreService.save_cart(flask_session, tenant_id, cart)
 
     return jsonify({"success": True, "cart_count": len(cart)})
 
 
 @store_bp.route("/cart/remove", methods=["POST"])
+@limiter.limit("30 per minute")
 def public_cart_remove():
-    """Remove product from shopping cart."""
-    from flask import session as flask_session
-
-    tenant_id = _get_tenant_id_from_request()
-    if not tenant_id:
-        return jsonify({"error": "tenant not found"}), 404
+    """Remove a product from the shopping cart."""
+    store = _resolve_public_store()
+    tenant_id = store.tenant_id
 
     data = request.get_json(silent=True) or {}
-    product_id = str(int(data.get("product_id", 0)))
+    product_id = _parse_int(data.get("product_id"))
+    if not product_id:
+        return jsonify({"success": False, "error": "invalid product"}), 400
 
-    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
-    cart.pop(product_id, None)
-    flask_session[StoreService.cart_session_key(tenant_id)] = cart
-    flask_session.modified = True
+    cart = StoreService.get_cart(flask_session, tenant_id)
+    cart.pop(str(product_id), None)
+    StoreService.save_cart(flask_session, tenant_id, cart)
 
     return jsonify({"success": True})
 
 
 @store_bp.route("/public-checkout", methods=["POST"])
+@limiter.limit("5 per minute")
 def public_checkout():
-    """Public checkout — create provisional order from cart and send WhatsApp."""
-    from flask import session as flask_session
+    """Public checkout — create a provisional order and send the WhatsApp order.
 
-    tenant_id = _get_tenant_id_from_request()
-    if not tenant_id:
-        return jsonify({"error": "tenant not found"}), 404
-
-    store = StoreService.get_tenant_store(tenant_id, create=False)
-    if not store or not StoreService.is_store_publicly_available(store):
-        abort(403)
+    No money is captured here. The order stays ``pending`` until the tenant's
+    store manager approves it, which is when stock is deducted and the ledger
+    is posted.
+    """
+    store = _resolve_public_store()
+    tenant_id = store.tenant_id
 
     data = request.get_json(silent=True) or {}
-    customer_name = (data.get("customer_name") or "").strip()
+    customer_name = (data.get("customer_name") or "").strip()[:120]
     customer_phone = (data.get("customer_phone") or "").strip()
-    customer_email = (data.get("customer_email") or "").strip()
-    currency_code = (data.get("currency_code") or store.display_currency or "USD").strip().upper()
+    customer_email = (data.get("customer_email") or "").strip()[:180]
+    requested_currency = (data.get("currency_code") or "").strip().upper()
 
-    cart = flask_session.get(StoreService.cart_session_key(tenant_id), {})
-    if not cart:
-        return jsonify({"error": "cart is empty"}), 400
+    if not _PHONE_RE.match(customer_phone.replace(" ", "").replace("-", "")):
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "a valid phone number with the country code is required",
+                }
+            ),
+            400,
+        )
 
-    if not customer_phone:
-        return jsonify({"error": "phone number required"}), 400
-
-    tenant = db.session.get(Tenant, tenant_id)
+    ctx = _storefront_context(store)
+    tenant = ctx["tenant"]
     base_currency = StorePricingService._base_currency(tenant)
+    currency_code = requested_currency or ctx["store_currency"]
 
-    # Resolve exchange rate
+    cart = StoreService.get_cart(flask_session, tenant_id)
+    if not cart:
+        return jsonify({"success": False, "error": "cart is empty"}), 400
+
     rate = Decimal("1")
     if currency_code != base_currency:
         stored = StoreOrderService._latest_stored_rate(tenant_id, currency_code, base_currency)
@@ -934,10 +1007,12 @@ def public_checkout():
 
     lines = []
     subtotal_tx = Decimal("0")
-    for pid, qty_str in cart.items():
-        qty = Decimal(str(qty_str))
+    for pid, qty_raw in cart.items():
+        qty = Decimal(str(qty_raw))
+        if qty == qty.to_integral_value():
+            qty = qty.to_integral_value()
         product = Product.query.filter_by(id=int(pid), tenant_id=tenant_id, is_active=True).first()
-        if not product:
+        if product is None or qty <= 0:
             continue
         unit_price = StorePricingService.resolve_store_price(product, tenant, currency_code)
         if unit_price is None:
@@ -955,49 +1030,40 @@ def public_checkout():
         )
 
     if not lines:
-        return jsonify({"error": "no valid products in cart"}), 400
+        return jsonify({"success": False, "error": "no valid products in cart"}), 400
 
-    subtotal_aed = convert_and_quantize_aed(
+    subtotal_base = convert_and_quantize_aed(
         subtotal_tx, currency_code, rate, base_currency=base_currency, tenant_id=tenant_id
     )
-
     provisional_number = StoreWhatsAppService.generate_provisional_number(tenant_id)
 
-    provisional = StoreProvisionalOrder(
-        tenant_id=tenant_id,
-        provisional_number=provisional_number,
-        customer_name=customer_name or None,
-        customer_phone=customer_phone or None,
-        customer_email=customer_email or None,
-        cart_json=lines,
-        currency_code=currency_code,
-        exchange_rate=rate,
-        subtotal_tx_ccy=subtotal_tx,
-        subtotal_aed=subtotal_aed,
-        status=StoreProvisionalOrder.STATUS_PENDING,
-    )
-    db.session.add(provisional)
-    db.session.flush()
+    with atomic_transaction("store_public_checkout"):
+        provisional = StoreProvisionalOrder(
+            tenant_id=tenant_id,
+            provisional_number=provisional_number,
+            customer_name=customer_name or None,
+            customer_phone=customer_phone or None,
+            customer_email=customer_email or None,
+            cart_json=lines,
+            currency_code=currency_code,
+            exchange_rate=rate,
+            subtotal_tx_ccy=subtotal_tx,
+            subtotal_aed=subtotal_base,
+            status=StoreProvisionalOrder.STATUS_PENDING,
+        )
+        db.session.add(provisional)
+        db.session.flush()
 
-    message = StoreWhatsAppService.build_message(provisional, tenant, store)
-    provisional.whatsapp_message = message
-    db.session.flush()
+        message = StoreWhatsAppService.build_message(provisional, tenant, store)
+        provisional.whatsapp_message = message
+        db.session.flush()
 
-    # Send WhatsApp message via API if configured, else fallback to wa.me link
-    whatsapp_sent = False
-    try:
-        from services.whatsapp_service import WhatsAppService
+        whatsapp_sent = StoreWhatsAppService.send_message(customer_phone, message)
+        provisional.whatsapp_sent_at = datetime.now(UTC) if whatsapp_sent else None
+        db.session.flush()
 
-        whatsapp_sent = WhatsAppService.send_message(customer_phone, message)
-    except Exception:
-        whatsapp_sent = False
-
-    provisional.whatsapp_sent_at = datetime.now(UTC) if whatsapp_sent else None
-    db.session.flush()
-
-    # Clear cart after checkout
-    flask_session.pop(StoreService.cart_session_key(tenant_id), None)
-    flask_session.modified = True
+    # The cart is cleared only after the order is persisted.
+    StoreService.save_cart(flask_session, tenant_id, {})
 
     return jsonify(
         {
@@ -1029,17 +1095,3 @@ def public_reports():
         top_products=top_products,
         chart=daily_chart,
     )
-
-
-def _get_tenant_id_from_request():
-    """Resolve tenant_id from host header or query param."""
-    host = request.host.split(":")[0]
-    store = StoreService.get_store_by_host(host)
-    if store:
-        return store.tenant_id
-    slug = request.args.get("store")
-    if slug:
-        s = StoreService.get_store_by_slug(slug)
-        if s:
-            return s.tenant_id
-    return None

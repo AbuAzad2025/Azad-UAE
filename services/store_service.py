@@ -235,7 +235,14 @@ class StoreService:
 
     @staticmethod
     def get_physical_warehouses(tenant_id: int, *, user=None):
-        warehouses = get_accessible_warehouses(user) if user else Warehouse.query.filter_by(is_active=True).all()
+        # Without a user the query would read EVERY tenant's warehouses and
+        # filter in Python. The filter is a tenant predicate, so it belongs
+        # in the query.
+        warehouses = (
+            get_accessible_warehouses(user)
+            if user
+            else Warehouse.query.filter_by(is_active=True, tenant_id=int(tenant_id)).all()
+        )
         return [wh for wh in warehouses if wh.tenant_id == int(tenant_id) and not wh.is_online]
 
     @staticmethod
@@ -417,9 +424,7 @@ class StoreService:
             if qty <= 0:
                 continue
             store_price = StorePricingService.resolve_store_price(product, tenant, store_ccy)
-            display_price = StorePricingService.convert_amount(
-                Decimal(str(product.regular_price or 0)), tenant, store_ccy
-            )
+            display_price = StorePricingService.resolve_display_price(product, tenant, store_ccy)
             items.append(
                 {
                     "product": product,
@@ -509,7 +514,7 @@ class StoreService:
                 line["store_currency"] = currency_code or StorePricingService._base_currency(tenant)
 
             if display_currency:
-                display_price = StorePricingService.convert_amount(unit_price, tenant, display_currency)
+                display_price = StorePricingService.resolve_display_price(product, tenant, display_currency)
                 display_line_total = (display_price * qty).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
                 display_subtotal += display_line_total
                 line["display_price"] = display_price
@@ -556,13 +561,16 @@ class StoreService:
         )
 
     @staticmethod
-    def get_loyalty_points(account_id: int, tenant_id: int | None = None):
+    def get_loyalty_points(account_id: int, tenant_id: int):
+        """The loyalty points of one account OF ONE TENANT.
+
+        The tenant is mandatory: without it the lookup answers with the first
+        account of any tenant that happens to share the id, which is a
+        cross-tenant read waiting to happen.
+        """
         from models.shop_loyalty import ShopLoyalty
 
-        query = ShopLoyalty.query.filter_by(account_id=int(account_id))
-        if tenant_id is not None:
-            query = query.filter_by(tenant_id=int(tenant_id))
-        lp = query.first()
+        lp = ShopLoyalty.query.filter_by(account_id=int(account_id), tenant_id=int(tenant_id)).first()
         return lp.points if lp else 0
 
     @staticmethod

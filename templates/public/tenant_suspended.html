@@ -73,8 +73,13 @@
     <div class="suspended-body">
       <h5 class="fw-bold text-dark mb-3"><i class="bi bi-exclamation-triangle-fill text-warning mr-2"></i>{{ _('تم تعليق الحساب') }}</h5>
 
+      {# The reason comes from the tenant's own suspension record. It is
+         shown to that tenant's customers, for whom "payment overdue" is
+         actionable. #}
       <p class="text-muted">
-        {% if reason == 'Suspended by owner' %}
+        {% if not reason %}
+          {{ _('تم تعليق الحساب. يرجى الاتصال بالدعم الفني لمزيد من المعلومات.') }}
+        {% elif reason == 'Suspended by owner' %}
           تم إيقاف هذه الخدمة من قبل الإدارة. يرجى الاتصال بالدعم الفني لمزيد من المعلومات.
         {% elif reason == 'Deleted by owner' %}
           تم إيقاف هذه الخدمة نهائياً من قبل الإدارة.
@@ -85,14 +90,16 @@
         {% elif 'انتهاك' in reason or 'violation' in reason.lower() %}
           تم تعليق الخدمة لانتهاك شروط الاستخدام.
         {% else %}
-          {{ reason }}
+          {{ _('تم تعليق الحساب. يرجى الاتصال بالدعم الفني لمزيد من المعلومات.') }}
         {% endif %}
       </p>
 
+      {% if reason %}
       <div class="reason-box">
         <strong class="d-block mb-1">{{ _('سبب التعليق:') }}</strong>
         <span class="text-dark">{{ reason }}</span>
       </div>
+      {% endif %}
 
       <div class="footer-note text-center">
         {% if tenant.phone_1 or tenant.phone_2 %}

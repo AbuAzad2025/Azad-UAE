@@ -17,6 +17,7 @@ from flask import (
 )
 from flask_babel import gettext
 
+from extensions import limiter
 from utils.db_safety import atomic_transaction
 
 public_bp = Blueprint("public", __name__)
@@ -170,6 +171,7 @@ def donate_azad():
 
 
 @public_bp.route("/donate/submit", methods=["POST"])
+@limiter.limit("5 per minute")
 def donate_azad_submit():
     from decimal import Decimal
 
@@ -405,11 +407,20 @@ def verify_document(token):
 
 
 @public_bp.route("/suspended/<int:tenant_id>")
+@limiter.limit("20 per minute")
 def tenant_suspend_page(tenant_id):
-    """Public page shown when a tenant is suspended."""
+    """Public page shown when a tenant is suspended.
+
+    The reason IS shown: this page is rendered for the tenant's own
+    customers, and "your service is suspended because payment is overdue"
+    is actionable for them. The page only exists for a tenant that is
+    actually suspended, and it is rate limited because the tenant id in the
+    URL is enumerable.
+    """
     from models import Tenant
 
     tenant = Tenant.query.get_or_404(tenant_id)
+    current_app.logger.info("Public suspended-tenant page viewed for tenant %s", tenant_id)
     return render_template(
         "public/tenant_suspended.html",
         tenant=tenant,

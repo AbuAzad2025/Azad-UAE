@@ -332,7 +332,7 @@ Access control is enforced in two places, and both are captured below.
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
 | GET | `/donate` | — | — | — | html |
-| POST | `/donate/submit` | — | — | — | html |
+| POST | `/donate/submit` | — | — | `5 per minute` | html |
 
 ### `expenses` (12)
 
@@ -1075,7 +1075,7 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/store/` | — | — | — | html |
+| GET | `/store/` | — | — | `60 per minute` | html |
 | GET | `/store/admin` | authenticated, permission | `manage_store` | — | html |
 | GET | `/store/admin/catalog` | authenticated, permission | `manage_store` | — | html |
 | GET, POST | `/store/admin/coupons` | authenticated, permission | `manage_store` | — | html |
@@ -1090,12 +1090,12 @@ Access control is enforced in two places, and both are captured below.
 | GET, POST | `/store/admin/settings` | authenticated, permission | `manage_store` | — | html |
 | GET | `/store/admin/stats` | authenticated, permission | `manage_store` | — | html |
 | GET, POST | `/store/admin/transfer` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/cart` | — | — | — | html |
-| POST | `/store/cart/add` | — | — | — | json |
-| POST | `/store/cart/remove` | — | — | — | json |
-| POST | `/store/checkout` | authenticated | — | — | json |
-| GET | `/store/product/<int:product_id>` | — | — | — | html |
-| POST | `/store/public-checkout` | — | — | — | json |
+| GET | `/store/cart` | — | — | `60 per minute` | html |
+| POST | `/store/cart/add` | — | — | `30 per minute` | json |
+| POST | `/store/cart/remove` | — | — | `30 per minute` | json |
+| POST | `/store/checkout` | authenticated, permission | `manage_store` | — | json |
+| GET | `/store/product/<int:product_id>` | — | — | `60 per minute` | html |
+| POST | `/store/public-checkout` | — | — | `5 per minute` | json |
 | GET | `/store/reports` | authenticated, permission | `manage_store` | — | html |
 
 ### `super-admin` (3)
@@ -1129,7 +1129,7 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/suspended/<int:tenant_id>` | — | — | — | html |
+| GET | `/suspended/<int:tenant_id>` | — | — | `20 per minute` | html |
 
 ### `tenant` (1)
 

@@ -197,18 +197,28 @@ def init_extensions(app):
 
 
 def get_or_create(db_session, model, defaults=None, **kwargs):
+    """Fetch the row matching *kwargs*, creating it when it does not exist.
+
+    The insert runs inside a SAVEPOINT, not in the caller's transaction. A
+    failed insert has to undo *itself* and nothing else: a full
+    ``db_session.rollback()`` here would discard every write the caller had
+    already made in the same transaction, which is the opposite of what a
+    "get or create" helper is for.
+    """
     instance = db_session.query(model).filter_by(**kwargs).first()
     if instance:
         return instance, False
     params = dict(kwargs.items())
     if defaults:
         params.update(defaults)
+    savepoint = db_session.begin_nested()
     try:
         instance = model(**params)
         db_session.add(instance)
         db_session.flush()
+        savepoint.commit()
     except Exception:
-        db_session.rollback()
+        savepoint.rollback()
         instance = db_session.query(model).filter_by(**kwargs).first()
         if instance:
             return instance, False

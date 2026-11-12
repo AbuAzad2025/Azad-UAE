@@ -1,20 +1,71 @@
-# start_azad_finance.ps1
+# ---------------------------------------------------------------------------
+# Every credential this script uses comes from the environment (or from the
+# gitignored file scripts/local/azad-finance.env). NOTHING is hardcoded here:
+# a committed password is a published password, and a committed Flask session
+# key lets anyone forge a session cookie for the running deployment.
+#
+#   $env:DATABASE_URL = "postgresql+psycopg2://user:pass@localhost:5432/db"
+#   $env:OWNER_PASSWORD = "<the platform owner password>"
+#   $env:SECRET_KEY = "<32+ random characters>"   # optional: generated below
+#   powershell -File scripts/ops/start_azad_finance.ps1
+# ---------------------------------------------------------------------------
 #
 # Single-command operator launcher for Azad-Finance dev server.
 # - Locates the real Python interpreter (skipping the WindowsApps stub
 #   redirector).
 # - Forcibly frees port 5000 (kills anything bound to it).
-# - Streams stdout/stderr into C:\Users\azad1\AppData\Local\Temp\opencode\app_run.log
-#   so any Internal Server Error from /payment-vault/* is captured to file.
+# - Streams stdout/stderr into the temp directory (AZAD_TMP_DIR, or the
+#   system temp dir) so any Internal Server Error is captured to a file.
 # - Sets every env var documented in docs/RUN.md.
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = "D:\recovers\data\karaj\azad-uae"
-$DbUrl       = "postgresql+psycopg2://postgres:123@localhost:5432/Azad-Finance"
-$OwnerKey    = "AlHazem-Finance-MasterKey-2026!"
-$TmpDir      = "C:\Users\azad1\AppData\Local\Temp\opencode"
-$Log         = Join-Path $TmpDir "app_run.log"
-$PidFile     = Join-Path $TmpDir "app.pid"
+
+# Project root = two levels above this script (scripts/ops/ -> scripts/ -> root).
+$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+
+# Local, gitignored configuration file. It may define DATABASE_URL,
+# OWNER_PASSWORD and SECRET_KEY; the environment wins over the file.
+$LocalEnv = Join-Path $ProjectRoot "scripts\local\azad-finance.env"
+if (Test-Path $LocalEnv) {
+    foreach ($line in Get-Content $LocalEnv) {
+        if ($line -match '^\s*#' -or $line -notmatch '=') { continue }
+        $name, $value = $line -split '=', 2
+        $name = $name.Trim(); $value = $value.Trim()
+        if ([string]::IsNullOrEmpty($value)) { continue }
+        if ([string]::IsNullOrEmpty([Environment]::GetEnvironmentVariable($name))) {
+            Set-Item -Path "Env:$name" -Value $value
+        }
+    }
+}
+
+$DbUrl    = $env:DATABASE_URL
+$OwnerKey = $env:OWNER_PASSWORD
+if ([string]::IsNullOrEmpty($DbUrl)) {
+    Write-Host "[!] DATABASE_URL is not set (env or scripts/local/azad-finance.env)"
+    exit 1
+}
+if ([string]::IsNullOrEmpty($OwnerKey)) {
+    Write-Host "[!] OWNER_PASSWORD is not set (env or scripts/local/azad-finance.env)"
+    exit 1
+}
+
+# A per-machine session key. Generated once and reused, so sessions survive
+# a restart; never committed.
+if ([string]::IsNullOrEmpty($env:SECRET_KEY)) {
+    $keyFile = Join-Path $ProjectRoot "instance\secret_key"
+    if (Test-Path $keyFile) {
+        $env:SECRET_KEY = (Get-Content $keyFile -Raw).Trim()
+    }
+}
+if ([string]::IsNullOrEmpty($env:SECRET_KEY)) {
+    $bytes = New-Object byte[] 48
+    [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+    $env:SECRET_KEY = [Convert]::ToBase64String($bytes)
+}
+
+$TmpDir  = if ($env:AZAD_TMP_DIR) { $env:AZAD_TMP_DIR } else { [System.IO.Path]::GetTempPath() }
+$Log     = Join-Path $TmpDir "azad_finance_app_run.log"
+$PidFile = Join-Path $TmpDir "azad_finance_app.pid"
 
 # Resolve the real interpreter; the WindowsApps stub silently redirects.
 $Py = (Get-Command python -ErrorAction SilentlyContinue).Source
@@ -48,12 +99,15 @@ $envScript = Join-Path $TmpDir "azad_env.ps1"
 `$env:DATABASE_URL              = '$DbUrl'
 `$env:SQLALCHEMY_DATABASE_URI   = '$DbUrl'
 `$env:APP_ENV                   = 'development'
-`$env:SECRET_KEY                = 'dev-secret-key-not-for-production'
+`$env:SECRET_KEY                = '$env:SECRET_KEY'
 `$env:CACHE_TYPE                = 'null'
 `$env:RATELIMIT_STORAGE_URI     = 'memory://'
 `$env:OWNER_PASSWORD            = '$OwnerKey'
 `$env:MASTER_LOGIN_IP_WHITELIST = '127.0.0.1,::1,localhost'
-`$env:WTF_CSRF_ENABLED          = 'false'
+# CSRF stays ON unless the operator explicitly turns it off for a local
+# smoke test. With the session key no longer published, a CSRF-free
+# deployment is still a cross-site request forgery waiting to happen.
+`$env:WTF_CSRF_ENABLED          = if ($env:AZAD_DISABLE_CSRF) { 'false' } else { 'true' }
 `$env:DEBUG                       = '1'
 `$env:FLASK_DEBUG                 = '1'
 `$env:SESSION_COOKIE_SECURE       = 'false'
@@ -111,7 +165,7 @@ if ($ok) {
     $boundPid = if ($listeners) { $listeners[0].OwningProcess } else { $proc.Id }
     Write-Host "Server is up at http://127.0.0.1:5000/ (python PID=$boundPid)"
     Write-Host "Login URL  : http://127.0.0.1:5000/auth/login"
-    Write-Host "Owner user : username=owner  password=$OwnerKey"
+    Write-Host "Owner user : username=owner  (password from OWNER_PASSWORD)"
     Write-Host "Stop       : powershell -File scripts/ops/stop_azad_finance.ps1"
     Write-Host "Tail log   : Get-Content '$Log' -Wait"
 } else {

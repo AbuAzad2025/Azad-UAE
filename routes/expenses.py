@@ -637,8 +637,8 @@ def create_category():
             name_ar=data.get("name_ar"),
             gl_account_code=gl_account_code,
         )
-        db.session.add(category)
         with atomic_transaction("expense_category_create"):
+            db.session.add(category)
             db.session.flush()
 
         if request.is_json:

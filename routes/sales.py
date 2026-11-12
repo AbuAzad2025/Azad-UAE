@@ -1,4 +1,5 @@
 from datetime import UTC
+from decimal import Decimal
 
 from flask import (
     Blueprint,
@@ -31,6 +32,7 @@ from utils.decorators import enforce_resource_limit, owner_required, permission_
 from utils.error_messages import ErrorCategory, refuse
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
+from utils.numeric_input import parse_decimal_field
 from utils.qr_generator import generate_qr_data_url
 from utils.tenant_limits import TenantLimitError
 from utils.tenanting import (
@@ -196,9 +198,20 @@ def create():
             exchange_rate_server = request.form.get("exchange_rate_server", type=float)
             exchange_rate_diff = request.form.get("exchange_rate_difference", type=float)
 
-            discount_amount = safe_float(request.form.get("discount_amount"))
-            shipping_cost = safe_float(request.form.get("shipping_cost"))
-            tax_rate = safe_float(request.form.get("tax_rate"), default=None)
+            # Money and rates are parsed strictly: a malformed tax rate must
+            # not become an explicit 0 (which the statutory fallback would
+            # respect, producing a tax-free invoice).
+            try:
+                discount_amount = parse_decimal_field(
+                    request.form.get("discount_amount"), default=Decimal("0"), field="discount_amount"
+                )
+                shipping_cost = parse_decimal_field(
+                    request.form.get("shipping_cost"), default=Decimal("0"), field="shipping_cost"
+                )
+                tax_rate = parse_decimal_field(request.form.get("tax_rate"), default=None, field="tax_rate")
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("sales.create"))
             notes = request.form.get("notes")
             sales_rep_id = request.form.get("sales_rep_id", type=int)
             coupon_code = request.form.get("coupon_code", "").strip()
@@ -212,7 +225,13 @@ def create():
                     )
                     notes = (notes or "") + audit_note
 
-            payment_amount = safe_float(request.form.get("payment_amount"))
+            try:
+                payment_amount = parse_decimal_field(
+                    request.form.get("payment_amount"), default=Decimal("0"), field="payment_amount"
+                )
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("sales.create"))
             payment_method = request.form.get("payment_method", "cash")
 
             payment_data = (
@@ -872,12 +891,18 @@ def api_calculate_sale_totals():
             return error_response(message="No data provided", status_code=400)
 
         lines = data.get("lines", [])
-        discount_amount = Decimal(str(data.get("discount_amount", 0)))
-        shipping_cost = Decimal(str(data.get("shipping_cost", 0)))
-        promotion_discount = Decimal(str(data.get("promotion_discount_amount", 0)))
-        # None = not specified → country/tenant default in normalize_tax_rate.
-        _raw_tax = data.get("tax_rate")
-        tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
+        try:
+            discount_amount = parse_decimal_field(
+                data.get("discount_amount"), default=Decimal("0"), field="discount_amount"
+            )
+            shipping_cost = parse_decimal_field(data.get("shipping_cost"), default=Decimal("0"), field="shipping_cost")
+            promotion_discount = parse_decimal_field(
+                data.get("promotion_discount_amount"), default=Decimal("0"), field="promotion_discount_amount"
+            )
+            # None = not specified → country/tenant default in normalize_tax_rate.
+            tax_rate = parse_decimal_field(data.get("tax_rate"), default=None, field="tax_rate")
+        except ValueError as exc:
+            return error_response(message=str(exc), status_code=400)
         prices_include_vat = bool(data.get("prices_include_vat", False))
         from utils.tax_settings import normalize_tax_rate
 

@@ -131,9 +131,26 @@ class StockSyncService:
         if not idempotency_key:
             raise ValueError("idempotency_key is required")
 
-        tenant_id = payload.get("tenant_id")
-        if not tenant_id:
+        payload_tenant_id = payload.get("tenant_id")
+        if not payload_tenant_id:
             raise ValueError("tenant_id is required")
+
+        # The tenant is the one the API key is bound to, NOT the one the
+        # payload names. The key is what authenticates the caller; the
+        # payload is what the caller wants written. Trusting the payload
+        # would let the holder of ANY tenant's key post stock movements
+        # into another tenant.
+        from utils.tenanting import get_active_tenant_id
+
+        active_tenant_id = get_active_tenant_id()
+        if active_tenant_id is not None:
+            if int(active_tenant_id) != int(payload_tenant_id):
+                raise ValueError("tenant_id does not match the tenant the API key is bound to")
+            tenant_id = int(active_tenant_id)
+        else:
+            # No request context (a direct service call). The payload is the
+            # only tenant there is.
+            tenant_id = int(payload_tenant_id)
 
         # Idempotency check (outside the stock transaction is fine; we guard
         # against re-processing inside the transaction as well).

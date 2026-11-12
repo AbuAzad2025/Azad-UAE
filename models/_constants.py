@@ -527,6 +527,13 @@ GL_CONCEPT_REGISTRY: dict[str, dict[str, Any]] = {
         "normal_balance": "credit",
         "resolution_mode": RESOLUTION_MODE_MAPPING,
     },
+    GL_CONCEPT_SHOP_COGS: {
+        "meaning": "Online Store Cost of Goods Sold",
+        "legacy_code": "5103",
+        "required": False,
+        "normal_balance": "debit",
+        "resolution_mode": RESOLUTION_MODE_MAPPING,
+    },
     GL_CONCEPT_COUPON_EXPENSE: {
         "meaning": "Store Coupon Discount Expense",
         "legacy_code": "6130",

@@ -367,8 +367,8 @@ def delete(**kwargs):
                 "warning",
             )
         else:
-            db.session.delete(supplier)
             with atomic_transaction("supplier_hard_delete"):
+                db.session.delete(supplier)
                 db.session.flush()
             flash(gettext(f'✅ تم حذف المورد "{supplier.name}" نهائياً!'), "success")
 

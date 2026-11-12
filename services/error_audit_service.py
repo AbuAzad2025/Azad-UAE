@@ -221,7 +221,13 @@ class ErrorAuditService:
         )
 
     @staticmethod
-    def mark_resolved(log_id: int, user_id: int, note: str = "") -> bool:
+    def mark_resolved(log_id: int, user_id: int, note: str = "", tenant_id: int | None = None) -> bool:
+        """Mark one audit row resolved.
+
+        ``tenant_id`` is optional only for a platform-wide row; when the row
+        belongs to a tenant the statement carries that tenant in its WHERE
+        clause, because raw SQL is invisible to the ORM tenant guard.
+        """
         try:
             sql = text("""
                 UPDATE error_audit_logs
@@ -230,6 +236,7 @@ class ErrorAuditService:
                     resolved_by = :user_id,
                     resolution_note = :note
                 WHERE id = :log_id
+                  AND (:tenant_id IS NULL OR tenant_id = :tenant_id)
                 """)
             with db.engine.connect() as conn:
                 conn.execute(
@@ -239,6 +246,7 @@ class ErrorAuditService:
                         "user_id": user_id,
                         "note": note[:500],
                         "log_id": log_id,
+                        "tenant_id": tenant_id,
                     },
                 )
                 conn.commit()

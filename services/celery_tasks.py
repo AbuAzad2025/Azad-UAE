@@ -183,7 +183,13 @@ def generate_monthly_report(month: int, year: int):
 
 
 @celery.task
-def send_invoice_email(sale_id: int):
+def send_invoice_email(sale_id: int, tenant_id: int | None = None):
+    """Email an invoice.
+
+    ``tenant_id`` is the tenant the sale belongs to. A Celery task has no
+    request context, so the ORM tenant guard is OFF inside it: without an
+    explicit predicate this would read (and email) any tenant's sale.
+    """
     from flask_mail import Message
 
     from app import create_app
@@ -192,7 +198,10 @@ def send_invoice_email(sale_id: int):
 
     app = create_app()
     with app.app_context():
-        sale = Sale.query.get(sale_id)
+        sale_query = Sale.query.filter_by(id=sale_id)
+        if tenant_id is not None:
+            sale_query = sale_query.filter_by(tenant_id=int(tenant_id))
+        sale = sale_query.first()
         if sale and sale.customer and sale.customer.email:
             msg = Message(
                 subject=gettext(f"فاتورة رقم {sale.sale_number}"),
@@ -246,6 +255,7 @@ def send_payment_reminders():
     from decimal import Decimal
 
     from app import create_app
+    from extensions import db
     from models import Customer
     from services.whatsapp_service import WhatsAppService
 
@@ -253,11 +263,21 @@ def send_payment_reminders():
     with app.app_context():
         from flask import g
 
-        customers = Customer.query.filter_by(is_active=True).all()
-        # group by tenant to keep tenant context isolated
+        # There is no request context here, so the ORM tenant guard is off
+        # and every read has to carry its own tenant predicate. The tenant
+        # list is read once; the customers are then read ONE TENANT AT A
+        # TIME, so a customer of another tenant can never enter the loop.
+        from models import Tenant
+
+        tenant_ids = [row[0] for row in db.session.query(Tenant.id).filter(Tenant.is_active.is_(True)).distinct().all()]
+
+        customers = []
         by_tenant: dict[Any, list[Customer]] = {}
-        for c in customers:
-            by_tenant.setdefault(c.tenant_id, []).append(c)
+        for tid in tenant_ids:
+            g.active_tenant_id = tid
+            tenant_customers = Customer.query.filter_by(is_active=True, tenant_id=tid).all()
+            customers.extend(tenant_customers)
+            by_tenant.setdefault(tid, []).extend(tenant_customers)
         sent = 0
 
         for tid, tenant_customers in by_tenant.items():
@@ -283,11 +303,27 @@ def send_abandoned_cart_reminders():
 
     now = datetime.now(UTC)
 
-    first_reminder = ShopAbandonedCart.query.filter(
-        ShopAbandonedCart.reminder_sent_at.is_(None),
-        ShopAbandonedCart.created_at <= now - timedelta(hours=1),
-        ShopAbandonedCart.recovered.is_(False),
-    ).all()
+    # The reminder marks rows of the tenant that owns them. Without a
+    # request context the ORM tenant guard is off, so the carts are read
+    # ONE TENANT AT A TIME and every read carries its own tenant predicate.
+    tenant_ids = [
+        row[0]
+        for row in db.session.query(ShopAbandonedCart.tenant_id)
+        .filter(ShopAbandonedCart.reminder_sent_at.is_(None))
+        .distinct()
+        .all()
+    ]
+
+    first_reminder = []
+    for tid in tenant_ids:
+        first_reminder.extend(
+            ShopAbandonedCart.query.filter(
+                ShopAbandonedCart.tenant_id == tid,
+                ShopAbandonedCart.reminder_sent_at.is_(None),
+                ShopAbandonedCart.created_at <= now - timedelta(hours=1),
+                ShopAbandonedCart.recovered.is_(False),
+            ).all()
+        )
 
     for ac in first_reminder:
         try:
@@ -301,12 +337,25 @@ def send_abandoned_cart_reminders():
         except Exception:
             current_app.logger.exception("Abandoned cart first reminder failed")
 
-    second_reminder = ShopAbandonedCart.query.filter(
-        ShopAbandonedCart.reminder_sent_at.isnot(None),
-        ShopAbandonedCart.created_at <= now - timedelta(hours=24),
-        ShopAbandonedCart.recovered.is_(False),
-        ShopAbandonedCart.reminder_count == 1,
-    ).all()
+    second_tenant_ids = [
+        row[0]
+        for row in db.session.query(ShopAbandonedCart.tenant_id)
+        .filter(ShopAbandonedCart.reminder_sent_at.isnot(None))
+        .distinct()
+        .all()
+    ]
+
+    second_reminder = []
+    for tid in second_tenant_ids:
+        second_reminder.extend(
+            ShopAbandonedCart.query.filter(
+                ShopAbandonedCart.tenant_id == tid,
+                ShopAbandonedCart.reminder_sent_at.isnot(None),
+                ShopAbandonedCart.created_at <= now - timedelta(hours=24),
+                ShopAbandonedCart.recovered.is_(False),
+                ShopAbandonedCart.reminder_count == 1,
+            ).all()
+        )
 
     for ac in second_reminder:
         try:

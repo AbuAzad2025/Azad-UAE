@@ -258,12 +258,33 @@ class TestTenantAwareCache:
         assert tenant_cache.some_plugin_hook == "hook-value"
 
 
+def _free_currency_code(db_session) -> str:
+    """A currency code that is free in THIS database.
+
+    ``currencies.code`` is three characters wide and unique, so the test
+    codes are ``C`` plus two hex digits - only 256 of them. Two tests in the
+    same slice that draw the same pair collide on the unique index, and the
+    loser fails with a UniqueViolation that has nothing to do with what it
+    was testing. Deleting any leftover row first makes each test
+    independent of the others.
+    """
+    from models import Currency
+
+    for _ in range(64):
+        code = "C" + uuid.uuid4().hex[:2].upper()
+        db_session.query(Currency).filter_by(code=code).delete(synchronize_session=False)
+        db_session.commit()
+        if db_session.query(Currency).filter_by(code=code).first() is None:
+            return code
+    raise AssertionError("could not find a free currency code")
+
+
 class TestGetOrCreateRealDatabase:
     def test_creates_missing_row_without_defaults(self, db_session):
         from extensions import get_or_create
         from models import Currency
 
-        code = "C" + uuid.uuid4().hex[:2].upper()
+        code = _free_currency_code(db_session)
         instance, created = get_or_create(
             db_session,
             Currency,
@@ -279,7 +300,7 @@ class TestGetOrCreateRealDatabase:
         from extensions import get_or_create
         from models import Currency
 
-        code = "C" + uuid.uuid4().hex[:2].upper()
+        code = _free_currency_code(db_session)
         first, created_first = get_or_create(
             db_session,
             Currency,
@@ -303,9 +324,7 @@ class TestGetOrCreateRealDatabase:
         from extensions import get_or_create
         from models import Currency
 
-        code = "C" + uuid.uuid4().hex[:2].upper()
-        db_session.query(Currency).filter_by(code=code).delete(synchronize_session=False)
-        db_session.commit()
+        code = _free_currency_code(db_session)
         instance, created = get_or_create(
             db_session,
             Currency,

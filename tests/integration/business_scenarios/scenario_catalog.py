@@ -142,7 +142,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "shipments": 10,
     "shop": 37,
     "stock_sync": 2,
-    "store": 11,
+    "store": 22,
     "suppliers": 8,
     "tenant_backups": 5,
     "tenants": 1,

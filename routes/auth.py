@@ -831,7 +831,7 @@ def available_currencies():
 def estimate_amount():
     """تقدير المبلغ للعملة الرقمية"""
     try:
-        amount = float(request.args.get("amount", 0))
+        amount = request.args.get("amount", 0, type=float) or 0.0
         from_currency = request.args.get("from", "usd")
         to_currency = request.args.get("to", "btc")
 

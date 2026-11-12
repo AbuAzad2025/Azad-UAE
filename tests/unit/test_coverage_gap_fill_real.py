@@ -37,8 +37,11 @@ def test_shipments_list_create(auth_client):
 def test_shop_and_store_endpoints(auth_client):
     resp_shop = auth_client.get("/shop/")
     assert resp_shop.status_code in (200, 302, 404)
+    # 403 is the correct answer when the tenant has the store module switched
+    # off: the feature gate runs as a blueprint before_request, ahead of the
+    # view, and refuses the whole blueprint.
     resp_store = auth_client.get("/store/")
-    assert resp_store.status_code in (200, 302, 404)
+    assert resp_store.status_code in (200, 302, 403, 404)
 
 
 def test_services_aging_and_advanced_journal():

@@ -45,6 +45,7 @@ from utils.decorators import any_permission_required, branch_scope_id, permissio
 from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_barcode, generate_sku, save_uploaded_file
+from utils.numeric_input import parse_decimal_field
 from utils.static_asset_paths import tenant_upload_dir
 from utils.tenanting import (
     assign_tenant_id,
@@ -159,6 +160,16 @@ def safe_float(value, default=0.0):
         return float(value)
     except (ValueError, TypeError):
         return default
+
+
+def _dec(value, field: str, default=Decimal("0")):
+    """Parse a money field strictly.
+
+    Empty -> *default* (the field was not supplied). Anything that is not a
+    number -> ValueError naming the field, so the operator is told instead of
+    the product silently storing a zero price.
+    """
+    return parse_decimal_field(value, default=default, field=field)
 
 
 def require_float(value):
@@ -350,7 +361,10 @@ def import_products():
         file_b64 = base64.b64encode(file_content).decode()
         from services.import_job_service import process_product_import_task
 
-        task = process_product_import_task.delay(job.id, file_b64, file.filename, update_existing)
+        # The tenant travels with the message: a Celery task has no request
+        # context, so the ORM tenant guard is off inside it and the task has
+        # to know which tenant's job it is working on.
+        task = process_product_import_task.delay(job.id, file_b64, file.filename, update_existing, job.tenant_id)
         with atomic_transaction("import_job_queue"):
             job.celery_task_id = task.id
             db.session.flush()
@@ -565,9 +579,9 @@ def create():
                 sku = (request.form.get("sku") or "").strip() or generate_sku()
 
                 warehouse_id = request.form.get("warehouse_id", type=int)
-                current_stock = safe_float(request.form.get("current_stock"))
+                current_stock = _dec(request.form.get("current_stock"), "current_stock")
                 initial_stock = current_stock
-                cost_price = safe_float(request.form.get("cost_price"))
+                cost_price = _dec(request.form.get("cost_price"), "cost_price")
 
                 payload_errors = _validate_product_create_payload(
                     form,
@@ -685,13 +699,16 @@ def create():
                     part_number=request.form.get("part_number"),
                     barcode=request.form.get("barcode") or generate_barcode(),
                     category_id=(form.category_id.data or None),
-                    regular_price=safe_float(request.form.get("regular_price")),
-                    merchant_price=safe_float(request.form.get("merchant_price")),
-                    merchant_share=safe_float(request.form.get("merchant_share"), default=100.0),
-                    partner_price=safe_float(request.form.get("partner_price")),
-                    cost_price=safe_float(request.form.get("cost_price")),
+                    # Prices are parsed strictly: a malformed price used to
+                    # become 0.0, which stores a product with a zero sale
+                    # price and no error shown to the operator.
+                    regular_price=_dec(request.form.get("regular_price"), "regular_price"),
+                    merchant_price=_dec(request.form.get("merchant_price"), "merchant_price"),
+                    merchant_share=_dec(request.form.get("merchant_share"), "merchant_share", default=Decimal("100")),
+                    partner_price=_dec(request.form.get("partner_price"), "partner_price"),
+                    cost_price=_dec(request.form.get("cost_price"), "cost_price"),
                     current_stock=0,
-                    min_stock_alert=safe_float(request.form.get("min_stock_alert")),
+                    min_stock_alert=_dec(request.form.get("min_stock_alert"), "min_stock_alert"),
                     unit=unit_value,
                     location=request.form.get("location"),
                     description=request.form.get("description"),
@@ -1625,12 +1642,13 @@ def import_job_confirm(job_id: int):
         return redirect(url_for("products.import_job_detail", job_id=job.id))
 
     # Reset job for actual execution
-    job.status = ProductImportJobStatus.PENDING
-    job.is_dry_run = False
-    job.completed_at = None
-    job.processed_rows = 0
-    job.success_count = 0
-    job.error_count = 0
+    with atomic_transaction("import_job_confirm"):
+        job.status = ProductImportJobStatus.PENDING
+        job.is_dry_run = False
+        job.completed_at = None
+        job.processed_rows = 0
+        job.success_count = 0
+        job.error_count = 0
     job.errors = []
     job.warnings = []
     job.created_product_ids = []

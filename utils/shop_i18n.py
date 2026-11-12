@@ -288,6 +288,22 @@ def shop_lang(default="ar"):
 
 
 def t(key, lang=None):
+    """Resolve a storefront string.
+
+    The storefront has its own compact catalogue (``STRINGS``) for the words
+    that only the shop speaks. Everything else a storefront page needs — the
+    WhatsApp checkout labels, the store reports, the product details — lives
+    in the application catalogue (``utils.i18n.TRANSLATIONS``). Falling back to
+    it means a storefront page can use the whole bilingual catalogue instead
+    of rendering an unwrapped key to an Arabic customer.
+    """
     lang = lang or shop_lang()
     entry = STRINGS.get(key, {})
-    return entry.get(lang) or entry.get("ar") or key
+    if entry:
+        return entry.get(lang) or entry.get("ar") or key
+    from utils.i18n import TRANSLATIONS
+
+    entry = TRANSLATIONS.get(key, {})
+    if entry:
+        return entry.get(lang) or entry.get("ar") or key
+    return key

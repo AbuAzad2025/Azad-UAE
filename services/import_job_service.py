@@ -587,8 +587,15 @@ def process_product_import_task(
     file_content_b64: str,
     filename: str,
     update_existing: bool = False,
+    tenant_id: int | None = None,
 ):
-    """Celery task for background product import."""
+    """Celery task for background product import.
+
+    ``tenant_id`` is optional only so an already-queued message keeps working;
+    it is the tenant the job belongs to and it is what every query in this
+    task is filtered by. A Celery task has no request context, so the ORM
+    tenant guard is OFF inside it and nothing else would scope the work.
+    """
     import base64
     import logging
 
@@ -602,7 +609,10 @@ def process_product_import_task(
 
     with app.app_context(), atomic_transaction("background_import"):
         try:
-            job = ProductImportJob.query.get_or_404(job_id)
+            job_query = ProductImportJob.query.filter_by(id=job_id)
+            if tenant_id is not None:
+                job_query = job_query.filter_by(tenant_id=int(tenant_id))
+            job = job_query.first_or_404()
             job.celery_task_id = self.request.id
             db.session.flush()
 
@@ -613,7 +623,7 @@ def process_product_import_task(
 
             service = ProductImportService(job.tenant_id, job.user_id)
             if job.template_id:
-                template = ProductImportTemplate.query.get(job.template_id)
+                template = ProductImportTemplate.query.filter_by(id=job.template_id, tenant_id=job.tenant_id).first()
                 if template:
                     service.set_template(template)
 
@@ -657,8 +667,18 @@ def process_product_import_rollback_task(rollback_job_id: int):
     from utils.db_safety import atomic_transaction
 
     with app.app_context(), atomic_transaction("import_rollback"):
-        rollback_job = ProductImportJob.query.get_or_404(rollback_job_id)
-        original_job = rollback_job.rollback_job_id and ProductImportJob.query.get(rollback_job.rollback_job_id)
+        # No request context here, so the ORM tenant guard is off. The
+        # rollback therefore carries the tenant explicitly and scopes every
+        # read and every bulk delete by it: a bulk delete is invisible to
+        # the write guard AND to the SELECT criteria, so an unscoped one
+        # here would delete another tenant's stock movements and GL entries.
+        rollback_job = ProductImportJob.query.filter_by(id=rollback_job_id).first_or_404()
+        tenant_id = int(rollback_job.tenant_id)
+        original_job = (
+            ProductImportJob.query.filter_by(id=rollback_job.rollback_job_id, tenant_id=tenant_id).first()
+            if rollback_job.rollback_job_id
+            else None
+        )
 
         if not original_job:
             raise ValueError("Original job not found")
@@ -669,20 +689,22 @@ def process_product_import_rollback_task(rollback_job_id: int):
 
         # Delete created products
         for pid in original_job.created_product_ids:
-            product = Product.query.get(pid)
+            product = Product.query.filter_by(id=pid, tenant_id=tenant_id).first()
             if product:
                 # Delete stock movements
-                deleted_movements = StockMovement.query.filter_by(product_id=pid).delete()
+                deleted_movements = StockMovement.query.filter_by(product_id=pid, tenant_id=tenant_id).delete()
                 rolled_back_stock_movements.extend([pid] * deleted_movements)
                 # Delete warehouse stock
-                ProductWarehouseStock.query.filter_by(product_id=pid).delete()
+                ProductWarehouseStock.query.filter_by(product_id=pid, tenant_id=tenant_id).delete()
                 # Delete GL entries for this product
                 gl_entries = GLJournalEntry.query.filter(
+                    GLJournalEntry.tenant_id == tenant_id,
                     GLJournalEntry.reference_id == pid,
                     GLJournalEntry.reference_type.in_(["PRODUCT_CREATION", "STOCK_ADJUSTMENT"]),
                 ).all()
                 rolled_back_gl_entries.extend([e.id for e in gl_entries])
                 GLJournalEntry.query.filter(
+                    GLJournalEntry.tenant_id == tenant_id,
                     GLJournalEntry.reference_id == pid,
                     GLJournalEntry.reference_type.in_(["PRODUCT_CREATION", "STOCK_ADJUSTMENT"]),
                 ).delete()
@@ -693,7 +715,7 @@ def process_product_import_rollback_task(rollback_job_id: int):
         snapshots = original_job.updated_product_snapshots or {}
         for pid_str, snapshot in snapshots.items():
             pid = int(pid_str)
-            product = Product.query.get(pid)
+            product = Product.query.filter_by(id=pid, tenant_id=tenant_id).first()
             if product:
                 # Restore product fields
                 product.name = snapshot.get("name", product.name)

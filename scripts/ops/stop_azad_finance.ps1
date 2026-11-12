@@ -4,8 +4,8 @@
 # machine and must stay up.
 
 $ErrorActionPreference = "Stop"
-$TmpDir  = "C:\Users\azad1\AppData\Local\Temp\opencode"
-$PidFile = Join-Path $TmpDir "app.pid"
+$TmpDir  = if ($env:AZAD_TMP_DIR) { $env:AZAD_TMP_DIR } else { [System.IO.Path]::GetTempPath() }
+$PidFile = Join-Path $TmpDir "azad_finance_app.pid"
 
 # 1) Kill the listener actually bound to port 5000 (authoritative owner).
 $listeners = Get-NetTCPConnection -LocalPort 5000 -State Listen -ErrorAction SilentlyContinue

@@ -44,6 +44,70 @@ def is_rtl():
 
 
 TRANSLATIONS = {
+    "تم تعليق الحساب. يرجى الاتصال بالدعم الفني لمزيد من المعلومات.": {
+        "ar": "تم تعليق الحساب. يرجى الاتصال بالدعم الفني لمزيد من المعلومات.",
+        "en": "This account is suspended. Please contact support for more information.",
+    },
+    # Online storefront / WhatsApp checkout keys. The public catalogue, the
+    # product page, the cart, the WhatsApp checkout form and the store
+    # reports are bilingual like every other page: an unwrapped key renders
+    # as the raw English string to an Arabic customer.
+    "Catalog": {"ar": "الكتالوج", "en": "Catalog"},
+    "added_to_cart": {"ar": "تمت الإضافة إلى السلة", "en": "Added to cart"},
+    "aed": {"ar": "درهم إماراتي", "en": "AED"},
+    "back_to_catalog": {"ar": "العودة إلى الكتالوج", "en": "Back to catalog"},
+    "back_to_dashboard": {"ar": "العودة إلى لوحة التحكم", "en": "Back to dashboard"},
+    "barcode": {"ar": "الباركود", "en": "Barcode"},
+    "cart_is_empty": {"ar": "سلة التسوق فارغة", "en": "Cart is empty"},
+    "cart_items": {"ar": "عناصر السلة", "en": "Cart items"},
+    "customer_reviews": {"ar": "آراء العملاء", "en": "Customer reviews"},
+    "daily_revenue": {"ar": "الإيراد اليومي", "en": "Daily revenue"},
+    "daily_sales_chart": {"ar": "رسم المبيعات اليومي", "en": "Daily sales chart"},
+    "default_price": {"ar": "السعر الافتراضي", "en": "Default price"},
+    "enter_email": {"ar": "أدخل البريد الإلكتروني", "en": "Enter your email"},
+    "enter_phone_with_country_code": {"ar": "أدخل رقم الهاتف مع رمز الدولة", "en": "Enter phone with country code"},
+    "enter_your_name": {"ar": "أدخل اسمك", "en": "Enter your name"},
+    "error_adding_to_cart": {"ar": "تعذر إضافة المنتج إلى السلة", "en": "Error adding to cart"},
+    "error_sending_order": {"ar": "تعذر إرسال الطلب", "en": "Error sending order"},
+    "ils": {"ar": "شيكل", "en": "ILS"},
+    "order_inquiry": {"ar": "طلب استفسار", "en": "Order inquiry"},
+    "order_sent": {"ar": "تم إرسال الطلب", "en": "Order sent"},
+    "order_via_whatsapp": {"ar": "اطلب عبر واتساب", "en": "Order via WhatsApp"},
+    "order_will_be_sent": {"ar": "سيتم إرسال طلبك إلى", "en": "Your order will be sent to"},
+    "pending_orders": {"ar": "الطلبات المعلقة", "en": "Pending orders"},
+    "product_details": {"ar": "تفاصيل المنتج", "en": "Product details"},
+    "product_store_prices": {"ar": "أسعار المنتجات في المتجر", "en": "Product store prices"},
+    "related_products": {"ar": "منتجات ذات صلة", "en": "Related products"},
+    "sar": {"ar": "ريال سعودي", "en": "SAR"},
+    "save": {"ar": "حفظ", "en": "Save"},
+    "send_order_via_whatsapp": {"ar": "إرسال الطلب عبر واتساب", "en": "Send order via WhatsApp"},
+    "sending": {"ar": "جارٍ الإرسال", "en": "Sending"},
+    "set_price_for": {"ar": "تعيين سعر لـ", "en": "Set price for"},
+    "shopping_cart": {"ar": "سلة التسوق", "en": "Shopping cart"},
+    "special_instructions": {"ar": "تعليمات خاصة", "en": "Special instructions"},
+    "start_shopping": {"ar": "ابدأ التسوق", "en": "Start shopping"},
+    "stock": {"ar": "المخزون", "en": "Stock"},
+    "store_prices": {"ar": "أسعار المتجر", "en": "Store prices"},
+    "store_reports": {"ar": "تقارير المتجر", "en": "Store reports"},
+    "top_products": {"ar": "أفضل المنتجات", "en": "Top products"},
+    "total_customers": {"ar": "إجمالي العملاء", "en": "Total customers"},
+    "total_revenue": {"ar": "إجمالي الإيرادات", "en": "Total revenue"},
+    "units_sold": {"ar": "وحدة مباعة", "en": "Units sold"},
+    "usd": {"ar": "دولار أمريكي", "en": "USD"},
+    "via_whatsapp": {"ar": "عبر واتساب", "en": "via WhatsApp"},
+    "whatsapp_not_configured": {
+        "ar": "واتساب غير مُعد في هذا المتجر",
+        "en": "WhatsApp is not configured for this store",
+    },
+    "whatsapp_not_sent_manual": {
+        "ar": "تعذر إرسال الرسالة تلقائياً، يرجى إرسالها يدوياً",
+        "en": "The message was not sent automatically, please send it manually",
+    },
+    "whatsapp_order_notice": {
+        "ar": "سيتم إرسال تفاصيل الطلب عبر واتساب للتأكيد",
+        "en": "The order details will be sent via WhatsApp for confirmation",
+    },
+    "your_name": {"ar": "اسمك", "en": "Your name"},
     # Login brand strapline. It sat hardcoded in English directly beneath an
     # already-translated Arabic brand title, so the Arabic page showed one line
     # of English between two Arabic ones.
@@ -8741,7 +8805,10 @@ TRANSLATIONS = {
     "Order Date": {"ar": "تاريخ الأمر", "en": "Order Date"},
     "Order Details": {"ar": "تفاصيل الأمر", "en": "Order Details"},
     "Order Discount": {"ar": "خصم الأمر", "en": "Order Discount"},
-    "Order number, customer, serial": {"ar": "رقم الأمر، العميل، الرقم التسلسلي", "en": "Order number, customer, serial"},
+    "Order number, customer, serial": {
+        "ar": "رقم الأمر، العميل، الرقم التسلسلي",
+        "en": "Order number, customer, serial",
+    },
     "Orders": {"ar": "الأوامر", "en": "Orders"},
     "Outstanding": {"ar": "المستحق", "en": "Outstanding"},
     "Part": {"ar": "قطعة", "en": "Part"},

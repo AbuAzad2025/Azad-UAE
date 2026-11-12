@@ -411,13 +411,18 @@ class TestMaintenanceOrderDiscount:
         """
         from models import Permission, Role
 
-        role = sample_user.role
+        # A role of its own, never the shared super_admin row: the seeded
+        # super_admin carries every maintenance permission, including the
+        # override, and reusing it would hand this user the very permission
+        # the test is about. The precondition is "has the discount
+        # permission, does NOT have the override", so it has to be built.
+        role = db_session.query(Role).filter_by(slug="discount-holder").first()
         if role is None:
             role = Role(name="Discount Holder", slug="discount-holder", is_active=True)
             db_session.add(role)
             db_session.flush()
-            sample_user.role_id = role.id
-            db_session.flush()
+        sample_user.role_id = role.id
+        db_session.flush()
 
         for code in ("maintenance_discount",):
             perm = db_session.query(Permission).filter_by(code=code).first()
@@ -428,6 +433,11 @@ class TestMaintenanceOrderDiscount:
             if perm not in role.permissions:
                 role.permissions.append(perm)
         db_session.flush()
+
+        override = db_session.query(Permission).filter_by(code="maintenance_override_discount").first()
+        if override is not None and override in role.permissions:
+            role.permissions.remove(override)
+            db_session.flush()
         return sample_user
 
     def _order_with_a_line(self, db_session, tenant, user, warehouse):

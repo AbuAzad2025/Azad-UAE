@@ -38,6 +38,7 @@ from utils.api_response import error_response, paginated_response, success_respo
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
 from utils.feature_guards import install_feature_gate
+from utils.numeric_input import parse_int_field
 from utils.tenanting import tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
@@ -1221,7 +1222,7 @@ def api_create_purchase():
                 return idempotent
 
             purchase = PackagePurchase(
-                package_id=int(data["package_id"]),
+                package_id=parse_int_field(data.get("package_id"), field="package_id", minimum=1),
                 customer_name=customer_name,
                 customer_email=customer_email,
                 customer_phone=customer_phone,
@@ -1354,7 +1355,11 @@ def api_create_donation():
         if not data.get("amount") or not data.get("payment_method"):
             return error_response(message=gettext("المبلغ وطريقة الدفع مطلوبة"), status_code=400)
 
-        if float(data["amount"]) < 15:
+        try:
+            amount = float(data["amount"])
+        except (TypeError, ValueError):
+            return error_response(message=gettext("المبلغ غير صالح."), status_code=400)
+        if amount < 15:
             return error_response(message=gettext("الحد الأدنى للتبرع $15"), status_code=400)
 
         from html import escape

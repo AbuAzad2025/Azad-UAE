@@ -1,165 +1,148 @@
-{% extends 'base.html' %}
-{% block title %}{{ product.name_ar or product.name }} - {{ store.title or store.store_slug }}{% endblock %}
+{% extends 'shop/base.html' %}
 
-{% block page_title %}
-<div class="d-flex justify-content-between align-items-center">
-  <h1 class="mb-0">{{ product.name_ar or product.name }}</h1>
-  <a href="{{ url_for('store.public_catalog', store=store.store_slug) }}" class="btn btn-outline-secondary">
-    <i class="fas fa-arrow-left mr-1" aria-hidden="true"></i>{{ t('back_to_catalog') }}
-  </a>
-</div>
-{% endblock %}
+{% block title %}{{ product.get_display_name(lang) }}{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-md-6">
+<nav class="ps-breadcrumb" aria-label="{{ t('breadcrumb') }}">
+  <a href="{{ url_for('store.public_catalog', store=store.store_slug) }}">{{ t('back_to_catalog') }}</a>
+</nav>
+
+<div class="ps-product-detail">
+  <div class="ps-product-gallery">
     {% if product.image_url %}
-    <img src="{{ product.image_url }}" class="img-fluid rounded" alt="{{ product.name_ar or product.name }}">
+    <img src="{{ product.image_url }}" alt="{{ product.get_display_name(lang) }}">
     {% else %}
-    <div class="bg-light rounded text-center d-flex align-items-center justify-content-center" style="height: 400px;">
-      <i class="fas fa-box text-muted fa-4x" aria-hidden="true"></i>
-    </div>
+    <div class="ps-placeholder"><i class="fas fa-box-open" aria-hidden="true"></i></div>
     {% endif %}
   </div>
-  <div class="col-md-6">
-    <h2>{{ product.name_ar or product.name }}</h2>
-    {% if product.name_en and product.name_ar and product.name_en != product.name_ar %}
-    <small class="text-muted">{{ product.name_en }}</small>
-    {% endif %}
-    <hr>
 
-    {% if product.description %}
-    <p>{{ product.description }}</p>
-    {% endif %}
+  <div class="ps-card-body">
+    <h1 class="ps-page-title">{{ product.get_display_name(lang) }}</h1>
+    {% if product.description %}<p>{{ product.description }}</p>{% endif %}
 
-    <div class="mt-4">
-      <h5>{{ t('price') }}:</h5>
-      {% if store_price %}
-      <span class="font-weight-bold text-primary h4">{{ '{:,.3f}'.format(store_price) }} {{ store_currency }}</span>
+    <p class="ps-price">{{ format_currency(store_price or product.regular_price, currency=store_currency) }}</p>
+
+    <p>
+      {{ t('stock') }}:
+      {% if (product.current_stock or 0) > 0 %}
+      <span class="ps-stock-badge ps-stock-in">{{ '{:,.3f}'.format(product.current_stock) }}</span>
       {% else %}
-      <span class="font-weight-bold text-primary h4">{{ '{:,.3f}'.format(product.regular_price) }} {{ tenant.base_currency or 'AED' }}</span>
+      <span class="ps-stock-badge ps-stock-out">{{ t('out_of_stock') }}</span>
       {% endif %}
+    </p>
+
+    <div class="ps-card-meta">
+      {% if product.sku %}{{ t('sku') }}: {{ product.sku }} · {% endif %}
+      {% if product.barcode %}{{ t('barcode') }}: {{ product.barcode }} · {% endif %}
+      {% if product.unit %}{{ t('unit') }}: {{ product.unit }}{% endif %}
     </div>
 
-    <div class="mt-3">
-      <h5>{{ t('stock') }}:</h5>
-      {% set stock = product.current_stock or 0 %}
-      {% if stock > 0 %}
-      <span class="badge badge-success">{{ '{:,.3f}'.format(stock) }} {{ t('in_stock') }}</span>
-      {% else %}
-      <span class="badge badge-danger">{{ t('out_of_stock') }}</span>
-      {% endif %}
+    <div class="ps-form-group">
+      <label for="qtyInput">{{ t('quantity') }}</label>
+      <input type="number" id="qtyInput" value="1" min="1" max="{{ product.current_stock or 1 }}"
+             class="ps-qty-input" aria-label="{{ t('quantity') }}">
     </div>
 
-    <div class="mt-4">
-      <h5>{{ t('product_details') }}:</h5>
-      <ul class="list-group list-group-flush">
-        {% if product.sku %}
-        <li class="list-group-item"><strong>{{ t('sku') }}:</strong> {{ product.sku }}</li>
-        {% endif %}
-        {% if product.barcode %}
-        <li class="list-group-item"><strong>{{ t('barcode') }}:</strong> {{ product.barcode }}</li>
-        {% endif %}
-        <li class="list-group-item"><strong>{{ t('unit') }}:</strong> {{ product.unit or 'piece' }}</li>
-      </ul>
-    </div>
-
-    <div class="mt-4">
-      <h5>{{ t('quantity') }}:</h5>
-      <input type="number" class="form-control" id="qtyInput" aria-label="Quantity" value="1" min="1" max="{{ product.current_stock or 1 }}">
-    </div>
-
-    <div class="mt-3">
-      <button class="btn btn-success btn-lg btn-block" id="whatsappCheckoutBtn"
-              onclick="openWhatsAppCheckout()">
-        <i class="fab fa-whatsapp mr-2" aria-hidden="true"></i>{{ t('order_via_whatsapp') }}
+    {% if (product.current_stock or 0) > 0 %}
+    <form method="post" action="{{ url_for('store.public_cart_add') }}" data-ajax-cart class="ps-card-actions">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="product_id" value="{{ product.id }}">
+      <input type="hidden" name="quantity" value="1">
+      <input type="hidden" name="currency_code" value="{{ store_currency }}">
+      <button type="submit" class="ps-btn ps-btn-primary ps-btn-block">
+        <i class="fas fa-bag-shopping" aria-hidden="true"></i> {{ t('add_to_cart') }}
       </button>
-    </div>
+    </form>
+    {% else %}
+    <span class="ps-btn ps-btn-ghost ps-btn-block" aria-disabled="true">{{ t('out_of_stock') }}</span>
+    {% endif %}
 
-    <div class="mt-2">
-      <a href="{{ url_for('store.public_cart') }}" class="btn btn-outline-primary">
-        <i class="fas fa-shopping-cart mr-1" aria-hidden="true"></i>{{ t('view_cart') }}
-      </a>
-    </div>
+    <a class="ps-btn ps-btn-outline ps-btn-block"
+       href="{{ url_for('store.public_cart', store=store.store_slug) }}">
+      <i class="fas fa-shopping-basket" aria-hidden="true"></i> {{ t('view_cart') }}
+    </a>
   </div>
 </div>
 
-<hr>
-
-<div class="row mt-4">
-  <div class="col-12">
-    <h5>{{ t('related_products') }}</h5>
-    <div class="row">
-      {% for rel in related %}
-      <div class="col-md-3 mb-3">
-        <div class="card h-100">
-          <div class="card-body text-center">
-            <h6>{{ rel.product.name_ar or rel.product.name }}</h6>
-            <p class="text-muted small">{{ '{:,.3f}'.format(rel.quantity or 0) }}</p>
-            <a href="{{ url_for('store.public_product_detail', product_id=rel.product.id) }}" class="btn btn-sm btn-outline-primary">{{ t('view') }}</a>
-          </div>
-        </div>
+{% if related %}
+<section class="ps-section-head">
+  <h2><i class="fas fa-layer-group" aria-hidden="true"></i> {{ t('related_products') }}</h2>
+</section>
+<div class="ps-grid">
+  {% for rel in related %}
+  <article class="ps-card">
+    <a href="{{ url_for('store.public_product_detail', product_id=rel.product.id, store=store.store_slug) }}"
+       class="ps-card-img" aria-label="{{ rel.product.get_display_name(lang) }}">
+      {% if rel.product.image_url %}
+      <img src="{{ rel.product.image_url }}" alt="{{ rel.product.get_display_name(lang) }}" loading="lazy" decoding="async">
+      {% else %}
+      <div class="ps-placeholder"><i class="fas fa-box-open" aria-hidden="true"></i></div>
+      {% endif %}
+    </a>
+    <div class="ps-card-body">
+      <div class="ps-card-head">
+        <h3 class="ps-card-title">{{ rel.product.get_display_name(lang) }}</h3>
       </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
-{% if reviews %}
-<hr>
-<div class="row mt-4">
-  <div class="col-12">
-    <h5>{{ t('customer_reviews') }}</h5>
-    <div class="row">
-      {% for review in reviews %}
-      <div class="col-md-4 mb-3">
-        <div class="card border-0">
-          <div class="card-body">
-            <h6 class="card-title">{{ review.customer_name or 'عميل' }}</h6>
-            <p class="card-text small">{{ review.comment or review.review_text or '' }}</p>
-            <small class="text-muted">{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}</small>
-          </div>
-        </div>
+      <div class="ps-card-footer">
+        <span class="ps-price">{{ format_currency(dp(rel.product), currency=store_currency) }}</span>
       </div>
-      {% endfor %}
     </div>
-  </div>
+  </article>
+  {% endfor %}
 </div>
 {% endif %}
 
-<script>
-function openWhatsAppCheckout() {
-  const qty = document.getElementById('qtyInput').value || 1;
-  
-  fetch('{{ url_for('store.public_cart_add') }}', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      product_id: {{ product.id }},
-      quantity: parseInt(qty),
-      currency_code: '{{ store_currency or tenant.base_currency or 'USD' }}'
-    })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      // Open WhatsApp checkout modal or redirect
-      const phone = '{{ store.whatsapp or '' }}';
-      const message = encodeURIComponent('{{ t('order_inquiry') }}: {{ product.name_ar or product.name }}\n{{ t('quantity') }}: ' + qty + '\n{{ t('price') }}: {{ '{:,.3f}'.format(store_price or product.regular_price) }} {{ store_currency or tenant.base_currency or 'USD' }}\n{{ t('order_number') }}: QR{{ product.id }}{{ loop.index0 }}');
-      
-      if (phone) {
-        window.open('https://wa.me/' + phone + '?text=' + message, '_blank');
-      } else {
-        alert('{{ t('whatsapp_not_configured') }}');
-      }
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('{{ t('error_adding_to_cart') }}');
+{% if reviews %}
+<section class="ps-section-head">
+  <h2><i class="fas fa-star" aria-hidden="true"></i> {{ t('customer_reviews') }}</h2>
+</section>
+{% for review in reviews %}
+<article class="ps-order-card">
+  <div class="ps-order-card-body">
+    <strong>{{ review.customer_name or t('customer') }}</strong>
+    <p>{{ review.comment or review.review_text or '' }}</p>
+    {% if review.created_at %}
+    <div class="ps-order-meta">{{ review.created_at.strftime('%Y-%m-%d') }}</div>
+    {% endif %}
+  </div>
+</article>
+{% endfor %}
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script nonce="{{ csp_nonce() }}">
+document.addEventListener('DOMContentLoaded', function () {
+  const csrf = document.querySelector('meta[name="csrf-token"]');
+  const qty = document.getElementById('qtyInput');
+  document.querySelectorAll('form[data-ajax-cart]').forEach(function (form) {
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const data = new FormData(form);
+      const quantity = qty ? parseInt(qty.value, 10) : parseInt(data.get('quantity'), 10);
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrf ? csrf.getAttribute('content') : ''
+        },
+        body: JSON.stringify({
+          product_id: parseInt(data.get('product_id'), 10),
+          quantity: quantity,
+          currency_code: data.get('currency_code')
+        })
+      })
+      .then(function (response) { return response.json(); })
+      .then(function (result) {
+        if (result && result.success) {
+          window.location.href = '{{ url_for('store.public_cart', store=store.store_slug) }}';
+        }
+      })
+      .catch(function () {
+        window.alert('{{ t('error_adding_to_cart') }}');
+      });
+    });
   });
-}
+});
 </script>
 {% endblock %}

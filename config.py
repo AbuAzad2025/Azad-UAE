@@ -188,6 +188,12 @@ class Config:
     WTF_CSRF_ENABLED = _bool(os.environ.get("WTF_CSRF_ENABLED"), True)
     WTF_CSRF_TIME_LIMIT = 3600
 
+    # Shared secret for the platform cron endpoints (subscription lifecycle:
+    # detect expiring tenants, remind them, suspend the ones that did not
+    # pay). The route reads this key; without it configured the endpoint
+    # answered 503 and the cron never ran at all.
+    CRON_SECRET = os.environ.get("CRON_SECRET", "")
+
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
     if "*" in CORS_ORIGINS:
         raise ValueError("CORS_ORIGINS must not contain '*' with credentials enabled.")
@@ -463,6 +469,13 @@ def assert_production_sanity(cfg=None) -> None:
 
     if not cfg.SESSION_COOKIE_SECURE:
         raise RuntimeError("SESSION_COOKIE_SECURE must be True in production!")
+
+    # The subscription lifecycle cron (detect expiring tenants, remind them,
+    # suspend the ones that did not pay) is authenticated by this secret.
+    # Without it the endpoint answers 503 and the cron never runs, so the
+    # tenants are never suspended for non-payment.
+    if not getattr(cfg, "CRON_SECRET", ""):
+        raise RuntimeError("CRON_SECRET must be set in production!")
 
     base_url = getattr(cfg, "BASE_URL", "")
     if base_url and not base_url.startswith("https://"):

@@ -30,6 +30,11 @@ PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
 ROUTES_DIR = PROJECT_ROOT / "routes"
 
 _GUARD_RE = re.compile(r"""@permission_required\(\s*["']([^"']+)["']\s*\)""")
+# A permission checked by hand rather than by a decorator. The literal has to
+# be a seeded code for exactly the same reason: a code nobody can hold makes
+# the branch unreachable, and an *action* that checks a code that does not
+# exist is an action that is silently refused for everybody.
+_CHECK_RE = re.compile(r"""has_permission\(\s*["']([^"']+)["']\s*\)""")
 
 
 def _guarded_codes():
@@ -42,8 +47,39 @@ def _guarded_codes():
     return found
 
 
+def _checked_codes():
+    """(code, "path:line") for every hand-written permission check."""
+    found = []
+    for base in ("routes", "services"):
+        root = PROJECT_ROOT / base
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*.py")):
+            for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                for code in _CHECK_RE.findall(line):
+                    found.append((code, f"{base}/{path.name}:{lineno}"))
+    return found
+
+
 def test_the_routes_directory_exists():
     assert ROUTES_DIR.is_dir(), f"{ROUTES_DIR} is not a directory"
+
+
+def test_every_hand_checked_permission_code_is_seedable():
+    """A permission checked by hand must name a code that can be granted.
+
+    The decorator scan above cannot see these: the AI action router keeps a
+    map of action names to permission codes, and a code that is not seeded
+    there is unreachable for everybody. ``manage_cheques`` was one: no role
+    can hold it, so the AI cheque wizard was dead for every non-owner.
+    """
+    seeded = set(PERMISSION_CODES)
+    dead = [(code, where) for code, where in _checked_codes() if code not in seeded]
+    assert not dead, (
+        "these permission checks name a code that is never seeded:\n"
+        + "\n".join(f"  {code}  at {where}" for code, where in dead)
+        + "\nadd the code(s) to utils.constants.PERMISSION_CODES and PERMISSIONS"
+    )
 
 
 def test_every_guarded_permission_code_is_seedable():

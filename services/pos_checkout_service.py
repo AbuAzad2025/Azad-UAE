@@ -325,7 +325,7 @@ class PosCheckoutService:
         _pre_sales = Decimal(str(session.total_sales or 0))
         db.session.execute(
             sa_update(PosSession)
-            .where(PosSession.id == session.id)
+            .where(PosSession.id == session.id, PosSession.tenant_id == tenant_id)
             .values(total_sales=PosSession.__table__.c.total_sales + sale_amount),
             execution_options={"synchronize_session": False},
         )
@@ -343,7 +343,7 @@ class PosCheckoutService:
             _pre_cash = Decimal(str(session.total_cash_sales or 0))
             db.session.execute(
                 sa_update(PosSession)
-                .where(PosSession.id == session.id)
+                .where(PosSession.id == session.id, PosSession.tenant_id == tenant_id)
                 .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + cash_aed),
                 execution_options={"synchronize_session": False},
             )
@@ -366,7 +366,7 @@ class PosCheckoutService:
             _pre_change = safe_decimal(session.total_change_given)
             db.session.execute(
                 sa_update(PosSession)
-                .where(PosSession.id == session.id)
+                .where(PosSession.id == session.id, PosSession.tenant_id == tenant_id)
                 .values(total_change_given=PosSession.__table__.c.total_change_given + change_due),
                 execution_options={"synchronize_session": False},
             )

@@ -29,6 +29,7 @@ from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import ErrorCategory, refuse
 from utils.gl_reference_types import GLRef
+from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 purchases_bp = Blueprint("purchases", __name__, url_prefix="/purchases")
@@ -42,6 +43,16 @@ def safe_float(value, default=0.0):
         return float(value)
     except (ValueError, TypeError):
         return default
+
+
+def _dec(value, field: str, default=Decimal("0")):
+    """Parse a money/rate field strictly.
+
+    Empty -> *default* (the field was not supplied). Anything that is not a
+    number -> ValueError naming the field, so the operator is told instead of
+    the document silently carrying a zero.
+    """
+    return parse_decimal_field(value, default=default, field=field)
 
 
 @purchases_bp.route("/")
@@ -137,16 +148,21 @@ def create():
                     warehouse_id=warehouse_id_val,
                     currency=request.form.get("currency") or default_currency,
                     user_exchange_rate=request.form.get("exchange_rate", type=float),
-                    discount_amount=safe_float(request.form.get("discount_amount")),
-                    tax_rate=safe_float(request.form.get("tax_rate"), default=None),
+                    # Money and rates are parsed strictly. A malformed
+                    # customs duty used to become None, which the service
+                    # reads as "not specified" and replaces with the
+                    # country's statutory default - a different number from
+                    # the operator's, with no warning.
+                    discount_amount=_dec(request.form.get("discount_amount"), "discount_amount"),
+                    tax_rate=_dec(request.form.get("tax_rate"), "tax_rate", default=None),
                     notes=request.form.get("notes"),
-                    freight=safe_float(request.form.get("freight")),
-                    insurance=safe_float(request.form.get("insurance")),
+                    freight=_dec(request.form.get("freight"), "freight"),
+                    insurance=_dec(request.form.get("insurance"), "insurance"),
                     # Blank means "not specified" — an import then picks up the
                     # country's statutory default. "0" is an explicit zero.
-                    customs_duty=safe_float(request.form.get("customs_duty"), default=None),
-                    excise_amount=safe_float(request.form.get("excise_amount"), default=None),
-                    other_landed_cost=safe_float(request.form.get("other_landed_cost")),
+                    customs_duty=_dec(request.form.get("customs_duty"), "customs_duty", default=None),
+                    excise_amount=_dec(request.form.get("excise_amount"), "excise_amount", default=None),
+                    other_landed_cost=_dec(request.form.get("other_landed_cost"), "other_landed_cost"),
                     is_import=(request.form.get("is_import") or "").lower() in ("1", "on", "true", "yes"),
                 )
 
@@ -463,9 +479,11 @@ def api_calculate_purchase_totals():
 
         lines = data.get("lines", [])
         # None = not specified → country/tenant default in normalize_tax_rate.
-        _raw_tax = data.get("tax_rate")
-        tax_rate = None if _raw_tax is None else Decimal(str(_raw_tax))
-        discount_amount = Decimal(str(data.get("discount_amount", 0) or 0))
+        try:
+            tax_rate = _dec(data.get("tax_rate"), "tax_rate", default=None)
+            discount_amount = _dec(data.get("discount_amount"), "discount_amount")
+        except ValueError as exc:
+            return error_response(message=str(exc), status_code=400)
         from utils.tax_settings import normalize_tax_rate
 
         # Name the tenant explicitly - see the same fix in routes/sales.py. Omitting
@@ -527,15 +545,14 @@ def api_calculate_purchase_totals():
         ]
 
         is_import = bool(data.get("is_import", False))
-        freight = Decimal(str(data.get("freight", 0) or 0))
-        insurance = Decimal(str(data.get("insurance", 0) or 0))
-        customs_duty = data.get("customs_duty")
-        customs_duty = None if customs_duty is None or str(customs_duty).strip() == "" else Decimal(str(customs_duty))
-        excise_amount = data.get("excise_amount")
-        excise_amount = (
-            None if excise_amount is None or str(excise_amount).strip() == "" else Decimal(str(excise_amount))
-        )
-        other_landed_cost = Decimal(str(data.get("other_landed_cost", 0) or 0))
+        try:
+            freight = _dec(data.get("freight"), "freight")
+            insurance = _dec(data.get("insurance"), "insurance")
+            customs_duty = _dec(data.get("customs_duty"), "customs_duty", default=None)
+            excise_amount = _dec(data.get("excise_amount"), "excise_amount", default=None)
+            other_landed_cost = _dec(data.get("other_landed_cost"), "other_landed_cost")
+        except ValueError as exc:
+            return error_response(message=str(exc), status_code=400)
         from models import Tenant as _Tenant
 
         _tenant_row = (
