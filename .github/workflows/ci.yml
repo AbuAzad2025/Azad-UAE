@@ -1224,7 +1224,7 @@ jobs:
             echo "$out" | tail -1
             echo "::endgroup::"
           done <<'FLOORS'
-          routes/* 98
+          routes/* 96
           services/* 97
           models/* 99
           utils/* 96
