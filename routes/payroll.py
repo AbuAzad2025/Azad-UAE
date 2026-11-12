@@ -11,6 +11,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
 from utils.feature_guards import install_feature_gate
+from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id
 
 payroll_bp = Blueprint("payroll", __name__, url_prefix="/payroll")
@@ -93,7 +94,7 @@ def advances():
             amount_str = request.form.get("amount")
             if not amount_str:
                 raise ValueError(gettext("المبلغ مطلوب."))
-            amount = float(amount_str)
+            amount = parse_decimal_field(amount_str, field="amount")
             employee = db.session.get(Employee, employee_id)
             _assert_employee_scope(employee, scoped_branch_id, tid)
             with atomic_transaction("payroll_create_advance"):
@@ -162,9 +163,9 @@ def process_payroll():
                         employee_id=employee_id,
                         month=int(request.form.get("month") or 0),
                         year=int(request.form.get("year") or 0),
-                        days_worked=float(request.form.get("days_worked", 0)),
-                        allowances=float(request.form.get("allowances", 0)),
-                        deductions=float(request.form.get("deductions", 0)),
+                        days_worked=parse_decimal_field(request.form.get("days_worked"), field="days_worked"),
+                        allowances=parse_decimal_field(request.form.get("allowances"), field="allowances"),
+                        deductions=parse_decimal_field(request.form.get("deductions"), field="deductions"),
                         user_id=current_user.id,
                         actor_user=current_user,
                     )

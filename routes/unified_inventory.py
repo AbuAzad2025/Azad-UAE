@@ -8,6 +8,7 @@ from models import Campaign, Shipment, WarrantyClaim
 from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id
 
 uinv_bp = Blueprint("unified_inventory", __name__, url_prefix="/uinv")
@@ -38,8 +39,8 @@ def campaigns_create():
             name=request.form.get("name"),
             campaign_type=request.form.get("campaign_type", "percentage"),
             coupon_code=request.form.get("coupon_code"),
-            discount_value=float(request.form.get("discount_value", 0)),
-            min_order_amount=float(request.form.get("min_order_amount", 0)),
+            discount_value=parse_decimal_field(request.form.get("discount_value"), field="discount_value"),
+            min_order_amount=parse_decimal_field(request.form.get("min_order_amount"), field="min_order_amount"),
             start_date=datetime.now(UTC),
             end_date=datetime.now(UTC) + timedelta(days=30),
             is_active=True,
@@ -117,9 +118,9 @@ def shipments_create():
             tracking_number=request.form.get("tracking_number"),
             source_type="sale",
             source_id=int(request.form.get("source_id") or 0),
-            shipping_cost=float(request.form.get("shipping_cost", 0)),
-            customs_duty=float(request.form.get("customs_duty", 0)),
-            insurance=float(request.form.get("insurance", 0)),
+            shipping_cost=parse_decimal_field(request.form.get("shipping_cost"), field="shipping_cost"),
+            customs_duty=parse_decimal_field(request.form.get("customs_duty"), field="customs_duty"),
+            insurance=parse_decimal_field(request.form.get("insurance"), field="insurance"),
             status="pending",
         )
         with atomic_transaction("shipment_create"):

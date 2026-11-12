@@ -62,19 +62,27 @@ def _order_or_404(order_id: int, tenant_id: int) -> MaintenanceOrder:
 
 
 def _decimal_or_zero(name: str) -> Decimal:
-    """Read a form amount. A malformed value is zero, never an exception.
+    """Read a form amount.
 
-    The service layer validates every amount against its own rules, so a
-    typo in the form produces "the value is invalid" there rather than a
-    500 here.
+    Empty -> zero (the field was not supplied). A malformed value -> a
+    ValueError naming the field, which the caller turns into a message for
+    the operator.
+
+    It used to return zero for a malformed value too. That made a typo in
+    ``unit_price`` a FREE part on the maintenance line, and a typo in
+    ``amount_received`` a receipt that closed the order for nothing, with
+    nothing on the screen to say so.
     """
     raw = request.form.get(name)
     if raw is None or str(raw).strip() == "":
         return Decimal("0")
     try:
-        return Decimal(str(raw))
+        value = Decimal(str(raw))
     except Exception:
-        return Decimal("0")
+        raise ValueError(gettext("قيمة غير صالحة: {field}").format(field=name)) from None
+    if not value.is_finite():
+        raise ValueError(gettext("قيمة غير صالحة: {field}").format(field=name))
+    return value
 
 
 def _optional_date(name: str, source=None) -> datetime | None:

@@ -31,6 +31,7 @@ from services.ai_actions_query_service import AiActionsQueryService
 from services.logging_core import LoggingCore
 from services.stock_service import StockService
 from utils.db_safety import atomic_transaction
+from utils.numeric_input import parse_decimal_field
 from utils.tenanting import assign_tenant_id, get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -2389,17 +2390,28 @@ http://localhost:5000/ai/assistant
                     name = parts[0]
                     part_number = parts[1]
                     price_str = parts[2].replace(gettext("درهم"), "").replace(gettext("د.إ"), "").strip()
-                    quantity = (
-                        int(parts[3].replace(gettext("قطعة"), "").replace(gettext("قطعه"), "").strip())
-                        if len(parts) > 3
-                        else 0
-                    )
+                    try:
+                        # The price is money: it is parsed as a Decimal and a
+                        # malformed one is a message, not a 500. It used to
+                        # be float(price_str), which raised on anything that
+                        # was not a number and stored a float in a Numeric
+                        # column.
+                        regular_price = parse_decimal_field(price_str, field="price")
+                        quantity = (
+                            int(parts[3].replace(gettext("قطعة"), "").replace(gettext("قطعه"), "").strip())
+                            if len(parts) > 3
+                            else 0
+                        )
+                    except (ValueError, TypeError):
+                        return """❌ **خطأ في إدخال السعر أو الكمية!**
+
+💡 **يرجى إدخال رقم صحيح**"""
 
                     from services.product_service import ProductService
 
                     product = ProductService.create_product(
                         name=name,
-                        regular_price=float(price_str),
+                        regular_price=regular_price,
                         part_number=part_number,
                     )
                     with atomic_transaction("ai_quick_create_product"):

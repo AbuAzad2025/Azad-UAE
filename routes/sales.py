@@ -125,6 +125,7 @@ def create():
             customer = tenant_get_or_404(Customer, customer_id)
 
             lines_data = []
+            rejected_lines: list[int] = []
             line_count = int(request.form.get("line_count", 0))
 
             for i in range(line_count):
@@ -133,13 +134,13 @@ def create():
                     product_id = int(product_id_str) if product_id_str else None
 
                     quantity_str = request.form.get(f"lines[{i}][quantity]")
-                    quantity = float(quantity_str) if quantity_str else None
+                    quantity = parse_decimal_field(quantity_str, field="quantity")
 
                     discount_str = request.form.get(f"lines[{i}][discount_percent]")
-                    discount_percent = float(discount_str) if discount_str else 0
+                    discount_percent = parse_decimal_field(discount_str, default=Decimal("0"), field="discount_percent")
 
                     price_str = request.form.get(f"lines[{i}][unit_price]")
-                    override_price = float(price_str) if price_str else None
+                    override_price = parse_decimal_field(price_str, field="unit_price")
 
                     # Get Serials if any
                     serials = request.form.getlist(f"lines[{i}][serials][]")
@@ -163,9 +164,20 @@ def create():
                                 }
                             )
                 except (ValueError, TypeError):
-                    # Skip invalid lines
+                    # The line is skipped, but the operator is told which
+                    # one: a silently dropped line means the invoice total
+                    # is not what they typed.
+                    rejected_lines.append(i + 1)
                     current_app.logger.debug("Skipping invalid sale line at index %d", i, exc_info=True)
                     continue
+
+            if rejected_lines:
+                flash(
+                    gettext("تم تجاهل السطور التالية لأن بياناتها غير صحيحة: {lines}").format(
+                        lines=", ".join(str(n) for n in rejected_lines)
+                    ),
+                    "warning",
+                )
 
             if not lines_data:
                 from utils.error_messages import ErrorMessages

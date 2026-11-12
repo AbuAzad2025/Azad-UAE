@@ -111,9 +111,14 @@ def create():
 
             for i in range(line_count):
                 product_id = request.form.get(f"lines[{i}][product_id]", type=int)
-                quantity = request.form.get(f"lines[{i}][quantity]", type=float)
-                unit_cost = request.form.get(f"lines[{i}][unit_cost]", type=float)
-                discount_percent = safe_float(request.form.get(f"lines[{i}][discount_percent]"))
+                # A malformed amount used to become None and then zero: the
+                # line was booked at no cost at all.
+                quantity = _dec(request.form.get(f"lines[{i}][quantity]"), f"lines[{i}][quantity]")
+                unit_cost = _dec(request.form.get(f"lines[{i}][unit_cost]"), f"lines[{i}][unit_cost]")
+                discount_percent = _dec(
+                    request.form.get(f"lines[{i}][discount_percent]"),
+                    f"lines[{i}][discount_percent]",
+                )
                 serials_raw = request.form.get(f"lines[{i}][serials]", "")
                 serials = [s.strip() for s in serials_raw.split("\n") if s.strip()] if serials_raw else []
                 if product_id and quantity and quantity > 0:

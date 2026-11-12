@@ -4,6 +4,7 @@ from flask_login import login_required
 
 from services.asset_service import AssetService
 from utils.decorators import permission_required
+from utils.numeric_input import parse_decimal_field
 from utils.tenanting import tenant_get_or_404
 
 assets_bp = Blueprint("assets", __name__, url_prefix="/assets")
@@ -89,9 +90,9 @@ def dispose(asset_id):
 
             disposal_date_str = request.form.get("disposal_date", "")
             disposal_date = date_type.fromisoformat(disposal_date_str) if disposal_date_str else date_type.today()
-            disposal_price = request.form.get("disposal_price", "0")
+            disposal_price = parse_decimal_field(request.form.get("disposal_price"), field="disposal_price")
             notes = request.form.get("notes")
-            AssetService.dispose_asset(asset, disposal_date, float(disposal_price), notes=notes)
+            AssetService.dispose_asset(asset, disposal_date, disposal_price, notes=notes)
             flash(gettext("تم التخلص من الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:

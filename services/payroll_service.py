@@ -182,7 +182,9 @@ class PayrollService:
             basic_amount = employee.basic_salary
 
         else:
-            basic_amount = employee.basic_salary * Decimal(days_worked)
+            # Decimal(str(...)): Decimal(float) materialises the binary
+            # artifact (Decimal(0.1) is 0.1000000000000000055511151231257827).
+            basic_amount = employee.basic_salary * Decimal(str(days_worked))
 
         pending_advances = SalaryAdvance.query.filter_by(
             employee_id=employee_id,

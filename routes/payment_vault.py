@@ -38,7 +38,7 @@ from utils.api_response import error_response, paginated_response, success_respo
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
 from utils.feature_guards import install_feature_gate
-from utils.numeric_input import parse_int_field
+from utils.numeric_input import parse_decimal_field, parse_int_field
 from utils.tenanting import tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
@@ -724,7 +724,7 @@ def create_package():
             name_en=name_en,
             slug=slug,
             icon=(request.form.get("icon") or "📦").strip() or "📦",
-            price=_as_float(request.form.get("price"), 0),
+            price=parse_decimal_field(request.form.get("price"), default=Decimal("0"), field="price"),
             description_ar=(request.form.get("description_ar") or "").strip() or None,
             description_en=(request.form.get("description_en") or "").strip() or None,
             features=[line.strip() for line in features_text.splitlines() if line.strip()],
