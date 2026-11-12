@@ -318,7 +318,9 @@ class TestLoyaltyAndVariants:
             StoreService.redeem_loyalty_points(sample_tenant.id, 999888, 10)
 
     def test_get_loyalty_points_missing(self):
-        assert StoreService.get_loyalty_points(999777) == 0
+        # tenant_id is mandatory: a loyalty lookup without a tenant is a
+        # cross-tenant read, so the service refuses to answer it.
+        assert StoreService.get_loyalty_points(999777, 1) == 0
 
     def test_get_product_variants_empty(self, sample_tenant):
         assert StoreService.get_product_variants(sample_tenant.id, 999666) == []
