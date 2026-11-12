@@ -164,7 +164,12 @@ class TestAuthorizeWithPin:
         token_row = PosOverrideService.authorize_with_pin(pin="7788", action="void_line", cashier=sample_user)
         token = sign_override_token(token_row)
         assert verify_override_token_signature(token_row, token) is True
-        assert verify_override_token_signature(token_row, token[:-2] + "00") is False
+        # Tamper with the very last character so the presented token differs
+        # from the signed one in a way that is guaranteed (the previous
+        # `token[:-2] + "00"` form could, with probability 1/256, leave the
+        # HMAC's final two characters as "00" and produce a flaky pass).
+        tampered = token[:-1] + ("0" if token[-1] != "0" else "1")
+        assert verify_override_token_signature(token_row, tampered) is False
 
     def test_wrong_pin_denied_and_audited(self, db_session, sample_tenant, sample_user, mocker):
         _make_supervisor(db_session, sample_tenant)
