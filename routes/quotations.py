@@ -5,6 +5,7 @@ from flask_login import current_user, login_required
 from services.quotation_service import QuotationService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.tenanting import get_active_tenant_id
 
 quotations_bp = Blueprint("quotations", __name__, url_prefix="/quotations")
 
@@ -14,7 +15,8 @@ quotations_bp = Blueprint("quotations", __name__, url_prefix="/quotations")
 @permission_required("manage_sales")
 def index():
     filters = {k: v for k, v in request.args.items() if v}
-    quotations = QuotationService.list_quotations(None, filters)
+    tid = get_active_tenant_id(current_user)
+    quotations = QuotationService.list_quotations(tid, filters)
     return render_template("quotations/index.html", quotations=quotations)
 
 
@@ -38,7 +40,7 @@ def create():
 @login_required
 @permission_required("manage_sales")
 def detail(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     return render_template("quotations/detail.html", quotation=q)
 
 
@@ -46,7 +48,7 @@ def detail(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def edit(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     if request.method == "POST":
         try:
             data = _parse_quotation_form(request.form)
@@ -63,7 +65,7 @@ def edit(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def send(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     try:
         with atomic_transaction("quotation_send"):
             QuotationService.send_quotation(q)
@@ -77,7 +79,7 @@ def send(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def accept(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     try:
         with atomic_transaction("quotation_accept"):
             QuotationService.accept_quotation(q)
@@ -91,7 +93,7 @@ def accept(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def reject(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     try:
         with atomic_transaction("quotation_reject"):
             QuotationService.reject_quotation(q)
@@ -105,7 +107,7 @@ def reject(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def convert(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     try:
         with atomic_transaction("quotation_convert_to_sale"):
             sale = QuotationService.convert_to_sale(q, current_user)
@@ -130,7 +132,7 @@ def convert(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def duplicate(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, None)
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
     try:
         with atomic_transaction("quotation_duplicate"):
             new_q = QuotationService.duplicate_quotation(q, current_user)

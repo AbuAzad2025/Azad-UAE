@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from flask_babel import gettext
 from werkzeug.exceptions import NotFound
@@ -241,17 +241,17 @@ class QuotationService:
             "notes": quotation.notes,
             "terms": quotation.terms,
             "currency": quotation.currency,
-            "exchange_rate": float(quotation.exchange_rate or 1),
+            "exchange_rate": Decimal(str(quotation.exchange_rate or 1)),
             "base_currency": quotation.base_currency,
             "prices_include_vat": quotation.prices_include_vat,
             "lines": [
                 {
                     "product_id": line.product_id,
                     "description": line.description,
-                    "quantity": float(line.quantity),
-                    "unit_price": float(line.unit_price),
-                    "discount_percent": float(line.discount_percent or 0),
-                    "tax_rate": float(line.tax_rate or 0),
+                    "quantity": Decimal(str(line.quantity or 0)),
+                    "unit_price": Decimal(str(line.unit_price or 0)),
+                    "discount_percent": Decimal(str(line.discount_percent or 0)),
+                    "tax_rate": Decimal(str(line.tax_rate or 0)),
                     "sort_order": line.sort_order,
                 }
                 for line in quotation.lines
@@ -286,7 +286,10 @@ class QuotationService:
             if filters.get("status"):
                 q = q.filter_by(status=filters["status"])
             if filters.get("customer_id"):
-                q = q.filter_by(customer_id=int(filters["customer_id"]))
+                import contextlib
+
+                with contextlib.suppress(TypeError, ValueError):
+                    q = q.filter_by(customer_id=int(filters["customer_id"]))
         return q.order_by(Quotation.created_at.desc()).all()
 
     @classmethod
@@ -306,5 +309,12 @@ class QuotationService:
         quotation.discount_amount = total_discount
         quotation.tax_amount = total_tax
         quotation.total_amount = subtotal - total_discount + total_tax
-        quotation.amount_aed = quotation.total_amount
+        # The quotation may be denominated in a foreign currency. The sale
+        # that is later converted from it posts amount_aed in the tenant's
+        # base currency, so the FX conversion has to be applied here and not
+        # left as the unconverted total.
+        rate = quotation.exchange_rate or Decimal("1")
+        quotation.amount_aed = (quotation.total_amount * Decimal(str(rate))).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
         db.session.flush()

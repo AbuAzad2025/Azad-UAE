@@ -408,7 +408,11 @@ class TestQuotationGuards:
         assert sale.tax_amount == Decimal("27.000")
         assert sale.total_amount == Decimal("567.000")
         assert sale.amount == Decimal("567.000")
-        assert sale.amount_aed == Decimal("567.000")
+        # The quotation is denominated in USD at a rate of 3.5, so the
+        # sale's base-currency total is 567 * 3.5, not 567. amount_aed is
+        # what the ledger and the aging report read, and it has to be in the
+        # tenant's base currency.
+        assert sale.amount_aed == Decimal("1984.500")
         assert sale.currency == "USD"
         assert sale.exchange_rate == Decimal("3.5")
         assert len(sale.lines) == 1
