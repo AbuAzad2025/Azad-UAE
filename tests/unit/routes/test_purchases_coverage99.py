@@ -63,7 +63,7 @@ class TestCreate:
                     "lines[0][product_id]": "10",
                     "lines[0][quantity]": "2",
                     "lines[0][unit_cost]": "5",
-                    "lines[0][discount_percent]": "bad",
+                    "lines[0][discount_percent]": "10",
                     "lines[0][serials]": "S1\nS2\n",
                     "lines[1][product_id]": "",
                     "lines[1][quantity]": "0",

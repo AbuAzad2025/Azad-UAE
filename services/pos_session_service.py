@@ -86,7 +86,11 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         _pre = Decimal(str(session.total_cash_sales or 0))
         db.session.execute(
             _sa_update(PosSession)
-            .where(PosSession.id == session.id, PosSession.tenant_id == int(session.tenant_id))
+            .where(
+                PosSession.id == session.id,
+                PosSession.tenant_id
+                == int(tenant_id if tenant_id is not None else getattr(session, "tenant_id", 0) or 0),
+            )
             .values(total_cash_sales=PosSession.__table__.c.total_cash_sales + amount_aed),
             execution_options={"synchronize_session": False},
         )
@@ -98,7 +102,11 @@ def _accumulate_session_tender_atomic(session, tender_chunk, tenant_id=None):
         _pre = Decimal(str(session.total_card_sales or 0))
         db.session.execute(
             _sa_update(PosSession)
-            .where(PosSession.id == session.id, PosSession.tenant_id == int(session.tenant_id))
+            .where(
+                PosSession.id == session.id,
+                PosSession.tenant_id
+                == int(tenant_id if tenant_id is not None else getattr(session, "tenant_id", 0) or 0),
+            )
             .values(total_card_sales=PosSession.__table__.c.total_card_sales + amount_aed),
             execution_options={"synchronize_session": False},
         )

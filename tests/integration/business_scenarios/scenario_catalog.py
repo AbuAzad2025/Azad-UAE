@@ -449,7 +449,7 @@ WAVES: tuple[Wave, ...] = (
                 "SHOP",
                 "Storefront catalogue, cart and checkout",
                 ("shop", "store"),
-                1.8,
+                1.45,
                 "the public catalogue is the only unauthenticated money path",
             ),
             Domain(

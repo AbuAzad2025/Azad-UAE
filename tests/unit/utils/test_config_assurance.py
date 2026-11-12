@@ -208,6 +208,7 @@ class TestAssertProductionSanity:
             "MASTER_LOGIN_ENABLED": True,
             "MASTER_LOGIN_IP_WHITELIST": "",
             "BASE_URL": "http://insecure.example.com",
+            "CRON_SECRET": "test-cron-secret-1234567890",
         }
         base.update(overrides)
         return type("ProdCfg", (), base)

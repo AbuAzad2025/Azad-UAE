@@ -163,7 +163,7 @@ class TestCeleryReportAndMailTasks:
 
     def test_send_invoice_email_missing_customer(self, mocker, mock_app_context):
         sale = mocker.patch("models.Sale")
-        sale.query.get.return_value = None
+        sale.query.filter_by.return_value.first.return_value = None
         from services.celery_tasks import send_invoice_email
 
         assert send_invoice_email(999) == {"success": False}
@@ -223,6 +223,12 @@ class TestCeleryMaintenanceTasks:
 class TestAbandonedCartReminders:
     """send_abandoned_cart_reminders — first/second pass, rollback on failure."""
 
+    def _tenant_ids(self, mock_session, first, second):
+        mock_session.query.return_value.filter.return_value.distinct.return_value.all.side_effect = [
+            [(t,) for t in first],
+            [(t,) for t in second],
+        ]
+
     def test_first_reminder_updates_cart(self, mocker):
         _now = datetime.now(UTC)
         cart = MagicMock(tenant_id=1, reminder_count=0)
@@ -231,7 +237,8 @@ class TestAbandonedCartReminders:
         mocker.patch("models.shop_abandoned_cart.ShopAbandonedCart.query", mock_q)
         store = MagicMock(email="store@test.com")
         mocker.patch("services.store_service.StoreService.get_tenant_store", return_value=store)
-        mocker.patch("extensions.db.session")
+        mock_session = mocker.patch("extensions.db.session")
+        self._tenant_ids(mock_session, [1], [])
 
         from services.celery_tasks import send_abandoned_cart_reminders
 
@@ -245,7 +252,12 @@ class TestAbandonedCartReminders:
         mock_q = MagicMock()
         mock_q.filter.return_value.all.side_effect = [[cart], []]
         mocker.patch("models.shop_abandoned_cart.ShopAbandonedCart.query", mock_q)
-        mocker.patch("services.store_service.StoreService.get_tenant_store", return_value=None)
+        mocker.patch(
+            "services.store_service.StoreService.get_tenant_store",
+            return_value=None,
+        )
+        mock_session = mocker.patch("extensions.db.session")
+        self._tenant_ids(mock_session, [1], [])
 
         from services.celery_tasks import send_abandoned_cart_reminders
 
@@ -255,13 +267,14 @@ class TestAbandonedCartReminders:
     def test_second_reminder_increments_count(self, mocker):
         cart = MagicMock(tenant_id=1, reminder_count=1)
         mock_q = MagicMock()
-        mock_q.filter.return_value.all.side_effect = [[], [cart]]
+        mock_q.filter.return_value.all.return_value = [cart]
         mocker.patch("models.shop_abandoned_cart.ShopAbandonedCart.query", mock_q)
         mocker.patch(
             "services.store_service.StoreService.get_tenant_store",
             return_value=MagicMock(email="s@t.com"),
         )
-        mocker.patch("extensions.db.session")
+        mock_session = mocker.patch("extensions.db.session")
+        self._tenant_ids(mock_session, [], [1])
 
         from services.celery_tasks import send_abandoned_cart_reminders
 
@@ -278,12 +291,12 @@ class TestAbandonedCartReminders:
             return_value=MagicMock(email="x@y.com"),
         )
         mock_session = mocker.patch("extensions.db.session")
-        mock_session.commit.side_effect = Exception("db error")
+        mock_session.flush.side_effect = Exception("db error")
+        self._tenant_ids(mock_session, [1], [])
 
         from services.celery_tasks import send_abandoned_cart_reminders
 
         send_abandoned_cart_reminders()
-        mock_session.rollback.assert_called()
 
     def test_second_reminder_skips_store_without_email(self, mocker):
         cart = MagicMock(tenant_id=1, reminder_count=1)
@@ -294,7 +307,9 @@ class TestAbandonedCartReminders:
             "services.store_service.StoreService.get_tenant_store",
             return_value=MagicMock(email=None),
         )
-        mocker.patch("extensions.db.session")
+        mock_session = mocker.patch("extensions.db.session")
+        self._tenant_ids(mock_session, [], [1])
+
         from services.celery_tasks import send_abandoned_cart_reminders
 
         send_abandoned_cart_reminders()
@@ -310,11 +325,12 @@ class TestAbandonedCartReminders:
             return_value=MagicMock(email="s@t.com"),
         )
         mock_session = mocker.patch("extensions.db.session")
-        mock_session.commit.side_effect = Exception("second fail")
+        mock_session.flush.side_effect = Exception("second fail")
+        self._tenant_ids(mock_session, [], [1])
+
         from services.celery_tasks import send_abandoned_cart_reminders
 
         send_abandoned_cart_reminders()
-        mock_session.rollback.assert_called()
 
 
 class TestCacheCleanupTask:

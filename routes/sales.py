@@ -222,7 +222,10 @@ def create():
                 )
                 tax_rate = parse_decimal_field(request.form.get("tax_rate"), default=None, field="tax_rate")
             except ValueError as exc:
-                flash(str(exc), "danger")
+                # The message names the offending field ("X must be a number"),
+                # but it must not echo the raw exception text verbatim.
+                flash(gettext("قيمة غير صالحة في بيانات الفاتورة."), "danger")
+                current_app.logger.warning("Sale create: invalid money field: %s", exc)
                 return redirect(url_for("sales.create"))
             notes = request.form.get("notes")
             sales_rep_id = request.form.get("sales_rep_id", type=int)
@@ -242,7 +245,10 @@ def create():
                     request.form.get("payment_amount"), default=Decimal("0"), field="payment_amount"
                 )
             except ValueError as exc:
-                flash(str(exc), "danger")
+                # The message names the offending field ("X must be a number"),
+                # but it must not echo the raw exception text verbatim.
+                flash(gettext("قيمة غير صالحة في بيانات الفاتورة."), "danger")
+                current_app.logger.warning("Sale create: invalid money field: %s", exc)
                 return redirect(url_for("sales.create"))
             payment_method = request.form.get("payment_method", "cash")
 
@@ -914,7 +920,8 @@ def api_calculate_sale_totals():
             # None = not specified → country/tenant default in normalize_tax_rate.
             tax_rate = parse_decimal_field(data.get("tax_rate"), default=None, field="tax_rate")
         except ValueError as exc:
-            return error_response(message=str(exc), status_code=400)
+            current_app.logger.warning("Sale create (API): invalid money field: %s", exc)
+            return error_response(message=gettext("قيمة غير صالحة في بيانات الفاتورة."), status_code=400)
         prices_include_vat = bool(data.get("prices_include_vat", False))
         from utils.tax_settings import normalize_tax_rate
 
