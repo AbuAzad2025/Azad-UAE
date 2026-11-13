@@ -421,6 +421,41 @@ def track_shipment(tracking_number):
     )
 
 
+@public_bp.route("/webhooks/carrier/<carrier>", methods=["POST"])
+@limiter.limit("60 per minute")
+def carrier_webhook(carrier):
+    from models.shipment import Shipment
+    from services.carrier_tracking_service import CarrierTrackingService
+
+    data = request.get_json(silent=True) or {}
+    tn = (
+        data.get("tracking_number")
+        or data.get("trackingNumber")
+        or data.get("tracking_no")
+        or (data.get("shipment") or {}).get("trackingNumber")
+    )
+    if not tn and isinstance(data.get("TrackingResults"), list) and data["TrackingResults"]:
+        tn = data["TrackingResults"][0].get("Key")
+    if not tn:
+        return {"success": False, "error": "no tracking number"}, 400
+
+    shipment = Shipment.query.filter_by(tracking_number=str(tn)).first()
+    if shipment is None:
+        return {"success": False, "error": "shipment not found"}, 404
+
+    try:
+        result = CarrierTrackingService.sync_shipment(shipment)
+        from extensions import db
+
+        db.session.flush()
+        return {"success": True, "status": shipment.status, "carrier_result": result.get("success", False)}, 200
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).exception("carrier webhook failed")
+        return {"success": False, "error": str(exc)}, 500
+
+
 @public_bp.route("/verify/<token>")
 def verify_document(token):
     """Public read-only document verification page — QR/link target."""

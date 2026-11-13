@@ -25,6 +25,8 @@ class IntegrationService:
         email = IntegrationSettings.get_service_config("email")
         redis = IntegrationSettings.get_service_config("redis")
         currency_api = IntegrationSettings.get_service_config("currency_api")
+        shipping = IntegrationSettings.get_service_config("shipping")
+        sms = IntegrationSettings.get_service_config("sms")
 
         return {
             "whatsapp": {
@@ -50,6 +52,18 @@ class IntegrationService:
                 "config": currency_api.get_config(),
                 "last_tested": currency_api.last_tested_at,
                 "status": currency_api.last_test_status or "not_configured",
+            },
+            "shipping": {
+                "enabled": shipping.enabled,
+                "config": shipping.get_config(),
+                "last_tested": shipping.last_tested_at,
+                "status": shipping.last_test_status or "not_configured",
+            },
+            "sms": {
+                "enabled": sms.enabled,
+                "config": sms.get_config(),
+                "last_tested": sms.last_tested_at,
+                "status": sms.last_test_status or "not_configured",
             },
         }
 

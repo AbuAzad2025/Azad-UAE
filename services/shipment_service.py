@@ -27,6 +27,7 @@ class ShipmentService:
             recipient_name=kwargs.get("recipient_name"),
             recipient_phone=kwargs.get("recipient_phone"),
             recipient_address=kwargs.get("recipient_address"),
+            recipient_email=kwargs.get("recipient_email"),
         )
         db.session.add(shipment)
         return shipment
@@ -96,6 +97,7 @@ class ShipmentService:
         recipient_phone=None,
         recipient_name=None,
         recipient_address=None,
+        recipient_email=None,
     ):
         from models.shipment import Shipment, ShipmentLine
 
@@ -125,6 +127,7 @@ class ShipmentService:
             recipient_phone=recipient_phone,
             recipient_name=recipient_name,
             recipient_address=recipient_address,
+            recipient_email=recipient_email,
         )
         db.session.add(shipment)
         db.session.flush()
@@ -228,17 +231,55 @@ class ShipmentService:
     @staticmethod
     def _notify_status(shipment):
         try:
-            from services.whatsapp_service import WhatsAppService
-
             phone = getattr(shipment, "recipient_phone", None)
-            if not phone:
-                return
-            WhatsAppService.send_shipment_status(
-                phone=phone,
-                tracking_number=getattr(shipment, "tracking_number", None),
-                status=getattr(shipment, "status", None),
-                carrier_name=getattr(shipment, "carrier_name", None),
-            )
+            tracking_number = getattr(shipment, "tracking_number", None)
+            status = getattr(shipment, "status", None)
+            carrier_name = getattr(shipment, "carrier_name", None)
+            tenant_id = getattr(shipment, "tenant_id", None)
+
+            if phone:
+                try:
+                    from services.whatsapp_service import WhatsAppService
+
+                    WhatsAppService.send_shipment_status(
+                        phone=phone,
+                        tracking_number=tracking_number,
+                        status=status,
+                        carrier_name=carrier_name,
+                    )
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).debug("whatsapp notification failed", exc_info=True)
+
+            if phone:
+                try:
+                    from services.sms_service import SMSService
+
+                    if SMSService.is_enabled(tenant_id):
+                        SMSService.send_shipment_status(phone, tracking_number, status, tenant_id=tenant_id)
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).debug("sms notification failed", exc_info=True)
+
+            email = getattr(shipment, "recipient_email", None)
+            if email:
+                try:
+                    from flask_mail import Message
+
+                    from extensions import mail
+
+                    msg = Message(
+                        subject="Shipment update: " + str(status),
+                        recipients=[email],
+                        body="Your shipment " + str(tracking_number or "") + " status is now: " + str(status),
+                    )
+                    mail.send(msg)
+                except Exception:
+                    import logging
+
+                    logging.getLogger(__name__).debug("email notification failed", exc_info=True)
         except Exception:
             import logging
 

@@ -74,6 +74,7 @@ class Shipment(db.Model):
     actual_delivery = db.Column(db.DateTime(timezone=True))
     recipient_name = db.Column(db.String(200))
     recipient_phone = db.Column(db.String(50))
+    recipient_email = db.Column(db.String(200))
     recipient_address = db.Column(db.Text)
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
     updated_at = db.Column(

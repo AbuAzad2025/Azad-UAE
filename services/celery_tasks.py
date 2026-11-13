@@ -38,6 +38,10 @@ def _parse_backup_schedule(schedule_str: str | None):
 
 # Build beat schedule dynamically so BACKUP_METHOD/BACKUP_SCHEDULE are honored.
 _beat_schedule = {
+    "sync-carrier-tracking": {
+        "task": "services.celery_tasks.sync_carrier_tracking",
+        "schedule": 1800.0,
+    },
     "daily-inventory-reconciliation": {
         "task": "services.celery_tasks.run_inventory_reconciliation",
         "schedule": 86400.0,  # 24 hours in seconds
@@ -394,3 +398,34 @@ def cleanup_old_cache():
         return {"success": True, "message": "Cache cleared"}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@celery.task(name="services.celery_tasks.sync_carrier_tracking")
+def sync_carrier_tracking():
+    from extensions import db
+    from models.shipment import Shipment
+    from services.carrier_tracking_service import CarrierTrackingService
+
+    try:
+        shipments = Shipment.query.filter(
+            Shipment.status.in_(["pending", "in_transit", "arrived"]),
+            Shipment.tracking_number.isnot(None),
+        ).all()
+    except Exception:
+        return {"synced": 0, "error": "query failed"}
+
+    synced = 0
+    for sh in shipments:
+        try:
+            result = CarrierTrackingService.sync_shipment(sh)
+            if result.get("success"):
+                synced += 1
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).debug("carrier sync failed", exc_info=True)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    return {"synced": synced, "total": len(shipments)}

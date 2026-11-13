@@ -19,6 +19,8 @@ from typing import Any
 
 import requests
 
+from services.shipping_config_service import ShippingConfigService
+
 
 class CarrierTrackingService:
     """Unified carrier tracking adapter."""
@@ -26,19 +28,8 @@ class CarrierTrackingService:
     SUPPORTED_CARRIERS = ("dhl", "fedex", "aramex", "other")
 
     @staticmethod
-    def is_configured(carrier: str) -> bool:
-        carrier = (carrier or "").lower()
-        if carrier == "dhl":
-            return bool(os.environ.get("DHL_API_KEY"))
-        if carrier == "fedex":
-            return bool(os.environ.get("FEDEX_CLIENT_ID") and os.environ.get("FEDEX_CLIENT_SECRET"))
-        if carrier == "aramex":
-            return bool(
-                os.environ.get("ARAMEX_USERNAME")
-                and os.environ.get("ARAMEX_PASSWORD")
-                and os.environ.get("ARAMEX_ACCOUNT_NUMBER")
-            )
-        return False
+    def is_configured(carrier: str, tenant_id: int | None = None) -> bool:
+        return ShippingConfigService.is_carrier_configured(carrier, tenant_id)
 
     @staticmethod
     def track(carrier: str, tracking_number: str) -> dict[str, Any]:
@@ -73,7 +64,8 @@ class CarrierTrackingService:
     # ── DHL ──────────────────────────────────────────────────────────────
     @staticmethod
     def _track_dhl(tracking_number: str) -> dict[str, Any]:
-        api_key = os.environ.get("DHL_API_KEY")
+        cfg = ShippingConfigService.get_carrier_config("dhl")
+        api_key = cfg.get("api_key") or os.environ.get("DHL_API_KEY")
         if not api_key:
             return {
                 "success": False,
@@ -136,8 +128,9 @@ class CarrierTrackingService:
     # ── FedEx ─────────────────────────────────────────────────────────────
     @staticmethod
     def _fedex_token() -> str | None:
-        client_id = os.environ.get("FEDEX_CLIENT_ID")
-        client_secret = os.environ.get("FEDEX_CLIENT_SECRET")
+        cfg = ShippingConfigService.get_carrier_config("fedex")
+        client_id = cfg.get("client_id") or os.environ.get("FEDEX_CLIENT_ID")
+        client_secret = cfg.get("client_secret") or os.environ.get("FEDEX_CLIENT_SECRET")
         if not client_id or not client_secret:
             return None
         try:
@@ -232,10 +225,11 @@ class CarrierTrackingService:
     # ── Aramex ────────────────────────────────────────────────────────────
     @staticmethod
     def _track_aramex(tracking_number: str) -> dict[str, Any]:
-        username = os.environ.get("ARAMEX_USERNAME")
-        password = os.environ.get("ARAMEX_PASSWORD")
-        account = os.environ.get("ARAMEX_ACCOUNT_NUMBER")
-        pin = os.environ.get("ARAMEX_PIN")
+        cfg = ShippingConfigService.get_carrier_config("aramex")
+        username = cfg.get("username") or os.environ.get("ARAMEX_USERNAME")
+        password = cfg.get("password") or os.environ.get("ARAMEX_PASSWORD")
+        account = cfg.get("account_number") or os.environ.get("ARAMEX_ACCOUNT_NUMBER")
+        pin = cfg.get("pin") or os.environ.get("ARAMEX_PIN")
         if not all([username, password, account]):
             return {
                 "success": False,

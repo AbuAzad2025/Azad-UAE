@@ -103,6 +103,7 @@ def create_shipment():
                     recipient_phone=request.form.get("recipient_phone"),
                     recipient_name=request.form.get("recipient_name"),
                     recipient_address=request.form.get("recipient_address"),
+                    recipient_email=request.form.get("recipient_email"),
                 )
                 try:
                     from services.logging_core import LoggingCore

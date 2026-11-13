@@ -126,6 +126,33 @@ def update_integration(service):
                 "update_frequency": request.form.get("update_frequency", "daily"),
             }
 
+        elif service == "shipping":
+            config_data = {
+                "carriers": {
+                    "dhl": {
+                        "api_key": request.form.get("dhl_api_key", ""),
+                    },
+                    "fedex": {
+                        "client_id": request.form.get("fedex_client_id", ""),
+                        "client_secret": request.form.get("fedex_client_secret", ""),
+                    },
+                    "aramex": {
+                        "username": request.form.get("aramex_username", ""),
+                        "password": request.form.get("aramex_password", ""),
+                        "account_number": request.form.get("aramex_account_number", ""),
+                        "pin": request.form.get("aramex_pin", ""),
+                    },
+                }
+            }
+
+        elif service == "sms":
+            config_data = {
+                "provider": request.form.get("sms_provider", "twilio"),
+                "account_sid": request.form.get("sms_account_sid", ""),
+                "auth_token": request.form.get("sms_auth_token", ""),
+                "from_number": request.form.get("sms_from_number", ""),
+            }
+
         with atomic_transaction("update_integration"):
             integration.set_config(config_data)
             integration.updated_by = current_user.id
