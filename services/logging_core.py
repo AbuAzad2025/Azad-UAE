@@ -1372,6 +1372,119 @@ class LoggingCore:
                 extra={"event_type": event_type, "ip": ip, "username": str(user)},
             )
 
+    #  EVENT HELPERS — unified audit reference
+    #
+    # These are thin wrappers around log_error() that tag the row with the
+    # right category, so the owner's audit dashboard is the single reference
+    # for every kind of failure the system can produce: security events,
+    # financial/accounting events, database events and migration events.
+    # Every one of them persists to error_audit_logs with a dedicated
+    # category and a sanitised payload.
+
+    @classmethod
+    def log_security_event(
+        cls,
+        event_type: str,
+        message: str,
+        *,
+        severity: str = "medium",
+        source: str = "security",
+        exception: BaseException | None = None,
+        extra: dict[str, Any] | None = None,
+        user: str = "-",
+        ip: str = "-",
+    ) -> int | None:
+        """Record a security event (failed login, permission denial, rate
+        limit, CSRF failure, tenant-isolation violation, suspicious
+        activity, ...) into the unified audit log."""
+        level = "CRITICAL" if severity == "critical" else ("ERROR" if severity in ("high", "error") else "WARNING")
+        return cls.log_error(
+            message=f"[{event_type}] {message}",
+            category="SECURITY",
+            level=level,
+            source=source,
+            exception=exception,
+            extra=extra,
+            username=user if user and user != "-" else None,
+            ip_address=ip if ip and ip != "-" else None,
+        )
+
+    @classmethod
+    def log_financial_event(
+        cls,
+        event_type: str,
+        message: str,
+        *,
+        severity: str = "high",
+        source: str = "financial",
+        exception: BaseException | None = None,
+        extra: dict[str, Any] | None = None,
+        tenant_id: int | None = None,
+        user_id: int | None = None,
+    ) -> int | None:
+        """Record a financial / accounting event (GL posting failure, balance
+        mismatch, reconciliation failure, negative balance, stock-valuation
+        anomaly, ...) into the unified audit log."""
+        level = "CRITICAL" if severity == "critical" else ("ERROR" if severity in ("high", "error") else "WARNING")
+        return cls.log_error(
+            message=f"[{event_type}] {message}",
+            category="FINANCIAL",
+            level=level,
+            source=source,
+            exception=exception,
+            extra=extra,
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+
+    @classmethod
+    def log_database_event(
+        cls,
+        event_type: str,
+        message: str,
+        *,
+        severity: str = "high",
+        source: str = "database",
+        exception: BaseException | None = None,
+        extra: dict[str, Any] | None = None,
+        tenant_id: int | None = None,
+    ) -> int | None:
+        """Record a database event (connection failure, constraint
+        violation, migration failure, schema drift, ...) into the unified
+        audit log."""
+        level = "CRITICAL" if severity == "critical" else ("ERROR" if severity in ("high", "error") else "WARNING")
+        return cls.log_error(
+            message=f"[{event_type}] {message}",
+            category="DATABASE",
+            level=level,
+            source=source,
+            exception=exception,
+            extra=extra,
+            tenant_id=tenant_id,
+        )
+
+    @classmethod
+    def log_migration_event(
+        cls,
+        event_type: str,
+        message: str,
+        *,
+        severity: str = "high",
+        source: str = "migration",
+        exception: BaseException | None = None,
+        extra: dict[str, Any] | None = None,
+    ) -> int | None:
+        """Record a schema-migration event (a failed upgrade, a drift between
+        the model and the database, a missing concept in the allow-list, ...)."""
+        return cls.log_database_event(
+            event_type=f"MIGRATION.{event_type}",
+            message=message,
+            severity=severity,
+            source=source,
+            exception=exception,
+            extra=extra,
+        )
+
     #  HEALTH CHECKS
 
     @classmethod

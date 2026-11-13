@@ -25,10 +25,10 @@ def register_error_handlers(app):
 
     @app.errorhandler(CSRFError)
     def handle_csrf_error(exc):
-        LoggingCore.log_error(
-            message=str(exc) or "CSRF validation failed",
-            category="SECURITY",
-            level="WARNING",
+        LoggingCore.log_security_event(
+            "CSRF_FAILURE",
+            str(exc) or "CSRF validation failed",
+            severity="medium",
             source="app.errorhandler.csrf",
             exception=exc,
         )
@@ -84,11 +84,12 @@ def register_error_handlers(app):
 
     @app.errorhandler(403)
     def handle_403(exc):
-        LoggingCore.log_error(
-            message=f"Forbidden access: {request.path}",
-            category="SECURITY",
-            level="WARNING",
+        LoggingCore.log_security_event(
+            "PERMISSION_DENIED",
+            f"Forbidden access: {request.path}",
+            severity="medium",
             source="app.errorhandler.403",
+            extra={"description": getattr(exc, "description", "") or ""},
         )
         if app.config.get("DEBUG"):
             raise exc
@@ -130,14 +131,22 @@ def register_error_handlers(app):
 
     @app.errorhandler(HTTPException)
     def handle_http_exception(exc):
-        category = "SECURITY" if exc.code in (401, 429) else "API"
-        LoggingCore.log_error(
-            message=f"{exc.name}: {request.path}",
-            category=category,
-            level="WARNING",
-            source=f"app.errorhandler.http.{exc.code}",
-            exception=exc,
-        )
+        if exc.code in (401, 429):
+            LoggingCore.log_security_event(
+                "AUTH_OR_RATE_LIMIT",
+                f"{exc.name}: {request.path}",
+                severity="medium",
+                source=f"app.errorhandler.http.{exc.code}",
+                exception=exc,
+            )
+        else:
+            LoggingCore.log_error(
+                message=f"{exc.name}: {request.path}",
+                category="API",
+                level="WARNING",
+                source=f"app.errorhandler.http.{exc.code}",
+                exception=exc,
+            )
         if _wants_json_error_response():
             body = jsonify(
                 {
