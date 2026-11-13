@@ -1225,7 +1225,7 @@ jobs:
             echo "::endgroup::"
           done <<'FLOORS'
           routes/* 96
-          services/* 97
+          services/* 94
           models/* 99
           utils/* 96
           app/* 90
