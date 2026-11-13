@@ -38,7 +38,7 @@ class SMSService:
             resp = requests.post(
                 url,
                 data={"From": from_number, "To": phone_clean, "Body": message},
-                auth=(account_sid, auth_token),
+                auth=(str(account_sid), str(auth_token)),
                 timeout=15,
             )
             if resp.status_code in (200, 201):

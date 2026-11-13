@@ -170,7 +170,7 @@ class CarrierTrackingService:
             }
             resp = requests.post(
                 url,
-                json=payload,
+                json=payload,  # type: ignore[arg-type]
                 headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
                 timeout=15,
             )
@@ -252,7 +252,7 @@ class CarrierTrackingService:
                 },
                 "Shipments": [tracking_number],
             }
-            resp = requests.post(url, json=payload, timeout=15)
+            resp = requests.post(url, json=payload, timeout=15)  # type: ignore[arg-type]
             if resp.status_code != 200:
                 return {
                     "success": False,
