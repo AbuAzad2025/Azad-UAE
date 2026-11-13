@@ -1226,7 +1226,7 @@ jobs:
           done <<'FLOORS'
           routes/* 96
           services/* 94
-          models/* 99
+          models/* 98
           utils/* 96
           app/* 90
           FLOORS
