@@ -418,6 +418,112 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary">
+                        <h3 class="card-title"><i class="fas fa-shipping-fast mr-2" aria-hidden="true"></i>Shipping Carriers (DHL / FedEx / Aramex)</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('owner.update_integration', service='shipping') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                            <div class="form-group">
+                                <label><i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>Enable Shipping Integration</label>
+                                <div class="custom-control custom-switch custom-switch-on-success">
+                                    <input type="checkbox" class="custom-control-input" id="shipping_enabled" name="enabled" {% if integrations.shipping.enabled %}checked{% endif %} aria-label="enabled">
+                                    <label class="custom-control-label" for="shipping_enabled">Enable carrier tracking</label>
+                                </div>
+                            </div>
+                            <h6 class="mt-3">DHL</h6>
+                            <div class="form-group">
+                                <label for="dhl_api_key">DHL API Key</label>
+                                <input type="text" class="form-control" name="dhl_api_key" id="dhl_api_key" placeholder="DHL-API-Key" value="{{ integrations.shipping.config.carriers.dhl.api_key if integrations.shipping.config.carriers else '' }}">
+                            </div>
+                            <h6 class="mt-3">FedEx</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fedex_client_id">FedEx Client ID</label>
+                                        <input type="text" class="form-control" name="fedex_client_id" id="fedex_client_id" value="{{ (integrations.shipping.config.carriers.fedex.client_id if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fedex_client_secret">FedEx Client Secret</label>
+                                        <input type="password" class="form-control" name="fedex_client_secret" id="fedex_client_secret" value="{{ (integrations.shipping.config.carriers.fedex.client_secret if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <h6 class="mt-3">Aramex</h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="aramex_username">Username</label>
+                                        <input type="text" class="form-control" name="aramex_username" id="aramex_username" value="{{ (integrations.shipping.config.carriers.aramex.username if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="aramex_password">Password</label>
+                                        <input type="password" class="form-control" name="aramex_password" id="aramex_password" value="{{ (integrations.shipping.config.carriers.aramex.password if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="aramex_account_number">Account Number</label>
+                                        <input type="text" class="form-control" name="aramex_account_number" id="aramex_account_number" value="{{ (integrations.shipping.config.carriers.aramex.account_number if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="aramex_pin">PIN</label>
+                                        <input type="password" class="form-control" name="aramex_pin" id="aramex_pin" value="{{ (integrations.shipping.config.carriers.aramex.pin if integrations.shipping.config.carriers else '') }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save mr-1" aria-hidden="true"></i>Save Shipping Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-secondary">
+                        <h3 class="card-title"><i class="fas fa-sms mr-2" aria-hidden="true"></i>SMS (Twilio)</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('owner.update_integration', service='sms') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+                            <div class="form-group">
+                                <label><i class="fas fa-toggle-on text-success mr-1" aria-hidden="true"></i>Enable SMS</label>
+                                <div class="custom-control custom-switch custom-switch-on-success">
+                                    <input type="checkbox" class="custom-control-input" id="sms_enabled" name="enabled" {% if integrations.sms.enabled %}checked{% endif %} aria-label="enabled">
+                                    <label class="custom-control-label" for="sms_enabled">Enable SMS notifications</label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sms_account_sid">Account SID</label>
+                                <input type="text" class="form-control" name="sms_account_sid" id="sms_account_sid" value="{{ integrations.sms.config.account_sid or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="sms_auth_token">Auth Token</label>
+                                <input type="password" class="form-control" name="sms_auth_token" id="sms_auth_token" value="{{ integrations.sms.config.auth_token or '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="sms_from_number">From Number</label>
+                                <input type="text" class="form-control" name="sms_from_number" id="sms_from_number" placeholder="+1234567890" value="{{ integrations.sms.config.from_number or '' }}">
+                            </div>
+                            <button type="submit" class="btn btn-secondary">
+                                <i class="fas fa-save mr-1" aria-hidden="true"></i>Save SMS Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            </div>
         </div>
     </section>
 

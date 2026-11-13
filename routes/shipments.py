@@ -7,6 +7,7 @@ then sell/charge/invoice until closed. Keeps legacy post-sale shipment
 """
 
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
+from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
@@ -186,9 +187,9 @@ def sync_tracking(id):
 
         db.session.flush()
         if result.get("success"):
-            flash("تم تحديث التتبع من الناقل.", "success")
+            flash(gettext("Shipment tracking updated from carrier."), "success")
         else:
-            flash(result.get("error") or "تعذر التحديث", "warning")
+            flash(result.get("error") or gettext("Could not update tracking."), "warning")
     except Exception as exc:
         flash(str(exc), "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
