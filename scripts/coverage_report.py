@@ -279,8 +279,17 @@ def main():
         yield "### Frontend (Templates) — تغطية القوالب"
         yield ""
         yield f"- إجمالي القوالب: **{len(all_templates)}**"
-        yield f"- القوالب المُقدّمة أثناء الاختبارات: **{len(rendered_templates)}**"
-        yield f"- نسبة التغطية: **{_pct(tmpl_pct)}**"
+        if not rendered_templates:
+            # Template rendering is not tracked in this run (no
+            # templates_rendered.json was produced by the test jobs), so any
+            # percentage here would be a lie. Say so explicitly instead of
+            # reporting 0.0%.
+            yield "- ⚠️ **لا توجد بيانات تغطية قوالب في هذا التشغيل** — تتبّع عرض القوالب غير مفعّل (templates_rendered.json غير موجود)"
+            yield "- ℹ️ لا تُعتبر نسبة 0% تغطية حقيقية: هي غياب بيانات، وليست فشلاً"
+            tmpl_pct = None
+        else:
+            yield f"- القوالب المُقدّمة أثناء الاختبارات: **{len(rendered_templates)}**"
+            yield f"- نسبة التغطية: **{_pct(tmpl_pct)}**"
         yield ""
 
         # ── JS ──
@@ -312,63 +321,45 @@ def main():
         yield ""
         if backend:
             overall_pct = next((b[5] for b in backend if b[0] == "_overall"), 0)
-            combined = overall_pct * 0.60 + tmpl_pct * 0.25 + (js_test_pct or 0) * 0.15
-            yield "| الطبقة (Layer) | النسبة (Coverage) |"
-            yield "|---------------|-------------------|"
-            yield f"| Backend (Python) | {_pct(overall_pct)} |"
-            yield f"| Frontend (Templates) | {_pct(tmpl_pct)} |"
-            yield f"| Frontend (JS reachability) | {_pct(js_pct)} |"
-            yield f"| Frontend (JS test coverage) | {_pct(js_test_pct or 0)} |"
-            yield f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |"
+            if tmpl_pct is None:
+                combined = overall_pct * 0.60 + (js_test_pct or 0) * 0.15
+                yield "| الطبقة (Layer) | النسبة (Coverage) |"
+                yield "|---------------|-------------------|"
+                yield f"| Backend (Python) | {_pct(overall_pct)} |"
+                yield "| Frontend (Templates) | ⚠️ لا توجد بيانات |"
+                yield f"| Frontend (JS reachability) | {_pct(js_pct)} |"
+                yield f"| Frontend (JS test coverage) | {_pct(js_test_pct or 0)} |"
+                yield f"| **النظام ككل (weighted: 60/15)** | **{_pct(combined)}** |"
+                yield ""
+                yield "> ℹ️ تغطية القوالب غير مُتتبَّعة في هذا التشغيل (لا توجد artifacts `templates-*`)."
+                yield "> الأرقام أعلاه تُظهر تغطية Python فقط."
+            else:
+                combined = overall_pct * 0.60 + tmpl_pct * 0.25 + (js_test_pct or 0) * 0.15
+                yield "| الطبقة (Layer) | النسبة (Coverage) |"
+                yield "|---------------|-------------------|"
+                yield f"| Backend (Python) | {_pct(overall_pct)} |"
+                yield f"| Frontend (Templates) | {_pct(tmpl_pct)} |"
+                yield f"| Frontend (JS reachability) | {_pct(js_pct)} |"
+                yield f"| Frontend (JS test coverage) | {_pct(js_test_pct or 0)} |"
+                yield f"| **النظام ككل (weighted: 60/25/15)** | **{_pct(combined)}** |"
             yield ""
         else:
             yield "لا توجد بيانات تغطية كافية لعرض الملخص."
             yield ""
 
         # ── Missing templates ──
-        # Many templates are intentionally not rendered in the unit suite: print
-        # documents, partials, admin surfaces that need a live tenant, the base
-        # layouts. Listing all 370 of them made the summary look like a
-        # catastrophe when it is not one. Group them by family so the report
-        # shows where the real gaps are instead of a wall of file names.
-        missing = sorted(all_templates - rendered_templates)
-
-        def _family(name: str) -> str:
-            if name.startswith("partials/"):
-                return "partials"
-            if "/print_" in name or name.startswith("print") or "print" in name.split("/")[-1]:
-                return "print"
-            if name.startswith("admin/") or name.startswith("owner/"):
-                return "admin"
-            if name.startswith("auth/"):
-                return "auth"
-            if name in ("base.html", "base2.html", "layout.html"):
-                return "layout"
-            return "other"
-
-        if missing:
-            families: dict[str, int] = {}
-            for name in missing:
-                families[_family(name)] = families.get(_family(name), 0) + 1
-            yield "### قوالب غير مُغطاة — Uncovered Templates"
-            yield ""
-            yield f"- إجمالي غير مُغطاة: **{len(missing)}** من {len(all_templates)}"
-            yield ""
-            yield "| الفئة | العدد |"
-            yield "|------|-------|"
-            for fam in ("print", "admin", "auth", "partials", "layout", "other"):
-                if families.get(fam):
-                    yield f"| {fam} | {families[fam]} |"
-            yield ""
-            # Only the "other" family is a real coverage gap worth listing.
-            other = [n for n in missing if _family(n) == "other"]
-            if other:
-                yield "#### قوالب أخرى غير مُغطاة (top 15)"
+        # Only meaningful when template coverage data is available.
+        if rendered_templates:
+            missing = sorted(all_templates - rendered_templates)
+            if missing:
+                yield "### قوالب غير مُغطاة — Uncovered Templates"
                 yield ""
-                for t in other[:15]:
+                yield f"- إجمالي غير مُغطاة: **{len(missing)}** من {len(all_templates)}"
+                yield ""
+                for t in missing[:15]:
                     yield f"- `{t}`"
-                if len(other) > 15:
-                    yield f"- ... و {len(other) - 15} قوالب أخرى"
+                if len(missing) > 15:
+                    yield f"- ... و {len(missing) - 15} قوالب أخرى"
                 yield ""
 
     lines: list[str] = list(_iter_lines())
