@@ -121,6 +121,7 @@ class QuotationLine(db.Model):
     discount_percent = db.Column(db.Numeric(5, 2), default=0)
     tax_rate = db.Column(db.Numeric(5, 2), default=0)
     line_total = db.Column(db.Numeric(15, 3), nullable=False, default=0)
+    amount_aed = db.Column(db.Numeric(15, 3), nullable=False, default=0)
     sort_order = db.Column(db.Integer, default=0)
 
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC))

@@ -26,7 +26,7 @@ class StoreAnalyticsService:
         month_start = StoreAnalyticsService._since(30)
 
         def _sum(q):
-            return q.with_entities(func.coalesce(func.sum(Sale.total_amount), 0)).scalar() or Decimal("0")
+            return q.with_entities(func.coalesce(func.sum(Sale.amount_aed), 0)).scalar() or Decimal("0")
 
         return {
             "pending": base.filter_by(status="pending").count(),
@@ -50,7 +50,7 @@ class StoreAnalyticsService:
             db.session.query(
                 SaleLine.product_id,
                 func.sum(SaleLine.quantity).label("qty"),
-                func.sum(SaleLine.line_total).label("total"),
+                func.sum(SaleLine.amount_aed).label("total"),
             )
             .join(Sale, Sale.id == SaleLine.sale_id)
             .filter(
@@ -59,7 +59,7 @@ class StoreAnalyticsService:
                 Sale.status == "confirmed",
             )
             .group_by(SaleLine.product_id)
-            .order_by(func.sum(SaleLine.line_total).desc())
+            .order_by(func.sum(SaleLine.amount_aed).desc())
             .limit(limit)
             .all()
         )

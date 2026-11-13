@@ -111,7 +111,7 @@ class AnalyticsService:
             .query(
                 models.Product.name,
                 func.sum(models.SaleLine.quantity).label("total_qty"),
-                func.sum(models.SaleLine.line_total).label("total_revenue"),
+                func.sum(models.SaleLine.amount_aed).label("total_revenue"),
             )
             .select_from(models.Product)
             .join(models.SaleLine, models.SaleLine.product_id == models.Product.id)
@@ -161,7 +161,7 @@ class AnalyticsService:
                 models.Product.sku,
                 models.Product.cost_price,
                 func.sum(models.SaleLine.quantity).label("total_sold"),
-                func.sum(models.SaleLine.line_total).label("total_revenue"),
+                func.sum(models.SaleLine.amount_aed).label("total_revenue"),
                 func.count(func.distinct(models.Sale.id)).label("transactions"),
             )
             .select_from(models.Product)

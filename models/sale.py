@@ -440,6 +440,7 @@ class SaleLine(db.Model):
     unit_price = db.Column(db.Numeric(15, 3), nullable=False)
     discount_percent = db.Column(db.Numeric(5, 2), default=0)
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
+    amount_aed = db.Column(db.Numeric(15, 3), nullable=False, default=0)
 
     cost_price = db.Column(db.Numeric(15, 3), default=0)
     warranty_start_date = db.Column(db.DateTime(timezone=True), nullable=True)

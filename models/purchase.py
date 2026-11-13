@@ -291,6 +291,7 @@ class PurchaseLine(db.Model):
     unit_cost = db.Column(db.Numeric(15, 3), nullable=False)
     discount_percent = db.Column(db.Numeric(5, 2), default=0)
     line_total = db.Column(db.Numeric(15, 3), nullable=False)
+    amount_aed = db.Column(db.Numeric(15, 3), nullable=False, default=0)
     landed_cost = db.Column(db.Numeric(15, 3), default=0, nullable=False)
     # Per-line VAT category — copied from the product at line creation.
     tax_category = db.Column(db.String(10), nullable=False, server_default="standard", default="standard")

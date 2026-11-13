@@ -56,6 +56,7 @@ class QuotationService:
                 discount_percent=disc,
                 tax_rate=tax,
                 line_total=line_total + tax_amt,
+                amount_aed=(line_total + tax_amt) * Decimal(str(data.get("exchange_rate", 1) or 1)),
                 sort_order=line_data.get("sort_order", 0),
             )
             db.session.add(line)
@@ -114,6 +115,7 @@ class QuotationService:
                     discount_percent=disc,
                     tax_rate=tax,
                     line_total=line_total + tax_amt,
+                    amount_aed=(line_total + tax_amt) * Decimal(str(quotation.exchange_rate or 1)),
                     sort_order=line_data.get("sort_order", 0),
                 )
                 quotation.lines.append(line)
@@ -224,6 +226,7 @@ class QuotationService:
                 unit_price=q_line.unit_price,
                 discount_percent=q_line.discount_percent,
                 line_total=q_line.line_total,
+                amount_aed=q_line.amount_aed,
             )
             db.session.add(s_line)
 

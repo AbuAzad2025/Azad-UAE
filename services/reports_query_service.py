@@ -1028,7 +1028,7 @@ class ReportsQueryService:
             db.session.query(
                 Product.name,
                 func.sum(SaleLine.quantity).label("qty"),
-                func.sum(SaleLine.line_total).label("total"),
+                func.sum(SaleLine.amount_aed).label("total"),
                 func.max(Sale.sale_date).label("last_date"),
             )
             .join(Sale)
@@ -1058,7 +1058,7 @@ class ReportsQueryService:
                     Product.name,
                     ProductPartner.percentage,
                     func.sum(SaleLine.quantity).label("qty"),
-                    func.sum(SaleLine.line_total).label("total_sales"),
+                    func.sum(SaleLine.amount_aed).label("total_sales"),
                     func.max(Sale.sale_date).label("last_date"),
                 )
                 .join(ProductPartner, Product.id == ProductPartner.product_id)
@@ -1093,7 +1093,7 @@ class ReportsQueryService:
                     Product.name,
                     Product.merchant_share,
                     func.sum(SaleLine.quantity).label("qty"),
-                    func.sum(SaleLine.line_total).label("total_sales"),
+                    func.sum(SaleLine.amount_aed).label("total_sales"),
                     func.max(Sale.sale_date).label("last_date"),
                 )
                 .join(SaleLine, SaleLine.product_id == Product.id)
@@ -1316,7 +1316,7 @@ class ReportsQueryService:
                 Product.id,
                 Product.name,
                 func.sum(SaleLine.quantity).label("total_quantity"),
-                func.sum(SaleLine.line_total).label("total_sales"),
+                func.sum(SaleLine.amount_aed).label("total_sales"),
             )
             .join(SaleLine, Product.id == SaleLine.product_id)
             .join(Sale, SaleLine.sale_id == Sale.id)

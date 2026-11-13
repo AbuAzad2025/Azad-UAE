@@ -417,6 +417,7 @@ class SaleService:
                     discount_percent=discount_percent,
                     cost_price=(Decimal(str(product.cost_price)) if product.cost_price else Decimal("0")),
                     line_total=Decimal("0"),  # Initialize with 0
+                    amount_aed=Decimal("0"),
                     notes=line_data.get("notes"),  # Pass notes if any
                     # Per-line VAT category — taken from the product; the
                     # tenant's enable_tax_categories switch gates whether
@@ -1015,6 +1016,7 @@ class SaleService:
             quantity=quantity,
             unit_price=Decimal(str(unit_price)),
             line_total=Decimal(str(unit_price)) * Decimal(str(quantity)),
+            amount_aed=Decimal(str(unit_price)) * Decimal(str(quantity)) * Decimal(str(sale.exchange_rate or 1)),
             tax_category=((getattr(product, "tax_category", None) or "standard").strip().lower()),
         )
         db.session.add(sale_line)

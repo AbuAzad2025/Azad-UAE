@@ -917,6 +917,7 @@ class PurchaseService:
             quantity=quantity,
             unit_cost=Decimal(str(unit_cost)),
             line_total=Decimal(str(unit_cost)) * Decimal(str(quantity)),
+            amount_aed=Decimal(str(unit_cost)) * Decimal(str(quantity)) * Decimal(str(purchase.exchange_rate or 1)),
         )
         db.session.add(purchase_line)
         db.session.flush()
