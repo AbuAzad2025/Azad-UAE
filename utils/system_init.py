@@ -221,6 +221,18 @@ def _ensure_functional_roles():
                 "description": "POS cashier - processes sales and receipts, opens/closes register; no reports, costs, or ledger access",
             },
             {
+                "name": "Inventory",
+                "name_ar": "أمين المخزون",
+                "slug": "inventory",
+                "description": "Warehouse keeper - manages stock, products and inventory valuations; may inspect stock movement reports",
+            },
+            {
+                "name": "Viewer",
+                "name_ar": "مشاهد",
+                "slug": "viewer",
+                "description": "Read-only viewer - inspects reports, ledger and products without changing anything",
+            },
+            {
                 "name": "Maintenance Reception",
                 "name_ar": "استقبال الصيانة",
                 "slug": "maintenance_reception",
@@ -305,6 +317,11 @@ def _ensure_functional_roles():
                 "maintenance_close",
                 "maintenance_discount",
                 "maintenance_override_discount",
+                # Tenant-level configuration and internal approvals. These are
+                # NOT platform-level: no backups, no global restore, no owner
+                # logs, no cross-tenant access.
+                "manage_settings",
+                "manage_approvals",
             ]
             manager_role.permissions = get_perms(*manager_codes)
 
@@ -375,7 +392,8 @@ def _ensure_functional_roles():
         if cashier_role:
             # POS cashier: executes sales/receipts and register ops only.
             # Explicitly NO view_reports (that stays with seller/manager),
-            # NO view_ledger/manage_ledger, NO payroll/users.
+            # NO view_ledger/manage_ledger, NO payroll/users, NO product
+            # master data edits.
             cashier_codes = [
                 "manage_sales",
                 "manage_customers",
@@ -389,6 +407,31 @@ def _ensure_functional_roles():
                 "maintenance_close",
             ]
             cashier_role.permissions = get_perms(*cashier_codes)
+
+        inventory_role = Role.query.filter_by(slug="inventory").first()
+        if inventory_role:
+            # Warehouse keeper: stock, products and inventory valuations.
+            # view_reports is granted so stock-movement reports and inventory
+            # valuations are readable; no ledger, payroll or cash handling.
+            inventory_codes = [
+                "manage_products",
+                "manage_warehouse",
+                "view_reports",
+                "view_products",
+            ]
+            inventory_role.permissions = get_perms(*inventory_codes)
+
+        viewer_role = Role.query.filter_by(slug="viewer").first()
+        if viewer_role:
+            # Read-only viewer: inspects reports, ledger and products without
+            # changing anything. view_products gives ledger and report views
+            # proper product contextualisation.
+            viewer_codes = [
+                "view_reports",
+                "view_ledger",
+                "view_products",
+            ]
+            viewer_role.permissions = get_perms(*viewer_codes)
 
         maintenance_reception_role = Role.query.filter_by(slug="maintenance_reception").first()
         if maintenance_reception_role:
