@@ -325,16 +325,51 @@ def main():
             yield "لا توجد بيانات تغطية كافية لعرض الملخص."
             yield ""
 
-        # ── Missing templates (top 30) ──
+        # ── Missing templates ──
+        # Many templates are intentionally not rendered in the unit suite: print
+        # documents, partials, admin surfaces that need a live tenant, the base
+        # layouts. Listing all 370 of them made the summary look like a
+        # catastrophe when it is not one. Group them by family so the report
+        # shows where the real gaps are instead of a wall of file names.
         missing = sorted(all_templates - rendered_templates)
+
+        def _family(name: str) -> str:
+            if name.startswith("partials/"):
+                return "partials"
+            if "/print_" in name or name.startswith("print") or "print" in name.split("/")[-1]:
+                return "print"
+            if name.startswith("admin/") or name.startswith("owner/"):
+                return "admin"
+            if name.startswith("auth/"):
+                return "auth"
+            if name in ("base.html", "base2.html", "layout.html"):
+                return "layout"
+            return "other"
+
         if missing:
-            yield "### قوالب غير مُغطاة — Uncovered Templates (top 30)"
+            families: dict[str, int] = {}
+            for name in missing:
+                families[_family(name)] = families.get(_family(name), 0) + 1
+            yield "### قوالب غير مُغطاة — Uncovered Templates"
             yield ""
-            for t in missing[:30]:
-                yield f"- `{t}`"
-            if len(missing) > 30:
-                yield f"- ... و {len(missing) - 30} قوالب أخرى"
+            yield f"- إجمالي غير مُغطاة: **{len(missing)}** من {len(all_templates)}"
             yield ""
+            yield "| الفئة | العدد |"
+            yield "|------|-------|"
+            for fam in ("print", "admin", "auth", "partials", "layout", "other"):
+                if families.get(fam):
+                    yield f"| {fam} | {families[fam]} |"
+            yield ""
+            # Only the "other" family is a real coverage gap worth listing.
+            other = [n for n in missing if _family(n) == "other"]
+            if other:
+                yield "#### قوالب أخرى غير مُغطاة (top 15)"
+                yield ""
+                for t in other[:15]:
+                    yield f"- `{t}`"
+                if len(other) > 15:
+                    yield f"- ... و {len(other) - 15} قوالب أخرى"
+                yield ""
 
     lines: list[str] = list(_iter_lines())
     output = "\n".join(lines)
