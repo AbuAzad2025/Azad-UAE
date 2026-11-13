@@ -387,6 +387,40 @@ Last update: 2026
     return Response(humans_content, mimetype="text/plain")
 
 
+@public_bp.route("/track/<tracking_number>")
+@limiter.limit("30 per minute")
+def track_shipment(tracking_number):
+    """Public, read-only shipment tracking page (no login required)."""
+    from models.shipment import Shipment
+
+    tn = (tracking_number or "").strip()
+    if not tn:
+        abort(404)
+    shipment = Shipment.query.filter_by(tracking_number=tn).first()
+    if shipment is None:
+        abort(404)
+
+    # Carrier sync (best-effort, no commit)
+    carrier_result = None
+    try:
+        from services.carrier_tracking_service import CarrierTrackingService
+
+        carrier_result = CarrierTrackingService.sync_shipment(shipment)
+    except Exception:
+        carrier_result = None
+
+    events = []
+    if carrier_result and carrier_result.get("success"):
+        events = carrier_result.get("events") or []
+
+    return render_template(
+        "public/track_shipment.html",
+        shipment=shipment,
+        carrier_result=carrier_result,
+        events=events,
+    )
+
+
 @public_bp.route("/verify/<token>")
 def verify_document(token):
     """Public read-only document verification page — QR/link target."""

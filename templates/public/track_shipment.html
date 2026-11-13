@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}تتبع الشحنة — {{ shipment.tracking_number }}{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0">تتبع الشحنة</h4>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>رقم التتبع:</strong> {{ shipment.tracking_number }}
+            </div>
+            <div class="col-md-6">
+              <strong>الناقل:</strong> {{ shipment.carrier_name or "—" }}
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>الحالة:</strong>
+              <span class="badge bg-info">{{ shipment.status_ar }}</span>
+            </div>
+            <div class="col-md-6">
+              <strong>الوجهة:</strong> {{ shipment.destination_name or "—" }}
+            </div>
+          </div>
+          {% if shipment.estimated_delivery %}
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <strong>التسليم المتوقع:</strong> {{ shipment.estimated_delivery.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+            {% if shipment.actual_delivery %}
+            <div class="col-md-6">
+              <strong>التسليم الفعلي:</strong> {{ shipment.actual_delivery.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <hr>
+          <h5>الجدول الزمني</h5>
+          <ul class="list-group">
+            {% if shipment.shipped_at %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>تم الإرسال</span>
+              <small class="text-muted">{{ shipment.shipped_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </li>
+            {% endif %}
+            {% if shipment.arrived_at %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>وصلت</span>
+              <small class="text-muted">{{ shipment.arrived_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </li>
+            {% endif %}
+            {% if shipment.closed_at %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>مغلقة</span>
+              <small class="text-muted">{{ shipment.closed_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            </li>
+            {% endif %}
+            {% if not shipment.shipped_at and not shipment.arrived_at and not shipment.closed_at %}
+            <li class="list-group-item text-muted">لا توجد أحداث بعد</li>
+            {% endif %}
+          </ul>
+
+          {% if events %}
+          <hr>
+          <h5>أحداث الناقل</h5>
+          <ul class="list-group">
+            {% for ev in events %}
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <span>{{ ev.description or ev.status or "—" }}</span>
+                <small class="text-muted">{{ ev.timestamp or "" }}</small>
+              </div>
+              {% if ev.location %}
+              <small class="text-muted">{{ ev.location }}</small>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if carrier_result and not carrier_result.get("success") %}
+          <div class="alert alert-warning mt-3 mb-0">
+            {{ carrier_result.get("error") }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -107,6 +107,50 @@ class WhatsAppService:
             return {"success": False, "error": str(e)}
 
     @staticmethod
+    def send_shipment_status(phone, tracking_number, status, carrier_name=None):
+        if not WhatsAppService.is_enabled():
+            return {"success": False, "error": "WhatsApp not configured"}
+        if not phone:
+            return {"success": False, "error": "phone required"}
+
+        api_key, api_url, instance_id = WhatsAppService._api_config()
+        if not all([api_key, instance_id]):
+            return {"success": False, "error": "Missing configuration"}
+
+        phone_clean = WhatsAppService._normalize_phone(phone)
+        status_labels = {
+            "pending": "قيد الانتظار",
+            "draft": "مسودة",
+            "in_transit": "في الطريق",
+            "arrived": "وصلت",
+            "selling": "قيد البيع",
+            "closed": "مغلقة",
+            "cancelled": "ملغاة",
+            "delivered": "تم التسليم",
+        }
+        label = status_labels.get(status, status)
+        carrier_part = "\nالناقل: " + carrier_name if carrier_name else ""
+        tracking_part = "\nرقم التتبع: " + tracking_number if tracking_number else ""
+        message = (
+            "السلام عليكم ورحمة الله وبركاته\n\n"
+            "تحديث حالة شحنتك:\n"
+            "الحالة: " + label + carrier_part + tracking_part + "\n\n"
+            "شكراً لتعاملكم معنا"
+        )
+
+        try:
+            endpoint = api_url + "/" + instance_id + "/messages/chat"
+            response = requests.post(
+                endpoint,
+                data={"token": api_key, "to": phone_clean, "body": message},
+                timeout=10,
+            )
+            result = response.json()
+            return {"success": True, "message_id": result.get("id"), "phone": phone_clean}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    @staticmethod
     def send_custom_message(phone: str, message: str) -> dict:
         if not WhatsAppService.is_enabled():
             return {"success": False, "error": "WhatsApp not configured"}

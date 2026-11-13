@@ -17,6 +17,7 @@ class ShipmentService:
             purchase_return_id=source_id if source_type == "purchase_return" else None,
             carrier_name=carrier_name,
             tracking_number=tracking_number,
+            carrier_code=kwargs.get("carrier_code"),
             tracking_url=kwargs.get("tracking_url"),
             shipping_cost=kwargs.get("shipping_cost", 0),
             customs_duty=kwargs.get("customs_duty", 0),
@@ -41,6 +42,7 @@ class ShipmentService:
             shipment.status = status
             if status == "delivered":
                 shipment.actual_delivery = datetime.now(UTC)
+                ShipmentService._notify_status(shipment)
 
     @staticmethod
     def get_shipments_for_sale(sale_id):
@@ -88,6 +90,12 @@ class ShipmentService:
         assigned_to_id=None,
         lines_data=None,
         notes=None,
+        carrier_name=None,
+        carrier_code=None,
+        tracking_number=None,
+        recipient_phone=None,
+        recipient_name=None,
+        recipient_address=None,
     ):
         from models.shipment import Shipment, ShipmentLine
 
@@ -111,6 +119,12 @@ class ShipmentService:
             notes=notes,
             created_by_id=created_by_id,
             assigned_to_id=assigned_to_id,
+            carrier_name=carrier_name,
+            carrier_code=carrier_code,
+            tracking_number=tracking_number,
+            recipient_phone=recipient_phone,
+            recipient_name=recipient_name,
+            recipient_address=recipient_address,
         )
         db.session.add(shipment)
         db.session.flush()
@@ -149,6 +163,7 @@ class ShipmentService:
         shipment.status = "in_transit"
         shipment.shipped_at = datetime.now(UTC)
         db.session.flush()
+        ShipmentService._notify_status(shipment)
         return shipment
 
     @staticmethod
@@ -163,6 +178,7 @@ class ShipmentService:
         shipment.status = "arrived"
         shipment.arrived_at = datetime.now(UTC)
         db.session.flush()
+        ShipmentService._notify_status(shipment)
         return shipment
 
     @staticmethod
@@ -190,6 +206,7 @@ class ShipmentService:
         shipment.status = "closed"
         shipment.closed_at = datetime.now(UTC)
         db.session.flush()
+        ShipmentService._notify_status(shipment)
         return shipment
 
     @staticmethod
@@ -205,7 +222,27 @@ class ShipmentService:
             raise ValueError("الإرسالية ملغاة بالفعل")
         shipment.status = "cancelled"
         db.session.flush()
+        ShipmentService._notify_status(shipment)
         return shipment
+
+    @staticmethod
+    def _notify_status(shipment):
+        try:
+            from services.whatsapp_service import WhatsAppService
+
+            phone = getattr(shipment, "recipient_phone", None)
+            if not phone:
+                return
+            WhatsAppService.send_shipment_status(
+                phone=phone,
+                tracking_number=getattr(shipment, "tracking_number", None),
+                status=getattr(shipment, "status", None),
+                carrier_name=getattr(shipment, "carrier_name", None),
+            )
+        except Exception:
+            import logging
+
+            logging.getLogger(__name__).debug("shipment notification failed", exc_info=True)
 
     @staticmethod
     def get_shipment_or_404(shipment_id):

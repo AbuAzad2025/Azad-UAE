@@ -63,6 +63,7 @@ class Shipment(db.Model):
     closed_at = db.Column(db.DateTime(timezone=True), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     carrier_name = db.Column(db.String(100))
+    carrier_code = db.Column(db.String(30), nullable=True, index=True)  # dhl/fedex/aramex/other
     tracking_number = db.Column(db.String(100))
     tracking_url = db.Column(db.String(500))
     shipping_cost = db.Column(db.Numeric(15, 3), default=0)

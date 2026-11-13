@@ -97,6 +97,12 @@ def create_shipment():
                     assigned_to_id=request.form.get("assigned_to_id", type=int),
                     lines_data=lines_data,
                     notes=request.form.get("notes"),
+                    carrier_name=request.form.get("carrier_name"),
+                    carrier_code=request.form.get("carrier_code"),
+                    tracking_number=request.form.get("tracking_number"),
+                    recipient_phone=request.form.get("recipient_phone"),
+                    recipient_name=request.form.get("recipient_name"),
+                    recipient_address=request.form.get("recipient_address"),
                 )
                 try:
                     from services.logging_core import LoggingCore
@@ -164,6 +170,26 @@ def start_selling(id):
         flash("✅ بدأ البيع الميداني", "success")
     except ValueError as e:
         flash(f"⚠️ {str(e)}", "danger")
+    return redirect(url_for("shipments.view_shipment", id=id))
+
+
+@shipment_bp.route("/<int:id>/sync-tracking", methods=["POST"])
+def sync_tracking(id):
+    from services.carrier_tracking_service import CarrierTrackingService
+    from services.shipment_service import ShipmentService
+
+    shipment = ShipmentService.get_shipment_or_404(id)
+    try:
+        result = CarrierTrackingService.sync_shipment(shipment)
+        from extensions import db
+
+        db.session.flush()
+        if result.get("success"):
+            flash("تم تحديث التتبع من الناقل.", "success")
+        else:
+            flash(result.get("error") or "تعذر التحديث", "warning")
+    except Exception as exc:
+        flash(str(exc), "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
