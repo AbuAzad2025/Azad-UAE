@@ -40,6 +40,7 @@ class EInvoice(db.Model):
         db.Integer,
         db.ForeignKey("product_returns.id", ondelete="CASCADE"),
         nullable=True,
+        index=True,
     )
     # Set when this row is the statutory document of a maintenance invoice.
     # A maintenance job is a sale for the tax authority, so it carries the

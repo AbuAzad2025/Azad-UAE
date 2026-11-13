@@ -33,7 +33,7 @@ class PosCashMovement(db.Model):
         nullable=False,
         index=True,
     )
-    shift_id = db.Column(db.Integer, db.ForeignKey("pos_shifts.id", ondelete="SET NULL"), nullable=True)
+    shift_id = db.Column(db.Integer, db.ForeignKey("pos_shifts.id", ondelete="SET NULL"), nullable=True, index=True)
     # Supervisor who authorized the movement via override, when applicable.
     authorized_by_user_id = db.Column(
         db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=True, index=True

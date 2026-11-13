@@ -191,7 +191,7 @@ class MaintenanceOrder(db.Model):
     # أرشفة بدلاً من الحذف
     is_archived = db.Column(db.Boolean, default=False, nullable=False, index=True)
     archived_at = db.Column(db.DateTime(timezone=True))
-    archived_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    archived_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     # Meta
     created_at = db.Column(
@@ -1125,7 +1125,9 @@ class MaintenancePurchaseOrderLine(db.Model):
     line_total = db.Column(db.Numeric(15, 3), nullable=False, default=0)
     # The stock movement the receipt created, so the line can be traced to
     # the movement that put the goods on the shelf.
-    movement_id = db.Column(db.Integer, db.ForeignKey("stock_movements.id", ondelete="SET NULL"), nullable=True)
+    movement_id = db.Column(
+        db.Integer, db.ForeignKey("stock_movements.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     received_quantity = db.Column(db.Numeric(15, 3), nullable=False, default=0)
     # Archive-only: a line is never deleted, it is retired.
     is_archived = db.Column(db.Boolean, default=False, nullable=False, index=True)

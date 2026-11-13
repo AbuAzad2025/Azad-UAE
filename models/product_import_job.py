@@ -68,6 +68,7 @@ class ProductImportJob(db.Model):
         db.Integer,
         db.ForeignKey("product_import_templates.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     # Progress tracking
@@ -94,6 +95,7 @@ class ProductImportJob(db.Model):
         db.Integer,
         db.ForeignKey("product_import_jobs.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     is_rollback = db.Column(db.Boolean, default=False, nullable=False)
 
@@ -201,6 +203,7 @@ class ProductImportTemplate(db.Model):
         db.Integer,
         db.ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     name = db.Column(db.String(100), nullable=False)
@@ -314,6 +317,7 @@ class ProductImportRollbackLog(db.Model):
         db.Integer,
         db.ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
 
     rolled_back_product_ids = db.Column(JSON, nullable=False, default=list)

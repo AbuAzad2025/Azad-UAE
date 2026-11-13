@@ -17,7 +17,7 @@ class DocumentVerification(db.Model):
     __tablename__ = "document_verifications"
 
     id = db.Column(db.Integer, primary_key=True)
-    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False)
+    tenant_id = db.Column(db.Integer, db.ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=False, index=True)
     document_type = db.Column(db.String(50), nullable=False)
     document_id = db.Column(db.Integer, nullable=False)
     document_hash = db.Column(db.String(64), unique=True, nullable=False, index=True)

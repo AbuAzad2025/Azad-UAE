@@ -404,7 +404,7 @@ class PurchaseRequisition(db.Model):
     status = db.Column(db.String(20), default="draft", index=True)
     justification = db.Column(db.Text)
     notes = db.Column(db.Text)
-    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     approved_at = db.Column(db.DateTime(timezone=True))
     rejected_reason = db.Column(db.String(500))
     po_id = db.Column(db.Integer, db.ForeignKey("purchases.id", ondelete="SET NULL"), nullable=True, index=True)
@@ -514,7 +514,7 @@ class PurchaseOrder(db.Model):
     status = db.Column(db.String(20), default="draft", index=True)
     notes = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    confirmed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    confirmed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     confirmed_at = db.Column(db.DateTime(timezone=True))
     created_at = db.Column(db.DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False, index=True)
     updated_at = db.Column(

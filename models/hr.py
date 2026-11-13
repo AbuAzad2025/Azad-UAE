@@ -300,7 +300,7 @@ class OvertimeEntry(db.Model):
     rate_multiplier = db.Column(db.Numeric(4, 2), default=1.0, nullable=False)
     overtime_type = db.Column(db.String(20), default="standard", nullable=False)
     status = db.Column(db.String(20), default="pending", index=True)
-    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     approved_at = db.Column(db.DateTime(timezone=True))
     rejected_reason = db.Column(db.String(500))
     notes = db.Column(db.Text)
