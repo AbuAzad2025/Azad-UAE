@@ -98,7 +98,9 @@ class ShippingConfigService:
         carrier: str, key: str, value: str, tenant_id: int | None = None, user_id: int | None = None
     ) -> None:
         if tenant_id is None:
-            raise ValueError("tenant_id is required — encrypted secrets must be stored per-tenant, never platform-global")
+            raise ValueError(
+                "tenant_id is required — encrypted secrets must be stored per-tenant, never platform-global"
+            )
         tid = ShippingConfigService._tenant_id(tenant_id)
         secret_name = f"{carrier}_{key}"
         if value:
@@ -176,7 +178,9 @@ class ShippingConfigService:
     @staticmethod
     def set_sms_secret(name: str, value: str, tenant_id: int | None = None, user_id: int | None = None) -> None:
         if tenant_id is None:
-            raise ValueError("tenant_id is required — encrypted secrets must be stored per-tenant, never platform-global")
+            raise ValueError(
+                "tenant_id is required — encrypted secrets must be stored per-tenant, never platform-global"
+            )
         tid = ShippingConfigService._tenant_id(tenant_id)
         if value:
             from services.tenant_secrets_service import TenantSecretsService
