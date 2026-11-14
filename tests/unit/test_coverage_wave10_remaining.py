@@ -1,13 +1,13 @@
-"""Wave 10 — precise line closure for 7 remaining modules (separate file).
+"""Wave 10 - precise line closure for 7 remaining modules (separate file).
 
 Targets (from the coverage report):
-- models/card_vault.py             → ImportError fallback + card-type detector arms
-- utils/i18n.py                    → ``_()`` TRANSLATIONS lookup arm
-- utils/feature_guards.py          → request.is_json / missing tenant / POS sub-feature
-- utils/system_init.py             → clean-platform bootstrap + exists-arms + email/password guards
-- utils/offsite_backup.py          → not-configured, older-sibling skip, paginator error, invalid key
-- ai_knowledge/expansion/knowledge_sources.py → stale cache, non-200, tax missing, dedupe, __main__
-- ai_knowledge/core/system_integration.py → request tenant + cross-tenant guard arms
+- models/card_vault.py             -> ImportError fallback + card-type detector arms
+- utils/i18n.py                    -> ``_()`` TRANSLATIONS lookup arm
+- utils/feature_guards.py          -> request.is_json / missing tenant / POS sub-feature
+- utils/system_init.py             -> clean-platform bootstrap + exists-arms + email/password guards
+- utils/offsite_backup.py          -> not-configured, older-sibling skip, paginator error, invalid key
+- ai_knowledge/expansion/knowledge_sources.py -> stale cache, non-200, tax missing, dedupe, __main__
+- ai_knowledge/core/system_integration.py -> request tenant + cross-tenant guard arms
 """
 
 from __future__ import annotations
@@ -214,7 +214,7 @@ class TestKnowledgeSourcesWave10:
         assert KnowledgeSourceManager.get_tax_resources("Palestine") == []
 
     def test_recommend_sources_dedupes(self):
-        results = recommend_sources_for_query("قطعة محرك")
+        results = recommend_sources_for_query("\u0642\u0637\u0639\u0629 \u0645\u062d\u0631\u0643")
         ids = [r["id"] for r in results]
         assert len(ids) == len(set(ids))
 
@@ -319,7 +319,7 @@ class TestSystemIntegratorWave10:
                 MockC.query.filter.return_value = chain
                 result = SystemIntegrator.get_customer_balance("Ali Test")
         assert result["success"] is False
-        assert "غير موجود" in result["error"]
+        assert "\u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f" in result["error"]
 
     def test_supplier_balance_name_search_filters_tenant(self, app):
         supplier = MagicMock()
@@ -391,7 +391,7 @@ class TestSystemIntegratorWave10:
             MockT.get_current.side_effect = RuntimeError("legacy down")
             result = SystemIntegrator.add_customer({"name": "X", "customer_type": "regular"})
         assert result["success"] is False
-        assert "تينانت" in result["error"]
+        assert "\u062a\u064a\u0646\u0627\u0646\u062a" in result["error"]
 
     def test_product_stock_tenant_filter(self, app):
         product = MagicMock()
@@ -410,7 +410,7 @@ class TestSystemIntegratorWave10:
                 MockP.query.filter.return_value = chain
                 result = SystemIntegrator.get_product_stock("PST-1")
         assert result["success"] is True
-        assert result["product"]["status"] == "جيد"
+        assert result["product"]["status"] == "\u062c\u064a\u062f"
 
     def test_product_stock_cross_tenant_guard(self, app):
         product = MagicMock()
@@ -520,7 +520,7 @@ class TestSystemInitWave10:
             patch.object(system_init_module.Permission, "query", query),
             patch("utils.system_init.db.session") as session,
             patch("utils.constants.PERMISSION_CODES", ["manage_sales"]),
-            patch("utils.constants.PERMISSIONS", {"manage_sales": {"en": "Manage", "ar": "إدارة"}}),
+            patch("utils.constants.PERMISSIONS", {"manage_sales": {"en": "Manage", "ar": "\u0625\u062f\u0627\u0631\u0629"}}),
         ):
             system_init_module._ensure_permissions()
         session.add.assert_not_called()

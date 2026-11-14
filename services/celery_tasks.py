@@ -45,7 +45,7 @@ _beat_schedule = {
     "daily-inventory-reconciliation": {
         "task": "services.celery_tasks.run_inventory_reconciliation",
         "schedule": 86400.0,  # 24 hours in seconds
-        "args": (None,),  # tenant_id=None → reconcile all tenants
+        "args": (None,),  # tenant_id=None -> reconcile all tenants
     },
     "check-abandoned-carts": {
         "task": "services.celery_tasks.send_abandoned_cart_reminders",
@@ -73,7 +73,7 @@ celery.conf.update(
 
 @celery.task
 def run_inventory_reconciliation(tenant_id: int | None = None):
-    """Scheduled inventory reconciliation — logs mismatches for admin review."""
+    """Scheduled inventory reconciliation - logs mismatches for admin review."""
     import logging
 
     from app import create_app
@@ -165,7 +165,7 @@ def run_inventory_reconciliation(tenant_id: int | None = None):
 
 @celery.task
 def generate_monthly_report(month: int, year: int):
-    """⚠ SAFETY-GUARDED: placeholder — no unscoped multi-tenant data access.
+    """! SAFETY-GUARDED: placeholder - no unscoped multi-tenant data access.
 
     The original implementation imported ``services.report_service.ReportService``
     which does **not exist** in this codebase, and ran an unscoped platform-wide
@@ -176,13 +176,13 @@ def generate_monthly_report(month: int, year: int):
 
     logger = logging.getLogger(__name__)
     logger.warning(
-        "generate_monthly_report(%d, %d) — disabled. No tenant-scoped ReportService is available yet.",
+        "generate_monthly_report(%d, %d) - disabled. No tenant-scoped ReportService is available yet.",
         month,
         year,
     )
     return {
         "success": False,
-        "error": "Disabled: ReportService not implemented — use per-tenant reporting instead.",
+        "error": "Disabled: ReportService not implemented - use per-tenant reporting instead.",
     }
 
 
@@ -208,9 +208,9 @@ def send_invoice_email(sale_id: int, tenant_id: int | None = None):
         sale = sale_query.first()
         if sale and sale.customer and sale.customer.email:
             msg = Message(
-                subject=gettext(f"فاتورة رقم {sale.sale_number}"),
+                subject=gettext(f"  {sale.sale_number}"),
                 recipients=[sale.customer.email],
-                body=gettext(f"تجدون في المرفق فاتورتكم رقم {sale.sale_number}"),
+                body=gettext(f"     {sale.sale_number}"),
             )
             mail.send(msg)
             return {"success": True}

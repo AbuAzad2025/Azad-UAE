@@ -118,7 +118,7 @@ class SeedSet:
         return "violated", f"{self.key}={actual} (expected {self.check} {self.expected})"
 
 
-# ── Platform-wide, seeded at every boot ──────────────────────────────────────
+# -- Platform-wide, seeded at every boot --------------------------------------
 
 PLATFORM_SEEDS: tuple[SeedSet, ...] = (
     SeedSet(
@@ -191,7 +191,7 @@ PLATFORM_SEEDS: tuple[SeedSet, ...] = (
 )
 
 
-# ── Per tenant, repaired on every boot for tenants that exist ────────────────
+# -- Per tenant, repaired on every boot for tenants that exist ----------------
 
 TENANT_SEEDS: tuple[SeedSet, ...] = (
     SeedSet(
@@ -267,7 +267,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
 )
 
 
-# ── Created on first use ─────────────────────────────────────────────────────
+# -- Created on first use -----------------------------------------------------
 
 LAZY_SEEDS: tuple[SeedSet, ...] = (
     SeedSet(
@@ -325,7 +325,7 @@ LAZY_SEEDS: tuple[SeedSet, ...] = (
 )
 
 
-# ── Intentionally NOT seeded ─────────────────────────────────────────────────
+# -- Intentionally NOT seeded -------------------------------------------------
 #
 # These are listed so their absence is a recorded decision rather than an
 # apparent oversight. None of them is a platform "basic": each belongs to a
@@ -472,7 +472,7 @@ DELIBERATELY_UNSEEDED: tuple[SeedSet, ...] = (
         "only, and default_tax_rate() returns zero unless the tenant has set one.",
         tags=("deliberate-empty", "finance"),
     ),
-    # ── Load-bearing but not a boot path. Recorded so nobody deletes them. ──
+    # -- Load-bearing but not a boot path. Recorded so nobody deletes them. --
     SeedSet(
         key="gl_accounting_setup_service",
         label="GL accounting setup service (REMOVED - superseded)",

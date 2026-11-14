@@ -1,4 +1,4 @@
-"""Integration tests for AnalyticsService — real DB only (no session mocks)."""
+"""Integration tests for AnalyticsService - real DB only (no session mocks)."""
 
 from __future__ import annotations
 
@@ -361,7 +361,7 @@ class TestProductPerformanceIntegration:
             perf = AnalyticsService.get_product_performance(tenant_id=sample_tenant.id)
 
         assert perf[0]["name"] == "High Vol"
-        assert perf[0]["status"] == "ممتاز"
+        assert perf[0]["status"] == "\u0645\u064a\u062a\u0627\u0632"
         assert perf[0]["margin"] == pytest.approx(4000.0)
         assert perf[0]["margin_percent"] == pytest.approx(80.0)
 
@@ -451,7 +451,7 @@ class TestForecastingAndPackagesIntegration:
             )
 
         assert len(historical) == 12
-        assert forecast["confidence"] in ("عالية", "متوسطة", "منخفضة")
+        assert forecast["confidence"] in ("\u0639\u0627\u0644\u064a\u0629", "\u0645\u062a\u0648\u0633\u0629", "\u0645\u0646\u062e\u0641\u0636\u0629")
 
     def test_package_performance_completed_vs_pending(self, app, db_session):
         from models import Package, PackagePurchase

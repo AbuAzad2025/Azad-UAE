@@ -1,4 +1,4 @@
-"""Integration service — settings context, toggles, config lookup fallbacks."""
+"""Integration service - settings context, toggles, config lookup fallbacks."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def _service_row(enabled, config, status=None, tested_at=None):
 
 
 class TestIntegrationsContext:
-    """IntegrationService.get_integrations_context — six service blocks."""
+    """IntegrationService.get_integrations_context - six service blocks."""
 
     def test_returns_all_integration_blocks(self, mocker):
         mocker.patch(
@@ -50,7 +50,7 @@ class TestIntegrationsContext:
 
 
 class TestIntegrationSettingsModel:
-    """IntegrationSettings — init, config parse, credential storage round-trip."""
+    """IntegrationSettings - init, config parse, credential storage round-trip."""
 
     def test_repr_shows_enabled_state(self):
         from models.integration_settings import IntegrationSettings

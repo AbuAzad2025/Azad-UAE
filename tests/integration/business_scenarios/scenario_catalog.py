@@ -78,7 +78,7 @@ class Wave:
         return derived + self.fixed_scenarios
 
 
-# ── measured route inventory, keyed by path under routes/ ──
+# -- measured route inventory, keyed by path under routes/ --
 #
 # Keyed by path, not by module stem: routes/tenants.py and routes/owner/tenants.py
 # are different surfaces that a stem-keyed inventory silently collapsed into one,

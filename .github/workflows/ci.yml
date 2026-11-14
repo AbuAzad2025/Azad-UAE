@@ -1,11 +1,11 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: CI
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Coverage policy: every production file type is gated — Python, Jinja/HTML,
+# -----------------------------------------------------------------------------
+# Coverage policy: every production file type is gated - Python, Jinja/HTML,
 # JavaScript, CSS, YAML and JSON. Only documentation, binary assets and
 # vendored third-party bundles (AdminLTE) may skip a CI run.
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 on:
   push:
     branches: [main, develop]
@@ -57,7 +57,7 @@ env:
   FLASK_APP: 'app.factory:create_app'
 
 jobs:
-  # ── Matrix engine: adapt PG version grid to Git ref ──
+  # -- Matrix engine: adapt PG version grid to Git ref --
   determine-matrix:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -102,7 +102,7 @@ jobs:
           fi
           echo "matrix=$(echo "$MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
 
-  # ── Python tests split by directory ──
+  # -- Python tests split by directory --
   test:
     needs: [determine-matrix]
     name: ${{ matrix.test-group }} (PG ${{ matrix.postgres-version }})
@@ -118,7 +118,7 @@ jobs:
     timeout-minutes: 1440
     strategy:
       # Never cancel sibling groups: every directory must report, even when
-      # another group fails �?" no part of the test suite may be skipped.
+      # another group fails ?" no part of the test suite may be skipped.
       fail-fast: false
       matrix: ${{ fromJSON(needs.determine-matrix.outputs.matrix) }}
 
@@ -207,7 +207,7 @@ jobs:
           ls -la .coverage 2>/dev/null || true
           cp .coverage coverage-data-${{ matrix.cov-flag }} 2>/dev/null || true
 
-      # ── N+1 profiling (opt-in, rides the existing test runs) ──────────────
+      # -- N+1 profiling (opt-in, rides the existing test runs) --------------
       # The profiler is loaded only for the two groups that exercise real request
       # lifecycles, and only on one PostgreSQL version, so it runs on a small slice
       # of the matrix. It is a second full pytest invocation for that slice, not a
@@ -276,7 +276,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 1
 
-  # ── App boot verification (quick smoke test) ──
+  # -- App boot verification (quick smoke test) --
   verify-boot:
     needs: [determine-matrix]
     runs-on: ubuntu-latest
@@ -320,8 +320,8 @@ jobs:
         run: |
           python -c "from app import create_app; app = create_app()"
 
-  # ── Security scan (bandit) ──
-  # Scope comes ONLY from .bandit.yml — no inline excludes, so no production
+  # -- Security scan (bandit) --
+  # Scope comes ONLY from .bandit.yml - no inline excludes, so no production
   # Python file can silently drop out of the scan.
   security-scan:
     runs-on: ubuntu-latest
@@ -350,9 +350,9 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # ── Static quality gates: Python · Jinja/HTML · JS · CSS · YAML · JSON ──
+  # -- Static quality gates: Python  Jinja/HTML  JS  CSS  YAML  JSON --
   lint-audit:
-    name: Static quality (py · jinja · js · css · yaml · json)
+    name: Static quality (py  jinja  js  css  yaml  json)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -374,7 +374,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Full requirements are REQUIRED here: mypy needs real flask types
-          # (e.g. abort() -> NoReturn) for correct narrowing — a slim install
+          # (e.g. abort() -> NoReturn) for correct narrowing - a slim install
           # degrades every unresolved import to Any and produces false errors.
           # ruff is PINNED: 0.16 expanded the default rule set (BLE001/UP017/
           # I001/FURB157...) which fires codebase-wide. Pin to the 0.15 line
@@ -387,7 +387,7 @@ jobs:
           npm ci --no-audit --no-fund
           npm install -g @biomejs/biome@2.5.4 cspell
 
-      # ── Python ──
+      # -- Python --
       - name: Ruff check (Python lint)
         run: ruff check . --output-format github
 
@@ -397,7 +397,7 @@ jobs:
       - name: Mypy (Python types)
         run: mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases
 
-      # ── Jinja / HTML templates ──
+      # -- Jinja / HTML templates --
       - name: Jinja template gate (all templates must parse)
         run: python scripts/lint/check_templates.py
 
@@ -494,7 +494,7 @@ jobs:
           # nothing compared the document to the code, so it survived.
           python scripts/lint/check_api_docs.py
 
-      # ── JavaScript ──
+      # -- JavaScript --
       - name: Biome check (JS lint+format, scope from biome.json)
         run: biome check . --reporter github
 
@@ -510,11 +510,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      # ── CSS ──
+      # -- CSS --
       - name: Stylelint (all project CSS)
         run: npx stylelint "static/**/*.css"
 
-      # ── JSON ──
+      # -- JSON --
       - name: JSON validation (every tracked .json file)
         run: |
           fail=0
@@ -529,13 +529,13 @@ jobs:
           echo "Validated ${count} JSON file(s)"
           exit $fail
 
-      # ── YAML ──
+      # -- YAML --
       - name: yamllint (every tracked .yml/.yaml file)
         run: |
           git ls-files '*.yml' '*.yaml' -- ':!:node_modules' | \
             xargs python -m yamllint -c .yamllint.yml
 
-      # ── Dependencies & spelling ──
+      # -- Dependencies & spelling --
       - name: pip-audit (known vulnerabilities in requirements)
         run: python -m pip_audit -r requirements.txt
 
@@ -544,13 +544,13 @@ jobs:
           npx cspell --config scripts/lint/.cspell.json \
             "templates/**/*.html" "static/js/**/*.js" "static/*.js"
 
-      # ── GitHub Actions workflows themselves ──
-      - name: actionlint (workflow syntax — fails on findings)
+      # -- GitHub Actions workflows themselves --
+      - name: actionlint (workflow syntax - fails on findings)
         run: |
           docker run --rm -v "$PWD:/repo" -w /repo \
             docker.io/rhysd/actionlint:latest .github/workflows/*.yml
 
-  # ── Frontend asset audit (Jinja/static) — Adaptive Frontend Asset Audit directive ──
+  # -- Frontend asset audit (Jinja/static) - Adaptive Frontend Asset Audit directive --
   frontend-asset-quality:
     name: Frontend asset audit (Jinja/static)
     runs-on: ubuntu-latest
@@ -594,7 +594,7 @@ jobs:
           AUTO_MIGRATE: "1"
         run: pytest tests/unit/test_js_reachability.py -v --tb=short
 
-  # ── Git & repository scanning ──
+  # -- Git & repository scanning --
   repo-security:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -630,7 +630,7 @@ jobs:
           sarif_file: 'trivy-results.sarif'
           category: 'trivy-fs'
 
-  # ── Docker infrastructure audit (Hadolint) ──
+  # -- Docker infrastructure audit (Hadolint) --
   docker-infra-audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -641,7 +641,7 @@ jobs:
           echo "=== RUNNING DOCKERFILE LINT ==="
           docker run --rm -i -v "${PWD}/scripts/.hadolint.yaml:/root/.hadolint.yaml" hadolint/hadolint < scripts/lint/Dockerfile.ci
 
-  # ── API fuzz testing (Schemathesis, non-blocking) ──
+  # -- API fuzz testing (Schemathesis, non-blocking) --
   api-fuzz:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -709,7 +709,7 @@ jobs:
             fi
             sleep 1
           done
-          # Fuzz public + documented API endpoints — spec served at /api-docs/openapi.json
+          # Fuzz public + documented API endpoints - spec served at /api-docs/openapi.json
           # Schemathesis v4: base-url + request-timeout live in scripts/schemathesis.toml (CLI flags removed).
           # ignored_auth: no session-auth context is configured for the fuzzer (covered by tenant-isolation
           # tests); negative_data_rejection: intentionally tolerant read endpoints 200 on junk input.
@@ -726,7 +726,7 @@ jobs:
           fuzz_rc=${PIPESTATUS[0]}
           set -e
           if [ "$fuzz_rc" -ne 0 ]; then
-            echo "::warning title=api-fuzz::Schemathesis exited ${fuzz_rc} — failing checks (see schemathesis-log artifact):"
+            echo "::warning title=api-fuzz::Schemathesis exited ${fuzz_rc} - failing checks (see schemathesis-log artifact):"
             grep -iE "failed|error|missing_property|not defined" schemathesis.log | head -15 || true
           fi
 
@@ -739,7 +739,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-  # ── Tenant isolation fuzzer ──
+  # -- Tenant isolation fuzzer --
   tenant-isolation-fuzzer:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -783,7 +783,7 @@ jobs:
         run: |
           pytest tests/unit/utils/test_tenant_isolation_fuzzer.py -v --tb=short
 
-  # ── Lighthouse CI (web vitals, BLOCKING) ──
+  # -- Lighthouse CI (web vitals, BLOCKING) --
   # This gate measured nothing until now. Nothing in this job ran the migrations,
   # so the azad_test database had no tables; every context processor query raised
   # UndefinedTable and both audited URLs rendered error pages. `continue-on-error:
@@ -1064,11 +1064,11 @@ jobs:
           # while still reporting success.
           include-hidden-files: true
 
-  # ── E2E business flow tours (Playwright, BLOCKING) ──
+  # -- E2E business flow tours (Playwright, BLOCKING) --
   # Tours are BLOCKING: any failure fails the CI job (no continue-on-error).
   # Gate: npx playwright test --config=scripts/playwright.config.json --reporter=list
-  # (JS tours; the old pytest-playwright POS tours never actually ran in CI —
-  # their conftest STATE_DIR was off-by-one so every tour silently skipped —
+  # (JS tours; the old pytest-playwright POS tours never actually ran in CI -
+  # their conftest STATE_DIR was off-by-one so every tour silently skipped -
   # and their assumptions did not match the real POS UI. They were removed.)
   e2e-tours:
     runs-on: ubuntu-latest
@@ -1154,7 +1154,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # ── Comprehensive coverage report (backend + frontend) ──
+  # -- Comprehensive coverage report (backend + frontend) --
   coverage-report:
     needs: [test]
     runs-on: ubuntu-latest
@@ -1195,7 +1195,7 @@ jobs:
           shopt -s nullglob
           files=(coverage-data/covdata-*/coverage-data-*)
           if [ ${#files[@]} -eq 0 ]; then
-            echo "::warning::No coverage data artifacts found — test jobs may have failed early"
+            echo "::warning::No coverage data artifacts found - test jobs may have failed early"
             exit 0
           fi
           coverage combine "${files[@]}"
