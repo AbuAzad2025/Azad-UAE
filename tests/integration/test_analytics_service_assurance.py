@@ -361,7 +361,7 @@ class TestProductPerformanceIntegration:
             perf = AnalyticsService.get_product_performance(tenant_id=sample_tenant.id)
 
         assert perf[0]["name"] == "High Vol"
-        assert perf[0]["status"] == "\u0645\u064a\u062a\u0627\u0632"
+        assert perf[0]["status"] == "\u0645\u0645\u062a\u0627\u0632"
         assert perf[0]["margin"] == pytest.approx(4000.0)
         assert perf[0]["margin_percent"] == pytest.approx(80.0)
 
