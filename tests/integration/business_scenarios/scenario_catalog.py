@@ -325,7 +325,7 @@ WAVES: tuple[Wave, ...] = (
                 "conversion is a money path that must be idempotent",
             ),
         ),
-        delivered=True,
+        delivered=False,
     ),
     Wave(
         number=10,
@@ -460,7 +460,7 @@ WAVES: tuple[Wave, ...] = (
                 "a public donation must never be creditable to the wrong tenant",
             ),
         ),
-        delivered=True,
+        delivered=False,
     ),
     Wave(
         number=16,
