@@ -993,6 +993,8 @@ class SaleService:
             seller = User.query.filter_by(tenant_id=tenant_id, is_active=True).order_by(User.id.asc()).first()
             seller_id = seller.id if seller else 1
 
+        fx_rate = Decimal("1")
+
         sale = Sale(
             customer_id=customer.id,
             seller_id=seller_id,
@@ -1002,7 +1004,7 @@ class SaleService:
             amount=Decimal(str(unit_price)) * Decimal(str(quantity)),
             amount_aed=Decimal(str(unit_price)) * Decimal(str(quantity)),
             currency="AED",
-            exchange_rate=1,
+            exchange_rate=fx_rate,
         )
         if tenant_id:
             sale.tenant_id = tenant_id
@@ -1016,7 +1018,7 @@ class SaleService:
             quantity=quantity,
             unit_price=Decimal(str(unit_price)),
             line_total=Decimal(str(unit_price)) * Decimal(str(quantity)),
-            amount_aed=Decimal(str(unit_price)) * Decimal(str(quantity)) * Decimal(str(sale.exchange_rate or 1)),
+            amount_aed=Decimal(str(unit_price)) * Decimal(str(quantity)) * fx_rate,
             tax_category=((getattr(product, "tax_category", None) or "standard").strip().lower()),
         )
         db.session.add(sale_line)
