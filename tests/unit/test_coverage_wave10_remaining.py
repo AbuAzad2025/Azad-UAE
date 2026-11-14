@@ -520,7 +520,10 @@ class TestSystemInitWave10:
             patch.object(system_init_module.Permission, "query", query),
             patch("utils.system_init.db.session") as session,
             patch("utils.constants.PERMISSION_CODES", ["manage_sales"]),
-            patch("utils.constants.PERMISSIONS", {"manage_sales": {"en": "Manage", "ar": "\u0625\u062f\u0627\u0631\u0629"}}),
+            patch(
+                "utils.constants.PERMISSIONS",
+                {"manage_sales": {"en": "Manage", "ar": "\u0625\u062f\u0627\u0631\u0629"}},
+            ),
         ):
             system_init_module._ensure_permissions()
         session.add.assert_not_called()

@@ -451,7 +451,11 @@ class TestForecastingAndPackagesIntegration:
             )
 
         assert len(historical) == 12
-        assert forecast["confidence"] in ("\u0639\u0627\u0644\u064a\u0629", "\u0645\u062a\u0648\u0633\u0629", "\u0645\u0646\u062e\u0641\u0636\u0629")
+        assert forecast["confidence"] in (
+            "\u0639\u0627\u0644\u064a\u0629",
+            "\u0645\u062a\u0648\u0633\u0629",
+            "\u0645\u0646\u062e\u0641\u0636\u0629",
+        )
 
     def test_package_performance_completed_vs_pending(self, app, db_session):
         from models import Package, PackagePurchase
