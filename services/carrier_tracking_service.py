@@ -32,7 +32,7 @@ class CarrierTrackingService:
         return ShippingConfigService.is_carrier_configured(carrier, tenant_id)
 
     @staticmethod
-    def track(carrier: str, tracking_number: str) -> dict[str, Any]:
+    def track(carrier: str, tracking_number: str, tenant_id: int | None = None) -> dict[str, Any]:
         """Query the carrier API and return normalized tracking data.
 
         Returns a dict with keys: success, carrier, tracking_number,
@@ -47,11 +47,11 @@ class CarrierTrackingService:
             return {"success": False, "error": f"unsupported carrier: {carrier}"}
 
         if carrier == "dhl":
-            return CarrierTrackingService._track_dhl(tracking_number)
+            return CarrierTrackingService._track_dhl(tracking_number, tenant_id)
         if carrier == "fedex":
-            return CarrierTrackingService._track_fedex(tracking_number)
+            return CarrierTrackingService._track_fedex(tracking_number, tenant_id)
         if carrier == "aramex":
-            return CarrierTrackingService._track_aramex(tracking_number)
+            return CarrierTrackingService._track_aramex(tracking_number, tenant_id)
         return {
             "success": False,
             "error": "manual carrier — no API integration",
@@ -63,8 +63,8 @@ class CarrierTrackingService:
 
     # ── DHL ──────────────────────────────────────────────────────────────
     @staticmethod
-    def _track_dhl(tracking_number: str) -> dict[str, Any]:
-        cfg = ShippingConfigService.get_carrier_config("dhl")
+    def _track_dhl(tracking_number: str, tenant_id: int | None = None) -> dict[str, Any]:
+        cfg = ShippingConfigService.get_carrier_config("dhl", tenant_id=tenant_id)
         api_key = cfg.get("api_key") or os.environ.get("DHL_API_KEY")
         if not api_key:
             return {
@@ -127,8 +127,8 @@ class CarrierTrackingService:
 
     # ── FedEx ─────────────────────────────────────────────────────────────
     @staticmethod
-    def _fedex_token() -> str | None:
-        cfg = ShippingConfigService.get_carrier_config("fedex")
+    def _fedex_token(tenant_id: int | None = None) -> str | None:
+        cfg = ShippingConfigService.get_carrier_config("fedex", tenant_id=tenant_id)
         client_id = cfg.get("client_id") or os.environ.get("FEDEX_CLIENT_ID")
         client_secret = cfg.get("client_secret") or os.environ.get("FEDEX_CLIENT_SECRET")
         if not client_id or not client_secret:
@@ -152,8 +152,8 @@ class CarrierTrackingService:
         return None
 
     @staticmethod
-    def _track_fedex(tracking_number: str) -> dict[str, Any]:
-        token = CarrierTrackingService._fedex_token()
+    def _track_fedex(tracking_number: str, tenant_id: int | None = None) -> dict[str, Any]:
+        token = CarrierTrackingService._fedex_token(tenant_id)
         if not token:
             return {
                 "success": False,
@@ -224,8 +224,8 @@ class CarrierTrackingService:
 
     # ── Aramex ────────────────────────────────────────────────────────────
     @staticmethod
-    def _track_aramex(tracking_number: str) -> dict[str, Any]:
-        cfg = ShippingConfigService.get_carrier_config("aramex")
+    def _track_aramex(tracking_number: str, tenant_id: int | None = None) -> dict[str, Any]:
+        cfg = ShippingConfigService.get_carrier_config("aramex", tenant_id=tenant_id)
         username = cfg.get("username") or os.environ.get("ARAMEX_USERNAME")
         password = cfg.get("password") or os.environ.get("ARAMEX_PASSWORD")
         account = cfg.get("account_number") or os.environ.get("ARAMEX_ACCOUNT_NUMBER")
@@ -295,7 +295,7 @@ class CarrierTrackingService:
             }
 
     @staticmethod
-    def sync_shipment(shipment) -> dict[str, Any]:
+    def sync_shipment(shipment, tenant_id: int | None = None) -> dict[str, Any]:
         """Query the carrier for the shipment's tracking number and update status.
 
         Returns the carrier result dict. Does NOT commit — caller manages transaction.
@@ -304,7 +304,7 @@ class CarrierTrackingService:
         tn = getattr(shipment, "tracking_number", None)
         if not tn:
             return {"success": False, "error": "no tracking_number on shipment", "events": []}
-        result = CarrierTrackingService.track(carrier, tn)
+        result = CarrierTrackingService.track(carrier, tn, tenant_id=tenant_id)
         if result.get("success"):
             # Map carrier status to internal status (best-effort)
             ext_status = (result.get("status") or "").lower()

@@ -405,7 +405,9 @@ def track_shipment(tracking_number):
     try:
         from services.carrier_tracking_service import CarrierTrackingService
 
-        carrier_result = CarrierTrackingService.sync_shipment(shipment)
+        carrier_result = CarrierTrackingService.sync_shipment(
+            shipment, tenant_id=getattr(shipment, "tenant_id", None)
+        )
     except Exception:
         carrier_result = None
 
@@ -444,7 +446,9 @@ def carrier_webhook(carrier):
         return {"success": False, "error": "shipment not found"}, 404
 
     try:
-        result = CarrierTrackingService.sync_shipment(shipment)
+        result = CarrierTrackingService.sync_shipment(
+            shipment, tenant_id=getattr(shipment, "tenant_id", None)
+        )
         from extensions import db
 
         db.session.flush()

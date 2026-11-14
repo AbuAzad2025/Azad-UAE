@@ -182,7 +182,7 @@ def sync_tracking(id):
 
     shipment = ShipmentService.get_shipment_or_404(id)
     try:
-        result = CarrierTrackingService.sync_shipment(shipment)
+        result = CarrierTrackingService.sync_shipment(shipment, tenant_id=get_active_tenant_id(current_user))
         from extensions import db
 
         db.session.flush()

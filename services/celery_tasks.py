@@ -417,7 +417,7 @@ def sync_carrier_tracking():
     synced = 0
     for sh in shipments:
         try:
-            result = CarrierTrackingService.sync_shipment(sh)
+            result = CarrierTrackingService.sync_shipment(sh, tenant_id=getattr(sh, "tenant_id", None))
             if result.get("success"):
                 synced += 1
         except Exception:

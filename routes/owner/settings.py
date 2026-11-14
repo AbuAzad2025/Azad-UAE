@@ -127,31 +127,83 @@ def update_integration(service):
             }
 
         elif service == "shipping":
-            config_data = {
-                "carriers": {
-                    "dhl": {
-                        "api_key": request.form.get("dhl_api_key", ""),
-                    },
-                    "fedex": {
-                        "client_id": request.form.get("fedex_client_id", ""),
-                        "client_secret": request.form.get("fedex_client_secret", ""),
-                    },
-                    "aramex": {
-                        "username": request.form.get("aramex_username", ""),
-                        "password": request.form.get("aramex_password", ""),
-                        "account_number": request.form.get("aramex_account_number", ""),
-                        "pin": request.form.get("aramex_pin", ""),
-                    },
-                }
-            }
+            config_data = {}
+            from services.shipping_config_service import ShippingConfigService
+
+            tid = get_active_tenant_id(current_user)
+            if tid is None:
+                return error_response("select_a_tenant_first", "يرجى اختيار تينانت قبل حفظ إعدادات الشحن", 400)
+
+            ShippingConfigService.set_carrier_secret(
+                "dhl", "api_key", request.form.get("dhl_api_key", "").strip(), tenant_id=tid, user_id=current_user.id
+            )
+            ShippingConfigService.set_carrier_secret(
+                "fedex",
+                "client_id",
+                request.form.get("fedex_client_id", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_carrier_secret(
+                "fedex",
+                "client_secret",
+                request.form.get("fedex_client_secret", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_carrier_secret(
+                "aramex",
+                "username",
+                request.form.get("aramex_username", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_carrier_secret(
+                "aramex",
+                "password",
+                request.form.get("aramex_password", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_carrier_secret(
+                "aramex",
+                "account_number",
+                request.form.get("aramex_account_number", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_carrier_secret(
+                "aramex", "pin", request.form.get("aramex_pin", "").strip(), tenant_id=tid, user_id=current_user.id
+            )
 
         elif service == "sms":
             config_data = {
                 "provider": request.form.get("sms_provider", "twilio"),
-                "account_sid": request.form.get("sms_account_sid", ""),
-                "auth_token": request.form.get("sms_auth_token", ""),
-                "from_number": request.form.get("sms_from_number", ""),
             }
+            from services.shipping_config_service import ShippingConfigService
+
+            tid = get_active_tenant_id(current_user)
+            if tid is None:
+                return error_response("select_a_tenant_first", "يرجى اختيار تينانت قبل حفظ إعدادات الرسائل النصية", 400)
+
+            ShippingConfigService.set_sms_secret(
+                "sms_account_sid",
+                request.form.get("sms_account_sid", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_sms_secret(
+                "sms_auth_token",
+                request.form.get("sms_auth_token", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
+            ShippingConfigService.set_sms_secret(
+                "sms_from_number",
+                request.form.get("sms_from_number", "").strip(),
+                tenant_id=tid,
+                user_id=current_user.id,
+            )
 
         with atomic_transaction("update_integration"):
             integration.set_config(config_data)
