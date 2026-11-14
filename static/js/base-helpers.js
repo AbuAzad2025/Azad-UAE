@@ -7,6 +7,43 @@
 const _safeT = (key) => (typeof window.t === "function" ? window.t(key) : key);
 if (typeof window !== "undefined") window._safeT = _safeT;
 
+// ── Azad shared utilities (security/robustness) ──
+(() => {
+	const escapeHtml = (value) =>
+		String(value == null ? "" : value)
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+
+	const safeRedirectUrl = (url, { allowHash = false } = {}) => {
+		if (url == null) return null;
+		const raw = String(url).trim();
+		if (!raw) return null;
+		// Allow relative paths only (no protocol-relative //evil.com)
+		if (raw.startsWith("/") && !raw.startsWith("//")) {
+			return raw;
+		}
+		if (allowHash && raw.startsWith("#")) {
+			return raw;
+		}
+		try {
+			const parsed = new URL(raw, window.location.origin);
+			if (parsed.origin === window.location.origin) {
+				return parsed.pathname + parsed.search + parsed.hash;
+			}
+		} catch (_e) {
+			return null;
+		}
+		return null;
+	};
+
+	window.AzadUtils = window.AzadUtils || {};
+	window.AzadUtils.escapeHtml = window.AzadUtils.escapeHtml || escapeHtml;
+	window.AzadUtils.safeRedirectUrl = window.AzadUtils.safeRedirectUrl || safeRedirectUrl;
+})();
+
 // ── 1. Azad UI Helper ──
 (() => {
 	let loadingCount = 0;
@@ -744,14 +781,7 @@ document.addEventListener("click", (e) => {
 });
 
 const currentMode = getSavedViewMode();
-if (window._DEBUG)
-	console.log(
-		"[Azad] View mode:",
-		currentMode,
-		"| Screen:",
-		`${window.innerWidth}x${window.innerHeight}`,
-	);
-setViewMode(currentMode);
+if (window._DEBUG) setViewMode(currentMode);
 
 // ── 10. Telemetry & Error Reporting ──
 (() => {
@@ -1111,6 +1141,8 @@ setViewMode(currentMode);
 if (typeof window !== "undefined") {
 	window.AzadHelpers = {
 		azad: window.azad,
+		escapeHtml: window.AzadUtils.escapeHtml,
+		safeRedirectUrl: window.AzadUtils.safeRedirectUrl,
 		formatFxRate,
 		safeEval,
 		updateDateTime,

@@ -1,0 +1,17 @@
+# Defense-in-depth: prevent execution of active/script content in uploads.
+# User-uploaded files must be treated as data only.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|php\d?|phtml|phar|cgi|pl|py|rb|sh|bash|asp|aspx|jsp|jspx|cfm|exe|dll|bat|cmd|ps1|msi)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Deny from all
+  </IfModule>
+</FilesMatch>
+Options -ExecCGI -Indexes

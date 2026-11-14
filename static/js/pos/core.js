@@ -36,6 +36,9 @@ const priceForCurrency = (basePrice) => {
 	return toNum(basePrice);
 };
 const esc = (s) => {
+	if (window.AzadUtils && typeof window.AzadUtils.escapeHtml === "function") {
+		return window.AzadUtils.escapeHtml(s);
+	}
 	if (s == null) return "";
 	return String(s)
 		.replace(/&/g, "&amp;")

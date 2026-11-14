@@ -1,6 +1,6 @@
 /**
- * 🗑️ Delete Manager - نظام حذف موحد واحترافي
- * إدارة عمليات الحذف في كل النظام مع تأكيد وأرشفة
+ * Delete Manager - نظام حذف موحد واحترافي
+ * إدارة عمليات الحذف في كل النظام مع تأكيد وتجربة موحدة
  */
 
 /* global Swal, toastr */
@@ -103,6 +103,24 @@
 		return ENDPOINTS[normalized][action](itemId);
 	}
 
+	function getSafeRedirectUrl(url) {
+		if (window.AzadUtils && typeof window.AzadUtils.safeRedirectUrl === "function") {
+			return window.AzadUtils.safeRedirectUrl(url);
+		}
+		if (url == null) return null;
+		const raw = String(url).trim();
+		if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+		try {
+			const parsed = new URL(raw, window.location.origin);
+			if (parsed.origin === window.location.origin) {
+				return parsed.pathname + parsed.search + parsed.hash;
+			}
+		} catch (_e) {
+			return null;
+		}
+		return null;
+	}
+
 	// =====================================
 	// حذف عنصر عام
 	// =====================================
@@ -118,43 +136,42 @@
 			return;
 		}
 
-		// رسائل مخصصة حسب نوع العنصر
 		const messages = {
 			customers: {
-				title: "حذف زبون",
-				text: "تنبيه: سيتم أرشفة الزبون إذا كان له سجلات مالية، أو حذفه نهائياً إذا كان جديداً.",
+				title: "حذف عميل",
+				text: "تنبيه: سيتم إيقاف العميل إذا كان له سجلات مالية، أو حذفه نهائياً إذا كان جديداً.",
 			},
 			suppliers: {
 				title: "حذف مورد",
-				text: "تنبيه: سيتم أرشفة المورد إذا كان له سجلات مالية، أو حذفه نهائياً إذا كان جديداً.",
+				text: "تنبيه: سيتم إيقاف المورد إذا كان له سجلات مالية، أو حذفه نهائياً إذا كان جديداً.",
 			},
 			products: {
 				title: "حذف منتج",
-				text: "تنبيه: سيتم أرشفة المنتج إذا كان مرتبطاً بعمليات بيع/شراء، أو حذفه نهائياً إذا كان غير مرتبط.",
+				text: "تنبيه: سيتم إيقاف المنتج إذا كان مرتبطاً بعمليات بيع/شراء، أو حذفه نهائياً إذا كان غير مرتبط.",
 			},
 			sales: {
 				title: "حذف فاتورة مبيعات",
-				text: "تنبيه: سيتم أرشفة الفاتورة إذا كان لها ارتباطات مالية (دفعات/شيكات)، أو حذفها نهائياً إذا كانت غير مرتبطة.",
+				text: "تنبيه: سيتم إلغاء الفاتورة إذا كان لها ارتباطات مالية (دفعات/شيكات)، أو حذفها نهائياً إذا كانت غير مرتبطة.",
 			},
 			purchases: {
 				title: "حذف فاتورة شراء",
-				text: "تنبيه: سيتم أرشفة الفاتورة إذا كان لها ارتباطات مالية، أو حذفها نهائياً إذا كانت غير مرتبطة.",
+				text: "تنبيه: سيتم إلغاء الفاتورة إذا كان لها ارتباطات مالية، أو حذفها نهائياً إذا كانت غير مرتبطة.",
 			},
 			receipts: {
 				title: "حذف سند قبض",
-				text: "تنبيه: سيتم أرشفة السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.",
+				text: "تنبيه: سيتم إلغاء السند إذا كان مرتبطاً بشيكات، أو حذفه نهائياً إذا كان غير مرتبط.",
 			},
 			payments: {
 				title: "حذف سند صرف",
-				text: "تنبيه: سيتم أرشفة السند إذا كان مرتبطاً بعمليات أخرى، أو حذفه نهائياً إذا كان غير مرتبط.",
+				text: "تنبيه: سيتم إلغاء السند إذا كان مرتبطاً بعمليات أخرى، أو حذفه نهائياً إذا كان غير مرتبط.",
 			},
 			expenses: {
 				title: "حذف مصروف",
-				text: "تنبيه: سيتم أرشفة المصروف وعكس القيد المحاسبي.",
+				text: "تنبيه: سيتم إلغاء المصروف وعكس القيد المحاسبي المرتبط به.",
 			},
 			cheques: {
 				title: "حذف شيك",
-				text: "تنبيه: سيتم أرشفة الشيك إذا كان مرتبطاً بسندات، أو حذفه نهائياً إذا كان غير مرتبط.",
+				text: "تنبيه: سيتم إلغاء الشيك إذا كان مرتبطاً بسندات، أو حذفه نهائياً إذا كان غير مرتبط.",
 			},
 			users: {
 				title: "حذف مستخدم",
@@ -162,7 +179,7 @@
 			},
 			warehouses: {
 				title: "حذف مستودع",
-				text: "تنبيه: سيتم أرشفة المستودع إذا كان يحتوي على حركات مخزنية، أو حذفه نهائياً إذا كان فارغاً.",
+				text: "تنبيه: سيتم إيقاف المستودع إذا كان يحتوي على حركات مخزنية، أو حذفه نهائياً إذا كان فارغاً.",
 			},
 		};
 
@@ -186,12 +203,10 @@
 			reverseButtons: true,
 			showLoaderOnConfirm: true,
 			preConfirm: () => {
-				// إنشاء form وإرساله
 				const form = document.createElement("form");
 				form.method = "POST";
 				form.action = deleteUrl;
 
-				// إضافة CSRF token
 				const csrfInput = document.createElement("input");
 				csrfInput.type = "hidden";
 				csrfInput.name = "csrf_token";
@@ -201,7 +216,6 @@
 				document.body.appendChild(form);
 				form.submit();
 
-				// منع إغلاق التنبيه
 				return new Promise(() => {});
 			},
 			allowOutsideClick: () => !Swal.isLoading(),
@@ -214,9 +228,9 @@
 	window.deleteMultiple = (itemIds, itemType, redirectUrl) => {
 		if (!itemIds || itemIds.length === 0) {
 			if (window.toastr) {
-				toastr.warning("⚠️ يجب اختيار عنصر واحد على الأقل");
+				toastr.warning("يرجى تحديد عنصر واحد على الأقل.");
 			} else {
-				window.alert("⚠️ يجب اختيار عنصر واحد على الأقل");
+				window.alert("يرجى تحديد عنصر واحد على الأقل.");
 			}
 			return;
 		}
@@ -224,8 +238,8 @@
 		Swal.fire({
 			title: "حذف متعدد",
 			html: `
-        <p>سيتم حذف <strong>${itemIds.length}</strong> عنصر</p>
-        <p class="text-muted">سيتم تنفيذ حذف آمن لكل عنصر حسب نوعه</p>
+        <p>سيتم حذف <strong>${itemIds.length}</strong> عنصر/عناصر</p>
+        <p class="text-muted">سيتم تنفيذ حذف آمن لكل عنصر حسب نوعه.</p>
       `,
 			icon: "warning",
 			showCancelButton: true,
@@ -265,12 +279,13 @@
 				Swal.fire({
 					icon: "success",
 					title: "تم الحذف بنجاح",
-					text: `تم حذف ${itemIds.length} عنصر بنجاح`,
+					text: `تم حذف ${itemIds.length} عنصر/عناصر بنجاح`,
 					timer: 2000,
 					showConfirmButton: false,
 				}).then(() => {
-					if (redirectUrl) {
-						window.location.href = redirectUrl;
+					const safeRedirect = getSafeRedirectUrl(redirectUrl);
+					if (safeRedirect) {
+						window.location.href = safeRedirect;
 					} else {
 						location.reload();
 					}
@@ -280,7 +295,7 @@
 	};
 
 	// =====================================
-	// حذف سطر (في الجداول)
+	// حذف صف (في الجداول)
 	// =====================================
 	window.deleteTableRow = (rowElement, confirmMessage = "هل أنت متأكد من الحذف؟") => {
 		Swal.fire({
@@ -298,7 +313,7 @@
 				$(rowElement).fadeOut(300, function () {
 					$(this).remove();
 					if (window.toastr) {
-						toastr.success("✅ تم الحذف");
+						toastr.success("تم الحذف");
 					}
 				});
 			}
@@ -315,7 +330,7 @@
 			Swal.fire({
 				icon: "info",
 				title: "الاستعادة غير متاحة",
-				text: "هذا النوع لا يملك مسار استعادة في النظام الحالي.",
+				text: "هذا النوع لا يدعم مسار الاستعادة في النظام الحالي.",
 			});
 			return;
 		}
@@ -351,7 +366,7 @@
 				Swal.fire({
 					icon: "success",
 					title: "تمت الاستعادة",
-					text: "تم استعادة العنصر بنجاح",
+					text: "تمت استعادة العنصر بنجاح",
 					timer: 2000,
 					showConfirmButton: false,
 				}).then(() => {
@@ -370,9 +385,9 @@
 		const itemId = $btn.data("delete-item");
 		const itemType = $btn.data("item-type");
 		const itemName = $btn.data("item-name") || "هذا العنصر";
-		const redirectUrl = $btn.data("redirect-url");
+		const _redirectUrl = $btn.data("redirect-url");
 
-		deleteItem(itemType, itemId, itemName, redirectUrl);
+		deleteItem(itemType, itemId, itemName, _redirectUrl);
 	});
 
 	$(document).on("click", "[data-delete-row]", function (e) {

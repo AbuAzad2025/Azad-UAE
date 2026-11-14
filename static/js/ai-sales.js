@@ -9,6 +9,9 @@ $(document).ready(() => {
 	// Escape untrusted server/AI-provided strings before injecting into HTML
 	// (defense against stored-XSS / prompt-injection-to-XSS).
 	function esc(v) {
+		if (window.AzadUtils && typeof window.AzadUtils.escapeHtml === "function") {
+			return window.AzadUtils.escapeHtml(v);
+		}
 		return String(v == null ? "" : v)
 			.replace(/&/g, "&amp;")
 			.replace(/</g, "&lt;")

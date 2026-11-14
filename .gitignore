@@ -207,3 +207,7 @@ scripts/ops/_fa_used.json
 nul
 .schemathesis/
 audit_output/
+
+# Vendor source maps (do not ship/expose)
+static/adminlte/**/*.map
+static/datatables/**/*.map

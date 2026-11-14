@@ -1,5 +1,8 @@
 ((window, $) => {
 	function _spEsc(s) {
+		if (window.AzadUtils && typeof window.AzadUtils.escapeHtml === "function") {
+			return window.AzadUtils.escapeHtml(s);
+		}
 		return String(s == null ? "" : s)
 			.replace(/&/g, "&amp;")
 			.replace(/</g, "&lt;")
@@ -42,7 +45,7 @@
 			'    <div class="modal-content">',
 			'      <div class="modal-header">',
 			'        <h5 class="modal-title" id="smartPrintModalLabel"><i class="fas fa-print mr-2"></i>خيارات الطباعة المتقدمة</h5>',
-			'        <button type="button" class="close" data-dismiss="modal" aria-label="Close">',
+			'        <button type="button" class="close" data-dismiss="modal" aria-label="إغلاق">',
 			'          <span aria-hidden="true">&times;</span>',
 			"        </button>",
 			"      </div>",
@@ -50,7 +53,7 @@
 			'        <div class="alert alert-danger d-none" id="smartPrintError"></div>',
 			'        <div class="custom-control custom-radio mb-2">',
 			'          <input type="radio" class="custom-control-input" name="smartPrintRange" id="smartPrintAll" value="all" checked>',
-			'          <label class="custom-control-label" for="smartPrintAll">طباعة جميع الصفوف</label>',
+			'          <label class="custom-control-label" for="smartPrintAll">طباعة كل الصفوف</label>',
 			"        </div>",
 			'        <div class="custom-control custom-radio mb-2">',
 			'          <input type="radio" class="custom-control-input" name="smartPrintRange" id="smartPrintPage" value="page">',
@@ -59,15 +62,15 @@
 			'        <div class="border rounded p-2 mb-3">',
 			'          <div class="custom-control custom-radio mb-2">',
 			'            <input type="radio" class="custom-control-input" name="smartPrintRange" id="smartPrintRows" value="rows">',
-			'            <label class="custom-control-label" for="smartPrintRows">تحديد مدى الأسطر</label>',
+			'            <label class="custom-control-label" for="smartPrintRows">تحديد مدى الصفوف</label>',
 			"          </div>",
 			'          <div class="form-row">',
 			'            <div class="form-group col">',
-			'              <label class="small mb-1" for="smartPrintRowStart">من السطر</label>',
+			'              <label class="small mb-1" for="smartPrintRowStart">من الصف</label>',
 			'              <input type="number" min="1" class="form-control form-control-sm" id="smartPrintRowStart" disabled>',
 			"            </div>",
 			'            <div class="form-group col">',
-			'              <label class="small mb-1" for="smartPrintRowEnd">إلى السطر</label>',
+			'              <label class="small mb-1" for="smartPrintRowEnd">إلى الصف</label>',
 			'              <input type="number" min="1" class="form-control form-control-sm" id="smartPrintRowEnd" disabled>',
 			"            </div>",
 			"          </div>",
@@ -158,7 +161,7 @@
 	function buildRowsSelector(mode, table, values) {
 		const appliedIndexes = table.rows({ search: "applied" }).indexes().toArray();
 		if (!appliedIndexes.length) {
-			showError("لا توجد صفوف مطابقة للطباعة.");
+			showError("لا توجد صفوف متاحة للطباعة.");
 			return null;
 		}
 
@@ -185,15 +188,15 @@
 			const end = values.rowEnd ? parseInt(values.rowEnd, 10) : start;
 
 			if (!start || start < 1 || Number.isNaN(start)) {
-				showError("يرجى إدخال رقم سطر بداية صحيح.");
+				showError("يرجى إدخال رقم صف بداية صحيح.");
 				return null;
 			}
 			if (!end || end < start || Number.isNaN(end)) {
-				showError("يرجى إدخال رقم سطر نهاية صحيح لا يقل عن رقم البداية.");
+				showError("يرجى إدخال رقم صف نهاية صحيح ولا يقل عن رقم البداية.");
 				return null;
 			}
 			if (start > appliedIndexes.length) {
-				showError("رقم السطر الأول يتجاوز عدد الصفوف المتاحة.");
+				showError("رقم الصف الأول يتجاوز عدد الصفوف المتاحة.");
 				return null;
 			}
 			const cappedEnd = Math.min(end, appliedIndexes.length);
@@ -209,7 +212,7 @@
 			const pageInfoPages = table.page.info();
 			const totalPages = pageInfoPages.pages || 1;
 			if (rowsPerPage === -1 || totalPages <= 1) {
-				showError('الجدول يعرض كل الصفوف في صفحة واحدة، اختر "جميع الصفوف".');
+				showError('الجدول يعرض كل الصفوف في صفحة واحدة، اختر "طباعة كل الصفوف".');
 				return null;
 			}
 
@@ -221,7 +224,7 @@
 				return null;
 			}
 			if (!endPage || endPage < startPage || Number.isNaN(endPage)) {
-				showError("يرجى إدخال رقم صفحة نهاية صحيح لا يقل عن رقم البداية.");
+				showError("يرجى إدخال رقم صفحة نهاية صحيح ولا يقل عن رقم البداية.");
 				return null;
 			}
 			if (startPage > totalPages) {
@@ -315,7 +318,7 @@
 			}
 		} catch (e) {
 			console.error("SmartPrint: Data extraction failed", e);
-			alert("حدث خطأ أثناء تحضير البيانات للطباعة.");
+			alert("حدث خطأ أثناء تجهيز البيانات للطباعة.");
 			return;
 		}
 
@@ -327,7 +330,7 @@
 		if (config.header) {
 			html += "<thead><tr>";
 			for (let i = 0; i < data.header.length; i++) {
-				html += `<th>${data.header[i]}</th>`;
+				html += `<th>${_spEsc(data.header[i])}</th>`;
 			}
 			html += "</tr></thead>";
 		}
@@ -337,7 +340,7 @@
 		for (let i = 0; i < data.body.length; i++) {
 			html += "<tr>";
 			for (let j = 0; j < data.body[i].length; j++) {
-				html += `<td>${data.body[i][j]}</td>`;
+				html += `<td>${_spEsc(data.body[i][j])}</td>`;
 			}
 			html += "</tr>";
 		}
@@ -347,7 +350,7 @@
 		if (config.footer && data.footer) {
 			html += "<tfoot><tr>";
 			for (let i = 0; i < data.footer.length; i++) {
-				html += `<th>${data.footer[i]}</th>`;
+				html += `<th>${_spEsc(data.footer[i])}</th>`;
 			}
 			html += "</tr></tfoot>";
 		}
@@ -356,7 +359,7 @@
 		// Create a new window for printing
 		const win = window.open("", "");
 		if (!win) {
-			alert("يرجى السماح بالنوافذ المنبثقة لطباعة التقرير.");
+			alert("يرجى السماح بالنوافذ المنبثقة لطباعة الملف.");
 			return;
 		}
 

@@ -28,16 +28,18 @@
 		const list = document.createElement("div");
 		list.setAttribute("role", "listbox");
 		data.results.forEach((item, i) => {
+			const safeUrl = safeItemUrl(item.url);
 			const a = document.createElement("a");
-			a.href = item.url;
+			a.href = safeUrl;
 			a.setAttribute("role", "option");
 			a.setAttribute("data-index", i);
 			a.className = "ps-autocomplete-item";
 			let html = "";
 			if (item.image) {
+				const safeImg = safeItemUrl(item.image);
 				html +=
 					'<span class="ps-ac-img"><img src="' +
-					escapeHtml(item.image) +
+					escapeHtml(safeImg) +
 					'" alt="" loading="lazy"></span>';
 			}
 			html +=
@@ -50,7 +52,7 @@
 			a.innerHTML = html;
 			a.addEventListener("click", (e) => {
 				e.preventDefault();
-				window.location.href = item.url;
+				window.location.href = safeUrl;
 			});
 			list.appendChild(a);
 		});
@@ -59,9 +61,30 @@
 	}
 
 	function escapeHtml(str) {
+		if (window.AzadUtils && typeof window.AzadUtils.escapeHtml === "function") {
+			return window.AzadUtils.escapeHtml(str);
+		}
 		const div = document.createElement("div");
 		div.appendChild(document.createTextNode(str));
 		return div.innerHTML;
+	}
+
+	function safeItemUrl(url) {
+		if (window.AzadUtils && typeof window.AzadUtils.safeRedirectUrl === "function") {
+			return window.AzadUtils.safeRedirectUrl(url) || "#";
+		}
+		if (url == null) return "#";
+		const raw = String(url).trim();
+		if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+		try {
+			const parsed = new URL(raw, window.location.origin);
+			if (parsed.origin === window.location.origin) {
+				return parsed.pathname + parsed.search + parsed.hash;
+			}
+		} catch (_e) {
+			return "#";
+		}
+		return "#";
 	}
 
 	function doSearch(query) {
@@ -109,7 +132,8 @@
 		}
 		if (e.key === "Enter" && activeIndex >= 0 && items[activeIndex]) {
 			e.preventDefault();
-			window.location.href = items[activeIndex].href;
+			const href = safeItemUrl(items[activeIndex].getAttribute("href") || items[activeIndex].href);
+			if (href && href !== "#") window.location.href = href;
 		}
 	});
 
