@@ -184,7 +184,9 @@ def update_integration(service):
 
             tid = get_active_tenant_id(current_user)
             if tid is None:
-                return error_response("select_a_tenant_first", gettext("يرجى اختيار تينانت قبل حفظ إعدادات الرسائل النصية"), 400)
+                return error_response(
+                    "select_a_tenant_first", gettext("يرجى اختيار تينانت قبل حفظ إعدادات الرسائل النصية"), 400
+                )
 
             ShippingConfigService.set_sms_secret(
                 "sms_account_sid",
