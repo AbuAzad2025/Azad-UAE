@@ -17,7 +17,7 @@ def _service_row(enabled, config, status=None, tested_at=None):
 
 
 class TestIntegrationsContext:
-    """IntegrationService.get_integrations_context — four service blocks."""
+    """IntegrationService.get_integrations_context — six service blocks."""
 
     def test_returns_all_integration_blocks(self, mocker):
         mocker.patch(
@@ -31,7 +31,7 @@ class TestIntegrationsContext:
         from services.integration_service import IntegrationService
 
         ctx = IntegrationService.get_integrations_context()
-        assert set(ctx.keys()) == {"whatsapp", "email", "redis", "currency_api"}
+        assert set(ctx.keys()) == {"whatsapp", "email", "redis", "currency_api", "shipping", "sms"}
         assert ctx["whatsapp"]["enabled"] is True
         assert ctx["email"]["status"] == "success"
         assert ctx["redis"]["status"] == "not_configured"

@@ -651,6 +651,8 @@ class TestSystemInitWave10:
             "accountant",
             "kitchen",
             "cashier",
+            "inventory",
+            "viewer",
             "maintenance_reception",
             "maintenance_engineer",
             "maintenance_cashier",

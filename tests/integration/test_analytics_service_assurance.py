@@ -70,6 +70,7 @@ def _add_sale_line(db_session, *, tenant_id, sale_id, product_id, qty, unit_pric
         quantity=qty_d,
         unit_price=unit_d,
         line_total=unit_d * qty_d,
+        amount_aed=unit_d * qty_d,
         cost_price=Decimal(str(cost_price)),
     )
     db_session.add(line)

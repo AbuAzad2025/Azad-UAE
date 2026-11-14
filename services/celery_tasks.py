@@ -402,7 +402,6 @@ def cleanup_old_cache():
 
 @celery.task(name="services.celery_tasks.sync_carrier_tracking")
 def sync_carrier_tracking():
-    from extensions import db
     from models.shipment import Shipment
     from services.carrier_tracking_service import CarrierTrackingService
 
@@ -424,8 +423,6 @@ def sync_carrier_tracking():
             import logging
 
             logging.getLogger(__name__).debug("carrier sync failed", exc_info=True)
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    with atomic_transaction("sync_carrier_tracking"):
+        pass
     return {"synced": synced, "total": len(shipments)}

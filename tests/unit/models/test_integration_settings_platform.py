@@ -57,5 +57,5 @@ class TestPlatformServiceConfig:
         from services.integration_service import IntegrationService
 
         ctx = IntegrationService.get_integrations_context()
-        assert set(ctx) == {"whatsapp", "email", "redis", "currency_api"}
+        assert set(ctx) == {"whatsapp", "email", "redis", "currency_api", "shipping", "sms"}
         assert ctx["whatsapp"]["status"] == "not_configured"
