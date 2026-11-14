@@ -132,7 +132,7 @@ def update_integration(service):
 
             tid = get_active_tenant_id(current_user)
             if tid is None:
-                return error_response("select_a_tenant_first", "يرجى اختيار تينانت قبل حفظ إعدادات الشحن", 400)
+                return error_response("select_a_tenant_first", gettext("يرجى اختيار تينانت قبل حفظ إعدادات الشحن"), 400)
 
             ShippingConfigService.set_carrier_secret(
                 "dhl", "api_key", request.form.get("dhl_api_key", "").strip(), tenant_id=tid, user_id=current_user.id
@@ -184,7 +184,7 @@ def update_integration(service):
 
             tid = get_active_tenant_id(current_user)
             if tid is None:
-                return error_response("select_a_tenant_first", "يرجى اختيار تينانت قبل حفظ إعدادات الرسائل النصية", 400)
+                return error_response("select_a_tenant_first", gettext("يرجى اختيار تينانت قبل حفظ إعدادات الرسائل النصية"), 400)
 
             ShippingConfigService.set_sms_secret(
                 "sms_account_sid",
