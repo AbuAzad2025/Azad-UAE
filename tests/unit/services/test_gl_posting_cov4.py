@@ -61,8 +61,8 @@ class TestNormalizeLinesRoundingPlug:
         out = _normalize_lines_to_base(
             lines, currency="AED", exchange_rate=Decimal("1"), base_currency="AED", tenant_id=1
         )
-        # diff = debit - credit = -0.001 -> credit-side plug arc (lines 68-72).
-        assert out[1]["credit"] == Decimal("10.002")
+        # diff = debit - credit = -0.001 -> credit side heavier; plug reduces it to balance.
+        assert out[1]["credit"] == Decimal("10.000")
 
     def test_no_plug_when_balanced(self):
         lines = [
