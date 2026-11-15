@@ -30,6 +30,7 @@ from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
+from config import BACKUP_DIR as _CONFIG_BACKUP_DIR
 from models.branch import Branch
 from models.tenant import Tenant
 from models.tenant_store import TenantStore
@@ -59,7 +60,11 @@ class BackupService:
     """PostgreSQL + uploads backup; safe restore only to a different database URL."""
 
     _BASEDIR = os.path.abspath(os.path.join(os.path.dirname(str(__file__)), os.pardir))
-    BACKUP_DIR = os.path.join(_BASEDIR, "instance", "backups")
+    # The same directory the application configuration uses (config.DATA_DIR),
+    # so the backups land on the attached disk in a container deployment
+    # instead of on the ephemeral application image, where every redeploy
+    # wiped them.
+    BACKUP_DIR = _CONFIG_BACKUP_DIR
     BACKUP_PREFIX = "azad_backup_"
     LEGACY_MANUAL_PREFIX = "manual_backup_"
     LEGACY_AUTO_PREFIX = "auto_backup_"

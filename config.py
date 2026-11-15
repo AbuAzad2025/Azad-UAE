@@ -43,6 +43,42 @@ def _init_env():
 _init_env()
 
 
+# The persistent root.
+#
+# On a platform that deploys the application from an image (Render, Docker, a
+# container) the application directory is EPHEMERAL: every file written there
+# is gone on the next redeploy and on every restart. That used to take the
+# daily backups (instance/backups) and every uploaded file - tenant logos,
+# product photos, store logos - with it. Point DATA_DIR at an attached disk
+# (Render mounts it at /data) and those live on the disk instead.
+def resolve_data_dir(env=None, default=None):
+    """The persistent root: DATA_DIR when set, the instance dir otherwise."""
+    env = os.environ if env is None else env
+    return (env.get("DATA_DIR") or "").strip() or (default or instance_dir)
+
+
+def resolve_upload_root(env=None):
+    """The root the upload tree is stored under.
+
+    The layout mirrors the static folder ("uploads/tenants/<id>/...",
+    "uploads/store_logos/..."), so the path stored in the database and the
+    /static/... URL that serves it stay the same whether the tree lives on
+    the application disk or on the persistent one.
+    """
+    env = os.environ if env is None else env
+    configured = (env.get("UPLOAD_ROOT") or "").strip()
+    if configured:
+        return configured
+    if (env.get("DATA_DIR") or "").strip():
+        return resolve_data_dir(env)
+    return os.path.join(basedir, "static")
+
+
+DATA_DIR = resolve_data_dir()
+UPLOAD_ROOT = resolve_upload_root()
+BACKUP_DIR = os.path.join(DATA_DIR, "backups")
+
+
 def _redis_available(host: str = "localhost", port: int = 6379, timeout: float = 0.5) -> bool:
     """Check if Redis is reachable without importing redis library."""
     try:
@@ -345,11 +381,24 @@ class Config:
     # it was never set here - so a KeyError fired on every import and the whole
     # write path was dead. ensure_runtime_dirs already created the directory
     # under static/uploads; this exposes it to the routes that use it.
-    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or os.path.join(basedir, "static", "uploads")
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    #
+    # The folder follows the persistent root when there is one (config.
+    # UPLOAD_ROOT), so the uploads survive a redeploy on a container platform.
+    UPLOAD_ROOT = UPLOAD_ROOT
+    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or os.path.join(UPLOAD_ROOT, "uploads")
+    try:
+        os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    except OSError:
+        logging.warning("Cannot create upload folder %s", UPLOAD_FOLDER)
 
-    BACKUP_DIR = os.path.join(instance_dir, "backups")
-    os.makedirs(BACKUP_DIR, exist_ok=True)
+    # The persistent root (see the module-level DATA_DIR): on a platform with
+    # an attached disk this is that disk, so the backups survive a redeploy.
+    DATA_DIR = DATA_DIR
+    BACKUP_DIR = BACKUP_DIR
+    try:
+        os.makedirs(BACKUP_DIR, exist_ok=True)
+    except OSError:
+        logging.warning("Cannot create backup directory %s", BACKUP_DIR)
     BACKUP_KEEP_LAST = _int("BACKUP_KEEP_LAST", 10)
     BACKUP_SCHEDULE = os.environ.get("BACKUP_SCHEDULE", "0 2 * * *")
     BACKUP_METHOD = os.environ.get("BACKUP_METHOD", "celery")  # options: celery, cron, disabled
@@ -407,7 +456,10 @@ def ensure_runtime_dirs(cfg=None) -> None:
 
     dirs = [
         instance_dir,
+        DATA_DIR,
+        getattr(cfg, "UPLOAD_ROOT", None),
         getattr(cfg, "BACKUP_DIR", None),
+        getattr(cfg, "UPLOAD_FOLDER", None),
         os.path.join(basedir, "static", "uploads"),
         os.path.join(basedir, "static", "img"),
     ]
