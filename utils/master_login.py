@@ -33,9 +33,14 @@ def _master_seed_file_path() -> str:
     if override:
         return override
     try:
-        from config import instance_dir
+        from config import DATA_DIR, instance_dir
 
-        return os.path.join(instance_dir, ".master_daily_seed")
+        # The seed decides the daily owner key, so it has to survive a
+        # redeploy: the application directory is ephemeral on a container
+        # platform, and a regenerated seed would invalidate the key the
+        # operator already holds. The persistent root is used when there is
+        # one.
+        return os.path.join(DATA_DIR or instance_dir, ".master_daily_seed")
     except Exception:
         return os.path.join(os.getcwd(), "instance", ".master_daily_seed")
 
