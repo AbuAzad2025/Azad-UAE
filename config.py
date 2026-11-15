@@ -384,8 +384,8 @@ class Config:
     #
     # The folder follows the persistent root when there is one (config.
     # UPLOAD_ROOT), so the uploads survive a redeploy on a container platform.
-    UPLOAD_ROOT = UPLOAD_ROOT
-    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or os.path.join(UPLOAD_ROOT, "uploads")
+    UPLOAD_ROOT = resolve_upload_root()
+    UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER") or os.path.join(resolve_upload_root(), "uploads")
     try:
         os.makedirs(UPLOAD_FOLDER, exist_ok=True)
     except OSError:
@@ -393,8 +393,8 @@ class Config:
 
     # The persistent root (see the module-level DATA_DIR): on a platform with
     # an attached disk this is that disk, so the backups survive a redeploy.
-    DATA_DIR = DATA_DIR
-    BACKUP_DIR = BACKUP_DIR
+    DATA_DIR = resolve_data_dir()
+    BACKUP_DIR = os.path.join(resolve_data_dir(), "backups")
     try:
         os.makedirs(BACKUP_DIR, exist_ok=True)
     except OSError:
