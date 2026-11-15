@@ -196,14 +196,22 @@ describe("base-helpers.js gaps", () => {
     try { expect(H.getSavedViewMode()).toBe("auto"); } finally { spy.mockRestore(); }
   });
 
-  it("logs the view mode in debug builds", async () => {
+  it("does not log the view mode in debug builds", async () => {
     const log = vi.fn();
+    const originalLog = console.log;
     console.log = log;
     window._DEBUG = true;
     try {
       await load();
-      expect(log).toHaveBeenCalledWith("[Azad] View mode:", expect.anything(), "| Screen:", expect.anything());
-    } finally { console.log = console.log; }
+      expect(log).not.toHaveBeenCalledWith(
+        "[Azad] View mode:",
+        expect.anything(),
+        "| Screen:",
+        expect.anything(),
+      );
+    } finally {
+      console.log = originalLog;
+    }
   });
 
   it("tolerates unparsable fetch URLs and non-API hosts", async () => {

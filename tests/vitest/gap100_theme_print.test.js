@@ -301,7 +301,7 @@ describe("smart-print.js gaps", () => {
     sp.trigger(table, { title: "t" });
     spVals.set('val:input[name="smartPrintRange"]:checked', "all");
     fireSp("#smartPrintModalConfirm", "click");
-    expect(window.alert).toHaveBeenCalledWith("يرجى السماح بالنوافذ المنبثقة لطباعة التقرير.");
+    expect(window.alert).toHaveBeenCalledWith("يرجى السماح بالنوافذ المنبثقة لطباعة الملف.");
   });
 
   it("applies print styles through the button customize hook", async () => {

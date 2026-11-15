@@ -164,7 +164,7 @@ describe('delete-manager.js', () => {
     document.querySelector('[data-delete-item]').click();
     expect(swalFire).toHaveBeenCalledTimes(1);
     const opts = swalFire.mock.calls[0][0];
-    expect(opts.title).toBe('حذف زبون');
+    expect(opts.title).toBe('حذف عميل');
     expect(opts.icon).toBe('warning');
     opts.preConfirm();
     await flush();
