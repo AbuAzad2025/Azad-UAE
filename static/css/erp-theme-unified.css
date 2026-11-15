@@ -4001,7 +4001,7 @@ body[data-sidebar-side="right"].sidebar-mini.sidebar-collapse .main-footer.erp-f
 }
 .text-wrap { white-space: normal !important; }
 .text-nowrap { white-space: nowrap !important; }
-.text-break { word-wrap: break-word !important; overflow-wrap: break-word !important; }
+.text-break { overflow-wrap: break-word !important; }
 .line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
@@ -4096,7 +4096,7 @@ body[data-sidebar-side="right"].sidebar-mini.sidebar-collapse .main-footer.erp-f
 .file-drop-zone i { font-size: 2rem; color: var(--az-text-muted); margin-bottom: var(--az-space-2); }
 .file-drop-zone p { margin: 0; color: var(--az-text-muted); font-size: var(--az-font-size-sm); }
 
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .sr-only-focusable { position: absolute; width: auto; height: auto; padding: var(--az-space-3); margin: -1px; top: 0; left: 0; background: var(--az-primary); color: #fff; z-index: 10000; border-radius: var(--az-radius-md); text-decoration: none; font-weight: 700; box-shadow: var(--az-shadow-lg); }
 .sr-only-focusable:focus { position: static; width: auto; height: auto; padding: var(--az-space-3); margin: var(--az-space-2); background: var(--az-primary); color: #fff; z-index: 10000; border-radius: var(--az-radius-md); text-decoration: none; font-weight: 700; box-shadow: var(--az-shadow-lg); }
 *:focus-visible { outline: 2px solid var(--az-primary); outline-offset: 2px; border-radius: var(--az-radius-sm); }
@@ -4116,6 +4116,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .az-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid color-mix(in srgb, var(--az-primary) 30%, transparent); border-top-color: var(--az-primary); border-radius: 50%; animation: az-spin 0.75s linear infinite; }
 .az-spinner-sm { width: 14px; height: 14px; border-width: 2px; }
 .az-spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+
 @keyframes az-spin { to { transform: rotate(360deg); } }
 
 .az-loading-overlay { position: absolute; inset: 0; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(2px); display: flex; align-items: center; justify-content: center; z-index: 1050; border-radius: inherit; }
@@ -4203,6 +4204,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .modal-backdrop.show { opacity: 0.55; backdrop-filter: blur(3px); }
 
 .dropdown-menu { border-radius: var(--az-radius-md); border: 1px solid var(--az-border); background: var(--az-surface); box-shadow: var(--az-shadow-md); padding: 6px; animation: az-pro-drop 0.16s ease; }
+
 @keyframes az-pro-drop { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 .dropdown-item { border-radius: var(--az-radius-sm); margin: 2px 4px; padding: 8px 14px; font-weight: 600; font-size: var(--az-font-size-sm); color: var(--az-text); transition: all 0.15s ease; }
 .dropdown-item:hover { background: var(--az-surface-2); color: var(--az-text); transform: translateX(-2px); }
