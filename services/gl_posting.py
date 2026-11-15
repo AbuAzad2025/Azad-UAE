@@ -68,8 +68,8 @@ def _normalize_lines_to_base(lines, *, currency, exchange_rate, base_currency, t
     if diff and abs(diff) <= _ROUNDING_PLUG_MAX:
         side = "debit" if diff > 0 else "credit"
         target = max(converted, key=lambda line: line[side])
-        target[side] = (target[side] - diff).quantize(_BASE_QUANTUM, rounding=ROUND_HALF_UP)
-        logger.info("GL rounding plug: adjusted %s by %s (base %s)", side, diff, base_currency)
+        target[side] = (target[side] - abs(diff)).quantize(_BASE_QUANTUM, rounding=ROUND_HALF_UP)
+        logger.info("GL rounding plug: adjusted %s by %s (base %s)", side, abs(diff), base_currency)
     return converted
 
 
