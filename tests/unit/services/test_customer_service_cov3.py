@@ -209,7 +209,9 @@ class TestBranchBalanceMapWithData:
             amount="10",
             direction="outgoing",
         )
-        # incoming payments do not affect this map
+        # Incoming payments DO credit the customer: normal sale settlement
+        # creates a Payment, not a Receipt, so omitting them showed a 100
+        # debt for an already-paid sale.
         _make_payment(
             db_session,
             sample_tenant.id,
@@ -220,7 +222,7 @@ class TestBranchBalanceMapWithData:
         )
         db_session.commit()
         m = CustomerService.branch_balance_map([sample_customer], sample_branch.id)
-        assert Decimal(str(m[sample_customer.id])) == Decimal("60") - Decimal("100") - Decimal("10")
+        assert Decimal(str(m[sample_customer.id])) == (Decimal("60") + Decimal("999") - Decimal("100") - Decimal("10"))
 
 
 class TestStatementRecords:
