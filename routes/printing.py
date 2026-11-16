@@ -504,6 +504,7 @@ def print_supplier_statement(id):
     from sqlalchemy import func
 
     from models import Payment, Purchase, PurchaseReturn, Supplier
+    from models.maintenance import MaintenancePurchaseOrder
     from services.supplier_service import SupplierService
     from utils.tenanting import tenant_get_or_404
 
@@ -521,16 +522,22 @@ def print_supplier_statement(id):
     purchases_q, payments_q, returns_q = SupplierService.print_statement_queries(
         record_id, tenant_id=tid, branch_id=branch_scope_id()
     )
+    maintenance_q = SupplierService.maintenance_purchase_query(record_id, tenant_id=tid, branch_id=branch_scope_id())
 
     opening_balance = SupplierService.preperiod_opening_balance(record_id, date_from, tenant_id=tid)
+    _maintenance_date = func.date(
+        func.coalesce(MaintenancePurchaseOrder.received_at, MaintenancePurchaseOrder.order_date)
+    )
     if date_from:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
         returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) >= date_from)
+        maintenance_q = maintenance_q.filter(_maintenance_date >= date_from)
     if date_to:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) <= date_to)
         payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
         returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) <= date_to)
+        maintenance_q = maintenance_q.filter(_maintenance_date <= date_to)
 
     transactions = []
     for p_ in purchases_q.order_by(Purchase.purchase_date.asc()).all():
@@ -542,6 +549,17 @@ def print_supplier_statement(id):
                 "debit": float(p_.amount_aed or 0),
                 "credit": 0,
                 "description": gettext("فاتورة شراء"),
+            }
+        )
+    for mo in maintenance_q.order_by(_maintenance_date.asc()).all():
+        transactions.append(
+            {
+                "date": mo.received_at or mo.order_date,
+                "type": "maintenance_purchase",
+                "reference": mo.po_number,
+                "debit": SupplierService.maintenance_purchase_base_amount(mo),
+                "credit": 0,
+                "description": gettext("فاتورة شراء قطع صيانة"),
             }
         )
     for pm in payments_q.order_by(Payment.payment_date.asc()).all():

@@ -37,6 +37,7 @@ from models import (
 from services.document_sequence_service import DocumentSequenceService
 from services.maintenance_gl_service import MaintenanceGLService
 from services.stock_service import StockService, _safe_for_update
+from utils.currency_utils import convert_and_quantize_aed
 from utils.gl_reference_types import GLRef
 from utils.logger import log_financial
 from utils.tenanting import tenant_query
@@ -336,6 +337,23 @@ class MaintenancePurchaseService:
         db.session.flush()
 
         MaintenanceGLService.post_purchase_receipt(order, received_by)
+
+        # The payable is the supplier's own AP account, so the supplier's
+        # aging total must grow with it. Without this the statement shows the
+        # purchase but get_balance_base() (total purchases - total paid) does
+        # not, and the AP aging disagrees with the GL.
+        if order.supplier_id:
+            supplier = tenant_query(Supplier).filter_by(id=order.supplier_id, tenant_id=tid).first()
+            if supplier is not None:
+                supplier.apply_purchase(
+                    convert_and_quantize_aed(
+                        order.total_amount or 0,
+                        order.currency or "AED",
+                        order.exchange_rate or 1,
+                        tenant_id=tid,
+                    )
+                )
+                db.session.flush()
 
         order.posted = True
         order.posted_at = datetime.now(UTC)

@@ -411,6 +411,8 @@ def statement(**kwargs):
     """كشف حساب المورد مع الرصيد الجاري والتصفية حسب التاريخ"""
     from datetime import datetime
 
+    from models.maintenance import MaintenancePurchaseOrder
+
     record_id = kwargs.pop("id")
     supplier = tenant_get_or_404(Supplier, record_id)
     if not _supplier_in_scope(record_id):
@@ -428,6 +430,12 @@ def statement(**kwargs):
         tenant_id=tid,
         branch_id=branch_scope_id(),
     )
+    # Spare parts bought by the workshop are payables to this same supplier.
+    maintenance_q = SupplierService.maintenance_purchase_query(
+        record_id,
+        tenant_id=tid,
+        branch_id=branch_scope_id(),
+    )
 
     # الرصيد الافتتاحي من استعلامات مستقلة لما قبل الفترة — الاستعلامات
     # الرئيسية ستُصفّى على >= date_from فلا يمكن استخلاصه منها.
@@ -441,18 +449,24 @@ def statement(**kwargs):
         branch_id=branch_scope_id(),
     )
 
+    _maintenance_date = func.date(
+        func.coalesce(MaintenancePurchaseOrder.received_at, MaintenancePurchaseOrder.order_date)
+    )
     if date_from:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) >= date_from)
         payments_q = payments_q.filter(func.date(Payment.payment_date) >= date_from)
         returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) >= date_from)
+        maintenance_q = maintenance_q.filter(_maintenance_date >= date_from)
     if date_to:
         purchases_q = purchases_q.filter(func.date(Purchase.purchase_date) <= date_to)
         payments_q = payments_q.filter(func.date(Payment.payment_date) <= date_to)
         returns_q = returns_q.filter(func.date(PurchaseReturn.return_date) <= date_to)
+        maintenance_q = maintenance_q.filter(_maintenance_date <= date_to)
 
     purchases = purchases_q.order_by(Purchase.purchase_date.asc()).all()
     payments = payments_q.order_by(Payment.payment_date.asc()).all()
     returns_list = returns_q.order_by(PurchaseReturn.return_date.asc()).all()
+    maintenance_orders = maintenance_q.order_by(_maintenance_date.asc()).all()
 
     transactions = []
     for p in purchases:
@@ -469,6 +483,23 @@ def statement(**kwargs):
                 "description": gettext("فاتورة شراء"),
                 "amount": float(p.total_amount or 0),
                 "base_amount": float(p.base_amount or 0),
+            }
+        )
+    for mo in maintenance_orders:
+        base_amount = SupplierService.maintenance_purchase_base_amount(mo)
+        transactions.append(
+            {
+                "date": mo.received_at or mo.order_date,
+                "type": "maintenance_purchase",
+                "reference": mo.po_number,
+                "debit": base_amount,
+                "credit": 0,
+                "balance": 0,
+                "currency": mo.currency or "AED",
+                "exchange_rate": float(mo.exchange_rate or 1),
+                "description": gettext("فاتورة شراء قطع صيانة"),
+                "amount": float(mo.total_amount or 0),
+                "base_amount": base_amount,
             }
         )
     for pm in payments:

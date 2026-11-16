@@ -200,6 +200,33 @@ class TestPurchaseReceipt:
         assert pwc.total_value == Decimal("250.000")
         assert pwc.average_cost == Decimal("25.0000")
 
+    def test_receipt_grows_the_supplier_payable_total(
+        self, db_session, sample_tenant, sample_user, sample_warehouse, sample_product, sample_supplier
+    ):
+        """The supplier has one AP balance, whichever module bought the parts."""
+        order = _purchase_order(
+            db_session, sample_tenant, sample_user, sample_warehouse, supplier_id=sample_supplier.id
+        )
+        db_session.flush()
+        MaintenancePurchaseService.add_line(
+            purchase_order_id=order.id,
+            tenant_id=sample_tenant.id,
+            product_id=sample_product.id,
+            quantity=Decimal("10"),
+            unit_cost=Decimal("25"),
+        )
+        db_session.flush()
+
+        before = Decimal(str(sample_supplier.total_purchases_aed or 0))
+        MaintenancePurchaseService.receive_purchase_order(
+            order.id,
+            sample_tenant.id,
+            received_by=sample_user.id,
+        )
+        db_session.flush()
+
+        assert Decimal(str(sample_supplier.total_purchases_aed or 0)) - before == order.total_amount
+
     def test_the_ledger_records_inventory_against_the_payable(
         self, db_session, sample_tenant, sample_user, sample_warehouse, sample_product
     ):

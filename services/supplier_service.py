@@ -185,6 +185,41 @@ class SupplierService:
         return payments_q, returns_q
 
     @staticmethod
+    def maintenance_purchase_query(supplier_id, tenant_id=None, branch_id=None):
+        """Received maintenance spare-part orders - they are supplier payables too.
+
+        The workshop buys its parts from the same suppliers and posts the
+        payable to the tenant's own AP account, so an order that was received
+        must be documented in the supplier's statement just like a trade
+        purchase. Draft and cancelled orders create no payable.
+        """
+        from models.maintenance import MaintenancePurchaseOrder, MaintenancePurchaseOrderStatus
+
+        query = MaintenancePurchaseOrder.query.filter_by(
+            supplier_id=supplier_id,
+            tenant_id=tenant_id,
+            status=MaintenancePurchaseOrderStatus.RECEIVED,
+            posted=True,
+        )
+        if branch_id is not None:
+            query = query.filter(MaintenancePurchaseOrder.branch_id == branch_id)
+        return query
+
+    @staticmethod
+    def maintenance_purchase_base_amount(order) -> float:
+        """A maintenance order's gross payable in the tenant's base currency."""
+        from utils.currency_utils import convert_and_quantize_aed
+
+        return float(
+            convert_and_quantize_aed(
+                order.total_amount or 0,
+                order.currency or "AED",
+                order.exchange_rate or 1,
+                tenant_id=order.tenant_id,
+            )
+        )
+
+    @staticmethod
     def print_statement_queries(supplier_id, tenant_id=None, branch_id=None):
         """(purchases_q, payments_q, returns_q) for the printable supplier statement."""
         from models import Purchase
@@ -233,6 +268,19 @@ class SupplierService:
         opening_balance = float(
             pre_purchases_q.with_entities(func.coalesce(func.sum(Purchase.amount_aed), 0)).scalar() or 0
         )
+        # Maintenance spare parts are bought from the same supplier and posted
+        # to the same AP account, so they are part of the payable from the
+        # moment they are received.
+        from models.maintenance import MaintenancePurchaseOrder
+
+        pre_maintenance_q = SupplierService.maintenance_purchase_query(
+            supplier_id, tenant_id=tenant_id, branch_id=branch_id
+        ).filter(
+            func.date(func.coalesce(MaintenancePurchaseOrder.received_at, MaintenancePurchaseOrder.order_date))
+            < date_from
+        )
+        for mp in pre_maintenance_q.all():
+            opening_balance += SupplierService.maintenance_purchase_base_amount(mp)
         for pm in pre_payments_q.all():
             # A payment affects the balance when confirmed, or when it is a
             # still-pending cheque without a rejection reason.

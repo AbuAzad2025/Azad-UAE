@@ -283,6 +283,42 @@ class TestSupplierStatement:
         assert "الرصيد الافتتاحي" in html
         assert _final_balance_from_html(html) == pytest.approx(1000.0)
 
+    def test_maintenance_purchase_is_in_the_supplier_statement(
+        self, db_session, auth_client, sample_tenant, sample_supplier
+    ):
+        """A workshop spare-part order is a payable to the same supplier."""
+        from models.maintenance import MaintenancePurchaseOrder, MaintenancePurchaseOrderStatus
+        from services.supplier_service import SupplierService
+
+        received = datetime(2026, 5, 6, tzinfo=UTC)
+        db_session.add(
+            MaintenancePurchaseOrder(
+                tenant_id=sample_tenant.id,
+                supplier_id=sample_supplier.id,
+                po_number="MPO-STMT-1",
+                order_date=received,
+                received_at=received,
+                status=MaintenancePurchaseOrderStatus.RECEIVED,
+                total_amount=Decimal("300"),
+                currency="AED",
+                exchange_rate=Decimal("1"),
+                posted=True,
+            )
+        )
+        db_session.commit()
+
+        assert SupplierService.maintenance_purchase_base_amount(
+            SupplierService.maintenance_purchase_query(sample_supplier.id, tenant_id=sample_tenant.id).one()
+        ) == pytest.approx(300.0)
+        assert SupplierService.preperiod_opening_balance(
+            sample_supplier.id, "2026-06-01", tenant_id=sample_tenant.id
+        ) == pytest.approx(300.0)
+
+        for query in ("", "?date_from=2026-05-01&date_to=2026-05-31"):
+            resp = auth_client.get(f"/suppliers/{sample_supplier.id}/statement{query}")
+            assert resp.status_code == 200
+            assert _final_balance_from_html(resp.get_data(as_text=True)) == pytest.approx(300.0)
+
 
 # ───────────────────── GL account statement ─────────────────────
 
