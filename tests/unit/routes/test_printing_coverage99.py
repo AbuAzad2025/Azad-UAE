@@ -58,39 +58,63 @@ def _return():
 
 
 class TestCustomerStatement:
-    def _get(self, client, qs=""):
+    def _context(self):
+        return {
+            "transactions": [
+                {"date": datetime(2024, 1, 5), "type": "sale", "debit": 100, "credit": 0, "balance": -100},
+                {"date": datetime(2024, 1, 6), "type": "maintenance", "debit": 30, "credit": 0, "balance": -130},
+                {
+                    "date": datetime(2024, 1, 7),
+                    "type": "maintenance_receipt",
+                    "debit": 0,
+                    "credit": 30,
+                    "balance": -100,
+                },
+            ],
+            "final_balance": -100.0,
+            "filters": {"date_from": "", "date_to": "", "transaction_type": "all"},
+        }
+
+    def _get(self, client, qs="", render=None):
         customer = MagicMock(tenant_id=1)
+        render = render or MagicMock(return_value="ok")
         with (
             patch("utils.tenanting.tenant_get_or_404", return_value=customer),
             patch("routes.customers._customer_in_scope", return_value=True),
+            patch("utils.currency_utils.resolve_default_currency", return_value="AED"),
             patch(
-                "services.customer_service.CustomerService.statement_opening_balance",
-                return_value=20.0,
-            ),
-            patch(
-                "services.customer_service.CustomerService.statement_records",
-                return_value={
-                    "sales": [_sale()],
-                    "payments": [_payment("incoming"), _payment("outgoing")],
-                    "receipts": [_receipt()],
-                    "returns": [_return()],
-                },
-            ),
+                "services.customer_statement_service.CustomerStatementService.build_statement_context",
+                return_value=self._context(),
+            ) as build,
             patch("routes.printing.get_active_tenant_id", return_value=1),
             patch("routes.printing.branch_scope_id", return_value=None),
             patch("services.invoice_profile_service.get_company_print_context", return_value=(None, None, None)),
             patch("utils.tenant_branding.get_print_header_context", return_value={}),
             patch("routes.printing.PrintService.create_snapshot", return_value=None),
             patch("routes.printing.PrintService.audit_print", return_value=None),
-            patch("routes.printing.PrintService.render_print", return_value="ok"),
+            patch("routes.printing.PrintService.render_print", render),
         ):
-            return client.get(f"/printing/customer-statement/5{qs}")
+            response = client.get(f"/printing/customer-statement/5{qs}")
+        return response, build, render
 
     def test_full_with_dates(self, print_client):
-        assert self._get(print_client, "?date_from=2024-01-01&date_to=2024-01-31").status_code == 200
+        assert self._get(print_client, "?date_from=2024-01-01&date_to=2024-01-31")[0].status_code == 200
 
     def test_full_no_dates(self, print_client):
-        assert self._get(print_client).status_code == 200
+        assert self._get(print_client)[0].status_code == 200
+
+    def test_printed_statement_uses_the_full_statement_source(self, print_client):
+        """The printable copy must carry maintenance rows and the shared balance."""
+        render = MagicMock(return_value="ok")
+        response, build, render = self._get(print_client, "?date_from=2024-01-01&date_to=2024-01-31", render=render)
+        assert response.status_code == 200
+        build.assert_called_once()
+        kwargs = build.call_args.kwargs
+        assert kwargs["transaction_type"] == "all"
+        assert kwargs["tenant_id"] == 1
+        rendered = render.call_args.args[1]
+        assert [t["type"] for t in rendered["transactions"]] == ["sale", "maintenance", "maintenance_receipt"]
+        assert rendered["final_balance"] == -100.0
 
     def test_out_of_scope(self, print_client):
         with (

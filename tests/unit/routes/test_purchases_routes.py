@@ -439,7 +439,10 @@ class TestPurchasesExtended:
             stock_model.filter_by.return_value.count.return_value = 0
             resp = purchases_client.post("/purchases/1/delete")
         assert resp.status_code == 302
-        supplier.apply_payment.assert_called_once()
+        # The route no longer reverses AP itself - delete_purchase owns it, so
+        # a delete cannot decrement the supplier twice.
+        _ctx["purchase_service"].delete_purchase.assert_called_once_with(purchase)
+        supplier.apply_payment.assert_not_called()
 
     def test_delete_exception_redirects_to_view(self, purchases_client):
         purchase = _mock_purchase(supplier_id=None)

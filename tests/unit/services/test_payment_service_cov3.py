@@ -507,9 +507,10 @@ class TestScopedBalances:
             patch(f"{MOD}.get_active_tenant_id", return_value=4),
         ):
             mock_db.session.query.side_effect = [
-                _chain(scalar=Decimal("100")),
-                _chain(scalar=Decimal("30")),
-                _chain(scalar=Decimal("5")),
+                _chain(scalar=Decimal("100")),  # sales
+                _chain(scalar=Decimal("5")),  # outgoing payments
+                _chain(all_result=[]),  # incoming payments
+                _chain(scalar=Decimal("30")),  # receipts
             ]
             bal = PaymentService.get_customer_balance_scoped(5, branch_id=2, tenant_id=None)
         # receipts(30) - sales(100) - outgoing(5)
@@ -522,7 +523,7 @@ class TestScopedBalances:
             patch(f"{MOD}.db") as mock_db,
             patch(f"{MOD}.get_active_tenant_id", return_value=None),
         ):
-            mock_db.session.query.side_effect = [_chain(), _chain(), _chain()]
+            mock_db.session.query.side_effect = [_chain(), _chain(), _chain(), _chain()]
             assert PaymentService.get_customer_balance_scoped(5) == Decimal("0")
 
     def test_supplier_balance_resolves_tenant_and_branch(self):

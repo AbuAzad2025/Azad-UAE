@@ -47,17 +47,17 @@ class TestSimpleLookups:
     def test_verify_totp_exception_returns_false(self, mocker):
         import pyotp
 
-        user = MagicMock(totp_secret="JBSWY3DPEHPK3PXP")
+        user = MagicMock(totp_secret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP")
         mocker.patch.object(pyotp.TOTP, "verify", side_effect=RuntimeError("boom"))
         assert UserService.verify_totp(user, "123456") is False
 
     def test_totp_roundtrip_and_qr(self, mocker):
         import pyotp
 
-        user = MagicMock(totp_secret="JBSWY3DPEHPK3PXP", username="u1", email="")
+        user = MagicMock(totp_secret="JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP", username="u1", email="")
         uri = UserService.totp_provisioning_uri(user)
         assert uri.startswith("otpauth://")
-        code = pyotp.TOTP("JBSWY3DPEHPK3PXP").now()
+        code = pyotp.TOTP("JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP").now()
         assert UserService.verify_totp(user, code) is True
         data_uri = UserService.two_factor_qr_data_uri(user)
         assert data_uri.startswith("data:image/png;base64,")

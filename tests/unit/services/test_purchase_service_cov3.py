@@ -608,7 +608,7 @@ class TestDeletePurchase:
         from models import Supplier as SupplierModel
         from services.purchase_service import PurchaseService
 
-        supplier = SimpleNamespace(apply_payment=MagicMock())
+        supplier = SimpleNamespace(apply_purchase=MagicMock(), apply_payment=MagicMock())
         purchase = SimpleNamespace(id=1, supplier_id=4, tenant_id=1, amount_aed=Decimal("60"))
         with (
             patch(f"{PMOD}.db") as mock_db,
@@ -617,7 +617,8 @@ class TestDeletePurchase:
         ):
             mock_db.session.delete = MagicMock()
             PurchaseService.delete_purchase(purchase)
-        supplier.apply_payment.assert_called_once_with(Decimal("-60"))
+        supplier.apply_purchase.assert_called_once_with(Decimal("-60"))
+        supplier.apply_payment.assert_not_called()
 
     def test_without_supplier_skips_reversal(self):
         from models import PurchaseLine as PLModel

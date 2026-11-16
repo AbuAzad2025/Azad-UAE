@@ -66,6 +66,7 @@ class TestPaymentServiceHelpers:
             chain = MagicMock()
             chain.filter.return_value = chain
             chain.scalar.return_value = scalar_val
+            chain.all.return_value = []
             return chain
 
         with (
@@ -73,9 +74,10 @@ class TestPaymentServiceHelpers:
             patch("services.payment_service.get_active_tenant_id", return_value=1),
         ):
             mock_db.session.query.side_effect = [
-                _query_chain(Decimal("1000")),
-                _query_chain(Decimal("400")),
-                _query_chain(Decimal("50")),
+                _query_chain(Decimal("1000")),  # sales
+                _query_chain(Decimal("50")),  # outgoing payments
+                _query_chain(Decimal("0")),  # incoming payments
+                _query_chain(Decimal("400")),  # receipts
             ]
             bal = PaymentService.get_customer_balance_scoped(5, branch_id=2, tenant_id=1)
         assert bal == Decimal("-650")
@@ -87,6 +89,7 @@ class TestPaymentServiceHelpers:
             chain = MagicMock()
             chain.filter.return_value = chain
             chain.scalar.return_value = scalar_val
+            chain.all.return_value = []
             return chain
 
         with (
