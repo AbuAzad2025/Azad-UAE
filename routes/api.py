@@ -806,11 +806,16 @@ def _query_products(warehouse_id=None):
     q = request.args.get("q", "").strip()
     products = StockService.get_visible_products_query(current_user)
     if q:
+        from models.product_serial import ProductSerial
+
+        serial_subq = db.session.query(ProductSerial.product_id).filter(ProductSerial.serial_number.ilike(f"%{q}%"))
         products = products.filter(
             db.or_(
                 Product.name.ilike(f"%{q}%"),
+                Product.name_ar.ilike(f"%{q}%"),
                 Product.sku.ilike(f"%{q}%"),
                 Product.barcode.ilike(f"%{q}%"),
+                Product.id.in_(serial_subq),
             )
         )
     products = products.order_by(Product.name).limit(20).all()
@@ -829,7 +834,10 @@ def _query_products(warehouse_id=None):
             "text": f"{p.name} ({p.sku})" if p.sku else p.name,
             "name": p.name,
             "sku": p.sku,
+            "barcode": p.barcode,
             "price": float(p.regular_price or 0),
+            "merchant_price": float(p.merchant_price) if p.merchant_price else None,
+            "cost_price": float(p.cost_price or 0),
             "stock": float(stock_map.get(p.id, p.current_stock or 0)),
         }
         for p in products
@@ -899,6 +907,9 @@ def api_product_info(pid):
             "sku": product.sku,
             "barcode": product.barcode,
             "price": float(product.regular_price or 0),
+            "regular_price": float(product.regular_price or 0),
+            "merchant_price": float(product.merchant_price) if product.merchant_price else None,
+            "cost_price": float(product.cost_price or 0),
             "stock": stock,
             "unit": product.unit,
             "is_low_stock": stock <= float(product.min_stock_alert or 0),
