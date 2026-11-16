@@ -2,7 +2,10 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
+from extensions import db
+from models import Customer, Product, Tenant
 from services.quotation_service import QuotationService
+from services.stock_service import StockService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
@@ -33,7 +36,18 @@ def create():
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
-    return render_template("quotations/form.html", quotation=None)
+    tid = get_active_tenant_id(current_user)
+    products = StockService.get_visible_products_query(current_user).order_by(Product.name).all()
+    customers = Customer.query.filter_by(tenant_id=tid).order_by(Customer.name).all() if tid else []
+    tenant = db.session.get(Tenant, tid) if tid else None
+    default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
+    return render_template(
+        "quotations/form.html",
+        quotation=None,
+        products=products,
+        customers=customers,
+        default_currency=default_currency,
+    )
 
 
 @quotations_bp.route("/<int:quotation_id>")
@@ -58,7 +72,18 @@ def edit(quotation_id):
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
-    return render_template("quotations/form.html", quotation=q)
+    tid = get_active_tenant_id(current_user)
+    products = StockService.get_visible_products_query(current_user).order_by(Product.name).all()
+    customers = Customer.query.filter_by(tenant_id=tid).order_by(Customer.name).all() if tid else []
+    tenant = db.session.get(Tenant, tid) if tid else None
+    default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
+    return render_template(
+        "quotations/form.html",
+        quotation=q,
+        products=products,
+        customers=customers,
+        default_currency=default_currency,
+    )
 
 
 @quotations_bp.route("/<int:quotation_id>/send", methods=["POST"])

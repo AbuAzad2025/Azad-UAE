@@ -12,6 +12,9 @@
             <label class="form-label" for="f_customer_id">{{ t('Customer') }} *</label>
             <select name="customer_id" class="form-select" required id="f_customer_id">
               <option value="">{{ t('Select') }}</option>
+              {% for c in customers %}
+              <option value="{{ c.id }}" {% if quotation and quotation.customer_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+              {% endfor %}
             </select>
           </div>
           <div class="col-md-2">
@@ -20,7 +23,15 @@
           </div>
           <div class="col-md-2">
             <label class="form-label" for="f_currency">{{ t('Currency') }}</label>
-            <input type="text" name="currency" class="form-control" value="{{ quotation.currency if quotation else 'AED' }}" id="f_currency">
+            <input type="text" name="currency" class="form-control" value="{{ quotation.currency if quotation else default_currency }}" id="f_currency">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label" for="f_exchange_rate">{{ t('Exchange Rate') }}</label>
+            <input type="number" name="exchange_rate" class="form-control" value="{{ quotation.exchange_rate if quotation else 1 }}" step="0.0001" min="0.0001" id="f_exchange_rate">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label" for="f_base_currency">{{ t('Base Currency') }}</label>
+            <input type="text" name="base_currency" class="form-control" value="{{ quotation.base_currency if quotation else default_currency }}" id="f_base_currency" readonly>
           </div>
           <div class="col-md-4">
             <label class="form-label" for="f_notes">{{ t('Notes') }}</label>
@@ -36,7 +47,50 @@
     <div class="card mb-4">
       <div class="card-header"><h5>{{ t('Lines') }}</h5></div>
       <div class="card-body">
-        <div id="lines-container"></div>
+        <div id="lines-container" data-next-index="{{ (quotation.lines|length) if (quotation and quotation.lines) else 0 }}" data-auto-add="{{ '0' if (quotation and quotation.lines) else '1' }}">
+          {% if quotation and quotation.lines %}
+          {% for line in quotation.lines %}
+          <div class="quotation-line mb-3 p-2 border rounded" data-index="{{ loop.index0 }}">
+            <div class="row g-2 align-items-end">
+              <div class="col-md-4">
+                <label class="form-label">{{ t('Product') }} *</label>
+                <select name="lines-{{ loop.index0 }}-product_id" class="form-select" required>
+                  <option value="">{{ t('Select') }}</option>
+                  {% for p in products %}
+                  <option value="{{ p.id }}" {% if p.id == line.product_id %}selected{% endif %}>{{ p.name }} ({{ p.sku }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">{{ t('Description') }}</label>
+                <input type="text" name="lines-{{ loop.index0 }}-description" class="form-control" value="{{ line.description or '' }}">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label">{{ t('Quantity') }} *</label>
+                <input type="number" name="lines-{{ loop.index0 }}-quantity" class="form-control" value="{{ line.quantity }}" step="0.01" min="0.01" required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">{{ t('Unit Price') }} *</label>
+                <input type="number" name="lines-{{ loop.index0 }}-unit_price" class="form-control" value="{{ line.unit_price }}" step="0.01" min="0" required>
+              </div>
+              <div class="col-md-1">
+                <label class="form-label">{{ t('Discount %') }}</label>
+                <input type="number" name="lines-{{ loop.index0 }}-discount_percent" class="form-control" value="{{ line.discount_percent or 0 }}" step="0.01" min="0" max="100">
+              </div>
+              <div class="col-md-1">
+                <label class="form-label">{{ t('Tax Rate') }}</label>
+                <input type="number" name="lines-{{ loop.index0 }}-tax_rate" class="form-control" value="{{ line.tax_rate or 0 }}" step="0.01" min="0">
+              </div>
+              <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeLine({{ loop.index0 }})" title="{{ t('Delete') }}">
+                  <i class="fas fa-trash" aria-hidden="true"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
         <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addLine()"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Line') }}</button>
       </div>
     </div>
@@ -44,4 +98,47 @@
     <a href="{{ url_for('quotations.index') }}" class="btn btn-secondary">{{ t('Cancel') }}</a>
   </form>
 </div>
+
+<template id="quotation-line-template">
+  <div class="quotation-line mb-3 p-2 border rounded" data-index="__IDX__">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label">{{ t('Product') }} *</label>
+        <select name="lines-__IDX__-product_id" class="form-select" required>
+          <option value="">{{ t('Select') }}</option>
+          {% for p in products %}
+          <option value="{{ p.id }}">{{ p.name }} ({{ p.sku }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label">{{ t('Description') }}</label>
+        <input type="text" name="lines-__IDX__-description" class="form-control">
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">{{ t('Quantity') }} *</label>
+        <input type="number" name="lines-__IDX__-quantity" class="form-control" value="1" step="0.01" min="0.01" required>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">{{ t('Unit Price') }} *</label>
+        <input type="number" name="lines-__IDX__-unit_price" class="form-control" step="0.01" min="0" required>
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">{{ t('Discount %') }}</label>
+        <input type="number" name="lines-__IDX__-discount_percent" class="form-control" value="0" step="0.01" min="0" max="100">
+      </div>
+      <div class="col-md-1">
+        <label class="form-label">{{ t('Tax Rate') }}</label>
+        <input type="number" name="lines-__IDX__-tax_rate" class="form-control" value="0" step="0.01" min="0">
+      </div>
+      <div class="col-md-1 d-flex align-items-end">
+        <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeLine(__IDX__)" title="{{ t('Delete') }}">
+          <i class="fas fa-trash" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script src="{{ url_for('static', filename='js/quotation-form.js') }}"></script>
 {% endblock %}
