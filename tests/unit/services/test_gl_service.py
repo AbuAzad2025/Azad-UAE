@@ -1143,14 +1143,16 @@ class TestGlServiceCoverageGaps:
     def test_post_entry_negative_rate_foreign_currency(self, db_session, sample_tenant, sample_gl_accounts, mocker):
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
-        entry = GLService.post_entry(
-            _balanced_lines(Decimal("5")),
-            description="Negative rate",
-            tenant_id=sample_tenant.id,
-            currency="USD",
-            exchange_rate=-1,
-        )
-        assert entry.exchange_rate == Decimal("1")
+        # A foreign-currency entry with an invalid rate must be refused:
+        # silently using parity left a balanced entry with wrong amount_aed.
+        with pytest.raises(ValueError):
+            GLService.post_entry(
+                _balanced_lines(Decimal("5")),
+                description="Negative rate",
+                tenant_id=sample_tenant.id,
+                currency="USD",
+                exchange_rate=-1,
+            )
 
     def test_vat_report_partial_accounts(self, sample_tenant, mocker):
         mocker.patch("utils.tax_settings.is_tax_enabled", return_value=True)
@@ -1465,14 +1467,30 @@ class TestGlServiceCoverageGaps:
                 branch_id=sample_branch.id,
             )
 
-    def test_post_entry_clamps_zero_rate(self, db_session, sample_tenant, sample_gl_accounts, mocker):
+    def test_post_entry_rejects_zero_rate_for_foreign_currency(
+        self, db_session, sample_tenant, sample_gl_accounts, mocker
+    ):
+        mocker.patch("services.gl_helpers.assert_period_open")
+        mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
+        with pytest.raises(ValueError):
+            GLService.post_entry(
+                _balanced_lines(Decimal("7")),
+                description="Zero rate",
+                tenant_id=sample_tenant.id,
+                currency="USD",
+                exchange_rate=Decimal("0"),
+            )
+
+    def test_post_entry_allows_parity_when_currency_is_base(
+        self, db_session, sample_tenant, sample_gl_accounts, mocker
+    ):
         mocker.patch("services.gl_helpers.assert_period_open")
         mocker.patch("services.gl_service.resolve_tenant_base_currency", return_value="AED")
         entry = GLService.post_entry(
             _balanced_lines(Decimal("7")),
-            description="Clamp rate",
+            description="Base currency",
             tenant_id=sample_tenant.id,
-            currency="USD",
+            currency="AED",
             exchange_rate=Decimal("0"),
         )
         assert entry.exchange_rate == Decimal("1")
