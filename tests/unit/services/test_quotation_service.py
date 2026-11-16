@@ -348,7 +348,9 @@ class TestQuotationGuards:
         q = QuotationService.create_quotation(
             {
                 "customer_id": customer.id,
-                "expiry_date": date.today() - timedelta(days=1),
+                # Two days back: is_expired compares against the UTC date,
+                # which can be one day behind the local date around midnight.
+                "expiry_date": date.today() - timedelta(days=2),
                 "lines": [{"product_id": sample_product.id, "quantity": 1, "unit_price": 50}],
             },
             sample_user,

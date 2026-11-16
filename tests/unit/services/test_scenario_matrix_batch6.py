@@ -49,7 +49,8 @@ class TestPayrollIncomeTaxGrid:
         assert result["tax"] > Decimal("0")
         assert result["tax"] < Decimal(income)
 
-    @pytest.mark.parametrize("income", ["10000", "30000", "48000"])
+    # 36,000 NIS annual resident exemption (Decree-Law 5/2015 Art. 3).
+    @pytest.mark.parametrize("income", ["10000", "30000", "36000"])
     def test_ps_exempt_band(self, income):
         result = payroll_income_tax_amount(Decimal(income), "PS")
         assert result["tax"] == Decimal("0.000")

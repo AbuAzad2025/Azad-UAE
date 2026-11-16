@@ -506,11 +506,12 @@ class TestScopedBalances:
             patch(f"{MOD}.db") as mock_db,
             patch(f"{MOD}.get_active_tenant_id", return_value=4),
         ):
+            receipt_row = MagicMock(amount_aed=Decimal("30"), receipt_number=None)
             mock_db.session.query.side_effect = [
                 _chain(scalar=Decimal("100")),  # sales
                 _chain(scalar=Decimal("5")),  # outgoing payments
                 _chain(all_result=[]),  # incoming payments
-                _chain(scalar=Decimal("30")),  # receipts
+                _chain(all_result=[receipt_row]),  # receipts
             ]
             bal = PaymentService.get_customer_balance_scoped(5, branch_id=2, tenant_id=None)
         # receipts(30) - sales(100) - outgoing(5)

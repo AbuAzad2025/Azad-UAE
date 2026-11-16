@@ -171,7 +171,16 @@ class GLAccount(db.Model):
         if end is not None:
             q = q.filter(GLJournalEntry.entry_date <= end)
         if exclude_reference_types:
-            q = q.filter(GLJournalEntry.reference_type.notin_(tuple(exclude_reference_types)))
+            from sqlalchemy import or_
+
+            # NULL reference_type (legacy/manual entries) is NOT "closing" -
+            # a bare NOT IN would drop it because NULL comparison is UNKNOWN.
+            q = q.filter(
+                or_(
+                    GLJournalEntry.reference_type.is_(None),
+                    GLJournalEntry.reference_type.notin_(tuple(exclude_reference_types)),
+                )
+            )
 
         balance = q.scalar()
 

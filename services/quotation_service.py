@@ -60,7 +60,7 @@ class QuotationService:
             price = Decimal(str(line_data.get("unit_price", 0)))
             disc = Decimal(str(line_data.get("discount_percent", 0)))
             tax = Decimal(str(line_data.get("tax_rate", 0)))
-            _net, tax_amt, line_total = cls._line_amounts(qty, price, disc, tax, bool(data.get("prices_include_vat")))
+            _net, _tax_amt, line_total = cls._line_amounts(qty, price, disc, tax, bool(data.get("prices_include_vat")))
             line = QuotationLine(
                 tenant_id=tid,
                 quotation_id=q.id,
@@ -70,8 +70,8 @@ class QuotationService:
                 unit_price=price,
                 discount_percent=disc,
                 tax_rate=tax,
-                line_total=line_total + tax_amt,
-                amount_aed=(line_total + tax_amt) * Decimal(str(data.get("exchange_rate", 1) or 1)),
+                line_total=line_total,
+                amount_aed=line_total * Decimal(str(data.get("exchange_rate", 1) or 1)),
                 sort_order=line_data.get("sort_order", 0),
             )
             db.session.add(line)
@@ -118,7 +118,9 @@ class QuotationService:
                 price = Decimal(str(line_data.get("unit_price", 0)))
                 disc = Decimal(str(line_data.get("discount_percent", 0)))
                 tax = Decimal(str(line_data.get("tax_rate", 0)))
-                _net, tax_amt, line_total = cls._line_amounts(qty, price, disc, tax, bool(quotation.prices_include_vat))
+                _net, _tax_amt, line_total = cls._line_amounts(
+                    qty, price, disc, tax, bool(quotation.prices_include_vat)
+                )
                 line = QuotationLine(
                     tenant_id=quotation.tenant_id,
                     quotation_id=quotation.id,
@@ -128,8 +130,8 @@ class QuotationService:
                     unit_price=price,
                     discount_percent=disc,
                     tax_rate=tax,
-                    line_total=line_total + tax_amt,
-                    amount_aed=(line_total + tax_amt) * Decimal(str(quotation.exchange_rate or 1)),
+                    line_total=line_total,
+                    amount_aed=line_total * Decimal(str(quotation.exchange_rate or 1)),
                     sort_order=line_data.get("sort_order", 0),
                 )
                 quotation.lines.append(line)

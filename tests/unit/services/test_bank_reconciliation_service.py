@@ -465,7 +465,8 @@ class TestSuspenseAndApply:
             date(2026, 7, 31),
         )
         assert results == []
-        assert stmt.status == "ignored"
+        # A failed suspense post must stay retryable, not be silently dropped.
+        assert stmt.status == "imported"
 
     def test_route_orphans_ignores_tiny_amount(self, mocker, db_session, sample_tenant, bank_gl_account):
         stmt = BankStatementLine(
@@ -486,7 +487,8 @@ class TestSuspenseAndApply:
             date(2026, 7, 31),
         )
         assert results == []
-        assert stmt.status == "ignored"
+        # A failed suspense post must stay retryable, not be silently dropped.
+        assert stmt.status == "imported"
 
 
 class TestBankReconciliationModel:

@@ -873,6 +873,7 @@ class TestPaymentServiceRemainingGaps:
             chain = MagicMock()
             chain.filter.return_value = chain
             chain.scalar.return_value = scalar_val
+            chain.all.return_value = []
             return chain
 
         with (
@@ -880,6 +881,7 @@ class TestPaymentServiceRemainingGaps:
             patch("services.payment_service.get_active_tenant_id", return_value=9),
         ):
             mock_db.session.query.side_effect = [
+                _query_chain(Decimal("0")),
                 _query_chain(Decimal("0")),
                 _query_chain(Decimal("0")),
                 _query_chain(Decimal("0")),

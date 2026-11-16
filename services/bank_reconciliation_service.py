@@ -520,7 +520,7 @@ class BankReconciliationService:
         """
         from decimal import Decimal as _D
 
-        from services.gl_posting import UnbalancedJournalEntryError, post_or_fail
+        from services.gl_posting import post_or_fail
 
         orphans = BankStatementLine.query.filter(
             BankStatementLine.tenant_id == tenant_id,
@@ -590,9 +590,10 @@ class BankReconciliationService:
                         "suspense_entry_id": entry.id if hasattr(entry, "id") else None,
                     }
                 )
-            except UnbalancedJournalEntryError as exc:
+            except Exception as exc:
                 # A failed suspense post must stay retryable; marking the line
-                # "ignored" silently dropped money from the books.
+                # "ignored" silently dropped money from the books. Log the
+                # reason with the statement id so an operator can retry it.
                 logger.error("Suspense routing failed for statement line %s: %s", stmt.id, exc)
                 stmt.status = "imported"
 

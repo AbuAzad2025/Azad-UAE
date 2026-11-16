@@ -1491,7 +1491,7 @@ class TestGlServiceCoverageGaps:
             description="Base currency",
             tenant_id=sample_tenant.id,
             currency="AED",
-            exchange_rate=Decimal("0"),
+            exchange_rate=None,
         )
         assert entry.exchange_rate == Decimal("1")
 
