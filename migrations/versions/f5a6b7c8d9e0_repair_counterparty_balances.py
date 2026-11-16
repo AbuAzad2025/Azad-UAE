@@ -412,11 +412,65 @@ def _repair_partner_commissions(connection) -> None:
         )
 
 
+def _repair_maintenance_base_mirrors(connection, tenant_base: dict) -> None:
+    """Rebuild the base-currency mirrors that the statement and e-invoice render.
+
+    ``close_and_collect`` updates ``paid_amount``/``balance_due`` when the
+    receipt is taken, but older rows never had their ``*_aed`` counterparts
+    refreshed, so a fully paid maintenance invoice still rendered as unpaid.
+    """
+    if not _has_columns(connection, "maintenance_orders", "id", "tenant_id"):
+        return
+    orders_columns = {"id", "tenant_id", "currency", "exchange_rate"}
+    present = {column["name"] for column in sa.inspect(connection).get_columns("maintenance_orders")}
+    orders_columns &= present
+    orders_table = _table("maintenance_orders", *sorted(orders_columns))
+    orders = {}
+    for row in connection.execute(sa.select(orders_table)):
+        mapping = row._mapping
+        base = mapping.get("base_currency") or tenant_base.get(mapping["tenant_id"], "AED")
+        orders[mapping["id"]] = (
+            mapping.get("currency"),
+            mapping.get("exchange_rate"),
+            base,
+        )
+
+    def _repair_table(name: str, keys: tuple[str, ...], *, has_order_ref: bool) -> None:
+        required = {"id", "paid_amount", "balance_due", "paid_amount_aed", "balance_due_aed"}
+        if has_order_ref:
+            required.add("order_id")
+        table_columns = {column["name"] for column in sa.inspect(connection).get_columns(name)}
+        if not required.issubset(table_columns):
+            return
+        columns = sorted(required | ({"currency", "exchange_rate", "base_currency"} & table_columns))
+        table = _table(name, *columns)
+        for row in connection.execute(sa.select(table)):
+            mapping = row._mapping
+            order = orders.get(mapping["order_id"]) if has_order_ref else None
+            currency = mapping.get("currency") or (order[0] if order else None) or "AED"
+            rate = mapping.get("exchange_rate")
+            if rate is None and order:
+                rate = order[1]
+            base = mapping.get("base_currency") or (order[2] if order else None) or "AED"
+            values = {
+                f"{key}_aed": _base_amount(mapping[key], currency, rate, base).quantize(
+                    _QUANTUM, rounding=ROUND_HALF_UP
+                )
+                for key in keys
+            }
+            connection.execute(sa.update(table).where(table.c.id == mapping["id"]).values(**values))
+
+    _repair_table("maintenance_orders", ("paid_amount", "balance_due"), has_order_ref=False)
+    if _has_table(connection, "maintenance_invoices"):
+        _repair_table("maintenance_invoices", ("paid_amount", "balance_due"), has_order_ref=True)
+
+
 def upgrade():
     connection = op.get_bind()
     tenant_base = _tenant_base_currencies(connection)
     _repair_customer_balances(connection, tenant_base)
     _repair_supplier_totals(connection, tenant_base)
+    _repair_maintenance_base_mirrors(connection, tenant_base)
     _repair_partner_commissions(connection)
 
 

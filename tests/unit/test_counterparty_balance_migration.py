@@ -95,6 +95,11 @@ def test_migration_repairs_all_counterparty_balances(
                 total_amount=Decimal("30"),
                 amount=Decimal("30"),
                 amount_aed=Decimal("30"),
+                paid_amount=Decimal("30"),
+                balance_due=Decimal("0"),
+                # Stale mirrors: the old close path never refreshed these.
+                paid_amount_aed=Decimal("0"),
+                balance_due_aed=Decimal("30"),
                 currency="AED",
                 base_currency="AED",
                 posted=True,
@@ -174,6 +179,9 @@ def test_migration_repairs_all_counterparty_balances(
     _run_migration(db_session, mocker)
 
     assert Decimal(str(sample_customer.balance)) == Decimal("-60.000")
+    stale_invoice = MaintenanceInvoice.query.filter_by(invoice_number="MIG-MINV-1").one()
+    assert Decimal(str(stale_invoice.paid_amount_aed)) == Decimal("30.000")
+    assert Decimal(str(stale_invoice.balance_due_aed)) == Decimal("0.000")
     assert Decimal(str(Supplier.query.get(sample_supplier.id).total_purchases_aed)) == Decimal("200.000")
     assert Decimal(str(Partner.query.get(partner.id).current_balance)) == Decimal("50.000")
     tx = PartnerTransaction.query.filter_by(

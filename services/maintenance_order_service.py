@@ -1055,6 +1055,16 @@ class MaintenanceService:
         invoice.balance_due = total - invoice.paid_amount
         if invoice.balance_due < 0:
             invoice.balance_due = Decimal("0")
+        # The base-currency mirrors are what the customer statement and the
+        # statutory invoice render. Leaving them at the values copied before
+        # the receipt existed showed "paid 0 / full amount due" on a fully
+        # settled job. Keep the order's mirrors in step with its own figures
+        # too (its paid_amount excludes the deposit, the invoice's includes
+        # it - that difference is intentional).
+        invoice.paid_amount_aed = _customer_base_amount(order, invoice.paid_amount, tid)
+        invoice.balance_due_aed = _customer_base_amount(order, invoice.balance_due, tid)
+        order.paid_amount_aed = _customer_base_amount(order, order.paid_amount, tid)
+        order.balance_due_aed = _customer_base_amount(order, order.balance_due, tid)
         db.session.flush()
 
         # 4. The ledger. The parts cost first (it is the inventory movement),

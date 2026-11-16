@@ -763,7 +763,7 @@ class TestCustomerLedger:
 
         total = Decimal(str(order.total_amount))
         starting_balance = Decimal(str(sample_customer.balance or 0))
-        MaintenanceService.close_and_collect(
+        order, receipt, invoice = MaintenanceService.close_and_collect(
             order_id=order.id,
             tenant_id=sample_tenant.id,
             cashier_id=sample_user.id,
@@ -771,6 +771,11 @@ class TestCustomerLedger:
             amount_received=total,
         )
         db_session.flush()
+
+        # The invoice that the statement and the e-invoice render must show
+        # the money that was actually collected in the base currency too.
+        assert Decimal(str(invoice.paid_amount_aed)) == total
+        assert Decimal(str(invoice.balance_due_aed)) == Decimal("0")
 
         # The customer has ONE balance: the maintenance charge debited it and
         # the cash collected credited it, so it ends where it started.
