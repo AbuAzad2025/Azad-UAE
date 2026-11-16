@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
@@ -605,7 +605,13 @@ class GLService:
         rate = Decimal(str(exchange_rate)) if exchange_rate else Decimal("1")
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         if currency and currency.upper() != base_currency.upper() and rate <= 0:
-            rate = Decimal("1")
+            # A foreign-currency entry with a missing/invalid rate must be
+            # refused, not silently converted at parity: the entry would stay
+            # balanced while every amount_aed was wrong. post_or_fail already
+            # does this for auto-postings; manual entries must behave the same.
+            raise ValueError(
+                gettext(f'سعر صرف غير صالح للقيد "{lines[0].get("description", "") if lines else ""}": {exchange_rate}')
+            )
         adapted_lines = []
         for line in lines:
             orig_debit = Decimal(str(line.get("debit", 0) or 0))
@@ -1990,10 +1996,14 @@ class FiscalYearService:
         last_year, last_month = months[-1]
 
         start_date = datetime(first_year, first_month, 1, tzinfo=UTC)
-        if last_month == 12:
-            end_date = datetime(last_year, 12, 31, 23, 59, 59, tzinfo=UTC)
-        else:
-            end_date = datetime(last_year, last_month + 1, 1, tzinfo=UTC)
+        # GLAccount.get_balance() uses an INCLUSIVE <= end filter. Make the
+        # bound one microsecond before the first instant of the next fiscal
+        # year for BOTH December and non-December year-ends. The old split
+        # put the closing entry itself inside the next P&L window whenever
+        # the year did not end in December.
+        next_year = last_year + (1 if last_month == 12 else 0)
+        next_month = (last_month % 12) + 1
+        end_date = datetime(next_year, next_month, 1, tzinfo=UTC) - timedelta(microseconds=1)
 
         pl_accounts = (
             GLAccount.query.filter(
@@ -2050,6 +2060,18 @@ class FiscalYearService:
         Returns the closing ``GLJournalEntry``.
         """
         from services.gl_posting import post_or_fail
+
+        # A repeat call must not post the whole closing entry again: periods
+        # stay closed after the first run, and a balanced duplicate still
+        # passes every check while doubling retained earnings.
+        already_closed = GLJournalEntry.query.filter_by(
+            tenant_id=int(tenant_id),
+            reference_type="closing",
+            reference_id=int(fiscal_year),
+            is_posted=True,
+        ).first()
+        if already_closed is not None:
+            raise ValueError(gettext(f"السنة المالية {fiscal_year} مُقفلة بالفعل."))
 
         FiscalYearService.validate_periods_closed(tenant_id, fiscal_year)
         pl = FiscalYearService.calculate_pl_balance(tenant_id, fiscal_year, user_id=user_id)
@@ -2131,6 +2153,7 @@ class FiscalYearService:
             gl_lines,
             description=f"إقفال السنة المالية {fiscal_year}",
             reference_type="closing",
+            reference_id=int(fiscal_year),
             date=closing_date,
             user_id=user_id,
             tenant_id=tenant_id,

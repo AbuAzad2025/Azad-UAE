@@ -149,10 +149,13 @@ class FixedAsset(db.Model):
             return Decimal("0")  # الأراضي لا تستهلك
 
         if self.depreciation_method == "straight_line":
-            # القسط الثابت
+            # القسط الثابت. The last period must absorb the rounding residue,
+            # otherwise a 1000/60 asset ends at 1000.20 accumulated and a
+            # negative book value. Money is 3dp throughout the system.
             months = self.useful_life_years * 12
-            monthly = (self.depreciable_amount / months).quantize(Decimal("0.01"), ROUND_HALF_UP)
-            return monthly
+            monthly = (self.depreciable_amount / months).quantize(Decimal("0.001"), ROUND_HALF_UP)
+            remaining = self.depreciable_amount - Decimal(str(self.accumulated_depreciation or 0))
+            return min(monthly, remaining) if remaining > 0 else Decimal("0")
 
         elif self.depreciation_method == "declining_balance":
             # القسط المتناقص المضاعف (Double Declining Balance)
@@ -164,7 +167,7 @@ class FixedAsset(db.Model):
                 return Decimal("0")
 
             annual_depreciation = current_book_value * rate
-            monthly = (annual_depreciation / 12).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            monthly = (annual_depreciation / 12).quantize(Decimal("0.001"), ROUND_HALF_UP)
 
             # التأكد من عدم تجاوز القيمة الإنقاذية
             if current_book_value - monthly < self.salvage_value:

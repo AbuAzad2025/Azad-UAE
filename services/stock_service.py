@@ -610,8 +610,11 @@ class StockService:
             _q = ProductWarehouseCost.query.filter_by(tenant_id=tenant_id, product_id=product_id, warehouse_id=_wid)
             _pwcs[_wid] = _safe_for_update(_q, label=f"PWC transfer p={product_id} w={_wid}")
         src_pwc = _pwcs[from_wh.id]
-        if src_pwc and src_pwc.total_quantity and src_pwc.average_cost:
-            unit_cost = src_pwc.average_cost
+        # A positive quantity with a zero average cost is legitimate (free
+        # goods, or a previously emptied shelf). The destination still needs a
+        # PWC row with the (zero) valuation moved, so gate on quantity only.
+        if src_pwc and src_pwc.total_quantity and src_pwc.total_quantity > 0:
+            unit_cost = src_pwc.average_cost or Decimal("0")
             transfer_value = (qty * unit_cost).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
             # Deduct from source
             src_pwc.total_quantity = (src_pwc.total_quantity - qty).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
@@ -623,8 +626,11 @@ class StockService:
                     Decimal("0.0001"), rounding=ROUND_HALF_UP
                 )
             else:
+                # Zero units must carry zero value. A phantom 0.001 used to
+                # survive here, contaminating the next receipt's MWAC and
+                # breaking inventory-to-GL reconciliation.
                 src_pwc.average_cost = Decimal("0.0000")
-                src_pwc.total_value = Decimal("0.001") if src_pwc.total_quantity == 0 else src_pwc.total_value
+                src_pwc.total_value = Decimal("0")
             # Add to destination
             dest_pwc = _pwcs.get(to_wh.id)
             if not dest_pwc:
@@ -664,6 +670,36 @@ class StockService:
             notes=label,
             warehouse_id=to_wh.id,
         )
+
+        # FEFO lots are warehouse-scoped. Moving the units without moving the
+        # lots left the source holding batches it no longer had and the
+        # destination with none, so a later sale silently priced COGS from
+        # MWAC instead of the lot costs the tenant enabled FEFO for.
+        from services.stock_batch_service import StockBatchService
+
+        if StockBatchService.batches_enabled():
+            source_lots = StockBatchService._fefo_query(product_id, from_wh.id, tenant_id).all()
+            snapshot = [(Decimal(str(lot.quantity)), lot.unit_cost, lot.expiry_date) for lot in source_lots]
+            consumed_qty, _consumed_value = StockBatchService.consume_fefo(product_id, from_wh.id, qty, tenant_id)
+            if consumed_qty < qty:
+                raise ValueError(gettext("الكمية المتوفرة في دفعات المستودع المصدر أقل من كمية التحويل."))
+            to_move = qty
+            for lot_qty, unit_cost, expiry_date in snapshot:
+                if to_move <= 0:
+                    break
+                take = min(lot_qty, to_move)
+                StockBatchService.record_receipt(
+                    tenant_id,
+                    product_id,
+                    to_wh.id,
+                    take,
+                    unit_cost,
+                    reference_type=GLRef.STOCK_TRANSFER,
+                    reference_id=out_movement.id,
+                    expiry_date=expiry_date,
+                )
+                to_move -= take
+
         return out_movement, in_movement
 
     @staticmethod

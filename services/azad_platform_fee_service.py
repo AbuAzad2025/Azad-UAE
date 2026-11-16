@@ -300,15 +300,25 @@ class AzadPlatformFeeService:
         vault = PaymentVault.get_platform_vault()
         if not vault:
             raise ValueError("Platform vault does not exist — cannot record payout.")
-        total = sum((Decimal(str(f.fee_amount_aed or 0)) for f in fees), Decimal("0"))
-        if total <= Decimal("0"):
+        total_aed = sum((Decimal(str(f.fee_amount_aed or 0)) for f in fees), Decimal("0"))
+        if total_aed <= Decimal("0"):
             raise ValueError("Total payout amount is zero.")
+        # Every vault report sums amount_usd as USD. Writing the AED total
+        # there inflated reported platform revenue by the AED/USD factor.
+        from services.exchange_rate_service import ExchangeRateService
+        from utils.currency_utils import convert_and_quantize_aed
+
+        rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction("AED", "USD")
+        usd_rate = Decimal(str((rate_info or {}).get("rate") or 0))
+        if usd_rate <= 0:
+            raise ValueError("Cannot record payout: no valid AED→USD exchange rate is available.")
+        amount_usd = convert_and_quantize_aed(total_aed, "AED", usd_rate, base_currency="USD")
         txn_id = f"PLATFORM-SETTLE-{generate_number('SETT', PaymentTransaction, 'transaction_id')}"
         txn = PaymentTransaction(
             tenant_id=None,
             transaction_id=txn_id,
-            amount_usd=total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
-            amount_crypto=0,
+            amount_usd=amount_usd.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
+            amount_crypto=total_aed.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP),
             crypto_currency="AED",
             payment_status="completed",
             payment_method="bank",
@@ -330,10 +340,10 @@ class AzadPlatformFeeService:
             "Platform settlement paid: txn=%s fees=%d total=%s",
             txn_id,
             len(fees),
-            total,
+            total_aed,
         )
         return {
             "transaction_id": txn_id,
             "count": len(fees),
-            "total_aed": total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP),
+            "total_aed": total_aed.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP),
         }

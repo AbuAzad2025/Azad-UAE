@@ -350,13 +350,32 @@ class PosRmaService:
                 session=session,
                 user=user,
             )
+            from sqlalchemy import update as sa_update
+
+            from models.pos_session import PosSession
+            from models.pos_shift import PosShift
+
+            # Same lost-update hazard the checkout path already solved: two
+            # concurrent refunds must not both write the same starting total.
             refund_base = _money(product_return.amount_aed)
-            session.total_cash_refunds = Decimal(str(session.total_cash_refunds or 0)) + refund_base
+            tenant_id = int(getattr(session, "tenant_id", 0) or 0)
+            pre_refunds = Decimal(str(session.total_cash_refunds or 0))
+            db.session.execute(
+                sa_update(PosSession)
+                .where(PosSession.id == session.id, PosSession.tenant_id == tenant_id)
+                .values(total_cash_refunds=PosSession.__table__.c.total_cash_refunds + refund_base),
+                execution_options={"synchronize_session": False},
+            )
+            session.__dict__["total_cash_refunds"] = pre_refunds + refund_base
             if shift is not None:
-                shift.total_cash_refunds = Decimal(str(getattr(shift, "total_cash_refunds", None) or 0)) + refund_base
-            db.session.add(session)
-            if shift is not None:
-                db.session.add(shift)
+                pre_shift = Decimal(str(getattr(shift, "total_cash_refunds", None) or 0))
+                db.session.execute(
+                    sa_update(PosShift)
+                    .where(PosShift.id == shift.id, PosShift.tenant_id == tenant_id)
+                    .values(total_cash_refunds=PosShift.__table__.c.total_cash_refunds + refund_base),
+                    execution_options={"synchronize_session": False},
+                )
+                shift.__dict__["total_cash_refunds"] = pre_shift + refund_base
             # The cash settlement consumed the credit the return created;
             # refresh the sale's derived payment status accordingly.
             if hasattr(sale, "recalculate_payment_status"):

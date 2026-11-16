@@ -64,14 +64,20 @@ class DonationGLService:
         vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
         debit_acct, credit_acct = DonationGLService._vault_accounts(vault, int(tenant_id or 0))
 
+        from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
+
+        # convert_and_quantize_aed converts into the TENANT's base currency,
+        # not AED. Resolving a USD->AED rate here and posting it as ILS for an
+        # ILS tenant overstated both the bank debit and donation revenue.
+        base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         try:
-            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction("USD", "AED")
+            rate_info = ExchangeRateService.resolve_exchange_rate_for_transaction(
+                "USD", base_currency, tenant_id=tenant_id
+            )
             rate = Decimal(str(rate_info["rate"]))
         except Exception:
             rate = Decimal("3.67")
-        from utils.currency_utils import convert_and_quantize_aed
-
-        amount_aed = convert_and_quantize_aed(amount_usd, "USD", rate, tenant_id=tenant_id)
+        amount_aed = convert_and_quantize_aed(amount_usd, "USD", rate, base_currency=base_currency, tenant_id=tenant_id)
 
         method_label = donation.payment_method or "donation"
         donor = donation.donor_name or donation.customer_name or gettext("متبرع")

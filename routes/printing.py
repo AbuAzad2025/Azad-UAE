@@ -362,11 +362,10 @@ def api_print_history():
 @login_required
 @permission_required("manage_customers")
 def print_customer_statement(id):
-    """Print customer statement — unified facade with full transaction logic."""
-    from datetime import datetime
-
+    """Print customer statement from the same source as the on-screen one."""
     from models import Customer
-    from services.customer_service import CustomerService
+    from services.customer_statement_service import CustomerStatementService
+    from utils.currency_utils import get_system_default_currency, resolve_default_currency
     from utils.tenanting import tenant_get_or_404
 
     record_id = id
@@ -380,93 +379,27 @@ def print_customer_statement(id):
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
     tid = get_active_tenant_id(current_user)
+    try:
+        default_currency = resolve_default_currency()
+    except Exception:
+        default_currency = get_system_default_currency()
 
-    opening_balance = 0.0
-    if date_from:
-        opening_balance = CustomerService.statement_opening_balance(record_id, tid, date_from)
-
-    records = CustomerService.statement_records(record_id, tid, date_from, date_to, branch_id=branch_scope_id())
-
-    transactions = []
-    for s in records["sales"]:
-        transactions.append(
-            {
-                "date": s.sale_date,
-                "type": "sale",
-                "reference": s.sale_number,
-                "debit": float(s.amount_aed or 0),
-                "credit": 0,
-                "description": gettext("فاتورة بيع"),
-            }
-        )
-    for p in records["payments"]:
-        amt = float(p.amount_aed or 0)
-        if p.direction == "incoming":
-            transactions.append(
-                {
-                    "date": p.payment_date,
-                    "type": "payment",
-                    "reference": p.payment_number or p.reference_number or "",
-                    "debit": 0,
-                    "credit": amt,
-                    "description": gettext("دفعة"),
-                }
-            )
-        else:
-            transactions.append(
-                {
-                    "date": p.payment_date,
-                    "type": "payment",
-                    "reference": p.payment_number or p.reference_number or "",
-                    "debit": amt,
-                    "credit": 0,
-                    "description": gettext("استرداد"),
-                }
-            )
-    for r in records["receipts"]:
-        transactions.append(
-            {
-                "date": r.receipt_date,
-                "type": "receipt",
-                "reference": r.receipt_number,
-                "debit": 0,
-                "credit": float(r.amount_aed or 0),
-                "description": gettext("سند قبض"),
-            }
-        )
-    for ret in records["returns"]:
-        transactions.append(
-            {
-                "date": ret.return_date,
-                "type": "return",
-                "reference": ret.return_number,
-                "debit": 0,
-                "credit": float(ret.amount_aed or 0),
-                "description": gettext("مرتجع مبيعات"),
-            }
-        )
-
-    transactions.sort(key=lambda x: x["date"] or datetime.min)
-
-    if date_from:
-        transactions.insert(
-            0,
-            {
-                "date": date_from,
-                "type": "opening",
-                "reference": "",
-                "debit": 0,
-                "credit": 0,
-                "balance": opening_balance,
-                "description": gettext("الرصيد الافتتاحي"),
-            },
-        )
-
-    running = opening_balance if date_from else 0
-    for t in transactions:
-        if t["type"] != "opening":
-            running += t["credit"] - t["debit"]
-        t["balance"] = running
+    # One source of truth. The printable statement must carry exactly the
+    # movements the customer sees on screen - including maintenance invoices,
+    # receipts, returns and refunds - and the same closing balance. The old
+    # bespoke path used CustomerService.statement_records, which silently
+    # dropped every maintenance movement.
+    context = CustomerStatementService.build_statement_context(
+        record_id=record_id,
+        date_from=date_from,
+        date_to=date_to,
+        transaction_type="all",
+        default_currency=default_currency,
+        tenant_id=tid,
+        branch_id=branch_scope_id(),
+    )
+    transactions = context["transactions"]
+    final_balance = context["final_balance"]
 
     from services.invoice_profile_service import get_company_print_context
     from utils.tenant_branding import get_print_header_context
@@ -482,7 +415,7 @@ def print_customer_statement(id):
         {
             "customer": customer,
             "transactions": transactions,
-            "final_balance": running,
+            "final_balance": final_balance,
             "filters": {"date_from": date_from or "", "date_to": date_to or ""},
             "settings": settings,
             "company": company,
@@ -524,7 +457,9 @@ def print_supplier_statement(id):
     )
     maintenance_q = SupplierService.maintenance_purchase_query(record_id, tenant_id=tid, branch_id=branch_scope_id())
 
-    opening_balance = SupplierService.preperiod_opening_balance(record_id, date_from, tenant_id=tid)
+    opening_balance = SupplierService.preperiod_opening_balance(
+        record_id, date_from, tenant_id=tid, branch_id=branch_scope_id()
+    )
     _maintenance_date = func.date(
         func.coalesce(MaintenancePurchaseOrder.received_at, MaintenancePurchaseOrder.order_date)
     )
@@ -626,7 +561,7 @@ def print_supplier_statement(id):
     running = opening_balance if date_from else 0
     for t in transactions:
         if t["type"] != "opening":
-            running += t["credit"] - t["debit"]
+            running += t["debit"] - t["credit"]
         t["balance"] = running
 
     from services.invoice_profile_service import get_company_print_context

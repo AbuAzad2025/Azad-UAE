@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_babel import gettext
 from flask_login import current_user, login_required
@@ -136,11 +138,25 @@ def convert(quotation_id):
     # stock movement). Conversion to a sale needs one, so fall back to the
     # user's first accessible warehouse instead of failing with "no warehouse".
     if q.warehouse_id is None:
+        from services.stock_service import StockService
         from utils.branching import get_accessible_warehouse_ids
 
-        accessible = get_accessible_warehouse_ids(current_user)
-        if accessible:
-            q.warehouse_id = accessible[0]
+        # Pick the first accessible shelf that can actually supply the quoted
+        # lines. Choosing the first warehouse blindly makes conversion fail
+        # the service's stock check even when the goods sit on another shelf
+        # the seller can reach.
+        quantities = {}
+        for line in q.lines:
+            pid = line.product_id
+            quantities[pid] = quantities.get(pid, Decimal("0")) + Decimal(str(line.quantity or 0))
+        for warehouse_id in get_accessible_warehouse_ids(current_user):
+            if all(
+                Decimal(str(StockService.get_product_stock(pid, warehouse_id=warehouse_id, user=current_user) or 0))
+                >= required
+                for pid, required in quantities.items()
+            ):
+                q.warehouse_id = warehouse_id
+                break
     try:
         with atomic_transaction("quotation_convert_to_sale"):
             sale = QuotationService.convert_to_sale(q, current_user)

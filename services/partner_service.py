@@ -875,28 +875,58 @@ class PartnerService:
         if not partner:
             return {}
 
-        txs = (
+        all_txs = (
             PartnerTransaction.query.filter(
                 PartnerTransaction.partner_id == partner_id,
                 PartnerTransaction.tenant_id == partner.tenant_id,
-                PartnerTransaction.transaction_date >= start_date,
                 PartnerTransaction.transaction_date <= end_date,
             )
             .order_by(PartnerTransaction.transaction_date, PartnerTransaction.id)
             .all()
         )
+        txs = [t for t in all_txs if t.transaction_date >= start_date]
 
         total_credit = sum(float(t.amount_base) for t in txs if float(t.amount_base) > 0)
         total_debit = sum(abs(float(t.amount_base)) for t in txs if float(t.amount_base) < 0)
 
+        # Stored balance_after was computed at write time (insertion order),
+        # but rows are displayed in transaction-date order. A back-dated
+        # distribution or commission therefore makes it wrong. Rebuild the
+        # running balance in display order without mutating ORM rows - a
+        # later flush must never persist a display-only value. The ledger is
+        # the source of truth (the repair migration rebuilds it from zero), so
+        # do not anchor on the cached current_balance, which may be stale.
+        class _StatementLine:
+            def __init__(self, tx, balance):
+                self._tx = tx
+                self.balance_after = balance
+
+            def __getattr__(self, name):
+                return getattr(self._tx, name)
+
+        running = Decimal("0")
+        display_rows = []
+        # An empty ledger gives the cached balance nothing to contradict; use
+        # it as the opening/closing figure in that one case.
+        opening_balance = float(partner.current_balance or 0) if not all_txs else 0.0
+        closing_balance = opening_balance
+        for tx in all_txs:
+            running += Decimal(str(tx.amount_base or 0))
+            if tx.transaction_date < start_date:
+                opening_balance = float(running)
+                closing_balance = float(running)
+                continue
+            display_rows.append(_StatementLine(tx, running))
+            closing_balance = float(running)
+
         return {
             "partner": partner,
-            "transactions": txs,
+            "transactions": display_rows,
             "total_credit": total_credit,
             "total_debit": total_debit,
             "net_movement": total_credit - total_debit,
-            "opening_balance": (float(txs[0].balance_after) - float(txs[0].amount_base) if txs else 0),
-            "closing_balance": (float(txs[-1].balance_after) if txs else float(partner.current_balance or 0)),
+            "opening_balance": opening_balance,
+            "closing_balance": closing_balance,
         }
 
     @staticmethod

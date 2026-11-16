@@ -457,16 +457,29 @@ class CustomerStatementService:
                 }
             )
 
-        allocated_receipt_numbers = set()
+        allocated_receipt_amounts: dict[str, Decimal] = {}
         for t in transactions:
             if t["type"] == "payment":
                 ref = t.get("reference", "") or t.get("payment", {}).get("reference_number", "")
-                if ref:
-                    allocated_receipt_numbers.add(ref)
+                source = t.get("payment") or {}
+                confirmed = bool(source.get("payment_confirmed")) or (
+                    source.get("payment_method") == "cheque" and not source.get("rejection_reason")
+                )
+                if ref and confirmed:
+                    allocated_receipt_amounts[ref] = allocated_receipt_amounts.get(
+                        ref, Decimal("0")
+                    ) + _scalar_to_decimal(source.get("amount_aed") or 0)
 
         for receipt in receipts:
             receipt_ref = receipt.receipt_number or gettext(f"قبض #{receipt.id}")
-            if receipt_ref in allocated_receipt_numbers:
+            # A receipt larger than the invoices it was allocated to still
+            # credits the whole amount in Customer.balance. Show only the
+            # unallocated remainder here, otherwise the closing balance
+            # understates the customer's payment.
+            unallocated = _scalar_to_decimal(receipt.amount_aed) - allocated_receipt_amounts.get(
+                receipt_ref, Decimal("0")
+            )
+            if unallocated <= Decimal("0"):
                 continue
             transactions.append(
                 {
@@ -474,19 +487,19 @@ class CustomerStatementService:
                     "type": "receipt",
                     "reference": receipt_ref,
                     "debit": 0,
-                    "credit": float(receipt.amount_aed or 0),
+                    "credit": float(unallocated),
                     "balance": 0,
                     "description": gettext("سند قبض"),
                     "currency": default_currency,
                     "exchange_rate": 1.0,
-                    "paid_amount": float(receipt.amount_aed or 0),
+                    "paid_amount": float(unallocated),
                     "balance_due": 0,
                     "status": gettext("مؤكدة") if receipt.payment_confirmed else gettext("معلقة"),
                     "payment_method": receipt.payment_method,
                     "payment_confirmed": receipt.payment_confirmed,
                     "rejection_reason": getattr(receipt, "rejection_reason", None),
                     "_debit_exact": Decimal("0"),
-                    "_credit_exact": Decimal(str(receipt.amount_aed or 0)),
+                    "_credit_exact": unallocated,
                 }
             )
 

@@ -92,7 +92,11 @@ class PurchaseReturn(db.Model):
 
         # Calculate tax amount only if recalculate_tax is True or tax_amount not set
         if recalculate_tax or self.tax_amount is None:
-            tax_rate_decimal = Decimal(str(self.tax_rate)) if self.tax_rate else Decimal("0")
+            # PurchaseReturn has no persisted tax_rate column - the service
+            # computes tax proportionally from the source purchase. Reading a
+            # missing attribute here used to raise AttributeError on a plain
+            # calculate_totals() call.
+            tax_rate_decimal = Decimal(str(getattr(self, "tax_rate", 0) or 0))
             self.tax_amount = (self.subtotal * (tax_rate_decimal / Decimal("100"))).quantize(
                 Decimal("0.001"), rounding=ROUND_HALF_UP
             )

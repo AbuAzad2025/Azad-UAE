@@ -830,6 +830,10 @@ class PaymentService:
                                         branch_id=receipt.branch_id,
                                         tenant_id=tenant_id,
                                     )
+                                    # FX gain/loss settles AR in the GL; it is
+                                    # not customer credit. Keep the sub-ledger
+                                    # in step with the receivable.
+                                    customer.adjust_balance(-fx_diff)
                                 except Exception as fx_err:
                                     current_app.logger.exception(
                                         "FX auto-posting failed for receipt %s: %s",
@@ -1038,6 +1042,12 @@ class PaymentService:
                 tenant_id=tenant_id,
             )
 
+        # Cash (or a cheque) went OUT to the customer. The GL debits the
+        # customer's AR and the statement shows an outgoing payment as a debit,
+        # so the stored balance must lose the same amount - otherwise the
+        # customer card and the statement disagree.
+        customer.adjust_balance(-Decimal(str(payment.amount_aed or 0)))
+
         return payment
 
     @staticmethod
@@ -1051,6 +1061,8 @@ class PaymentService:
         الدلالة: موجب = رصيد للعميل، سالب = ذمة على العميل.
         الصيغة: Receipts - Sales - Outgoing_Payments_to_customer (refunds)
         يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد بالفرع)."""
+        from sqlalchemy import or_
+
         from models import Payment as PaymentModel
         from models.payment import payment_affects_balance
 
@@ -1061,26 +1073,45 @@ class PaymentService:
             Sale.customer_id == customer_id,
             Sale.status == "confirmed",
         )
-        receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
-            Receipt.customer_id == customer_id,
-            payment_affects_balance(Receipt),
-        )
         outgoing_total = db.session.query(db.func.sum(PaymentModel.amount_aed)).filter(
             PaymentModel.customer_id == customer_id,
             PaymentModel.direction == "outgoing",
             payment_affects_balance(PaymentModel),
         )
+        incoming_rows = db.session.query(PaymentModel.amount_aed, PaymentModel.reference_number).filter(
+            PaymentModel.customer_id == customer_id,
+            PaymentModel.direction == "incoming",
+            payment_affects_balance(PaymentModel),
+        )
         if tenant_id is not None:
             sales_total = sales_total.filter(Sale.tenant_id == tenant_id)
-            receipts_total = receipts_total.filter(Receipt.tenant_id == tenant_id)
             outgoing_total = outgoing_total.filter(PaymentModel.tenant_id == tenant_id)
+            incoming_rows = incoming_rows.filter(PaymentModel.tenant_id == tenant_id)
         if branch_id is not None:
             sales_total = sales_total.filter(Sale.branch_id == branch_id)
-            receipts_total = receipts_total.filter(Receipt.branch_id == branch_id)
             outgoing_total = outgoing_total.filter(PaymentModel.branch_id == branch_id)
+            incoming_rows = incoming_rows.filter(PaymentModel.branch_id == branch_id)
+
+        incoming_payments = incoming_rows.all()
+        incoming_total = sum((Decimal(str(row.amount_aed or 0)) for row in incoming_payments), Decimal("0"))
+        # A Receipt and its allocated Payment share a reference_number. Count
+        # each collection once, exactly as the customer statement does.
+        allocated_refs = {row.reference_number for row in incoming_payments if row.reference_number}
+        receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
+            Receipt.customer_id == customer_id,
+            payment_affects_balance(Receipt),
+            or_(Receipt.receipt_number.is_(None), ~Receipt.receipt_number.in_(allocated_refs))
+            if allocated_refs
+            else True,
+        )
+        if tenant_id is not None:
+            receipts_total = receipts_total.filter(Receipt.tenant_id == tenant_id)
+        if branch_id is not None:
+            receipts_total = receipts_total.filter(Receipt.branch_id == branch_id)
 
         return (
             (receipts_total.scalar() or Decimal("0"))
+            + incoming_total
             - (sales_total.scalar() or Decimal("0"))
             - (outgoing_total.scalar() or Decimal("0"))
         )

@@ -362,16 +362,8 @@ def delete(**kwargs):
                     tenant_id=purchase.tenant_id,
                 )
 
-                if purchase.supplier_id:
-                    supplier = PurchaseService.get_tenant_supplier(
-                        purchase.supplier_id,
-                        tenant_id=purchase.tenant_id,
-                    )
-                    if supplier:
-                        from decimal import Decimal
-
-                        supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
-
+                # delete_purchase owns the AP reversal. Reversing it here as
+                # well used to touch total_paid_aed twice and corrupt AP.
                 PurchaseService.delete_purchase(purchase)
                 LoggingCore.log_audit("delete", "purchases", record_id)
             flash(

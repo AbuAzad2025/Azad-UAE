@@ -919,9 +919,17 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     for receipt in rcpt_q.all():
         receipt.reject_receipt(reason or gettext("تم إلغاء الشيك"))
 
+    # Cancelling an incoming cheque restores the customer's receivable in the
+    # GL and drops the payment from the statement, so the cached balance must
+    # lose the credit it gained when the cheque was received. A bounced cheque
+    # was already reversed by process_cheque_bounce - never reverse it twice.
+    if create_gl and not skip_gl and cheque.cheque_type == "incoming" and cheque.customer_id:
+        cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
+
     # Cancelling an outgoing supplier cheque restores AP in the GL, so restore
-    # the cached supplier paid total to keep the balance consistent.
-    if create_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
+    # the cached supplier paid total to keep the balance consistent. A bounced
+    # cheque already restored it - skip_gl guards this sub-ledger leg too.
+    if create_gl and not skip_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
         from models.supplier import Supplier
 
         tid = cheque.tenant_id if cheque is not None else None

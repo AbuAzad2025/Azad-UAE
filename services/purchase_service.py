@@ -662,7 +662,25 @@ class PurchaseService:
             if quantity <= 0:
                 continue
 
-            line_total = (quantity * unit_cost).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
+            # The source line's line_total is already net of its discount.
+            # Using quantity * unit_cost here ignores the discount and makes
+            # the return credit more AP/VAT/inventory than the purchase ever
+            # booked. Pro-rate the original net line instead.
+            source_line = (
+                next(
+                    (line for line in purchase.lines if line.id == purchase_line_id),
+                    None,
+                )
+                if purchase_line_id
+                else None
+            )
+            source_qty = getattr(source_line, "quantity", None) if source_line else None
+            source_net = getattr(source_line, "line_total", None) if source_line else None
+            if source_qty and source_net is not None and _D(str(source_qty)) > 0:
+                ratio = quantity / _D(str(source_qty))
+                line_total = (_D(str(source_net)) * ratio).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
+            else:
+                line_total = (quantity * unit_cost).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
             subtotal += line_total
 
             return_line = PurchaseReturnLine(
@@ -774,7 +792,7 @@ class PurchaseService:
         # حساب الضريبة التناسبية
         if purchase.tax_amount and purchase.subtotal and purchase.subtotal > 0:
             tax_ratio = subtotal / _D(str(purchase.subtotal))
-            tax_amount = (_D(str(purchase.tax_amount)) * tax_ratio).quantize(_D("0.01"), rounding=ROUND_HALF_UP)
+            tax_amount = (_D(str(purchase.tax_amount)) * tax_ratio).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
 
         purchase_return.subtotal = subtotal
         purchase_return.tax_amount = tax_amount
@@ -790,7 +808,7 @@ class PurchaseService:
                 tax_rate = Decimal("0")
             if tax_rate > 0:
                 inventory_credit = (subtotal / (Decimal("1") + (tax_rate / Decimal("100")))).quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
+                    Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
         if capitalized:
             for return_line in purchase_return.lines:
@@ -936,13 +954,18 @@ class PurchaseService:
 
     @staticmethod
     def delete_purchase(purchase, has_supplier: bool = True):
-        """Delete a purchase and its lines. Reverses supplier balance if needed."""
+        """Delete a purchase and its lines. Reverses supplier AP exactly once.
+
+        A purchase increased ``total_purchases_aed`` via ``apply_purchase``, so
+        the reversal must use the same field - ``apply_payment`` would have
+        driven ``total_paid_aed`` negative and inflated the payable.
+        """
         if has_supplier and purchase.supplier_id:
             from models import Supplier
 
             supplier = Supplier.query.filter_by(id=purchase.supplier_id, tenant_id=purchase.tenant_id).first()
             if supplier:
-                supplier.apply_payment(-Decimal(str(purchase.amount_aed or 0)))
+                supplier.apply_purchase(-Decimal(str(purchase.amount_aed or 0)))
         PurchaseLine.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).delete()
         db.session.delete(purchase)
 

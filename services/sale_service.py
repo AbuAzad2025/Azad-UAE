@@ -781,6 +781,43 @@ class SaleService:
                 from decimal import Decimal as _D
 
                 sale.customer.apply_receipt(_D(str(overpayment_aed or 0)))
+                # The excess was credited in the sub-ledger and the cash is in
+                # the drawer; without a matching GL entry the till is heavier
+                # than the books and the customer credit has no liability
+                # behind it. Keyed on the prepayment id so a retry cannot post
+                # it twice.
+                GLService.ensure_core_accounts(tenant_id=sale.tenant_id)
+                post_or_fail(
+                    [
+                        {
+                            "account": GLService.get_payment_debit_account(
+                                payment_data["payment_method"],
+                                branch_id=sale.branch_id,
+                                tenant_id=sale.tenant_id,
+                            ),
+                            "concept_code": GLService.get_payment_debit_concept(payment_data["payment_method"]),
+                            "debit": overpayment_aed,
+                            "description": gettext(f"دفع زائد - {sale.sale_number}"),
+                        },
+                        {
+                            "account": GLService.get_customer_credit_account(
+                                sale.customer,
+                                branch_id=sale.branch_id,
+                                tenant_id=sale.tenant_id,
+                            ),
+                            "concept_code": GLService.get_customer_credit_concept(sale.customer),
+                            "credit": overpayment_aed,
+                            "description": gettext(f"سلفة عميل - {sale.sale_number}"),
+                        },
+                    ],
+                    description=f"Customer prepayment {sale.sale_number}",
+                    reference_type=GLRef.PAYMENT,
+                    reference_id=prepayment.id,
+                    currency=payment_currency,
+                    exchange_rate=payment_exchange_decimal,
+                    branch_id=sale.branch_id,
+                    tenant_id=sale.tenant_id,
+                )
             else:
                 SaleService.create_payment_for_sale(
                     sale=sale,
@@ -1165,6 +1202,40 @@ class SaleService:
         db.session.add(prepayment)
         db.session.flush()
         sale.customer.apply_receipt(Decimal(str(excess_aed or 0)))
+        # Mirror the cash and the customer advance into the GL (see the
+        # single-payment prepayment path) so the till and the books agree.
+        GLService.ensure_core_accounts(tenant_id=sale.tenant_id)
+        post_or_fail(
+            [
+                {
+                    "account": GLService.get_payment_debit_account(
+                        chunk["payment_method"],
+                        branch_id=sale.branch_id,
+                        tenant_id=sale.tenant_id,
+                    ),
+                    "concept_code": GLService.get_payment_debit_concept(chunk["payment_method"]),
+                    "debit": excess_aed,
+                    "description": gettext(f"دفع زائد - {sale.sale_number}"),
+                },
+                {
+                    "account": GLService.get_customer_credit_account(
+                        sale.customer,
+                        branch_id=sale.branch_id,
+                        tenant_id=sale.tenant_id,
+                    ),
+                    "concept_code": GLService.get_customer_credit_concept(sale.customer),
+                    "credit": excess_aed,
+                    "description": gettext(f"سلفة عميل - {sale.sale_number}"),
+                },
+            ],
+            description=f"Customer prepayment {sale.sale_number}",
+            reference_type=GLRef.PAYMENT,
+            reference_id=prepayment.id,
+            currency=chunk["currency"],
+            exchange_rate=chunk["exchange_rate"],
+            branch_id=sale.branch_id,
+            tenant_id=sale.tenant_id,
+        )
 
     @staticmethod
     def create_payment_for_sale(
@@ -1445,6 +1516,11 @@ class SaleService:
                             branch_id=sale.branch_id,
                             tenant_id=(sale.tenant_id if sale is not None else None),
                         )
+                        # The FX difference is an entity gain/loss that
+                        # settles AR in the GL, not customer credit. Remove it
+                        # from the sub-ledger or the customer keeps a balance
+                        # with no receivable behind it.
+                        sale.customer.adjust_balance(-fx_diff)
                     except Exception as fx_err:
                         current_app.logger.exception(
                             "FX auto-posting failed for payment %s: %s",

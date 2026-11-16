@@ -409,7 +409,11 @@ def reverse_sale_revaluation(sale_id: int, tenant_id: int | None = None) -> list
     """
     from models.gl import GLJournalEntry
 
-    tag = f"{_REVALUATION_TAG}|sale:{sale_id}"
+    # The write side stores "FX_REVALUATION|YYYY-MM|sale:<id>". Match the
+    # contiguous "|sale:<id>" suffix - including the period segment in the
+    # middle used to match nothing, so settlement never unwound the
+    # unrealized revaluation and the rate move was recognised twice.
+    tag = f"|sale:{sale_id}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
             GLJournalEntry.notes.like(f"%{tag}%"),
@@ -467,7 +471,8 @@ def reverse_purchase_revaluation(purchase_id: int, tenant_id: int | None = None)
     """
     from models.gl import GLJournalEntry
 
-    tag = f"{_REVALUATION_TAG}|purchase:{purchase_id}"
+    # See the sale path: write side is "FX_REVALUATION|YYYY-MM|purchase:<id>".
+    tag = f"|purchase:{purchase_id}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
             GLJournalEntry.notes.like(f"%{tag}%"),

@@ -393,7 +393,9 @@ def social_insurance_amount(gross, country_code, *, is_national=False, joined_20
 
     if code == "PS":
         ceiling = Decimal(str(profile.get("social_ceiling") or 0)) or None
-        base = min(g, ceiling) if ceiling is not None else g
+        floor = Decimal(str(profile.get("social_floor") or 0))
+        insurable = max(g, floor)
+        base = min(insurable, ceiling) if ceiling is not None else insurable
         employee = _q3(base * Decimal(str(profile.get("social_employee_rate") or 0)) / Decimal("100"))
         employer = _q3(base * Decimal(str(profile.get("social_employer_rate") or 0)) / Decimal("100"))
         return {
@@ -418,7 +420,9 @@ def social_insurance_amount(gross, country_code, *, is_national=False, joined_20
 
     if code == "SA":
         gosi_ceiling = Decimal(str(profile.get("gosi_ceiling") or 0))
-        base = min(g, gosi_ceiling)
+        gosi_floor = Decimal(str(profile.get("gosi_floor") or 0))
+        insurable = max(g, gosi_floor)
+        base = min(insurable, gosi_ceiling) if gosi_ceiling > 0 else insurable
         if not is_national:
             # Occupational hazards only, employer side — no employee share.
             employee = Decimal("0")
@@ -448,7 +452,9 @@ def social_insurance_amount(gross, country_code, *, is_national=False, joined_20
                 "eligible": False,
             }
         ceiling = Decimal(str(profile.get("pension_ceiling") or 0))
-        base = min(g, ceiling)
+        pension_floor = Decimal(str(profile.get("pension_floor") or 0))
+        insurable = max(g, pension_floor)
+        base = min(insurable, ceiling) if ceiling > 0 else insurable
         employee = _q3(base * Decimal(str(profile.get("pension_national_rate_employee") or 0)) / Decimal("100"))
         employer = _q3(base * Decimal(str(profile.get("pension_national_rate_employer") or 0)) / Decimal("100"))
         return {

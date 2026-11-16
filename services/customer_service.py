@@ -246,16 +246,17 @@ class CustomerService:
             .group_by(Sale.customer_id)
             .all()
         )
-        receipts_rows = (
+        incoming_rows = (
             db.session.query(
-                Receipt.customer_id,
-                db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label("receipts_total"),
+                Payment.customer_id,
+                db.func.coalesce(db.func.sum(Payment.amount_aed), 0).label("incoming_total"),
             )
             .filter(
-                Receipt.branch_id == branch_id,
-                Receipt.customer_id.in_(customer_ids),
+                Payment.direction == "incoming",
+                Payment.branch_id == branch_id,
+                Payment.customer_id.in_(customer_ids),
             )
-            .group_by(Receipt.customer_id)
+            .group_by(Payment.customer_id)
             .all()
         )
         outgoing_rows = (
@@ -271,15 +272,44 @@ class CustomerService:
             .group_by(Payment.customer_id)
             .all()
         )
+        # A receipt and its allocated payment share a reference_number. Count
+        # the collection once, mirroring the customer statement's dedup.
+        allocated_refs = {
+            ref
+            for (ref,) in db.session.query(Payment.reference_number)
+            .filter(
+                Payment.direction == "incoming",
+                Payment.branch_id == branch_id,
+                Payment.customer_id.in_(customer_ids),
+                Payment.reference_number.isnot(None),
+            )
+            .all()
+        }
+        from sqlalchemy import or_
+
+        receipts_query = db.session.query(
+            Receipt.customer_id,
+            db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label("receipts_total"),
+        ).filter(
+            Receipt.branch_id == branch_id,
+            Receipt.customer_id.in_(customer_ids),
+        )
+        if allocated_refs:
+            receipts_query = receipts_query.filter(
+                or_(Receipt.receipt_number.is_(None), ~Receipt.receipt_number.in_(allocated_refs))
+            )
+        receipts_rows = receipts_query.group_by(Receipt.customer_id).all()
 
         sales_map = {cid: Decimal(str(total or 0)) for cid, total in sales_rows}
         receipts_map = {cid: Decimal(str(total or 0)) for cid, total in receipts_rows}
+        incoming_map = {cid: Decimal(str(total or 0)) for cid, total in incoming_rows}
         outgoing_map = {cid: Decimal(str(total or 0)) for cid, total in outgoing_rows}
 
         balance_map = {}
         for cid in customer_ids:
             balance_map[cid] = (
                 receipts_map.get(cid, Decimal("0"))
+                + incoming_map.get(cid, Decimal("0"))
                 - sales_map.get(cid, Decimal("0"))
                 - outgoing_map.get(cid, Decimal("0"))
             )

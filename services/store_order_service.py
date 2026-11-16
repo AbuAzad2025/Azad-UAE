@@ -296,6 +296,27 @@ class StoreOrderService:
         StoreOrderService._reverse_loyalty_points(sale)
 
         if sale.status == "confirmed" or StoreOrderService.is_fulfilled(sale):
+            # The platform fee was accrued (Dr Commission Expense / Cr Azad
+            # Payable) at confirmation. Cancelling the order without reversing
+            # it bills the tenant a commission on revenue that no longer
+            # exists, and settle_fees would still pay the platform.
+            from models import AzadPlatformFee
+            from services.gl_service import GLService
+            from utils.gl_reference_types import GLRef
+
+            accrued_fees = AzadPlatformFee.query.filter_by(
+                sale_id=sale.id, tenant_id=sale.tenant_id, status="accrued"
+            ).all()
+            for fee in accrued_fees:
+                if getattr(fee, "gl_posted", False):
+                    GLService.reverse_entry(
+                        reference_type=GLRef.AZAD_PLATFORM_FEE,
+                        reference_id=fee.id,
+                        description=f"Reverse platform fee — cancelled order {sale.sale_number}",
+                        tenant_id=sale.tenant_id,
+                    )
+                fee.status = "cancelled"
+
             SaleService.cancel_sale(sale)
             if sale.coupon_code:
                 from services.store_coupon_service import StoreCouponService
