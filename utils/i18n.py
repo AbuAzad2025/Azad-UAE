@@ -8391,6 +8391,8 @@ TRANSLATIONS = {
     "All_Warehouses": {"ar": "جميع المستودعات", "en": "All Warehouses"},
     "Use_Cost_Plus_Margin": {"ar": "استخدم التكلفة + هامش", "en": "Use Cost + Margin"},
     "Search_Product": {"ar": "بحث عن منتج", "en": "Search Product"},
+    "Base Currency": {"ar": "العملة الأساسية", "en": "Base Currency"},
+    "Discount %": {"ar": "نسبة الخصم %", "en": "Discount %"},
     "Reject": {"ar": "رفض", "en": "Reject"},
     "Reject?": {"ar": "رفض؟", "en": "Reject?"},
     "Send": {"ar": "إرسال", "en": "Send"},
