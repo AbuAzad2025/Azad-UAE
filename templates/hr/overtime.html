@@ -36,8 +36,8 @@
             <td class="text-center"><span class="badge {% if ot.status == 'approved' %}bg-success{% elif ot.status == 'rejected' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ ot.status_ar }}</span></td>
             <td class="text-center">
               {% if ot.status == 'pending' %}
-              <form method="POST" action="{{ url_for('hr.overtime_approve', ot_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">{{ t('Approve') }}</button></form>
-              <form method="POST" action="{{ url_for('hr.overtime_reject', ot_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">{{ t('Reject') }}</button></form>
+              <form method="POST" action="{{ url_for('hr.approve_overtime', entry_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-success">{{ t('Approve') }}</button></form>
+              <form method="POST" action="{{ url_for('hr.reject_overtime', entry_id=ot.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger">{{ t('Reject') }}</button></form>
               {% endif %}
             </td>
           </tr>
