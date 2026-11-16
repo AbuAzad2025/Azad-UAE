@@ -257,9 +257,16 @@ def _repair_supplier_totals(connection, tenant_base: dict) -> None:
     ):
         return
     suppliers = _table("suppliers", "id", "total_purchases_aed")
-    totals = {}
-    for row in connection.execute(sa.select(suppliers)):
-        totals[row.id] = _decimal(row.total_purchases_aed)
+    supplier_ids = [row.id for row in connection.execute(sa.select(suppliers.c.id))]
+
+    # Recompute from source documents rather than adding to the cached value:
+    # adding is not idempotent if the revision is replayed after a downgrade.
+    purchase_totals: dict[int, Decimal] = {sid: Decimal("0") for sid in supplier_ids}
+    if _has_columns(connection, "purchases", "supplier_id", "status", "amount_aed"):
+        purchases = _table("purchases", "supplier_id", "status", "amount_aed")
+        for row in connection.execute(sa.select(purchases)):
+            if (row.status or "") == "confirmed" and row.supplier_id in purchase_totals:
+                purchase_totals[row.supplier_id] += _decimal(row.amount_aed)
 
     orders = _table(
         "maintenance_purchase_orders",
@@ -273,7 +280,7 @@ def _repair_supplier_totals(connection, tenant_base: dict) -> None:
     )
     additions: dict[int, Decimal] = {}
     for row in connection.execute(sa.select(orders)):
-        if (row.status or "") != "received" or not row.posted or row.supplier_id not in totals:
+        if (row.status or "") != "received" or not row.posted or row.supplier_id not in purchase_totals:
             continue
         additions[row.supplier_id] = additions.get(row.supplier_id, Decimal("0")) + _base_amount(
             row.total_amount,
@@ -281,11 +288,15 @@ def _repair_supplier_totals(connection, tenant_base: dict) -> None:
             row.exchange_rate,
             tenant_base.get(row.tenant_id, "AED"),
         )
+    # Only suppliers actually affected by the missing workshop purchases are
+    # touched; a supplier with a manually set opening total and no workshop
+    # orders is left exactly as it was.
     for supplier_id, addition in additions.items():
+        total = purchase_totals.get(supplier_id, Decimal("0")) + addition
         connection.execute(
             sa.update(suppliers)
             .where(suppliers.c.id == supplier_id)
-            .values(total_purchases_aed=(totals[supplier_id] + addition).quantize(_QUANTUM, rounding=ROUND_HALF_UP))
+            .values(total_purchases_aed=total.quantize(_QUANTUM, rounding=ROUND_HALF_UP))
         )
 
 

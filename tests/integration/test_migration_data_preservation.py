@@ -247,6 +247,26 @@ def test_upgrade_preserves_money(comparison: dict[str, Any]) -> None:
     )
 
 
+def test_balance_repair_is_declared_and_scoped(comparison: dict[str, Any]) -> None:
+    """The data-repair revision may only touch the two declared sub-ledger totals."""
+    from scripts.ops.verify_migration_preserves_data import REPAIRED_MONEY_COLUMNS
+
+    repaired = comparison["repaired_money_changes"]
+    for change in repaired:
+        key = (change["table"], change["column"])
+        assert key in REPAIRED_MONEY_COLUMNS
+        assert change["revision"] == "f5a6b7c8d9e0"
+        assert change["before"] != change["after"]
+    # Every observed difference in those columns must be declared; an
+    # undeclared repair would be a silent mutation of source data.
+    for diff in comparison["value_differences"]:
+        if (diff["table"], diff["column"]) in REPAIRED_MONEY_COLUMNS:
+            assert any(
+                r["table"] == diff["table"] and r["column"] == diff["column"] and r["pk"] == diff["pk"]
+                for r in repaired
+            )
+
+
 def test_upgrade_preserves_non_timestamp_values(probe_report: dict[str, Any], comparison: dict[str, Any]) -> None:
     """No value outside the timestamp columns may change."""
     offenders = []

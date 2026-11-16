@@ -299,6 +299,22 @@ DECLARED_CHANGES: tuple[DeclaredChange, ...] = (
     ),
 )
 
+#: Money columns that revision f5a6b7c8d9e0 deliberately REBUILDS from the
+#: documents. They are the stored sub-ledger conveniences, not source data:
+#: the old code never moved them for maintenance movements / spare-part
+#: purchases / partner commissions, so the repair is the whole point of the
+#: revision. Changes here are declared and reported, never silently ignored.
+REPAIRED_MONEY_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
+    ("customers", "balance"): (
+        "f5a6b7c8d9e0",
+        "Customer balance rebuilt from every sale/payment/return/maintenance movement.",
+    ),
+    ("suppliers", "total_purchases_aed"): (
+        "f5a6b7c8d9e0",
+        "Workshop spare-part purchase orders added to the supplier's AP total.",
+    ),
+}
+
 #: The rows whose sha256 is printed in the report, because they carry the
 #: money. Keyed by "table:pk".
 KEY_ROWS = (
@@ -1497,7 +1513,23 @@ def compare(before: dict[str, Any], after: dict[str, Any], context: dict[str, An
     unexpected: list[dict[str, Any]] = []
     matched_declared: set[int] = set()
 
+    repaired_changes: list[dict[str, Any]] = []
     for index, diff in enumerate(value_diffs):
+        repair = REPAIRED_MONEY_COLUMNS.get((diff["table"], diff["column"]))
+        if repair is not None:
+            declared.append(
+                {
+                    "table": diff["table"],
+                    "pk": diff["pk"],
+                    "column": diff["column"],
+                    "before": diff["before"],
+                    "after": diff["after"],
+                    "revision": repair[0],
+                    "reason": repair[1],
+                }
+            )
+            repaired_changes.append(declared[-1])
+            continue
         hit = None
         for change_index, change in enumerate(DECLARED_CHANGES):
             if change.table != diff["table"] or change.column != diff["column"]:
@@ -1547,7 +1579,7 @@ def compare(before: dict[str, Any], after: dict[str, Any], context: dict[str, An
             continue
         for column, b_value in before_table["money"].items():
             a_value = after_table["money"].get(column)
-            if b_value != a_value:
+            if b_value != a_value and (table, column) not in REPAIRED_MONEY_COLUMNS:
                 money_diffs.append({"table": table, "column": column, "before": b_value, "after": a_value})
 
     balance_diffs: list[dict[str, Any]] = []
@@ -1623,6 +1655,7 @@ def compare(before: dict[str, Any], after: dict[str, Any], context: dict[str, An
         "new_tables": new_tables,
         "value_differences": value_diffs,
         "declared_changes": declared,
+        "repaired_money_changes": repaired_changes,
         "declared_changes_not_observed": declared_not_observed,
         "unexpected_value_differences": unexpected,
         "money_differences": money_diffs,
