@@ -762,6 +762,7 @@ class TestCustomerLedger:
         MaintenanceService.transition_status(order.id, sample_tenant.id, to_status="ready", changed_by=sample_user.id)
 
         total = Decimal(str(order.total_amount))
+        starting_balance = Decimal(str(sample_customer.balance or 0))
         MaintenanceService.close_and_collect(
             order_id=order.id,
             tenant_id=sample_tenant.id,
@@ -770,6 +771,10 @@ class TestCustomerLedger:
             amount_received=total,
         )
         db_session.flush()
+
+        # The customer has ONE balance: the maintenance charge debited it and
+        # the cash collected credited it, so it ends where it started.
+        assert Decimal(str(sample_customer.balance or 0)) == starting_balance
 
         context = CustomerStatementService.build_statement_context(
             record_id=sample_customer.id,

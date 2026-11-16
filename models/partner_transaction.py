@@ -8,6 +8,7 @@ Tracks every financial movement with a partner:
   • withdrawal          — مسحوبات
   • additional_investment — استثمار إضافي
   • expense_payment     — دفع نصيب من مصاريف
+  • sale_commission     — عمولة مبيعات (تنعكس من دفتر الشريك)
   • adjustment          — تسوية يدوية
 """
 
@@ -39,7 +40,8 @@ class PartnerTransaction(db.Model):
 
     transaction_type = db.Column(db.String(30), nullable=False)
     # profit_share | loss_share | investment_return |
-    # withdrawal | additional_investment | expense_payment | adjustment
+    # withdrawal | additional_investment | expense_payment |
+    # sale_commission | adjustment
 
     amount = db.Column(db.Numeric(15, 3), nullable=False)
 
@@ -78,6 +80,7 @@ class PartnerTransaction(db.Model):
             "additional_investment": "استثمار إضافي",
             "expense_payment": "دفع مصاريف",
             "adjustment": "تسوية",
+            "sale_commission": "عمولة مبيعات",
         }
         return labels.get(self.transaction_type, self.transaction_type)
 

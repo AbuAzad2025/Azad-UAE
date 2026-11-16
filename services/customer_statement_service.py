@@ -9,7 +9,7 @@ from flask_babel import gettext
 from sqlalchemy import func
 
 from models import ProductReturn, Sale
-from models.maintenance import MaintenanceInvoice, MaintenanceOrder, MaintenanceReceipt
+from models.maintenance import MaintenanceInvoice, MaintenanceOrder, MaintenanceReceipt, MaintenanceReturn
 from models.receipt import Receipt
 
 
@@ -89,6 +89,16 @@ class CustomerStatementService:
             MaintenanceOrder.customer_id == record_id,
             MaintenanceOrder.tenant_id == tenant_id,
         )
+        # A maintenance return is a credit note: the customer is owed for the
+        # parts put back on the shelf. It reduces the maintenance receivable
+        # just like an approved sales return does, so it belongs here.
+        maintenance_returns_query = MaintenanceReturn.query.join(
+            MaintenanceOrder, MaintenanceOrder.id == MaintenanceReturn.order_id
+        ).filter(
+            MaintenanceOrder.customer_id == record_id,
+            MaintenanceOrder.tenant_id == tenant_id,
+            MaintenanceReturn.posted.is_(True),
+        )
 
         if branch_id is not None:
             sales_query = sales_query.filter(Sale.branch_id == branch_id)
@@ -98,6 +108,7 @@ class CustomerStatementService:
             maintenance_orders_query = maintenance_orders_query.filter(MaintenanceOrder.branch_id == branch_id)
             maintenance_invoices_query = maintenance_invoices_query.filter(MaintenanceOrder.branch_id == branch_id)
             maintenance_receipts_query = maintenance_receipts_query.filter(MaintenanceOrder.branch_id == branch_id)
+            maintenance_returns_query = maintenance_returns_query.filter(MaintenanceOrder.branch_id == branch_id)
 
         if date_from:
             sales_query = sales_query.filter(func.date(Sale.sale_date) >= date_from)
@@ -109,6 +120,9 @@ class CustomerStatementService:
             )
             maintenance_receipts_query = maintenance_receipts_query.filter(
                 func.date(MaintenanceReceipt.receipt_date) >= date_from
+            )
+            maintenance_returns_query = maintenance_returns_query.filter(
+                func.date(MaintenanceReturn.return_date) >= date_from
             )
 
         opening_balance = Decimal("0")
@@ -184,9 +198,18 @@ class CustomerStatementService:
                 MaintenanceOrder.tenant_id == tenant_id,
                 func.date(MaintenanceReceipt.receipt_date) < date_from,
             )
+            pre_maintenance_returns_q = MaintenanceReturn.query.join(
+                MaintenanceOrder, MaintenanceOrder.id == MaintenanceReturn.order_id
+            ).filter(
+                MaintenanceOrder.customer_id == record_id,
+                MaintenanceOrder.tenant_id == tenant_id,
+                MaintenanceReturn.posted.is_(True),
+                func.date(MaintenanceReturn.return_date) < date_from,
+            )
             if branch_id is not None:
                 pre_maintenance_invoices_q = pre_maintenance_invoices_q.filter(MaintenanceOrder.branch_id == branch_id)
                 pre_maintenance_receipts_q = pre_maintenance_receipts_q.filter(MaintenanceOrder.branch_id == branch_id)
+                pre_maintenance_returns_q = pre_maintenance_returns_q.filter(MaintenanceOrder.branch_id == branch_id)
             pre_maintenance_invoices_total = _scalar_to_decimal(
                 pre_maintenance_invoices_q.with_entities(
                     func.coalesce(func.sum(MaintenanceInvoice.amount_aed), 0)
@@ -194,24 +217,29 @@ class CustomerStatementService:
             )
             # The receipts carry no base-currency column of their own, so
             # they are converted at their order's rate - the same
-            # conversion the statement uses for a sale.
-            pre_maintenance_receipts_total = sum(
-                (
-                    _to_base_amount(
-                        receipt.amount,
-                        receipt.order.currency if receipt.order else default_currency,
-                        receipt.order.exchange_rate if receipt.order else Decimal("1"),
-                        default_currency,
-                    )
-                    for receipt in pre_maintenance_receipts_q.all()
-                ),
-                Decimal("0"),
+            # conversion the statement uses for a sale. A refund receipt is
+            # money paid OUT to the customer, so it reduces (not increases)
+            # the customer's credit.
+            pre_maintenance_receipts_total = Decimal("0")
+            for receipt in pre_maintenance_receipts_q.all():
+                base = _to_base_amount(
+                    receipt.amount,
+                    receipt.order.currency if receipt.order else default_currency,
+                    receipt.order.exchange_rate if receipt.order else Decimal("1"),
+                    default_currency,
+                )
+                pre_maintenance_receipts_total += -base if receipt.is_refund else base
+            pre_maintenance_returns_total = _scalar_to_decimal(
+                pre_maintenance_returns_q.with_entities(
+                    func.coalesce(func.sum(MaintenanceReturn.total_value_aed), 0)
+                ).scalar()
             )
             opening_balance = (
                 pre_payments_net
                 + pre_receipts_total
                 + pre_returns_total
                 + pre_maintenance_receipts_total
+                + pre_maintenance_returns_total
                 - pre_sales_total
                 - pre_maintenance_invoices_total
             )
@@ -230,6 +258,9 @@ class CustomerStatementService:
             )
             maintenance_receipts_query = maintenance_receipts_query.filter(
                 func.date(MaintenanceReceipt.receipt_date) <= date_to
+            )
+            maintenance_returns_query = maintenance_returns_query.filter(
+                func.date(MaintenanceReturn.return_date) <= date_to
             )
 
         sales = sales_query.order_by(Sale.sale_date).all()
@@ -510,26 +541,54 @@ class CustomerStatementService:
                 order.exchange_rate if order else Decimal("1"),
                 default_currency,
             )
+            # A refund is money the workshop paid back to the customer. It
+            # is the mirror image of a receipt: it must DEBIT the customer's
+            # balance (reduce the credit the return created), not credit it
+            # a second time.
+            is_refund = bool(maintenance_receipt.is_refund)
             transactions.append(
                 {
                     "date": maintenance_receipt.receipt_date,
                     "type": "maintenance_receipt",
                     "reference": maintenance_receipt.receipt_number,
-                    "debit": 0,
-                    "credit": float(receipt_base),
+                    "debit": float(receipt_base) if is_refund else 0,
+                    "credit": 0 if is_refund else float(receipt_base),
                     "balance": 0,
-                    "description": gettext("سند قبض صيانة"),
+                    "description": gettext("سند استرداد صيانة") if is_refund else gettext("سند قبض صيانة"),
                     "currency": (order.currency if order else default_currency) or default_currency,
                     "exchange_rate": float(order.exchange_rate or 1) if order else 1.0,
-                    "paid_amount": float(receipt_base),
+                    "paid_amount": 0 if is_refund else float(receipt_base),
                     "balance_due": 0,
                     "status": gettext("مؤكدة"),
                     "payment_method": maintenance_receipt.payment_mode,
                     "payment_confirmed": True,
                     "rejection_reason": None,
                     "order_number": order.order_number if order else None,
+                    "_debit_exact": receipt_base if is_refund else Decimal("0"),
+                    "_credit_exact": Decimal("0") if is_refund else receipt_base,
+                }
+            )
+
+        for maintenance_return in maintenance_returns_query.all():
+            order = maintenance_return.order
+            return_base = _scalar_to_decimal(maintenance_return.total_value_aed)
+            transactions.append(
+                {
+                    "date": maintenance_return.return_date,
+                    "type": "maintenance_return",
+                    "reference": maintenance_return.return_number,
+                    "debit": 0,
+                    "credit": float(return_base),
+                    "balance": 0,
+                    "description": gettext("مرتجع صيانة"),
+                    "currency": (order.currency if order else default_currency) or default_currency,
+                    "exchange_rate": float(order.exchange_rate or 1) if order else 1.0,
+                    "paid_amount": 0,
+                    "balance_due": 0,
+                    "status": gettext("معتمد"),
+                    "order_number": order.order_number if order else None,
                     "_debit_exact": Decimal("0"),
-                    "_credit_exact": receipt_base,
+                    "_credit_exact": return_base,
                 }
             )
 
@@ -594,7 +653,9 @@ class CustomerStatementService:
             transactions = [trans for trans in transactions if trans["type"] in ("opening", transaction_type)]
         elif transaction_type == "maintenance":
             transactions = [
-                trans for trans in transactions if trans["type"] in ("opening", "maintenance", "maintenance_receipt")
+                trans
+                for trans in transactions
+                if trans["type"] in ("opening", "maintenance", "maintenance_receipt", "maintenance_return")
             ]
 
         return {

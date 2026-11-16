@@ -57,6 +57,45 @@ logger = logging.getLogger(__name__)
 
 _BASE_QUANTUM = Decimal("0.001")
 
+
+def _customer_base_amount(order, amount, tenant_id: int) -> Decimal:
+    """Convert a maintenance money amount into the customer's base currency."""
+    return convert_and_quantize_aed(
+        amount,
+        getattr(order, "currency", None) or "AED",
+        getattr(order, "exchange_rate", None) or Decimal("1"),
+        base_currency=getattr(order, "base_currency", None) or "AED",
+        tenant_id=tenant_id,
+    )
+
+
+def _apply_customer_movement(order, tenant_id: int, amount_aed, direction: str) -> None:
+    """Post a maintenance money movement into the customer's single balance.
+
+    The workshop keeps its own receivable account (1134), but the customer
+    does not keep two ledgers: what they owe the company is one number. The
+    customer statement already carries maintenance invoices, receipts,
+    returns and refunds, so the stored ``Customer.balance`` must move with
+    them or the statement and the customer card disagree.
+    """
+    customer_id = getattr(order, "customer_id", None)
+    if not customer_id or not amount_aed:
+        return
+    customer = tenant_query(Customer).filter_by(id=customer_id, tenant_id=tenant_id).first()
+    if customer is None:
+        return
+    amount = Decimal(str(amount_aed))
+    if direction == "charge":
+        customer.apply_sale(amount)
+    elif direction == "return":
+        customer.apply_return(amount)
+    elif direction == "refund":
+        customer.adjust_balance(-amount)
+    else:  # money handed over by the customer - a receipt or a deposit
+        customer.apply_receipt(amount)
+    db.session.flush()
+
+
 #: The payment methods the reception counter can take. ``account`` means the
 #: customer pays on account: the invoice is issued and the balance stays open
 #: in the maintenance receivable, with no cash entry at all.
@@ -867,6 +906,8 @@ class MaintenanceService:
         db.session.flush()
 
         MaintenanceGLService.post_refund(receipt, cashier_id)
+        # Money went OUT to the customer: reduce the credit the return gave.
+        _apply_customer_movement(order, tid, _customer_base_amount(order, amount_to_refund, tid), "refund")
 
         order.refunded_amount = already_refunded + amount_to_refund
         db.session.flush()
@@ -1025,6 +1066,13 @@ class MaintenanceService:
             MaintenanceGLService.post_receipt(receipt, cashier_id)
         MaintenanceGLService.post_deposit_application(order, cashier_id)
 
+        # The customer's single balance moves with the invoice and with the
+        # cash collected now. The deposit was already credited when it was
+        # taken, so applying it to the invoice here must not credit it twice.
+        _apply_customer_movement(order, tid, invoice.amount_aed or 0, "charge")
+        if receipt is not None:
+            _apply_customer_movement(order, tid, _customer_base_amount(order, amount_to_collect, tid), "receipt")
+
         # The statutory document: a maintenance job is a sale for the tax
         # authority, so the customer is entitled to the same UBL document
         # the trade path issues. It is produced inside this transaction,
@@ -1124,6 +1172,9 @@ class MaintenanceService:
         db.session.flush()
 
         MaintenanceGLService.post_deposit(receipt, cashier_id)
+        # A deposit is money the customer handed over; it is already a credit
+        # on their balance. At close it is reclassified, not collected again.
+        _apply_customer_movement(order, tid, _customer_base_amount(order, amount, tid), "receipt")
 
         log_financial(
             message=f"Maintenance deposit collected: {order.order_number} amount {amount}",
@@ -1367,6 +1418,9 @@ class MaintenanceService:
         db.session.flush()
 
         MaintenanceGLService.post_return(maintenance_return, returned_by)
+        # A credit note: the customer is owed for the parts put back on the
+        # shelf, so their balance moves the same way as a sales return.
+        _apply_customer_movement(order, tid, maintenance_return.total_value_aed or 0, "return")
 
         log_financial(
             message=(f"Maintenance return created: {return_number} value {total} tax {total_tax} cost {total_cost}"),

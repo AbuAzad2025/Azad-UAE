@@ -422,12 +422,9 @@ table.statement-table thead th {
                         <span>{{ t('Maintenance') }} {{ t('Order Number') }}: {{ trans.order_number }}</span>
                       {% endif %}
                       <span>{{ t('الطريقة') }}: {{ trans.payment_method }}</span>
-                      {% if trans.payment.payment_method == 'cheque' %}
-                        {% if trans.payment.payment_confirmed %}
-                          <span>{{ t('History') }} {{ t('Exchange') }}: {{ trans.payment.cheque_clearance_date.strftime('%Y-%m-%d') if trans.payment.cheque_clearance_date else '-' }}</span>
-                        {% else %}
-                          <span>{{ t('History') }} {{ t('Due') }}: {{ trans.payment.cheque_due_date.strftime('%Y-%m-%d') if trans.payment.cheque_due_date else '-' }}</span>
-                        {% endif %}
+                    {% elif trans.type == 'maintenance_return' %}
+                      {% if trans.order_number %}
+                        <span>{{ t('Maintenance') }} {{ t('Order Number') }}: {{ trans.order_number }}</span>
                       {% endif %}
                     {% endif %}
                   </div>

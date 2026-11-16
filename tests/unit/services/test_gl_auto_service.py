@@ -29,15 +29,17 @@ class TestValidateDecimalPrecision:
 class TestEnsureBalanceConsistency:
     def test_customer_balance_consistent(self):
         connection = MagicMock()
+        # Customer.balance: positive = credit, negative = customer owes.
+        # Sale 100 with 40 paid leaves a 60 debt, i.e. a balance of -60.
         sale_row = MagicMock(amount_aed=Decimal("100"), paid_amount_aed=Decimal("40"))
-        customer_row = MagicMock(balance=Decimal("60"))
+        customer_row = MagicMock(balance=Decimal("-60"))
         connection.execute.return_value.fetchall.return_value = [sale_row]
         connection.execute.return_value.first.return_value = customer_row
 
         result = gl_auto_service.ensure_balance_consistency(connection, Customer, 7)
 
-        assert result["stored"] == Decimal("60")
-        assert result["calculated"] == Decimal("60")
+        assert result["stored"] == Decimal("-60")
+        assert result["calculated"] == Decimal("-60")
         assert result["consistent"] is True
 
     def test_customer_balance_inconsistent(self):

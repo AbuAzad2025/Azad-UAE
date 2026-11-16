@@ -28,8 +28,12 @@ def ensure_balance_consistency(connection, model, record_id):
             result = connection.execute(
                 Sale.__table__.select().where(Sale.customer_id == record_id, Sale.status == "confirmed")
             ).fetchall()
+            # Customer.balance uses "positive = customer credit, negative =
+            # debt" (see models/customer.py). The old formula returned the
+            # outstanding receivable, which has the opposite sign, so a
+            # perfectly consistent customer was always reported inconsistent.
             calculated_balance = sum(
-                (row.amount_aed or Decimal("0")) - (row.paid_amount_aed or Decimal("0")) for row in result
+                (row.paid_amount_aed or Decimal("0")) - (row.amount_aed or Decimal("0")) for row in result
             )
             customer = connection.execute(Customer.__table__.select().where(Customer.id == record_id)).first()
             stored_balance = customer.balance if customer else Decimal("0")
