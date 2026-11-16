@@ -221,6 +221,16 @@ class CustomerStatementService:
             payments_query = payments_query.filter(func.date(Payment.payment_date) <= date_to)
             receipts_query = receipts_query.filter(func.date(Receipt.receipt_date) <= date_to)
             returns_query = returns_query.filter(func.date(ProductReturn.return_date) <= date_to)
+            # Maintenance movements are part of the customer's single balance,
+            # so the upper bound must apply to them as well - otherwise a
+            # statement "up to date_to" still shows later maintenance entries
+            # and overstates the closing balance.
+            maintenance_invoices_query = maintenance_invoices_query.filter(
+                func.date(MaintenanceInvoice.invoice_date) <= date_to
+            )
+            maintenance_receipts_query = maintenance_receipts_query.filter(
+                func.date(MaintenanceReceipt.receipt_date) <= date_to
+            )
 
         sales = sales_query.order_by(Sale.sale_date).all()
         payments = payments_query.order_by(Payment.payment_date).all()
@@ -533,11 +543,6 @@ class CustomerStatementService:
 
         transactions.sort(key=_sort_key)
 
-        if transaction_type in {"sale", "payment", "receipt", "return"}:
-            transactions = [trans for trans in transactions if trans["type"] == transaction_type]
-        elif transaction_type == "maintenance":
-            transactions = [trans for trans in transactions if trans["type"] in ("maintenance", "maintenance_receipt")]
-
         if opening_balance != 0 or date_from:
             transactions.insert(
                 0,
@@ -558,6 +563,11 @@ class CustomerStatementService:
                 },
             )
 
+        # Compute balances over ALL movements BEFORE applying the display
+        # filter. The closing balance is a fact about the customer, not about
+        # which movement type is currently selected for display - filtering
+        # the rows first used to drop the payments from the running total, so
+        # selecting "sales" showed a balance that ignored every receipt.
         running_balance = opening_balance
         for trans in transactions:
             if trans["type"] == "opening":
@@ -576,6 +586,16 @@ class CustomerStatementService:
                 running_balance += credit_exact - debit_exact
             trans["balance"] = float(running_balance)
             trans["is_confirmed"] = is_confirmed
+
+        # Display-only filter, applied AFTER the running balance is complete.
+        # The opening row is kept so the reader sees the balance the filtered
+        # sequence starts from.
+        if transaction_type in {"sale", "payment", "receipt", "return"}:
+            transactions = [trans for trans in transactions if trans["type"] in ("opening", transaction_type)]
+        elif transaction_type == "maintenance":
+            transactions = [
+                trans for trans in transactions if trans["type"] in ("opening", "maintenance", "maintenance_receipt")
+            ]
 
         return {
             "transactions": transactions,
