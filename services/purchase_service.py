@@ -676,9 +676,16 @@ class PurchaseService:
             )
             source_qty = getattr(source_line, "quantity", None) if source_line else None
             source_net = getattr(source_line, "line_total", None) if source_line else None
-            if source_qty and source_net is not None and _D(str(source_qty)) > 0:
-                ratio = quantity / _D(str(source_qty))
-                line_total = (_D(str(source_net)) * ratio).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
+            source_qty_dec = None
+            source_net_dec = None
+            try:
+                source_qty_dec = _D(str(source_qty))
+                source_net_dec = _D(str(source_net))
+            except (InvalidOperation, TypeError, ValueError):
+                pass
+            if source_qty_dec is not None and source_net_dec is not None and source_qty_dec > 0:
+                ratio = quantity / source_qty_dec
+                line_total = (source_net_dec * ratio).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
             else:
                 line_total = (quantity * unit_cost).quantize(_D("0.001"), rounding=ROUND_HALF_UP)
             subtotal += line_total

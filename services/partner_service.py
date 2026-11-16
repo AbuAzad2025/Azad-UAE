@@ -884,7 +884,14 @@ class PartnerService:
             .order_by(PartnerTransaction.transaction_date, PartnerTransaction.id)
             .all()
         )
-        txs = [t for t in all_txs if t.transaction_date >= start_date]
+
+        def _in_period(tx) -> bool:
+            value = getattr(tx, "transaction_date", None)
+            if not isinstance(value, date):
+                return True
+            return value >= start_date
+
+        txs = [t for t in all_txs if _in_period(t)]
 
         total_credit = sum(float(t.amount_base) for t in txs if float(t.amount_base) > 0)
         total_debit = sum(abs(float(t.amount_base)) for t in txs if float(t.amount_base) < 0)
@@ -906,13 +913,13 @@ class PartnerService:
 
         running = Decimal("0")
         display_rows = []
+        opening_balance = 0.0
         # An empty ledger gives the cached balance nothing to contradict; use
-        # it as the opening/closing figure in that one case.
-        opening_balance = float(partner.current_balance or 0) if not all_txs else 0.0
-        closing_balance = opening_balance
+        # it as the closing figure in that one case.
+        closing_balance = float(partner.current_balance or 0) if not all_txs else 0.0
         for tx in all_txs:
             running += Decimal(str(tx.amount_base or 0))
-            if tx.transaction_date < start_date:
+            if isinstance(getattr(tx, "transaction_date", None), date) and tx.transaction_date < start_date:
                 opening_balance = float(running)
                 closing_balance = float(running)
                 continue
