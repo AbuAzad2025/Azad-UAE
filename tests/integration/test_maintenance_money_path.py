@@ -798,6 +798,11 @@ class TestCustomerLedger:
         # The charge and the payment cancel each other, so the customer
         # owes nothing for the maintenance job.
         assert abs(context["final_balance"]) < Decimal("0.01")
+        # "One balance" means the stored figure and the statement's closing
+        # figure are the same number, not merely both close to zero.
+        assert Decimal(str(sample_customer.balance)) == Decimal(str(context["final_balance"])).quantize(
+            Decimal("0.001")
+        )
 
     def test_the_statement_can_be_filtered_to_the_maintenance_movements(
         self, db_session, sample_tenant, sample_user, sample_warehouse, sample_customer
