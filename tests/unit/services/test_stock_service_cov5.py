@@ -227,7 +227,9 @@ def test_transfer_creates_dest_pwc_and_resets_src_on_drain():
         ss.StockService.transfer_stock(1, 10, 11, 10, user=MagicMock())
     assert src_pwc.total_quantity == Decimal("0")
     assert src_pwc.average_cost == Decimal("0.0000")
-    assert src_pwc.total_value == Decimal("0.001")
+    # Zero units must carry zero value; the old 0.001 residue overstated
+    # inventory and contaminated the next receipt's moving average.
+    assert src_pwc.total_value == Decimal("0")
     added = [c for call in add_mock.call_args_list for c in call.args if isinstance(c, ss.ProductWarehouseCost)]
     assert added
     assert added[0].total_quantity == Decimal("10")
