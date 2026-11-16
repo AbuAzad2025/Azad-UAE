@@ -3,9 +3,8 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from extensions import db
-from models import Customer, Product, Tenant
+from models import Tenant, Warehouse
 from services.quotation_service import QuotationService
-from services.stock_service import StockService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
@@ -37,15 +36,15 @@ def create():
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
     tid = get_active_tenant_id(current_user)
-    products = StockService.get_visible_products_query(current_user).order_by(Product.name).all()
-    customers = Customer.query.filter_by(tenant_id=tid).order_by(Customer.name).all() if tid else []
     tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
+    from utils.branching import get_accessible_warehouses_query
+
+    warehouses = get_accessible_warehouses_query(current_user).order_by(Warehouse.name).all()
     return render_template(
         "quotations/form.html",
         quotation=None,
-        products=products,
-        customers=customers,
+        warehouses=warehouses,
         default_currency=default_currency,
     )
 
@@ -73,15 +72,15 @@ def edit(quotation_id):
         except (ValueError, KeyError) as e:
             flash(str(e), "danger")
     tid = get_active_tenant_id(current_user)
-    products = StockService.get_visible_products_query(current_user).order_by(Product.name).all()
-    customers = Customer.query.filter_by(tenant_id=tid).order_by(Customer.name).all() if tid else []
     tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
+    from utils.branching import get_accessible_warehouses_query
+
+    warehouses = get_accessible_warehouses_query(current_user).order_by(Warehouse.name).all()
     return render_template(
         "quotations/form.html",
         quotation=q,
-        products=products,
-        customers=customers,
+        warehouses=warehouses,
         default_currency=default_currency,
     )
 
@@ -133,6 +132,15 @@ def reject(quotation_id):
 @permission_required("manage_sales")
 def convert(quotation_id):
     q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    # A quotation carries no warehouse of its own (it is a price offer, not a
+    # stock movement). Conversion to a sale needs one, so fall back to the
+    # user's first accessible warehouse instead of failing with "no warehouse".
+    if q.warehouse_id is None:
+        from utils.branching import get_accessible_warehouse_ids
+
+        accessible = get_accessible_warehouse_ids(current_user)
+        if accessible:
+            q.warehouse_id = accessible[0]
     try:
         with atomic_transaction("quotation_convert_to_sale"):
             sale = QuotationService.convert_to_sale(q, current_user)
