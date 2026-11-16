@@ -51,6 +51,8 @@ def payment_mocks():
         patch("services.sale_service.db") as mock_db,
         patch("services.sale_service.generate_number", return_value="PRE-1"),
         patch("models.Payment") as mock_payment_cls,
+        patch("services.sale_service.GLService") as mock_gl,
+        patch("services.sale_service.post_or_fail") as mock_post,
     ):
         mock_payment_cls.return_value = MagicMock(id=55)
         yield type(
@@ -60,6 +62,8 @@ def payment_mocks():
                 "create_payment": create_payment,
                 "db": mock_db,
                 "payment_cls": mock_payment_cls,
+                "gl": mock_gl,
+                "post": mock_post,
             },
         )
 
