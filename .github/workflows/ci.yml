@@ -1195,8 +1195,10 @@ jobs:
           shopt -s nullglob
           files=(coverage-data/covdata-*/coverage-data-*)
           if [ ${#files[@]} -eq 0 ]; then
-            echo "::warning::No coverage data artifacts found - test jobs may have failed early"
-            exit 0
+            # A green coverage job with no data is false assurance: it is
+            # exactly what happens when every test slice died before upload.
+            echo "::error::No coverage data artifacts found - test jobs failed early"
+            exit 1
           fi
           coverage combine "${files[@]}"
           cp .coverage coverage-combined-data

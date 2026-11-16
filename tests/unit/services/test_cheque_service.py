@@ -353,9 +353,25 @@ class TestBounceCheque:
         with pytest.raises(RuntimeError, match="gl"):
             process_cheque_bounce(incoming_cheque, reason="NSF", bounce_fee=Decimal("10"))
 
-    def test_bounce_adjusts_customer(self, mocker, db_session, sample_customer, incoming_cheque):
+    def test_bounce_adjusts_customer(
+        self, mocker, db_session, sample_customer, incoming_cheque, sample_tenant, sample_user
+    ):
         incoming_cheque.status = "deposited"
         incoming_cheque.customer_id = sample_customer.id
+        # Only a cheque that came from a Receipt actually credited the
+        # customer's balance; a bare cheque has nothing to reverse.
+        db_session.add(
+            Receipt(
+                tenant_id=sample_tenant.id,
+                receipt_number=f"RCP-{uuid.uuid4().hex[:6]}",
+                customer_id=sample_customer.id,
+                amount=Decimal("1000"),
+                amount_aed=Decimal("1000"),
+                payment_method="cheque",
+                cheque_id=incoming_cheque.id,
+                user_id=sample_user.id,
+            )
+        )
         db_session.flush()
         adjust = mocker.patch.object(sample_customer, "adjust_balance")
         process_cheque_bounce(incoming_cheque, reason="NSF")
@@ -414,8 +430,25 @@ class TestCancelCheque:
         process_cheque_cancel(incoming_cheque)
         assert incoming_cheque.status == "cancelled"
 
-    def test_cancel_outgoing_supplier_restores_ap(self, mocker, db_session, sample_supplier, outgoing_cheque):
+    def test_cancel_outgoing_supplier_restores_ap(
+        self, mocker, db_session, sample_supplier, outgoing_cheque, sample_tenant, sample_user
+    ):
         outgoing_cheque.supplier_id = sample_supplier.id
+        db_session.add(
+            Payment(
+                tenant_id=sample_tenant.id,
+                payment_number=f"PAY-{uuid.uuid4().hex[:6]}",
+                payment_type="supplier_payment",
+                supplier_id=sample_supplier.id,
+                direction="outgoing",
+                amount=Decimal("500"),
+                amount_aed=Decimal("500"),
+                payment_method="cheque",
+                payment_confirmed=True,
+                cheque_id=outgoing_cheque.id,
+                user_id=sample_user.id,
+            )
+        )
         db_session.flush()
         apply = mocker.patch.object(sample_supplier, "apply_payment")
         process_cheque_cancel(outgoing_cheque, create_gl=True)
@@ -517,7 +550,9 @@ class TestChequeEdgePaths:
         process_cheque_bounce(outgoing_cheque, reason="Returned")
         assert outgoing_cheque.status == "bounced"
 
-    def test_bounce_customer_adjust_failure_propagates(self, mocker, db_session, sample_customer, incoming_cheque):
+    def test_bounce_customer_adjust_failure_propagates(
+        self, mocker, db_session, sample_customer, incoming_cheque, sample_tenant, sample_user
+    ):
         """A failed customer-balance adjustment must abort the bounce.
 
         This used to assert the opposite: the failure was logged via
@@ -527,6 +562,18 @@ class TestChequeEdgePaths:
         """
         incoming_cheque.status = "deposited"
         incoming_cheque.customer_id = sample_customer.id
+        db_session.add(
+            Receipt(
+                tenant_id=sample_tenant.id,
+                receipt_number=f"RCP-{uuid.uuid4().hex[:6]}",
+                customer_id=sample_customer.id,
+                amount=Decimal("1000"),
+                amount_aed=Decimal("1000"),
+                payment_method="cheque",
+                cheque_id=incoming_cheque.id,
+                user_id=sample_user.id,
+            )
+        )
         db_session.flush()
         mocker.patch.object(sample_customer, "adjust_balance", side_effect=RuntimeError("cust"))
         with pytest.raises(RuntimeError, match="cust"):
@@ -609,10 +656,27 @@ class TestChequeEdgePaths:
         process_cheque_clear(incoming_cheque)
         assert receipt.payment_confirmed is True
 
-    def test_bounce_outgoing_supplier_restores_ap(self, mocker, db_session, sample_supplier, outgoing_cheque):
+    def test_bounce_outgoing_supplier_restores_ap(
+        self, mocker, db_session, sample_supplier, outgoing_cheque, sample_tenant, sample_user
+    ):
         outgoing_cheque.status = "pending"
         outgoing_cheque.supplier_id = sample_supplier.id
         outgoing_cheque.expense_id = None
+        db_session.add(
+            Payment(
+                tenant_id=sample_tenant.id,
+                payment_number=f"PAY-{uuid.uuid4().hex[:6]}",
+                payment_type="supplier_payment",
+                supplier_id=sample_supplier.id,
+                direction="outgoing",
+                amount=Decimal("500"),
+                amount_aed=Decimal("500"),
+                payment_method="cheque",
+                payment_confirmed=True,
+                cheque_id=outgoing_cheque.id,
+                user_id=sample_user.id,
+            )
+        )
         db_session.flush()
         apply = mocker.patch.object(sample_supplier, "apply_payment")
         process_cheque_bounce(outgoing_cheque, reason="Returned")

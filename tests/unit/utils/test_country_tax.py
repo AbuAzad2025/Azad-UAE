@@ -72,10 +72,11 @@ def test_corporate_zero_profit_zero_tax():
 def test_personal_progressive_ps():
     brackets = personal_brackets_for_country("PS")
     assert brackets
-    # 48k @0 → tax 0
-    assert compute_progressive_tax(Decimal("48000"), brackets) == Decimal("0")
-    # 48k 0% + next 48k @5% = 2400
-    assert compute_progressive_tax(Decimal("96000"), brackets) == Decimal("2400.000")
+    # Decree-Law 5/2015: 5% up to 75k, 10% to 150k, 15% above.
+    # The 36k resident exemption is applied by payroll_income_tax_amount,
+    # not inside the progressive bracket function.
+    assert compute_progressive_tax(Decimal("48000"), brackets) == Decimal("2400.000")
+    assert compute_progressive_tax(Decimal("96000"), brackets) == Decimal("5850.000")
 
 
 def test_personal_progressive_il():

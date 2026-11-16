@@ -116,6 +116,8 @@ def _posted_period_entries(period_month: str, tenant_id: int | None) -> list[int
     tag = f"{_REVALUATION_TAG}|{period_month}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
+            # Period tag is a PREFIX of the written notes
+            # (FX_REVALUATION|YYYY-MM|sale:<id>), so keep the trailing wildcard.
             GLJournalEntry.notes.like(f"%{tag}%"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
@@ -378,6 +380,7 @@ def reverse_previous_revaluation(
     tag = f"{_REVALUATION_TAG}|{period_month}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
+            # Period tag prefixes the written notes; keep the trailing wildcard.
             GLJournalEntry.notes.like(f"%{tag}%"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
@@ -416,14 +419,18 @@ def reverse_sale_revaluation(sale_id: int, tenant_id: int | None = None) -> list
     tag = f"|sale:{sale_id}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
-            GLJournalEntry.notes.like(f"%{tag}%"),
+            # Exact suffix: a trailing wildcard would also match sale:50 when
+            # unwinding sale:5, reversing another voucher's revaluation.
+            GLJournalEntry.notes.like(f"%{tag}"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
         )
         q = q.filter(GLJournalEntry.tenant_id == tenant_id)
     else:
         q = GLJournalEntry.query.filter(
-            GLJournalEntry.notes.like(f"%{tag}%"),
+            # Exact suffix: a trailing wildcard would also match sale:50 when
+            # unwinding sale:5, reversing another voucher's revaluation.
+            GLJournalEntry.notes.like(f"%{tag}"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
         )
@@ -475,14 +482,18 @@ def reverse_purchase_revaluation(purchase_id: int, tenant_id: int | None = None)
     tag = f"|purchase:{purchase_id}"
     if tenant_id is not None:
         q = tenant_query(GLJournalEntry).filter(
-            GLJournalEntry.notes.like(f"%{tag}%"),
+            # Exact suffix: a trailing wildcard would also match sale:50 when
+            # unwinding sale:5, reversing another voucher's revaluation.
+            GLJournalEntry.notes.like(f"%{tag}"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
         )
         q = q.filter(GLJournalEntry.tenant_id == tenant_id)
     else:
         q = GLJournalEntry.query.filter(
-            GLJournalEntry.notes.like(f"%{tag}%"),
+            # Exact suffix: a trailing wildcard would also match sale:50 when
+            # unwinding sale:5, reversing another voucher's revaluation.
+            GLJournalEntry.notes.like(f"%{tag}"),
             GLJournalEntry.status == "posted",
             GLJournalEntry.is_reversed.is_(False),
         )

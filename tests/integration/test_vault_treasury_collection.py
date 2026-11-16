@@ -198,7 +198,12 @@ class TestFeeCollectionReal:
             ).all()
             mine = [t for t in txns if t.tenant_id is None and t.payment_status == "completed"]
             assert len(mine) >= 1
-            assert sum((t.amount_usd for t in mine), Decimal("0")) >= Decimal("10.00")
+            # fee_amount_aed is AED; the vault's amount_usd column must hold a
+            # real USD conversion, while the AED figure is preserved separately.
+            assert sum(
+                (t.amount_crypto or Decimal("0") for t in mine if t.crypto_currency == "AED"), Decimal("0")
+            ) >= Decimal("10.00")
+            assert any(t.amount_usd and t.amount_usd > Decimal("0") for t in mine)
 
 
 class TestVaultDashboardSplitReal:

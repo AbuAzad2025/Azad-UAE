@@ -112,7 +112,16 @@ class GLAccount(db.Model):
         }
         return sub_types.get(self.sub_type, self.sub_type or "")
 
-    def get_balance(self, start_date=None, end_date=None, as_of_date=None, _depth=0, _visited=None):
+    def get_balance(
+        self,
+        start_date=None,
+        end_date=None,
+        as_of_date=None,
+        *,
+        exclude_reference_types=None,
+        _depth=0,
+        _visited=None,
+    ):
         from decimal import Decimal
 
         from sqlalchemy import func
@@ -134,6 +143,7 @@ class GLAccount(db.Model):
                         start_date=start_date,
                         end_date=end_date,
                         as_of_date=as_of_date,
+                        exclude_reference_types=exclude_reference_types,
                         _depth=_depth + 1,
                         _visited=_visited,
                     )
@@ -160,6 +170,8 @@ class GLAccount(db.Model):
             q = q.filter(GLJournalEntry.entry_date >= start_date)
         if end is not None:
             q = q.filter(GLJournalEntry.entry_date <= end)
+        if exclude_reference_types:
+            q = q.filter(GLJournalEntry.reference_type.notin_(tuple(exclude_reference_types)))
 
         balance = q.scalar()
 

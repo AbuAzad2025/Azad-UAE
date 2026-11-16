@@ -38,8 +38,8 @@ class TestDepreciationFormulas:
 
     def test_straight_line_monthly_amount(self):
         asset = self._asset()
-        # (12000 - 2000) / (5 * 12) = 166.67
-        assert asset.calculate_monthly_depreciation() == Decimal("166.67")
+        # (12000 - 2000) / (5 * 12) = 166.666... -> system quantum 0.001
+        assert asset.calculate_monthly_depreciation() == Decimal("166.667")
 
     def test_declining_balance_respects_salvage_floor(self):
         asset = self._asset(

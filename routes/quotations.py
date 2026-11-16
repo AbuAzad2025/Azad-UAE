@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 from extensions import db
 from models import Tenant, Warehouse
 from services.quotation_service import QuotationService
+from utils.branching import branch_scope_id
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.tenanting import get_active_tenant_id
@@ -20,7 +21,7 @@ quotations_bp = Blueprint("quotations", __name__, url_prefix="/quotations")
 def index():
     filters = {k: v for k, v in request.args.items() if v}
     tid = get_active_tenant_id(current_user)
-    quotations = QuotationService.list_quotations(tid, filters)
+    quotations = QuotationService.list_quotations(tid, filters, branch_id=branch_scope_id())
     return render_template("quotations/index.html", quotations=quotations)
 
 
@@ -55,7 +56,7 @@ def create():
 @login_required
 @permission_required("manage_sales")
 def detail(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     return render_template("quotations/detail.html", quotation=q)
 
 
@@ -63,7 +64,7 @@ def detail(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def edit(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     if request.method == "POST":
         try:
             data = _parse_quotation_form(request.form)
@@ -91,7 +92,7 @@ def edit(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def send(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     try:
         with atomic_transaction("quotation_send"):
             QuotationService.send_quotation(q)
@@ -105,7 +106,7 @@ def send(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def accept(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     try:
         with atomic_transaction("quotation_accept"):
             QuotationService.accept_quotation(q)
@@ -119,7 +120,7 @@ def accept(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def reject(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     try:
         with atomic_transaction("quotation_reject"):
             QuotationService.reject_quotation(q)
@@ -133,7 +134,7 @@ def reject(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def convert(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     # A quotation carries no warehouse of its own (it is a price offer, not a
     # stock movement). Conversion to a sale needs one, so fall back to the
     # user's first accessible warehouse instead of failing with "no warehouse".
@@ -150,6 +151,9 @@ def convert(quotation_id):
             pid = line.product_id
             quantities[pid] = quantities.get(pid, Decimal("0")) + Decimal(str(line.quantity or 0))
         for warehouse_id in get_accessible_warehouse_ids(current_user):
+            warehouse = Warehouse.query.filter_by(id=int(warehouse_id), tenant_id=q.tenant_id).first()
+            if warehouse is None or (q.branch_id is not None and warehouse.branch_id != q.branch_id):
+                continue
             if all(
                 Decimal(str(StockService.get_product_stock(pid, warehouse_id=warehouse_id, user=current_user) or 0))
                 >= required
@@ -158,6 +162,10 @@ def convert(quotation_id):
                 q.warehouse_id = warehouse_id
                 break
     try:
+        if isinstance(q.warehouse_id, int) and q.branch_id is not None:
+            selected = Warehouse.query.filter_by(id=q.warehouse_id, tenant_id=q.tenant_id).first()
+            if selected is None or selected.branch_id != q.branch_id:
+                raise ValueError(gettext("المستودع المختار لا يتبع فرع عرض السعر."))
         with atomic_transaction("quotation_convert_to_sale"):
             sale = QuotationService.convert_to_sale(q, current_user)
         flash(gettext("تم تحويل العرض إلى فاتورة"), "success")
@@ -181,7 +189,7 @@ def convert(quotation_id):
 @login_required
 @permission_required("manage_sales")
 def duplicate(quotation_id):
-    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user))
+    q = QuotationService.get_quotation(quotation_id, get_active_tenant_id(current_user), branch_id=branch_scope_id())
     try:
         with atomic_transaction("quotation_duplicate"):
             new_q = QuotationService.duplicate_quotation(q, current_user)

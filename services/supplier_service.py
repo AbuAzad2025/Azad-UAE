@@ -119,6 +119,10 @@ class SupplierService:
 
         purchases = purchases_query.all()
         total_purchases = sum((p.amount_aed or 0) for p in purchases)
+        # Workshop spare-part orders are payables to the same supplier and are
+        # included in the statement; the detail card must show the same total.
+        for order in SupplierService.maintenance_purchase_query(supplier_id, tenant_id, branch_id).all():
+            total_purchases += SupplierService.maintenance_purchase_base_amount(order)
         total_paid = sum((p.amount_aed or 0) for p in payments_query.filter(Payment.direction == "outgoing").all())
         return purchases, total_purchases, total_paid
 

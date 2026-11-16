@@ -628,16 +628,23 @@ def _create_bounce_journal_entry(cheque):
             from models.expense import Expense
 
             expense = db.session.get(Expense, cheque.expense_id)
-            credit_account = (
+            category_account = (
                 expense.category.gl_account_code
                 if expense and expense.category and expense.category.gl_account_code
-                else GLService.get_account_code_for_concept(
+                else None
+            )
+            if category_account:
+                # An explicit category account must not be overridden by a
+                # concept mapping (the cancel path already does this).
+                credit_account = category_account
+                credit_concept = None
+            else:
+                credit_account = GLService.get_account_code_for_concept(
                     "MISC_EXPENSE",
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
                 )
-            )
-            credit_concept = "MISC_EXPENSE"
+                credit_concept = "MISC_EXPENSE"
         elif cheque.supplier_id:
             credit_account = GLService.get_account_code_for_concept(
                 "AP",
@@ -706,8 +713,10 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
             # description match) so a repeated bounce never double-posts.
             from utils.gl_reference_types import ref_variants
 
+            # The main bounce entry already uses CHEQUE_BOUNCE for this cheque,
+            # so guarding the fee on that reference suppressed it every time.
             existing_fee_q = GLJournalEntry.query.filter(
-                GLJournalEntry.reference_type.in_(ref_variants(GLRef.CHEQUE_BOUNCE)),
+                GLJournalEntry.reference_type.in_(ref_variants(GLRef.CHEQUE_BOUNCE_FEE)),
                 GLJournalEntry.reference_id == cheque.id,
                 GLJournalEntry.status == "posted",
             )
@@ -743,13 +752,11 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
                 post_or_fail(
                     fee_lines,
                     description=fee_desc,
-                    reference_type=GLRef.CHEQUE_BOUNCE,
+                    reference_type=GLRef.CHEQUE_BOUNCE_FEE,
                     reference_id=cheque.id,
                     branch_id=cheque.branch_id,
                     tenant_id=(cheque.tenant_id if cheque is not None else None),
                 )
-        if cheque.cheque_type == "incoming" and cheque.customer_id:
-            cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
         from models.payment import Payment
         from models.receipt import Receipt
 
@@ -757,10 +764,20 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
         pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
         if tid:
             pmt_q = pmt_q.filter(Payment.tenant_id == tid)
+        rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
+        if tid:
+            rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
+        # A bare cheque created from /cheques/create never credited the
+        # sub-ledger - only cheques that came from a Payment/Receipt did.
+        # Reversing those cached balances here would double the customer's
+        # debt and drive the supplier's paid total negative.
+        subledger_applied = pmt_q.first() is not None or rcpt_q.first() is not None
+        if subledger_applied and cheque.cheque_type == "incoming" and cheque.customer_id:
+            cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
         payment = pmt_q.first()
         if payment:
             payment.reject_payment(reason)
-        if cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
+        if subledger_applied and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
             from models.supplier import Supplier
 
             supplier_q = Supplier.query.filter_by(id=cheque.supplier_id)
@@ -769,9 +786,6 @@ def process_cheque_bounce(cheque, reason, bounce_fee=None):
             supplier = supplier_q.first()
             if supplier:
                 supplier.apply_payment(-Decimal(str(cheque.amount_aed or 0)))
-        rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
-        if tid:
-            rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
         receipt = rcpt_q.first()
         if receipt:
             receipt.reject_receipt(reason)
@@ -911,25 +925,37 @@ def process_cheque_cancel(cheque, reason=None, *, create_gl=True):
     pmt_q = Payment.query.filter_by(cheque_id=cheque.id)
     if tid:
         pmt_q = pmt_q.filter(Payment.tenant_id == tid)
-    for payment in pmt_q.all():
-        payment.reject_payment(reason or gettext("تم إلغاء الشيك"))
     rcpt_q = Receipt.query.filter_by(cheque_id=cheque.id)
     if tid:
         rcpt_q = rcpt_q.filter(Receipt.tenant_id == tid)
-    for receipt in rcpt_q.all():
+    payments = pmt_q.all()
+    receipts = rcpt_q.all()
+    # Only a cheque that came from a Payment/Receipt ever touched the cached
+    # balances. A standalone cheque must not reverse them a second time.
+    subledger_applied = bool(payments or receipts)
+    for payment in payments:
+        payment.reject_payment(reason or gettext("تم إلغاء الشيك"))
+    for receipt in receipts:
         receipt.reject_receipt(reason or gettext("تم إلغاء الشيك"))
 
     # Cancelling an incoming cheque restores the customer's receivable in the
     # GL and drops the payment from the statement, so the cached balance must
     # lose the credit it gained when the cheque was received. A bounced cheque
     # was already reversed by process_cheque_bounce - never reverse it twice.
-    if create_gl and not skip_gl and cheque.cheque_type == "incoming" and cheque.customer_id:
+    if create_gl and not skip_gl and subledger_applied and cheque.cheque_type == "incoming" and cheque.customer_id:
         cheque.customer.adjust_balance(-(cheque.amount_aed or Decimal("0")))
 
     # Cancelling an outgoing supplier cheque restores AP in the GL, so restore
     # the cached supplier paid total to keep the balance consistent. A bounced
     # cheque already restored it - skip_gl guards this sub-ledger leg too.
-    if create_gl and not skip_gl and cheque.cheque_type == "outgoing" and cheque.supplier_id and not cheque.expense_id:
+    if (
+        create_gl
+        and not skip_gl
+        and subledger_applied
+        and cheque.cheque_type == "outgoing"
+        and cheque.supplier_id
+        and not cheque.expense_id
+    ):
         from models.supplier import Supplier
 
         tid = cheque.tenant_id if cheque is not None else None

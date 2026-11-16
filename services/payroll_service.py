@@ -231,6 +231,9 @@ class PayrollService:
             country,
             is_national=is_national,
             joined_2024_07_03_or_later=joined_after_2024_07_03,
+            # GOSI new-entrant rates change every 1 July; the band must be
+            # selected by the payroll month being processed.
+            payroll_date=date(int(year), int(month), 1),
         )
         # Israel mandatory pension — benefits components only (employee 6% /
         # employer 6.5%), computed on the pensionable (basic) salary. The
@@ -690,7 +693,9 @@ class PayrollService:
         """
         Settle EOS for a terminated employee:
         1. Calculate EOSB amount
-        2. Post GL entry: Dr 6190 (EOS Provision Expense) / Cr 2140 (EOS Liability)
+        2. Post GL entry: Dr 2140 (EOS Liability, clearing the accrual) /
+           Cr bank (the cash paid out). Re-booking the provision here would
+           expense the same entitlement twice and grow the liability.
         3. Return the settlement details
         """
         employee = Employee.query.get_or_404(employee_id)
@@ -706,29 +711,29 @@ class PayrollService:
             [
                 {
                     "account": GLService.get_account_code_for_concept(
-                        "END_OF_SERVICE_PROVISION",
-                        branch_id=employee.branch_id,
-                        tenant_id=tenant_id,
-                    ),
-                    "concept_code": "END_OF_SERVICE_PROVISION",
-                    "debit": eosb_amount,
-                    "credit": 0,
-                    "description": f"EOSB Settlement - {employee.name}",
-                },
-                {
-                    "account": GLService.get_account_code_for_concept(
                         "END_OF_SERVICE_LIABILITY",
                         branch_id=employee.branch_id,
                         tenant_id=tenant_id,
                     ),
                     "concept_code": "END_OF_SERVICE_LIABILITY",
+                    "debit": eosb_amount,
+                    "credit": 0,
+                    "description": f"EOSB Settlement - {employee.name}",
+                },
+                {
+                    "account": GLService.get_default_liquidity_account(
+                        "bank",
+                        branch_id=employee.branch_id,
+                        tenant_id=tenant_id,
+                    ),
+                    "concept_code": "BANK",
                     "debit": 0,
                     "credit": eosb_amount,
                     "description": f"EOSB Settlement - {employee.name}",
                 },
             ],
             description=f"EOSB Settlement - {employee.name}",
-            reference_type=GLRef.PAYROLL,
+            reference_type=GLRef.EOSB_SETTLEMENT,
             reference_id=employee.id,
             branch_id=employee.branch_id,
             tenant_id=tenant_id,

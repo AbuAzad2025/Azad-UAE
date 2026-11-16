@@ -274,7 +274,10 @@ class BankReconciliationService:
                 description=gettext(f"قيد تسوية بنك - {reconciliation.reconciliation_number}"),
                 reference_type=GLRef.BANK_RECONCILIATION,
                 reference_id=reconciliation.id,
-                branch_id=getattr(reconciliation, "branch_id", None),
+                # BankReconciliation has no branch_id column; the branch comes
+                # from the bank account named on the lines. Passing None made
+                # liquidity validation reject branch-scoped bank accounts.
+                branch_id=getattr(reconciliation.bank_account, "branch_id", None),
                 tenant_id=getattr(reconciliation.bank_account, "tenant_id", None),
             )
 
@@ -577,7 +580,7 @@ class BankReconciliationService:
                     description=f"Suspense routing — {description_prefix} #{stmt.id}",
                     reference_type=GLRef.BANK_RECONCILIATION,
                     reference_id=stmt.id,
-                    branch_id=None,
+                    branch_id=getattr(stmt.bank_account, "branch_id", None),
                     tenant_id=tenant_id,
                 )
                 stmt.status = "suggested_match"
@@ -587,8 +590,11 @@ class BankReconciliationService:
                         "suspense_entry_id": entry.id if hasattr(entry, "id") else None,
                     }
                 )
-            except (UnbalancedJournalEntryError, Exception):
-                stmt.status = "ignored"
+            except UnbalancedJournalEntryError as exc:
+                # A failed suspense post must stay retryable; marking the line
+                # "ignored" silently dropped money from the books.
+                logger.error("Suspense routing failed for statement line %s: %s", stmt.id, exc)
+                stmt.status = "imported"
 
         try:
             db.session.flush()

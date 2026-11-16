@@ -59,9 +59,18 @@ def test_il_above_max_insurable_salary_is_capped():
 
 # KSA — GOSI (2025). New social insurance law applies from 2024-07-03.
 def test_sa_gosi_new_law_member():
-    result = _si(Decimal("5000"), "SA", is_national=True, joined_2024_07_03_or_later=True)
-    assert result["employee"] == Decimal("512.500")  # 10.25%
-    assert result["employer"] == Decimal("612.500")  # 12.25%
+    from datetime import date
+
+    result_2025 = _si(
+        Decimal("5000"), "SA", is_national=True, joined_2024_07_03_or_later=True, payroll_date=date(2025, 8, 1)
+    )
+    assert result_2025["employee"] == Decimal("512.500")  # 10.25% (Jul 2025 band)
+    assert result_2025["employer"] == Decimal("612.500")  # 12.25%
+    result_2026 = _si(
+        Decimal("5000"), "SA", is_national=True, joined_2024_07_03_or_later=True, payroll_date=date(2026, 8, 1)
+    )
+    assert result_2026["employee"] == Decimal("537.500")  # 10.75% (Jul 2026 band)
+    assert result_2026["employer"] == Decimal("637.500")  # 12.75%
 
 
 def test_sa_gosi_pre_july_2024_member():
@@ -77,7 +86,15 @@ def test_sa_gosi_non_national_pays_hazards_only():
 
 
 def test_sa_gosi_ceiling():
-    result = _si(Decimal("100000"), "SA", is_national=True, joined_2024_07_03_or_later=True)
+    from datetime import date
+
+    result = _si(
+        Decimal("100000"),
+        "SA",
+        is_national=True,
+        joined_2024_07_03_or_later=True,
+        payroll_date=date(2025, 8, 1),
+    )
     assert result["employee"] == Decimal("4612.500")  # 45000 * 10.25%
 
 
@@ -108,13 +125,22 @@ def test_ae_sa_have_no_personal_income_tax():
     assert payroll_income_tax_amount(Decimal("360000"), "SA")["tax"] == Decimal("0")
 
 
-def test_ps_income_tax_below_exempt_band():
-    assert payroll_income_tax_amount(Decimal("40000"), "PS")["tax"] == Decimal("0.000")
+def test_ps_income_tax_below_resident_exemption():
+    # Decree-Law 5/2015 Art. 3: 36,000 NIS annual resident exemption.
+    assert payroll_income_tax_amount(Decimal("30000"), "PS")["tax"] == Decimal("0.000")
 
 
 def test_ps_income_tax_brackets():
-    # 25000 above the 48k exempt band at 5%, nothing more.
-    assert payroll_income_tax_amount(Decimal("73000"), "PS")["tax"] == Decimal("1250.000")
+    # 73,000 - 36,000 exemption = 37,000 taxable at 5%.
+    assert payroll_income_tax_amount(Decimal("73000"), "PS")["tax"] == Decimal("1850.000")
+
+
+def test_sa_gosi_non_national_below_hazard_floor():
+    # GOSI FAQ: occupational-hazards floor is 400 SAR, not the 1,500
+    # annuities floor that applies to Saudi nationals.
+    result = _si(Decimal("300"), "SA", is_national=False)
+    assert result["employee"] == Decimal("0")
+    assert result["employer"] == Decimal("8.000")  # 400 * 2%
 
 
 def test_il_income_tax_uses_credit_points():

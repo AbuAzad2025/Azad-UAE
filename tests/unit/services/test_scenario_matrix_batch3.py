@@ -30,7 +30,7 @@ class TestSocialInsurancePs:
             ("18800", "1316.000", "1692.000"),
             ("20000", "1316.000", "1692.000"),
             ("30000", "1316.000", "1692.000"),
-            ("1000", "70.000", "90.000"),
+            ("1000", "131.600", "169.200"),  # 1,880 statutory floor
             ("7522", "526.540", "676.980"),
         ],
     )
@@ -52,7 +52,15 @@ class TestSocialInsuranceSa:
         ],
     )
     def test_sa_gosi(self, gross, national, employee, employer):
-        result = social_insurance_amount(Decimal(gross), "SA", is_national=national, joined_2024_07_03_or_later=True)
+        from datetime import date
+
+        result = social_insurance_amount(
+            Decimal(gross),
+            "SA",
+            is_national=national,
+            joined_2024_07_03_or_later=True,
+            payroll_date=date(2025, 8, 1),
+        )
         assert result["employee"] == Decimal(employee)
         assert result["employer"] == Decimal(employer)
 

@@ -796,7 +796,10 @@ class SaleService:
                                 tenant_id=sale.tenant_id,
                             ),
                             "concept_code": GLService.get_payment_debit_concept(payment_data["payment_method"]),
-                            "debit": overpayment_aed,
+                            # post_or_fail converts this with currency+rate;
+                            # pass the ORIGINAL currency amount, not the
+                            # already-base-currency AED figure (double FX).
+                            "debit": overpayment_amount,
                             "description": gettext(f"دفع زائد - {sale.sale_number}"),
                         },
                         {
@@ -806,7 +809,7 @@ class SaleService:
                                 tenant_id=sale.tenant_id,
                             ),
                             "concept_code": GLService.get_customer_credit_concept(sale.customer),
-                            "credit": overpayment_aed,
+                            "credit": overpayment_amount,
                             "description": gettext(f"سلفة عميل - {sale.sale_number}"),
                         },
                     ],
@@ -1214,7 +1217,7 @@ class SaleService:
                         tenant_id=sale.tenant_id,
                     ),
                     "concept_code": GLService.get_payment_debit_concept(chunk["payment_method"]),
-                    "debit": excess_aed,
+                    "debit": overpayment_amount,
                     "description": gettext(f"دفع زائد - {sale.sale_number}"),
                 },
                 {
@@ -1224,7 +1227,7 @@ class SaleService:
                         tenant_id=sale.tenant_id,
                     ),
                     "concept_code": GLService.get_customer_credit_concept(sale.customer),
-                    "credit": excess_aed,
+                    "credit": overpayment_amount,
                     "description": gettext(f"سلفة عميل - {sale.sale_number}"),
                 },
             ],
@@ -1516,11 +1519,8 @@ class SaleService:
                             branch_id=sale.branch_id,
                             tenant_id=(sale.tenant_id if sale is not None else None),
                         )
-                        # The FX difference is an entity gain/loss that
-                        # settles AR in the GL, not customer credit. Remove it
-                        # from the sub-ledger or the customer keeps a balance
-                        # with no receivable behind it.
-                        sale.customer.adjust_balance(-fx_diff)
+                        # The sub-ledger credits the full base amount received
+                        # (matching the statement); the FX leg stays in P&L.
                     except Exception as fx_err:
                         current_app.logger.exception(
                             "FX auto-posting failed for payment %s: %s",

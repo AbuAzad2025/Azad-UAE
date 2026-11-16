@@ -22,6 +22,7 @@ no filing format, generic TRN check.
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 
 __all__ = [
@@ -47,13 +48,15 @@ __all__ = [
 
 # (upper_bound_inclusive, marginal_rate_percent) — progressive brackets.
 # ``None`` upper bound means the top bracket (no ceiling).
+# Palestine — Decree-Law 5/2015, Art. 4: 5% up to 75,000 NIS, 10% to 150,000,
+# 15% above. Art. 3 grants a 36,000 NIS annual RESIDENT exemption, applied by
+# payroll_income_tax_amount() before these bands are evaluated.
 _PA_BRACKETS = (
-    (Decimal("48000"), Decimal("0")),
-    (Decimal("96000"), Decimal("5")),
-    (Decimal("192000"), Decimal("10")),
-    (Decimal("384000"), Decimal("15")),
-    (None, Decimal("20")),
+    (Decimal("75000"), Decimal("5")),
+    (Decimal("150000"), Decimal("10")),
+    (None, Decimal("15")),
 )
+_PA_RESIDENT_EXEMPTION = Decimal("36000")
 
 # IL tax credit point (נקדת זיכוי) annual value 2025 — deducted from the tax
 # bill after brackets apply. 2.25 points for a single adult (no children).
@@ -62,14 +65,19 @@ _PA_BRACKETS = (
 _IL_CREDIT_POINT_ANNUAL = Decimal("2904.00")
 _IL_DEFAULT_CREDIT_POINTS = Decimal("2.25")
 
+# Israel 2025 thresholds (frozen by the 2025 Efficiency Law through 2027):
+# Israel Tax Authority withholding booklet / Ordinance §121. The 3% high-income
+# surtax (§121B) on the excess over 721,560 is applied separately.
 _IL_BRACKETS = (
-    (Decimal("77480"), Decimal("10")),
-    (Decimal("110880"), Decimal("14")),
-    (Decimal("178080"), Decimal("20")),
-    (Decimal("247440"), Decimal("31")),
-    (Decimal("514920"), Decimal("35")),
+    (Decimal("84120"), Decimal("10")),
+    (Decimal("120720"), Decimal("14")),
+    (Decimal("193800"), Decimal("20")),
+    (Decimal("269280"), Decimal("31")),
+    (Decimal("560280"), Decimal("35")),
     (None, Decimal("47")),
 )
+_IL_HIGH_INCOME_SURTAX_THRESHOLD = Decimal("721560")
+_IL_HIGH_INCOME_SURTAX_RATE = Decimal("3")
 
 NULL_PROFILE = {
     "code": "XX",
@@ -216,17 +224,28 @@ COUNTRY_TAX_PROFILES = {
         "customs_default_rate": Decimal("15"),
         "excise_rates": {"tobacco": Decimal("100"), "energy_drinks": Decimal("100"), "soft_drinks": Decimal("50")},
         "wht_default_rate": None,
+        # New-entrant annuities rise by 0.5pp per side every 1 July until
+        # 2028; the selected band depends on the PAYROLL date, not the join
+        # date alone. The values below are the 2026-07-01 band.
         "gosi_joined_2024_07_03_or_later": {
-            "employee": Decimal("10.25"),
-            "employer": Decimal("12.25"),
+            "employee": Decimal("10.75"),
+            "employer": Decimal("12.75"),
         },
+        "gosi_new_entrant_schedule": (
+            ("2024-07-03", Decimal("9.75"), Decimal("11.75")),
+            ("2025-07-01", Decimal("10.25"), Decimal("12.25")),
+            ("2026-07-01", Decimal("10.75"), Decimal("12.75")),
+            ("2027-07-01", Decimal("11.25"), Decimal("13.25")),
+            ("2028-07-01", Decimal("11.75"), Decimal("13.75")),
+        ),
         "gosi_joined_before": {
             "employee": Decimal("9.75"),
             "employer": Decimal("11.75"),
         },
         "gosi_non_national_employer": Decimal("2"),
         "gosi_ceiling": Decimal("45000"),
-        "gosi_floor": Decimal("1500"),
+        "gosi_floor": Decimal("1500"),  # Annuities branch (Saudis)
+        "gosi_occupational_hazard_floor": Decimal("400"),  # expatriates
         "social_configurable": True,
         "tax_number_pattern": r"^3\d{14}$",
         "filing_note": "VAT return: ZATCA. Corporate tax 20%; zakat 2.5% applies per ZATCA rules (tenant-configured).",
@@ -367,7 +386,14 @@ def _tier_split(gross: Decimal, threshold: Decimal, ceiling: Decimal) -> tuple[D
     return lower, upper, g
 
 
-def social_insurance_amount(gross, country_code, *, is_national=False, joined_2024_07_03_or_later=False) -> dict:
+def social_insurance_amount(
+    gross,
+    country_code,
+    *,
+    is_national=False,
+    joined_2024_07_03_or_later=False,
+    payroll_date: date | None = None,
+) -> dict:
     """Statutory employee/employer social insurance contribution for one month.
 
     Sources of truth are the ``social_*``/``gosi_*``/``pension_*`` fields on the
@@ -420,25 +446,42 @@ def social_insurance_amount(gross, country_code, *, is_national=False, joined_20
 
     if code == "SA":
         gosi_ceiling = Decimal(str(profile.get("gosi_ceiling") or 0))
-        gosi_floor = Decimal(str(profile.get("gosi_floor") or 0))
-        insurable = max(g, gosi_floor)
-        base = min(insurable, gosi_ceiling) if gosi_ceiling > 0 else insurable
+        national_floor = Decimal(str(profile.get("gosi_floor") or 0))
+        hazard_floor = Decimal(str(profile.get("gosi_occupational_hazard_floor") or national_floor))
         if not is_national:
-            # Occupational hazards only, employer side — no employee share.
+            # GOSI FAQ: annuities floor 1,500 for Saudis, occupational-hazards
+            # floor 400 for expatriates. Applying 1,500 here over-charges every
+            # low-paid non-national.
+            insurable = max(g, hazard_floor)
+            base = min(insurable, gosi_ceiling) if gosi_ceiling > 0 else insurable
             employee = Decimal("0")
             employer = _q3(base * Decimal(str(profile.get("gosi_non_national_employer") or 0)) / Decimal("100"))
             eligible = employer > 0
+            applicable_floor = hazard_floor
         else:
-            joined = bool(joined_2024_07_03_or_later)
-            rates = profile.get("gosi_joined_2024_07_03_or_later" if joined else "gosi_joined_before") or {}
-            employee = _q3(base * Decimal(str(rates.get("employee") or 0)) / Decimal("100"))
-            employer = _q3(base * Decimal(str(rates.get("employer") or 0)) / Decimal("100"))
+            insurable = max(g, national_floor)
+            base = min(insurable, gosi_ceiling) if gosi_ceiling > 0 else insurable
+            if joined_2024_07_03_or_later:
+                # The new-entrant annuities rate rises each 1 July until 2028;
+                # select the band by the payroll month, not the join date.
+                as_of = payroll_date or date.today()
+                employee_rate, employer_rate = Decimal("10.75"), Decimal("12.75")
+                for effective, emp, er in profile.get("gosi_new_entrant_schedule", ()):
+                    if as_of >= date.fromisoformat(effective):
+                        employee_rate, employer_rate = emp, er
+            else:
+                rates = profile.get("gosi_joined_before") or {}
+                employee_rate = Decimal(str(rates.get("employee") or 0))
+                employer_rate = Decimal(str(rates.get("employer") or 0))
+            employee = _q3(base * employee_rate / Decimal("100"))
+            employer = _q3(base * employer_rate / Decimal("100"))
             eligible = True
+            applicable_floor = national_floor
         return {
             "employee": employee,
             "employer": employer,
             "ceiling": gosi_ceiling,
-            "floor": Decimal(str(profile.get("gosi_floor") or 0)),
+            "floor": applicable_floor,
             "eligible": eligible,
         }
 
@@ -494,21 +537,28 @@ def il_pension_amount(pensionable_salary) -> dict:
 def payroll_income_tax_amount(annual_taxable, country_code, *, credit_points=None) -> dict:
     """Annual income tax on the taxable income for the employee's country.
 
-    Progressive schedule from ``personal_brackets``. IL deducts the statutory
-    tax credit points (נק' זיכוי) from the bill: the default is a single adult
-    with 2.25 points at the 2025 published value. PS has a 48k exempt band
-    built into its brackets and takes no credit points. AE and SA levy no
-    personal income tax.
+    Progressive schedule from ``personal_brackets``. PS first deducts the
+    36,000 NIS annual resident exemption (Decree-Law 5/2015, Art. 3). IL applies
+    the 3% high-income surtax on the excess over 721,560 (§121B) and deducts the
+    statutory credit points (2.25 × 2,904 at the frozen 2025 value). AE and SA
+    levy no personal income tax.
     """
     code = _norm(country_code)
     profile = get_country_profile(code)
     brackets = personal_brackets_for_country(code)
-    t = Decimal(str(annual_taxable or 0))
+    gross = Decimal(str(annual_taxable or 0))
+    t = gross
+    if code == "PS":
+        t = max(Decimal("0"), gross - _PA_RESIDENT_EXEMPTION)
     if not brackets or t <= 0:
         return {"tax": Decimal("0"), "effective_rate": Decimal("0"), "country": code}
     tax = compute_progressive_tax(t, brackets)
+    if code == "IL":
+        if t > _IL_HIGH_INCOME_SURTAX_THRESHOLD:
+            tax += (t - _IL_HIGH_INCOME_SURTAX_THRESHOLD) * _IL_HIGH_INCOME_SURTAX_RATE / Decimal("100")
     if bool(profile.get("income_tax_credit_points_applies")):
         points = Decimal(str(credit_points)) if credit_points is not None else _IL_DEFAULT_CREDIT_POINTS
         tax = max(Decimal("0"), _q3(tax - points * _IL_CREDIT_POINT_ANNUAL))
-    rate = _q3(tax / t * Decimal("100")) if t > 0 else Decimal("0")
+    tax = _q3(tax)
+    rate = _q3(tax / gross * Decimal("100")) if gross > 0 else Decimal("0")
     return {"tax": tax, "effective_rate": rate, "country": code}

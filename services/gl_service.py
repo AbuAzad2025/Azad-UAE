@@ -602,7 +602,10 @@ class GLService:
         """
         if not currency:
             currency = resolve_tenant_base_currency(tenant_id=tenant_id)
-        rate = Decimal(str(exchange_rate)) if exchange_rate else Decimal("1")
+        # Keep an explicit zero: a foreign-currency entry with rate 0 must be
+        # refused below. Truthiness coercion used to turn 0 into 1 and let it
+        # through at parity.
+        rate = Decimal(str(exchange_rate)) if exchange_rate is not None else Decimal("1")
         base_currency = resolve_tenant_base_currency(tenant_id=tenant_id)
         if currency and currency.upper() != base_currency.upper() and rate <= 0:
             # A foreign-currency entry with a missing/invalid rate must be
@@ -2020,7 +2023,15 @@ class FiscalYearService:
         total_expense = Decimal("0")
         lines = []
         for acct in pl_accounts:
-            bal = acct.get_balance(start_date=start_date, end_date=end_date)
+            # Closing entries zero P&L into retained earnings on day 1 of the
+            # new year; including the PRIOR year's closing entry here would
+            # report it as this year's revenue/expense and corrupt retained
+            # earnings on sequential closes.
+            bal = acct.get_balance(
+                start_date=start_date,
+                end_date=end_date,
+                exclude_reference_types=("closing",),
+            )
             if bal == 0:
                 continue
             lines.append(

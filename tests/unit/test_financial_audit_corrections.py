@@ -12,7 +12,15 @@ def test_social_insurance_floors_are_applied_to_low_paid_employees():
     assert ps["employee"] == Decimal("131.600")  # 1880 * 7%
     assert ps["employer"] == Decimal("169.200")  # 1880 * 9%
 
-    sa = social_insurance_amount("1000", "SA", is_national=True, joined_2024_07_03_or_later=True)
+    from datetime import date
+
+    sa = social_insurance_amount(
+        "1000",
+        "SA",
+        is_national=True,
+        joined_2024_07_03_or_later=True,
+        payroll_date=date(2025, 8, 1),
+    )
     assert sa["employee"] > Decimal("0")
     # The base was the 1500 floor, not the 1000 gross:
     assert sa["employee"] == (Decimal("1500") * Decimal("10.25") / Decimal("100")).quantize(Decimal("0.001"))

@@ -116,7 +116,7 @@ class TestPostManualDepreciation:
 
         assert isinstance(schedule, DepreciationSchedule)
         assert schedule.asset_id == asset.id
-        expected_monthly = (Decimal("11900") / 60).quantize(Decimal("0.01"))
+        expected_monthly = (Decimal("11900") / 60).quantize(Decimal("0.001"))
         assert schedule.depreciation_amount == expected_monthly
         assert asset.accumulated_depreciation == expected_monthly
 

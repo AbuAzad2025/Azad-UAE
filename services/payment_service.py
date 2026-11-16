@@ -830,10 +830,11 @@ class PaymentService:
                                         branch_id=receipt.branch_id,
                                         tenant_id=tenant_id,
                                     )
-                                    # FX gain/loss settles AR in the GL; it is
-                                    # not customer credit. Keep the sub-ledger
-                                    # in step with the receivable.
-                                    customer.adjust_balance(-fx_diff)
+                                    # The sub-ledger credits the FULL base
+                                    # amount actually received, matching the
+                                    # customer statement. The FX leg is a
+                                    # separate P&L entry; do not remove part of
+                                    # the customer's credit here.
                                 except Exception as fx_err:
                                     current_app.logger.exception(
                                         "FX auto-posting failed for receipt %s: %s",
@@ -1061,8 +1062,6 @@ class PaymentService:
         الدلالة: موجب = رصيد للعميل، سالب = ذمة على العميل.
         الصيغة: Receipts - Sales - Outgoing_Payments_to_customer (refunds)
         يعيد Decimal. إذا كان branch_id = None يُرجع الرصيد الكامل (غير مقيد بالفرع)."""
-        from sqlalchemy import or_
-
         from models import Payment as PaymentModel
         from models.payment import payment_affects_balance
 
@@ -1094,23 +1093,36 @@ class PaymentService:
 
         incoming_payments = incoming_rows.all()
         incoming_total = sum((Decimal(str(row.amount_aed or 0)) for row in incoming_payments), Decimal("0"))
-        # A Receipt and its allocated Payment share a reference_number. Count
-        # each collection once, exactly as the customer statement does.
-        allocated_refs = {row.reference_number for row in incoming_payments if row.reference_number}
-        receipts_total = db.session.query(db.func.sum(Receipt.amount_aed)).filter(
+        # A receipt and its allocated payments share a reference_number. Count
+        # the collection once by subtracting the allocated amount from the
+        # receipt, so a partially allocated receipt keeps its remainder.
+        allocated_amounts: dict[str, Decimal] = {}
+        for row in incoming_payments:
+            if row.reference_number:
+                allocated_amounts[row.reference_number] = allocated_amounts.get(
+                    row.reference_number, Decimal("0")
+                ) + Decimal(str(row.amount_aed or 0))
+        receipts_q = db.session.query(Receipt).filter(
             Receipt.customer_id == customer_id,
             payment_affects_balance(Receipt),
-            or_(Receipt.receipt_number.is_(None), ~Receipt.receipt_number.in_(allocated_refs))
-            if allocated_refs
-            else True,
         )
         if tenant_id is not None:
-            receipts_total = receipts_total.filter(Receipt.tenant_id == tenant_id)
+            receipts_q = receipts_q.filter(Receipt.tenant_id == tenant_id)
         if branch_id is not None:
-            receipts_total = receipts_total.filter(Receipt.branch_id == branch_id)
+            receipts_q = receipts_q.filter(Receipt.branch_id == branch_id)
+        receipts_total = sum(
+            (
+                max(
+                    Decimal(str(r.amount_aed or 0)) - allocated_amounts.get(r.receipt_number or "", Decimal("0")),
+                    Decimal("0"),
+                )
+                for r in receipts_q.all()
+            ),
+            Decimal("0"),
+        )
 
         return (
-            (receipts_total.scalar() or Decimal("0"))
+            receipts_total
             + incoming_total
             - (sales_total.scalar() or Decimal("0"))
             - (outgoing_total.scalar() or Decimal("0"))

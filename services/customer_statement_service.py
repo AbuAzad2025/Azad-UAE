@@ -164,22 +164,28 @@ class CustomerStatementService:
                 Payment.payment_confirmed,
                 Payment.payment_method,
                 Payment.rejection_reason,
+                Payment.reference_number,
             ).all()
             pre_payments_net = sum(
                 (Decimal(str(amount or 0)) if direction == "incoming" else -Decimal(str(amount or 0)))
-                for direction, amount, confirmed, method, rejection in pre_pay_rows
+                for direction, amount, confirmed, method, rejection, _ref in pre_pay_rows
                 if confirmed or (method == "cheque" and not rejection)
             )
-            pre_payment_refs = {ref for (ref,) in pre_payments_q.with_entities(Payment.reference_number).all() if ref}
-            pre_receipts_total = sum(
-                (
-                    Decimal(str(r.amount_aed or 0))
-                    for r in pre_receipts_q.all()
-                    if (r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason))
-                    and (r.receipt_number or "") not in pre_payment_refs
-                ),
-                Decimal("0"),
-            )
+            # A receipt and its allocated payments share a reference number.
+            # Subtract only the amount actually allocated: dropping the whole
+            # receipt used to lose the unallocated remainder (100 received,
+            # 60 allocated => only 60 counted). Rejected/unconfirmed payments
+            # never affected the balance, so they cannot suppress a receipt.
+            pre_allocated: dict[str, Decimal] = {}
+            for direction, amount, confirmed, method, rejection, ref in pre_pay_rows:
+                if ref and (confirmed or (method == "cheque" and not rejection)):
+                    pre_allocated[ref] = pre_allocated.get(ref, Decimal("0")) + _scalar_to_decimal(amount)
+            pre_receipts_total = Decimal("0")
+            for r in pre_receipts_q.all():
+                if not (r.payment_confirmed or (r.payment_method == "cheque" and not r.rejection_reason)):
+                    continue
+                unallocated = _scalar_to_decimal(r.amount_aed) - pre_allocated.get(r.receipt_number or "", Decimal("0"))
+                pre_receipts_total += max(unallocated, Decimal("0"))
             pre_returns_total = _scalar_to_decimal(
                 pre_returns_q.with_entities(func.coalesce(func.sum(ProductReturn.amount_aed), 0)).scalar()
             )

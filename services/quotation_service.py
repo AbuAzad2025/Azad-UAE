@@ -11,6 +11,22 @@ from utils.helpers import generate_number
 
 class QuotationService:
     @staticmethod
+    def _line_amounts(qty, price, disc, tax, prices_include_vat):
+        """Return (net, tax, gross) for one quotation line.
+
+        A VAT-inclusive price already contains the tax: adding the tax again
+        overstates the quotation and the sale converted from it.
+        """
+        gross_or_net = qty * price * (Decimal("1") - disc / Decimal("100"))
+        rate = tax / Decimal("100")
+        if prices_include_vat:
+            tax_amt = gross_or_net * tax / (Decimal("100") + tax) if tax else Decimal("0")
+            net = gross_or_net - tax_amt
+            return net, tax_amt, gross_or_net
+        tax_amt = gross_or_net * rate
+        return gross_or_net, tax_amt, gross_or_net + tax_amt
+
+    @staticmethod
     def _tid(user):
         from utils.tenanting import get_active_tenant_id
 
@@ -44,8 +60,7 @@ class QuotationService:
             price = Decimal(str(line_data.get("unit_price", 0)))
             disc = Decimal(str(line_data.get("discount_percent", 0)))
             tax = Decimal(str(line_data.get("tax_rate", 0)))
-            line_total = qty * price * (1 - disc / 100)
-            tax_amt = line_total * tax / 100
+            _net, tax_amt, line_total = cls._line_amounts(qty, price, disc, tax, bool(data.get("prices_include_vat")))
             line = QuotationLine(
                 tenant_id=tid,
                 quotation_id=q.id,
@@ -103,8 +118,7 @@ class QuotationService:
                 price = Decimal(str(line_data.get("unit_price", 0)))
                 disc = Decimal(str(line_data.get("discount_percent", 0)))
                 tax = Decimal(str(line_data.get("tax_rate", 0)))
-                line_total = qty * price * (1 - disc / 100)
-                tax_amt = line_total * tax / 100
+                _net, tax_amt, line_total = cls._line_amounts(qty, price, disc, tax, bool(quotation.prices_include_vat))
                 line = QuotationLine(
                     tenant_id=quotation.tenant_id,
                     quotation_id=quotation.id,
@@ -263,7 +277,7 @@ class QuotationService:
         return cls.create_quotation(data, user)
 
     @classmethod
-    def get_quotation(cls, quotation_id, tenant_id=None):
+    def get_quotation(cls, quotation_id, tenant_id=None, branch_id=None):
         # A quotation that does not exist - or belongs to another tenant - is a
         # 404, not a ValueError. Every route in routes/quotations.py calls this
         # *outside* its try block, because the redirect afterwards needs q.id, so
@@ -280,11 +294,15 @@ class QuotationService:
             raise NotFound(description=gettext("عرض السعر غير موجود."))
         if tenant_id and q.tenant_id != tenant_id:
             raise NotFound(description=gettext("عرض السعر غير موجود."))
+        if branch_id is not None and q.branch_id != branch_id:
+            raise NotFound(description=gettext("عرض السعر غير موجود."))
         return q
 
     @classmethod
-    def list_quotations(cls, tenant_id, filters=None):
+    def list_quotations(cls, tenant_id, filters=None, branch_id=None):
         q = Quotation.query.filter_by(tenant_id=tenant_id)
+        if branch_id is not None:
+            q = q.filter(Quotation.branch_id == branch_id)
         if filters:
             if filters.get("status"):
                 q = q.filter_by(status=filters["status"])
@@ -304,8 +322,13 @@ class QuotationService:
             base = line.quantity * line.unit_price
             disc_amt = base * line.discount_percent / 100
             total_discount += disc_amt
-            taxable = base - disc_amt
-            tax = taxable * line.tax_rate / 100
+            taxable, tax, _gross = cls._line_amounts(
+                line.quantity,
+                line.unit_price,
+                line.discount_percent,
+                line.tax_rate,
+                bool(quotation.prices_include_vat),
+            )
             total_tax += tax
             subtotal += base
         quotation.subtotal = subtotal

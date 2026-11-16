@@ -393,7 +393,7 @@ def print_customer_statement(id):
         record_id=record_id,
         date_from=date_from,
         date_to=date_to,
-        transaction_type="all",
+        transaction_type=request.args.get("transaction_type", "all"),
         default_currency=default_currency,
         tenant_id=tid,
         branch_id=branch_scope_id(),
@@ -499,29 +499,20 @@ def print_supplier_statement(id):
         )
     for pm in payments_q.order_by(Payment.payment_date.asc()).all():
         amt = float(pm.amount_aed or 0)
-        if pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason):
-            if pm.direction == "incoming":
-                transactions.append(
-                    {
-                        "date": pm.payment_date,
-                        "type": "refund",
-                        "reference": pm.payment_number or "",
-                        "debit": amt,
-                        "credit": 0,
-                        "description": gettext("استرداد من المورد"),
-                    }
-                )
-            else:
-                transactions.append(
-                    {
-                        "date": pm.payment_date,
-                        "type": "payment",
-                        "reference": pm.payment_number or "",
-                        "debit": 0,
-                        "credit": amt,
-                        "description": gettext("دفعة"),
-                    }
-                )
+        affects_balance = bool(pm.payment_confirmed or (pm.payment_method == "cheque" and not pm.rejection_reason))
+        is_refund = pm.direction == "incoming"
+        # Emit every movement like the on-screen statement; a rejected payment
+        # is still a document the accountant must see, with a zero effect.
+        transactions.append(
+            {
+                "date": pm.payment_date,
+                "type": "refund" if is_refund else "payment",
+                "reference": pm.payment_number or "",
+                "debit": (amt if affects_balance else 0) if is_refund else 0,
+                "credit": 0 if is_refund else (amt if affects_balance else 0),
+                "description": (gettext("استرداد من المورد") if is_refund else gettext("دفعة")),
+            }
+        )
     for pr in returns_q.order_by(PurchaseReturn.return_date.asc()).all():
         transactions.append(
             {

@@ -92,9 +92,15 @@ def compute_import_levy_defaults(line_inputs, *, country, customs_duty, excise_a
         goods += value
         per_line.append(((excise_category or "").strip().lower(), value))
 
-    customs_rate = customs_rate_for_country(country) or Decimal("0")
+    default_customs_rate = customs_rate_for_country(country) or Decimal("0")
     if customs_duty is None:
-        customs_duty = (goods * customs_rate / Decimal("100")).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+        customs_duty = (goods * default_customs_rate / Decimal("100")).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
+    # Excise is charged on CIF + the customs duty ACTUALLY payable on the
+    # entry. An explicit duty (e.g. 0 under a trade agreement) must not be
+    # replaced by the statutory default in the excise base.
+    effective_customs_rate = (customs_duty / goods * Decimal("100")) if goods > 0 else Decimal("0")
     if excise_amount is None:
         total = Decimal("0")
         for category, value in per_line:
@@ -103,7 +109,7 @@ def compute_import_levy_defaults(line_inputs, *, country, customs_duty, excise_a
             rate = excise_rate_for_country(country, category)
             if not rate:
                 continue
-            base = value + (value * customs_rate / Decimal("100"))
+            base = value + (value * effective_customs_rate / Decimal("100"))
             total += base * rate / Decimal("100")
         excise_amount = total.quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
     return customs_duty, excise_amount

@@ -199,7 +199,7 @@ TENANT_SEEDS: tuple[SeedSet, ...] = (
         label="Chart of accounts",
         scope="tenant",
         seeder="services.gl_service.GLService.ensure_core_accounts",
-        expected=117,
+        expected=118,
         source="models/gl_account_registry.py:BASE_ACCOUNTS",
         note="118 base accounts (102 + 5 payroll statutory/pension + excise + zakat + withholding, Nov 2026 "
         "+ 5 maintenance accounts: AR/revenue/parts-cost/deposit/cash-difference, Nov 2026) + the "

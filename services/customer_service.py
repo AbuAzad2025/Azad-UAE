@@ -226,10 +226,16 @@ class CustomerService:
 
     @staticmethod
     def branch_balance_map(customers, branch_id):
-        """Per-customer branch-scoped balance map: receipts - sales - outgoing payments."""
+        """Per-customer branch-scoped balance map, identical to the statement logic.
+
+        Receipts and the payments allocated from them share a reference number;
+        count each collection once by netting the allocated amount off the
+        receipt, so a partially allocated receipt keeps its remainder.
+        """
         from decimal import Decimal
 
         from models import Payment, Sale
+        from models.payment import payment_affects_balance
         from models.receipt import Receipt
 
         customer_ids = [c.id for c in customers]
@@ -253,6 +259,7 @@ class CustomerService:
             )
             .filter(
                 Payment.direction == "incoming",
+                payment_affects_balance(Payment),
                 Payment.branch_id == branch_id,
                 Payment.customer_id.in_(customer_ids),
             )
@@ -266,42 +273,43 @@ class CustomerService:
             )
             .filter(
                 Payment.direction == "outgoing",
+                payment_affects_balance(Payment),
                 Payment.branch_id == branch_id,
                 Payment.customer_id.in_(customer_ids),
             )
             .group_by(Payment.customer_id)
             .all()
         )
-        # A receipt and its allocated payment share a reference_number. Count
-        # the collection once, mirroring the customer statement's dedup.
-        allocated_refs = {
-            ref
-            for (ref,) in db.session.query(Payment.reference_number)
+        payment_rows = (
+            db.session.query(Payment.customer_id, Payment.reference_number, Payment.amount_aed)
             .filter(
                 Payment.direction == "incoming",
+                payment_affects_balance(Payment),
                 Payment.branch_id == branch_id,
                 Payment.customer_id.in_(customer_ids),
                 Payment.reference_number.isnot(None),
             )
             .all()
-        }
-        from sqlalchemy import or_
-
-        receipts_query = db.session.query(
-            Receipt.customer_id,
-            db.func.coalesce(db.func.sum(Receipt.amount_aed), 0).label("receipts_total"),
-        ).filter(
-            Receipt.branch_id == branch_id,
-            Receipt.customer_id.in_(customer_ids),
         )
-        if allocated_refs:
-            receipts_query = receipts_query.filter(
-                or_(Receipt.receipt_number.is_(None), ~Receipt.receipt_number.in_(allocated_refs))
+        allocated: dict[tuple, Decimal] = {}
+        for cid, ref, amount in payment_rows:
+            allocated[(cid, ref)] = allocated.get((cid, ref), Decimal("0")) + Decimal(str(amount or 0))
+
+        receipt_rows = (
+            db.session.query(Receipt.customer_id, Receipt.receipt_number, Receipt.amount_aed)
+            .filter(
+                payment_affects_balance(Receipt),
+                Receipt.branch_id == branch_id,
+                Receipt.customer_id.in_(customer_ids),
             )
-        receipts_rows = receipts_query.group_by(Receipt.customer_id).all()
+            .all()
+        )
+        receipts_map: dict[int, Decimal] = {cid: Decimal("0") for cid in customer_ids}
+        for cid, ref, amount in receipt_rows:
+            net = Decimal(str(amount or 0)) - allocated.get((cid, ref or ""), Decimal("0"))
+            receipts_map[cid] += max(net, Decimal("0"))
 
         sales_map = {cid: Decimal(str(total or 0)) for cid, total in sales_rows}
-        receipts_map = {cid: Decimal(str(total or 0)) for cid, total in receipts_rows}
         incoming_map = {cid: Decimal(str(total or 0)) for cid, total in incoming_rows}
         outgoing_map = {cid: Decimal(str(total or 0)) for cid, total in outgoing_rows}
 

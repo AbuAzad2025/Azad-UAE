@@ -29,21 +29,29 @@ class TestSocialGrid:
     @pytest.mark.parametrize("gross", GROSSES)
     def test_ps_grid(self, gross):
         r = social_insurance_amount(Decimal(gross), "PS")
-        capped = min(Decimal(gross), Decimal("18800"))
+        capped = min(max(Decimal(gross), Decimal("1880")), Decimal("18800"))
         assert r["employee"] == (capped * Decimal("7") / Decimal("100")).quantize(Decimal("0.001"))
         assert r["employer"] == (capped * Decimal("9") / Decimal("100")).quantize(Decimal("0.001"))
 
     @pytest.mark.parametrize("gross", GROSSES)
     def test_ae_grid(self, gross):
         r = social_insurance_amount(Decimal(gross), "AE", is_national=True)
-        capped = min(Decimal(gross), Decimal("70000"))
+        capped = min(max(Decimal(gross), Decimal("3000")), Decimal("70000"))
         assert r["employee"] == (capped * Decimal("11") / Decimal("100")).quantize(Decimal("0.001"))
         assert r["employer"] == (capped * Decimal("15") / Decimal("100")).quantize(Decimal("0.001"))
 
     @pytest.mark.parametrize("gross", GROSSES)
     def test_sa_grid(self, gross):
-        r = social_insurance_amount(Decimal(gross), "SA", is_national=True, joined_2024_07_03_or_later=True)
-        capped = min(Decimal(gross), Decimal("45000"))
+        from datetime import date
+
+        r = social_insurance_amount(
+            Decimal(gross),
+            "SA",
+            is_national=True,
+            joined_2024_07_03_or_later=True,
+            payroll_date=date(2025, 8, 1),
+        )
+        capped = min(max(Decimal(gross), Decimal("1500")), Decimal("45000"))
         assert r["employee"] == (capped * Decimal("10.25") / Decimal("100")).quantize(Decimal("0.001"))
         assert r["employer"] == (capped * Decimal("12.25") / Decimal("100")).quantize(Decimal("0.001"))
 
@@ -51,9 +59,9 @@ class TestSocialGrid:
     def test_sa_nonnational_grid(self, gross):
         r = social_insurance_amount(Decimal(gross), "SA", is_national=False)
         assert r["employee"] == Decimal("0.000")
-        assert r["employer"] == (min(Decimal(gross), Decimal("45000")) * Decimal("2") / Decimal("100")).quantize(
-            Decimal("0.001")
-        )
+        assert r["employer"] == (
+            min(max(Decimal(gross), Decimal("400")), Decimal("45000")) * Decimal("2") / Decimal("100")
+        ).quantize(Decimal("0.001"))
 
 
 class TestMoneyGrids:

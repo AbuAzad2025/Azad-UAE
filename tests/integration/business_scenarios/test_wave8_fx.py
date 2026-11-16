@@ -568,9 +568,14 @@ class TestADV55Settlement:
         assert len(_entries_for(db_session, fx_tenant.id, GLRef.SALE_COGS, fx_sale.id)) == 1, (
             "the invoice's cost of sales was posted more than once"
         )
-        assert len(_entries_for(db_session, fx_tenant.id, GLRef.FX_GAIN_LOSS, fx_sale.id)) == 1, (
-            "the revaluation was posted more than once"
-        )
+        # A settlement now also posts a legitimate reversing entry for the
+        # unrealized revaluation; count only the original posting.
+        original_revaluation = [
+            e
+            for e in _entries_for(db_session, fx_tenant.id, GLRef.FX_GAIN_LOSS, fx_sale.id)
+            if not (e.description or "").startswith("Reverse FX Revaluation")
+        ]
+        assert len(original_revaluation) == 1, "the revaluation was posted more than once"
 
         receipt_entries = _entries_for(db_session, fx_tenant.id, GLRef.RECEIPT, receipt.id)
         receipt_own = [e for e in receipt_entries if (e.description or "").startswith("Receipt ")]
@@ -578,18 +583,9 @@ class TestADV55Settlement:
         assert len(receipt_own) == 1, f"the receipt was posted {len(receipt_own)} times"
         assert len(receipt_fx) == 1, f"the receipt's realized difference was posted {len(receipt_fx)} times"
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "The unrealized revaluation is never unwound at settlement. "
-            "services/fx_revaluation_service.py debits the difference to the receivable and nothing "
-            "reverses it, while services/payment_service.py computes the realized difference against "
-            "the ORIGINAL invoice rate. The two mechanisms never meet, so a settled invoice keeps a "
-            "receivable of 30.00 and the FX accounts carry 40.00 instead of 10.00. The books still "
-            "balance - it is the receivable and the customer statement that disagree. "
-            "Remove this marker when the settlement unwinds the revaluation."
-        ),
-    )
+    # ADV-57 used to be a strict xfail for the missing settlement unwind.
+    # services/fx_revaluation_service now matches the written tag and reverses
+    # the unrealized entry at settlement, so this must be a real assertion.
     def test_a_settled_invoice_leaves_no_receivable_behind(self, db_session, fx_tenant, fx_sale, demo_customer, ledger):
         """ADV-57. A settled invoice must not keep a receivable.
 

@@ -183,14 +183,37 @@ def build_invoice_xml(
 
     tax_total = ET.SubElement(root, f"{{{CAC_NS}}}TaxTotal")
     _text(tax_total, "TaxAmount", f"{_q3(tax_amount)}", CBC_NS, currencyID=currency)
-    subtotal = ET.SubElement(tax_total, f"{{{CAC_NS}}}TaxSubtotal")
-    _text(subtotal, "TaxableAmount", f"{_q3(taxable)}", CBC_NS, currencyID=currency)
-    _text(subtotal, "TaxAmount", f"{_q3(tax_amount)}", CBC_NS, currencyID=currency)
-    category = ET.SubElement(subtotal, f"{{{CAC_NS}}}TaxCategory")
-    _text(category, "ID", "S", CBC_NS)
-    _text(category, "Percent", f"{rate}", CBC_NS)
-    tax_scheme2 = ET.SubElement(category, f"{{{CAC_NS}}}TaxScheme")
-    _text(tax_scheme2, "ID", "VAT", CBC_NS)
+    # One TaxSubtotal per effective category. A single subtotal with the full
+    # taxable base at the standard rate is internally inconsistent whenever a
+    # zero-rated line exists (15% of 1500 != 150).
+    from utils.tax_categories import split_by_category
+
+    std_line, zero_line, exempt_line = split_by_category(
+        getattr(sale, "lines", []) or [], tenant_id=getattr(tenant, "id", None)
+    )
+    gross_lines = std_line + zero_line + exempt_line
+    if gross_lines > 0:
+        std_base = _q3(taxable * std_line / gross_lines)
+        zero_base = _q3(taxable * zero_line / gross_lines)
+        exempt_base = _q3(taxable * exempt_line / gross_lines)
+    else:
+        std_base, zero_base, exempt_base = _q3(taxable), Decimal("0"), Decimal("0")
+
+    for category_id, base, percent, amount in (
+        ("S", std_base, rate, tax_amount),
+        ("Z", zero_base, Decimal("0"), Decimal("0")),
+        ("E", exempt_base, Decimal("0"), Decimal("0")),
+    ):
+        if base <= 0:
+            continue
+        subtotal = ET.SubElement(tax_total, f"{{{CAC_NS}}}TaxSubtotal")
+        _text(subtotal, "TaxableAmount", f"{_q3(base)}", CBC_NS, currencyID=currency)
+        _text(subtotal, "TaxAmount", f"{_q3(amount)}", CBC_NS, currencyID=currency)
+        category = ET.SubElement(subtotal, f"{{{CAC_NS}}}TaxCategory")
+        _text(category, "ID", category_id, CBC_NS)
+        _text(category, "Percent", f"{percent}", CBC_NS)
+        tax_scheme2 = ET.SubElement(category, f"{{{CAC_NS}}}TaxScheme")
+        _text(tax_scheme2, "ID", "VAT", CBC_NS)
 
     monetary = ET.SubElement(root, f"{{{CAC_NS}}}LegalMonetaryTotal")
     _text(monetary, "LineExtensionAmount", f"{line_extension}", CBC_NS, currencyID=currency)
@@ -245,7 +268,11 @@ def zatca_document(
         if tenant
         else ""
     )
-    seller_id = (getattr(tenant, "tax_number", None) or "").strip() if tenant else ""
+    # Same fallback as build_invoice_xml: a tenant may store its VAT number
+    # in either field. An empty seller TRN makes the ZATCA QR non-compliant.
+    seller_id = (
+        (getattr(tenant, "tax_number", None) or getattr(tenant, "vat_number", None) or "").strip() if tenant else ""
+    )
     total = Decimal(str(getattr(sale, "total_amount", 0) or 0))
     tax = Decimal(str(getattr(sale, "tax_amount", 0) or 0))
     qr = zatca_tlv_base64(tenant_name, seller_id, timestamp, total, tax, xml_sha256_b64)

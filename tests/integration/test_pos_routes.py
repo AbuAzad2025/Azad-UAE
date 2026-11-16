@@ -12,7 +12,8 @@ class TestPOSSession:
         """POST /pos/api/session/open creates a POS session with opening balance."""
         from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"POS {tid}",
             name_ar=f"POS {tid}",
@@ -95,7 +96,8 @@ class TestPOSSession:
         from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PSC {tid}",
             name_ar=f"PSC {tid}",
@@ -251,7 +253,8 @@ class TestPOSSession:
         from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PCL {tid}",
             name_ar=f"PCL {tid}",
@@ -406,7 +409,8 @@ class TestPOSSession:
         from services.stock_service import StockService
         from utils.gl_reference_types import GLRef
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"POV {tid}",
             name_ar=f"POV {tid}",
@@ -568,7 +572,8 @@ class TestPOSSession:
         from models import Branch, Permission, Product, ProductCategory, Role, SystemSettings, Tenant, User, Warehouse
         from services.stock_service import StockService
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PPR {tid}",
             name_ar=f"PPR {tid}",
@@ -704,7 +709,8 @@ class TestPOSSession:
         )
         from services.stock_service import StockService
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PCR {tid}",
             name_ar=f"PCR {tid}",
@@ -849,7 +855,8 @@ class TestPOSSession:
         """Two cashiers have separate drawers/sessions in the same branch."""
         from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PIS {tid}",
             name_ar=f"PIS {tid}",
@@ -931,7 +938,8 @@ class TestPOSSession:
         """GET /pos/api/walkin-customer returns/creates a tenant-scoped walk-in customer."""
         from models import Branch, Permission, Role, SystemSettings, Tenant, User
 
-        tid = uuid.uuid4().hex[:4]
+        # 4 hex chars collide across a large suite and break unique names.
+        tid = uuid.uuid4().hex[:12]
         tenant = Tenant(
             name=f"PWC {tid}",
             name_ar=f"PWC {tid}",
