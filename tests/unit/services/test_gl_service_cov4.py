@@ -23,7 +23,7 @@ Targets (production lines):
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
@@ -164,7 +164,11 @@ class TestFiscalYear:
         sample_tenant.fiscal_year_start = 7
         db_session.flush()
         out = FiscalYearService.calculate_pl_balance(sample_tenant.id, 2025)
-        assert (out["end_date"].month, out["end_date"].day) == (7, 1)
+        # The bound is inclusive in get_balance(), so it must be the last
+        # microsecond of the fiscal year - not midnight on July 1, which used
+        # to pull the closing entry of a non-December year into the next P&L.
+        assert out["end_date"] < datetime(2026, 7, 1, tzinfo=UTC)
+        assert out["end_date"] >= datetime(2026, 6, 30, 23, 59, 59, tzinfo=UTC)
         db_session.rollback()
 
     def test_close_no_lines_raises(self, db_session, sample_tenant, mocker):
