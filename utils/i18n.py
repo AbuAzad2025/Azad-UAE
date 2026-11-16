@@ -8386,6 +8386,8 @@ TRANSLATIONS = {
     "No quotations found": {"ar": "لم يتم العثور على عروض أسعار", "en": "No quotations found"},
     "Quotation": {"ar": "عرض السعر", "en": "Quotation"},
     "Quotations": {"ar": "عروض الأسعار", "en": "Quotations"},
+    "New_Quotation": {"ar": "عرض سعر جديد", "en": "New Quotation"},
+    "Quotations_List": {"ar": "عروض الأسعار قائمة", "en": "Quotations List"},
     "Reject": {"ar": "رفض", "en": "Reject"},
     "Reject?": {"ar": "رفض؟", "en": "Reject?"},
     "Send": {"ar": "إرسال", "en": "Send"},

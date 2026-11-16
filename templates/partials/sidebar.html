@@ -183,7 +183,9 @@
             {% endif %}
           {{ _end(_prod) }}
 
-{# ═══════════════════════════════════════════════════════ #}
+          {# ═══════════════════════════════════════════════════════ #}
+          {#  2. المبيعات والعملاء (Sales & CRM)                      #}
+          {# ═══════════════════════════════════════════════════════ #}
           {% set _sale_perm = current_user.is_authenticated and (current_user.has_permission('manage_sales') or current_user.has_permission('manage_customers')) %}
           {{ _sec(t('Sales_Section'), _sale_perm) }}
 
@@ -218,6 +220,25 @@
             </li>
             {% endif %}
           {{ _end(_sale) }}
+
+          {# ── Quotations (عروض الأسعار) ── #}
+          {% set _quo = current_user.is_authenticated and current_user.has_permission('manage_sales') %}
+          {{ _tree('fas fa-file-contract', t('Quotations'), 'quotations', _quo) }}
+            {% if _quo %}
+            <li class="nav-item">
+              <a href="{{ url_for('quotations.create') }}" class="nav-link">
+                <i class="fas fa-plus-circle nav-icon text-success" aria-hidden="true"></i>
+                <p>{{ t('New_Quotation') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="{{ url_for('quotations.index') }}" class="nav-link">
+                <i class="fas fa-list nav-icon" aria-hidden="true"></i>
+                <p>{{ t('Quotations_List') }}</p>
+              </a>
+            </li>
+            {% endif %}
+          {{ _end(_quo) }}
 
           {% set _mnt_mgmt = current_user.is_authenticated and current_user.has_permission('manage_maintenance') %}
           {% set _mnt_recv = current_user.is_authenticated and current_user.has_permission('maintenance_receive') %}
