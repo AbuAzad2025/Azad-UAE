@@ -1,5 +1,11 @@
 from ._constants import GL_CONCEPT_REGISTRY, REQUIRED_GL_CONCEPTS
 from .advanced_accounting import AdvancedExpense, CustomsTax, TaxCalculationRule
+
+# These four modules define tables but were never exported here. Without the
+# explicit import, `db.metadata` omits them in a fresh process and the
+# alembic-vs-create_all parity gate cannot see them.
+from .ai import AiExpertise, AiInteraction, AiMemory
+from .ai_training_advanced import AiKnowledgeGraph, AiTrainingBatch, AiTrainingProgress
 from .api_key import APIKey
 from .archive import ArchivedRecord
 from .audit import AuditLog
@@ -21,6 +27,7 @@ from .cost_center import CostCenter
 from .crm import CRMActivity, CRMLead, CRMStage, CRMTeam, CRMTeamMember
 from .currency import Currency, ExchangeRate
 from .customer import Customer
+from .dashboard import DashboardWidget, UserDashboardLayout
 from .document_sequence import DocumentSequence
 from .document_snapshot import DocumentSnapshot
 from .document_verification import DocumentVerification
@@ -126,6 +133,7 @@ from .purchase_return import PurchaseReturn, PurchaseReturnLine
 from .quotation import Quotation, QuotationLine
 from .receipt import Receipt
 from .sale import Sale, SaleLine
+from .sales_rep_commission import SalesRepCommission
 from .security_alert import SecurityAlert
 from .shipment import Shipment
 from .shop_abandoned_cart import ShopAbandonedCart
@@ -342,4 +350,13 @@ __all__ = [
     "ProductImportJobStatus",
     "ProductImportTemplate",
     "ProductImportRollbackLog",
+    "AiExpertise",
+    "AiInteraction",
+    "AiMemory",
+    "AiKnowledgeGraph",
+    "AiTrainingBatch",
+    "AiTrainingProgress",
+    "DashboardWidget",
+    "UserDashboardLayout",
+    "SalesRepCommission",
 ]

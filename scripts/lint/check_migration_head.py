@@ -31,6 +31,8 @@ def main() -> int:
     revisions: dict[str, str] = {}
     parents: dict[str, str | None] = {}
     missing_downgrade: list[str] = []
+    filename_mismatches: list[str] = []
+    duplicate_ids: list[str] = []
 
     for path in sorted(VERSIONS.glob("*.py")):
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -39,10 +41,19 @@ def main() -> int:
             continue
         rid = rev.group(1)
         down = DOWN.search(text)
+        if rid in revisions:
+            duplicate_ids.append(f"{rid}: {revisions[rid]} and {path.name}")
         revisions[rid] = path.name
         parents[rid] = down.group(1) if (down and down.group(1)) else None
         if "def downgrade(" not in text:
             missing_downgrade.append(path.name)
+        # A copy-pasted migration that keeps the old `revision` string while
+        # renaming the file makes the id/name mapping ambiguous in every log
+        # and in `flask db downgrade <id>`. Catch it at authoring time.
+        # Revision ids may themselves contain underscores (squash_001), so
+        # check that the filename starts with "<id>_" rather than splitting.
+        if not path.name.startswith(f"{rid}_"):
+            filename_mismatches.append(f"{path.name} declares revision={rid}")
 
     if not revisions:
         print("FAIL: no alembic revisions found")
@@ -60,6 +71,10 @@ def main() -> int:
         problems.append(f"dangling parent(s) referenced but not defined: {dangling}")
     if missing_downgrade:
         problems.append(f"revision(s) without downgrade(): {missing_downgrade}")
+    if duplicate_ids:
+        problems.append(f"duplicate revision id(s): {duplicate_ids}")
+    if filename_mismatches:
+        problems.append(f"revision id does not match filename: {filename_mismatches}")
     if len(roots) != 1:
         problems.append(f"expected exactly 1 root, found {len(roots)}: {roots}")
 

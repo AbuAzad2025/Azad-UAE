@@ -20,6 +20,7 @@ import pytest
 import sqlalchemy as sa
 from sqlalchemy.pool import NullPool
 
+import models
 from extensions import db
 
 _SYSTEM_TABLES = frozenset({"alembic_version"})
@@ -77,6 +78,12 @@ def metadata_schema():
             conn.execute(sa.text(f'CREATE DATABASE "{name}"'))
     finally:
         admin.dispose()
+
+    # Importing the models package registers every table-defining module in
+    # db.metadata. Without this, the comparison depends on test collection
+    # order: in CI a different test imported them, locally none did.
+    assert models.SalesRepCommission.__tablename__ in db.metadata.tables
+    assert models.DashboardWidget.__tablename__ in db.metadata.tables
 
     engine = sa.create_engine(test_url.set(database=name), poolclass=NullPool)
     try:
