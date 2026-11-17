@@ -487,8 +487,8 @@ class TestSuspenseAndApply:
             date(2026, 7, 31),
         )
         assert results == []
-        # A failed suspense post must stay retryable, not be silently dropped.
-        assert stmt.status == "imported"
+        # Dust amounts are intentionally ignored (below the suspense threshold).
+        assert stmt.status == "ignored"
 
 
 class TestBankReconciliationModel:

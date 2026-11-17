@@ -96,13 +96,14 @@ class TestPayrollProcess:
         tx = PayrollTransaction.query.filter_by(employee_id=employee.id, tenant_id=tenant.id).first()
         assert tx is not None, "PayrollTransaction was not created"
         assert tx.basic_amount == Decimal("3000"), f"basic={tx.basic_amount}"
-        # PS statutory NSSF 7% on gross (3000 + 500 allowances) = 245.00 withheld;
-        # PS personal income tax applies only above the 48k annual exempt band
-        # (42000 annual => 0); net = 3500 - 245 = 3255.
+        # PS statutory NSSF 7% on gross (3000 + 500 allowances) = 245.00 withheld.
+        # Decree-Law 5/2015: 36,000 annual resident exemption, then 5% on the
+        # next 75,000. Annual gross 42,000 - 36,000 = 6,000 taxable => 300/yr,
+        # withheld as 25/month. Net = 3500 - 245 - 25 = 3230.
         assert tx.social_insurance_amount == Decimal("245.000"), f"si={tx.social_insurance_amount}"
         assert tx.social_insurance_employer_amount == Decimal("315.000"), f"si_er={tx.social_insurance_employer_amount}"
-        assert tx.income_tax_amount == Decimal("0.000"), f"it={tx.income_tax_amount}"
-        assert tx.net_salary == Decimal("3255.000"), f"net={tx.net_salary}"
+        assert tx.income_tax_amount == Decimal("25.000"), f"it={tx.income_tax_amount}"
+        assert tx.net_salary == Decimal("3230.000"), f"net={tx.net_salary}"
 
         from models.gl import GLJournalEntry
 
