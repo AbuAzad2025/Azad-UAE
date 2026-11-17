@@ -40,6 +40,10 @@ def main() -> int:
             db_name = session.execute(text("SELECT current_database()")).scalar()
             report = reconcile(session.connection(), apply=args.apply)
             report["database"] = db_name
+            # The ORM session does not auto-commit: without this, --apply
+            # reports the corrections but rolls every one of them back.
+            if args.apply:
+                session.commit()
     finally:
         engine.dispose()
 
