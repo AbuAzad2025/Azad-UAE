@@ -196,8 +196,10 @@ jobs:
           # broken migration chain just meant the tests ran against no schema
           # and failed later with a confusing UndefinedTable instead of here.
           flask db upgrade
-          # Now that the schema is real, prove the models agree with it.
+          # Now that the schema is real, prove the models agree with it,
+          # and that every migration-declared CHECK guard made it into the DB.
           python scripts/lint/check_model_schema_parity.py
+          python scripts/ops/verify_live_schema_guard.py
           # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
@@ -430,6 +432,7 @@ jobs:
           test -f tests/unit/scripts/test_migration_head_gate.py
           test -f scripts/ops/reconcile_historical_balances.py
           test -f scripts/ops/verify_isolation_db.py
+          test -f scripts/ops/verify_live_schema_guard.py
 
       - name: Transaction-boundary gate (services never end a transaction)
         run: python scripts/lint/check_txn_boundaries.py
