@@ -175,3 +175,46 @@ def test_full_historical_reconciliation(db_session, sample_tenant, sample_custom
 
     # Applying twice is idempotent.
     assert reconcile(db_session.connection(), apply=True)["total_discrepancies"] == 0
+
+
+def test_maintenance_receipt_is_converted_at_the_order_rate(db_session, sample_tenant, sample_customer, sample_user):
+    """A foreign-currency workshop receipt must reach the balance in base currency.
+
+    Regression: the first version of the reconciler read the raw receipt amount,
+    which would overwrite a correct 35.00 AED balance with 10.00 on upgrade.
+    """
+    from models import MaintenanceOrder, MaintenanceReceipt
+
+    tid = sample_tenant.id
+    order = MaintenanceOrder(
+        tenant_id=tid,
+        order_number="RECON-FX-ORDER",
+        customer_id=sample_customer.id,
+        received_by=sample_user.id,
+        total_amount=Decimal("100"),
+        amount=Decimal("100"),
+        amount_aed=Decimal("350"),
+        currency="USD",
+        exchange_rate=Decimal("3.5"),
+        base_currency="AED",
+        status="closed",
+    )
+    db_session.add(order)
+    db_session.flush()
+    db_session.add(
+        MaintenanceReceipt(
+            tenant_id=tid,
+            order_id=order.id,
+            receipt_number="RECON-FX-RCPT",
+            amount=Decimal("10"),  # 10 USD at 3.5 => 35 AED
+            payment_mode="cash",
+            cashier_id=sample_user.id,
+        )
+    )
+    sample_customer.balance = Decimal("0")
+    db_session.flush()
+
+    reconcile(db_session.connection(), apply=True)
+    db_session.expire_all()
+
+    assert sample_customer.balance == Decimal("35.000")

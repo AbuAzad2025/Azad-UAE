@@ -110,6 +110,7 @@ class SupplierService:
     def supplier_scoped_totals(supplier_id, tenant_id=None, branch_id=None):
         """(confirmed purchases, total_purchases_aed, total_paid_outgoing_aed) within tenant/branch."""
         from models import Payment, Purchase
+        from models.payment import payment_affects_balance
 
         purchases_query = Purchase.query.filter_by(supplier_id=supplier_id, status="confirmed", tenant_id=tenant_id)
         payments_query = Payment.query.filter_by(supplier_id=supplier_id, tenant_id=tenant_id)
@@ -123,7 +124,16 @@ class SupplierService:
         # included in the statement; the detail card must show the same total.
         for order in SupplierService.maintenance_purchase_query(supplier_id, tenant_id, branch_id).all():
             total_purchases += SupplierService.maintenance_purchase_base_amount(order)
-        total_paid = sum((p.amount_aed or 0) for p in payments_query.filter(Payment.direction == "outgoing").all())
+        # Only confirmed payments and live (non-rejected) cheques affect the
+        # balance; a rejected outgoing cheque must not reduce the supplier's
+        # paid total. This matches models/supplier.py and every statement path.
+        total_paid = sum(
+            (p.amount_aed or 0)
+            for p in payments_query.filter(
+                Payment.direction == "outgoing",
+                payment_affects_balance(Payment),
+            ).all()
+        )
         return purchases, total_purchases, total_paid
 
     @staticmethod

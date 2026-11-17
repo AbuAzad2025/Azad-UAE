@@ -65,7 +65,11 @@ def _customer_expected(conn, tenant_base: dict[int, str]) -> dict[int, Decimal]:
     for r in conn.execute(text("SELECT id FROM customers")):
         expected[r.id] = Decimal("0")
 
-    for r in conn.execute(text("SELECT customer_id, amount_aed FROM sales WHERE status='confirmed'")):
+    # Archived sales have their GL entry reversed (archive_service.py), so
+    # counting them here would resurrect a debt the books no longer carry.
+    for r in conn.execute(
+        text("SELECT customer_id, amount_aed FROM sales WHERE status='confirmed' AND is_active=true")
+    ):
         if r.customer_id in expected:
             expected[r.customer_id] -= _d(r.amount_aed)
 
@@ -101,16 +105,33 @@ def _customer_expected(conn, tenant_base: dict[int, str]) -> dict[int, Decimal]:
         if r.customer_id in expected:
             expected[r.customer_id] += _d(r.amount_aed)
 
-    orders = {r.id: r for r in conn.execute(text("SELECT id, customer_id FROM maintenance_orders"))}
+    orders = {
+        r.id: r
+        for r in conn.execute(
+            text("SELECT id, customer_id, tenant_id, currency, exchange_rate, base_currency FROM maintenance_orders")
+        )
+    }
     for r in conn.execute(text("SELECT order_id, amount_aed FROM maintenance_invoices WHERE posted=true")):
         o = orders.get(r.order_id)
         if o and o.customer_id in expected:
             expected[o.customer_id] -= _d(r.amount_aed)
-    for r in conn.execute(text("SELECT order_id, amount, is_refund, payment_mode FROM maintenance_receipts")):
+    # A maintenance receipt stores the amount in the ORDER's currency, while
+    # Customer.balance and the GL carry the base-currency equivalent. Convert
+    # exactly as services/maintenance_order_service.py::_customer_base_amount
+    # does; using the raw amount overwrites correct balances with wrong ones.
+    from utils.currency_utils import convert_and_quantize_aed
+
+    for r in conn.execute(text("SELECT order_id, amount, is_refund FROM maintenance_receipts")):
         o = orders.get(r.order_id)
         if not o or o.customer_id not in expected:
             continue
-        base = _d(r.amount)
+        base = convert_and_quantize_aed(
+            _d(r.amount),
+            o.currency or "AED",
+            o.exchange_rate or Decimal("1"),
+            base_currency=o.base_currency or tenant_base.get(o.tenant_id, "AED"),
+            tenant_id=o.tenant_id,
+        )
         expected[o.customer_id] += -base if r.is_refund else base
     for r in conn.execute(text("SELECT order_id, total_value_aed FROM maintenance_returns WHERE posted=true")):
         o = orders.get(r.order_id)

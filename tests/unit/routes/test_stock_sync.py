@@ -74,6 +74,9 @@ class TestStockSyncService:
                 email=f"sync{uniq}@test.local",
                 phone_1="0500000000",
                 country="AE",
+                # Keep the tax jurisdiction consistent with the entity country;
+                # otherwise the PS fallback makes the engine bill 16% VAT.
+                vat_country="AE",
                 subscription_plan="basic",
                 default_currency="AED",
                 base_currency="AED",
@@ -122,6 +125,7 @@ def api_credentials(app):
         email=f"syncroute{uniq}@test.local",
         phone_1="0500000000",
         country="AE",
+        vat_country="AE",  # match the entity country; PS fallback would bill 16%
         subscription_plan="basic",
         default_currency="AED",
         base_currency="AED",
@@ -283,6 +287,7 @@ class TestSyncStatusRoute:
             email=f"ro{uniq}@test.local",
             phone_1="0500000000",
             country="AE",
+            vat_country="AE",  # match the entity country; PS fallback would bill 16%
             subscription_plan="basic",
             default_currency="AED",
             base_currency="AED",

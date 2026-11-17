@@ -378,17 +378,31 @@ class CustomerService:
             .scalar()
             or 0
         )
-        pre_pay = sum(
-            (float(p.amount_aed or 0) if p.direction == "incoming" else -float(p.amount_aed or 0))
+        pre_payment_rows = [
+            p
             for p in Payment.query.filter(
                 Payment.customer_id == customer_id,
                 Payment.tenant_id == tenant_id,
                 func.date(Payment.payment_date) < date_from,
             ).all()
             if p.payment_confirmed or (p.payment_method == "cheque" and not p.rejection_reason)
+        ]
+        pre_pay = sum(
+            (float(p.amount_aed or 0) if p.direction == "incoming" else -float(p.amount_aed or 0))
+            for p in pre_payment_rows
         )
+        # A receipt and the payments allocated from it share a reference.
+        # Count the collection once by netting the allocated amount off the
+        # receipt, exactly like CustomerStatementService's opening balance;
+        # adding both in full double-counts partially allocated receipts.
+        pre_allocated: dict[str, float] = {}
+        for p in pre_payment_rows:
+            if p.reference_number:
+                pre_allocated[p.reference_number] = pre_allocated.get(p.reference_number, 0.0) + float(
+                    p.amount_aed or 0
+                )
         pre_receipt = sum(
-            float(r.amount_aed or 0)
+            max(float(r.amount_aed or 0) - pre_allocated.get(r.receipt_number or "", 0.0), 0.0)
             for r in Receipt.query.filter(
                 Receipt.customer_id == customer_id,
                 Receipt.tenant_id == tenant_id,
