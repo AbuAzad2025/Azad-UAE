@@ -470,8 +470,8 @@ class MaintenanceOrderStatusLog(db.Model):
         nullable=False,
         index=True,
     )
-    from_status = db.Column(db.String(20), nullable=True)
-    to_status = db.Column(db.String(20), nullable=False, index=True)
+    from_status = db.Column(db.String(50), nullable=True)  # matches migration length
+    to_status = db.Column(db.String(50), nullable=False, index=True)  # matches migration length
     changed_by = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
     created_at = db.Column(
         db.DateTime(timezone=True),

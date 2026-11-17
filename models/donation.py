@@ -25,7 +25,7 @@ class Donation(db.Model):
     )
     tenant = db.relationship("Tenant", backref="donations", foreign_keys=[tenant_id])
 
-    amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
+    amount_usd = db.Column(db.Numeric(15, 3), nullable=False)  # المبلغ بالدولار — matches migration precision
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
 
     # Payment Method - طريقة الدفع

@@ -52,7 +52,7 @@ class CardPayment(db.Model):
     # معلومات المشترية/التبرع
     transaction_type = db.Column(db.String(20), nullable=False)  # purchase, donation
     package = db.Column(db.String(50))  # للمشتريات
-    amount = db.Column(db.Numeric(15, 2), nullable=False)
+    amount = db.Column(db.Numeric(15, 3), nullable=False)  # matches migration precision
 
     # معلومات البطاقة (مشفرة)
     card_last_4 = db.Column(db.String(4))  # آخر 4 أرقام فقط (غير مشفرة)

@@ -75,8 +75,8 @@ jobs:
               {"postgres-version":15,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
               {"postgres-version":15,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
               {"postgres-version":15,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
-              {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
-              {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
+              {"postgres-version":15,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/ tests/unit/scripts/", "cov-flag":"unit-utils"},
+              {"postgres-version":15,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core --ignore=tests/unit/scripts", "cov-flag":"unit-core"},
               {"postgres-version":15,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
               {"postgres-version":15,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
               {"postgres-version":15,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
@@ -90,8 +90,8 @@ jobs:
               {"postgres-version":16,"test-group":"services","test-path":"tests/unit/services/",           "cov-flag":"unit-services"},
               {"postgres-version":16,"test-group":"models",  "test-path":"tests/unit/models/",             "cov-flag":"unit-models"},
               {"postgres-version":16,"test-group":"ai_knowledge","test-path":"tests/unit/ai_knowledge/",  "cov-flag":"unit-ai-knowledge"},
-              {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/", "cov-flag":"unit-utils"},
-              {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core", "cov-flag":"unit-core"},
+              {"postgres-version":16,"test-group":"utils",   "test-path":"tests/unit/utils/ tests/unit/app/ tests/unit/runtime_core/ tests/unit/scripts/", "cov-flag":"unit-utils"},
+              {"postgres-version":16,"test-group":"core",    "test-path":"tests/unit/ --ignore=tests/unit/routes --ignore=tests/unit/services --ignore=tests/unit/ai_knowledge --ignore=tests/unit/models --ignore=tests/unit/utils --ignore=tests/unit/app --ignore=tests/unit/runtime_core --ignore=tests/unit/scripts", "cov-flag":"unit-core"},
               {"postgres-version":16,"test-group":"integration","test-path":"tests/integration/ --ignore=tests/integration/business_scenarios","cov-flag":"integration"},
               {"postgres-version":16,"test-group":"scenarios-a","test-path":"tests/integration/business_scenarios/test_wave{0,1,2,2b,3,4,4b,5,6,7}_*.py","cov-flag":"scenarios-a"},
               {"postgres-version":16,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
@@ -419,6 +419,17 @@ jobs:
 
       - name: Alembic graph gate (single head, reversible chain)
         run: python scripts/lint/check_migration_head.py
+
+      # The CFO/financial-assurance gates live as tests (unit/models and
+      # integration) and as ops scripts. Fail the build here if any of them is
+      # removed or renamed, so the financial controls cannot silently rot.
+      - name: Financial assurance gates are present
+        run: |
+          test -f tests/unit/models/test_schema_parity_migrations.py
+          test -f tests/integration/test_cfo_financial_assurance.py
+          test -f tests/unit/scripts/test_migration_head_gate.py
+          test -f scripts/ops/reconcile_historical_balances.py
+          test -f scripts/ops/verify_isolation_db.py
 
       - name: Transaction-boundary gate (services never end a transaction)
         run: python scripts/lint/check_txn_boundaries.py

@@ -73,9 +73,11 @@ class PaymentVault(db.Model):
     razorpay_key_secret = db.Column(db.String(255))  # Razorpay Secret
 
     # Payment Limits - حدود الدفع
-    min_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal("10.00"))  # الحد الأدنى
-    max_donation_amount = db.Column(db.Numeric(10, 2), default=Decimal("10000.00"))  # الحد الأقصى
-    daily_limit = db.Column(db.Numeric(15, 2), default=Decimal("50000.00"))  # الحد اليومي
+    # Precision matches the migration (15,3) — the old model declared (10,2)/
+    # (15,2), which silently truncated money written through the ORM.
+    min_donation_amount = db.Column(db.Numeric(15, 3), default=Decimal("10.000"))  # الحد الأدنى
+    max_donation_amount = db.Column(db.Numeric(15, 3), default=Decimal("10000.000"))  # الحد الأقصى
+    daily_limit = db.Column(db.Numeric(15, 3), default=Decimal("50000.000"))  # الحد اليومي
 
     # Azad Donation Page — controlled from secret vault
     donations_enabled = db.Column(db.Boolean, default=False)
@@ -258,7 +260,7 @@ class PaymentLog(db.Model):
 
     # Transaction Reference - مرجع المعاملة
     transaction_id = db.Column(db.String(100))  # معرف المعاملة
-    amount = db.Column(db.Numeric(15, 2))  # المبلغ
+    amount = db.Column(db.Numeric(15, 3))  # المبلغ — matches migration precision
 
     # Security - الأمان
     ip_address = db.Column(db.String(50))  # عنوان IP
