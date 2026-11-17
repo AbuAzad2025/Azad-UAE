@@ -313,6 +313,10 @@ REPAIRED_MONEY_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
         "f5a6b7c8d9e0",
         "Workshop spare-part purchase orders added to the supplier's AP total.",
     ),
+    ("suppliers", "total_paid_aed"): (
+        "g1h2i3j4k5l6",
+        "Supplier paid total rebuilt from every outgoing payment and incoming refund.",
+    ),
 }
 
 #: The rows whose sha256 is printed in the report, because they carry the
