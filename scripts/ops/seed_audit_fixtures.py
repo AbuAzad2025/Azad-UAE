@@ -37,8 +37,11 @@ def _ins(conn, table: str, **values):
     return conn.execute(sql, values).scalar_one()
 
 
-def _post(conn, tid: int, number: str, ref_type: str, ref_id: int, lines: list[tuple[str, Decimal, Decimal]]):
+def _post(
+    conn, tid: int, number: str, ref_type: str, ref_id: int, lines: list[tuple[str, int | Decimal, int | Decimal]]
+):
     """Post one balanced journal entry; raises if the lines do not balance."""
+    lines = [(code, Decimal(str(d)), Decimal(str(c))) for code, d, c in lines]
     dr = sum((d for _, d, _ in lines), Decimal("0"))
     cr = sum((c for _, _, c in lines), Decimal("0"))
     if dr != cr:
