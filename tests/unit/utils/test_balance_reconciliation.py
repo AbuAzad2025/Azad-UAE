@@ -218,3 +218,75 @@ def test_maintenance_receipt_is_converted_at_the_order_rate(db_session, sample_t
     db_session.expire_all()
 
     assert sample_customer.balance == Decimal("35.000")
+
+
+def test_cash_box_and_customer_total_purchases_are_rebuilt(
+    db_session, sample_tenant, sample_customer, sample_user, sample_gl_accounts
+):
+    """The two cached columns with no incremental writer are rebuilt too."""
+    from models import GLAccount, GLJournalEntry, GLJournalLine, Sale
+    from models.cash_box import CashBox
+
+    tid = sample_tenant.id
+    cash_account = GLAccount.query.filter_by(tenant_id=tid, code="1111").first()
+    assert cash_account is not None
+
+    db_session.add(
+        Sale(
+            tenant_id=tid,
+            sale_number="RECON-TP-SALE",
+            customer_id=sample_customer.id,
+            seller_id=sample_user.id,
+            sale_date=datetime.now(UTC),
+            status="confirmed",
+            is_active=True,
+            amount=Decimal("100"),
+            amount_aed=Decimal("100"),
+            total_amount=Decimal("100"),
+        )
+    )
+    entry = GLJournalEntry(
+        tenant_id=tid,
+        entry_number="RECON-CB-GL",
+        entry_date=datetime.now(UTC),
+        description="cash box reconciliation",
+        reference_type="manual",
+        currency="AED",
+        exchange_rate=Decimal("1"),
+        total_debit=Decimal("55"),
+        total_credit=Decimal("55"),
+        status="posted",
+        is_posted=True,
+    )
+    db_session.add(entry)
+    db_session.flush()
+    db_session.add(
+        GLJournalLine(
+            tenant_id=tid,
+            entry_id=entry.id,
+            account_id=cash_account.id,
+            debit=Decimal("55"),
+            credit=Decimal("0"),
+            amount=Decimal("55"),
+            amount_aed=Decimal("55"),
+        )
+    )
+    box = CashBox(
+        tenant_id=tid,
+        code="RECON-CB",
+        name_ar="صندوق",
+        box_type="cash",
+        currency="AED",
+        current_balance=Decimal("999"),
+        gl_account_id=cash_account.id,
+    )
+    db_session.add(box)
+    sample_customer.total_purchases = Decimal("1")
+    db_session.flush()
+
+    report = reconcile(db_session.connection(), apply=True)
+    db_session.expire_all()
+
+    assert any(c["id"] == box.id for c in report["cash_boxes"])
+    assert box.current_balance == Decimal("55.000")
+    assert sample_customer.total_purchases == Decimal("100.000")

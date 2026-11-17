@@ -299,8 +299,8 @@ DECLARED_CHANGES: tuple[DeclaredChange, ...] = (
     ),
 )
 
-#: Money columns that revision f5a6b7c8d9e0 deliberately REBUILDS from the
-#: documents. They are the stored sub-ledger conveniences, not source data:
+#: Money columns that the reconciliation revisions deliberately REBUILD from
+#: the documents. They are the stored sub-ledger conveniences, not source data:
 #: the old code never moved them for maintenance movements / spare-part
 #: purchases / partner commissions, so the repair is the whole point of the
 #: revision. Changes here are declared and reported, never silently ignored.
@@ -316,6 +316,14 @@ REPAIRED_MONEY_COLUMNS: dict[tuple[str, str], tuple[str, str]] = {
     ("suppliers", "total_paid_aed"): (
         "g1h2i3j4k5l6",
         "Supplier paid total rebuilt from every outgoing payment and incoming refund.",
+    ),
+    ("customers", "total_purchases"): (
+        "h2i3j4k5l6m9",
+        "VIP-classification total rebuilt from confirmed, active sales.",
+    ),
+    ("cash_boxes", "current_balance"): (
+        "h2i3j4k5l6m9",
+        "Treasury balance rebuilt from the linked GL account's posted lines.",
     ),
 }
 

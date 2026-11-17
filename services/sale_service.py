@@ -1512,12 +1512,15 @@ class SaleService:
                         post_or_fail(
                             fx_lines,
                             description=f"FX Gain/Loss - Payment {payment.payment_number}",
-                            reference_type=GLRef.PAYMENT,
+                            # A distinct reference type and idempotency key keep
+                            # the FX leg separate from the payment's main leg.
+                            reference_type=GLRef.FX_GAIN_LOSS,
                             reference_id=payment.id,
                             currency=get_system_default_currency(),
                             exchange_rate=1.0,
                             branch_id=sale.branch_id,
                             tenant_id=(sale.tenant_id if sale is not None else None),
+                            idempotency_key="realized-fx",
                         )
                         # The sub-ledger credits the full base amount received
                         # (matching the statement); the FX leg stays in P&L.

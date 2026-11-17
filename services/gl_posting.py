@@ -87,6 +87,7 @@ def post_or_fail(
     tenant_id=None,
     commit=False,
     allow_closed_period=False,
+    idempotency_key=None,
 ):
     """
     Post a journal entry with mandatory validation flow.
@@ -127,6 +128,25 @@ def post_or_fail(
     if not lines:
         raise GlPostingError(gettext(f'لا يمكن ترحيل "{description}" بدون سطور قيد.'))
 
+    # Two legitimate postings can share (reference_type, reference_id) — e.g.
+    # a payment's main leg and its realised-FX leg. Callers that can be retried
+    # pass an explicit key so a second attempt returns the first entry instead
+    # of posting the money twice. The marker lives in notes so it needs no new
+    # column, and is namespaced to avoid colliding with FX revaluation tags.
+    if idempotency_key:
+        from models import GLJournalEntry
+
+        marker = f"IDEMPOTENT|{idempotency_key}|"
+        existing = GLJournalEntry.query.filter(
+            GLJournalEntry.tenant_id == tenant_id,
+            GLJournalEntry.reference_type == reference_type,
+            GLJournalEntry.reference_id == reference_id,
+            GLJournalEntry.status == "posted",
+            GLJournalEntry.notes.like(f"{marker}%"),
+        ).first()
+        if existing is not None:
+            return existing
+
     assert_balanced_lines(lines, currency=currency)
 
     entry_date = date or datetime.now(UTC)
@@ -163,6 +183,7 @@ def post_or_fail(
             exchange_rate=exchange_rate,
             entry_type="auto",
             allow_closed_period=allow_closed_period,
+            notes=(f"IDEMPOTENT|{idempotency_key}|" if idempotency_key else None),
         )
 
         # Validate the entry (sets status to 'validated' or 'error')

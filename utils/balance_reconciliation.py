@@ -28,7 +28,9 @@ def _d(value: Any) -> Decimal:
 
 
 def _q(value: Decimal) -> Decimal:
-    return value.quantize(_Q, rounding=ROUND_HALF_UP)
+    # Legacy rows can hold NULL in cached money columns that have no DB
+    # default; treat them as zero rather than crashing the repair migration.
+    return _d(value).quantize(_Q, rounding=ROUND_HALF_UP)
 
 
 def _t(name: str, *columns: str):
@@ -188,17 +190,40 @@ def reconcile(conn, *, apply: bool = False) -> dict[str, Any]:
         "customers": [],
         "suppliers": [],
         "partners": [],
+        "cash_boxes": [],
         "applied": apply,
     }
 
-    customers_tbl = _t("customers", "id", "balance")
-    stored_customers = {r.id: _q(r.balance) for r in conn.execute(sa.select(customers_tbl))}
+    # total_purchases drives the customer VIP classification and is written
+    # incrementally by the sale service. Rebuild it from the same documents:
+    # confirmed, active sales. Cancelled/archived sales never counted.
+    purchases_by_customer: dict[int, Decimal] = {}
+    for r in conn.execute(
+        text("SELECT customer_id, amount_aed FROM sales WHERE status='confirmed' AND is_active=true")
+    ):
+        purchases_by_customer[r.customer_id] = purchases_by_customer.get(r.customer_id, Decimal("0")) + _d(r.amount_aed)
+
+    customers_tbl = _t("customers", "id", "balance", "total_purchases")
+    stored_customers = {r.id: (_q(r.balance), _q(r.total_purchases)) for r in conn.execute(sa.select(customers_tbl))}
     for cid, expected in _customer_expected(conn, tenant_base).items():
-        stored = stored_customers.get(cid, Decimal("0"))
-        if stored != expected:
-            report["customers"].append({"id": cid, "before": str(stored), "after": str(expected)})
+        expected_purchases = _q(purchases_by_customer.get(cid, Decimal("0")))
+        before_balance, before_purchases = stored_customers.get(cid, (Decimal("0"), Decimal("0")))
+        if (before_balance, before_purchases) != (expected, expected_purchases):
+            report["customers"].append(
+                {
+                    "id": cid,
+                    "before": str(before_balance),
+                    "after": str(expected),
+                    "before_purchases": str(before_purchases),
+                    "after_purchases": str(expected_purchases),
+                }
+            )
             if apply:
-                conn.execute(sa.update(customers_tbl).where(customers_tbl.c.id == cid).values(balance=expected))
+                conn.execute(
+                    sa.update(customers_tbl)
+                    .where(customers_tbl.c.id == cid)
+                    .values(balance=expected, total_purchases=expected_purchases)
+                )
 
     purchases, paid = _supplier_expected(conn, tenant_base)
     suppliers_tbl = _t("suppliers", "id", "total_purchases_aed", "total_paid_aed")
@@ -256,5 +281,29 @@ def reconcile(conn, *, apply: bool = False) -> dict[str, Any]:
                     sa.update(partners_tbl).where(partners_tbl.c.id == pid).values(current_balance=_q(running))
                 )
 
-    report["total_discrepancies"] = sum(len(report[k]) for k in ("customers", "suppliers", "partners"))
+    # Cash boxes are the denormalised view of their linked GL liquidity
+    # account. The service never updates current_balance after creation, so
+    # the column goes stale; derive it from posted GL lines instead.
+    cash_boxes_tbl = _t("cash_boxes", "id", "gl_account_id", "current_balance")
+    for box in conn.execute(sa.select(cash_boxes_tbl)).all():
+        if box.gl_account_id is None:
+            continue  # no GL link -> nothing authoritative to derive from
+        balance = conn.execute(
+            text(
+                "SELECT COALESCE(SUM(l.debit - l.credit), 0) "
+                "FROM gl_journal_lines l JOIN gl_journal_entries e ON e.id = l.entry_id "
+                "WHERE l.account_id = :a AND e.status = 'posted'"
+            ),
+            {"a": box.gl_account_id},
+        ).scalar()
+        expected = _q(balance)
+        before = _q(box.current_balance)
+        if before != expected:
+            report["cash_boxes"].append({"id": box.id, "before": str(before), "after": str(expected)})
+            if apply:
+                conn.execute(
+                    sa.update(cash_boxes_tbl).where(cash_boxes_tbl.c.id == box.id).values(current_balance=expected)
+                )
+
+    report["total_discrepancies"] = sum(len(report[k]) for k in ("customers", "suppliers", "partners", "cash_boxes"))
     return report

@@ -216,12 +216,13 @@ class PaymentService:
         post_or_fail(
             fx_lines,
             description=f"FX Gain/Loss - Payment {payment.payment_number}",
-            reference_type=GLRef.PAYMENT,
+            reference_type=GLRef.FX_GAIN_LOSS,
             reference_id=payment.id,
             currency=resolve_tenant_base_currency(tenant_id=tenant_id),
             exchange_rate=1.0,
             branch_id=payment.branch_id,
             tenant_id=tenant_id,
+            idempotency_key="realized-fx",
         )
 
     @staticmethod
@@ -823,12 +824,13 @@ class PaymentService:
                                     post_or_fail(
                                         fx_lines,
                                         description=f"FX Gain/Loss - Receipt {receipt.receipt_number}",
-                                        reference_type=GLRef.RECEIPT,
+                                        reference_type=GLRef.FX_GAIN_LOSS,
                                         reference_id=receipt.id,
                                         currency=resolve_tenant_base_currency(tenant_id=tenant_id),
                                         exchange_rate=1.0,
                                         branch_id=receipt.branch_id,
                                         tenant_id=tenant_id,
+                                        idempotency_key="realized-fx",
                                     )
                                     # The sub-ledger credits the FULL base
                                     # amount actually received, matching the

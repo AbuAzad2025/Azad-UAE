@@ -351,6 +351,7 @@ class GLService:
         exchange_rate=None,
         entry_type="auto",
         allow_closed_period=False,
+        notes=None,
     ):
         """Standardized GL Entry Creation"""
 
@@ -439,6 +440,7 @@ class GLService:
             exchange_rate=exchange_rate,
             reference_type=validate_reference_type_write(reference_type),
             reference_id=reference_id,
+            notes=notes,
         )
         db.session.add(entry)
         db.session.flush()

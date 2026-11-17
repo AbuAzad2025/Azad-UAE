@@ -579,7 +579,10 @@ class TestADV55Settlement:
 
         receipt_entries = _entries_for(db_session, fx_tenant.id, GLRef.RECEIPT, receipt.id)
         receipt_own = [e for e in receipt_entries if (e.description or "").startswith("Receipt ")]
-        receipt_fx = [e for e in receipt_entries if (e.description or "").startswith("FX Gain/Loss - Receipt ")]
+        # The realised-FX leg has its own reference type so it can be retried
+        # independently of the receipt posting.
+        receipt_fx = _entries_for(db_session, fx_tenant.id, GLRef.FX_GAIN_LOSS, receipt.id)
+        assert all((e.description or "").startswith("FX Gain/Loss - Receipt ") for e in receipt_fx)
         assert len(receipt_own) == 1, f"the receipt was posted {len(receipt_own)} times"
         assert len(receipt_fx) == 1, f"the receipt's realized difference was posted {len(receipt_fx)} times"
 

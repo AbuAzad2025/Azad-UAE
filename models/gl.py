@@ -13,6 +13,9 @@ class GLAccount(db.Model):
     __tablename__ = "gl_accounts"
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "code", name="uq_gl_accounts_tenant_code"),
+        # Target for the composite (tenant_id, account_id) FK on journal lines:
+        # a line may never point at another tenant's account.
+        db.UniqueConstraint("tenant_id", "id", name="uq_gl_accounts_tenant_id"),
         db.Index("idx_gl_accounts_tenant_active_code", "tenant_id", "is_active", "code"),
     )
 
@@ -214,6 +217,8 @@ class GLJournalEntry(db.Model):
     __tablename__ = "gl_journal_entries"
     __table_args__ = (
         db.UniqueConstraint("tenant_id", "entry_number", name="uq_gl_journal_entries_tenant_number"),
+        # Target for the composite (tenant_id, entry_id) FK on journal lines.
+        db.UniqueConstraint("tenant_id", "id", name="uq_gl_entries_tenant_id"),
         db.Index("idx_gl_entries_tenant_date", "tenant_id", "entry_date"),
         # Double-entry, enforced by the row itself. assert_balanced_lines guards
         # the service paths; this guards everything else - a raw insert, a
@@ -295,7 +300,14 @@ class GLJournalEntry(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    lines: Mapped[list["GLJournalLine"]] = relationship("GLJournalLine", back_populates="entry", lazy="dynamic")
+    lines: Mapped[list["GLJournalLine"]] = relationship(
+        "GLJournalLine",
+        back_populates="entry",
+        lazy="dynamic",
+        # The composite tenant FKs add extra paths between these tables; pin
+        # the one that actually defines this relationship.
+        foreign_keys="[GLJournalLine.entry_id]",
+    )
     reversed_entry = db.relationship("GLJournalEntry", remote_side=[id], foreign_keys=[reversed_entry_id])
     user = db.relationship("User", foreign_keys=[created_by])
     branch = db.relationship("Branch", backref="journal_entries", foreign_keys=[branch_id])
@@ -409,6 +421,21 @@ class GLJournalLine(db.Model):
     __table_args__ = (
         db.Index("idx_gl_lines_tenant_entry", "tenant_id", "entry_id"),
         db.Index("idx_gl_lines_tenant_account", "tenant_id", "account_id"),
+        # Tenant isolation is a DB invariant, not just a service convention:
+        # a line must agree with both its entry and its account about the
+        # tenant. The single-column FKs above do not catch a cross-tenant id.
+        db.ForeignKeyConstraint(
+            ["tenant_id", "entry_id"],
+            ["gl_journal_entries.tenant_id", "gl_journal_entries.id"],
+            name="fk_gl_lines_tenant_entry_composite",
+            ondelete="RESTRICT",
+        ),
+        db.ForeignKeyConstraint(
+            ["tenant_id", "account_id"],
+            ["gl_accounts.tenant_id", "gl_accounts.id"],
+            name="fk_gl_lines_tenant_account_composite",
+            ondelete="RESTRICT",
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -452,8 +479,10 @@ class GLJournalLine(db.Model):
     partner_id = db.Column(db.Integer, db.ForeignKey("partners.id", ondelete="RESTRICT"), nullable=True, index=True)
     explicit_account_allowed = db.Column(db.Boolean, default=False, server_default=text("false"), nullable=False)
 
-    entry: Mapped["GLJournalEntry"] = relationship("GLJournalEntry", back_populates="lines")
-    account = db.relationship("GLAccount")
+    entry: Mapped["GLJournalEntry"] = relationship(
+        "GLJournalEntry", back_populates="lines", foreign_keys="[GLJournalLine.entry_id]"
+    )
+    account = db.relationship("GLAccount", foreign_keys="[GLJournalLine.account_id]")
     cost_center = db.relationship("CostCenter")
     branch = db.relationship("Branch", foreign_keys=[branch_id])
     warehouse = db.relationship("Warehouse", foreign_keys=[warehouse_id])
