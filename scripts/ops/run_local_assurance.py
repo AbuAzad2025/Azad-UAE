@@ -89,6 +89,12 @@ def main() -> int:
     ):
         failures.append("pytest")
 
+    # Browser-discovered JS defect guard: sales-enhanced.js is loaded on every
+    # page but select2 only on sale forms. This vitest guards the fix.
+    npx = "npx.cmd" if sys.platform == "win32" else "npx"
+    if not run("vitest select2 guard", [npx, "vitest", "run", "tests/vitest/sales_enhanced_select2_guard.test.js"]):
+        failures.append("vitest-select2")
+
     # The full POS→GL→Shift→Billing lifecycle script sits at the root of
     # tests/ and is collected by no suite. Run it explicitly. It builds its
     # schema with create_all(), so it needs PostgreSQL (JSONB columns).

@@ -808,7 +808,13 @@ $("#payment_method").on("change", function () {
  * Initialize on Document Ready
  */
 $(document).ready(() => {
-	$("#customer_id").select2({
+	// This script is loaded globally, but select2 is only included on the sale
+	// create/edit pages. Calling .select2() on any other page (or on a page
+	// where the plugin asset failed to load) throws and aborts the rest of the
+	// ready handler. Guard both the element and the plugin.
+	const $customer = $("#customer_id");
+	if ($customer.length && typeof $.fn.select2 === "function") {
+	$customer.select2({
 		placeholder: "ابحث عن زبون...",
 		language: "ar",
 		dir: "rtl",
@@ -837,6 +843,7 @@ $(document).ready(() => {
 		},
 		templateSelection: (customer) => customer.text,
 	});
+	}
 
 	addLine();
 
