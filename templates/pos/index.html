@@ -104,6 +104,16 @@
 
       <div class="pos-cart-scroll">
         <table class="pos-cart-table" aria-label="{{ _('السلة') }}">
+          <thead class="pos-cart-head">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">{{ _('الصنف') }}</th>
+              <th scope="col">{{ _('الكمية') }}</th>
+              <th scope="col">{{ _('سعر الوحدة') }}</th>
+              <th scope="col">{{ _('الإجمالي') }}</th>
+              <th scope="col"><span class="sr-only">{{ _('حذف') }}</span></th>
+            </tr>
+          </thead>
           <tbody id="cartBody">
             <tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
           </tbody>
