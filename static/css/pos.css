@@ -32,6 +32,17 @@
 
 body.pos-layout:has(.pos-app) {
 	background: #eff3f8;
+	/* The register is a dense screen: let the page scroll rather than clip
+	   panels or compress one section to make room for another. */
+	height: auto;
+	min-height: 100vh;
+	overflow: auto;
+}
+
+body.pos-layout:has(.pos-app) .pos-fullscreen {
+	height: auto;
+	min-height: 100vh;
+	overflow: visible;
 }
 
 .pos-app .pos-topbar {
@@ -118,10 +129,19 @@ body.pos-layout:has(.pos-app) {
 	color: #fff;
 }
 
-/* The cart rows must stay visible: without a min-height the flex item collapsed
-   to ~18px and the added items were effectively hidden under the totals. */
+/* Keep every panel at its natural height. The old layout pinned the cart side
+   to the viewport and squeezed the rows to ~18px to make room for the rest.
+   Let the page scroll instead; the table only scrolls after many lines. */
+.pos-app .pos-side {
+	position: static;
+	max-height: none;
+	overflow: visible;
+}
+
 .pos-app .pos-cart-scroll {
-	min-height: 210px;
+	min-height: 120px;
+	max-height: 320px;
+	overflow-y: auto;
 }
 
 .pos-app .pos-cart-table td {
