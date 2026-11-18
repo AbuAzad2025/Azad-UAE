@@ -69,6 +69,40 @@ CHECKS = {
         JOIN tenants t ON t.id = u.tenant_id
         WHERE t.enable_maintenance = false AND r.slug LIKE 'maintenance_%'
     """,
+    # A POS cashier cannot open a session without an active branch, and a
+    # branchless poster cannot post a sale when liquidity/stock accounts are
+    # branch-scoped. Every active user must resolve to an active branch of its
+    # own tenant.
+    "active_users_without_active_branch": """
+        SELECT count(*) FROM users u
+        WHERE u.is_active = true AND u.tenant_id IS NOT NULL
+          AND (u.branch_id IS NULL OR NOT EXISTS (
+              SELECT 1 FROM branches b
+              WHERE b.id = u.branch_id AND b.tenant_id = u.tenant_id AND b.is_active = true
+          ))
+    """,
+    # create_sale() filters warehouses by the seller's branch before posting;
+    # a warehouse with no branch is invisible to a branch-scoped cashier.
+    "tenants_without_branch_warehouse": """
+        SELECT count(*) FROM tenants t
+        WHERE NOT EXISTS (
+            SELECT 1 FROM warehouses w
+            JOIN branches b ON b.id = w.branch_id
+            WHERE w.tenant_id = t.id AND w.is_active = true
+              AND b.tenant_id = t.id AND b.is_active = true
+        )
+    """,
+    # On-hand stock is derived from StockMovement rows, not the product's
+    # aggregate field. A product with current_stock but no opening movement
+    # fails every real checkout with "insufficient stock (available: 0)".
+    "products_without_warehouse_stock_movement": """
+        SELECT count(*) FROM products p
+        WHERE p.is_active = true AND COALESCE(p.current_stock, 0) > 0
+          AND NOT EXISTS (
+              SELECT 1 FROM stock_movements sm
+              WHERE sm.product_id = p.id AND sm.tenant_id = p.tenant_id
+          )
+    """,
 }
 
 

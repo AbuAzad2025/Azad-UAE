@@ -810,7 +810,7 @@ def _upgrade(url: str) -> None:
     command.upgrade(cfg, "head")
 
 
-def _seed_users(conn, tid: int, idx: int, store: bool, maintenance: bool) -> list[str]:
+def _seed_users(conn, tid: int, idx: int, branch_id: int, store: bool, maintenance: bool) -> list[str]:
     """One independent user set per tenant, limited to what its package grants."""
     from werkzeug.security import generate_password_hash
 
@@ -834,6 +834,7 @@ def _seed_users(conn, tid: int, idx: int, store: bool, maintenance: bool) -> lis
             password_hash=generate_password_hash("IsolationSeed1!"),
             full_name=f"{label} - Tenant {idx}",
             role_id=roles[slug],
+            branch_id=branch_id,
             is_owner=False,
             is_active=True,
             created_at="2026-01-01 00:00:00+00",
@@ -861,6 +862,17 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
     ) = spec
 
     accounts = dict(conn.execute(sa.text("SELECT code, id FROM gl_accounts WHERE tenant_id=:t"), {"t": tid}).all())
+    # Branch-scoped documents and balances need an active branch. Give each
+    # tenant a main branch and attach its warehouse and users to it, otherwise
+    # a branchless cashier cannot open a POS session or post a sale.
+    branch_id = _ins(
+        conn,
+        "branches",
+        tenant_id=tid,
+        name="Main Branch",
+        code=f"BR{idx:02d}",
+        is_active=True,
+    )
     categories, nouns = CATALOG[industry]
     cat_ids = [
         _ins(
@@ -873,7 +885,7 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
         )
         for category in categories
     ]
-    _ins(
+    warehouse_id = _ins(
         conn,
         "warehouses",
         tenant_id=tid,
@@ -881,6 +893,7 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
         name_ar="المستودع الرئيسي",
         code=f"WH{idx}",
         warehouse_type="main",
+        branch_id=branch_id,
         is_active=True,
         is_main=True,
     )
@@ -890,24 +903,50 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
         base_name = nouns[i % len(nouns)]
         variant = VARIANTS[(i // len(nouns)) % len(VARIANTS)]
         cost = (Decimal(price_base) + Decimal((i * 7) % 90)).quantize(Decimal("0.001"))
-        product_ids.append(
-            _ins(
-                conn,
-                "products",
-                tenant_id=tid,
-                name=f"{base_name} {variant}",
-                name_ar=f"{base_name} {variant}",
-                sku=f"SKU-{idx:02d}-{i + 1:05d}",
-                barcode=f"BAR{idx:02d}{i + 1:08d}",
-                category_id=cat_ids[i % len(cat_ids)],
-                cost_price=cost,
-                regular_price=(cost * Decimal("1.8")).quantize(Decimal("0.001")),
-                current_stock=20 + (i * 3) % 180,
-                has_serial_number=False,
-                is_active=True,
-                industry=industry,
-                created_at="2026-01-01 00:00:00+00",
-            )
+        stock_qty = 20 + (i * 3) % 180
+        pid = _ins(
+            conn,
+            "products",
+            tenant_id=tid,
+            name=f"{base_name} {variant}",
+            name_ar=f"{base_name} {variant}",
+            sku=f"SKU-{idx:02d}-{i + 1:05d}",
+            barcode=f"BAR{idx:02d}{i + 1:08d}",
+            category_id=cat_ids[i % len(cat_ids)],
+            cost_price=cost,
+            regular_price=(cost * Decimal("1.8")).quantize(Decimal("0.001")),
+            current_stock=stock_qty,
+            has_serial_number=False,
+            is_active=True,
+            industry=industry,
+            created_at="2026-01-01 00:00:00+00",
+        )
+        product_ids.append(pid)
+        # POS/sales consume warehouse-level stock (ProductWarehouseStock), not
+        # the product's aggregate current_stock. Seed the per-warehouse rows so
+        # a real checkout has stock to deduct from.
+        _ins(
+            conn,
+            "product_warehouse_stock",
+            tenant_id=tid,
+            product_id=pid,
+            warehouse_id=warehouse_id,
+            quantity=stock_qty,
+        )
+        # On-hand quantities are derived from StockMovement rows, not from the
+        # product's aggregate field, so seed the matching opening movement.
+        _ins(
+            conn,
+            "stock_movements",
+            tenant_id=tid,
+            product_id=pid,
+            warehouse_id=warehouse_id,
+            movement_type="adjustment",
+            quantity=stock_qty,
+            reference_type="seed_opening",
+            reference_id=pid,
+            notes="Opening stock (seed)",
+            created_at="2026-01-01 00:00:00+00",
         )
     if store:
         for pid in product_ids[:50]:
@@ -1318,7 +1357,7 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
             {"p": totals["purchases"], "d": totals["paid"], "i": sid},
         )
 
-    user_roles = _seed_users(conn, tid, idx, store, maintenance)
+    user_roles = _seed_users(conn, tid, idx, branch_id, store, maintenance)
 
     return {
         "tenant": tid,
