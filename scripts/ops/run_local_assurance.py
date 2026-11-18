@@ -92,7 +92,9 @@ def main() -> int:
     # Browser-discovered JS defect guards:
     #  - sales-enhanced.js is loaded on every page but select2 only on sale forms;
     #  - an unavailable POS product card must explain itself on tap instead of
-    #    silently ignoring the cashier (it looked disabled but had no handler).
+    #    silently ignoring the cashier (it looked disabled but had no handler);
+    #  - the POS must send unit_price to the totals API, otherwise every line
+    #    is priced at zero and all four KPIs read 0.00.
     npx = "npx.cmd" if sys.platform == "win32" else "npx"
     if not run(
         "vitest browser-defect guards",
@@ -102,6 +104,7 @@ def main() -> int:
             "run",
             "tests/vitest/sales_enhanced_select2_guard.test.js",
             "tests/vitest/pos/pos_ui.test.js",
+            "tests/vitest/pos/pos_cart.test.js",
         ],
     ):
         failures.append("vitest-browser-defects")

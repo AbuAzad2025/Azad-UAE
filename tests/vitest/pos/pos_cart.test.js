@@ -151,6 +151,31 @@ describe("pos/cart.js — recalc", () => {
     expect(totals.total).toBe(0);
   });
 
+  // Browser-discovered defect: the POS sent only product_id + quantity to the
+  // totals API, which prices each line from `unit_price`. Every line was
+  // skipped as zero-priced and all four KPIs stayed at 0.00.
+  it("sends the base unit price so the backend can total the cart", async () => {
+    let payload = null;
+    globalThis.fetch = vi.fn((url, opts) => {
+      if (String(url).indexOf("calculate-totals") >= 0) {
+        payload = JSON.parse(opts.body);
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, subtotal: 200, discount: 0, total: 200, tax_amount: 0, prices_include_vat: false }),
+        });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({}) });
+    });
+    window.fetch = globalThis.fetch;
+    const { state, recalc } = await loadModule();
+    state.cart = [{ id: 7, name: "Milk", price: 120, basePrice: 100, qty: 2, discountPercent: 0 }];
+    await recalc();
+    expect(payload).not.toBeNull();
+    expect(payload.lines[0]).toMatchObject({ product_id: 7, quantity: 2, unit_price: 100 });
+    expect(document.getElementById("kpiTotal").textContent).toBe("200.00");
+  });
+
   it("backend success path updates KPIs", async () => {
     mockFetch({
       "/sales/api/calculate-totals": () =>

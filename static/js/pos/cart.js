@@ -65,6 +65,12 @@ const recalc = async () => {
 					lines: state.cart.map((it) => ({
 						quantity: it.qty,
 						product_id: it.id,
+						// The totals API prices a line from `unit_price`; the POS
+						// cart holds it as `basePrice` (display `price` is already
+						// converted to the selected currency). Sending only the
+						// product id made every line price 0, so the backend
+						// skipped it and the KPIs stayed at 0.00.
+						unit_price: it.basePrice ?? it.price,
 					})),
 					discount_amount: discountAmount,
 					shipping_cost: shipping,
