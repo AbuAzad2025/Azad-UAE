@@ -79,6 +79,30 @@ body.pos-layout:has(.pos-app) {
 	background: var(--pos-accent);
 }
 
+/* Top-bar controls sit on the navy gradient: keep them translucent with white
+   glyphs so they read as part of the bar, not as empty white boxes. */
+.pos-app .pos-topbar .pos-chip,
+.pos-app .pos-topbar .pos-icon-btn {
+	background: rgba(255, 255, 255, 0.1);
+	border: 1px solid rgba(255, 255, 255, 0.32);
+	color: #fff;
+}
+
+.pos-app .pos-topbar .pos-chip:hover,
+.pos-app .pos-topbar .pos-icon-btn:hover {
+	background: rgba(255, 255, 255, 0.18);
+	border-color: #fff;
+	color: #fff;
+}
+
+.pos-app .pos-topbar .pos-chip .dot {
+	background: #34d17a;
+}
+
+.pos-app .pos-topbar .pos-chip.closed .dot {
+	background: #ff6b6b;
+}
+
 .pos-app .pos-cat {
 	background: #edf2f8;
 	border: 1px solid var(--pos-border-faint);
