@@ -2213,3 +2213,358 @@ body:has(.pos-app) {
 		text-align: right;
 	}
 }
+
+/* ==========================================================================
+   Locked 100vh POS workspace — cart left, products + numpad center, cats right.
+   Only layout containers are restructured; ids, handlers and logic unchanged.
+   ========================================================================== */
+html:has(.pos-workspace),
+body:has(.pos-workspace) {
+	height: 100%;
+	overflow: hidden !important;
+}
+
+body.pos-layout:has(.pos-workspace) {
+	height: 100vh;
+	min-height: 0;
+	overflow: hidden;
+}
+
+body.pos-layout:has(.pos-workspace) .pos-fullscreen {
+	height: 100vh;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pos-app:has(.pos-workspace) {
+	height: 100vh;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pos-app .pos-workspace {
+	display: grid;
+	flex: 1 1 0%;
+	gap: 10px;
+	grid-template-columns: 140px minmax(0, 1fr) 360px;
+	min-height: 0;
+}
+
+/* Explicit placement keeps the reference order in RTL: categories far right,
+   products centre, cart/checkout far left. */
+.pos-app .pos-workspace .pos-cats-col {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.pos-app .pos-workspace .pos-center-col {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+.pos-app .pos-workspace .pos-cart-col {
+	grid-column: 3;
+	grid-row: 1;
+}
+
+.pos-app .pos-cart-col,
+.pos-app .pos-center-col,
+.pos-app .pos-cats-col {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	min-width: 0;
+}
+
+.pos-app .pos-cart-col,
+.pos-app .pos-cats-col {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.pos-app .pos-cart-top {
+	border-bottom: 1px solid var(--line);
+	flex: 0 0 auto;
+	padding: 10px 12px 8px;
+}
+
+.pos-app .pos-cart-top .pos-side-head {
+	padding: 0 0 8px;
+}
+
+.pos-app .pos-cart-scroll {
+	flex: 1 1 0%;
+	max-height: none;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.pos-app .pos-cart-bottom {
+	border-top: 1px solid var(--line);
+	flex: 0 0 auto;
+}
+
+.pos-app .pos-center-col {
+	gap: 10px;
+}
+
+.pos-app .pos-top-zone {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	display: flex;
+	flex: 1 1 0%;
+	flex-direction: column;
+	gap: 8px;
+	min-height: 0;
+	overflow: hidden;
+	padding: 12px;
+}
+
+.pos-app .pos-top-zone .pos-search-row,
+.pos-app .pos-top-zone #productLoading {
+	flex: 0 0 auto;
+}
+
+.pos-app .pos-top-zone #posProductGrid {
+	align-content: start;
+	flex: 1 1 0%;
+	max-height: none;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.pos-app .pos-bottom-zone {
+	display: grid;
+	flex: 0 0 auto;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+}
+
+.pos-app .pos-bottom-zone .pos-calc,
+.pos-app .pos-bottom-zone .pos-settings {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	overflow: hidden;
+}
+
+.pos-app .pos-cats-col #posCategories {
+	background: transparent;
+	border: 0;
+	border-radius: 0;
+	flex: 1 1 0%;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+/* Keep the fixed checkout block compact enough to stay fully visible. */
+.pos-app .pos-cart-bottom .pos-totals {
+	padding: 8px 12px;
+}
+
+.pos-app .pos-cart-bottom .pos-totals .row {
+	font-size: 12px;
+	line-height: 1.2;
+	padding: 2px 8px;
+}
+
+.pos-app .pos-cart-bottom .pos-totals .row.grand {
+	font-size: 18px;
+	line-height: 1.2;
+	margin-top: 0;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay {
+	gap: 6px;
+	padding: 10px 12px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method .pm {
+	min-height: 44px;
+	padding: 6px;
+}
+
+.pos-app .pos-cart-bottom .pos-btn {
+	min-height: 46px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay .field,
+.pos-app .pos-cart-bottom .pos-pay .ref-field {
+	padding: 0;
+}
+
+/* Compact numpad so two product rows stay visible above it. */
+.pos-app .pos-bottom-zone .pos-calc {
+	align-self: start;
+}
+
+.pos-app .pos-bottom-zone .pos-settings {
+	align-self: start;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid {
+	gap: 4px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button {
+	font-size: 15px;
+	height: 38px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-display {
+	font-size: 16px;
+	height: 40px;
+}
+
+/* Tighten the fixed checkout block so the cart table keeps usable height. */
+.pos-app .pos-cart-top {
+	padding: 2px 8px;
+}
+
+.pos-app .pos-cart-top .pos-side-head h3 {
+	font-size: 12px;
+}
+
+.pos-app .pos-cart-top .pos-search input {
+	font-size: 11px;
+}
+
+.pos-app .pos-cart-top #customerSelectedHint {
+	font-size: 9px;
+}
+
+.pos-app .pos-cart-top .pos-side-head {
+	padding: 0 0 4px;
+}
+
+.pos-app .pos-cart-top .pos-side-head h3 {
+	font-size: 13px;
+}
+
+.pos-app .pos-cart-top .pos-search {
+	padding: 4px 8px;
+}
+
+.pos-app .pos-cart-top .pos-search input {
+	font-size: 12px;
+}
+
+.pos-app .pos-cart-top #customerSelectedHint {
+	font-size: 10px;
+}
+
+.pos-app .pos-cart-bottom .pos-totals .row {
+	font-size: 11px;
+	padding: 1px 6px;
+}
+
+.pos-app .pos-cart-bottom .pos-totals .row.grand {
+	font-size: 15px;
+	padding: 4px 8px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay {
+	display: grid;
+	gap: 3px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	padding: 4px 8px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay > label.small,
+.pos-app .pos-cart-bottom .pos-pay > .pos-pay-method,
+.pos-app .pos-cart-bottom .pos-pay > #pushTerminalBtn,
+.pos-app .pos-cart-bottom .pos-pay > #paymentMethod,
+.pos-app .pos-cart-bottom .pos-pay > .field:has(#splitTenderToggle),
+.pos-app .pos-cart-bottom .pos-pay > #splitTenderBox,
+.pos-app .pos-cart-bottom .pos-pay > .pos-actions {
+	grid-column: 1 / -1;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method {
+	gap: 4px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method .pm {
+	min-height: 38px;
+	padding: 4px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method .pm i {
+	font-size: 14px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay label.small,
+.pos-app .pos-cart-bottom .pos-pay .field label {
+	font-size: 11px;
+	margin-bottom: 2px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay .form-control {
+	font-size: 11px;
+	height: 26px;
+	padding: 2px 6px;
+}
+
+.pos-app .pos-cart-bottom .pos-btn {
+	font-size: 13px;
+	min-height: 32px;
+	padding: 2px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay .field,
+.pos-app .pos-cart-bottom .pos-pay .ref-field {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.pos-app .pos-cart-bottom .pos-pay .field label,
+.pos-app .pos-cart-bottom .pos-pay .ref-field label {
+	line-height: 1.1;
+	margin: 0;
+}
+
+.pos-app .pos-cart-bottom .pos-pay .field label .btn {
+	font-size: 10px;
+	line-height: 1;
+	padding: 0;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method {
+	gap: 3px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method .pm {
+	min-height: 30px;
+	padding: 2px;
+}
+
+.pos-app .pos-cart-bottom .pos-pay-method .pm span {
+	font-size: 11px;
+}
+
+.pos-app .pos-cart-bottom .pos-actions {
+	gap: 4px;
+}
+
+.pos-app .pos-cart-bottom .pos-actions .small {
+	font-size: 8px;
+	margin-top: 0;
+}
+
+.pos-app .pos-cart-bottom .pos-totals .row.grand {
+	font-size: 14px;
+	padding: 3px 8px;
+}
+
+@media (max-width: 1200px) {
+	.pos-app .pos-workspace {
+		grid-template-columns: 120px minmax(0, 1fr) 340px;
+	}
+}
