@@ -35,6 +35,17 @@ def test_print_context_supplies_totals_and_json() -> None:
         assert needle in source
 
 
+def test_matrix_generator_cannot_repeat_its_old_bugs() -> None:
+    source = (ROOT / "scripts" / "ops" / "generate_page_access_report.py").read_text(encoding="utf-8")
+    # DEBUG handlers re-raise HTTP exceptions as 500, so a refused page was
+    # recorded as a server error in the first matrix.
+    assert 'app.config["DEBUG"] = False' in source
+    # Visiting logout mid-sweep redirected every later page to login (302),
+    # which the old matrix wrongly counted as "allowed".
+    assert '"/auth/logout"' in source
+    assert "SIDE_EFFECT_URLS" in source
+
+
 def test_seed_provisions_public_store() -> None:
     source = (ROOT / "scripts" / "ops" / "seed_clean_isolation_db.py").read_text(encoding="utf-8")
     assert '"tenant_stores"' in source
