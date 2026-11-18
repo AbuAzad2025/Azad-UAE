@@ -20,7 +20,8 @@
   <div class="pos-topbar">
     <div class="pos-brand">
       <div class="pos-flag" aria-hidden="true"></div>
-      <div class="pos-logo">AZAD <span>POS</span></div>
+      <div class="pos-logo">{{ _('نظام نقاط البيع') }}</div>
+      <span class="pos-user-badge"><i class="fas fa-user" aria-hidden="true"></i> {{ current_user.full_name or current_user.username }}</span>
     </div>
 
     <div class="pos-topbar-center">
@@ -61,6 +62,7 @@
       <div class="pos-cart-top">
         <div class="pos-side-head">
           <h3>{{ t('Cart') }}</h3>
+          <span class="pos-sale-badge">{{ _('بيع مباشر') }}</span>
           <span class="cnt" id="cartCount">0</span>
           <button id="clearCartBtn" class="pos-icon-btn" type="button" title="{{ _('تفريغ السلة') }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
         </div>
