@@ -23,6 +23,7 @@ const handleScannedCode = async (code) => {
 		const qty = p.is_weight_product && liveKg > 0 ? liveKg : p.scale_weight_kg || 1;
 		await addToCart(p, qty);
 		qs("#productSearch").value = "";
+		qs("#barcodeSecondary") && (qs("#barcodeSecondary").value = "");
 		qs("#productResults").classList.add("d-none");
 		showAlert(`${t("تمت إضافة")} ${p.name}`, "success");
 	}

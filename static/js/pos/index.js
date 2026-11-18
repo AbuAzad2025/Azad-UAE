@@ -174,6 +174,25 @@ qs("#walkinCustomer").addEventListener("click", async () => {
 	customerHint();
 	qs("#productSearch").focus();
 });
+qs("#addCustomerBtn")?.addEventListener("click", async () => {
+	const name = window.prompt(window.t("اسم الزبون الجديد"));
+	if (!name || !name.trim()) return;
+	try {
+		const res = await fetch("/pos/api/customers/create", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+			body: JSON.stringify({ name: name.trim() }),
+		});
+		const body = await res.json();
+		if (!res.ok || !body.success) return showAlert(body.message || window.t("تعذر إضافة الزبون"));
+		state.customer = body.data;
+		qs("#customerSearch").value = body.data.text || body.data.name;
+		customerHint();
+		showAlert(window.t("تمت إضافة الزبون"), "success");
+	} catch (err) {
+		showAlert(window.t("تعذر إضافة الزبون"));
+	}
+});
 
 let productTimer = null;
 qs("#productSearch").addEventListener("input", function () {
@@ -182,6 +201,18 @@ qs("#productSearch").addEventListener("input", function () {
 	productTimer = setTimeout(() => runProductSearch(q), 220);
 });
 qs("#productSearch").addEventListener("keydown", function (e) {
+	if (e.key === "Enter") {
+		e.preventDefault();
+		void addFirstOrLookup(this.value.trim());
+	}
+});
+// Dedicated barcode field: the .barcode-input class also enables hardware
+// scanner keypresses via barcode-scanner.js without a second scanner instance.
+qs("#barcodeSecondary")?.addEventListener("input", function () {
+	const q = this.value.trim();
+	if (q) void runProductSearch(q);
+});
+qs("#barcodeSecondary")?.addEventListener("keydown", function (e) {
 	if (e.key === "Enter") {
 		e.preventDefault();
 		void addFirstOrLookup(this.value.trim());
@@ -240,6 +271,16 @@ qs("#splitTenderToggle")?.addEventListener("change", (e) => {
 	}
 });
 qs("#splitTenderAdd")?.addEventListener("click", () => addSplitRow("", "cash"));
+// Mixed-payment button drives the existing split-tender handler; the change
+// event is dispatched so row seeding stays in exactly one place.
+qs("#mixedPaymentBtn")?.addEventListener("click", () => {
+	const toggle = qs("#splitTenderToggle");
+	if (!toggle) return;
+	toggle.checked = !toggle.checked;
+	toggle.dispatchEvent(new Event("change", { bubbles: true }));
+	qs("#mixedPaymentBtn")?.setAttribute("aria-pressed", toggle.checked ? "true" : "false");
+	qs("#mixedPaymentBtn")?.classList.toggle("active", toggle.checked);
+});
 
 let checkoutBusy = false;
 const resetAfterSale = async () => {
@@ -249,6 +290,8 @@ const resetAfterSale = async () => {
 	qs("#paidAmount").value = 0;
 	const splitToggle = qs("#splitTenderToggle");
 	if (splitToggle) splitToggle.checked = false;
+	qs("#mixedPaymentBtn")?.setAttribute("aria-pressed", "false");
+	qs("#mixedPaymentBtn")?.classList.remove("active");
 	qs("#splitTenderBox")?.classList.add("d-none");
 	const splitRows = qs("#splitTenderRows");
 	if (splitRows) splitRows.innerHTML = "";
@@ -363,6 +406,10 @@ const checkout = async (autoPrint) => {
 		}
 		const d = j.data || j;
 		qs("#doneSaleNumber").textContent = d.sale_number;
+		const invoiceBadge = qs("#invoiceNumberBadge");
+		if (invoiceBadge && d.sale_number) {
+			invoiceBadge.textContent = `INV-${String(d.sale_number).split("-").pop()}`;
+		}
 		renderUpsellMessages(qs("#doneUpsellList"), d.upsell_prompts);
 		qs("#doneViewBtn").href = d.view_url;
 		qs("#donePrintBtn").href = d.print_url;
@@ -422,6 +469,34 @@ document.addEventListener("keydown", (e) => {
 		state.lastProductResults = [];
 	}
 });
+// Live wall clock in the POS footer (independent of the session timer).
+const footerClock = qs("#posFooterClock");
+if (footerClock) {
+	const tickClock = () => {
+		footerClock.textContent = new Date().toLocaleTimeString("ar-AE", {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			hour12: false,
+		});
+	};
+	tickClock();
+	window.setInterval(tickClock, 1000);
+}
+
+const loadStockSummary = async () => {
+	const res = await fetchJson("/pos/api/stock/summary");
+	if (!res.ok || !res.data) return;
+	const set = (id, value) => {
+		const el = qs(id);
+		if (el) el.textContent = value;
+	};
+	set("#stockAvailable", res.data.available);
+	set("#stockLow", res.data.low);
+	set("#stockOut", res.data.out);
+};
+void loadStockSummary();
+
 customerHint();
 void renderCart();
 qs("#productSearch").focus();

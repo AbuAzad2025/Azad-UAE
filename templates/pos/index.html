@@ -22,6 +22,7 @@
       <div class="pos-flag" aria-hidden="true"></div>
       <div class="pos-logo">{{ _('نظام نقاط البيع') }}</div>
       <span class="pos-user-badge"><i class="fas fa-user" aria-hidden="true"></i> {{ current_user.full_name or current_user.username }}</span>
+      {% if branch_name %}<span class="pos-branch-badge"><i class="fas fa-map-marker-alt" aria-hidden="true"></i> {{ branch_name }}</span>{% endif %}
     </div>
 
     <div class="pos-topbar-center">
@@ -62,6 +63,7 @@
       <div class="pos-cart-top">
         <div class="pos-side-head">
           <h3>{{ t('Cart') }}</h3>
+          {% if invoice_preview %}<span class="pos-invoice-badge" id="invoiceNumberBadge">{{ invoice_preview }}</span>{% endif %}
           <span class="pos-sale-badge">{{ _('بيع مباشر') }}</span>
           <span class="cnt" id="cartCount">0</span>
           <button id="clearCartBtn" class="pos-icon-btn" type="button" title="{{ _('تفريغ السلة') }}"><i class="fas fa-trash" aria-hidden="true"></i></button>
@@ -70,6 +72,7 @@
           <label for="customerSearch" class="sr-only">{{ _('البحث بالاسم أو الهاتف') }}</label>
           <input id="customerSearch" placeholder="{{ _('البحث بالاسم أو الهاتف') }} (F4)">
           <button id="walkinCustomer" class="search-clear" title="{{ _('زبون نقدي سريع') }}">{{ _('عميل نقدي') }}</button>
+          <button id="addCustomerBtn" class="search-clear search-tool" type="button" title="{{ _('إضافة زبون جديد') }}"><i class="fas fa-user-plus" aria-hidden="true"></i></button>
           <button id="clearCustomer" class="search-clear" title="{{ _('مسح') }}">✕</button>
           <div id="customerResults" class="pos-cust-results d-none"></div>
           <span class="kbd">F4</span>
@@ -114,6 +117,7 @@
           <div class="pm" data-method="bank_transfer" role="button" tabindex="0"><i class="fas fa-university" aria-hidden="true"></i><span>{{ _('تحويل بنكي') }}</span></div>
           <div class="pm" data-method="e_wallet" role="button" tabindex="0"><i class="fas fa-wallet" aria-hidden="true"></i><span>{{ _('محفظة إلكترونية') }}</span></div>
         </div>
+        <button id="mixedPaymentBtn" type="button" class="pos-mixed-btn" aria-pressed="false" title="{{ _('دفع مختلط') }}"><i class="fas fa-layer-group" aria-hidden="true"></i><span>{{ _('دفع مختلط') }}</span></button>
         <button id="pushTerminalBtn" type="button" class="btn btn-outline-primary btn-sm d-none mt-1" title="{{ t('Push Card Payment To Terminal') }}"><i class="fas fa-credit-card mr-1" aria-hidden="true"></i>{{ t('Push To Terminal') }}</button>
         <select id="paymentMethod" class="d-none" aria-label="{{ _('طريقة الدفع') }}">
 <option value="">{{ _('بدون دفع الآن (آجل)') }}</option>
@@ -177,7 +181,13 @@
       <div class="pos-top-zone">
         <div class="pos-search-row">
           <div class="pos-search">
+            <label for="barcodeSecondary" class="sr-only">{{ _('إدخال الباركود') }}</label>
+            <i class="fas fa-barcode pos-search-icon" aria-hidden="true"></i>
+            <input id="barcodeSecondary" class="barcode-input" placeholder="{{ _('إدخال الباركود') }}">
+          </div>
+          <div class="pos-search">
             <label for="productSearch" class="sr-only">{{ _('مسح الباركود أو كتابة الاسم/الكود') }}</label>
+            <i class="fas fa-search pos-search-icon" aria-hidden="true"></i>
             <input id="productSearch" class="barcode-input" placeholder="{{ _('ابحث عن صنف أو باركود') }}">
             <button id="cameraScanBtn" type="button" class="search-clear search-tool" title="{{ _('مسح بالكاميرا') }}" data-scan-hint="{{ _('أشر الكاميرا نحو الباركود') }}"><i class="fas fa-camera" aria-hidden="true"></i></button>
             <button id="scaleConnectBtn" type="button" class="search-clear search-tool" title="{{ _('ربط الميزان') }}" data-scale-on-title="{{ _('فك ربط الميزان') }}"><i class="fas fa-weight-hanging" aria-hidden="true"></i></button>
@@ -275,6 +285,12 @@
     <!-- RIGHT: categories rail -->
     <div class="pos-cats-col">
       <div id="posCategories" class="pos-categories" aria-label="{{ _('التصنيفات') }}"></div>
+      <div id="posStockSummary" class="pos-stock-summary" aria-label="{{ _('حالة المخزون') }}">
+        <div class="ps-title"><i class="fas fa-boxes" aria-hidden="true"></i> {{ _('حالة المخزون') }}</div>
+        <div class="ps-row ps-ok"><span class="ps-dot"></span><span>{{ _('صنف متوفر') }}</span><b id="stockAvailable">—</b></div>
+        <div class="ps-row ps-low"><span class="ps-dot"></span><span>{{ _('صنف منخفض') }}</span><b id="stockLow">—</b></div>
+        <div class="ps-row ps-out"><span class="ps-dot"></span><span>{{ _('صنف نافد') }}</span><b id="stockOut">—</b></div>
+      </div>
     </div>
 
   </div><!-- /pos-workspace -->

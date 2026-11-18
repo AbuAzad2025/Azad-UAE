@@ -24,7 +24,7 @@ from flask_login import current_user, login_required
 from sqlalchemy.exc import IntegrityError
 
 from extensions import db
-from models import Customer, PosOrderType, PosPrinter, PosSession
+from models import Customer, PosOrderType, PosPrinter, PosSession, Product
 from models.enums import PermissionEnum
 from models.pos_shift import PosShift
 from models.tenant import Tenant
@@ -295,7 +295,25 @@ def _pos_register_context():
     except Exception:
         symbol = tenant_default_currency or "AED"
     branch_id = get_active_branch_id()
+    # Header identity used by the register template. All read-only data.
+    from utils.branching import get_active_branch
+
+    branch = get_active_branch(current_user)
+    branch_name = branch.name if branch else ((tenant.name_ar or tenant.name) if tenant else "")
+    invoice_preview = invoice_number = ""
+    try:
+        from services.document_sequence_service import DocumentSequenceService
+
+        tid = get_active_tenant_id(current_user)
+        if tid:
+            invoice_number = DocumentSequenceService.preview(tid, "sale")
+            invoice_preview = f"INV-{str(invoice_number).rsplit('-', 1)[-1]}"
+    except Exception as exc:
+        # A missing sequence row must never block the register from opening.
+        current_app.logger.debug("POS invoice preview unavailable: %s", exc)
     return {
+        "branch_name": branch_name,
+        "invoice_preview": invoice_preview,
         "warehouses": warehouses,
         "tenant_default_currency": tenant_default_currency,
         "currency_symbol": symbol,
@@ -703,6 +721,69 @@ def api_customers():
             }
         )
     return success_response(data=results)
+
+
+@pos_bp.route("/api/customers/create", methods=["POST"])
+@login_required
+@permission_required("manage_sales")
+def api_create_quick_customer():
+    """Create a lightweight customer from the POS screen (tenant-scoped)."""
+    data = request.get_json(silent=True) or {}
+    name = str(data.get("name") or "").strip()
+    if not name:
+        return error_response(message=gettext("الاسم مطلوب."), status_code=400)
+    try:
+        from services.customer_service import CustomerService
+
+        tenant_id = get_active_tenant_id(current_user)
+        with atomic_transaction("pos_quick_customer_create"):
+            customer = CustomerService.create_customer(
+                name=name,
+                name_ar=str(data.get("name_ar") or "").strip() or None,
+                phone=str(data.get("phone") or "").strip() or None,
+                customer_type="individual",
+                tenant_id=tenant_id,
+            )
+        phone = (customer.phone or "").strip()
+        label = customer.name + (f" - {phone}" if phone else "")
+        return success_response(
+            data={
+                "id": customer.id,
+                "name": customer.name,
+                "phone": customer.phone,
+                "customer_type": customer.customer_type,
+                "text": label,
+            },
+            status_code=201,
+        )
+    except Exception as exc:
+        current_app.logger.error("POS quick customer create failed: %s", exc, exc_info=True)
+        return error_response(message=ErrorMessages.unexpected_error(), status_code=400)
+
+
+@pos_bp.route("/api/stock/summary")
+@login_required
+@permission_required("manage_sales")
+def api_stock_summary():
+    """Tenant stock counters for the POS quick-info widget (read-only)."""
+    try:
+        from services.stock_service import StockService
+
+        low = StockService.get_low_stock_products(user=current_user)
+        out = StockService.get_out_of_stock_products(user=current_user)
+        query = tenant_query(Product)
+        total = query.count()
+        return success_response(
+            data={
+                "available": max(0, total - len(low) - len(out)),
+                "low": len(low),
+                "out": len(out),
+                "total": total,
+            }
+        )
+    except Exception as exc:
+        current_app.logger.error("POS stock summary failed: %s", exc, exc_info=True)
+        return error_response(message=ErrorMessages.unexpected_error(), status_code=400)
 
 
 @pos_bp.route("/api/walkin-customer")

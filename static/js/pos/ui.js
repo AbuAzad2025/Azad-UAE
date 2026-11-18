@@ -265,7 +265,9 @@ const loadProducts = async (categoryId) => {
 					: p.stock != null && Number(p.stock) <= 5 && Number(p.stock) > 0
 						? `<span class="badge warn">${fmt(p.stock)}</span>`
 						: "";
+			const imageUrl = String(p.image_url || "").trim();
 			card.innerHTML = `
+                    ${imageUrl ? `<img class="card-img" src="${esc(imageUrl)}" alt="" loading="lazy">` : ""}
                     <div class="icon" aria-hidden="true">📦</div>
                     <div class="name" title="${esc(hasBoth ? `${rawAr} — ${rawEn}` : displayName)}">${nameHtml}</div>
                     <div class="meta">
@@ -273,6 +275,14 @@ const loadProducts = async (categoryId) => {
                         ${badge}
                     </div>
                 `;
+			const cardImage = card.querySelector(".card-img");
+			if (cardImage) {
+				card.classList.add("has-img");
+				cardImage.addEventListener("error", () => {
+					cardImage.remove();
+					card.classList.remove("has-img");
+				});
+			}
 			// Every card is interactive. An unavailable product must explain why
 			// it cannot be added instead of silently ignoring the cashier's tap
 			// (the `.out` style already makes it look disabled).

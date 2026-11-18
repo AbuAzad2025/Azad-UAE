@@ -1790,6 +1790,110 @@ body:has(.pos-app) {
 	white-space: nowrap;
 }
 
+.pos-app .pos-branch-badge {
+	color: #cbd5e1;
+	font-size: 12px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-branch-badge i {
+	color: #93c5fd;
+}
+
+.pos-app .pos-invoice-badge {
+	background: #e5effa;
+	border: 1px solid #bfdbfe;
+	border-radius: 6px;
+	color: #1d4ed8;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 3px 7px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-mixed-btn {
+	align-items: center;
+	background: linear-gradient(180deg, #1396b2 0%, #087e98 100%);
+	border: 0;
+	border-radius: 7px;
+	color: #fff;
+	display: flex;
+	gap: 6px;
+	justify-content: center;
+	min-height: 32px;
+	padding: 4px 10px;
+	transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.pos-app .pos-mixed-btn.active,
+.pos-app .pos-mixed-btn:hover {
+	box-shadow: 0 2px 8px rgba(8, 126, 152, 0.3);
+	transform: translateY(-1px);
+}
+
+.pos-app .pos-search-icon {
+	color: #64748b;
+	flex: 0 0 auto;
+}
+
+.pos-app .pos-card .card-img {
+	border-radius: 6px;
+	height: 96px;
+	object-fit: contain;
+	width: 100%;
+}
+
+.pos-app .pos-card.has-img .icon {
+	display: none;
+}
+
+.pos-app .pos-stock-summary {
+	background: var(--surface);
+	border-top: 1px solid var(--line);
+	flex: 0 0 auto;
+	padding: 10px;
+}
+
+.pos-app .pos-stock-summary .ps-title {
+	color: #334155;
+	font-size: 11px;
+	font-weight: 700;
+	margin-bottom: 6px;
+}
+
+.pos-app .pos-stock-summary .ps-row {
+	align-items: center;
+	color: #475569;
+	display: flex;
+	font-size: 10px;
+	gap: 5px;
+	padding: 3px 0;
+}
+
+.pos-app .pos-stock-summary .ps-row b {
+	color: #0f172a;
+	margin-inline-start: auto;
+}
+
+.pos-app .pos-stock-summary .ps-dot {
+	border-radius: 50%;
+	display: inline-block;
+	height: 7px;
+	width: 7px;
+}
+
+.pos-app .pos-stock-summary .ps-ok .ps-dot {
+	background: #16a34a;
+}
+
+.pos-app .pos-stock-summary .ps-low .ps-dot {
+	background: #eab308;
+}
+
+.pos-app .pos-stock-summary .ps-out .ps-dot {
+	background: #dc2626;
+}
+
 .pos-app .pos-topbar-center #posSessionBar,
 .pos-app .pos-topbar-center #posSessionRequired {
 	display: flex;

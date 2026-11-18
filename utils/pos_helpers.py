@@ -258,6 +258,7 @@ def serialize_pos_product(product: Product, stock_map: dict, *, warehouse_id: in
         "name_ar": product.name_ar or "",
         "sku": product.sku or "",
         "barcode": product.barcode or "",
+        "image_url": getattr(product, "image_url", None) or "",
         "price": float(product.regular_price or 0),
         "stock": stock,
         "unit": product.unit,
