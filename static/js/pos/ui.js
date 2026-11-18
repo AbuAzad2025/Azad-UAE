@@ -266,20 +266,35 @@ const loadProducts = async (categoryId) => {
                         ${badge}
                     </div>
                 `;
-			if (!p.is_inactive && !p.is_out_of_stock) {
-				card.setAttribute("role", "button");
-				card.setAttribute("tabindex", "0");
-				card.addEventListener("click", async () => {
-					await addToCart(p);
-					qs("#productSearch")?.focus();
-				});
-				card.addEventListener("keydown", async (e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						await addToCart(p);
-					}
-				});
+			// Every card is interactive. An unavailable product must explain why
+			// it cannot be added instead of silently ignoring the cashier's tap
+			// (the `.out` style already makes it look disabled).
+			card.setAttribute("role", "button");
+			card.setAttribute("tabindex", "0");
+			const unavailableReason = p.is_inactive
+				? t("المنتج غير نشط.")
+				: p.is_out_of_stock
+					? t("المنتج نفد من المخزون.")
+					: null;
+			if (unavailableReason) {
+				card.classList.add("out");
+				card.setAttribute("aria-disabled", "true");
 			}
+			const tryAdd = async () => {
+				if (unavailableReason) {
+					showAlert(unavailableReason, "warning");
+					return;
+				}
+				await addToCart(p);
+				qs("#productSearch")?.focus();
+			};
+			card.addEventListener("click", () => void tryAdd());
+			card.addEventListener("keydown", (e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					e.preventDefault();
+					void tryAdd();
+				}
+			});
 			grid.appendChild(card);
 		});
 	} catch (_err) {

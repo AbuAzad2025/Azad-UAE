@@ -89,11 +89,22 @@ def main() -> int:
     ):
         failures.append("pytest")
 
-    # Browser-discovered JS defect guard: sales-enhanced.js is loaded on every
-    # page but select2 only on sale forms. This vitest guards the fix.
+    # Browser-discovered JS defect guards:
+    #  - sales-enhanced.js is loaded on every page but select2 only on sale forms;
+    #  - an unavailable POS product card must explain itself on tap instead of
+    #    silently ignoring the cashier (it looked disabled but had no handler).
     npx = "npx.cmd" if sys.platform == "win32" else "npx"
-    if not run("vitest select2 guard", [npx, "vitest", "run", "tests/vitest/sales_enhanced_select2_guard.test.js"]):
-        failures.append("vitest-select2")
+    if not run(
+        "vitest browser-defect guards",
+        [
+            npx,
+            "vitest",
+            "run",
+            "tests/vitest/sales_enhanced_select2_guard.test.js",
+            "tests/vitest/pos/pos_ui.test.js",
+        ],
+    ):
+        failures.append("vitest-browser-defects")
 
     # The full POS→GL→Shift→Billing lifecycle script sits at the root of
     # tests/ and is collected by no suite. Run it explicitly. It builds its

@@ -180,6 +180,42 @@ describe("pos/ui.js — loadProducts", () => {
     expect(grid).toContain("\u0646\u0641\u062f");
     expect(grid).toContain("\u063a\u064a\u0631 \u0646\u0634\u0637");
   });
+
+  // Browser-discovered defect: unavailable cards looked disabled (`.out`) but
+  // had no click handler, so a cashier's tap silently did nothing and the
+  // product never appeared in the cart. Every card must now respond, either
+  // by explaining why it cannot be sold or by adding it.
+  it("explains unavailable products on click and still adds available ones", async () => {
+    mockFetch({
+      "/pos/api/products?per_page=60": () =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve([
+            { id: 1, name: "Out", price: 10, stock: 0, is_out_of_stock: true, is_inactive: false },
+            { id: 2, name: "Inactive", price: 10, stock: 5, is_out_of_stock: false, is_inactive: true },
+            { id: 3, name: "Ok", price: 10, stock: 5, is_out_of_stock: false, is_inactive: false },
+          ]),
+        }),
+    });
+    const { loadProducts } = await loadModule();
+    await loadProducts("");
+    const cards = document.querySelectorAll(".pos-card");
+    expect(cards).toHaveLength(3);
+    cards.forEach((c) => {
+      expect(c.getAttribute("role")).toBe("button");
+      expect(c.getAttribute("tabindex")).toBe("0");
+    });
+    expect(cards[0].getAttribute("aria-disabled")).toBe("true");
+    expect(cards[1].getAttribute("aria-disabled")).toBe("true");
+    expect(cards[2].hasAttribute("aria-disabled")).toBe(false);
+    const alert = document.getElementById("posAlert");
+
+    cards[0].click();
+    expect(alert.textContent).toContain("\u0646\u0641\u062f \u0645\u0646 \u0627\u0644\u0645\u062e\u0632\u0648\u0646");
+    cards[1].click();
+    expect(alert.textContent).toContain("\u063a\u064a\u0631 \u0646\u0634\u0637");
+  });
 });
 
 describe("pos/ui.js — loadFloors", () => {
