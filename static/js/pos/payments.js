@@ -1,4 +1,4 @@
-import { csrf, fmt, qs, qsa, toNum } from "./core.js";
+import { csrf, fmt, qs, qsa, state, toNum } from "./core.js";
 import { showAlert } from "./ui.js";
 
 let pinResolver = null;
@@ -155,7 +155,14 @@ const readSplitPayments = () => {
 			);
 			return null;
 		}
-		chunks.push({ amount, payment_method: method, currency: cur, exchange_rate: rate });
+		chunks.push({
+			amount,
+			payment_method: method,
+			currency: cur,
+			exchange_rate: rate,
+			rate_source: state.rateSource || "user_manual",
+			rate_fetched_at: state.rateFetchedAt || null,
+		});
 	}
 	return chunks;
 };

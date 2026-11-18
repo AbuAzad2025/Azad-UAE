@@ -191,6 +191,8 @@ class SaleService:
         warehouse_id=None,
         currency=None,
         user_exchange_rate=None,
+        rate_source=None,
+        rate_fetched_at=None,
         discount_amount=0,
         shipping_cost=0,
         tax_rate=None,
@@ -319,6 +321,8 @@ class SaleService:
                 branch_id=sale_branch_id,
                 currency=currency,
                 exchange_rate=exchange_rate,
+                rate_source=rate_source,
+                rate_fetched_at=rate_fetched_at,
                 discount_amount=discount_decimal,
                 shipping_cost=shipping_decimal,
                 tax_rate=tax_rate_decimal,
@@ -750,6 +754,8 @@ class SaleService:
                     cheque_date=payment_data.get("cheque_date"),
                     bank_name=payment_data.get("bank_name"),
                     notes=payment_data.get("notes"),
+                    rate_source=payment_data.get("rate_source"),
+                    rate_fetched_at=payment_data.get("rate_fetched_at"),
                 )
                 # Record excess as customer prepayment (unlinked to sale for reuse)
                 from models import Payment
@@ -833,6 +839,8 @@ class SaleService:
                     cheque_date=payment_data.get("cheque_date"),
                     bank_name=payment_data.get("bank_name"),
                     notes=payment_data.get("notes"),
+                    rate_source=payment_data.get("rate_source"),
+                    rate_fetched_at=payment_data.get("rate_fetched_at"),
                 )
 
         sale.calculate_totals()
@@ -1166,6 +1174,8 @@ class SaleService:
                     cheque_date=chunk.get("cheque_date"),
                     bank_name=chunk.get("bank_name"),
                     notes=chunk.get("notes"),
+                    rate_source=chunk.get("rate_source"),
+                    rate_fetched_at=chunk.get("rate_fetched_at"),
                 )
             excess_aed += chunk_aed - applied_aed
             remaining_aed -= chunk_aed
@@ -1252,6 +1262,8 @@ class SaleService:
         cheque_date=None,
         bank_name=None,
         notes=None,
+        rate_source=None,
+        rate_fetched_at=None,
     ):
         """
         Create a payment for a sale with proper validations
@@ -1322,6 +1334,8 @@ class SaleService:
             amount=amount_decimal,
             currency=currency,
             exchange_rate=exchange_rate_decimal,
+            rate_source=rate_source,
+            rate_fetched_at=rate_fetched_at,
             amount_aed=amount_aed,
             payment_method=payment_method,
             payment_confirmed=(payment_method != "cheque"),

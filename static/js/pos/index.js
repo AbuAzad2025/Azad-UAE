@@ -4,6 +4,7 @@
 	HOLD_KEY,
 	heldCount,
 	loadRateForCurrency,
+	markRateSource,
 	recalc,
 	renderCart,
 	renderUpsellMessages,
@@ -127,8 +128,15 @@ qsa("#taxRate,#shippingCost,#discountAmount").forEach((el) => {
 	el.addEventListener("change", recalc);
 });
 qs("#currency").addEventListener("change", loadRateForCurrency);
-qs("#exchangeRate").addEventListener("input", updateCartPrices);
-qs("#exchangeRate").addEventListener("change", updateCartPrices);
+qs("#exchangeRate").addEventListener("input", () => {
+	markRateSource("user_manual", window.t("تم تعديل السعر يدوياً"));
+	updateCartPrices();
+});
+qs("#exchangeRate").addEventListener("change", () => {
+	markRateSource("user_manual", window.t("تم تعديل السعر يدوياً"));
+	updateCartPrices();
+});
+qs("#refreshRateBtn")?.addEventListener("click", () => void loadRateForCurrency());
 
 let customerTimer = null;
 qs("#customerSearch").addEventListener("input", function () {
@@ -329,6 +337,8 @@ const checkout = async (autoPrint) => {
 		warehouse_id: qs("#warehouseId").value || null,
 		currency: qs("#currency").value,
 		exchange_rate: toNum(qs("#exchangeRate").value) || 1,
+		exchange_rate_source: state.rateSource || "user_manual",
+		rate_fetched_at: state.rateFetchedAt || null,
 		tax_rate: toNum(qs("#taxRate").value) || 0,
 		shipping_cost: toNum(qs("#shippingCost").value) || 0,
 		discount_amount: toNum(qs("#discountAmount").value) || 0,
@@ -502,6 +512,7 @@ void loadStockSummary();
 
 customerHint();
 void renderCart();
+void loadRateForCurrency();
 qs("#productSearch").focus();
 
 setupDevices();

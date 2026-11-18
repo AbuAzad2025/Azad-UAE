@@ -93,6 +93,9 @@ class Sale(db.Model):
 
     currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    # Provenance of the rate: online_api / user_manual / parity / document_fixed ...
+    rate_source = db.Column(db.String(30), nullable=True)
+    rate_fetched_at = db.Column(db.DateTime(timezone=True), nullable=True)
     base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
     paid_amount_aed = db.Column(db.Numeric(15, 3), default=0)

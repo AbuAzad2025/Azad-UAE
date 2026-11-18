@@ -94,6 +94,8 @@ def _parse_split_tenders(raw_payments, default_currency, default_rate):
                 "cheque_date": chunk.get("cheque_date"),
                 "bank_name": chunk.get("bank_name"),
                 "notes": chunk.get("notes"),
+                "rate_source": (chunk.get("rate_source") or "").strip() or None,
+                "rate_fetched_at": chunk.get("rate_fetched_at") or None,
             }
         )
     return chunks, None

@@ -38,7 +38,7 @@ def run(label: str, cmd: list[str], env: dict | None = None) -> bool:
     print(f"\n=== {label} ===")
     print(" + " + " ".join(cmd))
     result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, env=env)
-    tail = (result.stdout + result.stderr).strip().splitlines()
+    tail = ((result.stdout or "") + (result.stderr or "")).strip().splitlines()
     for line in tail[-15:]:
         print("   " + line)
     ok = result.returncode == 0

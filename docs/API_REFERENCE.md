@@ -150,7 +150,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/api/barcode/validate` | authenticated, permission | `view_reports` | — | json |
 | GET | `/api/check-username` | authenticated | — | — | json |
 | GET | `/api/currencies` | authenticated | — | — | json |
-| GET | `/api/currency-rate/<from_currency>/<to_currency>` | authenticated, permission | `view_reports` | — | json |
+| GET | `/api/currency-rate/<from_currency>/<to_currency>` | authenticated | — | — | json |
 | DELETE, PATCH, PUT | `/api/echo` | authenticated | — | — | json |
 | GET | `/api/exchange-rates/display` | authenticated | — | — | json |
 | GET | `/api/health` | — | — | — | json |

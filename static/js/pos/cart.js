@@ -25,10 +25,37 @@ const updateCartPrices = async () => {
 	await renderCart();
 };
 
+const RATE_LABELS = {
+	online: "أونلاين",
+	cache: "أونلاين (مخزّن)",
+	open_er_api: "أونلاين",
+	forex_python: "أونلاين",
+	user_input: "يدوي",
+	user_manual: "يدوي",
+	admin_manual: "يدوي (إدارة)",
+	parity: "افتراضي",
+	fallback_static: "احتياطي",
+	needs_input: "مطلوب إدخال",
+};
+
+const markRateSource = (source, note = "") => {
+	state.rateSource = source || "user_manual";
+	const badge = qs("#exchangeRateSource");
+	if (badge) {
+		badge.dataset.source = state.rateSource;
+		badge.textContent =
+			RATE_LABELS[state.rateSource] || window.t("يدوي");
+	}
+	const noteEl = qs("#exchangeRateNote");
+	if (noteEl) noteEl.textContent = note || "";
+};
+
 const loadRateForCurrency = async () => {
 	const currency = selectedCurrency();
 	if (currency === baseCurrency) {
 		qs("#exchangeRate").value = "1";
+		state.rateFetchedAt = null;
+		markRateSource("parity", window.t("عملة الأساس — لا يحتاج تحويلاً"));
 		await updateCartPrices();
 		return;
 	}
@@ -36,11 +63,28 @@ const loadRateForCurrency = async () => {
 		const r = await fetch(
 			`/api/currency-rate/${encodeURIComponent(currency)}/${encodeURIComponent(baseCurrency)}`,
 		);
-		const data = await r.json();
-		if (data.success && data.rate) {
-			qs("#exchangeRate").value = Number(data.rate).toFixed(6);
+		const body = await r.json();
+		// The accounting endpoint wraps its payload in `data`, but older callers
+		// (and the browser-defect guards) use a flat {success, rate} shape. Accept
+		// both so this change cannot break anyone reading the same endpoint.
+		const d = body.data && body.data.rate !== undefined ? body.data : body;
+		if (r.ok && body.success && d?.rate) {
+			qs("#exchangeRate").value = Number(d.rate).toFixed(6);
+			state.rateFetchedAt = d.fetched_at || null;
+			const source = d.cached ? "cache" : d.source || "online";
+			const age = Number(d.age_seconds || 0);
+			markRateSource(
+				source,
+				age > 0
+					? `${window.t("آخر جلب")}: ${age} ${window.t("ثانية")}`
+					: window.t("تم الجلب من المزود"),
+			);
+		} else {
+			markRateSource("needs_input", body.message || window.t("تعذر جلب السعر — أدخله يدوياً"));
 		}
-	} catch (_) {}
+	} catch (_) {
+		markRateSource("needs_input", window.t("تعذر جلب السعر — أدخله يدوياً"));
+	}
 	await updateCartPrices();
 };
 
@@ -269,6 +313,7 @@ export {
 	HOLD_KEY,
 	heldCount,
 	loadRateForCurrency,
+	markRateSource,
 	recalc,
 	renderCart,
 	renderUpsellMessages,

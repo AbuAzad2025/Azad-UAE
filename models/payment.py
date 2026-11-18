@@ -57,6 +57,8 @@ class Payment(db.Model):
         db.String(3), default=context_aware_default_currency, nullable=False
     )  # TODO: use Config.DEFAULT_CURRENCY
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
+    rate_source = db.Column(db.String(30), nullable=True)
+    rate_fetched_at = db.Column(db.DateTime(timezone=True), nullable=True)
     base_currency = db.Column(db.String(3), default=context_aware_default_currency, nullable=False)
     amount_aed = db.Column(db.Numeric(15, 3), nullable=False)
 

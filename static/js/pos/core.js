@@ -7,6 +7,8 @@ const state = {
 	barcodeScanner: null,
 	selectedTable: null,
 	sessionToken: sessionStorage.getItem("posSessionToken") || null,
+	rateSource: null,
+	rateFetchedAt: null,
 };
 const sessionHeaders = () =>
 	state.sessionToken ? { "X-POS-Session-Token": state.sessionToken } : {};

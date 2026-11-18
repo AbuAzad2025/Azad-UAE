@@ -1836,6 +1836,61 @@ body:has(.pos-app) {
 	flex: 0 0 auto;
 }
 
+.pos-app .pos-rate-refresh {
+	background: transparent;
+	border: 0;
+	color: var(--pos-primary);
+	cursor: pointer;
+	font-size: 11px;
+	padding: 0 4px;
+}
+
+.pos-app .pos-rate-refresh:hover {
+	color: var(--pos-primary-pressed);
+}
+
+.pos-app .pos-rate-source {
+	background: #f1f5f9;
+	border: 1px solid #cbd5e1;
+	border-radius: 999px;
+	color: #475569;
+	font-size: 9px;
+	font-weight: 700;
+	margin-inline-start: 6px;
+	padding: 1px 6px;
+}
+
+.pos-app .pos-rate-source[data-source="online"],
+.pos-app .pos-rate-source[data-source="cache"],
+.pos-app .pos-rate-source[data-source="open_er_api"],
+.pos-app .pos-rate-source[data-source="forex_python"] {
+	background: #dcfce7;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.pos-app .pos-rate-source[data-source="user_manual"],
+.pos-app .pos-rate-source[data-source="user_input"],
+.pos-app .pos-rate-source[data-source="admin_manual"] {
+	background: #fef3c7;
+	border-color: #fcd34d;
+	color: #92400e;
+}
+
+.pos-app .pos-rate-source[data-source="fallback_static"],
+.pos-app .pos-rate-source[data-source="needs_input"] {
+	background: #fef2f2;
+	border-color: #fecaca;
+	color: #b91c1c;
+}
+
+.pos-app #exchangeRateNote {
+	display: block;
+	font-size: 9px;
+	line-height: 1.2;
+	min-height: 11px;
+}
+
 .pos-app .pos-card .card-img {
 	border-radius: 6px;
 	height: 96px;

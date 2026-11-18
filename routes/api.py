@@ -19,7 +19,7 @@ from utils.branching import (
     get_accessible_warehouses_query,
     get_branch_stock_map,
 )
-from utils.decorators import branch_scope_id, permission_required
+from utils.decorators import any_permission_required, branch_scope_id, permission_required
 from utils.logger import log_event
 from utils.tenanting import get_active_tenant_id
 
@@ -275,7 +275,9 @@ def payment_fields(payment_method):
 
 @api_bp.route("/currency-rate/<from_currency>/<to_currency>")
 @login_required
-@permission_required("view_reports")
+# Cashiers need the live rate at checkout; accountants/reporters need it in
+# reports. Both roles are legitimate readers of the same rate lookup.
+@any_permission_required("view_reports", "manage_sales")
 def currency_rate(from_currency, to_currency):
     from services.currency_service import CurrencyService
 

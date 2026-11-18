@@ -87,6 +87,9 @@ class PosCheckoutService:
 
         currency = (payload.get("currency") or context_aware_default_currency()).strip().upper()
         exchange_rate = payload.get("exchange_rate", 1.0)
+        # Provenance reported by the register: online lookup or manual edit.
+        rate_source = (payload.get("exchange_rate_source") or "user_manual").strip()
+        rate_fetched_at = payload.get("rate_fetched_at") or None
 
         lines = payload.get("lines") or []
         if not isinstance(lines, list) or not lines:
@@ -225,6 +228,8 @@ class PosCheckoutService:
                 "bank_name": (payload.get("bank_name") or "").strip() or None,
                 "cheque_number": (payload.get("cheque_number") or "").strip() or None,
                 "cheque_date": (payload.get("cheque_date") or "").strip() or None,
+                "rate_source": rate_source,
+                "rate_fetched_at": rate_fetched_at,
             }
 
         payments_data = None
@@ -280,6 +285,8 @@ class PosCheckoutService:
             warehouse_id=warehouse_id,
             currency=currency,
             user_exchange_rate=exchange_rate,
+            rate_source=rate_source,
+            rate_fetched_at=rate_fetched_at,
             discount_amount=payload.get("discount_amount", 0) or 0,
             shipping_cost=payload.get("shipping_cost", 0) or 0,
             tax_rate=payload.get("tax_rate"),
