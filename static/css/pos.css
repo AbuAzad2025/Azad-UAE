@@ -2089,3 +2089,127 @@ body:has(.pos-app) {
 	font-size: 18px;
 	font-weight: 700;
 }
+
+/* ==========================================================================
+   Final polish — unified pills, single-line cart controls, even payment grid.
+   Styling only; the DOM ids, data-method values and handlers stay untouched.
+   ========================================================================== */
+.pos-app .pos-cat {
+	background: #f1f5f9;
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	color: #475569;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 8px 14px;
+	transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.pos-app .pos-cat:hover {
+	background: #e2e8f0;
+	border-color: #cbd5e1;
+	color: var(--ink);
+	transform: translateY(-1px);
+}
+
+.pos-app .pos-cat.active {
+	background: linear-gradient(180deg, #15803d 0%, #166534 100%);
+	border-color: #166534;
+	box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
+	color: #fff;
+}
+
+.pos-app .pos-cart-item .ci-name {
+	font-size: 14px;
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.pos-app .pos-cart-item .ci-meta {
+	color: #64748b;
+	font-size: 11px;
+	line-height: 1.3;
+}
+
+.pos-app .pos-cart-item .ci-controls {
+	flex-wrap: nowrap;
+	gap: 4px;
+	min-width: 0;
+}
+
+.pos-app .pos-cart-item .ci-controls > * {
+	flex: 0 0 auto;
+}
+
+.pos-app .pos-cart-item .ci-remove {
+	margin-inline-end: 0;
+}
+
+.pos-app .pos-cart-item .ci-qty {
+	width: 40px;
+}
+
+.pos-app .pos-cart-item .ci-price-in {
+	width: 56px;
+}
+
+.pos-app .pos-cart-item .ci-disc {
+	width: 44px;
+}
+
+.pos-app .pos-pay-method {
+	gap: 8px;
+	grid-auto-rows: 1fr;
+}
+
+.pos-app .pos-pay-method .pm {
+	align-items: center;
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	justify-content: center;
+	min-height: 56px;
+	padding: 8px;
+}
+
+.pos-app .pos-pay-method .pm i {
+	font-size: 18px;
+	line-height: 1;
+}
+
+.pos-app .pos-pay-method .pm span {
+	font-size: 13px;
+	line-height: 1.2;
+}
+
+.pos-app .pos-main,
+.pos-app .pos-side {
+	padding: 14px;
+}
+
+.pos-app .pos-grid {
+	gap: 12px;
+}
+
+.pos-app .pos-products {
+	gap: 6px;
+	padding: 4px 2px 8px;
+}
+
+.pos-app .pos-calc {
+	padding: 12px 14px;
+}
+
+.pos-app .pos-totals,
+.pos-app .pos-pay {
+	padding: 12px 14px;
+}
+
+@media (min-width: 1400px) {
+	.pos-app .pos-cat {
+		border-radius: 10px;
+		padding: 10px 12px;
+		text-align: right;
+	}
+}
