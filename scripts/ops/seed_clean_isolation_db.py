@@ -1232,6 +1232,7 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
             platform_disabled=False,
             notify_whatsapp_on_order=False,
             notify_email_on_order=False,
+            created_at="2026-01-01 00:00:00+00",
         )
         for pid in product_ids[:50]:
             _ins(
