@@ -11,16 +11,39 @@ import sys
 import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
+
+# Running as `python tests/e2e_dry_run.py` puts tests/ on sys.path, not the
+# project root, so `import app` fails. Add the root explicitly so the script
+# works both standalone and under pytest (its documented contract).
+_ROOT = str(Path(__file__).resolve().parents[1])
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
 logger = logging.getLogger(__name__)
 
 
 def _setup():
+    import os
+
     from app.factory import create_app
     from config import TestConfig
     from extensions import db
 
-    app = create_app(config_class=TestConfig)
+    # This dry-run uses db.create_all() (not Alembic) and the metadata contains
+    # PostgreSQL-only types (JSONB), so it must run against PostgreSQL. Honour
+    # TEST_DATABASE_URL like the rest of the suite does; fail loudly otherwise.
+    url = (os.environ.get("TEST_DATABASE_URL") or "").strip()
+    if not url or not url.startswith("postgresql"):
+        raise RuntimeError(
+            "e2e_dry_run needs TEST_DATABASE_URL pointing at a PostgreSQL database "
+            "(the schema contains JSONB and cannot be built on SQLite)."
+        )
+
+    class _DryRunConfig(TestConfig):
+        SQLALCHEMY_DATABASE_URI = url
+
+    app = create_app(config_class=_DryRunConfig)
     with app.app_context():
         db.create_all()
     return app, db
@@ -38,6 +61,11 @@ def _seed_tenant(db):
         slug=f"e2e-{uid}",
         default_currency="AED",
         base_currency="AED",
+        country="AE",
+        # The statutory rate is keyed by vat_country. Without AE here, the
+        # fallback jurisdiction (PS 16%) contradicts the 5% rate below and
+        # SaleService rejects the document.
+        vat_country="AE",
         enable_tax=True,
         default_tax_rate=Decimal("5.00"),
         enable_pos=True,
@@ -282,13 +310,21 @@ def _verify_tenant_limits(db, ctx):
     assert branch_count <= tenant.max_branches, "Branch count exceeds limit"
 
 
-def _cleanup(db, _ctx):
-    from models import PosSession, Sale
+def _cleanup(db, ctx):
+    # Delete children before parents: sale_lines has a RESTRICT FK to sales,
+    # so a bare `DELETE FROM sales` fails. Scope everything to this tenant —
+    # the dry-run may share a database with other tenants.
+    from models import Payment, PosSession, Receipt, Sale, SaleLine, StockMovement
     from models.pos_shift import PosShift
 
-    db.session.query(PosShift).delete()
-    db.session.query(PosSession).delete()
-    db.session.query(Sale).delete()
+    tid = ctx["tenant"].id
+    db.session.query(StockMovement).filter_by(tenant_id=tid).delete()
+    db.session.query(SaleLine).filter_by(tenant_id=tid).delete()
+    db.session.query(Payment).filter_by(tenant_id=tid).delete()
+    db.session.query(Receipt).filter_by(tenant_id=tid).delete()
+    db.session.query(PosShift).filter_by(tenant_id=tid).delete()
+    db.session.query(PosSession).filter_by(tenant_id=tid).delete()
+    db.session.query(Sale).filter_by(tenant_id=tid).delete()
     db.session.flush()
 
 

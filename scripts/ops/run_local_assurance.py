@@ -30,13 +30,14 @@ TESTS = [
     "tests/unit/scripts/",
     "tests/integration/test_cfo_financial_assurance.py",
     "tests/unit/utils/test_balance_reconciliation.py",
+    "tests/integration/test_csrf_live_enforcement.py",
 ]
 
 
-def run(label: str, cmd: list[str]) -> bool:
+def run(label: str, cmd: list[str], env: dict | None = None) -> bool:
     print(f"\n=== {label} ===")
     print(" + " + " ".join(cmd))
-    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, env=env)
     tail = (result.stdout + result.stderr).strip().splitlines()
     for line in tail[-15:]:
         print("   " + line)
@@ -87,6 +88,24 @@ def main() -> int:
         "pytest assurance suite", [sys.executable, "-m", "pytest", *TESTS, "-q", "-p", "no:randomly", "--tb=line"]
     ):
         failures.append("pytest")
+
+    # The full POS→GL→Shift→Billing lifecycle script sits at the root of
+    # tests/ and is collected by no suite. Run it explicitly. It builds its
+    # schema with create_all(), so it needs PostgreSQL (JSONB columns).
+    db_url = (os.environ.get("DATABASE_URL") or os.environ.get("TEST_DATABASE_URL") or "").strip()
+    if db_url.startswith("postgresql"):
+        import os as _os
+
+        e2e_env = _os.environ.copy()
+        e2e_env["TEST_DATABASE_URL"] = db_url
+        if not run(
+            "e2e full lifecycle",
+            [sys.executable, "-m", "pytest", "tests/e2e_dry_run.py", "-q", "-p", "no:randomly", "--tb=line"],
+            env=e2e_env,
+        ):
+            failures.append("e2e")
+    else:
+        print("\n=== e2e full lifecycle ===\n -> SKIPPED (needs a PostgreSQL DATABASE_URL)")
 
     # The live guard is read-only and points at an EXISTING migrated DB. The
     # pytest suite rebuilds its own throw-away DB and may drop/rename scratch
