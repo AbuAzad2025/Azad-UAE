@@ -1891,6 +1891,139 @@ body:has(.pos-app) {
 	min-height: 11px;
 }
 
+/* Cashier toolkit */
+.pos-app .pos-hw-badge {
+	align-items: center;
+	background: #f1f5f9;
+	border: 1px solid #cbd5e1;
+	border-radius: 6px;
+	color: #64748b;
+	display: inline-flex;
+	font-size: 12px;
+	height: 30px;
+	justify-content: center;
+	margin-inline-end: 2px;
+	width: 30px;
+}
+
+.pos-app .pos-hw-badge[data-state="connected"],
+.pos-app .pos-hw-badge[data-state="online"] {
+	background: #dcfce7;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.pos-app .pos-hw-badge[data-state="error"] {
+	background: #fef2f2;
+	border-color: #fecaca;
+	color: #b91c1c;
+}
+
+.pos-app .pos-fast-cash {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 6px;
+}
+
+.pos-app .pos-fast-key {
+	background: #f8fafc;
+	border: 1px solid #cbd5e1;
+	border-radius: 5px;
+	color: #334155;
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: 700;
+	padding: 3px 7px;
+}
+
+.pos-app .pos-fast-key:hover {
+	background: #e2e8f0;
+}
+
+.pos-app .pos-fast-key.exact {
+	background: #dcfce7;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.pos-app .pos-mini-list {
+	max-height: 220px;
+	overflow-y: auto;
+}
+
+.pos-app .pos-mini-row {
+	align-items: center;
+	border-bottom: 1px solid #eef2f7;
+	display: grid;
+	font-size: 11px;
+	gap: 4px;
+	grid-template-columns: 70px 70px 1fr;
+	padding: 5px 2px;
+}
+
+.pos-app .pos-mini-row small {
+	color: #94a3b8;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pos-app .pos-in {
+	color: #15803d;
+}
+
+.pos-app .pos-out {
+	color: #b91c1c;
+}
+
+.pos-app .pos-report-row {
+	border-bottom: 1px solid #eef2f7;
+	display: flex;
+	font-size: 12px;
+	justify-content: space-between;
+	padding: 6px 2px;
+}
+
+.pos-app .pos-report-row span {
+	color: #64748b;
+}
+
+.pos-app .pos-return-info {
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	margin-bottom: 10px;
+	padding: 4px 8px;
+}
+
+.pos-app .pos-return-lines {
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+.pos-app .pos-return-line {
+	border: 1px solid #e2e8f0;
+	border-radius: 6px;
+	margin-bottom: 6px;
+	padding: 7px 9px;
+}
+
+.pos-app .rl-name {
+	font-size: 12px;
+	font-weight: 700;
+}
+
+.pos-app .rl-meta {
+	color: #94a3b8;
+	font-size: 10px;
+	margin-bottom: 4px;
+}
+
+.pos-app .rl-qty {
+	max-width: 120px;
+}
+
 .pos-app .pos-card .card-img {
 	border-radius: 6px;
 	height: 96px;

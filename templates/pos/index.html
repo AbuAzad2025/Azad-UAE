@@ -6,8 +6,9 @@
 <meta name="pos-base-currency" content="{{ tenant_default_currency }}">
 <meta name="pos-currency-symbol" content="{{ currency_symbol }}">
 <meta name="pos-prices-include-vat" content="{{ 'true' if prices_include_vat else 'false' }}">
-{# SECURITY: use tojson|e inside HTML attributes #}
-<meta name="pos-config" content="{{ pos_config | tojson | e }}">
+{# SECURITY: tojson returns Markup, so |e is a no-op; forceescape keeps the
+   JSON valid inside the double-quoted attribute (quotes -> &#34;). #}
+<meta name="pos-config" content="{{ pos_config | tojson | forceescape }}">
 {% endblock %}
 
 {# pos-theme styles are bundled in css/pos.css, loaded by base_pos.html #}
@@ -43,6 +44,11 @@
     </div>
 
     <div class="pos-topbar-actions">
+      <span id="hardwareStatusBadge" class="pos-hw-badge" data-state="unknown" title="{{ _('حالة الأجهزة') }}"><i class="fas fa-plug" aria-hidden="true"></i></span>
+      <button id="stockLookupBtn" type="button" class="pos-icon-btn" title="{{ _('استعلام المخزون') }}"><i class="fas fa-warehouse" aria-hidden="true"></i></button>
+      <button id="returnsBtn" type="button" class="pos-icon-btn" title="{{ _('المرتجعات') }}"><i class="fas fa-undo" aria-hidden="true"></i></button>
+      <button id="cashMovementBtn" type="button" class="pos-icon-btn" title="{{ _('حركات الدرج') }}"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
+      <button id="sessionReportBtn" type="button" class="pos-icon-btn" title="{{ _('تقرير الجلسة') }}"><i class="fas fa-chart-pie" aria-hidden="true"></i></button>
       <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair" aria-hidden="true"></i></button>
       <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause" aria-hidden="true"></i></button>
       <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i></a>
@@ -211,6 +217,7 @@
         <!-- calculator / paid amount -->
         <div class="pos-calc">
           <input id="paidAmount" class="pos-calc-display" type="text" inputmode="decimal" value="0" aria-label="{{ _('المبلغ المدفوع') }}">
+          <div id="posFastCash" class="pos-fast-cash" aria-label="{{ _('مبالغ نقدية سريعة') }}"></div>
           <div class="pos-calc-grid" id="posCalc">
             <button type="button" data-act="digit" data-val="7">7</button>
             <button type="button" data-act="digit" data-val="8">8</button>
@@ -447,6 +454,104 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إغلاق') }}</button>
         <button type="button" class="btn btn-danger" id="posTableClear">{{ _('إلغاء الطاولة') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Cashier toolkit modals ===== -->
+<div class="modal fade" id="cashMovementModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-exchange-alt mr-2" aria-hidden="true"></i>{{ _('حركات الدرج') }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ _('إغلاق') }}"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div id="cashMovementAlert" class="alert d-none" role="alert"></div>
+        <div class="field">
+          <label for="cashMovementType">{{ _('نوع الحركة') }}</label>
+          <select id="cashMovementType" class="form-control">
+            <option value="pay_in">{{ _('إيداع في الدرج') }}</option>
+            <option value="pay_out">{{ _('صرف من الدرج') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cashMovementAmount">{{ _('المبلغ') }}</label>
+          <input id="cashMovementAmount" type="number" step="0.01" min="0.01" class="form-control" value="0">
+        </div>
+        <div class="field">
+          <label for="cashMovementReason">{{ _('السبب') }}</label>
+          <input id="cashMovementReason" class="form-control" placeholder="{{ _('اختياري') }}">
+        </div>
+        <hr>
+        <div class="small text-muted mb-1">{{ _('آخر الحركات') }}</div>
+        <div id="cashMovementsList" class="pos-mini-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إغلاق') }}</button>
+        <button type="button" id="cashMovementSave" class="btn btn-primary">{{ _('تسجيل الحركة') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="returnsModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-undo mr-2" aria-hidden="true"></i>{{ _('مرتجع نقطة البيع') }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ _('إغلاق') }}"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div id="returnAlert" class="alert d-none" role="alert"></div>
+        <div class="form-inline mb-3">
+          <label class="ml-2" for="returnReceiptNumber">{{ _('رقم الإيصال') }}</label>
+          <input id="returnReceiptNumber" class="form-control ml-2" placeholder="{{ _('مثال: S-2026-0001') }}">
+          <button type="button" id="returnLookupBtn" class="btn btn-outline-primary">{{ _('بحث') }}</button>
+        </div>
+        <div id="returnReceiptInfo" class="pos-return-info d-none"></div>
+        <div id="returnLines" class="pos-return-lines"></div>
+        <div class="row2 mt-2">
+          <div class="field">
+            <label for="returnRefundMethod">{{ _('طريقة الاسترجاع') }}</label>
+            <select id="returnRefundMethod" class="form-control">
+              <option value="credit">{{ _('رصيد للزبون') }}</option>
+              <option value="cash">{{ _('نقد من الدرج') }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="returnNotes">{{ _('ملاحظات') }}</label>
+            <input id="returnNotes" class="form-control" placeholder="{{ _('اختياري') }}">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إغلاق') }}</button>
+        <button type="button" id="returnSubmitBtn" class="btn btn-warning">{{ _('تأكيد المرتجع') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="stockLookupModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-warehouse mr-2" aria-hidden="true"></i>{{ _('استعلام المخزون') }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ _('إغلاق') }}"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div id="stockLookupAlert" class="alert d-none" role="alert"></div>
+        <div class="form-inline">
+          <label class="ml-2" for="stockLookupQuery">{{ _('الباركود أو رقم الصنف') }}</label>
+          <input id="stockLookupQuery" class="form-control ml-2" placeholder="{{ _('امسح الباركود أو اكتب الرقم') }}">
+          <button type="button" id="stockLookupGo" class="btn btn-outline-primary">{{ _('بحث') }}</button>
+        </div>
+        <div id="stockLookupResult" class="pos-mini-list mt-3"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{{ _('إغلاق') }}</button>
       </div>
     </div>
   </div>

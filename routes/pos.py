@@ -322,7 +322,13 @@ def _pos_register_context():
             branch_id=branch_id,
         ),
         "pos_config": (
-            get_pos_profile(tenant)
+            {
+                **get_pos_profile(tenant),
+                # Let the register hide SaaS-gated actions instead of showing
+                # buttons that the server would refuse with a 403.
+                "enable_pos_returns": pos_feature_enabled(tenant, "pos_returns"),
+                "enable_pos_shifts": pos_feature_enabled(tenant, "pos_shifts"),
+            }
             if tenant
             else {
                 "business_type": "general",
@@ -330,6 +336,8 @@ def _pos_register_context():
                 "enable_tables": False,
                 "enable_hold": True,
                 "enable_kds": True,
+                "enable_pos_returns": False,
+                "enable_pos_shifts": False,
             }
         ),
     }

@@ -44,6 +44,20 @@ import {
 } from "./payments.js";
 import { autoPrintQueuedReceipt, autoPrintSale } from "./printer.js";
 import {
+	loadCashMovements,
+	lookupReceipt,
+	openCashMovements,
+	openReturns,
+	openSessionReport,
+	openStockLookup,
+	refreshHardwareStatus,
+	renderFastCash,
+	runStockLookup,
+	saveCashMovement,
+	setupPosToolkit,
+	submitReturn,
+} from "./toolkit.js";
+import {
 	addFirstOrLookup,
 	customerHint,
 	hideModalAlert,
@@ -516,6 +530,7 @@ void loadRateForCurrency();
 qs("#productSearch").focus();
 
 setupDevices();
+setupPosToolkit();
 
 const paidEl = qs("#paidAmount");
 const calcGrid = qs("#posCalc");
@@ -938,3 +953,16 @@ window._posRenderUpsellMessages = renderUpsellMessages;
 window._posToggleTableField = toggleTableField;
 window._posLoadTableOptions = loadTableOptions;
 window._posSyncPay = syncPay;
+window._posToolkit = {
+	openSessionReport,
+	openCashMovements,
+	loadCashMovements,
+	saveCashMovement,
+	openReturns,
+	lookupReceipt,
+	submitReturn,
+	openStockLookup,
+	runStockLookup,
+	renderFastCash,
+	refreshHardwareStatus,
+};

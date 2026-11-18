@@ -140,6 +140,7 @@ const recalc = async () => {
 				};
 				if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
 				state.lastTotals = exactTotals;
+				window.dispatchEvent(new CustomEvent("pos:totals", { detail: exactTotals }));
 				const chg = qs("#kpiChange");
 				if (chg)
 					chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - data.total));
@@ -158,6 +159,7 @@ const recalc = async () => {
 	};
 	if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
 	state.lastTotals = quickTotals;
+	window.dispatchEvent(new CustomEvent("pos:totals", { detail: quickTotals }));
 	const chg = qs("#kpiChange");
 	if (chg) chg.textContent = fmt(0);
 	return quickTotals;
