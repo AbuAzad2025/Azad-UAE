@@ -103,6 +103,13 @@ CHECKS = {
               WHERE sm.product_id = p.id AND sm.tenant_id = p.tenant_id
           )
     """,
+    # name_ar must carry a real Arabic label; copying the English name left
+    # Arabic ERP screens with no Arabic product text at all.
+    "products_without_arabic_name": """
+        SELECT count(*) FROM products p
+        WHERE p.is_active = true
+          AND (p.name_ar IS NULL OR p.name_ar = '' OR p.name_ar !~ '[أ-ي]')
+    """,
 }
 
 
