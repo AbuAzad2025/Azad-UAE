@@ -1615,6 +1615,25 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
 
     user_roles = _seed_users(conn, tid, idx, branch_id, store, maintenance)
 
+    # The POS order-type settings page is otherwise empty and boot reports
+    # "UNDER-SEEDED pos_order_types". Use the model's canonical defaults so the
+    # seed cannot drift from what a freshly provisioned tenant gets.
+    from models.pos_order_type import DEFAULT_POS_ORDER_TYPES
+
+    for code, name_ar, name_en, is_default, sort_order, kds_enabled in DEFAULT_POS_ORDER_TYPES:
+        _ins(
+            conn,
+            "pos_order_types",
+            tenant_id=tid,
+            code=code,
+            name_ar=name_ar,
+            name_en=name_en,
+            is_active=True,
+            is_default=is_default,
+            sort_order=sort_order,
+            kds_enabled=kds_enabled,
+        )
+
     return {
         "tenant": tid,
         "slug": slug,

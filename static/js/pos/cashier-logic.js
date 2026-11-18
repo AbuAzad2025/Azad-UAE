@@ -108,10 +108,23 @@ function createCashierLogic(baseCurrency = "AED") {
 	};
 }
 
-module.exports = {
-	toNum,
-	fmt,
-	esc,
-	priceForCurrency,
-	createCashierLogic,
-};
+// This file is served to the browser as a plain script as well as required by
+// Node tests. An unguarded `module.exports` threw `module is not defined` on
+// every POS page and aborted the rest of the script.
+if (typeof module !== "undefined" && module.exports) {
+	module.exports = {
+		toNum,
+		fmt,
+		esc,
+		priceForCurrency,
+		createCashierLogic,
+	};
+} else {
+	window.PosCashierLogic = {
+		toNum,
+		fmt,
+		esc,
+		priceForCurrency,
+		createCashierLogic,
+	};
+}

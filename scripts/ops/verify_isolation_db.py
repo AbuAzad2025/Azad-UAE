@@ -110,6 +110,10 @@ CHECKS = {
         WHERE p.is_active = true
           AND (p.name_ar IS NULL OR p.name_ar = '' OR p.name_ar !~ '[أ-ي]')
     """,
+    "tenants_without_pos_order_types": """
+        SELECT count(*) FROM tenants t
+        WHERE NOT EXISTS (SELECT 1 FROM pos_order_types o WHERE o.tenant_id = t.id)
+    """,
 }
 
 

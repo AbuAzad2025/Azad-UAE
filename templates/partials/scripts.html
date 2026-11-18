@@ -24,8 +24,11 @@
 <script defer src="{{ dist_url('js/performance.js') }}"></script>
 <script defer src="{{ dist_url('js/smart-print.js') }}"></script>
 
-<!-- POS Module (lazy-loaded only on POS pages) -->
-{% if request.endpoint and 'pos' in request.endpoint %}
+<!-- POS Module (only the POS register has the DOM these scripts bind to).
+     A broad `'pos' in endpoint` test also matched pos.order_type_settings and
+     pos.printer_settings, where index.js threw on a missing #cartBody and
+     aborted the rest of its initialisation. -->
+{% if request.endpoint == 'pos.index' %}
 <script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/cashier-logic.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/cfd-broadcast.js') }}"></script>
