@@ -41,6 +41,7 @@ from utils.error_messages import (
     BusinessRuleError,
     ErrorMessages,
     report_system_error,
+    safe_error,
 )
 from utils.feature_guards import install_feature_gate
 from utils.helpers import generate_number
@@ -120,7 +121,7 @@ def _refuse(error, *, context):
             error.field or "-",
             error.message,
         )
-        flash(error.message, "warning")
+        flash(safe_error(error, context=__name__), "warning")
     else:
         flash(report_system_error(error, context=context, logger=current_app.logger), "danger")
 

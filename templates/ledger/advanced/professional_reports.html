@@ -179,7 +179,7 @@
         <p>{{ t('Total_2') }} {{ t('Revenue') }}</p>
         <h3>{{ format_currency(total_revenue) }}</h3>
         {% if revenue_delta is not none %}
-        <p><i class="fas fa-arrow-{{ 'up' if revenue_delta >= 0 else 'down' }} {{ 'trend-up' if revenue_delta >= 0 else 'trend-down' }}"></i> {{ '+' if revenue_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(revenue_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        <p><i class="fas fa-arrow-{{ 'up' if revenue_delta >= 0 else 'down' }} {{ 'trend-up' if revenue_delta >= 0 else 'trend-down' }}"></i> {{ '+' if revenue_delta >= 0 else '-' }}{{ "{:.1f}".format(revenue_delta|abs) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
         {% endif %}
       </div>
     </div>
@@ -188,7 +188,7 @@
         <p>{{ t('Total_2') }} {{ t('Expenses') }}</p>
         <h3>{{ format_currency(total_expenses) }}</h3>
         {% if expense_delta is not none %}
-        <p><i class="fas fa-arrow-{{ 'up' if expense_delta >= 0 else 'down' }} {{ 'trend-up' if expense_delta >= 0 else 'trend-down' }}"></i> {{ '+' if expense_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(expense_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        <p><i class="fas fa-arrow-{{ 'up' if expense_delta >= 0 else 'down' }} {{ 'trend-up' if expense_delta >= 0 else 'trend-down' }}"></i> {{ '+' if expense_delta >= 0 else '-' }}{{ "{:.1f}".format(expense_delta|abs) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
         {% endif %}
       </div>
     </div>
@@ -197,7 +197,7 @@
         <p>{{ t('Net') }} {{ t('Profit') }}</p>
         <h3>{{ format_currency(net_profit) }}</h3>
         {% if profit_delta is not none %}
-        <p><i class="fas fa-arrow-{{ 'up' if profit_delta >= 0 else 'down' }} {{ 'trend-up' if profit_delta >= 0 else 'trend-down' }}"></i> {{ '+' if profit_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(profit_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        <p><i class="fas fa-arrow-{{ 'up' if profit_delta >= 0 else 'down' }} {{ 'trend-up' if profit_delta >= 0 else 'trend-down' }}"></i> {{ '+' if profit_delta >= 0 else '-' }}{{ "{:.1f}".format(profit_delta|abs) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
         {% endif %}
       </div>
     </div>
@@ -206,7 +206,7 @@
         <p>{{ t('Margin') }} {{ t('Profit') }}</p>
         <h3>{{ "{:.1f}".format(profit_margin) }}%</h3>
         {% if margin_delta is not none %}
-        <p><i class="fas fa-arrow-{{ 'up' if margin_delta >= 0 else 'down' }} {{ 'trend-up' if margin_delta >= 0 else 'trend-down' }}"></i> {{ '+' if margin_delta >= 0 else '-' }}{{ "{:.1f}".format(abs(margin_delta)) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
+        <p><i class="fas fa-arrow-{{ 'up' if margin_delta >= 0 else 'down' }} {{ 'trend-up' if margin_delta >= 0 else 'trend-down' }}"></i> {{ '+' if margin_delta >= 0 else '-' }}{{ "{:.1f}".format(margin_delta|abs) }}% {{ t('من') }} {{ t('Month') }} {{ t('الماضي') }}</p>
         {% endif %}
       </div>
     </div>
@@ -354,7 +354,7 @@
           {% if revenue_growth is not none %}
           <h3 class="{{ 'trend-up' if revenue_growth >= 0 else 'trend-down' }}">
             <i class="fas fa-arrow-{{ 'up' if revenue_growth >= 0 else 'down' }}"></i>
-            {{ '+' if revenue_growth >= 0 else '-' }}{{ "{:.1f}".format(abs(revenue_growth)) }}%
+            {{ '+' if revenue_growth >= 0 else '-' }}{{ "{:.1f}".format(revenue_growth|abs) }}%
           </h3>
           {% else %}
           <h3 class="text-muted">—</h3>

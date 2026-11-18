@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 from services.budget_service import BudgetService
 from utils.api_response import error_response, success_response
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 
 budget_bp = Blueprint("budget", __name__, url_prefix="/budgets")
 
@@ -38,7 +39,7 @@ def create():
             flash(gettext("تم إنشاء الميزانية"), "success")
             return redirect(url_for("budget.detail", budget_id=budget.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("financials/budget/form.html", budget=None)
 
 
@@ -62,7 +63,7 @@ def edit(budget_id):
             flash(gettext("تم تحديث الميزانية"), "success")
             return redirect(url_for("budget.detail", budget_id=budget.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("financials/budget/form.html", budget=budget)
 
 
@@ -75,7 +76,7 @@ def approve(budget_id):
         BudgetService.approve_budget(budget, current_user)
         flash(gettext("تمت الموافقة على الميزانية"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("budget.detail", budget_id=budget.id))
 
 
@@ -88,7 +89,7 @@ def activate(budget_id):
         BudgetService.activate_budget(budget)
         flash(gettext("تم تنشيط الميزانية"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("budget.detail", budget_id=budget.id))
 
 
@@ -101,7 +102,7 @@ def close(budget_id):
         BudgetService.close_budget(budget)
         flash(gettext("تم إغلاق الميزانية"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("budget.detail", budget_id=budget.id))
 
 
@@ -114,7 +115,7 @@ def delete(budget_id):
         BudgetService.delete_budget(budget)
         flash(gettext("تم حذف الميزانية"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("budget.index"))
 
 

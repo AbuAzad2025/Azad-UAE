@@ -149,7 +149,7 @@ class CashFlowService:
         if salary_account:
             salaries_query = (
                 db.session.query(func.sum(GLJournalLine.debit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == salary_account.id,
@@ -210,7 +210,7 @@ class CashFlowService:
         for account in fixed_assets_account:
             purchases_query = (
                 db.session.query(func.sum(GLJournalLine.debit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == account.id,
@@ -231,7 +231,7 @@ class CashFlowService:
         for account in fixed_assets_account:
             sales_query = (
                 db.session.query(func.sum(GLJournalLine.credit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == account.id,
@@ -281,7 +281,7 @@ class CashFlowService:
         if capital_account:
             capital_query = (
                 db.session.query(func.sum(GLJournalLine.credit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == capital_account.id,
@@ -306,7 +306,7 @@ class CashFlowService:
         if owner_draw_account:
             owner_withdrawals_query = (
                 db.session.query(func.sum(GLJournalLine.debit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == owner_draw_account.id,
@@ -332,7 +332,7 @@ class CashFlowService:
         if loans_account:
             loans_received_query = (
                 db.session.query(func.sum(GLJournalLine.credit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == loans_account.id,
@@ -349,7 +349,7 @@ class CashFlowService:
 
             loan_repayments_query = (
                 db.session.query(func.sum(GLJournalLine.debit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == loans_account.id,
@@ -405,7 +405,7 @@ class CashFlowService:
             # حساب الرصيد حتى التاريخ المحدد
             debit_query = (
                 db.session.query(func.sum(GLJournalLine.debit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == account.id,
@@ -425,7 +425,7 @@ class CashFlowService:
 
             credit_query = (
                 db.session.query(func.sum(GLJournalLine.credit))
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     and_(
                         GLJournalLine.account_id == account.id,

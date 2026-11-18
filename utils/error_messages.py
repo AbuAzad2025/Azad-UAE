@@ -471,6 +471,16 @@ def report_system_error(
     return ErrorMessages.unexpected_error(reference)
 
 
+def safe_error(exception: BaseException, *, context: str = "", logger=None) -> str:
+    """Return only the safe part of an exception to a flash message.
+
+    Drop-in replacement for ``str(exception)`` at a flash call site: the full
+    traceback goes to the log, the page receives a clean sentence plus a short
+    support reference. No SQL, table names, file paths or credentials.
+    """
+    return report_system_error(exception, context=context, logger=logger)
+
+
 def _default_logger():
     """The app logger inside a request, the module logger outside one."""
     try:

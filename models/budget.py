@@ -152,7 +152,7 @@ class Budget(db.Model):
         actual_debits = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), Decimal("0")))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(*entry_filters)
             .scalar()
         )
@@ -160,7 +160,7 @@ class Budget(db.Model):
         actual_credits = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.credit), Decimal("0")))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(*entry_filters)
             .scalar()
         )
@@ -212,11 +212,15 @@ class Budget(db.Model):
             # حساب المبلغ الفعلي
             debit_sum = db.session.query(func.sum(GLJournalLine.debit)).filter(
                 GLJournalLine.account_id == line.account_id
-            ).join(GLJournalEntry).filter(*entry_filters).scalar() or Decimal("0")
+            ).join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
+                *entry_filters
+            ).scalar() or Decimal("0")
 
             credit_sum = db.session.query(func.sum(GLJournalLine.credit)).filter(
                 GLJournalLine.account_id == line.account_id
-            ).join(GLJournalEntry).filter(*entry_filters).scalar() or Decimal("0")
+            ).join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
+                *entry_filters
+            ).scalar() or Decimal("0")
 
             # حساب الفعلي حسب نوع الحساب
             if line.account.type in ["asset", "expense"]:

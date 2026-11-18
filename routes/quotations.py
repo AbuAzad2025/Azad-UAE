@@ -10,6 +10,7 @@ from services.quotation_service import QuotationService
 from utils.branching import branch_scope_id
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id
 
 quotations_bp = Blueprint("quotations", __name__, url_prefix="/quotations")
@@ -37,7 +38,7 @@ def create():
             flash(gettext("تم إنشاء عرض السعر"), "success")
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     tid = get_active_tenant_id(current_user)
     tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
@@ -73,7 +74,7 @@ def edit(quotation_id):
             flash(gettext("تم تحديث عرض السعر"), "success")
             return redirect(url_for("quotations.detail", quotation_id=q.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     tid = get_active_tenant_id(current_user)
     tenant = db.session.get(Tenant, tid) if tid else None
     default_currency = tenant.default_currency if tenant and tenant.default_currency else "AED"
@@ -98,7 +99,7 @@ def send(quotation_id):
             QuotationService.send_quotation(q)
         flash(gettext("تم إرسال عرض السعر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
 
 
@@ -112,7 +113,7 @@ def accept(quotation_id):
             QuotationService.accept_quotation(q)
         flash(gettext("تم قبول عرض السعر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
 
 
@@ -126,7 +127,7 @@ def reject(quotation_id):
             QuotationService.reject_quotation(q)
         flash(gettext("تم رفض عرض السعر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
 
 
@@ -181,7 +182,7 @@ def convert(quotation_id):
         # second time.
         return redirect(url_for("sales.view", id=sale.id))
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
 
 
@@ -196,7 +197,7 @@ def duplicate(quotation_id):
         flash(gettext("تم نسخ عرض السعر"), "success")
         return redirect(url_for("quotations.detail", quotation_id=new_q.id))
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("quotations.detail", quotation_id=q.id))
 
 

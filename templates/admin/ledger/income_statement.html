@@ -82,7 +82,7 @@
           <tr>
             <td><strong>{{ revenue.code }}</strong></td>
             <td>{{ revenue.full_name }}</td>
-            <td class="text-center text-success">{{ format_currency(abs(balance)) }}</td>
+            <td class="text-center text-success">{{ format_currency(balance|abs) }}</td>
           </tr>
           {% endif %}
           {% endfor %}

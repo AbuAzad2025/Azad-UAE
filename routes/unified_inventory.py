@@ -8,6 +8,7 @@ from models import Campaign, Shipment, WarrantyClaim
 from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id
 
@@ -50,7 +51,7 @@ def campaigns_create():
             LoggingCore.log_audit("create", "campaigns", c.id)
         flash("Campaign created.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        flash(f"Error: {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("unified_inventory.campaigns_index"))
 
 
@@ -88,7 +89,7 @@ def warranty_create():
             LoggingCore.log_audit("create", "warranty_claims", claim.id)
         flash("Warranty claim created.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        flash(f"Error: {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("unified_inventory.warranty_index"))
 
 
@@ -128,5 +129,5 @@ def shipments_create():
             LoggingCore.log_audit("create", "shipments", s.id)
         flash("Shipment created.", "success")
     except Exception as e:
-        flash(f"Error: {e}", "danger")
+        flash(f"Error: {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("unified_inventory.shipments_index"))

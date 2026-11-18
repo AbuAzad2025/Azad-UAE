@@ -30,7 +30,7 @@ from utils.decorators import (
     branch_scope_id,
     permission_required,
 )
-from utils.error_messages import ErrorMessages
+from utils.error_messages import ErrorMessages, safe_error
 from utils.structured_logging import log_mutation
 from utils.tenanting import get_active_tenant_id, scoped_user_query, tenant_get_or_404
 
@@ -396,7 +396,7 @@ def create_warehouse():
             try:
                 check_warehouses_limit()
             except TenantLimitError as e:
-                flash(str(e), "warning")
+                flash(safe_error(e, context=__name__), "warning")
                 return redirect(url_for("warehouse.create_warehouse"))
 
             with atomic_transaction("warehouse_creation"):
@@ -433,7 +433,7 @@ def create_warehouse():
 
         except ValueError as e:
             current_app.logger.warning(f"ValueError creating warehouse: {e}")
-            flash(str(e), "warning")
+            flash(safe_error(e, context=__name__), "warning")
             return render_template(
                 "warehouse/create_warehouse.html",
                 parent_warehouses=parent_warehouses,

@@ -83,13 +83,13 @@ class InventoryReconciliationService:
         debit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), 0))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.is_posted.is_(True))
         )
         credit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.credit), 0))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.is_posted.is_(True))
         )
         if tenant_id is not None:

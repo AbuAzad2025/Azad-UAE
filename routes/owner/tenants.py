@@ -10,6 +10,7 @@ from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from services.saas_provisioning_service import SaaSProvisioningService
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 
 from .common import (
     Tenant,
@@ -109,7 +110,7 @@ def tenant_ai_toggle(tenant_id):
             "success",
         )
     except Exception as exc:
-        flash(gettext(f"تعذر تحديث إعداد AI: {exc}"), "danger")
+        flash(gettext(f"تعذر تحديث إعداد AI: {safe_error(exc, context=__name__)}"), "danger")
     return redirect(url_for("owner.tenant_ai"))
 
 
@@ -142,7 +143,7 @@ def tenant_store_platform_toggle(store_id):
             "success",
         )
     except Exception as exc:
-        flash(gettext(f"تعذر تحديث حالة المتجر: {exc}"), "danger")
+        flash(gettext(f"تعذر تحديث حالة المتجر: {safe_error(exc, context=__name__)}"), "danger")
     return redirect(url_for("owner.tenant_stores"))
 
 
@@ -441,7 +442,7 @@ def tenant_create():
             flash(gettext(f'تم إنشاء التينانت "{tenant.name_ar}" بنجاح.'), "success")
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
-            flash(gettext(f"خطأ في إنشاء التينانت: {str(e)}"), "danger")
+            flash(gettext(f"خطأ في إنشاء التينانت: {safe_error(e, context=__name__)}"), "danger")
     from utils.tax_settings import VAT_COUNTRY_LABELS
 
     return render_template("owner/tenant_create.html", packages=packages, vat_countries=VAT_COUNTRY_LABELS)
@@ -465,7 +466,7 @@ def tenant_suspend(tenant_id):
             tenant.suspension_reason = reason or "Suspended by owner"
             tenant.updated_at = datetime.now(UTC)
     except Exception as e:
-        flash(gettext(f"خطأ في تعليق التينانت: {str(e)}"), "danger")
+        flash(gettext(f"خطأ في تعليق التينانت: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_suspend", {"tenant_id": tenant_id, "reason": reason})
@@ -489,7 +490,7 @@ def tenant_activate(tenant_id):
             tenant.suspension_reason = None
             tenant.updated_at = datetime.now(UTC)
     except Exception as e:
-        flash(gettext(f"خطأ في تفعيل التينانت: {str(e)}"), "danger")
+        flash(gettext(f"خطأ في تفعيل التينانت: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_activate", {"tenant_id": tenant_id})
@@ -660,7 +661,7 @@ def tenant_edit(tenant_id):
             )
             return redirect(url_for("owner.tenants_list"))
         except Exception as e:
-            flash(gettext(f"خطأ في تحديث التينانت: {str(e)}"), "danger")
+            flash(gettext(f"خطأ في تحديث التينانت: {safe_error(e, context=__name__)}"), "danger")
 
     from utils.tax_settings import VAT_COUNTRY_LABELS
 
@@ -693,7 +694,7 @@ def tenant_delete(tenant_id):
             tenant.suspension_reason = "Deleted by owner"
             tenant.updated_at = datetime.now(UTC)
     except Exception as e:
-        flash(gettext(f"خطأ في حذف التينانت: {str(e)}"), "danger")
+        flash(gettext(f"خطأ في حذف التينانت: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.tenants_list"))
     _invalidate_owner_changes()
     _audit_owner_db_action("tenant_soft_delete", {"tenant_id": tenant_id})
@@ -819,7 +820,7 @@ def tenant_extend_subscription(tenant_id):
             "success",
         )
     except Exception as e:
-        flash(gettext(f"خطأ في تمديد الاشتراك: {e}"), "danger")
+        flash(gettext(f"خطأ في تمديد الاشتراك: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
 
 

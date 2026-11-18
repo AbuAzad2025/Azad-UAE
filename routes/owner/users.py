@@ -5,6 +5,7 @@ import logging
 from flask_babel import gettext
 
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 
 from .common import (
     User,
@@ -84,7 +85,7 @@ def create_user():
             try:
                 email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
-                flash(str(exc), "error")
+                flash(safe_error(exc, context=__name__), "error")
                 return render_template(
                     "owner/create_user.html",
                     roles=roles,
@@ -211,7 +212,7 @@ def create_user():
         except Exception as e:
             from utils.error_messages import ErrorMessages
 
-            flash(ErrorMessages.user_update_failed(str(e)), "error")
+            flash(ErrorMessages.user_update_failed(safe_error(e, context=__name__)), "error")
             return render_template(
                 "owner/create_user.html",
                 roles=roles,
@@ -273,7 +274,7 @@ def edit_user(user_id):
             try:
                 user.email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
-                flash(str(exc), "error")
+                flash(safe_error(exc, context=__name__), "error")
                 return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
             user.full_name = request.form.get("full_name", "").strip()
             user.role_id = role_id
@@ -297,7 +298,7 @@ def edit_user(user_id):
             return redirect(url_for("owner.users_list"))
 
         except Exception as e:
-            flash(gettext(f"خطأ في تحديث المستخدم: {str(e)}"), "error")
+            flash(gettext(f"خطأ في تحديث المستخدم: {safe_error(e, context=__name__)}"), "error")
 
     return render_template("owner/edit_user.html", user=user, roles=roles, branches=branches)
 
@@ -348,7 +349,7 @@ def delete_user(user_id):
         _invalidate_owner_changes()
         flash(gettext(f"تم تعطيل المستخدم {user.username}"), "success")
     except Exception as e:
-        flash(gettext(f"خطأ في حذف المستخدم: {str(e)}"), "error")
+        flash(gettext(f"خطأ في حذف المستخدم: {safe_error(e, context=__name__)}"), "error")
 
     return redirect(url_for("owner.users_list"))
 

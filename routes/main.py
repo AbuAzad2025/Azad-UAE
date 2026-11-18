@@ -20,6 +20,7 @@ from utils.api_response import success_response
 from utils.branching import get_visible_products_query
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
+from utils.error_messages import safe_error
 from utils.gl_tenant import get_gl_account_by_code
 from utils.tenanting import get_active_tenant_id
 
@@ -347,7 +348,7 @@ def my_profile_update():
 
     except Exception as e:
         current_app.logger.error(f"My profile update error: {e}")
-        flash(gettext(f"❌ خطأ في التحديث: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ في التحديث: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("main.my_profile"))
 

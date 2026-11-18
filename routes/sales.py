@@ -29,7 +29,7 @@ from utils.branching import (
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import enforce_resource_limit, owner_required, permission_required
-from utils.error_messages import ErrorCategory, refuse
+from utils.error_messages import ErrorCategory, refuse, safe_error
 from utils.gl_reference_types import GLRef
 from utils.number_to_arabic import number_to_arabic_words
 from utils.numeric_input import parse_decimal_field
@@ -534,7 +534,7 @@ def submit_to_zatca(**kwargs):
         with atomic_transaction("zatca_invoice_submission"):
             result = ZatcaSubmissionService.submit(sale)
     except ZatcaSubmissionError as exc:
-        flash(gettext(str(exc)), "danger")
+        flash(gettext(safe_error(exc, context=__name__)), "danger")
         return redirect(url_for("sales.view", id=sale.id))
     flash(gettext(f"تم تقديم الفاتورة إلى ZATCA بنجاح — الحالة: {result['status']}"), "success")
     return redirect(url_for("sales.view", id=sale.id))
@@ -569,7 +569,7 @@ def request_ita_allocation(**kwargs):
         with atomic_transaction("ita_invoice_allocation"):
             result = ItaAllocationService.request_allocation_number(sale, user_id=current_user.id)
     except ItaAllocationError as exc:
-        flash(gettext(str(exc)), "danger")
+        flash(gettext(safe_error(exc, context=__name__)), "danger")
         return redirect(url_for("sales.view", id=sale.id))
     flash(gettext(f"מספר הקצאה: {result['allocation_number']} — تم طلبه من רשות המסים بنجاح"), "success")
     return redirect(url_for("sales.view", id=sale.id))

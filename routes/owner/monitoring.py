@@ -10,6 +10,7 @@ from flask_babel import gettext
 from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 
 from .common import (
     APIKey,
@@ -44,7 +45,7 @@ def system_health():
         health_data = HealthCheckService.get_health_data()
         return render_template("owner/system_health.html", health=health_data)
     except Exception as e:
-        flash(gettext(f"خطأ في تحميل معلومات النظام: {str(e)}"), "danger")
+        flash(gettext(f"خطأ في تحميل معلومات النظام: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.dashboard"))
 
 
@@ -129,7 +130,7 @@ def resolve_alert(**kwargs):
             alert.resolved_at = datetime.now(UTC)
             alert.resolved_by = current_user.id
     except Exception as e:
-        flash(gettext(f"❌ خطأ في حل التنبيه: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ في حل التنبيه: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.security_alerts"))
     _invalidate_owner_changes()
     flash(gettext("✅ تم حل التنبيه الأمني"), "success")
@@ -186,7 +187,7 @@ def ip_whitelist():
                 whitelist.append({"ip": ip_address, "description": description})
                 settings.owner_whitelist_ips = json.dumps(whitelist, ensure_ascii=False)
         except Exception as e:
-            flash(gettext(f"❌ خطأ في إضافة IP: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ في إضافة IP: {safe_error(e, context=__name__)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم إضافة IP للقائمة البيضاء"), "success")
@@ -240,7 +241,7 @@ def delete_ip_whitelist(index):
                 whitelist.pop(index)
                 settings.owner_whitelist_ips = json.dumps(whitelist, ensure_ascii=False)
         except Exception as e:
-            flash(gettext(f"❌ خطأ في حذف IP: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ في حذف IP: {safe_error(e, context=__name__)}"), "danger")
             return redirect(url_for("owner.ip_whitelist"))
         _invalidate_owner_changes()
         flash(gettext("✅ تم حذف IP من القائمة البيضاء"), "success")
@@ -278,7 +279,7 @@ def api_keys():
             with atomic_transaction("create_api_key"):
                 db.session.add(key)
         except Exception as e:
-            flash(gettext(f"❌ خطأ في إنشاء المفتاح: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ في إنشاء المفتاح: {safe_error(e, context=__name__)}"), "danger")
             return redirect(url_for("owner.api_keys"))
         _invalidate_owner_changes()
         flash(gettext(f"✅ تم إنشاء API Key ({_mask_api_key(key.key)})"), "success")
@@ -298,7 +299,7 @@ def toggle_api_key(**kwargs):
         with atomic_transaction("toggle_api_key"):
             key.is_active = not key.is_active
     except Exception as e:
-        flash(gettext(f"❌ خطأ في تحديث المفتاح: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ في تحديث المفتاح: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.api_keys"))
     _invalidate_owner_changes()
     status = gettext("تفعيل") if key.is_active else gettext("تعطيل")
@@ -429,5 +430,5 @@ def clear_error_audit_logs():
             deleted = LoggingCore.clear_all_error_logs()
         flash(gettext(f"✅ تم مسح {deleted} سجل خطأ من النظام"), "success")
     except Exception as e:
-        flash(gettext(f"❌ فشل في مسح سجلات الأخطاء: {str(e)}"), "danger")
+        flash(gettext(f"❌ فشل في مسح سجلات الأخطاء: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("owner.error_audit_logs"))

@@ -340,7 +340,7 @@ class AgingAnalysisService:
                 db.session.query(
                     func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
                 )
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     GLJournalLine.account_id == ar_acc.id,
                     GLJournalEntry.is_posted,
@@ -380,7 +380,7 @@ class AgingAnalysisService:
                 db.session.query(
                     func.coalesce(func.sum(GLJournalLine.credit), 0) - func.coalesce(func.sum(GLJournalLine.debit), 0)
                 )
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(
                     GLJournalLine.account_id == ap_acc.id,
                     GLJournalEntry.is_posted,

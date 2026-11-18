@@ -263,7 +263,7 @@ class TestLED28FinancialStatements:
 
         lines = (
             db_session.query(GLJournalLine)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.tenant_id == sample_tenant.id,
                 GLJournalEntry.is_posted.is_(True),

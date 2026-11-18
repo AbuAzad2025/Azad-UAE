@@ -14,6 +14,7 @@ from flask_login import current_user
 
 from services.owner_ops_service import OwnerOpsService
 from utils.decorators import owner_required
+from utils.error_messages import safe_error
 from utils.security_helpers import enforce_owner_ip_if_needed
 
 logger = logging.getLogger(__name__)
@@ -128,10 +129,10 @@ def activate_subscription():
             duration_type,
         )
     except SaaSProvisioningError as exc:
-        flash(f"Provisioning failed: {exc}", "danger")
+        flash(f"Provisioning failed: {safe_error(exc, context=__name__)}", "danger")
         logger.error("SaaS provisioning error: %s", exc)
     except Exception as exc:
-        flash(f"Unexpected error: {exc}", "danger")
+        flash(f"Unexpected error: {safe_error(exc, context=__name__)}", "danger")
         logger.exception("Unexpected error during subscription activation")
 
     return redirect(url_for("owner_admin.dashboard"))

@@ -6,6 +6,7 @@ from werkzeug.exceptions import NotFound
 from services.transfer_service import TransferService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 
 transfers_bp = Blueprint("transfers", __name__, url_prefix="/transfers")
 
@@ -49,7 +50,7 @@ def create():
             flash(gettext("تم إنشاء طلب النقل"), "success")
             return redirect(url_for("transfers.detail", transfer_id=t.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("warehouse/transfer_form.html", transfer=None)
 
 
@@ -71,7 +72,7 @@ def approve(transfer_id):
             TransferService.approve_transfer(t, current_user)
         flash(gettext("تمت الموافقة على النقل"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("transfers.detail", transfer_id=t.id))
 
 
@@ -85,7 +86,7 @@ def ship(transfer_id):
             TransferService.ship_transfer(t)
         flash(gettext("تم شحن النقل"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("transfers.detail", transfer_id=t.id))
 
 
@@ -100,7 +101,7 @@ def receive(transfer_id):
             TransferService.complete_transfer(t, current_user)
         flash(gettext("تم استلام وإتمام النقل"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("transfers.detail", transfer_id=t.id))
 
 
@@ -114,7 +115,7 @@ def cancel(transfer_id):
             TransferService.cancel_transfer(t)
         flash(gettext("تم إلغاء النقل"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("transfers.detail", transfer_id=t.id))
 
 

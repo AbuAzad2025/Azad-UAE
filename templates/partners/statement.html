@@ -88,7 +88,7 @@
             <td>{{ txn.transaction_type_label }}</td>
             <td>{{ txn.notes or '—' }}</td>
             <td class="text-center {% if txn.is_debit %}text-danger fw-bold{% endif %}">
-              {% if txn.is_debit %}{{ format_currency(abs(txn.amount_base or 0)) }}{% else %}—{% endif %}
+              {% if txn.is_debit %}{{ format_currency((txn.amount_base or 0)|abs) }}{% else %}—{% endif %}
             </td>
             <td class="text-center {% if txn.is_credit %}text-success fw-bold{% endif %}">
               {% if txn.is_credit %}{{ format_currency(txn.amount_base or 0) }}{% else %}—{% endif %}

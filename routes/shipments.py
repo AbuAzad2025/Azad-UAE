@@ -15,6 +15,7 @@ from models.shipment import Shipment
 from services.shipment_service import ShipmentService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 shipment_bp = Blueprint("shipments", __name__, url_prefix="/shipments")
@@ -119,7 +120,7 @@ def create_shipment():
         except Exception as e:
             # atomic_transaction (line 89) already rolled back on exception;
             # no direct db.session.rollback() permitted (GRIMOIRE G1-ATOMICITY)
-            flash(f"❌ خطأ: {str(e)}", "danger")
+            flash(f"❌ خطأ: {safe_error(e, context=__name__)}", "danger")
     from models.product import Product
     from models.user import User
     from models.warehouse import Warehouse
@@ -145,7 +146,7 @@ def send_shipment(id):
             ShipmentService.send_shipment(id, current_user.id)
         flash("✅ تم إرسال الإرسالية", "success")
     except ValueError as e:
-        flash(f"⚠️ {str(e)}", "danger")
+        flash(f"⚠️ {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
@@ -158,7 +159,7 @@ def arrive_shipment(id):
             ShipmentService.arrive_shipment(id, current_user.id)
         flash("✅ تم تأكيد وصول الإرسالية", "success")
     except ValueError as e:
-        flash(f"⚠️ {str(e)}", "danger")
+        flash(f"⚠️ {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
@@ -171,7 +172,7 @@ def start_selling(id):
             ShipmentService.start_selling(id, current_user.id)
         flash("✅ بدأ البيع الميداني", "success")
     except ValueError as e:
-        flash(f"⚠️ {str(e)}", "danger")
+        flash(f"⚠️ {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
@@ -191,7 +192,7 @@ def sync_tracking(id):
         else:
             flash(result.get("error") or gettext("Could not update tracking."), "warning")
     except Exception as exc:
-        flash(str(exc), "danger")
+        flash(safe_error(exc, context=__name__), "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
@@ -204,7 +205,7 @@ def close_shipment(id):
             ShipmentService.close_shipment(id, current_user.id)
         flash("✅ تم إغلاق الإرسالية", "success")
     except ValueError as e:
-        flash(f"⚠️ {str(e)}", "danger")
+        flash(f"⚠️ {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 
@@ -217,7 +218,7 @@ def cancel_shipment(id):
             ShipmentService.cancel_shipment(id, current_user.id)
         flash("✅ تم إلغاء الإرسالية", "success")
     except ValueError as e:
-        flash(f"⚠️ {str(e)}", "danger")
+        flash(f"⚠️ {safe_error(e, context=__name__)}", "danger")
     return redirect(url_for("shipments.view_shipment", id=id))
 
 

@@ -10,6 +10,7 @@ from services.payroll_service import PayrollService
 from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
+from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id
@@ -72,7 +73,7 @@ def add_employee():
             flash(gettext("تم إضافة الموظف بنجاح"), "success")
             return redirect(url_for("payroll.employees_list"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     tid = get_active_tenant_id(current_user)
     branches = PayrollService.list_branch_options(tid, scoped_branch_id)
@@ -107,9 +108,9 @@ def advances():
                 )
             flash(gettext("تم تسجيل السلفة بنجاح"), "success")
         except ValueError as e:
-            flash(gettext(f"خطأ في البيانات: {e}"), "danger")
+            flash(gettext(f"خطأ في البيانات: {safe_error(e, context=__name__)}"), "danger")
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     scoped_branch_id = branch_scope_id()
     tid = get_active_tenant_id(current_user)
@@ -146,9 +147,9 @@ def process_payroll():
                     "success",
                 )
             except ValueError as e:
-                flash(gettext(f"خطأ في البيانات: {e}"), "danger")
+                flash(gettext(f"خطأ في البيانات: {safe_error(e, context=__name__)}"), "danger")
             except Exception as e:
-                flash(gettext(f"حدث خطأ: {e}"), "danger")
+                flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
         else:
             try:
                 employee_id_str = request.form.get("employee_id")
@@ -171,9 +172,9 @@ def process_payroll():
                     )
                 flash(gettext("تم صرف الراتب بنجاح"), "success")
             except ValueError as e:
-                flash(gettext(f"خطأ في البيانات: {e}"), "danger")
+                flash(gettext(f"خطأ في البيانات: {safe_error(e, context=__name__)}"), "danger")
             except Exception as e:
-                flash(gettext(f"حدث خطأ: {e}"), "danger")
+                flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     tid = get_active_tenant_id(current_user)
     employees, branches, transactions = PayrollService.process_page_data(tid, scoped_branch_id)

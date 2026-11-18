@@ -6,6 +6,7 @@ from extensions import db
 from models import Branch
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 branches_bp = Blueprint("branches", __name__, url_prefix="/branches")
@@ -61,7 +62,7 @@ def create():
         try:
             check_branches_limit()
         except TenantLimitError as e:
-            flash(str(e), "warning")
+            flash(safe_error(e, context=__name__), "warning")
             return redirect(url_for("branches.create"))
 
         if tenant_query(Branch).filter_by(code=code).first():

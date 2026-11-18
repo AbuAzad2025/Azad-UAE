@@ -4,6 +4,7 @@ from flask_login import current_user, login_required
 
 from services.ticket_service import TicketService
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id
 
 tickets_bp = Blueprint("tickets", __name__, url_prefix="/tickets")
@@ -40,7 +41,7 @@ def create_ticket():
             flash(gettext("تم إنشاء التذكرة بنجاح"), "success")
             return redirect(url_for("tickets.list_tickets"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
     tid = get_active_tenant_id(current_user)
     categories = TicketService.tenant_categories(tid)
     priorities = TicketService.tenant_priorities(tid)
@@ -62,7 +63,7 @@ def ticket_detail(ticket_id):
     try:
         ticket = TicketService.get_ticket(ticket_id, current_user)
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
         return redirect(url_for("tickets.list_tickets"))
     tid = get_active_tenant_id(current_user)
     categories = TicketService.tenant_categories(tid)
@@ -85,7 +86,7 @@ def add_comment(ticket_id):
         TicketService.add_comment(ticket_id, request.form, current_user)
         flash(gettext("تم إضافة التعليق"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("tickets.ticket_detail", ticket_id=ticket_id))
 
 
@@ -98,7 +99,7 @@ def assign_ticket(ticket_id):
         TicketService.assign_ticket(ticket_id, user_id, current_user)
         flash(gettext("تم تعيين التذكرة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("tickets.ticket_detail", ticket_id=ticket_id))
 
 
@@ -110,7 +111,7 @@ def resolve_ticket(ticket_id):
         TicketService.resolve_ticket(ticket_id, current_user)
         flash(gettext("تم حل التذكرة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("tickets.ticket_detail", ticket_id=ticket_id))
 
 
@@ -122,7 +123,7 @@ def close_ticket(ticket_id):
         TicketService.close_ticket(ticket_id, current_user)
         flash(gettext("تم إغلاق التذكرة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("tickets.ticket_detail", ticket_id=ticket_id))
 
 
@@ -134,5 +135,5 @@ def reopen_ticket(ticket_id):
         TicketService.reopen_ticket(ticket_id, current_user)
         flash(gettext("تم إعادة فتح التذكرة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("tickets.ticket_detail", ticket_id=ticket_id))

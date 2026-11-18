@@ -114,7 +114,7 @@ class AdvancedFinancialAnalytics:
             filter_end = datetime.combine(filter_end, datetime.max.time())
 
         for account in accounts:
-            lines_query = GLJournalLine.query.join(GLJournalEntry).filter(
+            lines_query = GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
                 GLJournalLine.account_id == account.id,
                 GLJournalEntry.is_posted,
             )
@@ -163,7 +163,7 @@ class AdvancedFinancialAnalytics:
 
         for account in accounts:
             if date_from and date_to:
-                lines_q = GLJournalLine.query.join(GLJournalEntry).filter(
+                lines_q = GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
                     GLJournalLine.account_id == account.id,
                     GLJournalEntry.entry_date >= date_from,
                     GLJournalEntry.entry_date <= date_to,

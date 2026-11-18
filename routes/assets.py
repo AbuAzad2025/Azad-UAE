@@ -4,6 +4,7 @@ from flask_login import login_required
 
 from services.asset_service import AssetService
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.numeric_input import parse_decimal_field
 from utils.tenanting import tenant_get_or_404
 
@@ -30,7 +31,7 @@ def create():
             flash(gettext("تم إنشاء الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("assets/create.html")
 
 
@@ -58,7 +59,7 @@ def edit(asset_id):
             flash(gettext("تم تحديث الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("assets/create.html", asset=asset)
 
 
@@ -73,7 +74,7 @@ def depreciate(asset_id):
         AssetService.post_manual_depreciation(asset)
         flash(gettext("تم ترحيل الاستهلاك"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("assets.detail", asset_id=asset.id))
 
 
@@ -96,7 +97,7 @@ def dispose(asset_id):
             flash(gettext("تم التخلص من الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
     return render_template("assets/disposal.html", asset=asset)
 
 

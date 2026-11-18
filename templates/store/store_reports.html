@@ -75,12 +75,12 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
+<script src="{{ url_for('static', filename='adminlte/plugins/chartjs/chart.min.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
   const ctx = document.getElementById('salesChart').getContext('2d');
-  const labels = {{ chart.labels | tojson }};
-  const data = {{ chart.data | tojson }};
+  const labels = {{ (chart.labels | default([])) | tojson }};
+  const data = {{ (chart.data | default([])) | tojson }};
   
   new Chart(ctx, {
     type: 'line',

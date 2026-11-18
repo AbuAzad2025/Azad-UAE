@@ -969,7 +969,7 @@ class GLService:
         q = (
             db.session.query(func.sum(GLJournalLine.amount_aed))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.status == "posted")
         )
         if tenant_id is not None:
@@ -993,7 +993,7 @@ class GLService:
 
         query = (
             GLJournalLine.query.filter_by(account_id=account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.status == "posted")
         )
 
@@ -1019,7 +1019,7 @@ class GLService:
         if date_from:
             opening_query = (
                 GLJournalLine.query.filter_by(account_id=account_id)
-                .join(GLJournalEntry)
+                .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
                 .filter(GLJournalEntry.status == "posted")
             )
 
@@ -1099,7 +1099,9 @@ class GLService:
             return []
 
         def _entry_filters(q):
-            q = q.join(GLJournalEntry).filter(GLJournalEntry.status == "posted")
+            q = q.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
+                GLJournalEntry.status == "posted"
+            )
             if branch_id:
                 q = q.filter(GLJournalEntry.branch_id == branch_id)
             if tenant_id is not None:
@@ -1188,7 +1190,7 @@ class GLService:
 
         tenant_id = tenant_id or gl_helpers.resolve_tenant_id(branch_id=branch_id)
 
-        query = GLJournalLine.query.join(GLJournalEntry).filter(
+        query = GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
             GLJournalLine.partner_id == partner_id,
             GLJournalEntry.status == "posted",
         )
@@ -1203,7 +1205,7 @@ class GLService:
 
         lines = query.order_by(GLJournalEntry.entry_date, GLJournalEntry.id).all()
 
-        opening_query = GLJournalLine.query.join(GLJournalEntry).filter(
+        opening_query = GLJournalLine.query.join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id).filter(
             GLJournalLine.partner_id == partner_id,
             GLJournalEntry.status == "posted",
         )
@@ -1536,7 +1538,7 @@ class GLService:
             db.session.query(
                 func.coalesce(func.sum(GLJournalLine.debit), 0) - func.coalesce(func.sum(GLJournalLine.credit), 0)
             )
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalLine.account_id == acc.id,
                 GLJournalEntry.status == "posted",

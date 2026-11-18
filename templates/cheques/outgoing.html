@@ -127,7 +127,7 @@
                 <small class="text-muted">{{ t('صرف') }}:</small>
                 <span class="badge badge-success">{{ "{:.4f}".format(cheque.clearance_exchange_rate) }}</span>
               </div>
-              {% if cheque.currency_gain_loss and abs(cheque.currency_gain_loss) > 0.01 %}
+              {% if cheque.currency_gain_loss and cheque.currency_gain_loss|abs > 0.01 %}
               <div>
                 <small class="{% if cheque.currency_gain_loss > 0 %}text-success{% else %}text-danger{% endif %}">
                   {% if cheque.currency_gain_loss > 0 %}+{% endif %}{{ "{:.0f}".format(cheque.currency_gain_loss) }}

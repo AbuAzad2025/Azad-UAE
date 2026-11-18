@@ -14,6 +14,7 @@ from services.ai_training_service import (
 )
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 
 from .common import (
     abort,
@@ -84,7 +85,7 @@ def ai_training_qa():
             )
         flash(gettext("تم حفظ الزوج التدريبي بنجاح."), "success")
     except ValueError as exc:
-        flash(str(exc), "danger")
+        flash(safe_error(exc, context=__name__), "danger")
     except Exception:
         logger.exception("Owner AI training QA failed")
         flash(gettext("تعذر حفظ الزوج التدريبي."), "danger")
@@ -126,7 +127,7 @@ def ai_training_correct():
             )
         flash(gettext("تم حفظ التصحيح وسيستخدمه المساعد."), "success")
     except ValueError as exc:
-        flash(str(exc), "danger")
+        flash(safe_error(exc, context=__name__), "danger")
     except Exception:
         logger.exception("Owner AI training correction failed")
         flash(gettext("تعذر حفظ التصحيح."), "danger")

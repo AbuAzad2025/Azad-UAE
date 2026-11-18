@@ -19,6 +19,7 @@ from flask_babel import gettext
 
 from extensions import limiter
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 
 public_bp = Blueprint("public", __name__)
 
@@ -216,7 +217,7 @@ def donate_azad_submit():
             is_en=is_en,
         )
     except ValueError as exc:
-        flash(str(exc), "danger")
+        flash(safe_error(exc, context=__name__), "danger")
         return redirect(url_for("public.donate_azad"))
     except Exception:
         import logging

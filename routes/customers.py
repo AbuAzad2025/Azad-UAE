@@ -27,6 +27,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 customers_bp = Blueprint("customers", __name__, url_prefix="/customers")
@@ -227,7 +228,7 @@ def create():
             try:
                 check_customers_limit()
             except TenantLimitError as e:
-                flash(str(e), "warning")
+                flash(safe_error(e, context=__name__), "warning")
                 return redirect(url_for("customers.create"))
 
             customer = CustomerService.create_customer(

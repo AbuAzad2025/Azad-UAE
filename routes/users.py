@@ -27,7 +27,7 @@ from utils.auth_helpers import (
 from utils.branching import branch_scope_id_for, role_requires_branch
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
-from utils.error_messages import ErrorMessages
+from utils.error_messages import ErrorMessages, safe_error
 from utils.field_validators import (
     FieldValidationError,
     normalize_phone_optional,
@@ -174,7 +174,7 @@ def create():
             try:
                 check_users_limit()
             except TenantLimitError as e:
-                flash(str(e), "warning")
+                flash(safe_error(e, context=__name__), "warning")
                 return _create_form_context(roles, branches, form_values)
 
             conflict = UserService.find_username_conflict(username)
@@ -185,7 +185,7 @@ def create():
             try:
                 email = normalize_user_email_required(request.form.get("email"))
             except FieldValidationError as exc:
-                flash(str(exc), "danger")
+                flash(safe_error(exc, context=__name__), "danger")
                 return _create_form_context(roles, branches, form_values)
 
             user = User(
@@ -261,7 +261,7 @@ def edit(**kwargs):
                 try:
                     user.email = normalize_user_email_required(request.form.get("email"))
                 except FieldValidationError as exc:
-                    flash(str(exc), "danger")
+                    flash(safe_error(exc, context=__name__), "danger")
                     return render_template("users/edit.html", user=user, roles=roles, branches=branches)
                 user.full_name = request.form.get("full_name")
                 user.full_name_ar = request.form.get("full_name_ar")

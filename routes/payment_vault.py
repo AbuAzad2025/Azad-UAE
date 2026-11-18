@@ -37,6 +37,7 @@ from services.vault_query_service import VaultQueryService
 from utils.api_response import error_response, paginated_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import owner_only
+from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 from utils.numeric_input import parse_decimal_field, parse_int_field
 from utils.tenanting import tenant_query
@@ -749,7 +750,7 @@ def create_package():
         flash(gettext("✅ تم إنشاء الباقة بنجاح"), "success")
     except Exception as e:
         logger.exception("Package creation failed")
-        flash(gettext(f"❌ خطأ أثناء إنشاء الباقة: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ أثناء إنشاء الباقة: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("payment_vault.packages_management"))
 
@@ -820,7 +821,7 @@ def edit_package(package_id):
             return redirect(url_for("payment_vault.packages_management"))
         except Exception as e:
             logger.exception("Package update failed")
-            flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return render_template("payment_vault/edit_package.html", package=package)
 
@@ -1577,7 +1578,7 @@ def activate_purchase(**kwargs):
         flash(gettext("✅ تم تفعيل الباقة"), "success")
     except Exception as e:
         logger.exception("Purchase activation failed")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("payment_vault.purchase_detail", id=record_id))
 
@@ -1659,7 +1660,7 @@ def approve_donation(donation_id):
         flash(gettext("✅ تم قبول التبرع"), "success")
     except Exception as e:
         logger.exception("Donation approval failed")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
 
@@ -1683,7 +1684,7 @@ def reject_donation(donation_id):
         flash(gettext("✅ تم رفض التبرع"), "warning")
     except Exception as e:
         logger.exception("Donation rejection failed")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("payment_vault.donations"))
 
@@ -1739,7 +1740,7 @@ def confirm_platform_fees():
             return jsonify({"success": True, **{k: str(v) for k, v in result.items()}}), 200
     except Exception as e:
         logger.exception("Platform fee collection confirm failed")
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         if wants_json:
             return jsonify({"success": False, "error": str(e)}), 400
 

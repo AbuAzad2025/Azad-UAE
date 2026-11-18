@@ -2,6 +2,7 @@
 {% block title %}{{ t('Quotation') }}{% endblock %}
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
+<script src="{{ url_for('static', filename='js/quotation-form.js') }}"></script>
 {% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
@@ -170,6 +171,4 @@
     </div>
   </div>
 </template>
-
-<script src="{{ url_for('static', filename='js/quotation-form.js') }}"></script>
 {% endblock %}

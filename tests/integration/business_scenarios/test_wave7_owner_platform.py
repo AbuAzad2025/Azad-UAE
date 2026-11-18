@@ -287,7 +287,12 @@ class TestOWN02TenantLifecycle:
         accounts = db_session.query(GLAccount).filter_by(tenant_id=tenant.id).all()
         assert accounts, "the new tenant has no chart of accounts"
 
-        lines = db_session.query(GLJournalLine).join(GLJournalEntry).filter(GLJournalEntry.tenant_id == tenant.id).all()
+        lines = (
+            db_session.query(GLJournalLine)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
+            .filter(GLJournalEntry.tenant_id == tenant.id)
+            .all()
+        )
         total = sum((Decimal(str(ln.debit or 0)) - Decimal(str(ln.credit or 0))) for ln in lines)
         assert total == Decimal("0"), f"the new tenant's opening balance is {total}, not zero"
 

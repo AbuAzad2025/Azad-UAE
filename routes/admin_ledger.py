@@ -21,6 +21,7 @@ from utils.api_response import success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required
+from utils.error_messages import safe_error
 from utils.gl_tenant import (
     active_tenant_id,
     gl_account_query,
@@ -308,7 +309,7 @@ def delete_account(**kwargs):
         flash(gettext(f"✅ تم حذف الحساب {account.full_name} بنجاح"), "success")
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("admin_ledger.accounts_management"))
 
@@ -362,7 +363,7 @@ def reverse_journal(**kwargs):
         flash(gettext(f"✅ تم عكس القيد {entry.entry_number} بنجاح"), "success")
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("admin_ledger.view_journal", id=record_id))
 

@@ -11,6 +11,7 @@ from flask_babel import gettext
 from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
+from utils.error_messages import safe_error
 from utils.safe_sql import (
     count_query,
     delete_all_query,
@@ -172,7 +173,7 @@ def clear_cache():
                 source="routes.owner.clear_cache.fallback",
                 exception=inner,
             )
-            flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("owner.dashboard"))
 
@@ -211,7 +212,7 @@ def truncate_table():
 
         flash(gettext(f"✅ تم مسح جدول {safe_table} بنجاح"), "success")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("owner.database_tools"))
 
@@ -251,7 +252,7 @@ def browse_table(table_name):
         )
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.database_tools"))
 
 
@@ -316,7 +317,7 @@ def edit_table_data(table_name):
         return render_template("owner/edit_table.html", table_name=safe_table, columns=columns, rows=rows)
 
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.database_tools"))
 
 
@@ -432,7 +433,7 @@ def export_database():
 
     except Exception as e:
         current_app.logger.error("export_database failed user_id=%s: %s", current_user.id, e)
-        flash(gettext(f"❌ خطأ في التصدير: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ في التصدير: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("owner.database_tools"))
 
@@ -515,7 +516,7 @@ def convert_database():
                 _mask_db_uri(new_uri),
                 e,
             )
-            flash(gettext(f"❌ خطأ في التحويل: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ في التحويل: {safe_error(e, context=__name__)}"), "danger")
 
     return render_template("owner/convert_database.html")
 
@@ -534,7 +535,7 @@ def database_optimize():
             msg = vacuum_result.get("error") or analyze_result.get("error") or gettext("عملية التحسين لم تكتمل")
             flash(gettext(f"⚠️ تحذير: {msg}"), "warning")
     except Exception as e:
-        flash(gettext(f"❌ خطأ في التحسين: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ في التحسين: {safe_error(e, context=__name__)}"), "danger")
 
     return redirect(url_for("owner.system_health"))
 
@@ -565,7 +566,7 @@ def verify_backups():
         return render_template("owner/verify_backups.html", backups=verified)
 
     except Exception as e:
-        flash(gettext(f"خطأ في تحميل النسخ الاحتياطية: {str(e)}"), "danger")
+        flash(gettext(f"خطأ في تحميل النسخ الاحتياطية: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("owner.dashboard"))
 
 
@@ -591,7 +592,7 @@ def data_cleanup():
                 elif cleanup_type == "archived":
                     deleted_count = OwnerOpsService.delete_old_archived_records(cutoff_date)
         except Exception as e:
-            flash(gettext(f"❌ خطأ في التنظيف: {str(e)}"), "danger")
+            flash(gettext(f"❌ خطأ في التنظيف: {safe_error(e, context=__name__)}"), "danger")
             return redirect(url_for("owner.data_cleanup"))
         _invalidate_owner_changes()
         flash(gettext(f"✅ تم حذف {deleted_count} سجل قديم"), "success")

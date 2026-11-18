@@ -252,7 +252,7 @@ class TestEXP13CreationAndLedger:
 
         lines = (
             db_session.query(GLJournalLine)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.tenant_id == sample_tenant.id,
                 GLJournalEntry.reference_type == GLRef.EXPENSE,
@@ -330,7 +330,7 @@ class TestEXP13CreationAndLedger:
 
         lines = (
             db_session.query(GLJournalLine)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.tenant_id == sample_tenant.id,
                 GLJournalEntry.reference_type == GLRef.EXPENSE,
@@ -679,7 +679,7 @@ class TestEXP26CancelReversesTheLedger:
 
         lines = (
             db_session.query(GLJournalLine)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalEntry.tenant_id == sample_tenant.id,
                 GLJournalEntry.reference_type == GLRef.EXPENSE,

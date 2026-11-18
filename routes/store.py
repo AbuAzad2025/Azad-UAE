@@ -37,7 +37,7 @@ from utils.branching import get_branch_stock_map
 from utils.currency_utils import convert_and_quantize_aed
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
-from utils.error_messages import ErrorMessages
+from utils.error_messages import ErrorMessages, safe_error
 from utils.feature_guards import install_feature_gate
 from utils.helpers import save_uploaded_file
 from utils.tenanting import get_active_tenant_id
@@ -198,7 +198,7 @@ def admin_settings():
             return redirect(url_for("store.admin_index"))
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in store settings: {exc}")
-            flash(str(exc), "warning")
+            flash(safe_error(exc, context=__name__), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error saving store settings: {exc}")
             flash(ErrorMessages.action_failed(gettext("حفظ الإعدادات")), "danger")
@@ -319,7 +319,7 @@ def admin_prices():
             flash(gettext("تم حفظ السعر بنجاح."), "success")
         except ValueError as exc:
             current_app.logger.warning(f"ValueError saving store price: {exc}")
-            flash(str(exc), "warning")
+            flash(safe_error(exc, context=__name__), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error saving store price: {exc}")
             flash(ErrorMessages.action_failed(gettext("حفظ السعر")), "danger")
@@ -388,7 +388,7 @@ def admin_transfer():
             return redirect(url_for("store.admin_catalog"))
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in stock transfer: {exc}")
-            flash(str(exc), "warning")
+            flash(safe_error(exc, context=__name__), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error transferring stock: {exc}")
             flash(ErrorMessages.action_failed(gettext("تحويل المخزون")), "danger")
@@ -487,7 +487,7 @@ def admin_order_confirm(order_id):
         flash(gettext(f"تم تأكيد الطلب {sale.sale_number}."), "success")
     except ValueError as exc:
         current_app.logger.warning(f"ValueError confirming order {order_id}: {exc}")
-        flash(str(exc), "warning")
+        flash(safe_error(exc, context=__name__), "warning")
     except Exception as exc:
         current_app.logger.error(f"Error confirming order {order_id}: {exc}")
         flash(ErrorMessages.action_failed(gettext("تأكيد الطلب")), "danger")
@@ -509,7 +509,7 @@ def admin_order_cancel(order_id):
         flash(gettext(f"تم إلغاء الطلب {sale.sale_number}."), "success")
     except ValueError as exc:
         current_app.logger.warning(f"ValueError cancelling order {order_id}: {exc}")
-        flash(str(exc), "warning")
+        flash(safe_error(exc, context=__name__), "warning")
     except Exception as exc:
         current_app.logger.error(f"Error cancelling order {order_id}: {exc}")
         flash(ErrorMessages.action_failed(gettext("إلغاء الطلب")), "danger")
@@ -581,7 +581,7 @@ def admin_coupons():
                     flash(gettext("تم تحديث الكوبون."), "success")
         except ValueError as exc:
             current_app.logger.warning(f"ValueError in coupon operation: {exc}")
-            flash(str(exc), "warning")
+            flash(safe_error(exc, context=__name__), "warning")
         except Exception as exc:
             current_app.logger.error(f"Error in coupon operation: {exc}")
             flash(ErrorMessages.action_failed(gettext("العملية على الكوبون")), "danger")
@@ -732,7 +732,7 @@ def approve_provisional_order(provisional_id: int):
         flash(gettext("تم اعتماد الطلب وتحويله إلى فاتورة مبيعات: {}").format(sale.sale_number), "success")
     except ValueError as exc:
         current_app.logger.warning(f"ValueError approving provisional {provisional_id}: {exc}")
-        flash(str(exc), "warning")
+        flash(safe_error(exc, context=__name__), "warning")
     except Exception as exc:
         current_app.logger.error(f"Error approving provisional {provisional_id}: {exc}")
         flash(ErrorMessages.action_failed(gettext("اعتماد الطلب المؤقت")), "danger")

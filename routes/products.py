@@ -42,7 +42,7 @@ from utils.branching import (
 )
 from utils.db_safety import atomic_transaction
 from utils.decorators import any_permission_required, branch_scope_id, permission_required
-from utils.error_messages import ErrorCategory, ErrorMessages, refuse
+from utils.error_messages import ErrorCategory, ErrorMessages, refuse, safe_error
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_barcode, generate_sku, save_uploaded_file
 from utils.numeric_input import parse_decimal_field
@@ -815,7 +815,7 @@ def create():
             current_app.logger.warning(f"Form validation failed. Errors: {form.errors}")
             for field, errors in form.errors.items():
                 for error in errors:
-                    flash(gettext(f"⚠️ خطأ في حقل {field}: {error}"), "danger")
+                    flash(gettext(f"⚠️ خطأ في حقل {field}: {safe_error(error, context=__name__)}"), "danger")
 
     category_list = ProductService.list_active_categories(get_active_tenant_id(current_user))
     warehouses = get_accessible_warehouses(current_user)

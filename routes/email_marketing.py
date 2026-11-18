@@ -4,6 +4,7 @@ from flask_login import current_user, login_required
 
 from services.email_marketing_service import EmailMarketingService
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 
 email_marketing_bp = Blueprint("email_marketing", __name__, url_prefix="/marketing")
 
@@ -33,7 +34,7 @@ def create_campaign():
             flash(gettext("تم إنشاء الحملة"), "success")
             return redirect(url_for("email_marketing.campaigns"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
     list_data = EmailMarketingService.list_lists(current_user)
     template_data = EmailMarketingService.list_templates(current_user)
     return render_template("marketing/campaign_form.html", lists=list_data, templates=template_data)
@@ -46,7 +47,7 @@ def campaign_detail(campaign_id):
     try:
         stats = EmailMarketingService.get_campaign_stats(campaign_id, current_user)
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
         return redirect(url_for("email_marketing.campaigns"))
     return render_template("marketing/stats.html", stats=stats)
 
@@ -59,7 +60,7 @@ def send_campaign(campaign_id):
         EmailMarketingService.send_campaign(campaign_id, current_user)
         flash(gettext("تم إرسال الحملة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("email_marketing.campaign_detail", campaign_id=campaign_id))
 
 
@@ -79,7 +80,7 @@ def create_list():
         EmailMarketingService.create_list(request.form, current_user)
         flash(gettext("تم إنشاء القائمة"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("email_marketing.lists"))
 
 
@@ -99,5 +100,5 @@ def create_template():
         EmailMarketingService.create_template(request.form, current_user)
         flash(gettext("تم إنشاء القالب"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("email_marketing.templates"))

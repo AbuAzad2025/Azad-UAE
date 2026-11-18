@@ -91,7 +91,7 @@ class CostCenter(db.Model):
         # الإيرادات
         revenue_query = (
             db.session.query(func.sum(GLJournalLine.credit))
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalLine.cost_center_id == self.id,
                 GLJournalLine.account.has(type="revenue"),
@@ -106,7 +106,7 @@ class CostCenter(db.Model):
         # المصروفات
         expense_query = (
             db.session.query(func.sum(GLJournalLine.debit))
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(
                 GLJournalLine.cost_center_id == self.id,
                 GLJournalLine.account.has(type="expense"),

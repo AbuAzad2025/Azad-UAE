@@ -7,6 +7,7 @@ from flask_login import current_user, login_required
 from models import LeaveRequest, LeaveType
 from services.hr_service import HRService, LeaveBalanceService, OvertimeService
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
 
 hr_bp = Blueprint("hr", __name__, url_prefix="/hr")
@@ -47,7 +48,7 @@ def clock_in():
             "success",
         )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.attendance"))
 
 
@@ -59,7 +60,7 @@ def clock_out():
         att = HRService.clock_out(current_user)
         flash(gettext(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.attendance"))
 
 
@@ -90,7 +91,7 @@ def request_leave():
             flash(gettext("تم تقديم طلب الإجازة"), "success")
             return redirect(url_for("hr.leaves_list"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
     leave_types = tenant_query(LeaveType).filter_by(is_active=True).all() if get_active_tenant_id(current_user) else []
     return render_template("hr/leave_form.html", leave_types=leave_types)
 
@@ -104,7 +105,7 @@ def approve_leave(leave_id):
         HRService.approve_leave(leave_id, current_user)
         flash(gettext("تم الموافقة على طلب الإجازة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.leaves_list"))
 
 
@@ -118,7 +119,7 @@ def refuse_leave(leave_id):
         HRService.refuse_leave(leave_id, current_user, reason)
         flash(gettext("تم رفض طلب الإجازة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.leaves_list"))
 
 
@@ -138,7 +139,7 @@ def create_department():
         HRService.create_department(request.form, current_user)
         flash(gettext("تم إنشاء القسم"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.departments_list"))
 
 
@@ -150,7 +151,7 @@ def create_contract():
         HRService.create_contract(request.form, current_user)
         flash(gettext("تم إنشاء العقد"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.departments_list"))
 
 
@@ -190,7 +191,7 @@ def accrue_leave():
         LeaveBalanceService.accrue_leave(user_id, leave_type_id, year, float(days), tid)
         flash(gettext("تم احتساب أيام الإجازة"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     if user_id is not None:
         return redirect(url_for("hr.leave_ledger", user_id=user_id, year=year))
     return redirect(url_for("hr.leave_ledger", year=year))
@@ -208,7 +209,7 @@ def carry_forward_leave():
         LeaveBalanceService.carry_forward_leave(user_id, leave_type_id, from_year, tid)
         flash(gettext("تم تحويل الرصيد إلى السنة الجديدة"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.leave_ledger"))
 
 
@@ -241,7 +242,7 @@ def create_overtime():
         OvertimeService.create_entry(data, current_user)
         flash(gettext("تم إنشاء سجل العمل الإضافي"), "success")
     except (ValueError, KeyError) as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.overtime_list"))
 
 
@@ -256,7 +257,7 @@ def approve_overtime(entry_id):
         OvertimeService.approve_entry(entry, current_user)
         flash(gettext("تمت الموافقة على العمل الإضافي"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.overtime_list"))
 
 
@@ -272,5 +273,5 @@ def reject_overtime(entry_id):
         OvertimeService.reject_entry(entry, current_user, reason)
         flash(gettext("تم رفض العمل الإضافي"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     return redirect(url_for("hr.overtime_list"))

@@ -32,6 +32,7 @@ from services.partner_service import PartnerService
 from utils.api_response import success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 partners_bp = Blueprint("partners", __name__, url_prefix="/partners")
@@ -146,7 +147,7 @@ def create():
         try:
             financials, error = _parse_partner_financials(request.form)
             if error:
-                flash(gettext(f"❌ خطأ: {error}"), "danger")
+                flash(gettext(f"❌ خطأ: {safe_error(error, context=__name__)}"), "danger")
                 return render_template("partners/create.html", branches=branches, warehouses=warehouses)
             scope_type = request.form.get("scope_type", "company")
             scope_id = request.form.get("scope_id", type=int) or None
@@ -182,7 +183,7 @@ def create():
             flash(gettext("✅ تم إضافة الشريك بنجاح."), "success")
             return redirect(url_for("partners.index"))
         except Exception as e:
-            flash(gettext(f"❌ خطأ: {e}"), "danger")
+            flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return render_template("partners/create.html", branches=branches, warehouses=warehouses)
 
@@ -225,7 +226,7 @@ def edit(**kwargs):
         try:
             financials, error = _parse_partner_financials(request.form, existing=partner)
             if error:
-                flash(gettext(f"❌ خطأ: {error}"), "danger")
+                flash(gettext(f"❌ خطأ: {safe_error(error, context=__name__)}"), "danger")
                 return render_template("partners/edit.html", partner=partner, branches=branches, warehouses=warehouses)
             scope_type = request.form.get("scope_type", partner.scope_type)
             scope_id = request.form.get("scope_id", type=int) or None
@@ -262,7 +263,7 @@ def edit(**kwargs):
             flash(gettext("✅ تم تحديث بيانات الشريك."), "success")
             return redirect(url_for("partners.view", id=record_id))
         except Exception as e:
-            flash(gettext(f"❌ خطأ: {e}"), "danger")
+            flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     return render_template("partners/edit.html", partner=partner, branches=branches, warehouses=warehouses)
 
@@ -326,7 +327,7 @@ def distribute():
             flash(gettext(f"✅ تم إنشاء {len(dist_ids)} توزيع مسودة."), "success")
             return redirect(url_for("partners.distributions"))
         except Exception as e:
-            flash(gettext(f"❌ خطأ: {e}"), "danger")
+            flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
 
     today = datetime.now(UTC).date()
     last_month_end = today.replace(day=1) - timedelta(days=1)
@@ -350,7 +351,7 @@ def approve_distribution(dist_id):
         else:
             flash(gettext("❌ لم يتم اعتماد التوزيع."), "danger")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {e}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("partners.distributions"))
 
 
@@ -366,7 +367,7 @@ def pay_distribution(dist_id):
         else:
             flash(gettext("❌ لم يتم تسجيل الدفع."), "danger")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {e}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("partners.distributions"))
 
 
@@ -401,7 +402,7 @@ def add_transaction(**kwargs):
             return redirect(url_for("partners.index"))
         flash(gettext("✅ تم تسجيل الحركة."), "success")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {e}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("partners.view", id=record_id))
 
 
@@ -481,7 +482,7 @@ def link_customer(**kwargs):
         else:
             flash(gettext("❌ تعذر الربط (النطاق أو النوع غير صالح)."), "danger")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {e}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("partners.view", id=record_id))
 
 
@@ -504,5 +505,5 @@ def unlink_customer(**kwargs):
         else:
             flash(gettext("❌ تعذر فك الربط."), "danger")
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {e}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("partners.view", id=record_id))

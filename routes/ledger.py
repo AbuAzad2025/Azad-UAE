@@ -26,6 +26,7 @@ from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 
 ledger_bp = Blueprint("ledger", __name__, url_prefix="/ledger")
@@ -583,10 +584,10 @@ def reverse_entry(entry_id):
         return redirect(url_for("ledger.view_entry", entry_id=reversed_entry.id))
 
     except ValueError as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("ledger.view_entry", entry_id=entry_id))
     except Exception as e:
-        flash(gettext(f"❌ خطأ: {str(e)}"), "danger")
+        flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         return redirect(url_for("ledger.view_entry", entry_id=entry_id))
 
 
@@ -1184,7 +1185,7 @@ def close_fiscal_year():
             "success",
         )
     except ValueError as exc:
-        flash(str(exc), "warning")
+        flash(safe_error(exc, context=__name__), "warning")
     except Exception:
         current_app.logger.exception("Fiscal year close failed")
         flash(gettext("فشل إغلاق السنة المالية."), "danger")

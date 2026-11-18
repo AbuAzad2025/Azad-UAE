@@ -227,7 +227,8 @@
                   <span class="badge badge-success px-3 py-2">
                     <i class="fas fa-check mr-1" aria-hidden="true"></i>{{ t('Good') }}
                   </span>
-                  {% set stock_calc = (product.visible_stock / (product.min_stock_alert * 3) * 100) if product.min_stock_alert > 0 else 100 %}
+                  {% set alert_level = product.min_stock_alert or 0 %}
+                  {% set stock_calc = (product.visible_stock / (alert_level * 3) * 100) if alert_level > 0 else 100 %}
                   {% set stock_percent = stock_calc if stock_calc < 100 else 100 %}
                   <div class="stock-indicator">
                     <div class="stock-indicator-bar stock-good" data-width="{{ stock_percent }}"></div>

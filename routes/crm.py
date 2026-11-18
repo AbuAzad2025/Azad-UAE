@@ -6,6 +6,7 @@ from services.crm_lead_service import CRMLeadService
 from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id
 
 crm_bp = Blueprint("crm", __name__, url_prefix="/crm")
@@ -54,7 +55,7 @@ def create_lead():
             flash(gettext("تم إنشاء العميل المتوقع بنجاح"), "success")
             return redirect(url_for("crm.leads_list"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
     tid = get_active_tenant_id(current_user)
     stages = CRMLeadService.tenant_stages(tid)
     customers = CRMLeadService.tenant_customers(tid)
@@ -76,7 +77,7 @@ def lead_detail(lead_id):
     try:
         lead = CRMLeadService.get_lead(lead_id, current_user)
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
         return redirect(url_for("crm.leads_list"))
     tid = get_active_tenant_id(current_user)
     stages = CRMLeadService.tenant_stages(tid)
@@ -91,7 +92,7 @@ def edit_lead(lead_id):
     try:
         lead = CRMLeadService.get_lead(lead_id, current_user)
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
         return redirect(url_for("crm.leads_list"))
     if request.method == "POST":
         try:
@@ -100,7 +101,7 @@ def edit_lead(lead_id):
             flash(gettext("تم تحديث العميل المتوقع بنجاح"), "success")
             return redirect(url_for("crm.leads_list"))
         except Exception as e:
-            flash(gettext(f"حدث خطأ: {e}"), "danger")
+            flash(gettext(f"حدث خطأ: {safe_error(e, context=__name__)}"), "danger")
     tid = get_active_tenant_id(current_user)
     stages = CRMLeadService.tenant_stages(tid)
     customers = CRMLeadService.tenant_customers(tid)

@@ -9,6 +9,7 @@ from sqlalchemy import func
 
 from extensions import db
 from models import Customer, GLAccount, GLJournalEntry, GLJournalLine, Sale
+from services.gl_account_resolver import GLMappingError
 from services.gl_service import GLService
 from utils.gl_tenant import scope_gl_accounts
 
@@ -21,31 +22,40 @@ def _get_receivable_concept_account(tenant_id=None, branch_id=None, fallback="11
 
 
 def _get_partner_account(tenant_id=None, branch_id=None, fallback="2150"):
-    """Get the partner current account code via concept resolution (mapping only)."""
+    """Get the partner current account code (None when the module is off)."""
     if tenant_id:
-        return GLService.get_account_code_for_concept(
-            "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
-        )
+        try:
+            return GLService.get_account_code_for_concept(
+                "PARTNER_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
+            )
+        except GLMappingError:
+            # The partners module is optional; tenants that never enabled it
+            # have no mapping and must still be able to open this report.
+            return None
     raise ValueError("tenant_id is required to resolve partner account")
 
 
 def _get_merchant_account(tenant_id=None, branch_id=None, fallback="2151"):
-    """Get the merchant current account code via concept resolution (mapping only)."""
+    """Get the merchant current account code (None when the module is off)."""
     if tenant_id:
-        return GLService.get_account_code_for_concept(
-            "MERCHANT_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
-        )
+        try:
+            return GLService.get_account_code_for_concept(
+                "MERCHANT_CURRENT_ACCOUNT", tenant_id=tenant_id, branch_id=branch_id
+            )
+        except GLMappingError:
+            return None
     raise ValueError("tenant_id is required to resolve merchant account")
 
 
 # These are the canonical subledger account codes — resolved dynamically per tenant/branch.
 # Kept as callables so callers can pass tenant/branch context.
 def _ar_subledger_accounts(tenant_id=None, branch_id=None):
-    return (
+    candidates = (
         (_get_receivable_concept_account(tenant_id, branch_id), lazy_gettext("ذمم مدينة"), ("regular",)),
         (_get_partner_account(tenant_id, branch_id), lazy_gettext("جاري الشركاء"), ("partner",)),
         (_get_merchant_account(tenant_id, branch_id), lazy_gettext("ذمم التجار"), ("merchant",)),
     )
+    return tuple(row for row in candidates if row[0])
 
 
 class ARReconciliationService:
@@ -54,13 +64,13 @@ class ARReconciliationService:
         debit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.debit), 0))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.is_posted)
         )
         credit_q = (
             db.session.query(func.coalesce(func.sum(GLJournalLine.credit), 0))
             .filter(GLJournalLine.account_id == account_id)
-            .join(GLJournalEntry)
+            .join(GLJournalEntry, GLJournalLine.entry_id == GLJournalEntry.id)
             .filter(GLJournalEntry.is_posted)
         )
         if tenant_id is not None:

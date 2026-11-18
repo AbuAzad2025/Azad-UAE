@@ -43,6 +43,7 @@ from services.maintenance_purchase_service import MaintenancePurchaseService
 from services.maintenance_warranty_service import WarrantyService
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
+from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 from utils.tenanting import (
     require_active_tenant_id,
@@ -217,10 +218,15 @@ def create():
                 )
                 return redirect(url_for("maintenance.detail", order_id=order.id))
         except ValueError as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
         except Exception as e:
             current_app.logger.exception("Maintenance order creation failed")
-            flash(gettext("فشل إنشاء أمر الصيانة: {error}").format(error=str(e)), "danger")
+            flash(
+                gettext("فشل إنشاء أمر الصيانة: {safe_error(error, context=__name__)}").format(
+                    error=safe_error(e, context=__name__)
+                ),
+                "danger",
+            )
 
     customers = tenant_query(Customer).filter_by(tenant_id=tid, is_active=True).all()
     warehouses = tenant_query(Warehouse).filter_by(tenant_id=tid, is_active=True).all()
@@ -258,10 +264,15 @@ def add_line(order_id):
             )
             flash(gettext("تم إضافة القطعة إلى الأمر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance line creation failed")
-        flash(gettext("فشل إضافة القطعة: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل إضافة القطعة: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -296,10 +307,15 @@ def add_service(order_id):
             )
             flash(gettext("تم إضافة الخدمة إلى الأمر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance service line creation failed")
-        flash(gettext("فشل إضافة الخدمة: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل إضافة الخدمة: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -331,7 +347,7 @@ def change_status(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -365,7 +381,7 @@ def set_order_discount(order_id):
             )
             flash(gettext("تم تطبيق الخصم على الأمر"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -399,10 +415,15 @@ def refund_credit(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance refund failed")
-        flash(gettext("فشل الاسترداد: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل الاسترداد: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -429,7 +450,7 @@ def check_warranty(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -464,7 +485,7 @@ def register_device(order_id):
             )
             flash(gettext("تم تسجيل الجهاز في سجل الكفالات"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -489,7 +510,7 @@ def cancel_warranty(order_id):
             )
             flash(gettext("تم إلغاء الكفالة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -511,7 +532,7 @@ def restore_warranty(order_id):
             )
             flash(gettext("تم إعادة تفعيل الكفالة"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -544,10 +565,15 @@ def collect_deposit(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance deposit collection failed")
-        flash(gettext("فشل تحصيل العربون: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل تحصيل العربون: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -581,10 +607,15 @@ def close(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance close failed")
-        flash(gettext("فشل إغلاق الأمر: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل إغلاق الأمر: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -657,10 +688,15 @@ def create_return(order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
     except Exception as e:
         current_app.logger.exception("Maintenance return creation failed")
-        flash(gettext("فشل إنشاء المرتجع: {error}").format(error=str(e)), "danger")
+        flash(
+            gettext("فشل إنشاء المرتجع: {safe_error(error, context=__name__)}").format(
+                error=safe_error(e, context=__name__)
+            ),
+            "danger",
+        )
 
     return redirect(url_for("maintenance.detail", order_id=order_id))
 
@@ -691,10 +727,15 @@ def service_templates():
                 )
                 flash(gettext("تم إضافة قالب الخدمة"), "success")
         except ValueError as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
         except Exception as e:
             current_app.logger.exception("Service template creation failed")
-            flash(gettext("فشل إضافة قالب الخدمة: {error}").format(error=str(e)), "danger")
+            flash(
+                gettext("فشل إضافة قالب الخدمة: {safe_error(error, context=__name__)}").format(
+                    error=safe_error(e, context=__name__)
+                ),
+                "danger",
+            )
 
     templates = (
         tenant_query(MaintenanceServiceTemplate)
@@ -737,7 +778,7 @@ def settings():
                 )
                 flash(gettext("تم تحديث إعدادات الصيانة"), "success")
         except ValueError as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
         return redirect(url_for("maintenance.settings"))
 
     # The settings row is created on the first visit, so it has to be
@@ -827,7 +868,7 @@ def create_purchase():
                 )
                 return redirect(url_for("maintenance.purchase_detail", purchase_order_id=order.id))
         except ValueError as e:
-            flash(str(e), "danger")
+            flash(safe_error(e, context=__name__), "danger")
 
     warehouses = tenant_query(Warehouse).filter_by(tenant_id=tid, is_active=True).all()
     suppliers = tenant_query(Supplier).filter_by(tenant_id=tid).all()
@@ -874,7 +915,7 @@ def add_purchase_line(purchase_order_id):
             )
             flash(gettext("تم إضافة القطعة إلى أمر الشراء"), "success")
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.purchase_detail", purchase_order_id=purchase_order_id))
 
@@ -898,7 +939,7 @@ def receive_purchase(purchase_order_id):
                 "success",
             )
     except ValueError as e:
-        flash(str(e), "danger")
+        flash(safe_error(e, context=__name__), "danger")
 
     return redirect(url_for("maintenance.purchase_detail", purchase_order_id=purchase_order_id))
 
