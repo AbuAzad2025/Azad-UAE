@@ -223,7 +223,7 @@
                 <span class="badge badge-danger stock-low px-3 py-2">
                   <i class="fas fa-times mr-1" aria-hidden="true"></i>{{ t('Out_Of_Stock') }} ({{ shown_stock }})
                 </span>
-              {% elif shown_stock <= product.min_stock_alert %}
+              {% elif shown_stock <= (product.min_stock_alert or 0) %}
                 <span class="badge badge-warning px-3 py-2">
                   <i class="fas fa-exclamation-triangle mr-1" aria-hidden="true"></i>{{ shown_stock }}
                 </span>
@@ -261,16 +261,15 @@
               </div>
             </td>
           </tr>
-          {% else %}
-          <tr>
-            <td colspan="9" class="text-center text-muted py-5">
-              <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
-              {{ t('No_Products') }}
-            </td>
-          </tr>
           {% endfor %}
         </tbody>
       </table>
+      {% if not products %}
+      <div class="text-center text-muted py-5">
+        <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
+        {{ t('No_Products') }}
+      </div>
+      {% endif %}
     </div>
     {% set endpoint = 'products.index' %}
     {% include 'partials/flask_pagination.html' %}

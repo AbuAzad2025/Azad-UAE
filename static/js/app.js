@@ -258,6 +258,33 @@
 		});
 	}
 
+	// Several list templates render an empty-state <tr><td colspan="N">…</td></tr>
+	// and then call $table.DataTable() directly. DataTables maps that single cell
+	// onto the first column and throws "_DT_CellIndex". Strip such rows before
+	// any initialisation (this also covers the app's own auto-init below).
+	if ($.fn.DataTable && !$.fn.DataTable.__azadEmptyRowGuard) {
+		const originalDataTable = $.fn.DataTable;
+		const guardedDataTable = function (...args) {
+			this.each(function () {
+				const $rows = $(this).find("tbody tr");
+				const rows = $rows.toArray();
+				if (
+					rows.length > 0 &&
+					rows.every((tr) => {
+						const cells = tr.children;
+						return cells.length === 1 && cells[0].hasAttribute("colspan");
+					})
+				) {
+					$rows.remove();
+				}
+			});
+			return originalDataTable.apply(this, args);
+		};
+		Object.assign(guardedDataTable, originalDataTable);
+		guardedDataTable.__azadEmptyRowGuard = true;
+		$.fn.DataTable = guardedDataTable;
+	}
+
 	function initDataTables(root) {
 		if (!$.fn.DataTable) return;
 		$(root)
@@ -266,6 +293,18 @@
 				const $tbl = $(this);
 				if ($.fn.DataTable.isDataTable(this)) return;
 				if ($tbl.data("dt-initialized")) return;
+				// An empty-state row spanning every column is not a data row.
+				// DataTables tries to map its single cell to the first column and
+				// throws "_DT_CellIndex"; leave such tables alone so the message
+				// stays visible instead.
+				const $rows = $tbl.find("tbody tr");
+				const onlySpannedEmptyRow =
+					$rows.length > 0 &&
+					$rows.toArray().every((tr) => {
+						const cells = tr.children;
+						return cells.length === 1 && cells[0].hasAttribute("colspan");
+					});
+				if (onlySpannedEmptyRow) return;
 				$tbl.data("dt-initialized", 1);
 
 				const hasButtons = $.fn.dataTable?.Buttons;

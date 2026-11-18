@@ -41,41 +41,51 @@
 <script defer src="{{ dist_url('js/pos/pos-config.js') }}"></script>
 {% endif %}
 
-<!-- Sales Module (lazy-loaded only on sales pages) -->
-{% if request.endpoint and 'sales' in request.endpoint %}
+<!-- Sales Module — only the pages whose DOM the scripts bind to. A broad
+     'sales' in endpoint also hit print/e-invoice endpoints with no form. -->
+{% if request.endpoint in ['sales.index', 'sales.view', 'sales.archived'] %}
+<script defer src="{{ dist_url('js/sales.js') }}"></script>
+<script defer src="{{ dist_url('js/sales-index.js') }}"></script>
+{% endif %}
+{% if request.endpoint in ['sales.create', 'sales.edit'] %}
 <script defer src="{{ dist_url('js/sales.js') }}"></script>
 <script defer src="{{ dist_url('js/sales-enhanced.js') }}"></script>
 <script defer src="{{ dist_url('js/sales-create.js') }}"></script>
-<script defer src="{{ dist_url('js/sales-index.js') }}"></script>
 {% endif %}
 
 <!-- Purchases Module -->
-{% if request.endpoint and 'purchases' in request.endpoint %}
+{% if request.endpoint == 'purchases.create' %}
 <script defer src="{{ dist_url('js/purchases/create.js') }}"></script>
 {% endif %}
 
 <!-- Products Module -->
-{% if request.endpoint and 'products' in request.endpoint %}
+{% if request.endpoint in ['products.create', 'products.edit', 'products.categories'] %}
 <script defer src="{{ dist_url('js/products/category-controls.js') }}"></script>
+{% endif %}
+{% if request.endpoint in ['products.create', 'products.edit'] %}
 <script defer src="{{ dist_url('js/products/industry-fields.js') }}"></script>
 {% endif %}
 
 <!-- CRM Module -->
-{% if request.endpoint and 'crm' in request.endpoint %}
+{% if request.endpoint == 'crm.pipeline' %}
 <script defer src="{{ dist_url('js/crm/pipeline.js') }}"></script>
 {% endif %}
 
 <!-- Projects Module -->
-{% if request.endpoint and 'projects' in request.endpoint %}
+{% if request.endpoint == 'projects.list_projects' %}
 <script defer src="{{ dist_url('js/projects/kanban.js') }}"></script>
 {% endif %}
 
 <!-- Shop Module -->
-{% if request.endpoint and 'shop' in request.endpoint %}
+{% if request.endpoint in ['shop.catalog', 'shop.product_detail', 'shop.quick_view'] %}
 <script defer src="{{ dist_url('js/shop-storefront.js') }}"></script>
 <script defer src="{{ dist_url('js/shop-search.js') }}"></script>
-<script defer src="{{ dist_url('js/shop-quickview.js') }}"></script>
 <script defer src="{{ dist_url('js/shop-gallery.js') }}"></script>
+{% endif %}
+{% if request.endpoint in ['shop.catalog', 'shop.product_detail'] %}
+<script defer src="{{ dist_url('js/shop-quickview.js') }}"></script>
+{% endif %}
+{% if request.endpoint in ['shop.cart_view', 'shop.checkout'] %}
 <script defer src="{{ dist_url('js/shop-cart.js') }}"></script>
 {% endif %}
 

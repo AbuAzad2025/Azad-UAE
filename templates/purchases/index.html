@@ -164,16 +164,17 @@
             </div>
           </td>
         </tr>
-        {% else %}
-        <tr>
-          <td colspan="10" class="text-center text-muted py-5">
-            <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
-            {{ t('No_Purchases') }}
-          </td>
-        </tr>
         {% endfor %}
       </tbody>
       </table>
+      {% if not purchases %}
+      {# A colspan row inside tbody breaks DataTables (_DT_CellIndex); render
+         the empty state outside the table instead. #}
+      <div class="text-center text-muted py-5">
+        <i class="fas fa-inbox fa-3x mb-3 d-block text-muted opacity-50" aria-hidden="true"></i>
+        {{ t('No_Purchases') }}
+      </div>
+      {% endif %}
     </div>
     {% set endpoint = 'purchases.index' %}
     {% include 'partials/flask_pagination.html' %}

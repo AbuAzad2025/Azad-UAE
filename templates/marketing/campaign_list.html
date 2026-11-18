@@ -26,11 +26,12 @@
               <td>{{ c.open_count }}</td>
               <td><a href="{{ url_for('email_marketing.campaign_detail', campaign_id=c.id) }}" class="btn btn-sm btn-info" aria-label="{{ t('Campaign_Statistics') }}"><i class="fas fa-chart-bar" aria-hidden="true"></i></a></td>
             </tr>
-            {% else %}
-            <tr><td colspan="6" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not campaigns %}
+        <div class="text-center text-muted">{{ t('No_Data_Available') }}</div>
+        {% endif %}
       </div>
     </div>
     <div class="tab-pane {% if tab == 'lists' %}active{% endif %}" id="lists">
@@ -45,11 +46,12 @@
               <td>{{ l.description or '-' }}</td>
               <td>{{ l.subscribers|selectattr('status', 'eq', 'subscribed')|list|length }}</td>
             </tr>
-            {% else %}
-            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not lists %}
+        <div class="text-center text-muted">{{ t('No_Data_Available') }}</div>
+        {% endif %}
       </div>
     </div>
     <div class="tab-pane {% if tab == 'templates' %}active{% endif %}" id="templates">
@@ -64,11 +66,12 @@
               <td>{{ tpl.subject }}</td>
               <td>{{ tpl.from_email or '-' }}</td>
             </tr>
-            {% else %}
-            <tr><td colspan="3" class="text-center text-muted">{{ t('No_Data_Available') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not templates %}
+        <div class="text-center text-muted">{{ t('No_Data_Available') }}</div>
+        {% endif %}
       </div>
     </div>
   </div>

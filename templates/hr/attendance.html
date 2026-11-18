@@ -51,11 +51,12 @@
               <td>{{ r.work_hours or '-' }}</td>
               <td><span class="badge badge-{{ 'success' if r.state == 'validated' else 'secondary' }}">{{ t(r.state) }}</span></td>
             </tr>
-            {% else %}
-            <tr><td colspan="6" class="text-center text-muted py-4">{{ t('لا توجد سجلات حضور') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not records %}
+        <div class="text-center text-muted py-4">{{ t('لا توجد سجلات حضور') }}</div>
+        {% endif %}
       </div>
     </div>
     <div class="tab-pane {% if tab == 'departments' %}active{% endif %}" id="departments">
@@ -70,11 +71,12 @@
               <td>{{ d.manager.name if d.manager else '-' }}</td>
               <td><span style="display:inline-block;width:20px;height:20px;background:{{ d.color }};border-radius:4px"></span></td>
             </tr>
-            {% else %}
-            <tr><td colspan="3" class="text-center text-muted py-4">{{ t('لا توجد أقسام') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not departments %}
+        <div class="text-center text-muted py-4">{{ t('لا توجد أقسام') }}</div>
+        {% endif %}
       </div>
     </div>
   </div>

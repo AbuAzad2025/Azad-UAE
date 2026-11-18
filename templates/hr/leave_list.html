@@ -56,11 +56,12 @@
                 {% endif %}
               </td>
             </tr>
-            {% else %}
-            <tr><td colspan="7" class="text-center text-muted py-4">{{ t('لا توجد طلبات إجازات') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not leaves %}
+        <div class="text-center text-muted py-4">{{ t('لا توجد طلبات إجازات') }}</div>
+        {% endif %}
       </div>
     </div>
   </div>

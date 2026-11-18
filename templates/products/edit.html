@@ -390,7 +390,7 @@
 
 {% block extra_js %}
 {% include 'partials/select2_assets.html' %}
-<script src="{{ dist_url('js/products/category-controls.js') }}"></script>
+{# category-controls.js is loaded once by partials/scripts.html for products.edit #}
 <script nonce="{{ csp_nonce() }}">
 $(function() {
   // Initialize tooltips
@@ -470,5 +470,5 @@ $(function() {
   });
 });
 </script>
-<script src="{{ dist_url('js/products/industry-fields.js') }}"></script>
+{# industry-fields.js is loaded once by partials/scripts.html for products.edit #}
 {% endblock %}

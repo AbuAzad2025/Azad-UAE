@@ -43,11 +43,12 @@
                 {% endif %}
               </td>
             </tr>
-            {% else %}
-            <tr><td colspan="8" class="text-center text-muted">{{ t('No_Data') }}</td></tr>
             {% endfor %}
           </tbody>
         </table>
+        {% if not leads %}
+        <div class="text-center text-muted">{{ t('No_Data') }}</div>
+        {% endif %}
       </div>
     </div>
   </div>

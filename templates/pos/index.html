@@ -414,7 +414,5 @@
 
 {% block extra_js %}
 <script src="{{ dist_url('js/barcode-scanner.js') }}"></script>
-<script src="{{ dist_url('js/pos/pos-config.js') }}"></script>
-<script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
-<script src="{{ dist_url('js/pos/offline.js') }}"></script>
+{# pos-config.js, index.js and offline.js are loaded once by partials/scripts.html #}
 {% endblock %}

@@ -75,7 +75,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ dist_url('js/products/category-controls.js') }}"></script>
+{# category-controls.js is loaded once by partials/scripts.html for products.categories #}
 <script nonce="{{ csp_nonce() }}">
 $(function() {
   $('.js-category-add').on('click', () => {

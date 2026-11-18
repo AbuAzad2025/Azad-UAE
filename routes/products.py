@@ -531,6 +531,20 @@ def index():
                 self.prev_num = page - 1 if self.has_prev else None
                 self.next_num = page + 1 if self.has_next else None
 
+            def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+                """Match Flask-SQLAlchemy's Pagination API used by the shared pager."""
+                last = 0
+                for num in range(1, self.pages + 1):
+                    if (
+                        num <= left_edge
+                        or (self.page - left_current - 1 < num < self.page + right_current)
+                        or num > self.pages - right_edge
+                    ):
+                        if last + 1 != num:
+                            yield None
+                        yield num
+                        last = num
+
         pagination = SimplePagination(page, per_page, total)
         items = page_items
     else:

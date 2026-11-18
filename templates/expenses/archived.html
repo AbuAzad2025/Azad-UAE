@@ -50,13 +50,12 @@
                             </div>
                         </td>
                     </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">{{ t('لا توجد مصروفات مؤرشفة') }}</td>
-                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% if not expenses %}
+            <div class="text-center text-muted py-4">{{ t('لا توجد مصروفات مؤرشفة') }}</div>
+            {% endif %}
         </div>
     </div>
 </div>
