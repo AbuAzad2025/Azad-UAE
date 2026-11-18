@@ -247,10 +247,17 @@ const loadProducts = async (categoryId) => {
 		products.forEach((p) => {
 			const card = document.createElement("div");
 			card.className = `pos-card${p.is_out_of_stock ? " out" : ""}`;
-			// Preserve English name for test determinism while preferring Arabic for users
+			// Keep both names in the DOM (tests and search rely on the English one)
+			// but render them on separate lines with explicit direction so mixed
+			// Arabic/LTR text cannot produce tangled brackets in RTL cards.
 			const rawAr = p.name_ar || "";
 			const rawEn = p.name || p.text || "—";
-			const displayName = rawAr && rawAr !== rawEn ? `${rawAr} (${rawEn})` : rawAr || rawEn;
+			const hasArabic = /[\u0600-\u06FF]/.test(rawAr);
+			const hasBoth = rawAr && rawEn && rawAr !== rawEn;
+			const displayName = hasArabic ? rawAr : rawEn;
+			const nameHtml = hasBoth
+				? `<bdi class="name-ar" dir="rtl">${esc(rawAr)}</bdi><bdi class="name-en" dir="ltr">${esc(rawEn)}</bdi>`
+				: `<bdi class="name-ar" dir="${hasArabic ? "rtl" : "ltr"}">${esc(displayName)}</bdi>`;
 			const badge = p.is_inactive
 				? '<span class="badge danger">غير نشط</span>'
 				: p.is_out_of_stock
@@ -260,7 +267,7 @@ const loadProducts = async (categoryId) => {
 						: "";
 			card.innerHTML = `
                     <div class="icon" aria-hidden="true">📦</div>
-                    <div class="name" title="${esc(displayName)}">${esc(displayName)}</div>
+                    <div class="name" title="${esc(hasBoth ? `${rawAr} — ${rawEn}` : displayName)}">${nameHtml}</div>
                     <div class="meta">
                         <span class="price">${fmt(priceForCurrency(p.price))} ${esc(currencySymbolFor(selectedCurrency()))}</span>
                         ${badge}

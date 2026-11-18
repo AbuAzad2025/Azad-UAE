@@ -71,11 +71,12 @@
 
         <div class="pos-search">
           <label for="productSearch" class="sr-only">{{ _('مسح الباركود أو كتابة الاسم/الكود') }}</label>
-          <input id="productSearch" class="barcode-input" placeholder="{{ _('مسح الباركود أو كتابة الاسم/الكود') }} (Ctrl+K)">
+          <input id="productSearch" class="barcode-input" placeholder="{{ _('ابحث عن صنف أو باركود') }}">
           <button id="cameraScanBtn" type="button" class="search-clear search-tool" title="{{ _('مسح بالكاميرا') }}" data-scan-hint="{{ _('أشر الكاميرا نحو الباركود') }}"><i class="fas fa-camera" aria-hidden="true"></i></button>
           <button id="scaleConnectBtn" type="button" class="search-clear search-tool" title="{{ _('ربط الميزان') }}" data-scale-on-title="{{ _('فك ربط الميزان') }}"><i class="fas fa-weight-hanging" aria-hidden="true"></i></button>
           <button id="clearProductSearch" class="search-clear" title="{{ t('Clear') }}">✕</button>
           <div id="productResults" class="pos-product-results d-none"></div>
+          <span class="kbd" title="{{ _('اختصار البحث') }}">Ctrl+K</span>
           <span class="kbd">F2</span>
         </div>
 

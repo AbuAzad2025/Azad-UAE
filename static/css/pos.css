@@ -209,19 +209,38 @@ body.pos-layout:has(.pos-app) .pos-fullscreen {
 }
 
 .pos-app .pos-card .name {
-	color: #14233b;
-	font-size: 14px;
-	font-weight: 700;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	line-height: 1.25;
 	text-align: center;
+}
+
+/* Arabic is the primary label; English is a quiet secondary line. Each is a
+   bdi with an explicit dir from the template, so brackets never tangle. */
+.pos-app .pos-card .name-ar {
+	color: #122744;
+	font-size: 15px;
+	font-weight: 700;
+	unicode-bidi: isolate;
+}
+
+.pos-app .pos-card .name-en {
+	color: #526780;
+	direction: ltr;
+	font-size: 11px;
+	font-weight: 500;
+	text-align: center;
+	unicode-bidi: isolate;
 }
 
 .pos-app .pos-card .price {
 	background: linear-gradient(180deg, #0767b1 0%, #07518e 100%);
 	border-radius: 6px;
 	color: #fff;
-	font-size: 15px;
-	font-weight: 700;
-	padding: 3px 8px;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 2px 7px;
 	text-align: center;
 	white-space: nowrap;
 }
