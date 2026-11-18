@@ -1205,6 +1205,33 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
             created_at="2026-01-01 00:00:00+00",
         )
     if store:
+        # A public storefront resolves by host/slug and requires an ONLINE
+        # warehouse; without these rows /s/<slug> and /store/?store=<slug>
+        # always 404 even though the routes are registered.
+        online_warehouse_id = _ins(
+            conn,
+            "warehouses",
+            tenant_id=tid,
+            name=f"{name} Online Warehouse",
+            code=f"WH{idx}-ON",
+            warehouse_type="online",
+            branch_id=branch_id,
+            is_active=True,
+            is_main=False,
+        )
+        _ins(
+            conn,
+            "tenant_stores",
+            tenant_id=tid,
+            warehouse_id=online_warehouse_id,
+            store_slug=slug,
+            subdomain=slug,
+            title=name,
+            is_enabled=True,
+            platform_disabled=False,
+            notify_whatsapp_on_order=False,
+            notify_email_on_order=False,
+        )
         for pid in product_ids[:50]:
             _ins(
                 conn,

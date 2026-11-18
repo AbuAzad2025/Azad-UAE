@@ -47,9 +47,9 @@
     <span class="ps-section-link">{{ catalog.total }} {{ t('products') }}</span>
   </div>
 
-  {% if catalog.items %}
+  {% if catalog['items'] %}
   <div class="ps-grid">
-    {% for item in catalog.items %}
+    {% for item in catalog['items'] %}
     {% set product = item.product %}
     {% set stock = item.stock %}
     <article class="ps-card">

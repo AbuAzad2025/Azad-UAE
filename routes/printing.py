@@ -3,6 +3,7 @@ Printing Routes — Unified Professional Printing
 طباعة احترافية مع دعم PDF ومعاينة وطباعة جماعية
 """
 
+from decimal import Decimal
 from io import BytesIO
 from typing import Any, cast
 
@@ -617,10 +618,26 @@ def print_advanced_ledger():
                 }
             )
 
+    total_debit = sum((row["debit"] for row in trial_balance_data), Decimal("0"))
+    total_credit = sum((row["credit"] for row in trial_balance_data), Decimal("0"))
+    trial_balance_json = [
+        {
+            "code": row["account"].code,
+            "full_name": row["account"].name,
+            "type_ar": row["account"].name_ar or "",
+            "debit": float(row["debit"]),
+            "credit": float(row["credit"]),
+            "balance": float(row["debit"] - row["credit"]),
+        }
+        for row in trial_balance_data
+    ]
     return PrintService.render_print(
         "ledger/professional_printing.html",
         {
             "trial_balance_data": trial_balance_data,
+            "trial_balance_json": trial_balance_json,
+            "total_debit": total_debit,
+            "total_credit": total_credit,
             "date_from": date.today() - timedelta(days=30),
             "date_to": date.today(),
             "print_branding": get_print_header_context(tid, profile=settings),

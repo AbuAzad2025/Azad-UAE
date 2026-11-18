@@ -116,6 +116,33 @@ def admin_required(f):
     return decorated_function
 
 
+def finance_admin_required(f):
+    """Tenant finance admin surfaces (ledger admin dashboards/reports).
+
+    Owner and super-admin keep global access; a company manager or accountant
+    may use the tenant-scoped ledger admin pages. Cashier, seller and inventory
+    roles never reach them.
+    """
+    finance_roles = {RoleEnum.MANAGER.value, RoleEnum.ACCOUNTANT.value}
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash("الرجاء تسجيل الدخول أولاً", "warning")
+            return redirect(url_for("auth.login"))
+        if is_global_owner_user(current_user) or is_admin_surface_user(current_user):
+            return f(*args, **kwargs)
+        role = getattr(current_user, "role", None)
+        slug = getattr(role, "slug", None) if role else None
+        if slug in finance_roles:
+            return f(*args, **kwargs)
+        flash("هذه الصفحة للإدارة المالية فقط", "danger")
+        abort(403)
+
+    decorated_function._required_guard = "finance_admin"
+    return decorated_function
+
+
 def seller_or_above(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):

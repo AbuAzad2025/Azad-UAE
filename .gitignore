@@ -27,6 +27,7 @@ wheels/
 
 # Flask
 instance/
+flask_session/
 .webassets-cache
 
 # Database

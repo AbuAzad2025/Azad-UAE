@@ -25,7 +25,7 @@ from utils.api_response import error_response, success_response
 from utils.branching import get_accessible_branches, user_can_access_branch
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
-from utils.decorators import admin_required, branch_scope_id, permission_required
+from utils.decorators import branch_scope_id, finance_admin_required, permission_required
 from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 
@@ -781,7 +781,7 @@ def aging_analysis_export():
 
 @ledger_bp.route("/admin-dashboard")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_dashboard():
     """لوحة تحكم شاملة لدفتر الأستاذ"""
     from utils.gl_tenant import gl_account_query, gl_entry_query, scoped_model_query
@@ -841,7 +841,7 @@ def admin_dashboard():
 
 @ledger_bp.route("/admin-accounts")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_accounts():
     """إدارة الحسابات المحاسبية"""
     from utils.gl_tenant import gl_account_query
@@ -852,7 +852,7 @@ def admin_accounts():
 
 @ledger_bp.route("/admin-accounts/add", methods=["GET", "POST"])
 @login_required
-@admin_required
+@finance_admin_required
 def admin_add_account():
     """إضافة حساب محاسبي جديد"""
     from utils.gl_tenant import active_tenant_id, gl_account_query
@@ -924,7 +924,7 @@ def admin_add_account():
 
 @ledger_bp.route("/admin-vaults")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_vaults():
     """إدارة الصناديق والمحافظ"""
     from utils.gl_tenant import scoped_model_query
@@ -935,7 +935,7 @@ def admin_vaults():
 
 @ledger_bp.route("/admin-journals")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_journals():
     """إدارة القيود المحاسبية"""
     from utils.gl_tenant import gl_entry_query
@@ -954,7 +954,7 @@ def admin_journals():
 
 @ledger_bp.route("/admin-reports")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_reports():
     """التقارير المالية المتقدمة"""
     return render_template("admin/ledger/reports.html")
@@ -962,7 +962,7 @@ def admin_reports():
 
 @ledger_bp.route("/admin-trial-balance")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_trial_balance():
     """ميزان المراجعة"""
     date_from_raw = request.args.get("date_from", date.today().strftime("%Y-%m-%d"))
@@ -1009,7 +1009,7 @@ def admin_trial_balance():
 
 @ledger_bp.route("/admin-balance-sheet")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_balance_sheet():
     """الميزانية العمومية"""
     as_of_date_raw = request.args.get("as_of_date", date.today().strftime("%Y-%m-%d"))
@@ -1104,7 +1104,7 @@ def budget_vs_actual():
 
 @ledger_bp.route("/admin-income-statement")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_income_statement():
     """قائمة الدخل"""
     date_from_raw = request.args.get("date_from", (date.today() - timedelta(days=30)).strftime("%Y-%m-%d"))
@@ -1149,7 +1149,7 @@ def admin_income_statement():
 
 @ledger_bp.route("/admin-settings")
 @login_required
-@admin_required
+@finance_admin_required
 def admin_settings():
     """إعدادات النظام المحاسبي"""
     return render_template("admin/ledger/settings.html")
