@@ -167,6 +167,19 @@ const syncPay = () => {
 		pm.classList.toggle("active", pm.getAttribute("data-method") === v);
 	});
 	if (refField) refField.classList.toggle("show", !!v);
+	const bankField = qs("#bankField");
+	if (bankField) bankField.classList.toggle("d-none", v !== "bank_transfer");
+	const refLabel = qs("#referenceLabel");
+	if (refLabel) {
+		refLabel.textContent =
+			v === "card"
+				? window.t("رقم العملية (البطاقة)")
+				: v === "bank_transfer"
+					? window.t("رقم التحويل البنكي")
+					: v === "e_wallet"
+						? window.t("رقم المحفظة")
+						: window.t("رقم العملية / المرجع");
+	}
 };
 
 export {

@@ -222,6 +222,9 @@ class PosCheckoutService:
                 "currency": payment_currency,
                 "exchange_rate": float(payment_exchange_rate),
                 "reference_number": reference_number,
+                "bank_name": (payload.get("bank_name") or "").strip() or None,
+                "cheque_number": (payload.get("cheque_number") or "").strip() or None,
+                "cheque_date": (payload.get("cheque_date") or "").strip() or None,
             }
 
         payments_data = None

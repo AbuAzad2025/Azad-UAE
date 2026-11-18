@@ -145,8 +145,12 @@
         </div>
 
         <div class="ref-field" id="refField">
-          <label class="small text-muted" for="referenceNumber">{{ _('رقم مرجع') }}</label>
-          <input id="referenceNumber" class="form-control" placeholder="{{ _('اختياري') }}">
+          <label class="small text-muted" for="referenceNumber" id="referenceLabel">{{ _('رقم العملية / المرجع') }}</label>
+          <input id="referenceNumber" class="form-control" placeholder="{{ _('رقم العملية أو المرجع') }}">
+        </div>
+        <div class="field d-none" id="bankField">
+          <label class="small text-muted" for="bankName">{{ _('اسم البنك') }}</label>
+          <input id="bankName" class="form-control" placeholder="{{ _('اسم البنك') }}">
         </div>
 
         <div class="field">

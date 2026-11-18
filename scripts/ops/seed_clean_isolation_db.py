@@ -1127,6 +1127,7 @@ def _seed_tenant(conn, tid: int, spec, idx: int) -> dict:
         name="Main Branch",
         code=f"BR{idx:02d}",
         is_active=True,
+        is_main=True,
     )
     categories, nouns = CATALOG[industry]
     cat_ids = [

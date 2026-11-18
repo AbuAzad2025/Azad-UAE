@@ -297,6 +297,7 @@ const resetAfterSale = async () => {
 	if (splitRows) splitRows.innerHTML = "";
 	qs("#paymentMethod").value = "cash";
 	qs("#referenceNumber").value = "";
+	if (qs("#bankName")) qs("#bankName").value = "";
 	if (qs("#orderNote")) qs("#orderNote").value = "";
 	if (typeof syncPay === "function") syncPay();
 };
@@ -341,6 +342,7 @@ const checkout = async (autoPrint) => {
 		payment_currency: qs("#currency").value,
 		payment_exchange_rate: toNum(qs("#exchangeRate").value) || 1,
 		reference_number: qs("#referenceNumber").value || "",
+		bank_name: qs("#bankName") ? qs("#bankName").value || "" : "",
 		notes: qs("#orderNote") ? qs("#orderNote").value || "" : "",
 		lines: state.cart.map((it) => ({
 			product_id: it.id,
@@ -356,7 +358,8 @@ const checkout = async (autoPrint) => {
 		serialsByProduct[it.id].push(it.serial);
 	});
 	if (Object.keys(serialsByProduct).length) payload.serials = serialsByProduct;
-	if (payload.payment_method === "cash" && toNum(qs("#paidAmount").value) <= 0) {
+	// Any non-credit method needs an amount; default it to the invoice total.
+	if (payload.payment_method && toNum(qs("#paidAmount").value) <= 0) {
 		payload.paid_amount = Math.max(0, toNum(_totals?.total));
 	}
 	if (splitEnabled()) {
