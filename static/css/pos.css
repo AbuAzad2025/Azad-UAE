@@ -94,6 +94,19 @@ body.pos-layout:has(.pos-app) {
 	color: #fff;
 }
 
+.pos-app .pos-products {
+	gap: 4px;
+	padding: 4px;
+}
+
+/* The reference shows five tight columns on a wide desktop. Keep the existing
+   auto-fill behaviour on smaller screens so the sale flow never breaks. */
+@media (min-width: 1400px) {
+	.pos-app .pos-products {
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+	}
+}
+
 .pos-app .pos-card {
 	background: var(--pos-surface-2);
 	border: 1px solid #bbcbdd;
@@ -194,10 +207,32 @@ body.pos-layout:has(.pos-app) {
 	color: var(--pos-text);
 }
 
+/* Each payment method carries the colour the visual reference assigns to its
+   action: cash green, card blue, transfer/wallet teal. Decoration only — the
+   data-method attributes and the click handlers stay exactly as they are. */
 .pos-app .pos-pay-method .pm.active {
-	background: #e5effa;
-	border-color: var(--pos-primary);
-	color: var(--pos-primary);
+	background: var(--pos-surface-2);
+	border-color: var(--pos-border);
+	color: var(--pos-text);
+}
+
+.pos-app .pos-pay-method .pm[data-method="cash"].active {
+	background: linear-gradient(180deg, #099640 0%, #08752f 100%);
+	border-color: #08752f;
+	color: #fff;
+}
+
+.pos-app .pos-pay-method .pm[data-method="card"].active {
+	background: linear-gradient(180deg, #0a73bd 0%, #07519a 100%);
+	border-color: #07519a;
+	color: #fff;
+}
+
+.pos-app .pos-pay-method .pm[data-method="bank_transfer"].active,
+.pos-app .pos-pay-method .pm[data-method="e_wallet"].active {
+	background: linear-gradient(180deg, #1396b2 0%, #087e98 100%);
+	border-color: #087e98;
+	color: #fff;
 }
 
 .pos-app .form-control,
