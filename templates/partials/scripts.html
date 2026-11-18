@@ -27,7 +27,7 @@
 <!-- POS Module (only the POS register has the DOM these scripts bind to).
      A broad `'pos' in endpoint` test also matched pos.order_type_settings and
      pos.printer_settings, where index.js threw on a missing #cartBody and
-     aborted the rest of its initialisation. -->
+     stopped the rest of its initialization. -->
 {% if request.endpoint == 'pos.index' %}
 <script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
 <script defer src="{{ dist_url('js/pos/cashier-logic.js') }}"></script>
