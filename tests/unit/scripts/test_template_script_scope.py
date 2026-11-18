@@ -39,7 +39,6 @@ def test_no_duplicate_dist_script_between_partial_and_page_templates() -> None:
         "products/create.html": "js/products/category-controls.js",
         "products/edit.html": "js/products/industry-fields.js",
         "products/categories.html": "js/products/category-controls.js",
-        "pos/index.html": "js/pos/pos-config.js",
         "partials/print_handlers.html": "js/print-handlers.js",
     }
     offenders = []
@@ -48,6 +47,15 @@ def test_no_duplicate_dist_script_between_partial_and_page_templates() -> None:
         if re.search(r'<script[^>]*src="\{\{ dist_url\(\'' + re.escape(src), source):
             offenders.append(f"{rel}: {src}")
     assert not offenders, offenders
+
+
+def test_pos_page_loads_its_own_scripts_through_base_pos_layout() -> None:
+    # pos/index.html extends layouts/base_pos.html, which does not include
+    # partials/scripts.html. Removing these tags silently disables the whole
+    # register (no products, no cart, no checkout).
+    source = (TEMPLATES / "pos" / "index.html").read_text(encoding="utf-8", errors="ignore")
+    for script in ("js/pos/pos-config.js", "js/pos/index.js", "js/pos/offline.js"):
+        assert script in source
 
 
 def test_no_colspan_empty_row_inside_tbody_for_direct_datatable_pages() -> None:

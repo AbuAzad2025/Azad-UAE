@@ -1,6 +1,231 @@
 /* Azadexa POS */
 
 /* ==========================================================================
+   POS visual reference restyle — navy / royal blue / green, light surfaces.
+   Scoped to .pos-app only: no DOM ids, handlers, routes, data or calculations
+   are touched. Existing responsive rules and interactions remain in place.
+   (See POS_Visual_Design_Reference_RTL.json — visual style reference only.)
+   ========================================================================== */
+.pos-app {
+	--pos-bg: #eff3f8;
+	--pos-surface: #f8fafd;
+	--pos-surface-2: #f0f4f9;
+	--pos-border: #b9c9db;
+	--pos-border-faint: #d7e0ea;
+	--pos-text: #122744;
+	--pos-muted: #526780;
+	--pos-accent: #07833b;
+	--pos-accent-hover: #07662f;
+	--pos-primary: #075aa3;
+	--pos-primary-pressed: #03477f;
+	--pos-danger: #b71b20;
+	--pos-danger-hover: #9a161a;
+	--pos-warn: #eba900;
+	--pos-radius: 8px;
+	--pos-shadow: 0 1px 3px rgba(10, 40, 80, 0.07);
+	background: var(--pos-bg);
+	color: var(--pos-text);
+	font-size: 14px;
+	padding: 14px;
+	gap: 12px;
+}
+
+body.pos-layout:has(.pos-app) {
+	background: #eff3f8;
+}
+
+.pos-app .pos-topbar {
+	background: linear-gradient(90deg, #092d57 0%, #103e73 55%, #15538b 100%);
+	border: 0;
+	border-radius: var(--pos-radius);
+	color: #fff;
+	padding: 12px 20px;
+}
+
+.pos-app .pos-topbar * {
+	color: #fff;
+}
+
+.pos-app .pos-logo,
+.pos-app .pos-topbar h1,
+.pos-app .pos-topbar h2 {
+	font-size: 28px;
+	font-weight: 700;
+}
+
+.pos-app .pos-chip,
+.pos-app .pos-icon-btn,
+.pos-app .pos-main,
+.pos-app .pos-side,
+.pos-app .pos-search,
+.pos-app .pos-product-results,
+.pos-app .pos-cust-results,
+.pos-app .pos-cart-scroll {
+	background: var(--pos-surface);
+	border: 1px solid var(--pos-border);
+	border-radius: var(--pos-radius);
+	box-shadow: var(--pos-shadow);
+	color: var(--pos-text);
+}
+
+.pos-app .pos-chip:hover,
+.pos-app .pos-icon-btn:hover,
+.pos-app .pos-cat:hover {
+	color: var(--pos-primary);
+}
+
+.pos-app .pos-chip .dot,
+.pos-app .pos-icon-btn .badge.warn {
+	background: var(--pos-accent);
+}
+
+.pos-app .pos-cat {
+	background: #edf2f8;
+	border: 1px solid var(--pos-border-faint);
+	border-radius: 6px;
+	color: #142744;
+	font-weight: 600;
+	padding: 9px 12px;
+}
+
+.pos-app .pos-cat.active {
+	background: linear-gradient(180deg, #139258 0%, #07833b 100%);
+	border-color: #07833b;
+	color: #fff;
+}
+
+.pos-app .pos-card {
+	background: var(--pos-surface-2);
+	border: 1px solid #bbcbdd;
+	border-radius: 7px;
+	min-height: 165px;
+	padding: 8px;
+	gap: 6px;
+}
+
+.pos-app .pos-card .icon {
+	background: transparent;
+	border-radius: 6px;
+	color: var(--pos-primary);
+}
+
+.pos-app .pos-card .name {
+	color: #14233b;
+	font-size: 14px;
+	font-weight: 700;
+	text-align: center;
+}
+
+.pos-app .pos-card .price {
+	background: linear-gradient(180deg, #0767b1 0%, #07518e 100%);
+	border-radius: 6px;
+	color: #fff;
+	font-size: 15px;
+	font-weight: 700;
+	padding: 3px 8px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.pos-app .pos-card .stock {
+	font-size: 11px;
+}
+
+.pos-app .pos-card .badge.danger {
+	background: #fef2f2;
+	color: #b71b20;
+}
+
+.pos-app .pos-card .badge.warn {
+	background: #fff7e0;
+	color: #9a6b00;
+}
+
+.pos-app .pos-totals .row {
+	background: #f1f5fa;
+	border-radius: 4px;
+	color: var(--pos-text);
+	padding: 3px 8px;
+}
+
+.pos-app .pos-totals .row.grand {
+	background: linear-gradient(90deg, #d0e9d4 0%, #bae3c6 100%);
+	color: #08652c;
+	font-size: 24px;
+	font-weight: 700;
+}
+
+.pos-app .pos-totals .row.grand .amt {
+	color: #08652c;
+}
+
+.pos-app .pos-btn {
+	border-radius: 7px;
+	font-size: 17px;
+	min-height: 57px;
+	padding: 12px;
+}
+
+.pos-app .pos-btn-primary {
+	background: linear-gradient(180deg, #099640 0%, #08752f 100%);
+	color: #fff;
+}
+
+.pos-app .pos-btn-primary:hover {
+	background: linear-gradient(180deg, #08752f 0%, #07662f 100%);
+}
+
+.pos-app .pos-btn-ghost {
+	background: #e8f0fa;
+	border: 1px solid #aec3db;
+	color: #123a6a;
+}
+
+.pos-app .pos-btn-danger {
+	background: #fdf4f4;
+	border: 1px solid #c44a4a;
+	color: #b71b20;
+}
+
+.pos-app .pos-pay-method .pm {
+	background: var(--pos-surface-2);
+	border: 1px solid var(--pos-border);
+	border-radius: 7px;
+	color: var(--pos-text);
+}
+
+.pos-app .pos-pay-method .pm.active {
+	background: #e5effa;
+	border-color: var(--pos-primary);
+	color: var(--pos-primary);
+}
+
+.pos-app .form-control,
+.pos-app .form-select,
+.pos-app .ci-price-in,
+.pos-app .ci-qty,
+.pos-app .ci-disc,
+.pos-app .paid-field input {
+	background: #f9fbfe;
+	border: 1px solid #afc3da;
+	border-radius: 7px;
+	color: var(--pos-text);
+}
+
+.pos-app .form-control:focus,
+.pos-app .form-select:focus {
+	border-color: var(--pos-primary);
+	box-shadow: 0 0 0 3px rgba(7, 90, 163, 0.12);
+}
+
+@media (max-width: 1100px) {
+	.pos-app .pos-card {
+		min-height: 140px;
+	}
+}
+
+
+/* ==========================================================================
    Base POS layout (unified register)
    ========================================================================== */
 
