@@ -323,6 +323,13 @@ const setupPosToolkit = () => {
 	gate("#returnsBtn", cfg.enable_pos_returns);
 	gate("#cashMovementBtn", cfg.enable_pos_shifts);
 
+	qs("#customerDisplayBtn")?.addEventListener("click", () => {
+		if (!state.customerDisplayUrl) {
+			showAlert(t("افتح جلسة كاشير أولاً"), "warning");
+			return;
+		}
+		window.open(state.customerDisplayUrl, "_blank", "noopener,noreferrer");
+	});
 	qs("#sessionReportBtn")?.addEventListener("click", () => void openSessionReport());
 	qs("#cashMovementBtn")?.addEventListener("click", () => void openCashMovements());
 	qs("#cashMovementSave")?.addEventListener("click", () => void saveCashMovement());

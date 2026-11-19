@@ -754,6 +754,12 @@ async function loadSession() {
 		const s = j.data?.session || j.session;
 		if (j.success && s) {
 			if (window.cfdBroadcast) cfdBroadcast.setSession(s.id);
+			const cdBtn = qs("#customerDisplayBtn");
+			state.customerDisplayUrl = s.customer_display_url || null;
+			if (cdBtn) {
+				cdBtn.classList.toggle("disabled", !state.customerDisplayUrl);
+				cdBtn.setAttribute("aria-disabled", state.customerDisplayUrl ? "false" : "true");
+			}
 			bar.classList.remove("d-none");
 			required.classList.add("d-none");
 			qs("#sessionNumber").textContent = s.number;
@@ -776,6 +782,12 @@ async function loadSession() {
 				window.__sesTimer = null;
 			}
 			if (window.cfdBroadcast) cfdBroadcast.setSession(null);
+			state.customerDisplayUrl = null;
+			const cdBtn = qs("#customerDisplayBtn");
+			if (cdBtn) {
+				cdBtn.classList.add("disabled");
+				cdBtn.setAttribute("aria-disabled", "true");
+			}
 			bar.classList.add("d-none");
 			required.classList.remove("d-none");
 		}

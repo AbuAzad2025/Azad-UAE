@@ -49,6 +49,7 @@
       <button id="returnsBtn" type="button" class="pos-icon-btn" title="{{ _('المرتجعات') }}"><i class="fas fa-undo" aria-hidden="true"></i></button>
       <button id="cashMovementBtn" type="button" class="pos-icon-btn" title="{{ _('حركات الدرج') }}"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
       <button id="sessionReportBtn" type="button" class="pos-icon-btn" title="{{ _('تقرير الجلسة') }}"><i class="fas fa-chart-pie" aria-hidden="true"></i></button>
+      <button id="customerDisplayBtn" type="button" class="pos-icon-btn disabled" title="{{ _('شاشة الزبون') }}" aria-disabled="true"><i class="fas fa-desktop" aria-hidden="true"></i></button>
       <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair" aria-hidden="true"></i></button>
       <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause" aria-hidden="true"></i></button>
       <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i></a>
@@ -564,6 +565,9 @@
 {# This page extends layouts/base_pos.html, which does NOT include
    partials/scripts.html — these three scripts are loaded only here. #}
 <script src="{{ dist_url('js/pos/pos-config.js') }}"></script>
+{# Live-cart bridge to the customer-display tab; index.js calls it via
+   window.cfdBroadcast, which is undefined without this script. #}
+<script src="{{ dist_url('js/pos/cfd-broadcast.js') }}"></script>
 {# The register needs these before index.js runs: the offline product catalog
    (barcode lookup with no connection) and the serial scale UI. #}
 <script src="{{ dist_url('js/pos/offline-catalog.js') }}"></script>

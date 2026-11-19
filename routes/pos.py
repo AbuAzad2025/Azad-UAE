@@ -2227,6 +2227,12 @@ def customer_display_stream(session_id):
         kds_order = PosWriteService.kds_order_for_sale(latest.id, session.tenant_id)
         return build_cfd_order_payload(latest, kds_order.status if kds_order else "confirmed")
 
+    # A streaming response body is consumed after Flask has popped the request
+    # context. Hold the app object here and open a fresh context per poll —
+    # Flask-SQLAlchemy also removes the scoped session on that teardown, so the
+    # display never reuses a stale ORM identity map.
+    app = current_app._get_current_object()
+
     def stream():
         q: _queue.Queue = _queue.Queue()
         subscriber = (display_tenant_id, session_id, q)
@@ -2236,7 +2242,8 @@ def customer_display_stream(session_id):
         last_sent = None
         try:
             while True:
-                payload = _current_payload()
+                with app.app_context():
+                    payload = _current_payload()
                 if payload.get("type") == "closed":
                     yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
                     break

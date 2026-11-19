@@ -41,7 +41,9 @@
   let currentFilter = 'all';
 
   function loadOrders() {
-    fetch('/pos/api/kds/orders').then(r=>r.json()).then(orders=>{
+    fetch('/pos/api/kds/orders').then(r=>r.json()).then(body=>{
+      // success_response() wraps the list under `data`; accept a bare array too.
+      const orders = Array.isArray(body) ? body : (body.data || []);
       renderOrders(orders);
     }).catch(()=>{
       grid.innerHTML = '<div class="text-center text-muted py-5 col-12">{{ _('فشل التحميل') }}</div>';
