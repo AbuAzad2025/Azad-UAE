@@ -564,6 +564,11 @@
 {# This page extends layouts/base_pos.html, which does NOT include
    partials/scripts.html — these three scripts are loaded only here. #}
 <script src="{{ dist_url('js/pos/pos-config.js') }}"></script>
+{# The register needs these before index.js runs: the offline product catalog
+   (barcode lookup with no connection) and the serial scale UI. #}
+<script src="{{ dist_url('js/pos/offline-catalog.js') }}"></script>
+<script src="{{ dist_url('js/pos/scale-serial.js') }}"></script>
+<script src="{{ dist_url('js/pos/print-tickets.js') }}"></script>
 <script type="module" src="{{ dist_url('js/pos/index.js') }}"></script>
 <script src="{{ dist_url('js/pos/offline.js') }}"></script>
 {% endblock %}

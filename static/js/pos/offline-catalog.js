@@ -67,8 +67,11 @@ async function hydrateCatalog({ warehouseParam = "" } = {}) {
 		const res = await fetch(`/pos/api/catalog/snapshot${wp}`, {
 			credentials: "same-origin",
 		});
-		const data = await res.json().catch(() => ({}));
-		if (!res.ok || !data.success || !Array.isArray(data.products)) return 0;
+		const body = await res.json().catch(() => ({}));
+		// success_response() wraps the snapshot under `data`; accept a bare
+		// payload too so older callers/tests keep working.
+		const data = body.data && body.data.products ? body.data : body;
+		if (!res.ok || body.success === false || !Array.isArray(data.products)) return 0;
 		const db = await openCatalogDB();
 		const tx = db.transaction(CATALOG_STORE, "readwrite");
 		const store = tx.objectStore(CATALOG_STORE);

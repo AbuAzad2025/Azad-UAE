@@ -56,8 +56,10 @@
 				signal: ctrl.signal,
 				cache: "no-store",
 			});
-			// Any HTTP response means we reached the server
-			return res.status !== 0;
+			// Any real HTTP response means we reached the server. The service
+			// worker answers 503 from its offline fallback when the network is
+			// gone — that is NOT connectivity, so treat 5xx as offline.
+			return res.status !== 0 && res.status < 500;
 		} catch (_) {
 			// Network error / abort → probe fallback endpoint quickly
 			try {
@@ -70,7 +72,7 @@
 					signal: ctrl2.signal,
 					cache: "no-store",
 				}).finally(() => clearTimeout(t2));
-				return res2.status !== 0;
+				return res2.status !== 0 && res2.status < 500;
 			} catch (_) {
 				return false;
 			}

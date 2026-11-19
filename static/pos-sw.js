@@ -140,11 +140,11 @@ async function networkFirst(request) {
 }
 
 async function networkFirstWithQueue(request) {
-	try {
-		return await fetchAndCache(request);
-	} catch {
-		const clone = request.clone();
-		await queueCheckout(clone);
+	// Clone before fetching — once the body is consumed it cannot be cloned,
+	// and a financial mutation must never be dropped because of that.
+	const backup = request.clone();
+	const queueAndRespond = async () => {
+		await queueCheckout(backup);
 		return new Response(
 			JSON.stringify({
 				queued: true,
@@ -152,6 +152,15 @@ async function networkFirstWithQueue(request) {
 			}),
 			{ status: 202, headers: { "Content-Type": "application/json" } },
 		);
+	};
+	try {
+		const response = await fetchAndCache(request);
+		// A 502/503 from an upstream proxy is a connectivity failure too. Never
+		// surface it to the cashier as a lost sale — keep it in the queue.
+		if (response.status >= 500) return await queueAndRespond();
+		return response;
+	} catch {
+		return await queueAndRespond();
 	}
 }
 
