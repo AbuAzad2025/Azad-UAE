@@ -57,6 +57,13 @@ _DECORATORS = (
     ("@api_key_required", "api_key"),
     ("@role_required", "role"),
     ("@api_v2_key_required", "api_key"),
+    ("@admin_required", "admin"),
+    ("@finance_admin_required", "finance_admin"),
+    ("@owner_only", "owner"),
+    ("@owner_or_company_admin", "owner_or_admin"),
+    ("@any_permission_required", "permission"),
+    ("@two_factor_required", "two_factor"),
+    ("@feature_required", "feature"),
 )
 
 _RENDER = re.compile(r"render_template\(|render_template_string\(")

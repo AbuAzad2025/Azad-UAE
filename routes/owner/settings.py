@@ -16,7 +16,10 @@ from services.logging_core import LoggingCore
 from services.owner_ops_service import OwnerOpsService
 from utils.db_safety import atomic_transaction
 from utils.error_messages import ErrorCategory, ErrorMessages, refuse
+from utils.helpers import save_uploaded_file
 from utils.regional_defaults import FALLBACK_CURRENCY
+
+_ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif"}
 
 from .common import (
     IntegrationSettings,
@@ -640,16 +643,16 @@ def invoice_settings():
                 file = request.files.get(field) if field in request.files else None
                 if not (file and file.filename):
                     return None
-                import os
-
-                from werkzeug.utils import secure_filename
-
-                filename = secure_filename(file.filename)
-                filename = f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
-                folder = os.path.join("static", "uploads", directory)
-                os.makedirs(folder, exist_ok=True)
-                file.save(os.path.join(folder, filename))
-                return f"uploads/{directory}/{filename}"
+                # Use the central validated helper: extension allowlist, 5MB
+                # cap, executable rejection and byte-signature verification.
+                # Hand-saving here allowed .html/.svg into the static tree and
+                # yielded stored XSS on the application origin.
+                try:
+                    return save_uploaded_file(file, f"uploads/{directory}", _ALLOWED_IMAGE_EXTENSIONS)
+                except ValueError:
+                    current_app.logger.warning("Rejected unsafe upload for %s", field)
+                    flash(gettext("❌ نوع الملف غير مسموح أو حجمه كبير."), "danger")
+                    return None
 
             if path := _save_upload("company_logo", "logos", "logo"):
                 uploaded["logo_path"] = path

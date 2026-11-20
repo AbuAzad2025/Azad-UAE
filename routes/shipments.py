@@ -177,16 +177,17 @@ def start_selling(id):
 
 
 @shipment_bp.route("/<int:id>/sync-tracking", methods=["POST"])
+@login_required
+@permission_required("manage_warehouse")
 def sync_tracking(id):
     from services.carrier_tracking_service import CarrierTrackingService
-    from services.shipment_service import ShipmentService
 
-    shipment = ShipmentService.get_shipment_or_404(id)
+    # Tenant-scoped lookup: the bare db.session.get in ShipmentService would
+    # fetch any tenant's shipment for an anonymous visitor.
+    shipment = tenant_get_or_404(Shipment, id)
     try:
-        result = CarrierTrackingService.sync_shipment(shipment, tenant_id=get_active_tenant_id(current_user))
-        from extensions import db
-
-        db.session.flush()
+        with atomic_transaction("shipment_tracking_sync"):
+            result = CarrierTrackingService.sync_shipment(shipment, tenant_id=get_active_tenant_id(current_user))
         if result.get("success"):
             flash(gettext("Shipment tracking updated from carrier."), "success")
         else:

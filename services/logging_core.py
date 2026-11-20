@@ -90,6 +90,11 @@ _SECRET_KEYS = frozenset(
         "api_secret",
         "secret",
         "secret_key",
+        "expiry",
+        "card",
+        "holder",
+        "exp_month",
+        "exp_year",
         "csrf_token",
         "auth_token",
         "session_token",
@@ -253,7 +258,8 @@ def _get_request_context() -> dict[str, Any]:
         "tenant_id": None,
     }
     if has_request_context() and request:
-        ctx["url"] = request.url[:_MAX_URL_LEN]
+        # Never persist query strings: tokens/session secrets ride in URLs.
+        ctx["url"] = urlparse(request.url)._replace(query="", fragment="").geturl()[:_MAX_URL_LEN]
         ctx["method"] = request.method
         ctx["ua"] = request.headers.get("User-Agent", "")[:_MAX_UA_LEN]
         ctx["ip"] = request.headers.get("X-Forwarded-For", request.remote_addr) or ""
@@ -858,7 +864,7 @@ class LoggingCore:
         environment = "production"
         app_version = ""
         try:
-            environment = current_app.config.get("FLASK_ENV", "production")
+            environment = current_app.config.get("APP_ENV") or current_app.config.get("FLASK_ENV", "production")
             app_version = current_app.config.get("APP_VERSION", "")
         except Exception:
             logger.debug("Failed to read app config for error context", exc_info=True)
@@ -1254,23 +1260,39 @@ class LoggingCore:
           - utils/helpers.py → create_audit_log()
           - utils/advanced_audit.py → log_sensitive_action()
         """
+        from sqlalchemy import text
+
         from extensions import db
-        from models.audit import AuditLog
 
         ctx = _get_request_context()
         try:
-            entry = AuditLog(
-                user_id=ctx["user_id"],
-                tenant_id=ctx["tenant_id"],
-                action=action,
-                table_name=table_name,
-                record_id=record_id,
-                changes=changes,
-                ip_address=ctx["ip"],
-                user_agent=ctx["ua"],
-            )
-            db.session.add(entry)
-            db.session.flush()
+            # Write on its own connection. Most callers invoke log_audit AFTER
+            # atomic_transaction has committed; a session.flush() there opens
+            # a new transaction that session.remove() discards at teardown,
+            # silently losing the audit row. A direct insert can neither lose
+            # the row nor prematurely commit the caller's in-flight work.
+            with db.engine.connect() as conn:
+                conn.execute(
+                    text(
+                        "INSERT INTO audit_logs "
+                        "(tenant_id, user_id, action, table_name, record_id, changes, "
+                        " ip_address, user_agent, created_at) "
+                        "VALUES (:tenant_id, :user_id, :action, :table_name, :record_id, "
+                        " :changes, :ip_address, :user_agent, :created_at)"
+                    ),
+                    {
+                        "tenant_id": ctx["tenant_id"],
+                        "user_id": ctx["user_id"],
+                        "action": action,
+                        "table_name": table_name,
+                        "record_id": record_id,
+                        "changes": json.dumps(changes, ensure_ascii=False, default=str) if changes else None,
+                        "ip_address": ctx["ip"],
+                        "user_agent": ctx["ua"],
+                        "created_at": datetime.now(UTC),
+                    },
+                )
+                conn.commit()
         except Exception as e:
             cls._fallback_write(f"[AUDIT_FALLBACK] action={action} table={table_name} error={e}")
 

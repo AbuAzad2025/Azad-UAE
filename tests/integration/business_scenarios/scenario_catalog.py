@@ -129,7 +129,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "payment_vault": 42,
     "payments": 20,
     "payroll": 6,
-    "pos": 59,
+    "pos": 61,
     "printing": 11,
     "products": 30,
     "projects": 9,

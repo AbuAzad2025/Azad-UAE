@@ -63,7 +63,7 @@ def config():
         provider = request.form.get("provider", "groq")
 
         if not api_key:
-            return error_response(message=gettext("المفتاح مطلوب"), status_code=200)
+            return error_response(message=gettext("المفتاح مطلوب"), status_code=400)
 
         try:
             from pathlib import Path

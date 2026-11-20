@@ -425,8 +425,20 @@ def track_shipment(tracking_number):
 @public_bp.route("/webhooks/carrier/<carrier>", methods=["POST"])
 @limiter.limit("60 per minute")
 def carrier_webhook(carrier):
+    import hmac
+
+    from flask import current_app
+
     from models.shipment import Shipment
     from services.carrier_tracking_service import CarrierTrackingService
+
+    # Machine client: fail closed unless a shared secret is configured and
+    # presented. The public blueprint skips ORM tenant scoping, so an open
+    # endpoint here would let anyone mutate any tenant's delivery status.
+    secret = current_app.config.get("CARRIER_WEBHOOK_SECRET", "")
+    provided = request.headers.get("X-Webhook-Secret", "")
+    if not secret or not hmac.compare_digest(provided, secret):
+        return {"success": False, "error": "unauthorized"}, 401
 
     data = request.get_json(silent=True) or {}
     tn = (

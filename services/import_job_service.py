@@ -607,51 +607,44 @@ def process_product_import_task(
 
     from utils.db_safety import atomic_transaction
 
-    with app.app_context(), atomic_transaction("background_import"):
+    with app.app_context():
         try:
-            job_query = ProductImportJob.query.filter_by(id=job_id)
-            if tenant_id is not None:
-                job_query = job_query.filter_by(tenant_id=int(tenant_id))
-            job = job_query.first_or_404()
-            job.celery_task_id = self.request.id
-            db.session.flush()
+            with atomic_transaction("background_import"):
+                job_query = ProductImportJob.query.filter_by(id=job_id)
+                if tenant_id is not None:
+                    job_query = job_query.filter_by(tenant_id=int(tenant_id))
+                job = job_query.first_or_404()
+                job.celery_task_id = self.request.id
+                db.session.flush()
 
-            # Update progress via WebSocket
-            self.update_state(
-                state="PROGRESS", meta={"current": 0, "total": job.total_rows, "status": "Starting import..."}
-            )
-
-            service = ProductImportService(job.tenant_id, job.user_id)
-            if job.template_id:
-                template = ProductImportTemplate.query.filter_by(id=job.template_id, tenant_id=job.tenant_id).first()
-                if template:
-                    service.set_template(template)
-
-            # Custom progress callback
-            def progress_callback(processed, total):
                 self.update_state(
-                    state="PROGRESS",
-                    meta={"current": processed, "total": total, "status": f"Processing row {processed}/{total}"},
+                    state="PROGRESS", meta={"current": 0, "total": job.total_rows, "status": "Starting import..."}
                 )
 
-            # Monkey-patch progress updates
-            def progress_wrapper(df, update_existing, dry_run):
-                # This is a simplified version - in production you'd want a proper callback
-                return ProductImportService.process_dataframe(service, df, update_existing=False, dry_run=False)
+                service = ProductImportService(job.tenant_id, job.user_id)
+                if job.template_id:
+                    template = ProductImportTemplate.query.filter_by(
+                        id=job.template_id, tenant_id=job.tenant_id
+                    ).first()
+                    if template:
+                        service.set_template(template)
 
-            results = service.run_import(
-                file_content=base64.b64decode(job.original_filename),
-                filename=job.original_filename,
-                job=job,
-                update_existing=job.update_existing if hasattr(job, "update_existing") else False,
-            )
+                results = service.run_import(
+                    # Decode the uploaded bytes, never the filename. The old
+                    # code fed "products.xlsx" to b64decode and every job died.
+                    file_content=base64.b64decode(file_content_b64),
+                    filename=filename or job.original_filename,
+                    job=job,
+                    update_existing=update_existing,
+                )
 
             return {"status": "completed", "results": results}
 
         except Exception as exc:
             logger.exception(f"Import task failed: {exc}")
-            from utils.db_safety import atomic_transaction
-
+            # The outer transaction rolled back on the exception. Record the
+            # failure in a SEPARATE boundary — a nested atomic_transaction
+            # would commit the partial import before retry re-runs it.
             with atomic_transaction("import_task_fail"):
                 ImportJobService.fail_job(job_id, str(exc))
             raise self.retry(exc=exc)

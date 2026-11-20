@@ -50,10 +50,12 @@
 		post: async function (url, body, options) {
 			options = options || {};
 			return this.fetch(url, {
-				method: "POST",
-				headers: mergeHeaders(options.headers),
-				body: JSON.stringify(body),
 				...options,
+				method: "POST",
+				body: JSON.stringify(body),
+				// Spread first so a caller-supplied headers object cannot drop
+				// the CSRF and X-Requested-With headers merged in here.
+				headers: mergeHeaders(options.headers),
 			});
 		},
 
@@ -63,9 +65,9 @@
 		get: async function (url, options) {
 			options = options || {};
 			return this.fetch(url, {
+				...options,
 				method: "GET",
 				headers: mergeHeaders(options.headers),
-				...options,
 			});
 		},
 	};

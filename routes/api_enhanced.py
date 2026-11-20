@@ -89,7 +89,7 @@ def search_products():
     limit = request.args.get("limit", 20, type=int)
 
     if not query_text:
-        return error_response("Query required", status_code=200)
+        return error_response("Query required", status_code=400)
 
     tid = get_active_tenant_id(current_user)
 

@@ -324,7 +324,7 @@ class ErrorAuditService:
         environment = "production"
         app_version = ""
         try:
-            environment = current_app.config.get("FLASK_ENV", "production")
+            environment = current_app.config.get("APP_ENV") or current_app.config.get("FLASK_ENV", "production")
             app_version = current_app.config.get("APP_VERSION", "")
         except Exception:
             logger.warning("Failed to read app config for error audit context", exc_info=True)

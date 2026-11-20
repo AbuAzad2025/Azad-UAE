@@ -19,7 +19,7 @@ def send_invoice(sale_id):
     sale = tenant_get_or_404(Sale, sale_id)
 
     if not sale.customer or not sale.customer.phone:
-        return error_response(message="Customer phone not available", status_code=200)
+        return error_response(message="Customer phone not available", status_code=400)
 
     pdf_url = request.form.get("pdf_url")
 
@@ -48,7 +48,7 @@ def send_reminder(customer_id):
     customer = tenant_get_or_404(Customer, customer_id)
 
     if not customer.phone:
-        return error_response(message="Customer phone not available", status_code=200)
+        return error_response(message="Customer phone not available", status_code=400)
 
     balance = float(customer.get_balance_aed())
 

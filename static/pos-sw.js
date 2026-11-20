@@ -218,7 +218,23 @@ async function queueCheckout(request) {
 	});
 }
 
+// Only one flush may run at a time: message, sync and online events can all
+// fire together, and a double flush would post the same money mutation twice.
+let retryInFlight = null;
+
 async function retryQueue() {
+	if (retryInFlight) return retryInFlight;
+	retryInFlight = (async () => {
+		return await _retryQueueOnce();
+	})();
+	try {
+		return await retryInFlight;
+	} finally {
+		retryInFlight = null;
+	}
+}
+
+async function _retryQueueOnce() {
 	let db;
 	try {
 		db = await openQueueDB();

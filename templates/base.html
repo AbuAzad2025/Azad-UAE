@@ -161,7 +161,7 @@
     window._FX_BASE_CURRENCY = '{{ FX_BASE_CURRENCY }}';
     window._FX_FALLBACK_BASE = '{{ FX_BASE_CURRENCY }}';
     window._FX_BASE_LABEL = '{{ FX_BASE_LABEL }}';
-    window._CURRENCY_NAME_AR = '{{ tenant_currency_name_ar or tenant_currency_symbol }}';
+    window._CURRENCY_NAME_AR = {{ (tenant_currency_name_ar or tenant_currency_symbol) | tojson }};
     window._CURRENCY_SYMBOL = '{{ tenant_currency_symbol }}';
 
     // Unified Routes Object

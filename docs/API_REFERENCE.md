@@ -66,22 +66,22 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/admin/ledger/` | authenticated | — | — | html |
-| GET | `/admin/ledger/accounts` | authenticated | — | — | html |
-| POST | `/admin/ledger/accounts/<int:id>/delete` | authenticated | — | — | json |
-| GET, POST | `/admin/ledger/accounts/<int:id>/edit` | authenticated | — | — | html |
-| GET, POST | `/admin/ledger/accounts/add` | authenticated | — | — | html |
-| GET | `/admin/ledger/api/account-balance/<int:account_id>` | authenticated | — | — | json |
-| GET | `/admin/ledger/api/account-statement/<int:account_id>` | authenticated | — | — | json |
-| GET | `/admin/ledger/journals` | authenticated | — | — | html |
-| POST | `/admin/ledger/journals/<int:id>/reverse` | authenticated | — | — | json |
-| GET | `/admin/ledger/journals/<int:id>/view` | authenticated | — | — | html |
-| GET | `/admin/ledger/reports` | authenticated | — | — | html |
-| GET | `/admin/ledger/reports/balance-sheet` | authenticated | — | — | html |
-| GET | `/admin/ledger/reports/income-statement` | authenticated | — | — | html |
-| GET | `/admin/ledger/reports/trial-balance` | authenticated | — | — | html |
-| GET | `/admin/ledger/settings` | authenticated | — | — | html |
-| GET | `/admin/ledger/vaults` | authenticated | — | — | html |
+| GET | `/admin/ledger/` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/accounts` | admin, authenticated | — | — | html |
+| POST | `/admin/ledger/accounts/<int:id>/delete` | admin, authenticated | — | — | json |
+| GET, POST | `/admin/ledger/accounts/<int:id>/edit` | admin, authenticated | — | — | html |
+| GET, POST | `/admin/ledger/accounts/add` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/api/account-balance/<int:account_id>` | admin, authenticated | — | — | json |
+| GET | `/admin/ledger/api/account-statement/<int:account_id>` | admin, authenticated | — | — | json |
+| GET | `/admin/ledger/journals` | admin, authenticated | — | — | html |
+| POST | `/admin/ledger/journals/<int:id>/reverse` | admin, authenticated | — | — | json |
+| GET | `/admin/ledger/journals/<int:id>/view` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/reports` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/reports/balance-sheet` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/reports/income-statement` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/reports/trial-balance` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/settings` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/vaults` | admin, authenticated | — | — | html |
 
 ### `ai` (50)
 
@@ -108,18 +108,18 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/ai/exchange-rate/<currency>` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/external-sources` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/find-compatible/<int:product_id>` | authenticated, permission | `view_products` | — | json |
-| GET | `/ai/global/expertise-update` | authenticated | — | — | json |
+| GET | `/ai/global/expertise-update` | admin, authenticated | — | — | json |
 | GET | `/ai/global/insights` | authenticated, permission | `view_reports` | — | json |
-| POST | `/ai/improvement/auto-improve` | authenticated | — | — | json |
+| POST | `/ai/improvement/auto-improve` | admin, authenticated | — | — | json |
 | GET | `/ai/improvement/progress` | authenticated, permission | `view_reports` | — | json |
-| POST | `/ai/improvement/set-goal` | authenticated | — | — | json |
+| POST | `/ai/improvement/set-goal` | admin, authenticated | — | — | json |
 | GET | `/ai/improvement/status` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/inventory-health` | authenticated, permission | `manage_warehouse` | — | json |
 | POST | `/ai/knowledge/add-document` | authenticated, owner | — | — | json |
 | POST | `/ai/knowledge/add-website` | authenticated, owner | — | — | json |
 | GET | `/ai/knowledge/search` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/knowledge/summary` | authenticated, permission | `view_reports` | — | json |
-| POST | `/ai/learning/evolve` | authenticated | — | — | json |
+| POST | `/ai/learning/evolve` | admin, authenticated | — | — | json |
 | GET | `/ai/learning/status` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/neural-status` | authenticated, permission | `view_reports` | — | json |
 | GET | `/ai/optimize-inventory` | authenticated, permission | `manage_warehouse` | — | json |
@@ -150,7 +150,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/api/barcode/validate` | authenticated, permission | `view_reports` | — | json |
 | GET | `/api/check-username` | authenticated | — | — | json |
 | GET | `/api/currencies` | authenticated | — | — | json |
-| GET | `/api/currency-rate/<from_currency>/<to_currency>` | authenticated | — | — | json |
+| GET | `/api/currency-rate/<from_currency>/<to_currency>` | authenticated, permission | — | — | json |
 | DELETE, PATCH, PUT | `/api/echo` | authenticated | — | — | json |
 | GET | `/api/exchange-rates/display` | authenticated | — | — | json |
 | GET | `/api/health` | — | — | — | json |
@@ -241,10 +241,10 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/branches/` | authenticated | — | — | html |
-| GET, POST | `/branches/create` | authenticated | — | — | html |
-| POST | `/branches/delete/<int:id>` | authenticated | — | — | json |
-| GET, POST | `/branches/edit/<int:id>` | authenticated | — | — | html |
+| GET | `/branches/` | admin, authenticated | — | — | html |
+| GET, POST | `/branches/create` | admin, authenticated | — | — | html |
+| POST | `/branches/delete/<int:id>` | admin, authenticated | — | — | json |
+| GET, POST | `/branches/edit/<int:id>` | admin, authenticated | — | — | html |
 
 ### `budgets` (10)
 
@@ -268,16 +268,16 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/cheques/` | authenticated, permission | `manage_payments` | — | html |
 | GET | `/cheques/<int:id>` | authenticated, permission | `manage_payments` | — | html |
 | POST | `/cheques/<int:id>/bounce` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/cancel` | authenticated, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/cancel` | admin, authenticated, permission | `manage_payments` | — | html |
 | POST | `/cheques/<int:id>/clear` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/delete` | authenticated, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/delete` | admin, authenticated, permission | `manage_payments` | — | html |
 | POST | `/cheques/<int:id>/deposit` | authenticated, permission | `manage_payments` | — | html |
 | GET, POST | `/cheques/<int:id>/edit` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/restore` | authenticated, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/restore` | admin, authenticated, permission | `manage_payments` | — | html |
 | GET | `/cheques/alerts` | authenticated, permission | `manage_payments` | — | html |
 | GET | `/cheques/api/alerts` | authenticated, permission | `manage_payments` | — | json |
 | GET | `/cheques/api/stats` | authenticated, permission | `manage_payments` | — | json |
-| GET | `/cheques/archived` | authenticated, permission | `manage_payments` | — | html |
+| GET | `/cheques/archived` | admin, authenticated, permission | `manage_payments` | — | html |
 | GET, POST | `/cheques/create` | authenticated, permission | `manage_payments` | `10 per minute` | html |
 | GET | `/cheques/incoming` | authenticated, permission | `manage_payments` | — | html |
 | GET | `/cheques/outgoing` | authenticated, permission | `manage_payments` | — | html |
@@ -376,7 +376,7 @@ Access control is enforced in two places, and both are captured below.
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
 | POST | `/graphql` | authenticated, permission | `view_reports` | `60 per minute` | json |
-| GET | `/graphql/playground` | authenticated, permission | `admin` | — | json |
+| GET | `/graphql/playground` | admin, authenticated, permission | `admin` | — | json |
 
 ### `hr` (17)
 
@@ -420,38 +420,38 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/ledger/account/<int:account_id>` | authenticated, permission | `view_ledger` | — | html |
 | GET | `/ledger/account/<int:account_id>/statement` | authenticated, permission | `view_ledger` | — | html |
 | GET | `/ledger/accounts-tree` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/admin-accounts` | authenticated | — | — | html |
-| GET, POST | `/ledger/admin-accounts/add` | authenticated | — | — | html |
-| GET | `/ledger/admin-balance-sheet` | authenticated | — | — | html |
-| GET | `/ledger/admin-dashboard` | authenticated | — | — | html |
-| GET | `/ledger/admin-income-statement` | authenticated | — | — | html |
-| GET | `/ledger/admin-journals` | authenticated | — | — | html |
-| GET | `/ledger/admin-reports` | authenticated | — | — | html |
-| GET | `/ledger/admin-settings` | authenticated | — | — | html |
-| GET | `/ledger/admin-trial-balance` | authenticated | — | — | html |
-| GET | `/ledger/admin-vaults` | authenticated | — | — | html |
-| GET | `/ledger/advanced/advanced-analytics` | authenticated | — | — | html |
+| GET | `/ledger/admin-accounts` | authenticated, finance_admin | — | — | html |
+| GET, POST | `/ledger/admin-accounts/add` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-balance-sheet` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-dashboard` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-income-statement` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-journals` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-reports` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-settings` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-trial-balance` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/admin-vaults` | authenticated, finance_admin | — | — | html |
+| GET | `/ledger/advanced/advanced-analytics` | admin, authenticated | — | — | html |
 | GET | `/ledger/advanced/advanced-expenses` | authenticated, permission | `view_ledger` | — | html |
-| GET, POST | `/ledger/advanced/advanced-expenses/add` | authenticated | — | — | html |
+| GET, POST | `/ledger/advanced/advanced-expenses/add` | admin, authenticated | — | — | html |
 | GET | `/ledger/advanced/api/cheque/<int:cheque_id>/accounting-summary` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/advanced/api/events/stream` | authenticated | — | — | json |
+| GET | `/ledger/advanced/api/events/stream` | admin, authenticated | — | — | json |
 | GET | `/ledger/advanced/api/financial-ratios` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/advanced/api/forecasting` | authenticated | — | — | json |
+| GET | `/ledger/advanced/api/forecasting` | admin, authenticated | — | — | json |
 | GET | `/ledger/advanced/api/trend-analysis` | authenticated, permission | `view_ledger` | — | json |
 | GET | `/ledger/advanced/cheque-integration` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/clear` | authenticated | — | — | json |
-| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/receive` | authenticated | — | — | json |
-| GET | `/ledger/advanced/customs-taxes` | authenticated | — | — | html |
-| GET, POST | `/ledger/advanced/customs-taxes/add` | authenticated | — | — | html |
-| GET | `/ledger/advanced/expense-categories` | authenticated | — | — | html |
-| GET, POST | `/ledger/advanced/expense-categories/add` | authenticated | — | — | html |
-| GET | `/ledger/advanced/journal-management` | authenticated | — | — | html |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/approve` | authenticated | — | — | json |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/delete` | authenticated | — | — | json |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/reverse` | authenticated | — | — | json |
+| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/clear` | admin, authenticated | — | — | json |
+| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/receive` | admin, authenticated | — | — | json |
+| GET | `/ledger/advanced/customs-taxes` | admin, authenticated | — | — | html |
+| GET, POST | `/ledger/advanced/customs-taxes/add` | admin, authenticated | — | — | html |
+| GET | `/ledger/advanced/expense-categories` | admin, authenticated | — | — | html |
+| GET, POST | `/ledger/advanced/expense-categories/add` | admin, authenticated | — | — | html |
+| GET | `/ledger/advanced/journal-management` | admin, authenticated | — | — | html |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/approve` | admin, authenticated | — | — | json |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/delete` | admin, authenticated | — | — | json |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/reverse` | admin, authenticated | — | — | json |
 | GET | `/ledger/advanced/professional-printing` | authenticated, permission | `view_ledger` | — | html |
 | GET | `/ledger/advanced/professional-reports` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/advanced/real-time-events` | authenticated | — | — | html |
+| GET | `/ledger/advanced/real-time-events` | admin, authenticated | — | — | html |
 | GET | `/ledger/aging-analysis` | authenticated, permission | `view_ledger` | — | html |
 | GET | `/ledger/aging-analysis/export` | authenticated, permission | `view_ledger` | — | json |
 | GET | `/ledger/api/accounts/search` | authenticated, permission | `view_ledger` | — | json |
@@ -534,9 +534,9 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/monitoring/dashboard` | authenticated | — | — | html |
+| GET | `/monitoring/dashboard` | admin, authenticated | — | — | html |
 | GET | `/monitoring/health` | — | — | `60 per minute` | json |
-| GET | `/monitoring/metrics` | authenticated | — | — | json |
+| GET | `/monitoring/metrics` | admin, authenticated | — | — | json |
 
 ### `my-profile` (2)
 
@@ -566,7 +566,7 @@ Access control is enforced in two places, and both are captured below.
 | GET, POST | `/owner/api-keys` | owner | — | — | html |
 | POST | `/owner/api-keys/<int:id>/toggle` | owner | — | — | json |
 | GET | `/owner/api/recent-audit-logs` | owner | — | — | json |
-| POST | `/owner/api/supervisor-override` | authenticated, owner | — | `20 per minute` | json |
+| POST | `/owner/api/supervisor-override` | authenticated, owner, owner_or_admin | — | `20 per minute` | json |
 | POST | `/owner/api/tenant/<int:tenant_id>/extend-subscription` | owner | — | — | json |
 | POST | `/owner/api/tenant/<int:tenant_id>/toggle-status` | owner | — | — | json |
 | POST | `/owner/api/tenant/<int:tenant_id>/update-package` | owner | — | — | json |
@@ -586,11 +586,11 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/owner/browse-table/<table_name>` | owner | — | — | html |
 | POST | `/owner/clear-cache` | owner | — | — | json |
 | GET | `/owner/company-dashboard` | authenticated, owner | — | — | html |
-| GET, POST | `/owner/company-info` | authenticated | — | — | html |
+| GET, POST | `/owner/company-info` | authenticated, owner_or_admin | — | — | html |
 | GET | `/owner/config` | owner | — | — | html |
 | GET, POST | `/owner/convert-database` | owner | — | — | html |
 | GET, POST | `/owner/currency-settings` | owner | — | — | html |
-| GET | `/owner/dashboard` | owner | — | — | html |
+| GET | `/owner/dashboard` | owner, two_factor | — | — | html |
 | GET, POST | `/owner/data-cleanup` | owner | — | — | html |
 | POST | `/owner/database-optimize` | owner | — | — | json |
 | GET | `/owner/database-tools` | owner | — | — | html |
@@ -609,7 +609,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/owner/integrations` | owner | — | — | html |
 | POST | `/owner/integrations/test/<service>` | owner | — | — | json |
 | POST | `/owner/integrations/update/<service>` | owner | — | — | json |
-| GET, POST | `/owner/invoice-settings` | authenticated | — | — | html |
+| GET, POST | `/owner/invoice-settings` | authenticated, owner_or_admin | — | — | html |
 | GET, POST | `/owner/ip-whitelist` | owner | — | — | html |
 | POST | `/owner/ip-whitelist/<int:index>/delete` | owner | — | — | json |
 | GET | `/owner/login-history` | owner | — | — | html |
@@ -623,8 +623,8 @@ Access control is enforced in two places, and both are captured below.
 | GET, POST | `/owner/notification-templates` | owner | — | — | html |
 | GET, POST | `/owner/payment-gateways` | owner | — | — | html |
 | GET | `/owner/performance-metrics` | owner | — | — | html |
-| GET | `/owner/preview-invoice/<template>` | authenticated | — | — | html |
-| GET | `/owner/preview-receipt/<template>` | authenticated | — | — | html |
+| GET | `/owner/preview-invoice/<template>` | authenticated, owner_or_admin | — | — | html |
+| GET | `/owner/preview-receipt/<template>` | authenticated, owner_or_admin | — | — | html |
 | GET | `/owner/reports` | owner | — | — | html |
 | GET | `/owner/roles-permissions` | owner | — | — | html |
 | GET, POST | `/owner/scheduled-backups` | owner | — | — | html |
@@ -849,7 +849,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/printing/customer-statement/<int:id>` | authenticated, permission | `manage_customers` | — | html |
 | GET | `/printing/expense/<int:id>` | authenticated, permission | `manage_expenses` | — | json |
 | GET | `/printing/history` | authenticated, permission | `view_reports` | — | html |
-| GET, POST | `/printing/settings` | authenticated | — | — | html |
+| GET, POST | `/printing/settings` | admin, authenticated | — | — | html |
 | GET | `/printing/supplier-statement/<int:id>` | authenticated, permission | `manage_suppliers` | — | html |
 
 ### `products` (30)
@@ -865,7 +865,7 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/products/api/products/bulk` | authenticated, permission | `manage_products` | — | json |
 | GET | `/products/api/products/by-barcode/<barcode>` | authenticated, permission | `view_products` | — | json |
 | GET | `/products/api/products/by-sku/<sku>` | authenticated, permission | `view_products` | — | json |
-| GET | `/products/api/search` | authenticated | — | — | json |
+| GET | `/products/api/search` | authenticated, permission | — | — | json |
 | GET | `/products/categories` | authenticated, permission | `manage_products` | — | html |
 | GET | `/products/categories/<int:id>` | authenticated, permission | `manage_products` | — | json |
 | DELETE, POST | `/products/categories/<int:id>/delete` | authenticated, permission | `manage_products` | — | json |
@@ -1063,7 +1063,7 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/shipments/<int:id>/close` | authenticated, permission | `manage_warehouse` | — | json |
 | POST | `/shipments/<int:id>/send` | authenticated, permission | `manage_warehouse` | — | json |
 | POST | `/shipments/<int:id>/start-selling` | authenticated, permission | `manage_warehouse` | — | json |
-| POST | `/shipments/<int:id>/sync-tracking` | — | — | — | json |
+| POST | `/shipments/<int:id>/sync-tracking` | authenticated, permission | `manage_warehouse` | — | json |
 | GET | `/shipments/api/products` | authenticated | — | — | json |
 | GET | `/shipments/api/warehouses` | authenticated | — | — | json |
 | GET, POST | `/shipments/create` | authenticated, permission | `manage_warehouse` | — | html |
@@ -1117,8 +1117,8 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/suppliers/<int:id>` | authenticated, permission | `manage_suppliers` | — | html |
 | POST | `/suppliers/<int:id>/delete` | authenticated, permission | `manage_suppliers` | — | html |
 | GET, POST | `/suppliers/<int:id>/edit` | authenticated, permission | `manage_suppliers` | — | html |
-| GET | `/suppliers/<int:id>/statement` | authenticated | — | — | html |
-| GET | `/suppliers/<int:id>/statement/print` | authenticated | — | — | json |
+| GET | `/suppliers/<int:id>/statement` | admin, authenticated | — | — | html |
+| GET | `/suppliers/<int:id>/statement/print` | admin, authenticated | — | — | json |
 | GET | `/suppliers/api/search` | authenticated, permission | `manage_suppliers` | — | json |
 | GET, POST | `/suppliers/create` | authenticated, permission | `manage_suppliers` | `10 per minute` | html |
 
@@ -1217,12 +1217,12 @@ Access control is enforced in two places, and both are captured below.
 |---|---|---|---|---|---|
 | GET | `/warehouse/` | authenticated, permission | `manage_warehouse` | — | html |
 | GET | `/warehouse/<int:id>` | authenticated, permission | `manage_warehouse` | — | html |
-| POST | `/warehouse/<int:id>/delete` | authenticated, permission | `manage_warehouse` | — | json |
-| GET, POST | `/warehouse/<int:id>/edit` | authenticated, permission | `manage_warehouse` | — | html |
+| POST | `/warehouse/<int:id>/delete` | admin, authenticated, permission | `manage_warehouse` | — | json |
+| GET, POST | `/warehouse/<int:id>/edit` | admin, authenticated, permission | `manage_warehouse` | — | html |
 | POST | `/warehouse/add-stock/<int:product_id>` | authenticated, permission | `manage_warehouse` | — | json |
 | POST | `/warehouse/api/upload_product_image` | authenticated, permission | `manage_products` | — | json |
-| GET, POST | `/warehouse/create` | authenticated, permission | `manage_warehouse` | — | html |
-| GET, POST | `/warehouse/create-warehouse` | authenticated, permission | `manage_warehouse` | — | html |
+| GET, POST | `/warehouse/create` | admin, authenticated, permission | `manage_warehouse` | — | html |
+| GET, POST | `/warehouse/create-warehouse` | admin, authenticated, permission | `manage_warehouse` | — | html |
 | POST | `/warehouse/exchange` | authenticated, permission | `manage_warehouse` | — | json |
 | GET | `/warehouse/list` | authenticated, permission | `manage_warehouse` | — | html |
 | GET | `/warehouse/low-stock` | authenticated, permission | `manage_warehouse` | — | html |
@@ -1247,8 +1247,8 @@ Access control is enforced in two places, and both are captured below.
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
 | POST | `/whatsapp/send-invoice/<int:sale_id>` | authenticated, permission | `manage_sales` | — | json |
-| POST | `/whatsapp/send-reminder/<int:customer_id>` | authenticated | — | — | json |
-| GET | `/whatsapp/test` | authenticated | — | — | json |
+| POST | `/whatsapp/send-reminder/<int:customer_id>` | admin, authenticated | — | — | json |
+| GET | `/whatsapp/test` | admin, authenticated | — | — | json |
 
 ## Verifying this document
 

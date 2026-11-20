@@ -5,6 +5,7 @@ purchased packages onto verified tenants.
 
 from __future__ import annotations
 
+import hmac
 import logging
 from datetime import UTC, datetime
 
@@ -160,7 +161,7 @@ def generic_webhook():
             logger.warning("Generic webhook rejected: BILLING_WEBHOOK_SECRET not configured")
             return error_response(message="Webhook not configured", status_code=503)
         provided = request.headers.get("X-Webhook-Secret", "")
-        if provided != secret:
+        if not hmac.compare_digest(provided, secret):
             logger.warning("Generic webhook rejected: invalid secret")
             return error_response(message="Forbidden", status_code=403)
 

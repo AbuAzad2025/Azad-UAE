@@ -229,6 +229,9 @@ class Config:
     # pay). The route reads this key; without it configured the endpoint
     # answered 503 and the cron never ran at all.
     CRON_SECRET = os.environ.get("CRON_SECRET", "")
+    # Carrier IPNs are machine clients: require a shared secret so an
+    # anonymous caller cannot flip any tenant's delivery status.
+    CARRIER_WEBHOOK_SECRET = os.environ.get("CARRIER_WEBHOOK_SECRET", "")
 
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "http://localhost:5000,http://127.0.0.1:5000").split(",")
     if "*" in CORS_ORIGINS:
@@ -477,10 +480,13 @@ def assert_production_sanity(cfg=None) -> None:
     if cfg is None:
         cfg = Config
 
-    is_prod = not cfg.DEBUG and cfg.APP_ENV.lower() == "production"
-
+    # Gate on APP_ENV alone: a stray DEBUG=true must never disable production
+    # fail-closed checks (secret/cookie/DB validations).
+    is_prod = cfg.APP_ENV.lower() == "production"
     if not is_prod:
         return
+    if cfg.DEBUG:
+        raise RuntimeError("DEBUG must be false when APP_ENV=production")
 
     if not os.environ.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY must be set in production!")

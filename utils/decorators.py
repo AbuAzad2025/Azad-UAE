@@ -197,7 +197,11 @@ def owner_only(f):
     def decorated_function(*args, **kwargs):
         if not current_user.is_authenticated:
             abort(403)
-        if not getattr(current_user, "is_owner", False):
+        # Same predicate as owner_required: a tenant-scoped is_owner user
+        # must not reach platform-wide surfaces (vault, fees, packages).
+        from utils.auth_helpers import is_global_owner_user
+
+        if not is_global_owner_user(current_user):
             abort(403)
         return f(*args, **kwargs)
 

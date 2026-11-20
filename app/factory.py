@@ -206,7 +206,9 @@ def create_app(config_class=Config) -> Flask:
     run_boot_provisioning(app, phase="post")
 
     # Proxy Fix for Nginx/Cloudflare
-    cast(Any, app).wsgi_app = ProxyFix(app.wsgi_app, x_host=1, x_prefix=1)
+    # Trust only one proxy hop for the client IP so audit/telemetry cannot be
+    # forged by a client-supplied X-Forwarded-For chain.
+    cast(Any, app).wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_host=1, x_prefix=1)
 
     from bootstrap.blueprints import register_blueprints
 
