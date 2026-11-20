@@ -515,8 +515,19 @@ class ReturnService:
                 customer_net_return_amount = gross_customer_amount - auto_tax_amount
             auto_gross_return_amount = customer_net_return_amount + auto_tax_amount
 
-            final_refund_amount = manual_refund_amount if manual_refund_amount is not None else auto_gross_return_amount
+            requested_refund = None
             if manual_refund_amount is not None:
+                try:
+                    requested_refund = Decimal(str(manual_refund_amount))
+                except Exception:
+                    requested_refund = Decimal("0")
+                # A refund cannot exceed what the returned lines actually
+                # represent. Without this cap a cashier with manage_sales can
+                # mint arbitrary customer credit (and a matching revenue
+                # reversal) from a single low-value return.
+                requested_refund = max(Decimal("0"), min(requested_refund, auto_gross_return_amount))
+            final_refund_amount = requested_refund if requested_refund is not None else auto_gross_return_amount
+            if requested_refund is not None:
                 blended_rate = (
                     (auto_tax_amount / customer_net_return_amount * Decimal("100"))
                     if customer_net_return_amount > 0

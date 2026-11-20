@@ -130,8 +130,8 @@ class TestRecordPayment:
             return_value="BANK",
         )
         mocker.patch(
-            "services.azad_subscription_fee_service.GLService._resolve_journal_line_account",
-            return_value=MagicMock(code="1120"),
+            "services.azad_subscription_fee_service.GLService.get_payment_credit_account",
+            return_value="1120",
         )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mock_post = mocker.patch("services.azad_subscription_fee_service.post_or_fail")
@@ -171,6 +171,10 @@ class TestRecordPayment:
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value=None,
+        )
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_payment_credit_account",
+            return_value="1120",
         )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")
@@ -285,6 +289,10 @@ class TestRecordPaymentFallbacks:
         mocker.patch(
             "services.azad_subscription_fee_service.GLService.get_payment_credit_concept",
             return_value=None,
+        )
+        mocker.patch(
+            "services.azad_subscription_fee_service.GLService.get_payment_credit_account",
+            return_value="1110",
         )
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
         mocker.patch("services.azad_subscription_fee_service.post_or_fail")

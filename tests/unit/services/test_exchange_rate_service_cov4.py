@@ -179,7 +179,9 @@ def test_admin_rate_and_latest_and_save(db_session, sample_tenant):
     out = ExchangeRateService.save_manual_rate("USD", "ILS", 3.7, tenant_id=sample_tenant.id)
     assert out == {"ok": True, "message": "Rate saved successfully"}
     ExchangeRateService._save_rate_record("USD", "ILS", "3.71", "manual", sample_tenant.id)
-    with patch("services.exchange_rate_service.atomic_transaction", side_effect=RuntimeError("tx down")):
+    # A failed flush is swallowed: the record save is best-effort and must
+    # never break the enclosing document transaction.
+    with patch("extensions.db.session.flush", side_effect=RuntimeError("db down")):
         ExchangeRateService._save_rate_record("USD", "ILS", "3.7", "manual", sample_tenant.id)
         assert ExchangeRateService.save_manual_rate("USD", "ILS", 3.7)["ok"] is True
 

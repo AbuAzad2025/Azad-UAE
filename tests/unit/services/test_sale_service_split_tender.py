@@ -75,6 +75,16 @@ class TestPrepareSplitPayments:
         assert prepared[0]["amount"] == Decimal("30")
         assert prepared[1]["payment_method"] == "card"
 
+    def test_rate_provenance_is_preserved_on_every_chunk(self):
+        # FX provenance must survive validation — otherwise split-tender
+        # payments lose the online/manual distinction persisted on Payment.
+        chunks = _chunks(("30", "cash", "USD", "3.673"))
+        chunks[0]["rate_source"] = "open_er_api"
+        chunks[0]["rate_fetched_at"] = "2026-11-20T10:00:00Z"
+        prepared = SaleService.prepare_split_payments(chunks)
+        assert prepared[0]["rate_source"] == "open_er_api"
+        assert prepared[0]["rate_fetched_at"] == "2026-11-20T10:00:00Z"
+
     def test_mixed_currency_exact_conversion(self):
         prepared = SaleService.prepare_split_payments(
             _chunks(("10", "cash", "USD", "3.673"), ("50", "card", "AED", "1"))

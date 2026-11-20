@@ -31,8 +31,6 @@ from typing import Any
 from flask import current_app
 from flask_babel import gettext
 
-from utils.db_safety import atomic_transaction
-
 logger = logging.getLogger(__name__)
 
 # Import existing currency service for manual-rate fallback detection only
@@ -663,28 +661,34 @@ class ExchangeRateService:
             from models import ExchangeRateRecord
 
             today = date.today().isoformat()
-            with atomic_transaction("save_rate_record"):
-                existing = ExchangeRateRecord.query.filter_by(
-                    tenant_id=tenant_id,
-                    from_currency=from_currency,
-                    to_currency=to_currency,
-                    effective_date=today,
-                    source=source,
-                ).first()
-                if existing:
-                    existing.rate = Decimal(str(rate))
-                    return
+            # Flush-only: this is reached from resolve_exchange_rate_for_transaction()
+            # inside the caller's atomic money transaction. Committing here would
+            # end that transaction early and leave sequence numbers/GL rows
+            # orphaned if a later step failed. The out-of-band manual-rate route
+            # owns its own commit boundary.
+            existing = ExchangeRateRecord.query.filter_by(
+                tenant_id=tenant_id,
+                from_currency=from_currency,
+                to_currency=to_currency,
+                effective_date=today,
+                source=source,
+            ).first()
+            if existing:
+                existing.rate = Decimal(str(rate))
+                db.session.flush()
+                return
 
-                record = ExchangeRateRecord(
-                    tenant_id=tenant_id,
-                    from_currency=from_currency,
-                    to_currency=to_currency,
-                    rate=Decimal(str(rate)),
-                    source=source,
-                    api_provider=api_provider,
-                    effective_date=today,
-                )
-                db.session.add(record)
+            record = ExchangeRateRecord(
+                tenant_id=tenant_id,
+                from_currency=from_currency,
+                to_currency=to_currency,
+                rate=Decimal(str(rate)),
+                source=source,
+                api_provider=api_provider,
+                effective_date=today,
+            )
+            db.session.add(record)
+            db.session.flush()
         except Exception:
             logger.warning(
                 "Failed to save exchange rate record for %s -> %s",

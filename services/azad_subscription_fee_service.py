@@ -161,24 +161,14 @@ class AzadSubscriptionFeeService:
             branch_id=_resolve_main_branch(tid),
             tenant_id=tid,
         )
+        # Liquidity concepts cannot be resolved from a bare posting_line: the
+        # account resolver requires an explicit account code for CASH/BANK. Use
+        # the dedicated payment-credit resolver so the branch-scoped liquidity
+        # account is selected instead of raising GLMappingError on every pay.
         credit_concept = GLService.get_payment_credit_concept(payment_method)
-        if credit_concept:
-            credit_account = GLService._resolve_journal_line_account(
-                GLService.posting_line(credit_concept.lower().replace("_", ""), concept_code=credit_concept),
-                tenant_id=tid,
-                missing_ok=True,
-            )
-            credit_code = (
-                credit_account.code
-                if credit_account
-                else GLService.get_account_code_for_concept(
-                    credit_concept, tenant_id=tid, branch_id=_resolve_main_branch(tid)
-                )
-            )
-        else:
-            credit_code = GLService.get_account_code_for_concept(
-                "CASH", tenant_id=tid, branch_id=_resolve_main_branch(tid)
-            )
+        credit_code = GLService.get_payment_credit_account(
+            payment_method, branch_id=_resolve_main_branch(tid), tenant_id=tid
+        )
 
         GLService.ensure_core_accounts(tenant_id=int(tid))
         branch_id = _resolve_main_branch(tid)

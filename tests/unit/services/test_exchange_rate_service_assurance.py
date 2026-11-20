@@ -366,14 +366,18 @@ class TestSaveAndLegacy:
         mocker.patch("models.ExchangeRateRecord.query", chain)
         assert _ERS()._get_last_known_rate("USD", "AED") is None
 
-    def test_save_rate_record_rollback_on_error(self, mocker, sample_tenant):
+    def test_save_rate_record_flush_failure_is_swallowed(self, mocker, sample_tenant):
+        # Flush-only: the caller owns the commit/rollback boundary. A failed
+        # lookup save must never end an enclosing document transaction.
         chain = mocker.MagicMock()
         chain.filter_by.return_value.first.return_value = None
         mocker.patch("models.ExchangeRateRecord.query", chain)
-        mocker.patch("extensions.db.session.commit", side_effect=RuntimeError("db"))
+        mocker.patch("extensions.db.session.flush", side_effect=RuntimeError("db"))
         mock_rollback = mocker.patch("extensions.db.session.rollback")
+        mock_commit = mocker.patch("extensions.db.session.commit")
         _ERS()._save_rate_record("USD", "AED", 3.67, "api_primary", sample_tenant.id)
-        mock_rollback.assert_called_once()
+        mock_rollback.assert_not_called()
+        mock_commit.assert_not_called()
 
     def test_fetch_fallbacks_continues_on_url_error(self, app, mocker):
         app.config["CURRENCY_API_FALLBACKS"] = [

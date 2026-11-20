@@ -648,6 +648,26 @@ class TestCreateReturn:
             )
         assert result.refund_amount == Decimal("105.000")
 
+    def test_manual_refund_capped_at_returnable_amount(self, app, mocker):
+        # A cashier with manage_sales must not be able to mint customer credit
+        # by submitting an arbitrary manual refund larger than the returned
+        # lines are worth.
+        sale = _sale(tax_rate=Decimal("5"))
+        line = _sale_line()
+        product = _product()
+        line.product = product
+        self._patch_common(mocker, sale, line, product)
+        from services.return_service import ReturnService
+
+        with app.app_context():
+            result = ReturnService.create_return(
+                sale.id,
+                [{"sale_line_id": line.id, "quantity": 1}],
+                user=_user(),
+                manual_refund_amount="1000000",
+            )
+        assert result.refund_amount <= Decimal("105.000")
+
     def test_net_return_clamped_to_zero(self, app, mocker):
         sale = _sale(subtotal=Decimal("100"), discount_amount=Decimal("200"))
         line = _sale_line(line_total=Decimal("100"))

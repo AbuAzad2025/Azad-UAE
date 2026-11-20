@@ -3,6 +3,7 @@ from flask_babel import gettext
 from flask_login import login_required
 
 from services.asset_service import AssetService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 from utils.numeric_input import parse_decimal_field
@@ -27,7 +28,8 @@ def index():
 def create():
     if request.method == "POST":
         try:
-            asset = AssetService.create_asset(request.form, None)
+            with atomic_transaction("asset_create"):
+                asset = AssetService.create_asset(request.form, None)
             flash(gettext("تم إنشاء الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:
@@ -55,7 +57,8 @@ def edit(asset_id):
     asset = tenant_get_or_404(FixedAsset, asset_id)
     if request.method == "POST":
         try:
-            AssetService.update_asset(asset, request.form)
+            with atomic_transaction("asset_update"):
+                AssetService.update_asset(asset, request.form)
             flash(gettext("تم تحديث الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:
@@ -71,7 +74,8 @@ def depreciate(asset_id):
 
     asset = tenant_get_or_404(FixedAsset, asset_id)
     try:
-        AssetService.post_manual_depreciation(asset)
+        with atomic_transaction("asset_depreciation"):
+            AssetService.post_manual_depreciation(asset)
         flash(gettext("تم ترحيل الاستهلاك"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -93,7 +97,8 @@ def dispose(asset_id):
             disposal_date = date_type.fromisoformat(disposal_date_str) if disposal_date_str else date_type.today()
             disposal_price = parse_decimal_field(request.form.get("disposal_price"), field="disposal_price")
             notes = request.form.get("notes")
-            AssetService.dispose_asset(asset, disposal_date, disposal_price, notes=notes)
+            with atomic_transaction("asset_disposal"):
+                AssetService.dispose_asset(asset, disposal_date, disposal_price, notes=notes)
             flash(gettext("تم التخلص من الأصل"), "success")
             return redirect(url_for("assets.detail", asset_id=asset.id))
         except (ValueError, KeyError) as e:

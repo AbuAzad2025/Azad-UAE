@@ -62,7 +62,19 @@ class DonationGLService:
             return False
 
         vault = PaymentVault.get_tenant_vault(tenant_id) or PaymentVault.get_platform_vault()
-        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, int(tenant_id or 0))
+        tid = int(tenant_id or 0)
+        debit_acct, credit_acct = DonationGLService._vault_accounts(vault, tid)
+
+        # The default liquidity rows are branch-scoped (1120-B<n> / 1110-B<n>).
+        # Posting with branch_id=None is refused by the validator, so stamp the
+        # branch of the account we actually debit.
+        debit_row = (
+            GLAccount.query.filter_by(code=debit_acct, tenant_id=tid, is_active=True)
+            .order_by(GLAccount.id.asc())
+            .first()
+        )
+        kind = getattr(debit_row, "liquidity_kind", None) or ("cash" if str(debit_acct).startswith("111") else "bank")
+        branch_id = getattr(debit_row, "branch_id", None) or GLService.resolve_liquidity_branch(kind, tenant_id=tid)
 
         from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
 
@@ -104,7 +116,9 @@ class DonationGLService:
                 description=desc,
                 reference_type=GLRef.DONATION,
                 reference_id=donation.id,
+                currency=base_currency,
                 exchange_rate=1,
+                branch_id=branch_id,
                 tenant_id=tenant_id,
             )
             donation.gl_posted = True

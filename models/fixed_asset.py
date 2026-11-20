@@ -222,11 +222,15 @@ class FixedAsset(db.Model):
             },
         ]
 
+        from utils.currency_utils import resolve_tenant_base_currency
+
         entry = gl_post_or_fail(
             lines=lines,
             description=f"قيد استهلاك شهري - {self.asset_number}",
             reference_type=GLRef.DEPRECIATION,
             reference_id=self.id,
+            currency=resolve_tenant_base_currency(tenant_id=getattr(self, "tenant_id", None)),
+            exchange_rate=1,
             branch_id=self.branch_id,
             tenant_id=getattr(self, "tenant_id", None),
         )
@@ -361,11 +365,15 @@ class FixedAsset(db.Model):
         )
 
         disposal_type = "بيع" if self.disposal_price > 0 else "إتلاف"
+        from utils.currency_utils import resolve_tenant_base_currency
+
         gl_post_or_fail(
             lines=lines,
             description=f"قيد {disposal_type} أصل - {self.asset_number}",
             reference_type=GLRef.ASSET_DISPOSAL,
             reference_id=self.id,
+            currency=resolve_tenant_base_currency(tenant_id=getattr(self, "tenant_id", None)),
+            exchange_rate=1,
             branch_id=posting_branch_id,
             tenant_id=getattr(self, "tenant_id", None),
         )

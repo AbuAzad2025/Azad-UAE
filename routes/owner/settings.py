@@ -1082,13 +1082,14 @@ def exchange_rates():
             request.form.get("effective_date") or today
 
             if rate_val and rate_val > 0:
-                result = ExchangeRateService.save_manual_rate(
-                    from_currency=from_currency,
-                    to_currency=to_currency,
-                    rate=rate_val,
-                    tenant_id=getattr(current_user, "tenant_id", None),
-                    created_by=current_user.id,
-                )
+                with atomic_transaction("exchange_rate_manual_save"):
+                    result = ExchangeRateService.save_manual_rate(
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                        rate=rate_val,
+                        tenant_id=getattr(current_user, "tenant_id", None),
+                        created_by=current_user.id,
+                    )
                 if result.get("ok"):
                     flash(gettext("✅ تم حفظ سعر الصرف بنجاح!"), "success")
                 else:

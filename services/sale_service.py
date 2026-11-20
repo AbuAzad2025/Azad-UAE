@@ -1133,6 +1133,8 @@ class SaleService:
                     "cheque_date": chunk.get("cheque_date"),
                     "bank_name": chunk.get("bank_name"),
                     "notes": chunk.get("notes"),
+                    "rate_source": chunk.get("rate_source"),
+                    "rate_fetched_at": chunk.get("rate_fetched_at"),
                 }
             )
         return prepared
