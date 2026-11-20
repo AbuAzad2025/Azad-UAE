@@ -128,8 +128,9 @@ def _compute_change_due(
 ):
     """Cash change owed when the tender exceeds the invoice total.
 
-    Reporting metadata only — the overpayment itself is still booked as
-    customer prepayment credit by SaleService (unchanged behavior).
+    SaleService caps the cash payment at the invoice amount and does NOT book
+    this excess as a customer credit; the drawer keeps the change out via
+    ``total_change_given`` on the session/shift.
     """
     sale_total_aed = getattr(sale, "amount_aed", None)
     if not isinstance(sale_total_aed, Decimal):

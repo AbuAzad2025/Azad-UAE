@@ -70,6 +70,10 @@ def test_post_success_with_rate_fallback(db_session, sample_tenant):
             "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
             side_effect=RuntimeError("no rate"),
         ),
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
+            return_value="3.670000",
+        ),
         patch("services.donation_gl_service.post_or_fail", return_value=None) as p,
         patch(
             "services.donation_gl_service.GLService.get_default_liquidity_account",
@@ -79,6 +83,27 @@ def test_post_success_with_rate_fallback(db_session, sample_tenant):
         assert DonationGLService.post_completed_donation(d) is True
         assert d.gl_posted is True
         p.assert_called_once()
+
+
+def test_post_refuses_when_no_verifiable_rate(db_session, sample_tenant):
+    d = _make_donation(db_session, sample_tenant)
+    with (
+        patch(
+            "services.donation_gl_service.DonationGLService._vault_accounts",
+            return_value=("1120", "4500"),
+        ),
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
+            side_effect=RuntimeError("no rate"),
+        ),
+        patch(
+            "services.exchange_rate_service.ExchangeRateService.get_latest_rate",
+            return_value=None,
+        ),
+        patch("services.donation_gl_service.post_or_fail") as p,
+    ):
+        assert DonationGLService.post_completed_donation(d) is False
+        p.assert_not_called()
 
 
 def test_post_success_with_live_rate(db_session, sample_tenant):

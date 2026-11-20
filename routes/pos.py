@@ -48,7 +48,7 @@ from utils.branching import (
     get_active_branch_id,
 )
 from utils.db_safety import atomic_transaction
-from utils.decorators import permission_required
+from utils.decorators import branch_scope_id, permission_required
 from utils.error_messages import ErrorCategory, ErrorMessages, refuse
 from utils.logger import log_hardware, log_security
 from utils.pos_checkout_helpers import _pos_standard_price, _promotion_evaluation_json
@@ -1406,6 +1406,13 @@ def api_session_report():
         session = tenant_get(PosSession, session_id)
         if not session:
             return error_response(message=gettext("الجلسة غير موجودة."), status_code=404)
+        # A cashier may only read their own drawer; managers with expected-
+        # balance visibility may read any session in their branch scope.
+        if not _can_view_expected() and session.user_id != current_user.id:
+            return error_response(message=gettext("لا صلاحية لعرض هذه الجلسة."), status_code=403)
+        scoped_branch = branch_scope_id()
+        if scoped_branch is not None and session.branch_id != scoped_branch:
+            return error_response(message=gettext("لا صلاحية لعرض هذه الجلسة."), status_code=403)
     else:
         session = get_active_session(current_user) or get_paused_session(current_user)
         if not session:
@@ -1823,8 +1830,22 @@ def api_cash_movement_create():
         return token_error
 
     shift = _get_active_shift(current_user)
+    idempotency_key = _extract_idempotency_key(payload)
     try:
         with atomic_transaction("pos_cash_movement"):
+            idem_record = None
+            if idempotency_key:
+                idem_record, idem_stored, idem_error = _idempotent_begin("pos.cash_movement", payload, idempotency_key)
+                if idem_error:
+                    return idem_error
+                if idem_stored is not None:
+                    stored_body, stored_status = idem_stored
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
             supervisor_id = PosOverrideService.require_permission_or_override(
                 user=current_user,
                 action=movement_type,
@@ -1839,12 +1860,20 @@ def api_cash_movement_create():
                 reason=reason,
                 authorized_by_user_id=supervisor_id,
             )
+            response = {"movement": movement.to_dict()}
+            if idem_record is not None:
+                IdempotencyService.complete(idem_record, response, 201)
     except PosOverrideError as exc:
         return error_response(message=str(exc), status_code=403)
     except ValueError as exc:
         return error_response(message=str(exc), status_code=400)
+    except IntegrityError:
+        if idempotency_key:
+            return _idempotency_conflict_response()
+        current_app.logger.error("POS cash movement integrity error", exc_info=True)
+        raise
 
-    return success_response(data={"movement": movement.to_dict()}, status_code=201)
+    return success_response(data=response, status_code=201)
 
 
 @pos_bp.route("/api/carts/<int:cart_id>/void-line", methods=["POST"])

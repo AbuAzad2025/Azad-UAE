@@ -88,7 +88,16 @@ class DonationGLService:
             )
             rate = Decimal(str(rate_info["rate"]))
         except Exception:
-            rate = Decimal("3.67")
+            # Never invent a rate for a posted donation — a guessed 3.67 can
+            # misstate both the bank debit and the revenue. Use the last
+            # recorded rate for this tenant/pair, or refuse the posting.
+            last_rate = ExchangeRateService.get_latest_rate("USD", base_currency, tenant_id=tenant_id)
+            if not last_rate:
+                current_app.logger.error(
+                    "Donation GL skipped #%s: no verifiable USD->%s rate", donation.id, base_currency
+                )
+                return False
+            rate = Decimal(str(last_rate))
         amount_aed = convert_and_quantize_aed(amount_usd, "USD", rate, base_currency=base_currency, tenant_id=tenant_id)
 
         method_label = donation.payment_method or "donation"

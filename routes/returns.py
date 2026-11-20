@@ -5,19 +5,55 @@ from werkzeug.exceptions import NotFound
 
 from extensions import limiter
 from models import ProductReturn, Sale
+from services.idempotency_service import (
+    IdempotencyHashMismatchError,
+    IdempotencyInFlightError,
+    IdempotencyService,
+    hash_request_payload,
+)
 from services.logging_core import LoggingCore
 from services.return_service import ReturnService
 from utils.api_response import error_response, paginated_response, success_response
 from utils.branching import should_show_all_branch_columns
 from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, permission_required
-from utils.tenanting import tenant_get_or_404
+from utils.tenanting import get_active_tenant_id, tenant_get_or_404
 
 returns_bp = Blueprint("returns", __name__, url_prefix="/returns")
 
 
 def _scoped_returns_query():
     return ReturnService.get_scoped_returns_query(current_user, branch_scope_id())
+
+
+def _begin_idem(payload, key):
+    """Begin an idempotent return inside the caller's transaction."""
+    tid = get_active_tenant_id(current_user)
+    request_hash = hash_request_payload({k: v for k, v in (payload or {}).items() if k != "idempotency_key"})
+    try:
+        record, stored = IdempotencyService.begin(
+            tenant_id=int(tid or 0),
+            endpoint="returns.create",
+            key=key,
+            user_id=getattr(current_user, "id", None),
+            request_hash=request_hash,
+        )
+    except IdempotencyInFlightError:
+        return (
+            None,
+            None,
+            error_response(message=gettext("طلب مكرر قيد المعالجة حالياً. أعد المحاولة بعد لحظات."), status_code=409),
+        )
+    except IdempotencyHashMismatchError:
+        return (
+            None,
+            None,
+            error_response(message=gettext("مفتاح عدم التكرار استُخدم مع بيانات مختلفة."), status_code=422),
+        )
+    if stored is not None:
+        body, status = stored
+        return None, (body, status), None
+    return record, None, None
 
 
 @returns_bp.route("/")
@@ -59,11 +95,23 @@ def api_create_return():
         if not sale_id or not lines:
             return error_response(message="Missing sale_id or lines", status_code=400)
 
-        from utils.tenanting import tenant_get_or_404
-
         tenant_get_or_404(Sale, sale_id)
 
+        idempotency_key = request.headers.get("Idempotency-Key") or data.get("idempotency_key")
         with atomic_transaction("sale_return"):
+            idem_record = None
+            if idempotency_key:
+                idem_record, idem_stored, idem_error = _begin_idem(data, idempotency_key)
+                if idem_error:
+                    return idem_error
+                if idem_stored is not None:
+                    stored_body, stored_status = idem_stored
+                    replay_data = {k: v for k, v in stored_body.items() if k != "success"}
+                    return success_response(
+                        data=replay_data,
+                        meta={"idempotent_replay": True},
+                        status_code=stored_status,
+                    )
             result = ReturnService.create_return(
                 sale_id=sale_id,
                 return_lines_data=lines,
@@ -71,6 +119,14 @@ def api_create_return():
                 notes=notes,
                 manual_refund_amount=manual_refund_amount,
             )
+            response_body = {
+                "return_id": result.id,
+                "return_number": result.return_number,
+                "refund_amount": float(result.refund_amount or 0),
+                "amount_aed": float(result.amount_aed or 0),
+            }
+            if idem_record is not None:
+                IdempotencyService.complete(idem_record, response_body, 201)
 
         LoggingCore.log_audit(
             "create",
@@ -85,12 +141,7 @@ def api_create_return():
         )
 
         return success_response(
-            data={
-                "return_id": result.id,
-                "return_number": result.return_number,
-                "refund_amount": float(result.refund_amount or 0),
-                "amount_aed": float(result.amount_aed or 0),
-            },
+            data=response_body,
             message="Return processed successfully",
         )
 

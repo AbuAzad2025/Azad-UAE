@@ -872,7 +872,7 @@ class ReportsQueryService:
             db.session.query(
                 Product.name,
                 func.sum(PurchaseLine.quantity).label("qty"),
-                func.sum(PurchaseLine.line_total).label("total"),
+                func.sum(PurchaseLine.line_total * Purchase.exchange_rate).label("total"),
                 func.max(Purchase.purchase_date).label("last_date"),
             )
             .join(Purchase)

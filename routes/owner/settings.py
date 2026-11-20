@@ -1087,7 +1087,9 @@ def exchange_rates():
                         from_currency=from_currency,
                         to_currency=to_currency,
                         rate=rate_val,
-                        tenant_id=getattr(current_user, "tenant_id", None),
+                        # owner_required users have tenant_id=NULL; the active
+                        # tenant is the one carried in the session.
+                        tenant_id=get_active_tenant_id(current_user),
                         created_by=current_user.id,
                     )
                 if result.get("ok"):
@@ -1284,7 +1286,12 @@ def api_update_tenant_settings():
         else:
             with atomic_transaction("api_update_tenant_settings"):
                 if field == "prices_include_vat":
-                    tenant.prices_include_vat = bool(value)
+                    # bool("false") is True — parse the JSON string explicitly.
+                    tenant.prices_include_vat = value is True or str(value).strip().lower() in {
+                        "1",
+                        "true",
+                        "on",
+                    }
                 elif field == "logo_url":  # pragma: no cover - validated above, unreachable else
                     tenant.logo_url = str(value).strip()
                 tenant.updated_at = datetime.now(UTC)

@@ -619,10 +619,19 @@ class SaleService:
                 sale.paid_amount = paid_amount  # في عملة الفاتورة
                 sale.paid_amount_aed = paid_amount_aed  # محول للدرهم
 
-                # Handle overpayment (credit to customer)
+                # Handle overpayment. Cash overpayment is change handed back
+                # at the till — never a customer credit.
                 if paid_amount_aed > sale.amount_aed:
                     overpayment = paid_amount_aed - sale.amount_aed
-                    payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
+                    if (payment_data.get("payment_method") or "").strip().lower() == "cash":
+                        overpayment_cur = (overpayment / payment_exchange_decimal).quantize(
+                            Decimal("0.001"), rounding=ROUND_HALF_UP
+                        )
+                        sale.paid_amount = paid_amount - overpayment_cur
+                        sale.paid_amount_aed = sale.amount_aed
+                        payment_note = f"\n[باقي نقدي] أُعيد {overpayment} للزبون نقداً"
+                    else:
+                        payment_note = f"\n[دفع زائد] مبلغ {overpayment} AED سُجّل كرصيد للزبون"
                     sale.notes = (sale.notes or "") + payment_note
 
                 # Add payment currency info to notes if not default
@@ -738,7 +747,11 @@ class SaleService:
                 sale.notes = (sale.notes or "") + payment_note
 
             if overpayment_aed > Decimal("0"):
-                # Cap sale payment at invoice amount; remainder becomes prepayment
+                # Cap the sale payment at the invoice amount. For cash the
+                # remainder is change handed back at the till (already tracked
+                # on the session/shift) — it must NOT become a customer credit
+                # with a second debit to the cash GL. Card/bank overpayments
+                # remain genuine customer prepayments.
                 overpayment_amount = (overpayment_aed / payment_exchange_decimal).quantize(
                     Decimal("0.001"), rounding=ROUND_HALF_UP
                 )
@@ -757,76 +770,21 @@ class SaleService:
                     rate_source=payment_data.get("rate_source"),
                     rate_fetched_at=payment_data.get("rate_fetched_at"),
                 )
-                # Record excess as customer prepayment (unlinked to sale for reuse)
-                from models import Payment
-
-                prepayment = Payment(
-                    tenant_id=(sale.tenant_id if sale is not None else None),
-                    payment_number=generate_number(
-                        "PRE",
-                        Payment,
-                        "payment_number",
-                        branch_id=sale.branch_id,
-                        tenant_id=(sale.tenant_id if sale is not None else None),
-                    ),
-                    payment_type="prepayment",
-                    direction="incoming",
-                    customer_id=sale.customer_id,
-                    amount=overpayment_amount,
-                    currency=payment_currency,
-                    exchange_rate=payment_exchange_decimal,
-                    amount_aed=overpayment_aed,
-                    payment_method=payment_data["payment_method"],
-                    payment_confirmed=(payment_data["payment_method"] != "cheque"),
-                    notes=gettext(f"دفع زائد من فاتورة {sale.sale_number}"),
-                    user_id=sale.seller_id,
-                    branch_id=sale.branch_id,
-                )
-                db.session.add(prepayment)
-                db.session.flush()
-                from decimal import Decimal as _D
-
-                sale.customer.apply_receipt(_D(str(overpayment_aed or 0)))
-                # The excess was credited in the sub-ledger and the cash is in
-                # the drawer; without a matching GL entry the till is heavier
-                # than the books and the customer credit has no liability
-                # behind it. Keyed on the prepayment id so a retry cannot post
-                # it twice.
-                GLService.ensure_core_accounts(tenant_id=sale.tenant_id)
-                post_or_fail(
-                    [
-                        {
-                            "account": GLService.get_payment_debit_account(
-                                payment_data["payment_method"],
-                                branch_id=sale.branch_id,
-                                tenant_id=sale.tenant_id,
-                            ),
-                            "concept_code": GLService.get_payment_debit_concept(payment_data["payment_method"]),
-                            # post_or_fail converts this with currency+rate;
-                            # pass the ORIGINAL currency amount, not the
-                            # already-base-currency AED figure (double FX).
-                            "debit": overpayment_amount,
-                            "description": gettext(f"دفع زائد - {sale.sale_number}"),
-                        },
-                        {
-                            "account": GLService.get_customer_credit_account(
-                                sale.customer,
-                                branch_id=sale.branch_id,
-                                tenant_id=sale.tenant_id,
-                            ),
-                            "concept_code": GLService.get_customer_credit_concept(sale.customer),
-                            "credit": overpayment_amount,
-                            "description": gettext(f"سلفة عميل - {sale.sale_number}"),
-                        },
-                    ],
-                    description=f"Customer prepayment {sale.sale_number}",
-                    reference_type=GLRef.PAYMENT,
-                    reference_id=prepayment.id,
-                    currency=payment_currency,
-                    exchange_rate=payment_exchange_decimal,
-                    branch_id=sale.branch_id,
-                    tenant_id=sale.tenant_id,
-                )
+                sale.paid_amount = sale_payment_amount
+                sale.paid_amount_aed = sale.amount_aed
+                if (payment_data.get("payment_method") or "").strip().lower() == "cash":
+                    sale.notes = (sale.notes or "") + gettext(
+                        f"\n[باقي نقدي] أُعيد {overpayment_aed} نقداً — لا رصيد للزبون"
+                    )
+                else:
+                    SaleService._book_customer_prepayment(
+                        sale,
+                        overpayment_aed=overpayment_aed,
+                        overpayment_amount=overpayment_amount,
+                        payment_method=payment_data["payment_method"],
+                        payment_currency=payment_currency,
+                        payment_exchange_decimal=payment_exchange_decimal,
+                    )
             else:
                 SaleService.create_payment_for_sale(
                     sale=sale,
@@ -1152,10 +1110,7 @@ class SaleService:
             raise ValueError(gettext("مجموع الدفعات يجب أن يكون أكبر من صفر"))
 
         remaining_aed = Decimal(str(sale.amount_aed or 0))
-        excess_aed = Decimal("0")
-        last_chunk = None
         for chunk in prepared_payments:
-            last_chunk = chunk
             chunk_aed = chunk["amount_aed"]
             applied_aed = min(chunk_aed, max(remaining_aed, Decimal("0")))
             if applied_aed > Decimal("0"):
@@ -1179,15 +1134,105 @@ class SaleService:
                     rate_source=chunk.get("rate_source"),
                     rate_fetched_at=chunk.get("rate_fetched_at"),
                 )
-            excess_aed += chunk_aed - applied_aed
+            chunk_excess = chunk_aed - applied_aed
+            if chunk_excess > Decimal("0"):
+                if (chunk["payment_method"] or "").strip().lower() == "cash":
+                    # Cash excess is change handed back at the till — record it
+                    # for the operator but never as a customer credit.
+                    sale.notes = (sale.notes or "") + gettext(
+                        f"\n[باقي نقدي] أُعيد {chunk_excess} نقداً — لا رصيد للزبون"
+                    )
+                else:
+                    overpayment_amount = (chunk_excess / chunk["exchange_rate"]).quantize(
+                        Decimal("0.001"), rounding=ROUND_HALF_UP
+                    )
+                    SaleService._book_customer_prepayment(
+                        sale,
+                        overpayment_aed=chunk_excess,
+                        overpayment_amount=overpayment_amount,
+                        payment_method=chunk["payment_method"],
+                        payment_currency=chunk["currency"],
+                        payment_exchange_decimal=chunk["exchange_rate"],
+                    )
             remaining_aed -= chunk_aed
 
-        if excess_aed > Decimal("0"):
-            SaleService._book_overpayment_prepayment(sale, excess_aed, last_chunk)
+    @staticmethod
+    def _book_customer_prepayment(
+        sale,
+        *,
+        overpayment_aed,
+        overpayment_amount,
+        payment_method,
+        payment_currency,
+        payment_exchange_decimal,
+    ):
+        """Genuine (non-cash) overpayment: a customer credit with matching GL."""
+        sale.notes = (sale.notes or "") + gettext(f"\n[دفع زائد] مبلغ {overpayment_aed} سُجّل كرصيد للزبون")
+        from models import Payment
+
+        prepayment = Payment(
+            tenant_id=(sale.tenant_id if sale is not None else None),
+            payment_number=generate_number(
+                "PRE",
+                Payment,
+                "payment_number",
+                branch_id=sale.branch_id,
+                tenant_id=(sale.tenant_id if sale is not None else None),
+            ),
+            payment_type="prepayment",
+            direction="incoming",
+            customer_id=sale.customer_id,
+            amount=overpayment_amount,
+            currency=payment_currency,
+            exchange_rate=payment_exchange_decimal,
+            amount_aed=overpayment_aed,
+            payment_method=payment_method,
+            payment_confirmed=(payment_method != "cheque"),
+            notes=gettext(f"دفع زائد من فاتورة {sale.sale_number}"),
+            user_id=sale.seller_id,
+            branch_id=sale.branch_id,
+        )
+        db.session.add(prepayment)
+        db.session.flush()
+        sale.customer.apply_receipt(overpayment_aed)
+        GLService.ensure_core_accounts(tenant_id=sale.tenant_id)
+        post_or_fail(
+            [
+                {
+                    "account": GLService.get_payment_debit_account(
+                        payment_method, branch_id=sale.branch_id, tenant_id=sale.tenant_id
+                    ),
+                    "concept_code": GLService.get_payment_debit_concept(payment_method),
+                    "debit": overpayment_amount,
+                    "description": gettext(f"دفع زائد - {sale.sale_number}"),
+                },
+                {
+                    "account": GLService.get_customer_credit_account(
+                        sale.customer, branch_id=sale.branch_id, tenant_id=sale.tenant_id
+                    ),
+                    "concept_code": GLService.get_customer_credit_concept(sale.customer),
+                    "credit": overpayment_amount,
+                    "description": gettext(f"سلفة عميل - {sale.sale_number}"),
+                },
+            ],
+            description=f"Customer prepayment {sale.sale_number}",
+            reference_type=GLRef.PAYMENT,
+            reference_id=prepayment.id,
+            currency=payment_currency,
+            exchange_rate=payment_exchange_decimal,
+            branch_id=sale.branch_id,
+            tenant_id=sale.tenant_id,
+        )
 
     @staticmethod
     def _book_overpayment_prepayment(sale, excess_aed, chunk):
-        """Single aggregate prepayment for split-tender overpayment."""
+        """Single aggregate prepayment for split-tender overpayment.
+
+        A cash chunk's excess is change returned, not a customer credit.
+        """
+        if (chunk.get("payment_method") or "").strip().lower() == "cash":
+            sale.notes = (sale.notes or "") + gettext(f"\n[باقي نقدي] أُعيد {excess_aed} نقداً — لا رصيد للزبون")
+            return
         overpayment_amount = (excess_aed / chunk["exchange_rate"]).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         payment_note = f"\n[دفع زائد] مبلغ {excess_aed} AED سُجّل كرصيد للزبون"
         sale.notes = (sale.notes or "") + payment_note

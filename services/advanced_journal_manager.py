@@ -388,10 +388,20 @@ class AdvancedJournalEntryManager:
             approved_by: User ID performing the approval.
             approval_notes: Optional notes for the approval (currently unused, kept for compatibility).
         """
-        return AdvancedJournalEntryManager.validate_entry(
+        validated = AdvancedJournalEntryManager.validate_entry(
             entry_id,
             validated_by=approved_by,
         )
+        # The UI says "approved and posted". Make that true: validation alone
+        # leaves the entry invisible to every GL balance and statement.
+        if getattr(validated, "status", None) == "validated":
+            return AdvancedJournalEntryManager.post_entry(
+                entry_id,
+                posted_by=approved_by,
+                post_notes=approval_notes,
+                commit=False,
+            )
+        return validated
 
     @staticmethod
     def get_entry_history(entry_id, tenant_id=None):

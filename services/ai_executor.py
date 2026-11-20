@@ -588,7 +588,7 @@ class AIExecutor:
         from models import Sale
 
         total = (
-            db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+            db.session.query(func.coalesce(func.sum(Sale.amount_aed), 0))
             .filter(
                 Sale.tenant_id == self.tenant_id,
                 Sale.status.in_(["confirmed", "active"]),
@@ -613,7 +613,7 @@ class AIExecutor:
         from models import Product, Sale, SaleLine
 
         total_revenue = (
-            db.session.query(func.coalesce(func.sum(Sale.total_amount), 0))
+            db.session.query(func.coalesce(func.sum(Sale.amount_aed), 0))
             .filter(
                 Sale.tenant_id == self.tenant_id,
                 Sale.status.in_(["confirmed", "active"]),

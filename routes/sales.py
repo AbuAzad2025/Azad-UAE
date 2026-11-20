@@ -667,9 +667,12 @@ def edit(**kwargs):
                 else:
                     sale.notes = request.form.get("notes", "")
                     discount_amount = max(
-                        0,
-                        safe_float(request.form.get("discount_amount")) or 0,
+                        Decimal("0"),
+                        Decimal(str(safe_float(request.form.get("discount_amount")) or 0)),
                     )
+                    # Mirror create_sale's guard: a discount above the subtotal
+                    # makes the recalculated total (and GL) negative.
+                    SaleService._ensure_discount_within_subtotal(discount_amount, Decimal(str(sale.subtotal or 0)))
                     sale.discount_amount = discount_amount
                     sale.calculate_totals()
                     LoggingCore.log_audit("update", "sales", record_id)

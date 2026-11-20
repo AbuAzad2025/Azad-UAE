@@ -506,6 +506,13 @@ def manual_entry():
                     created_by=current_user.id,
                     branch_id=branch_id,
                 )
+                # A draft entry affects no balance or statement. Validate and
+                # post it inside the same transaction so the "created"
+                # confirmation is truthful.
+                from services.advanced_journal_manager import AdvancedJournalEntryManager
+
+                AdvancedJournalEntryManager.validate_entry(entry.id, validated_by=current_user.id, commit=False)
+                AdvancedJournalEntryManager.post_entry(entry.id, posted_by=current_user.id, commit=False)
                 LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
 
             flash(gettext(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح"), "success")

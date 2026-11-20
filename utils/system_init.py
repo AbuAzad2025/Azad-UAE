@@ -322,6 +322,12 @@ def _ensure_functional_roles():
                 # logs, no cross-tenant access.
                 "manage_settings",
                 "manage_approvals",
+                # Fixed assets are tenant accounting records: the company
+                # manager owns their capitalization and depreciation, not just
+                # the platform owner.
+                "assets:view",
+                "assets:manage",
+                "assets:depreciate",
             ]
             manager_role.permissions = get_perms(*manager_codes)
 

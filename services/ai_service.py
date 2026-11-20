@@ -1970,9 +1970,7 @@ class AIService:
             if intent in ("sales", "overview"):
                 sales_30d = db.session.query(Sale).filter(Sale.sale_date >= cutoff, Sale.tenant_id == tid).count()
                 total_sales = _sum(
-                    db.session.query(func.sum(Sale.total_amount)).filter(
-                        Sale.sale_date >= cutoff, Sale.tenant_id == tid
-                    )
+                    db.session.query(func.sum(Sale.amount_aed)).filter(Sale.sale_date >= cutoff, Sale.tenant_id == tid)
                 )
                 data_parts.append(f"💰 المبيعات (30 يوم): {sales_30d} فاتورة (إجمالي: {total_sales:.2f} درهم)")
 
@@ -2127,7 +2125,7 @@ class AIService:
             cheques_count = db.session.query(Cheque).filter_by(tenant_id=tid).count()
 
             total_sales_amount = (
-                db.session.query(func.sum(Sale.total_amount))
+                db.session.query(func.sum(Sale.amount_aed))
                 .filter(
                     Sale.sale_date >= datetime.now() - timedelta(days=30),
                     Sale.tenant_id == tid,

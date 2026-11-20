@@ -155,6 +155,11 @@ class TestPostCompletedDonation:
             "services.donation_gl_service.ExchangeRateService.resolve_exchange_rate_for_transaction",
             side_effect=RuntimeError("api down"),
         )
+        # A guessed rate is never used: the last recorded rate is the fallback.
+        mocker.patch(
+            "services.donation_gl_service.ExchangeRateService.get_latest_rate",
+            return_value="3.670000",
+        )
         mocker.patch("services.donation_gl_service.post_or_fail", return_value=MagicMock(id=1))
         assert DonationGLService.post_completed_donation(donation) is True
 
