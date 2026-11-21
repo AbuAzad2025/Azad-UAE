@@ -3,6 +3,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.email_marketing_service import EmailMarketingService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 
@@ -30,7 +31,8 @@ def campaigns():
 def create_campaign():
     if request.method == "POST":
         try:
-            EmailMarketingService.create_campaign(request.form, current_user)
+            with atomic_transaction("marketing_create_campaign"):
+                EmailMarketingService.create_campaign(request.form, current_user)
             flash(gettext("تم إنشاء الحملة"), "success")
             return redirect(url_for("email_marketing.campaigns"))
         except Exception as e:
@@ -57,7 +59,8 @@ def campaign_detail(campaign_id):
 @permission_required("marketing.manage")
 def send_campaign(campaign_id):
     try:
-        EmailMarketingService.send_campaign(campaign_id, current_user)
+        with atomic_transaction("marketing_send_campaign"):
+            EmailMarketingService.send_campaign(campaign_id, current_user)
         flash(gettext("تم إرسال الحملة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -77,7 +80,8 @@ def lists():
 @permission_required("marketing.manage")
 def create_list():
     try:
-        EmailMarketingService.create_list(request.form, current_user)
+        with atomic_transaction("marketing_create_list"):
+            EmailMarketingService.create_list(request.form, current_user)
         flash(gettext("تم إنشاء القائمة"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -97,7 +101,8 @@ def templates():
 @permission_required("marketing.manage")
 def create_template():
     try:
-        EmailMarketingService.create_template(request.form, current_user)
+        with atomic_transaction("marketing_create_template"):
+            EmailMarketingService.create_template(request.form, current_user)
         flash(gettext("تم إنشاء القالب"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")

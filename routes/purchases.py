@@ -646,7 +646,8 @@ def create_requisition():
             from services.procurement_service import ProcurementService
 
             data = _parse_requisition_form(request.form)
-            ProcurementService.create_requisition(data, current_user)
+            with atomic_transaction("requisition_create"):
+                ProcurementService.create_requisition(data, current_user)
             flash(gettext("تم إنشاء طلب الشراء"), "success")
             return redirect(url_for("purchases.requisitions_list"))
         except (ValueError, KeyError) as e:
@@ -665,7 +666,8 @@ def submit_requisition(pr_id):
 
     pr = tenant_get_or_404(PurchaseRequisition, pr_id)
     try:
-        ProcurementService.submit_requisition(pr)
+        with atomic_transaction("requisition_submit"):
+            ProcurementService.submit_requisition(pr)
         flash(gettext("تم إرسال الطلب"), "success")
     except ValueError as e:
         refuse(e, context="requisition submit", category=ErrorCategory.BUSINESS)
@@ -681,7 +683,8 @@ def approve_requisition(pr_id):
 
     pr = tenant_get_or_404(PurchaseRequisition, pr_id)
     try:
-        ProcurementService.approve_requisition(pr, current_user)
+        with atomic_transaction("requisition_approve"):
+            ProcurementService.approve_requisition(pr, current_user)
         flash(gettext("تمت الموافقة على الطلب"), "success")
     except ValueError as e:
         refuse(e, context="requisition approve", category=ErrorCategory.BUSINESS)
@@ -698,7 +701,8 @@ def reject_requisition(pr_id):
     pr = tenant_get_or_404(PurchaseRequisition, pr_id)
     reason = request.form.get("reason", "")
     try:
-        ProcurementService.reject_requisition(pr, current_user, reason)
+        with atomic_transaction("requisition_reject"):
+            ProcurementService.reject_requisition(pr, current_user, reason)
         flash(gettext("تم رفض الطلب"), "success")
     except ValueError as e:
         refuse(e, context="requisition reject", category=ErrorCategory.BUSINESS)
@@ -725,7 +729,8 @@ def create_grn():
 
             po_id = int(request.form["po_id"])
             data = _parse_grn_form(request.form)
-            ProcurementService.create_grn(po_id, data, current_user)
+            with atomic_transaction("grn_create"):
+                ProcurementService.create_grn(po_id, data, current_user)
             flash(gettext("تم إنشاء إيصال الاستلام"), "success")
             return redirect(url_for("purchases.grn_list"))
         except (ValueError, KeyError) as e:
@@ -744,7 +749,8 @@ def confirm_grn(grn_id):
 
     grn = tenant_get_or_404(GoodsReceipt, grn_id)
     try:
-        ProcurementService.confirm_grn(grn)
+        with atomic_transaction("grn_confirm"):
+            ProcurementService.confirm_grn(grn)
         flash(gettext("تم تأكيد الاستلام"), "success")
     except ValueError as e:
         refuse(e, context="goods receipt confirm", category=ErrorCategory.BUSINESS)

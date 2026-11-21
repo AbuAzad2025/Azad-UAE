@@ -323,11 +323,12 @@ def account_login(slug):
 
     if request.method == "POST":
         try:
-            account = ShopCustomerAuthService.authenticate(
-                store.tenant_id,
-                request.form.get("email", ""),
-                request.form.get("password", ""),
-            )
+            with atomic_transaction("shop_login"):
+                account = ShopCustomerAuthService.authenticate(
+                    store.tenant_id,
+                    request.form.get("email", ""),
+                    request.form.get("password", ""),
+                )
 
             ShopCustomerAuthService.login(session, store.tenant_id, account)
 
@@ -361,14 +362,15 @@ def account_register(slug):
             abort(400)
 
         try:
-            account = ShopCustomerAuthService.register(
-                store.tenant_id,
-                request.form.get("name", ""),
-                request.form.get("email", ""),
-                request.form.get("phone", ""),
-                request.form.get("password", ""),
-                (request.form.get("address") or "").strip() or None,
-            )
+            with atomic_transaction("shop_register"):
+                account = ShopCustomerAuthService.register(
+                    store.tenant_id,
+                    request.form.get("name", ""),
+                    request.form.get("email", ""),
+                    request.form.get("phone", ""),
+                    request.form.get("password", ""),
+                    (request.form.get("address") or "").strip() or None,
+                )
 
             ShopCustomerAuthService.login(session, store.tenant_id, account)
 
@@ -1192,7 +1194,8 @@ def account_forgot_password(slug):
 
     if request.method == "POST":
         try:
-            account = ShopCustomerAuthService.request_password_reset(store.tenant_id, request.form.get("email", ""))
+            with atomic_transaction("shop_password_reset_request"):
+                account = ShopCustomerAuthService.request_password_reset(store.tenant_id, request.form.get("email", ""))
 
             if account:
                 reset_url = url_for(
@@ -1228,7 +1231,8 @@ def account_reset_password(slug, token):
 
     if request.method == "POST":
         try:
-            ShopCustomerAuthService.reset_password(store.tenant_id, token, request.form.get("password", ""))
+            with atomic_transaction("shop_password_reset_confirm"):
+                ShopCustomerAuthService.reset_password(store.tenant_id, token, request.form.get("password", ""))
 
             flash(t("reset_success", ctx["lang"]), "success")
 

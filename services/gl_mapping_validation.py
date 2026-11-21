@@ -893,12 +893,16 @@ class GLMappingValidationService:
         def _is_postable(acct: GLAccount) -> bool:
             return acct.tenant_id == tenant.id and acct.is_active and not acct.is_header
 
+        # Load the tenant's postable accounts ONCE. The old code re-ran this
+        # query for every exact/partial name pattern (one query per pattern).
+        postable_accounts = [
+            account for account in GLAccount.query.filter_by(tenant_id=tenant.id).all() if _is_postable(account)
+        ]
+
         # --- Strategy 1: exact name match (highest confidence) ---
         for pattern in name_exact:
-            for account in GLAccount.query.filter_by(tenant_id=tenant.id).all():
+            for account in postable_accounts:
                 if account.id in seen_ids:
-                    continue
-                if not _is_postable(account):
                     continue
                 if expected_types and account.type not in expected_types:
                     continue
@@ -909,10 +913,8 @@ class GLMappingValidationService:
 
         # --- Strategy 2: partial name match (medium confidence) ---
         for pattern in name_partial:
-            for account in GLAccount.query.filter_by(tenant_id=tenant.id).all():
+            for account in postable_accounts:
                 if account.id in seen_ids:
-                    continue
-                if not _is_postable(account):
                     continue
                 if expected_types and account.type not in expected_types:
                     continue

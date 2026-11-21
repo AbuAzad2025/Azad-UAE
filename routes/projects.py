@@ -5,6 +5,7 @@ from flask_login import current_user, login_required
 from models import Customer
 from services.project_service import ProjectService
 from utils.api_response import error_response, success_response
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_query
@@ -26,7 +27,8 @@ def list_projects():
 def create_project():
     if request.method == "POST":
         try:
-            ProjectService.create_project(request.form, current_user)
+            with atomic_transaction("project_create"):
+                ProjectService.create_project(request.form, current_user)
             flash(gettext("تم إنشاء المشروع بنجاح"), "success")
             return redirect(url_for("projects.list_projects"))
         except Exception as e:
@@ -70,7 +72,8 @@ def edit_project(project_id):
         return redirect(url_for("projects.list_projects"))
     if request.method == "POST":
         try:
-            ProjectService.update_project(project_id, request.form, current_user)
+            with atomic_transaction("project_update"):
+                ProjectService.update_project(project_id, request.form, current_user)
             flash(gettext("تم تحديث المشروع"), "success")
             return redirect(url_for("projects.project_detail", project_id=project_id))
         except Exception as e:
@@ -84,7 +87,8 @@ def edit_project(project_id):
 @permission_required("project.manage")
 def add_task(project_id):
     try:
-        ProjectService.create_task(project_id, request.form, current_user)
+        with atomic_transaction("project_add_task"):
+            ProjectService.create_task(project_id, request.form, current_user)
         flash(gettext("تم إنشاء المهمة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -97,7 +101,8 @@ def add_task(project_id):
 def api_move_task():
     data = request.get_json(silent=True) or {}
     try:
-        ProjectService.move_task(data["task_id"], data["stage_id"], current_user)
+        with atomic_transaction("project_move_task"):
+            ProjectService.move_task(data["task_id"], data["stage_id"], current_user)
         return success_response()
     except (ValueError, KeyError) as e:
         return error_response(message=str(e), status_code=400)
@@ -109,7 +114,8 @@ def api_move_task():
 def api_log_timesheet():
     data = request.get_json(silent=True) or {}
     try:
-        ts = ProjectService.log_timesheet(data["task_id"], data, current_user)
+        with atomic_transaction("project_log_timesheet"):
+            ts = ProjectService.log_timesheet(data["task_id"], data, current_user)
         return success_response(data={"id": ts.id, "hours": float(ts.hours)})
     except (ValueError, KeyError) as e:
         return error_response(message=str(e), status_code=400)
@@ -131,12 +137,13 @@ def api_gantt(project_id):
 @permission_required("project.manage")
 def add_member(project_id):
     try:
-        ProjectService.add_member(
-            project_id,
-            request.form["user_id"],
-            request.form.get("role", "member"),
-            current_user,
-        )
+        with atomic_transaction("project_add_member"):
+            ProjectService.add_member(
+                project_id,
+                request.form["user_id"],
+                request.form.get("role", "member"),
+                current_user,
+            )
         flash(gettext("تم إضافة العضو"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")

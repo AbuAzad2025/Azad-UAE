@@ -1,6 +1,6 @@
 import logging
 from datetime import UTC, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
 from flask import current_app
 from flask_babel import gettext
@@ -28,6 +28,25 @@ import time
 
 _MAX_LOCK_RETRIES = 3
 _BASE_LOCK_RETRY_DELAY = 0.02  # 20ms base delay
+
+# A raw StockMovement carries quantity only. A stock-sync payload is the only
+# caller that creates movements without a document behind them (no sale, no
+# purchase, no stocktake), so it is the only caller that has to supply the
+# valuation itself. These are the movement types that move value on/off the
+# shelf; ``transfer`` (net-zero between warehouses) and ``test_store_setup``
+# (a test fixture) are deliberately absent and are refused by
+# ``value_synced_movement`` rather than silently moved with no GL and no MWAC.
+SYNC_VALUE_BEARING_MOVEMENT_TYPES = frozenset(
+    {
+        "purchase",
+        "sale",
+        "adjustment",
+        "return",
+        "damage",
+        "maintenance",
+        "maintenance_return",
+    }
+)
 
 
 def _safe_for_update(query, label="row"):
@@ -171,7 +190,16 @@ class StockService:
         )
 
     @staticmethod
-    def _post_adjustment_gl(movement):
+    def _post_adjustment_gl(movement, unit_cost=None, reference_type=None):
+        """Post the GL leg of a valued stock movement.
+
+        ``adjust_stock`` calls this with no cost and it values at
+        ``product.cost_price``. The stock-sync path passes the same cost it used
+        for the MWAC update and the sync's own reference type, so the ledger and
+        the warehouse valuation can never disagree about a movement. The posting
+        itself (concept resolution, branch, ``post_or_fail``, no commit) is
+        unchanged.
+        """
         from services.gl_posting import post_or_fail
         from services.gl_service import GLService
 
@@ -180,7 +208,8 @@ class StockService:
             # The product is gone, so there is nothing to value the movement
             # against. Refuse rather than silently leaving the ledger behind.
             raise ValueError(gettext(f"لا يمكن تسوية مخزون منتج غير موجود: {movement.product_id}"))
-        if not product.cost_price:
+        raw_cost = unit_cost if unit_cost is not None else product.cost_price
+        if raw_cost is None or str(raw_cost).strip() == "" or Decimal(str(raw_cost)) <= 0:
             # Previously an early return: the movement was written, the quantity
             # changed, and no journal entry was created - with no exception, no
             # log, and no sign anywhere that the books had been left out of step
@@ -197,7 +226,9 @@ class StockService:
                     f"لا يمكن تسوية مخزون منتج بدون سعر تكلفة: {product.name}. أدخل سعر التكلفة أولاً ثم أعد التسوية."
                 )
             )
-        cost_value = abs(Decimal(str(movement.quantity))) * Decimal(str(product.cost_price))
+        cost_value = (abs(Decimal(str(movement.quantity))) * Decimal(str(raw_cost))).quantize(
+            Decimal("0.001"), rounding=ROUND_HALF_UP
+        )
         if cost_value <= 0:
             return
         warehouse = (
@@ -262,7 +293,7 @@ class StockService:
         post_or_fail(
             lines=lines,
             description=f"Stock Adjustment - {product.name}",
-            reference_type=movement.reference_type or GLRef.STOCK_ADJUSTMENT,
+            reference_type=reference_type or movement.reference_type or GLRef.STOCK_ADJUSTMENT,
             reference_id=movement.id,
             branch_id=branch_id,
             tenant_id=tenant_id,
@@ -348,6 +379,207 @@ class StockService:
                     tenant_id=tenant_id,
                 )
         return movement
+
+    @staticmethod
+    def value_synced_movement(movement, *, product=None, warehouse=None, unit_cost=None):
+        """Value a movement created by the inbound POS stock-sync.
+
+        ``create_movement`` deliberately only moves quantity: every other caller
+        (purchases, sales, adjustments, opening stock) adds the valuation and the
+        GL entry afterwards. Stock-sync has no document behind it, so it has to
+        do the same here inside the caller's ``atomic_transaction`` — otherwise
+        a synced sale/purchase changes the shelf while the inventory GL and
+        ``ProductWarehouseCost`` stay behind. This method never commits.
+
+        A movement type that cannot be valued safely is refused explicitly; a
+        quantity-only movement must never be allowed to commit looking like a
+        successful sync.
+        """
+        from services.gl_posting import post_or_fail
+        from services.gl_service import GLService
+
+        movement_type = (getattr(movement, "movement_type", None) or "").lower()
+        if movement_type not in SYNC_VALUE_BEARING_MOVEMENT_TYPES:
+            raise ValueError(
+                f"Cannot value stock-sync movement type '{movement_type or 'unknown'}': "
+                f"only {', '.join(sorted(SYNC_VALUE_BEARING_MOVEMENT_TYPES))} change inventory value."
+            )
+
+        qty = Decimal(str(movement.quantity))
+        if qty == 0:
+            # Zero quantity moves no value; there is nothing to post.
+            return movement
+
+        product = product if product is not None else db.session.get(Product, movement.product_id)
+        if product is None:
+            raise ValueError(f"Cannot value stock-sync movement: product #{movement.product_id} not found")
+        warehouse = (
+            warehouse
+            if warehouse is not None
+            else (db.session.get(Warehouse, movement.warehouse_id) if getattr(movement, "warehouse_id", None) else None)
+        )
+        tenant_id = product.tenant_id
+        branch_id = warehouse.branch_id if warehouse is not None else None
+
+        # Cost precedence: an explicit payload cost, the MWAC sitting on the
+        # shelf for an issue, then the product's standard cost. Without a cost
+        # there is no honest value to post, so refuse instead of posting zero.
+        resolved_cost = unit_cost
+        if resolved_cost is None and qty < 0 and warehouse is not None:
+            pwc = ProductWarehouseCost.query.filter_by(
+                tenant_id=tenant_id, product_id=product.id, warehouse_id=warehouse.id
+            ).first()
+            if pwc is not None and (pwc.total_quantity or 0) > 0 and pwc.average_cost:
+                resolved_cost = pwc.average_cost
+        if resolved_cost is None:
+            resolved_cost = product.cost_price
+        if resolved_cost is None or str(resolved_cost).strip() == "":
+            raise ValueError(
+                f"Cannot value stock-sync movement for product {product.name or product.id}: "
+                "no unit cost was supplied and the product has no cost price."
+            )
+        try:
+            unit_cost_decimal = Decimal(str(resolved_cost))
+        except (InvalidOperation, TypeError, ValueError):
+            raise ValueError(f"Cannot value stock-sync movement: invalid unit cost {resolved_cost!r}") from None
+        if unit_cost_decimal <= 0:
+            raise ValueError(
+                f"Cannot value stock-sync movement for product {product.name or product.id}: "
+                "unit cost must be greater than zero."
+            )
+
+        # Chart first, then concept resolution — the same order adjust_stock and
+        # add_opening_stock use, because a concept is resolved against the
+        # tenant's own chart and mapping.
+        GLService.ensure_core_accounts(tenant_id=tenant_id)
+        warehouse_id = warehouse.id if warehouse is not None else None
+
+        if qty > 0:
+            # Receipt side of the sync: MWAC update + the opening-stock GL shape
+            # (Dr Inventory Asset / Cr Opening Balance Equity). There is no
+            # supplier invoice behind an inbound sync, so an equity counterpart
+            # is the only honest one — inventing an AP line would be a lie.
+            StockService._update_wac_on_receipt(
+                tenant_id=tenant_id,
+                product_id=product.id,
+                warehouse_id=warehouse_id,
+                received_qty=qty,
+                unit_cost_aed=unit_cost_decimal,
+                reference_type=GLRef.INVENTORY_MIGRATION,
+                reference_id=movement.id,
+            )
+            asset_account = GLService.get_account_code_for_concept(
+                "INVENTORY_ASSET", tenant_id=tenant_id, branch_id=branch_id
+            )
+            equity_account = GLService.get_account_code_for_concept(
+                "OPENING_BALANCE_EQUITY", tenant_id=tenant_id, branch_id=branch_id
+            )
+            cost_value = (qty * unit_cost_decimal).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+            lines = [
+                {
+                    "account": asset_account,
+                    "concept_code": "INVENTORY_ASSET",
+                    "debit": cost_value,
+                    "credit": 0,
+                    "description": f"POS stock sync receipt - {product.name}",
+                },
+                {
+                    "account": equity_account,
+                    "concept_code": "OPENING_BALANCE_EQUITY",
+                    "debit": 0,
+                    "credit": cost_value,
+                    "description": f"POS stock sync receipt - {product.name}",
+                },
+            ]
+            post_or_fail(
+                lines=lines,
+                description=f"POS stock sync receipt - {product.name}",
+                reference_type=GLRef.INVENTORY_MIGRATION,
+                reference_id=movement.id,
+                branch_id=branch_id,
+                tenant_id=tenant_id,
+            )
+        else:
+            # Issue side: unwind the shelf valuation, then use the adjustment's
+            # own GL path (Dr Inventory Adjustment Loss / Cr Inventory Asset)
+            # with exactly the cost used for the unwind.
+            StockService._decrement_wac_on_issue(
+                tenant_id=tenant_id,
+                product_id=product.id,
+                warehouse_id=warehouse_id,
+                issued_qty=abs(qty),
+                unit_cost=unit_cost_decimal,
+                movement_type=movement_type,
+                reference_type=GLRef.INVENTORY_MIGRATION,
+                reference_id=movement.id,
+            )
+            StockService._post_adjustment_gl(
+                movement,
+                unit_cost=unit_cost_decimal,
+                reference_type=GLRef.INVENTORY_MIGRATION,
+            )
+        return movement
+
+    @staticmethod
+    def _decrement_wac_on_issue(
+        tenant_id, product_id, warehouse_id, issued_qty, unit_cost, movement_type, reference_type, reference_id
+    ):
+        """Mirror ``_update_wac_on_receipt`` for a value-bearing issue.
+
+        Runs inside an existing transaction; locks the PWC row so two concurrent
+        issues cannot lose each other's valuation update, and writes the same
+        immutable ``ProductCostHistory`` audit row a sale would.
+        """
+        from datetime import datetime
+
+        query = ProductWarehouseCost.query.filter_by(
+            tenant_id=tenant_id, product_id=product_id, warehouse_id=warehouse_id
+        )
+        pwc = _safe_for_update(query, label=f"PWC(sync issue) p={product_id} w={warehouse_id}")
+        if pwc is None:
+            old_qty = Decimal("0")
+            old_value = Decimal("0")
+            old_avg = None
+        else:
+            old_qty = Decimal(str(pwc.total_quantity or 0))
+            old_value = Decimal(str(pwc.total_value or 0))
+            old_avg = Decimal(str(pwc.average_cost)) if pwc.average_cost is not None else None
+
+        new_qty, new_value, new_avg = StockService._mwac_calc(old_qty, old_value, -abs(issued_qty), unit_cost)
+        if pwc is None:
+            pwc = ProductWarehouseCost(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                total_quantity=new_qty,
+                total_value=new_value,
+                average_cost=new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+            )
+            db.session.add(pwc)
+        else:
+            pwc.total_quantity = new_qty
+            pwc.total_value = new_value
+            pwc.average_cost = new_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+            pwc.last_updated = datetime.now(UTC)
+
+        db.session.add(
+            ProductCostHistory(
+                tenant_id=tenant_id,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
+                movement_type=movement_type,
+                reference_type=reference_type,
+                reference_id=reference_id,
+                old_average_cost=old_avg.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP) if old_avg else None,
+                new_average_cost=pwc.average_cost,
+                quantity_change=-abs(issued_qty),
+                old_total_quantity=old_qty,
+                new_total_quantity=new_qty,
+                old_total_value=old_value,
+                new_total_value=new_value,
+                movement_unit_cost=unit_cost.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP),
+            )
+        )
 
     @staticmethod
     def create_movement(

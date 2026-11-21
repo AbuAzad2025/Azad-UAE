@@ -367,7 +367,7 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/gamification/award/<action>` | authenticated, permission | `admin` | — | json |
+| POST | `/gamification/award/<action>` | authenticated, permission | `admin` | — | json |
 | GET | `/gamification/leaderboard` | authenticated, permission | `view_reports` | — | html |
 | GET | `/gamification/my-stats` | authenticated, permission | `view_reports` | — | json |
 

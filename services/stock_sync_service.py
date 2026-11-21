@@ -1,9 +1,13 @@
 """
 Lean external POS stock-sync service.
 
-Delegates all stock mutation to StockService.create_movement() so row-level
-locking, MWAC updates, GL posting, and negative-stock guards are inherited
-with zero duplicated logic.
+StockService.create_movement() supplies row-level locking, per-warehouse
+quantity and the negative-stock guard. It deliberately does NOT value the
+movement: every other caller (purchases, sales, adjustments, opening stock)
+adds the MWAC update and the GL entry afterwards. A sync payload has no
+document behind it, so this service calls StockService.value_synced_movement()
+for every value-bearing movement — inside the same atomic_transaction — and
+refuses movement types that cannot be valued safely.
 """
 
 from __future__ import annotations
@@ -11,7 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from extensions import db
@@ -229,6 +233,23 @@ class StockSyncService:
                     reference_id=batch.id,
                     resolved_product=product,
                     resolved_warehouse=warehouse,
+                )
+
+                # A raw movement changes quantity only. Value it here, inside
+                # the caller's atomic_transaction, using the same MWAC + GL path
+                # as adjust_stock/add_opening_stock. An unsupported movement
+                # type or a missing cost raises and rolls the whole batch back
+                # rather than leaving stock and the ledger out of step.
+                raw_cost = mv.get("unit_cost")
+                try:
+                    cost = Decimal(str(raw_cost)) if raw_cost not in (None, "") else None
+                except (InvalidOperation, TypeError, ValueError):
+                    raise ValueError(f"movement[{idx}]: invalid unit_cost {raw_cost!r}") from None
+                StockService.value_synced_movement(
+                    movement,
+                    product=product,
+                    warehouse=warehouse,
+                    unit_cost=cost,
                 )
 
                 results.append(

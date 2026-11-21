@@ -6,6 +6,7 @@ from flask_login import current_user, login_required
 
 from models import LeaveRequest, LeaveType
 from services.hr_service import HRService, LeaveBalanceService, OvertimeService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404, tenant_query
@@ -42,7 +43,8 @@ def attendance():
 def clock_in():
     try:
         branch_id = request.form.get("branch_id")
-        att = HRService.clock_in(current_user, branch_id)
+        with atomic_transaction("hr_clock_in"):
+            att = HRService.clock_in(current_user, branch_id)
         flash(
             gettext(f"تم تسجيل الحضور الساعة {att.check_in.strftime('%H:%M')}"),
             "success",
@@ -57,7 +59,8 @@ def clock_in():
 @permission_required("hr.view")
 def clock_out():
     try:
-        att = HRService.clock_out(current_user)
+        with atomic_transaction("hr_clock_out"):
+            att = HRService.clock_out(current_user)
         flash(gettext(f"تم تسجيل الانصراف. عدد ساعات العمل: {att.work_hours}"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -87,7 +90,8 @@ def leaves_list():
 def request_leave():
     if request.method == "POST":
         try:
-            HRService.request_leave(request.form, current_user)
+            with atomic_transaction("hr_request_leave"):
+                HRService.request_leave(request.form, current_user)
             flash(gettext("تم تقديم طلب الإجازة"), "success")
             return redirect(url_for("hr.leaves_list"))
         except Exception as e:
@@ -102,7 +106,8 @@ def request_leave():
 def approve_leave(leave_id):
     tenant_get_or_404(LeaveRequest, leave_id)
     try:
-        HRService.approve_leave(leave_id, current_user)
+        with atomic_transaction("hr_approve_leave"):
+            HRService.approve_leave(leave_id, current_user)
         flash(gettext("تم الموافقة على طلب الإجازة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -116,7 +121,8 @@ def refuse_leave(leave_id):
     tenant_get_or_404(LeaveRequest, leave_id)
     reason = request.form.get("rejected_reason", "")
     try:
-        HRService.refuse_leave(leave_id, current_user, reason)
+        with atomic_transaction("hr_refuse_leave"):
+            HRService.refuse_leave(leave_id, current_user, reason)
         flash(gettext("تم رفض طلب الإجازة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -136,7 +142,8 @@ def departments_list():
 @permission_required("hr.manage")
 def create_department():
     try:
-        HRService.create_department(request.form, current_user)
+        with atomic_transaction("hr_create_department"):
+            HRService.create_department(request.form, current_user)
         flash(gettext("تم إنشاء القسم"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -148,7 +155,8 @@ def create_department():
 @permission_required("hr.manage")
 def create_contract():
     try:
-        HRService.create_contract(request.form, current_user)
+        with atomic_transaction("hr_create_contract"):
+            HRService.create_contract(request.form, current_user)
         flash(gettext("تم إنشاء العقد"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -188,7 +196,8 @@ def accrue_leave():
         days = request.form.get("days", "1")
         year = int(request.args.get("year", date.today().year))
         tid = get_active_tenant_id(current_user)
-        LeaveBalanceService.accrue_leave(user_id, leave_type_id, year, float(days), tid)
+        with atomic_transaction("hr_accrue_leave"):
+            LeaveBalanceService.accrue_leave(user_id, leave_type_id, year, float(days), tid)
         flash(gettext("تم احتساب أيام الإجازة"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -206,7 +215,8 @@ def carry_forward_leave():
         leave_type_id = int(request.form["leave_type_id"])
         from_year = int(request.form["from_year"])
         tid = get_active_tenant_id(current_user)
-        LeaveBalanceService.carry_forward_leave(user_id, leave_type_id, from_year, tid)
+        with atomic_transaction("hr_carry_forward_leave"):
+            LeaveBalanceService.carry_forward_leave(user_id, leave_type_id, from_year, tid)
         flash(gettext("تم تحويل الرصيد إلى السنة الجديدة"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -239,7 +249,8 @@ def create_overtime():
             "overtime_type": request.form.get("overtime_type", "standard"),
             "notes": request.form.get("notes"),
         }
-        OvertimeService.create_entry(data, current_user)
+        with atomic_transaction("hr_create_overtime"):
+            OvertimeService.create_entry(data, current_user)
         flash(gettext("تم إنشاء سجل العمل الإضافي"), "success")
     except (ValueError, KeyError) as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -254,7 +265,8 @@ def approve_overtime(entry_id):
 
     entry = tenant_get_or_404(OvertimeEntry, entry_id)
     try:
-        OvertimeService.approve_entry(entry, current_user)
+        with atomic_transaction("hr_approve_overtime"):
+            OvertimeService.approve_entry(entry, current_user)
         flash(gettext("تمت الموافقة على العمل الإضافي"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -270,7 +282,8 @@ def reject_overtime(entry_id):
     entry = tenant_get_or_404(OvertimeEntry, entry_id)
     reason = request.form.get("reason", "")
     try:
-        OvertimeService.reject_entry(entry, current_user, reason)
+        with atomic_transaction("hr_reject_overtime"):
+            OvertimeService.reject_entry(entry, current_user, reason)
         flash(gettext("تم رفض العمل الإضافي"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")

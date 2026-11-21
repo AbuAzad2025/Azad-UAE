@@ -462,12 +462,15 @@ def report_system_error(
     """
     reference = new_error_reference()
     entry = logger if logger is not None else _default_logger()
-    entry.error(
-        "system_error ref=%s context=%s",
-        reference,
-        context or "-",
-        exc_info=(type(exception), exception, exception.__traceback__),
-    )
+    if isinstance(exception, BaseException):
+        exc_info: tuple | None = (type(exception), exception, exception.__traceback__)
+    else:
+        # A few callers pass a plain validation string instead of an exception.
+        # Logging it must not crash the very error path it belongs to.
+        exc_info = None
+        entry.error("system_error ref=%s context=%s detail=%s", reference, context or "-", str(exception)[:500])
+    if exc_info is not None:
+        entry.error("system_error ref=%s context=%s", reference, context or "-", exc_info=exc_info)
     return ErrorMessages.unexpected_error(reference)
 
 

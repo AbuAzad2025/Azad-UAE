@@ -33,27 +33,27 @@ class TestGamificationRoutes:
             "routes.gamification.GamificationService.award_points",
             return_value=result,
         )
-        resp = auth_client.get("/gamification/award/sale")
+        resp = auth_client.post("/gamification/award/sale")
         assert resp.status_code == 200
         body = resp.get_json()
         assert body["success"] is True
         assert body["data"] == result
 
     def test_routes_require_login(self, client):
-        for path in (
-            "/gamification/leaderboard",
-            "/gamification/my-stats",
-            "/gamification/award/login",
-        ):
+        for path in ("/gamification/leaderboard", "/gamification/my-stats"):
             resp = client.get(path)
             assert resp.status_code in (302, 401, 403)
+        # The award endpoint is POST-only (CSRF-covered); an anonymous POST
+        # must be refused just like the read surfaces.
+        resp = client.post("/gamification/award/login")
+        assert resp.status_code in (302, 401, 403)
 
     def test_award_points_passes_user_id(self, auth_client, mocker, sample_user):
         award = mocker.patch(
             "routes.gamification.GamificationService.award_points",
             return_value={"ok": True},
         )
-        auth_client.get("/gamification/award/daily_login")
+        auth_client.post("/gamification/award/daily_login")
         award.assert_called_once()
         assert award.call_args[0][0] == sample_user.id
         assert award.call_args[0][1] == "daily_login"

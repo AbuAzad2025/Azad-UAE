@@ -84,8 +84,9 @@ def print_document(doc_type, **kwargs):
         return render_template("errors/403.html"), 403
 
     eff_tid = tid or getattr(doc, "tenant_id", None)
-    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
-    PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
+    with atomic_transaction("print_snapshot"):
+        PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="print", document=doc)
+        PrintService.audit_print(eff_tid, doc_type, record_id, action="print")
 
     template = entry["template"]
     requested = (request.args.get("template") or "").strip().lower()
@@ -152,8 +153,9 @@ def print_document_pdf(doc_type, **kwargs):
         tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="pdf_download", document=doc)
-    PrintService.audit_print(eff_tid, doc_type, record_id, action="pdf_download")
+    with atomic_transaction("print_pdf_snapshot"):
+        PrintService.create_snapshot(eff_tid, doc_type, record_id, reason="pdf_download", document=doc)
+        PrintService.audit_print(eff_tid, doc_type, record_id, action="pdf_download")
 
     return send_file(
         BytesIO(pdf),
@@ -178,8 +180,9 @@ def _handle_packing_slip(sale_id, tid):
     lines = sale.lines if hasattr(sale, "lines") else []
 
     eff_tid = tid or getattr(sale, "tenant_id", None)
-    PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="print", document=sale)
-    PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="print")
+    with atomic_transaction("packing_slip_snapshot"):
+        PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="print", document=sale)
+        PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="print")
 
     return PrintService.render_print(
         "printing/packing_slip.html",
@@ -210,8 +213,9 @@ def _handle_packing_slip_pdf(sale_id, tid):
         tenant_id=eff_tid,
         filename=filename,
     )
-    PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="pdf_download", document=sale)
-    PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="pdf_download")
+    with atomic_transaction("packing_slip_pdf_snapshot"):
+        PrintService.create_snapshot(eff_tid, "packing_slip", sale_id, reason="pdf_download", document=sale)
+        PrintService.audit_print(eff_tid, "packing_slip", sale_id, action="pdf_download")
 
     return send_file(
         BytesIO(pdf),
@@ -283,8 +287,9 @@ def bulk_print():
         if doc:
             eff_tid = tid or getattr(doc, "tenant_id", None)
             documents.append({"type": doc_type, "context": {entry["context_key"]: doc}})
-            PrintService.create_snapshot(eff_tid, doc_type, doc_id, reason="bulk_print", document=doc)
-            PrintService.audit_print(eff_tid, f"{doc_type}_bulk", doc_id, action="bulk_print")
+            with atomic_transaction("bulk_print_snapshot"):
+                PrintService.create_snapshot(eff_tid, doc_type, doc_id, reason="bulk_print", document=doc)
+                PrintService.audit_print(eff_tid, f"{doc_type}_bulk", doc_id, action="bulk_print")
 
     template_map = {}
     for d in documents:
@@ -408,8 +413,9 @@ def print_customer_statement(id):
     eff_tid = tid or getattr(customer, "tenant_id", None)
     tenant, settings, company = get_company_print_context(tenant_id=eff_tid)
     branding = get_print_header_context(eff_tid, profile=settings)
-    PrintService.create_snapshot(eff_tid, "customer_statement", record_id, reason="print", document=customer)
-    PrintService.audit_print(eff_tid, "customer_statement", record_id, action="print")
+    with atomic_transaction("customer_statement_snapshot"):
+        PrintService.create_snapshot(eff_tid, "customer_statement", record_id, reason="print", document=customer)
+        PrintService.audit_print(eff_tid, "customer_statement", record_id, action="print")
 
     return PrintService.render_print(
         "customers/statement_print.html",
@@ -562,8 +568,9 @@ def print_supplier_statement(id):
     eff_tid = tid or getattr(supplier, "tenant_id", None)
     tenant, settings, company = get_company_print_context(tenant_id=eff_tid)
     branding = get_print_header_context(eff_tid, profile=settings)
-    PrintService.create_snapshot(eff_tid, "supplier_statement", record_id, reason="print", document=supplier)
-    PrintService.audit_print(eff_tid, "supplier_statement", record_id, action="print")
+    with atomic_transaction("supplier_statement_snapshot"):
+        PrintService.create_snapshot(eff_tid, "supplier_statement", record_id, reason="print", document=supplier)
+        PrintService.audit_print(eff_tid, "supplier_statement", record_id, action="print")
 
     return PrintService.render_print(
         "suppliers/statement_print.html",

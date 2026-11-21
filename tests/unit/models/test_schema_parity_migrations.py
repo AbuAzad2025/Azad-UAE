@@ -224,3 +224,46 @@ def test_the_gate_detects_type_changes():
     # the intentional direction where migrations tighten the model).
     created.get_columns.return_value = [{"name": "amount", "type": FakeType(3), "nullable": False}]
     assert not _schema_drift(migrated, created)
+
+
+def test_child_tenant_composite_fk_declarations_match_metadata():
+    """The child-tenant-FK migration's triples must match the real metadata.
+
+    Pure metadata test, no database. A copy/paste typo in the migration's
+    ``(child, column, parent)`` triples would otherwise only surface on a
+    PostgreSQL deploy, where the composite FK would fail to create. This keeps
+    the declared child column pointing at the declared parent's ``id`` and
+    requires both sides to carry ``tenant_id``.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    path = (
+        Path(__file__).resolve().parents[3] / "migrations" / "versions" / "q5r6s7t8u9v0_child_tenant_composite_fks.py"
+    )
+    spec = importlib.util.spec_from_file_location("q5r6s7t8u9v0_child_tenant_composite_fks", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    md = db.metadata
+    seen: set[str] = set()
+    for table, column, parent, name in module._COMPOSITE_FKS:
+        assert name not in seen, f"duplicate constraint name {name}"
+        seen.add(name)
+        assert len(name) <= 63, f"FK name exceeds PostgreSQL's 63-char limit: {name}"
+        child_t, parent_t = md.tables[table], md.tables[parent]
+        assert "tenant_id" in child_t.columns, f"{table} has no tenant_id"
+        assert "tenant_id" in parent_t.columns, f"{parent} has no tenant_id"
+        targets = [fk.column for fk in child_t.columns[column].foreign_keys]
+        assert any(t.table is parent_t and t.name == "id" for t in targets), (
+            f"{table}.{column} does not reference {parent}.id in model metadata"
+        )
+
+    for table, name in module._UNIQUE_ANCHORS:
+        assert name not in seen, f"duplicate constraint name {name}"
+        seen.add(name)
+        assert len(name) <= 63, f"anchor name exceeds PostgreSQL's 63-char limit: {name}"
+        anchor_t = md.tables[table]
+        assert "tenant_id" in anchor_t.columns and "id" in anchor_t.columns, (
+            f"anchor table {table} lacks tenant_id or id"
+        )

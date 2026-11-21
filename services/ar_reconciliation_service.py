@@ -86,21 +86,6 @@ class ARReconciliationService:
         from models import Payment
         from models.receipt import Receipt
 
-        # Get all confirmed sales for these customer types
-        sales_q = (
-            db.session.query(Sale.id, Sale.amount_aed, Sale.customer_id)
-            .join(Customer, Sale.customer_id == Customer.id)
-            .filter(
-                Sale.status == "confirmed",
-                Sale.is_active,
-                Customer.customer_type.in_(customer_types),
-            )
-        )
-        if tenant_id is not None:
-            sales_q = sales_q.filter(Sale.tenant_id == int(tenant_id))
-        if branch_id is not None:
-            sales_q = sales_q.filter(Sale.branch_id == branch_id)
-
         customer_ids_q = db.session.query(Customer.id).filter(Customer.customer_type.in_(customer_types))
         if tenant_id is not None:
             customer_ids_q = customer_ids_q.filter(Customer.tenant_id == int(tenant_id))
@@ -142,20 +127,44 @@ class ARReconciliationService:
 
         unallocated_receipts = Decimal(str(receipts_q.scalar() or 0))
 
-        total_unpaid = Decimal("0")
-        for sale_id, amount_aed, _customer_id in sales_q.all():
-            confirmed_payments = db.session.query(func.coalesce(func.sum(Payment.amount_aed), 0)).filter(
-                Payment.sale_id == sale_id,
-                payment_effective,
-                Payment.direction == "incoming",
-            )
-            if tenant_id is not None:
-                confirmed_payments = confirmed_payments.filter(Payment.tenant_id == int(tenant_id))
-            if branch_id is not None:
-                confirmed_payments = confirmed_payments.filter(Payment.branch_id == branch_id)
+        # Group effective incoming payments by sale once, then LEFT JOIN onto
+        # the same sales. This replaces the per-sale SUM query (N+1) while
+        # keeping the aggregation in base currency (amount_aed), Decimal-exact.
+        payments_by_sale = db.session.query(
+            Payment.sale_id.label("sale_id"),
+            func.coalesce(func.sum(Payment.amount_aed), 0).label("paid_aed"),
+        ).filter(
+            Payment.sale_id.isnot(None),
+            payment_effective,
+            Payment.direction == "incoming",
+        )
+        if tenant_id is not None:
+            payments_by_sale = payments_by_sale.filter(Payment.tenant_id == int(tenant_id))
+        if branch_id is not None:
+            payments_by_sale = payments_by_sale.filter(Payment.branch_id == branch_id)
+        payments_by_sale = payments_by_sale.group_by(Payment.sale_id).subquery()
 
-            paid = Decimal(str(confirmed_payments.scalar() or 0))
-            due = Decimal(str(amount_aed or 0)) - paid
+        sales_with_paid = (
+            db.session.query(
+                Sale.amount_aed.label("amount_aed"),
+                func.coalesce(payments_by_sale.c.paid_aed, 0).label("paid_aed"),
+            )
+            .join(Customer, Sale.customer_id == Customer.id)
+            .outerjoin(payments_by_sale, payments_by_sale.c.sale_id == Sale.id)
+            .filter(
+                Sale.status == "confirmed",
+                Sale.is_active,
+                Customer.customer_type.in_(customer_types),
+            )
+        )
+        if tenant_id is not None:
+            sales_with_paid = sales_with_paid.filter(Sale.tenant_id == int(tenant_id))
+        if branch_id is not None:
+            sales_with_paid = sales_with_paid.filter(Sale.branch_id == branch_id)
+
+        total_unpaid = Decimal("0")
+        for amount_aed, paid_aed in sales_with_paid.all():
+            due = Decimal(str(amount_aed or 0)) - Decimal(str(paid_aed or 0))
             if due > Decimal("0"):
                 total_unpaid += due
 

@@ -2,18 +2,30 @@
 
 Exercises the full inbound sync path against real rows: idempotency
 (cold + in-transaction race guard), product/warehouse resolution,
-movement creation through StockService, batch completion, and the
-atomic rollback guarantee when a movement fails validation.
+movement creation through StockService, MWAC/GL valuation, batch
+completion, and the atomic rollback guarantee when a movement fails
+validation or cannot be valued.
 """
 
 from __future__ import annotations
 
 import uuid
 from decimal import Decimal
+from unittest.mock import patch
 
 import pytest
 
-from models import Product, StockMovement, SyncBatch, Warehouse
+from models import (
+    GLAccount,
+    GLJournalEntry,
+    GLJournalLine,
+    Product,
+    ProductCostHistory,
+    ProductWarehouseCost,
+    StockMovement,
+    SyncBatch,
+    Warehouse,
+)
 from services.stock_sync_service import StockSyncService
 
 
@@ -202,6 +214,219 @@ class TestProcessSyncPayload:
             StockSyncService.process_sync_payload({"idempotency_key": "x", "tenant_id": 1})
 
 
+class TestSyncedMovementValuation:
+    """A synced movement must not commit with quantity changed but value silent.
+
+    The GL gateway is exercised against the real tenant chart (the tests assert
+    real posted journal rows), and the service-to-service boundary is mocked only
+    in the delegation test below. PWC/GL amounts are compared as exact Decimals.
+    """
+
+    @staticmethod
+    def _pwc(db_session, sample_tenant, product, warehouse):
+        return (
+            db_session.query(ProductWarehouseCost)
+            .filter_by(
+                tenant_id=sample_tenant.id,
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+            )
+            .one()
+        )
+
+    @staticmethod
+    def _sync_entry(db_session, sample_tenant, movement_id):
+        from utils.gl_reference_types import GLRef, filter_entries_by_ref
+
+        return (
+            filter_entries_by_ref(db_session.query(GLJournalEntry), GLRef.INVENTORY_MIGRATION)
+            .filter(
+                GLJournalEntry.tenant_id == sample_tenant.id,
+                GLJournalEntry.reference_id == movement_id,
+                GLJournalEntry.status == "posted",
+            )
+            .one()
+        )
+
+    @staticmethod
+    def _gl_lines_by_code(db_session, entry):
+        out = {}
+        for line in db_session.query(GLJournalLine).filter_by(entry_id=entry.id).all():
+            code = db_session.get(GLAccount, line.account_id).code
+            out[code] = (Decimal(str(line.debit or 0)), Decimal(str(line.credit or 0)))
+        return out
+
+    def test_receipt_posts_gl_and_updates_pwc(self, db_session, sample_tenant, product, warehouse):
+        payload = _payload(
+            product,
+            sample_tenant.id,
+            movements=[
+                {
+                    "sku": product.sku,
+                    "warehouse_code": warehouse.code,
+                    "quantity": 4,
+                    "movement_type": "purchase",
+                    "unit_cost": 2.5,
+                }
+            ],
+        )
+        result = StockSyncService.process_sync_payload(payload)
+        assert result["ok"] is True
+        movement_id = result["movements"][0]["movement_id"]
+
+        # MWAC: a first receipt at 2.5 seeds the warehouse valuation.
+        pwc = self._pwc(db_session, sample_tenant, product, warehouse)
+        assert Decimal(str(pwc.total_quantity)) == Decimal("4")
+        assert Decimal(str(pwc.total_value)) == Decimal("10")
+        assert Decimal(str(pwc.average_cost)) == Decimal("2.5")
+
+        history = (
+            db_session.query(ProductCostHistory)
+            .filter_by(
+                tenant_id=sample_tenant.id,
+                product_id=product.id,
+                warehouse_id=warehouse.id,
+                movement_type="purchase",
+            )
+            .one()
+        )
+        assert Decimal(str(history.quantity_change)) == Decimal("4")
+        assert Decimal(str(history.movement_unit_cost)) == Decimal("2.5")
+
+        # The same transaction wrote a balanced, posted journal entry.
+        entry = self._sync_entry(db_session, sample_tenant, movement_id)
+        from services.gl_service import GLService
+
+        asset = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=sample_tenant.id, branch_id=warehouse.branch_id
+        )
+        equity = GLService.get_account_code_for_concept(
+            "OPENING_BALANCE_EQUITY", tenant_id=sample_tenant.id, branch_id=warehouse.branch_id
+        )
+        lines = self._gl_lines_by_code(db_session, entry)
+        assert lines[asset] == (Decimal("10"), Decimal("0"))
+        assert lines[equity] == (Decimal("0"), Decimal("10"))
+        assert sum(d for d, _ in lines.values()) == sum(c for _, c in lines.values())
+
+    def test_issue_decrements_pwc_and_posts_loss(self, db_session, sample_tenant, product, warehouse):
+        # Seed the shelf first: 10 units at 2.5 -> value 25.
+        StockSyncService.process_sync_payload(
+            _payload(
+                product,
+                sample_tenant.id,
+                movements=[
+                    {
+                        "sku": product.sku,
+                        "warehouse_code": warehouse.code,
+                        "quantity": 10,
+                        "movement_type": "purchase",
+                        "unit_cost": 2.5,
+                    }
+                ],
+            )
+        )
+        before = self._pwc(db_session, sample_tenant, product, warehouse)
+        assert Decimal(str(before.total_quantity)) == Decimal("10")
+        assert Decimal(str(before.total_value)) == Decimal("25")
+
+        result = StockSyncService.process_sync_payload(
+            _payload(
+                product,
+                sample_tenant.id,
+                movements=[
+                    {
+                        "sku": product.sku,
+                        "warehouse_code": warehouse.code,
+                        "quantity": -4,
+                        "movement_type": "sale",
+                    }
+                ],
+            )
+        )
+        movement_id = result["movements"][0]["movement_id"]
+
+        # The issue is valued at the MWAC on the shelf, not the retail price.
+        after = self._pwc(db_session, sample_tenant, product, warehouse)
+        assert Decimal(str(after.total_quantity)) == Decimal("6")
+        assert Decimal(str(after.total_value)) == Decimal("15")
+        assert Decimal(str(after.average_cost)) == Decimal("2.5")
+        assert Decimal(str(product.current_stock)) == Decimal("6")
+
+        entry = self._sync_entry(db_session, sample_tenant, movement_id)
+        from services.gl_service import GLService
+
+        asset = GLService.get_account_code_for_concept(
+            "INVENTORY_ASSET", tenant_id=sample_tenant.id, branch_id=warehouse.branch_id
+        )
+        loss = GLService.get_account_code_for_concept(
+            "INVENTORY_ADJUSTMENT_LOSS", tenant_id=sample_tenant.id, branch_id=warehouse.branch_id
+        )
+        lines = self._gl_lines_by_code(db_session, entry)
+        assert lines[loss] == (Decimal("10"), Decimal("0"))
+        assert lines[asset] == (Decimal("0"), Decimal("10"))
+        assert sum(d for d, _ in lines.values()) == sum(c for _, c in lines.values())
+
+    def test_unsupported_movement_type_is_refused_and_batch_rolled_back(self, db_session, sample_tenant, product):
+        payload = _payload(
+            product,
+            sample_tenant.id,
+            movements=[{"sku": product.sku, "quantity": 3, "movement_type": "transfer"}],
+        )
+        with pytest.raises(ValueError, match="Cannot value stock-sync movement type 'transfer'"):
+            StockSyncService.process_sync_payload(payload)
+        db_session.rollback()
+        assert db_session.query(SyncBatch).filter_by(idempotency_key=payload["idempotency_key"]).first() is None
+
+    def test_receipt_without_any_cost_is_refused(self, db_session, sample_tenant, product, warehouse):
+        product.cost_price = None
+        db_session.flush()
+        payload = _payload(
+            product,
+            sample_tenant.id,
+            movements=[
+                {
+                    "sku": product.sku,
+                    "warehouse_code": warehouse.code,
+                    "quantity": 2,
+                    "movement_type": "purchase",
+                }
+            ],
+        )
+        with pytest.raises(ValueError, match="no unit cost was supplied"):
+            StockSyncService.process_sync_payload(payload)
+        db_session.rollback()
+        assert db_session.query(SyncBatch).filter_by(idempotency_key=payload["idempotency_key"]).first() is None
+
+    def test_valuation_is_delegated_at_the_service_boundary(self, db_session, sample_tenant, product, warehouse):
+        """The sync service hands the freshly created movement to StockService.
+
+        Mocked at the service boundary only; the GL/PWC effects themselves are
+        asserted end-to-end in the two tests above.
+        """
+        payload = _payload(
+            product,
+            sample_tenant.id,
+            movements=[
+                {
+                    "sku": product.sku,
+                    "warehouse_code": warehouse.code,
+                    "quantity": 1,
+                    "movement_type": "purchase",
+                    "unit_cost": 7.25,
+                }
+            ],
+        )
+        with patch("services.stock_sync_service.StockService.value_synced_movement") as value_movement:
+            result = StockSyncService.process_sync_payload(payload)
+
+        value_movement.assert_called_once()
+        (movement,) = value_movement.call_args.args
+        assert movement.id == result["movements"][0]["movement_id"]
+        assert value_movement.call_args.kwargs["product"].id == product.id
+        assert value_movement.call_args.kwargs["warehouse"].id == warehouse.id
+        assert value_movement.call_args.kwargs["unit_cost"] == Decimal("7.25")
+
+
 class TestGetSyncStatus:
     def test_returns_status_for_completed_batch(self, db_session, sample_tenant, product):
         result = StockSyncService.process_sync_payload(_payload(product, sample_tenant.id))
@@ -234,8 +459,9 @@ def test_lookup_queries_do_not_scale_with_payload_size(db_session, sample_tenant
     Product and warehouse resolution now runs once for the whole payload. The
     per-movement statements that remain are deliberate: the SELECT ... FOR UPDATE on
     product_warehouse_stock is what stops two concurrent movements from overselling,
-    and the SUM recomputed from that locked row is derived from it. Those must stay
-    per row, so the assertion is about the lookups rather than the raw total.
+    and the SUM recomputed from that locked row is derived from it. GL and MWAC
+    valuation are also per movement by necessity, so that boundary is mocked out
+    here; the assertion is about the lookups rather than the raw total.
     """
     from sqlalchemy import event
 
@@ -261,7 +487,8 @@ def test_lookup_queries_do_not_scale_with_payload_size(db_session, sample_tenant
         payload["movements"] = [dict(payload["movements"][0]) for _ in range(n)]
         event.listen(db.engine, "before_cursor_execute", _count)
         try:
-            StockSyncService.process_sync_payload(payload)
+            with patch("services.stock_sync_service.StockService.value_synced_movement"):
+                StockSyncService.process_sync_payload(payload)
             db.session.commit()
         finally:
             event.remove(db.engine, "before_cursor_execute", _count)

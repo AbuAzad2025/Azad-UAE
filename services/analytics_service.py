@@ -8,7 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from flask_babel import gettext
-from sqlalchemy import desc, func
+from sqlalchemy import case, desc, func
 
 import models
 
@@ -26,48 +26,58 @@ class AnalyticsService:
 
     @staticmethod
     def get_customer_insights(tenant_id, branch_id=None):
-        # TODO: optimize N+1 queries in a separate behavior-preserving patch
-        customers_data = []
+        """Per-customer sales insights in one aggregate query instead of N+1.
+
+        A single GROUP BY over the tenant's sales produces the confirmed
+        SUM(amount_aed)/COUNT and the most recent sale date for every customer
+        at once. ``MAX(sale_date)`` deliberately keeps no status filter — the
+        original "last sale" lookup ignored the status too.
+        """
         session = _db_session()
-        customers_query = session.query(models.Customer).filter_by(is_active=True, tenant_id=tenant_id)
+        confirmed_sale = models.Sale.status == "confirmed"
+
+        sales_by_customer = session.query(
+            models.Sale.customer_id.label("customer_id"),
+            func.sum(case((confirmed_sale, models.Sale.amount_aed), else_=0)).label("total_sales"),
+            func.sum(case((confirmed_sale, 1), else_=0)).label("sales_count"),
+            func.max(models.Sale.sale_date).label("last_sale_date"),
+        ).filter(models.Sale.tenant_id == tenant_id)
         if branch_id is not None:
-            customers_query = (
-                customers_query.join(models.Sale, models.Customer.id == models.Sale.customer_id)
-                .filter(models.Sale.branch_id == branch_id)
-                .distinct()
+            sales_by_customer = sales_by_customer.filter(models.Sale.branch_id == branch_id)
+        sales_by_customer = sales_by_customer.group_by(models.Sale.customer_id).subquery()
+
+        customer_rows = session.query(
+            models.Customer.name.label("name"),
+            func.coalesce(sales_by_customer.c.total_sales, 0).label("total_sales"),
+            func.coalesce(sales_by_customer.c.sales_count, 0).label("sales_count"),
+            sales_by_customer.c.last_sale_date.label("last_sale_date"),
+        ).filter(
+            models.Customer.is_active.is_(True),
+            models.Customer.tenant_id == tenant_id,
+        )
+        if branch_id is not None:
+            # Customers with no sale in this branch are excluded, as before.
+            customer_rows = customer_rows.join(sales_by_customer, sales_by_customer.c.customer_id == models.Customer.id)
+        else:
+            customer_rows = customer_rows.outerjoin(
+                sales_by_customer, sales_by_customer.c.customer_id == models.Customer.id
             )
 
-        for customer in customers_query.all():
-            total_sales = session.query(func.sum(models.Sale.amount_aed)).filter(
-                models.Sale.customer_id == customer.id,
-                models.Sale.status == "confirmed",
-                models.Sale.tenant_id == tenant_id,
-            )
-            if branch_id is not None:
-                total_sales = total_sales.filter(models.Sale.branch_id == branch_id)
-            total_sales = total_sales.scalar() or 0
-
-            sales_count = session.query(models.Sale).filter_by(
-                customer_id=customer.id, status="confirmed", tenant_id=tenant_id
-            )
-            if branch_id is not None:
-                sales_count = sales_count.filter(models.Sale.branch_id == branch_id)
-            sales_count = sales_count.count()
-
-            last_sale = session.query(models.Sale).filter_by(customer_id=customer.id, tenant_id=tenant_id)
-            if branch_id is not None:
-                last_sale = last_sale.filter(models.Sale.branch_id == branch_id)
-            last_sale = last_sale.order_by(models.Sale.sale_date.desc()).first()
-
-            if last_sale:
-                sale_date = last_sale.sale_date.date() if hasattr(last_sale.sale_date, "date") else last_sale.sale_date
-                days_since_last = (datetime.now().date() - sale_date).days
+        today = datetime.now().date()
+        customers_data = []
+        for row in customer_rows.all():
+            total_sales = row.total_sales or 0
+            sales_count = row.sales_count or 0
+            last_sale_date = row.last_sale_date
+            if last_sale_date:
+                sale_date = last_sale_date.date() if hasattr(last_sale_date, "date") else last_sale_date
+                days_since_last = (today - sale_date).days
             else:
                 days_since_last = 999
 
             customers_data.append(
                 {
-                    "name": customer.name,
+                    "name": row.name,
                     "lifetime_value": float(total_sales),
                     "sales_count": sales_count,
                     "avg_sale": (float(total_sales / sales_count) if sales_count > 0 else 0),

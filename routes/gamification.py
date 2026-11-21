@@ -3,6 +3,7 @@ from flask_login import current_user, login_required
 
 from services.gamification_service import GamificationService
 from utils.api_response import success_response
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 
 gamification_bp = Blueprint("gamification", __name__, url_prefix="/gamification")
@@ -24,7 +25,7 @@ def my_stats():
     return success_response(data=stats)
 
 
-@gamification_bp.route("/award/<action>")
+@gamification_bp.route("/award/<action>", methods=["POST"])
 @login_required
 @permission_required("admin")
 def award_points(action):
@@ -35,6 +36,11 @@ def award_points(action):
     ``GamificationService.award_points`` which is the authoritative
     validator for the award type — invalid action types are rejected
     there with a domain exception rather than leaking this far up.
+
+    This is a state-changing endpoint (POST, covered by the app-wide
+    CSRFProtect) and the award write is committed inside an atomic
+    transaction so it is not rolled back at request teardown.
     """
-    result = GamificationService.award_points(current_user.id, action)
+    with atomic_transaction("gamification_award"):
+        result = GamificationService.award_points(current_user.id, action)
     return success_response(data=result)

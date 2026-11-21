@@ -357,6 +357,11 @@ def import_products():
     )
 
     if run_background:
+        # Persist the job before queueing it: the Celery worker reads the job
+        # by id in its own session, so the row must be committed first.
+        with atomic_transaction("import_job_create"):
+            db.session.flush()
+
         # Queue background job
         file_b64 = base64.b64encode(file_content).decode()
         from services.import_job_service import process_product_import_task
@@ -1663,11 +1668,11 @@ def import_job_confirm(job_id: int):
         job.processed_rows = 0
         job.success_count = 0
         job.error_count = 0
-    job.errors = []
-    job.warnings = []
-    job.created_product_ids = []
-    job.updated_product_ids = []
-    db.session.flush()
+        job.errors = []
+        job.warnings = []
+        job.created_product_ids = []
+        job.updated_product_ids = []
+        db.session.flush()
 
     # Re-read file and execute
     # Note: In production, you'd need to store the file content or re-upload
@@ -1688,9 +1693,11 @@ def import_job_rollback(job_id: int):
         return redirect(url_for("products.import_job_detail", job_id=job.id))
 
     reason = request.form.get("reason", "").strip() or None
-    rollback_job = ImportJobService.create_rollback_job(job.id, current_user.id, reason)
+    with atomic_transaction("import_job_rollback_create"):
+        rollback_job = ImportJobService.create_rollback_job(job.id, current_user.id, reason)
 
-    # Queue rollback task
+    # Queue rollback task only after the rollback job is committed, so the
+    # worker can see the record it has to process.
     from services.import_job_service import process_product_import_rollback_task
 
     process_product_import_rollback_task.delay(rollback_job.id)
