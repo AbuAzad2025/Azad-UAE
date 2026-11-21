@@ -250,7 +250,10 @@ class InvoiceParser:
 
     def _extract_invoice_number(self, text: str) -> str | None:
         patterns = [
-            r"(?:رقم\s*الفاتورة|invoice\s*#?|invoice\s*number)\s*[:：\s]*(\S+)",
+            # The longer label must come first: the generic `invoice #?`
+            # alternative would otherwise match "invoice number:" and capture
+            # the word "number:" instead of the actual invoice id.
+            r"(?:رقم\s*الفاتورة|invoice\s*number|invoice\s*#?)\s*[:：\s]*(\S+)",
             r"(?:فاتورة\s*رقم)\s*[:：\s]*(\S+)",
         ]
         for pattern in patterns:

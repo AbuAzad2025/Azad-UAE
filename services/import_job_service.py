@@ -151,6 +151,9 @@ class ImportJobService:
     ) -> ProductImportJob:
         """Create a rollback job for a completed import."""
         original = ProductImportJob.query.get_or_404(original_job_id)
+        # The audit must name the actor performing the rollback, not the user
+        # who ran the original import — they are often different people.
+        actor_id = user_id if user_id is not None else original.user_id
 
         if original.status not in (
             ProductImportJobStatus.COMPLETED,
@@ -160,7 +163,7 @@ class ImportJobService:
 
         rollback_job = ProductImportJob(
             tenant_id=original.tenant_id,
-            user_id=original.user_id,
+            user_id=actor_id,
             job_name=f"Rollback of {original.job_name}",
             original_filename=original.original_filename,
             status=ProductImportJobStatus.PENDING,
@@ -176,7 +179,7 @@ class ImportJobService:
         log = ProductImportRollbackLog(
             original_job_id=original.id,
             rollback_job_id=rollback_job.id,
-            user_id=original.user_id,
+            user_id=actor_id,
             reason=reason or "Manual rollback",
         )
         db.session.add(log)

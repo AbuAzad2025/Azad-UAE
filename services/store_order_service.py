@@ -14,6 +14,7 @@ from services.sale_service import SaleService
 from services.stock_service import StockService
 from services.store_service import StoreService
 from utils.currency_utils import convert_and_quantize_aed, resolve_tenant_base_currency
+from utils.helpers import generate_number
 from utils.payment_constants import normalize_payment_method_code
 
 STATUS_LABELS_AR = {
@@ -449,6 +450,7 @@ class StoreOrderService:
             warehouse_id=warehouse_id,
             branch_id=branch_id,
             source="online_store",
+            sale_number=generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
             currency=currency_code,
             exchange_rate=rate,
             base_currency=base_currency,
@@ -464,7 +466,7 @@ class StoreOrderService:
             balance_due=total_amount,
             amount_aed=total_amount_aed,
             paid_amount_aed=Decimal("0"),
-            currency_rate_source="stored" if currency_code != base_currency else "same",
+            rate_source="stored" if currency_code != base_currency else "same",
             payment_status="unpaid",
             status="pending",
             is_active=True,
@@ -486,8 +488,7 @@ class StoreOrderService:
                 discount_percent=Decimal("0"),
                 line_total=line["line_total"],
                 cost_price=Decimal("0"),
-                unit_price_aed=line_total_aed / line["quantity"] if line["quantity"] > 0 else Decimal("0"),
-                line_total_aed=line_total_aed,
+                amount_aed=line_total_aed,
             )
             db.session.add(sl)
         db.session.flush()
@@ -595,6 +596,7 @@ class StoreOrderService:
             seller_id=int(approver_user.id) if approver_user and hasattr(approver_user, "id") else None,
             warehouse_id=warehouse_id,
             source="online_store",
+            sale_number=generate_number("S", Sale, "sale_number", tenant_id=tenant_id),
             currency=currency_code,
             exchange_rate=rate,
             base_currency=base_currency,
@@ -634,12 +636,7 @@ class StoreOrderService:
                 discount_percent=Decimal("0"),
                 line_total=line_data["line_total"],
                 cost_price=Decimal("0"),
-                unit_price_aed=(
-                    line_total_aed / Decimal(str(line_data["quantity"]))
-                    if Decimal(str(line_data["quantity"])) > 0
-                    else Decimal("0")
-                ),
-                line_total_aed=line_total_aed,
+                amount_aed=line_total_aed,
             )
             db.session.add(sl)
         db.session.flush()
