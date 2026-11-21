@@ -4770,20 +4770,20 @@ class TestOwnerHundredPercent:
     def test_invoice_settings_multipart_upload_paths(self, owner_client, tmp_path):
         from io import BytesIO
 
-        settings = MagicMock()
-        logo_path = str(tmp_path / "logo.png")
-        wm_path = str(tmp_path / "watermark.png")
-        join_calls = {"n": 0}
+        captured = {}
 
-        def _join(*parts):
-            join_calls["n"] += 1
-            if "watermarks" in parts:
-                return wm_path
-            return logo_path
+        def _save_upload(_file, target, _extensions):
+            name = "watermark.png" if "watermarks" in target else "logo.png"
+            return f"{target}/{name}"
 
+        # Uploads now go through the validated helper and the accepted paths
+        # are applied to the tenant by the print-profile service.
         with (
-            patch("os.makedirs") as makedirs,
-            patch("os.path.join", side_effect=_join),
+            patch("routes.owner.settings.save_uploaded_file", side_effect=_save_upload),
+            patch(
+                "services.invoice_profile_service.save_print_profile",
+                side_effect=lambda _tenant, _data, allow_files=None: captured.update(allow_files or {}),
+            ),
         ):
             resp = owner_client.post(
                 "/owner/invoice-settings",
@@ -4795,10 +4795,9 @@ class TestOwnerHundredPercent:
                 content_type="multipart/form-data",
                 follow_redirects=False,
             )
-        assert resp.status_code in (302, 303, 200)
-        assert makedirs.call_count >= 2
-        assert settings.logo_path
-        assert settings.watermark_image_path
+        assert resp.status_code in (302, 303)
+        assert captured["logo_path"] == "uploads/logos/logo.png"
+        assert captured["watermark_image_path"] == "uploads/watermarks/watermark.png"
 
     def test_api_toggle_warehouse_missing_id(self, app_factory, mock_user):
         from routes.owner import api_toggle_warehouse_negative, owner_bp

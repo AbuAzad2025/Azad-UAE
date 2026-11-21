@@ -19,7 +19,7 @@ from flask_babel import gettext
 
 from extensions import limiter
 from utils.db_safety import atomic_transaction
-from utils.error_messages import safe_error
+from utils.error_messages import refuse
 
 public_bp = Blueprint("public", __name__)
 
@@ -217,7 +217,9 @@ def donate_azad_submit():
             is_en=is_en,
         )
     except ValueError as exc:
-        flash(safe_error(exc, context=__name__), "danger")
+        # A validator's message is guidance for the donor, not a crash. The
+        # governance layer logs it while showing the message as written.
+        refuse(exc, context=__name__, category="validation")
         return redirect(url_for("public.donate_azad"))
     except Exception:
         import logging

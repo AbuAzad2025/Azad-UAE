@@ -532,6 +532,16 @@ class TestLedgerPages:
 
 
 class TestLedgerManualEntry:
+    @pytest.fixture(autouse=True)
+    def _stub_validate_and_post(self):
+        # The route validates and posts the draft inside the same transaction;
+        # these fixtures use mocked entries with no persisted row.
+        with (
+            patch("services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry"),
+            patch("services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry"),
+        ):
+            yield
+
     def test_manual_entry_get(self, ledger_client):
         with _ledger_patches():
             resp = ledger_client.get("/ledger/manual-entry")

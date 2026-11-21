@@ -14,6 +14,7 @@ def _chain(**terminals):
     q.filter_by.return_value = q
     q.filter.return_value = q
     q.join.return_value = q
+    q.outerjoin.return_value = q
     q.distinct.return_value = q
     q.group_by.return_value = q
     q.order_by.return_value = q
@@ -26,13 +27,24 @@ def _chain(**terminals):
     return q
 
 
+def _insight_row(name, total_sales, sales_count, last_sale_date):
+    row = MagicMock()
+    row.name = name
+    row.total_sales = total_sales
+    row.sales_count = sales_count
+    row.last_sale_date = last_sale_date
+    return row
+
+
 class TestCustomerInsights:
     def test_customer_insights_with_branch(self, mocker):
-        customer = MagicMock(name="Ali", id=1)
-        sale = MagicMock(sale_date=datetime(2025, 6, 1))
-        cq = _chain(all=[customer])
-        sq = _chain(scalar=1000, count=2, first=sale)
-        mocker.patch("services.analytics_service._db_session").return_value.query.side_effect = [cq, sq, sq, sq]
+        # One GROUP BY subquery plus one customer-row query — the old N+1 mock
+        # shape no longer matches the service.
+        sales_q = _chain()
+        customers_q = _chain(all=[_insight_row("Ali", 1000, 2, datetime(2025, 6, 1))])
+        session = MagicMock()
+        session.query.side_effect = [sales_q, customers_q]
+        mocker.patch("services.analytics_service._db_session", return_value=session)
         from services.analytics_service import AnalyticsService
 
         data = AnalyticsService.get_customer_insights(tenant_id=1, branch_id=2)
@@ -40,10 +52,11 @@ class TestCustomerInsights:
         assert data[0]["avg_sale"] == 500.0
 
     def test_customer_insights_no_last_sale(self, mocker):
-        customer = MagicMock(name="Bob", id=2)
-        cq = _chain(all=[customer])
-        sq = _chain(scalar=0, count=0, first=None)
-        mocker.patch("services.analytics_service._db_session").return_value.query.side_effect = [cq, sq, sq, sq]
+        sales_q = _chain()
+        customers_q = _chain(all=[_insight_row("Bob", 0, 0, None)])
+        session = MagicMock()
+        session.query.side_effect = [sales_q, customers_q]
+        mocker.patch("services.analytics_service._db_session", return_value=session)
         from services.analytics_service import AnalyticsService
 
         data = AnalyticsService.get_customer_insights(tenant_id=1)

@@ -244,7 +244,7 @@ class TestPublicDonateSubmit:
             sess["language"] = "ar"
         with (
             _vault_patch(vault),
-            patch("flask.flash") as flash,
+            patch("utils.error_messages.flash") as flash,
             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
@@ -258,7 +258,7 @@ class TestPublicDonateSubmit:
             sess["language"] = "en"
         with (
             _vault_patch(vault),
-            patch("flask.flash") as flash,
+            patch("utils.error_messages.flash") as flash,
             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "5"})
@@ -272,7 +272,7 @@ class TestPublicDonateSubmit:
             sess["language"] = "ar"
         with (
             _vault_patch(vault),
-            patch("flask.flash") as flash,
+            patch("utils.error_messages.flash") as flash,
             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})
@@ -285,7 +285,7 @@ class TestPublicDonateSubmit:
             sess["language"] = "en"
         with (
             _vault_patch(vault),
-            patch("flask.flash") as flash,
+            patch("utils.error_messages.flash") as flash,
             patch("routes.public.redirect", side_effect=lambda *a, **k: ("redirect", 302)),
         ):
             resp = public_client.post("/donate/submit", data={"amount": "500"})

@@ -106,6 +106,14 @@ class TestInvoiceLogoWatermarkGap100:
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
             # let makedirs create real dirs; mock save to avoid filesystem side-effects
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
+            # The route now validates uploads through the central helper and
+            # writes the accepted path onto the tenant profile.
+            stack.enter_context(
+                patch(
+                    "routes.owner.settings.save_uploaded_file",
+                    side_effect=lambda _file, target, _exts: f"{target}/stub.png",
+                )
+            )
             resp = app.test_client().post(
                 "/owner/invoice-settings",
                 data={
@@ -135,6 +143,14 @@ class TestInvoiceLogoWatermarkGap100:
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
+            # The route now validates uploads through the central helper and
+            # writes the accepted path onto the tenant profile.
+            stack.enter_context(
+                patch(
+                    "routes.owner.settings.save_uploaded_file",
+                    side_effect=lambda _file, target, _exts: f"{target}/stub.png",
+                )
+            )
             resp = app.test_client().post(
                 "/owner/invoice-settings",
                 data={
@@ -164,6 +180,14 @@ class TestInvoiceLogoWatermarkGap100:
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
+            # The route now validates uploads through the central helper and
+            # writes the accepted path onto the tenant profile.
+            stack.enter_context(
+                patch(
+                    "routes.owner.settings.save_uploaded_file",
+                    side_effect=lambda _file, target, _exts: f"{target}/stub.png",
+                )
+            )
             resp = app.test_client().post(
                 "/owner/invoice-settings",
                 data={
@@ -194,6 +218,14 @@ class TestInvoiceLogoWatermarkGap100:
             stack.enter_context(patch("routes.owner.settings.atomic_transaction", atomic))
             stack.enter_context(patch("utils.db_safety.atomic_transaction", atomic))
             stack.enter_context(patch("werkzeug.datastructures.FileStorage.save"))
+            # The route now validates uploads through the central helper and
+            # writes the accepted path onto the tenant profile.
+            stack.enter_context(
+                patch(
+                    "routes.owner.settings.save_uploaded_file",
+                    side_effect=lambda _file, target, _exts: f"{target}/stub.png",
+                )
+            )
             # Provide files with empty filename — should skip inner if
             resp = app.test_client().post(
                 "/owner/invoice-settings",
