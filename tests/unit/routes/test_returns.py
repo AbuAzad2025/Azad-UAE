@@ -109,7 +109,7 @@ class TestReturnsApiCreate:
         result = _mock_return(id=5, return_number="RET-005")
         with (
             _returns_patches(),
-            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.tenant_get_or_404"),
             patch("routes.returns.ReturnService.create_return", return_value=result),
         ):
             resp = returns_client.post(
@@ -124,7 +124,7 @@ class TestReturnsApiCreate:
     def test_create_value_error(self, returns_client):
         with (
             _returns_patches(),
-            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.tenant_get_or_404"),
             patch("routes.returns.ReturnService.create_return", side_effect=ValueError("bad")),
         ):
             resp = returns_client.post(
@@ -136,7 +136,7 @@ class TestReturnsApiCreate:
     def test_create_server_error(self, returns_client):
         with (
             _returns_patches(),
-            patch("utils.tenanting.tenant_get_or_404"),
+            patch("routes.returns.tenant_get_or_404"),
             patch("routes.returns.ReturnService.create_return", side_effect=RuntimeError("db")),
         ):
             resp = returns_client.post(

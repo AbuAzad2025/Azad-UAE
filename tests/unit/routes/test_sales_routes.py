@@ -24,6 +24,7 @@ def _mock_sale(**kwargs):
     sale.status = kwargs.get("status", "draft")
     sale.payment_status = kwargs.get("payment_status", "unpaid")
     sale.total_amount = kwargs.get("total_amount", Decimal("100"))
+    sale.subtotal = kwargs.get("subtotal", Decimal("100"))
     sale.currency = kwargs.get("currency", "AED")
     sale.sale_date = kwargs.get("sale_date", datetime(2026, 6, 26))
     sale.discount_amount = kwargs.get("discount_amount", Decimal("0"))

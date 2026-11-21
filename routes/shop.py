@@ -85,9 +85,13 @@ def _require_open_store(store):
     # Like the previous blueprint gate, it applies only when there is an
     # authenticated tenant context — an anonymous visitor reaching a published
     # store is governed by the store's own flag and the platform switch above.
-    from utils.tenanting import get_active_tenant_id
+    # Read the factory-set request value directly: get_active_tenant_id()
+    # resolves current_user first, which is unavailable in the lightweight
+    # route test apps and has no meaning for an anonymous storefront visit.
+    from flask import g, has_request_context
 
-    if get_active_tenant_id() and not getattr(tenant, "enable_store", False):
+    active_tenant_id = getattr(g, "active_tenant_id", None) if has_request_context() else None
+    if active_tenant_id and not getattr(tenant, "enable_store", False):
         return _closed_response(store, "plan")
 
     return None
