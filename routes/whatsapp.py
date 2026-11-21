@@ -34,6 +34,10 @@ def send_invoice(sale_id):
         from utils.error_messages import ErrorMessages
 
         flash(ErrorMessages.whatsapp_failed(), "danger")
+        return error_response(
+            message=ErrorMessages.whatsapp_failed(),
+            status_code=502,
+        )
 
     return success_response(data=result)
 
@@ -65,6 +69,10 @@ def send_reminder(customer_id):
         from utils.error_messages import ErrorMessages
 
         flash(ErrorMessages.whatsapp_failed(), "danger")
+        return error_response(
+            message=ErrorMessages.whatsapp_failed(),
+            status_code=502,
+        )
 
     return success_response(data=result)
 

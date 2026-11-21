@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from flask import Blueprint, current_app, request
 
 from extensions import limiter
+from routes.payment_vault import WebhookDedupUnavailable
 from utils.api_response import error_response, success_response
 from utils.feature_guards import install_feature_gate
 
@@ -41,19 +42,22 @@ def _reject_stale_timestamp(data: dict | None):
 
 
 def _is_duplicate(provider: str, event_id: str | None) -> bool:
-    if not event_id:
-        return False
-    try:
-        from extensions import cache
+    """Read-only replay check. Fail closed when the cache is unavailable.
 
-        key = f"billing_webhook:{provider}:{event_id}"
-        if cache.get(key):
-            logger.warning("Billing webhook duplicate blocked: %s %s", provider, event_id)
-            return True
-        cache.set(key, "1", timeout=86400)
-    except Exception:
-        logger.exception("Billing webhook dedup cache error")
-    return False
+    The marker is written only after successful processing (see
+    ``_mark_processed``), so a rejected/malformed event does not suppress the
+    legitimate retry. Reuses the vault webhook dedup backend as the single
+    source of truth.
+    """
+    from routes.payment_vault import _is_duplicate_webhook
+
+    return _is_duplicate_webhook(provider, event_id, fail_closed=True)
+
+
+def _mark_processed(provider: str, event_id: str | None) -> None:
+    from routes.payment_vault import _mark_webhook_processed
+
+    _mark_webhook_processed(provider, event_id)
 
 
 @billing_webhook_bp.route("/stripe", methods=["POST"])
@@ -117,14 +121,19 @@ def stripe_webhook():
                     tenant_id,
                     package_id,
                 )
+                _mark_processed("stripe", event_id)
                 return success_response(data={"provisioning": result})
             except SaaSProvisioningError as exc:
                 logger.error("Stripe provisioning failed: %s", exc)
-                return error_response(message=str(exc), status_code=422)
+                return error_response(message="Provisioning failed", status_code=422)
 
         logger.info("Stripe webhook unhandled event type: %s", event_type)
+        _mark_processed("stripe", event_id)
         return success_response(data={"status": "acknowledged"})
 
+    except WebhookDedupUnavailable:
+        logger.error("Stripe billing webhook dedup backend unavailable")
+        return error_response(message="Webhook temporarily unavailable", status_code=503)
     except Exception:
         logger.exception("Stripe billing webhook failed")
         return error_response(message="Webhook processing failed", status_code=500)
@@ -186,6 +195,7 @@ def generic_webhook():
             "invoice.payment_succeeded",
         ):
             logger.info("Generic webhook unhandled event: %s", event)
+            _mark_processed(provider, transaction_id)
             return success_response(data={"status": "acknowledged"})
 
         tenant_id = data.get("tenant_id")
@@ -207,11 +217,15 @@ def generic_webhook():
             package_id,
             transaction_id,
         )
+        _mark_processed(provider, transaction_id)
         return success_response(data={"provisioning": result})
 
     except SaaSProvisioningError as exc:
         logger.error("Generic webhook provisioning failed: %s", exc)
-        return error_response(message=str(exc), status_code=422)
+        return error_response(message="Provisioning failed", status_code=422)
+    except WebhookDedupUnavailable:
+        logger.error("Generic billing webhook dedup backend unavailable")
+        return error_response(message="Webhook temporarily unavailable", status_code=503)
     except Exception:
         logger.exception("Generic billing webhook failed")
         return error_response(message="Webhook processing failed", status_code=500)

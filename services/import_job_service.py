@@ -1,3 +1,6 @@
+# ARCH-LATE-IMPORT (allowlist): background import tasks run in Celery workers
+# with no request/app context; create_app() binds db and extensions, and the
+# tenant is carried explicitly through every query (the ORM guard is off).
 """Product Import Job Service - Background import processing with progress tracking."""
 
 from __future__ import annotations

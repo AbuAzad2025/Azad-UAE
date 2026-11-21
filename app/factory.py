@@ -1,7 +1,10 @@
 """Flask application factory for Azad Intelligent Systems ERP."""
 
+import atexit
 import os
 import secrets
+import sys
+import threading
 import time
 import uuid
 from typing import Any, cast
@@ -81,6 +84,45 @@ def _install_persistent_upload_serving(app):
     app.send_static_file = _send_static_file
 
 
+def _running_in_celery_process() -> bool:
+    """True when ``create_app`` runs inside a Celery worker/beat process.
+
+    Celery tasks call ``create_app()`` per task. Hourly in-process schedulers
+    belong to the web process only; a worker must not spawn one.
+    """
+    argv = " ".join(str(arg) for arg in sys.argv).lower()
+    if "celery" in argv and ("worker" in argv or "beat" in argv):
+        return True
+    return bool(os.environ.get("CELERY_WORKER") or os.environ.get("CELERY_BEAT"))
+
+
+def _start_web_process_schedulers(app) -> None:
+    """Register deployment-neutral background workers once per app instance."""
+    if _running_in_celery_process():
+        app.logger.info("Auto-approval scheduler skipped in Celery process")
+        return
+    if _truthy(os.environ.get("DISABLE_AUTO_APPROVAL_SCHEDULER")):
+        app.logger.info("Auto-approval scheduler disabled by configuration")
+        return
+
+    from services.auto_approval_service import schedule_auto_approval
+
+    stop_event = threading.Event()
+    try:
+        handle = schedule_auto_approval(app, stop_event=stop_event, skip_if_scheduled=True)
+    except Exception:
+        # A scheduling failure must never take the web process down; the
+        # owner panel still exposes the manual trigger.
+        app.logger.warning("Auto-approval scheduler failed to start", exc_info=True)
+        return
+    app.extensions["auto_approval_scheduler"] = handle
+    # Reuse the event that actually drives the worker: a guarded second call
+    # returns the original handle rather than a fresh (unused) event.
+    worker_stop = handle.get("stop_event", stop_event) if isinstance(handle, dict) else stop_event
+    atexit.register(worker_stop.set)
+    app.logger.info("Auto-approval scheduler registered")
+
+
 def create_app(config_class=Config) -> Flask:
     config._init_env()
     # Flask app is inside app/ package; templates/static live at project root
@@ -138,7 +180,7 @@ def create_app(config_class=Config) -> Flask:
         return redirect(url_for("auth.login"))
 
     LoggingCore.setup(app)
-    LoggingCore.schedule_cleanup(app)
+    LoggingCore.schedule_cleanup(app, skip_if_scheduled=True)
 
     # Zero-touch provisioning, phase 1: storage paths and schema health.
     # Idempotent and individually guarded. Runs after init_extensions so the
@@ -513,6 +555,11 @@ def create_app(config_class=Config) -> Flask:
     @app.teardown_request
     def _telemetry_clear_request_context(exc):
         _telemetry_clear()
+
+    # Hourly auto-approval: started here rather than under __main__ so WSGI
+    # (wsgi.py:app) and gunicorn deployments get it too. The Celery guard and
+    # the per-app guard in schedule_auto_approval prevent duplicate workers.
+    _start_web_process_schedulers(app)
 
     app.logger.info("[OK] Application initialized successfully")
 

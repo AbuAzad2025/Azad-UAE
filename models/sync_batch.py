@@ -20,6 +20,8 @@ class SyncBatch(db.Model):
     error_message = db.Column(db.Text)
 
     __table_args__ = (
-        db.UniqueConstraint("tenant_id", "idempotency_key", name="uq_sync_batch_idempotency"),
+        # Name matches the constraint actually created in migration
+        # 313a6a9fb20f; the two must agree so schema-parity checks stay honest.
+        db.UniqueConstraint("tenant_id", "idempotency_key", name="uq_sync_batches_tenant_key"),
         db.Index("ix_sync_batch_tenant_status", "tenant_id", "status"),
     )

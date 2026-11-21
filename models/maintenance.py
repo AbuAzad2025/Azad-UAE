@@ -218,21 +218,24 @@ class MaintenanceOrder(db.Model):
     closed_by_user = db.relationship("User", foreign_keys=[closed_by])
     archived_by_user = db.relationship("User", foreign_keys=[archived_by])
 
-    lines = db.relationship(
-        "MaintenanceOrderLine", back_populates="order", cascade="all, delete-orphan", lazy="dynamic"
-    )
-    services_lines = db.relationship(
-        "MaintenanceOrderService", back_populates="order", cascade="all, delete-orphan", lazy="dynamic"
-    )
+    # Archive-only children. Migration m3a4b5c6d7e8 installs BEFORE DELETE
+    # triggers on all six tables below (and refuses DELETE outright), so a
+    # physical delete can never succeed — a child is retired with is_archived
+    # instead. These relationships therefore deliberately carry NO
+    # ``delete``/``delete-orphan`` cascade: the ORM must not attempt to DELETE
+    # children that the database refuses to remove. The SQLAlchemy default
+    # cascade (save-update, merge) is kept so appending a new child still adds
+    # it to the session; no code path relies on session.delete of these rows.
+    lines = db.relationship("MaintenanceOrderLine", back_populates="order", lazy="dynamic")
+    services_lines = db.relationship("MaintenanceOrderService", back_populates="order", lazy="dynamic")
     status_logs = db.relationship(
         "MaintenanceOrderStatusLog",
         back_populates="order",
-        cascade="all, delete-orphan",
         order_by="MaintenanceOrderStatusLog.created_at.asc()",
     )
-    receipts = db.relationship("MaintenanceReceipt", back_populates="order", cascade="all, delete-orphan")
-    invoice = db.relationship("MaintenanceInvoice", back_populates="order", uselist=False, cascade="all, delete-orphan")
-    returns = db.relationship("MaintenanceReturn", back_populates="order", cascade="all, delete-orphan")
+    receipts = db.relationship("MaintenanceReceipt", back_populates="order")
+    invoice = db.relationship("MaintenanceInvoice", back_populates="order", uselist=False)
+    returns = db.relationship("MaintenanceReturn", back_populates="order")
 
     def __repr__(self):
         return f"<MaintenanceOrder {self.order_number} {self.status}>"

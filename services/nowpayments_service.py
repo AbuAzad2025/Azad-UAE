@@ -233,13 +233,29 @@ class NOWPaymentsService:
             }
 
     def verify_ipn(self, request_data, signature):
-        try:
-            expected_signature = hmac.new(
-                self.ipn_secret.encode("utf-8"),
-                json.dumps(request_data, sort_keys=True).encode("utf-8"),
-                hashlib.sha256,
-            ).hexdigest()
+        """Verify a NOWPayments IPN signature.
 
+        NOWPayments signs the **raw request body** with HMAC-SHA512. Pass
+        ``request.data`` (bytes) from the webhook route. The legacy dict path
+        (HMAC-SHA256 over re-serialized JSON) is retained only for older
+        in-process callers; it is never used by an HTTP handler because
+        re-serializing the payload changes the bytes that were signed.
+        """
+        try:
+            secret = (self.ipn_secret or "").encode("utf-8")
+            if not secret:
+                return False
+
+            if isinstance(request_data, (bytes, bytearray, memoryview)):
+                signed_bytes = bytes(request_data)
+                digest = hashlib.sha512
+            else:
+                # Legacy compatibility: old callers passed a parsed dict. The
+                # correct network path above always passes the raw body.
+                signed_bytes = json.dumps(request_data, sort_keys=True).encode("utf-8")
+                digest = hashlib.sha256
+
+            expected_signature = hmac.new(secret, signed_bytes, digest).hexdigest()
             return hmac.compare_digest(signature, expected_signature)
 
         except Exception:

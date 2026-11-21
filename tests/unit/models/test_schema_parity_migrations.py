@@ -267,3 +267,90 @@ def test_child_tenant_composite_fk_declarations_match_metadata():
         assert "tenant_id" in anchor_t.columns and "id" in anchor_t.columns, (
             f"anchor table {table} lacks tenant_id or id"
         )
+
+
+def _second_money_fk_module():
+    """Load the second composite-FK batch without importing the whole chain."""
+    import importlib.util
+    from pathlib import Path
+
+    path = (
+        Path(__file__).resolve().parents[3]
+        / "migrations"
+        / "versions"
+        / "r6s7t8u9v0w1_second_money_tenant_composite_fks.py"
+    )
+    spec = importlib.util.spec_from_file_location("r6s7t8u9v0w1_second_money_tenant_composite_fks", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_second_money_fk_declarations_match_metadata():
+    """The second batch's triples and anchors must match the real metadata.
+
+    A copy/paste typo in ``(child, column, parent)`` would otherwise only fail
+    on a PostgreSQL deploy, where the composite FK cannot be created when the
+    child column does not actually reference the declared parent's ``id``.
+    """
+    module = _second_money_fk_module()
+    md = db.metadata
+
+    seen: set[str] = set()
+    for table, column, parent, name in module._COMPOSITE_FKS:
+        assert name not in seen, f"duplicate constraint name {name}"
+        seen.add(name)
+        assert len(name) <= 63, f"FK name exceeds PostgreSQL's 63-char limit: {name}"
+        child_t, parent_t = md.tables[table], md.tables[parent]
+        assert "tenant_id" in child_t.columns, f"{table} has no tenant_id"
+        assert "tenant_id" in parent_t.columns, f"{parent} has no tenant_id"
+        targets = [fk.column for fk in child_t.columns[column].foreign_keys]
+        assert any(t.table is parent_t and t.name == "id" for t in targets), (
+            f"{table}.{column} does not reference {parent}.id in model metadata"
+        )
+
+    for table, name in module._UNIQUE_ANCHORS:
+        assert name not in seen, f"duplicate constraint name {name}"
+        seen.add(name)
+        assert len(name) <= 63, f"anchor name exceeds PostgreSQL's 63-char limit: {name}"
+        anchor_t = md.tables[table]
+        assert "tenant_id" in anchor_t.columns and "id" in anchor_t.columns, (
+            f"anchor table {table} lacks tenant_id or id"
+        )
+
+    # The batch is deliberately focused; an unbounded copy/paste is a defect.
+    assert len(module._COMPOSITE_FKS) + len(module._UNIQUE_ANCHORS) <= 25
+
+
+def test_second_money_fk_parents_are_anchored_in_migrated_db(app):
+    """Every parent referenced by the new composite FKs must be anchored live.
+
+    A composite ``(tenant_id, parent_id)`` FK is only valid against a parent
+    with ``UNIQUE (tenant_id, id)``. The migration adds that anchor to every
+    parent that lacked one; this checks the promise against the actual
+    migrated schema, not just the declaration lists.
+    """
+    module = _second_money_fk_module()
+    inspector = sa.inspect(db.engine)
+    parents = {parent for _table, _column, parent, _name in module._COMPOSITE_FKS}
+    for parent in sorted(parents):
+        unique_columns = {frozenset(c["column_names"]) for c in inspector.get_unique_constraints(parent)}
+        assert frozenset({"tenant_id", "id"}) in unique_columns, (
+            f"{parent} has no UNIQUE (tenant_id, id) anchor for the composite FK"
+        )
+
+
+def test_sync_batch_constraint_name_matches_the_database():
+    """The model must use the unique-constraint name the migration created."""
+    names = {c.name for c in db.metadata.tables["sync_batches"].constraints}
+    assert "uq_sync_batches_tenant_key" in names
+    assert "uq_sync_batch_idempotency" not in names
+
+
+def test_maintenance_order_children_are_archive_only_not_delete_cascaded():
+    """Archive-only children must not carry a delete/delete-orphan cascade."""
+    mapper = sa.inspect(models.MaintenanceOrder)
+    for name in ("lines", "services_lines", "status_logs", "receipts", "invoice", "returns"):
+        cascade = mapper.relationships[name].cascade
+        assert not cascade.delete, f"{name} must not cascade deletes (DB trigger refuses DELETE)"
+        assert not cascade.delete_orphan, f"{name} must not delete orphans (rows are archived, not deleted)"

@@ -339,6 +339,9 @@ class Sale(db.Model):
             # P0 Fix: Reverse unrealized FX revaluation when sale becomes fully paid
             if not was_paid:
                 try:
+                    # ARCH-LATE-IMPORT (allowlist): settlement reverses posted
+                    # FX journal entries inside a savepoint; no pure model
+                    # helper can reproduce that GL behavior.
                     from services.fx_revaluation_service import revalue_sale_at_settlement
 
                     revalue_sale_at_settlement(self.id, self.tenant_id)

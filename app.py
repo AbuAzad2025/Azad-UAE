@@ -59,10 +59,15 @@ if __name__ == "__main__":
         print("After BackupService.initialize")
 
         try:
+            # create_app() already registers the scheduler for web deployments
+            # (see app.factory._start_web_process_schedulers). This call is kept
+            # for the direct `python app.py` path and is idempotent: scheduling
+            # the same app twice returns the existing handle, never a second
+            # worker thread.
             from services.auto_approval_service import schedule_auto_approval
 
-            schedule_auto_approval(app)
-            app.logger.info("Auto-approval service scheduler started")
+            schedule_auto_approval(app, skip_if_scheduled=True)
+            app.logger.info("Auto-approval service scheduler active")
         except Exception as e:
             app.logger.warning("Auto-approval service failed: %s", e)
 

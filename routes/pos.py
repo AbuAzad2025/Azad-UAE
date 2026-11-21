@@ -2,6 +2,7 @@ import contextlib
 import json
 import os as _os
 import queue as _queue
+import threading
 import time
 from datetime import UTC
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
@@ -2108,6 +2109,11 @@ def api_stock_lookup():
 
 
 _HARDWARE_AGENT_URL = _os.environ.get("POS_HARDWARE_AGENT_URL", "http://127.0.0.1:8567")
+# SSE subscriber registries are shared by request threads and by the backplane
+# reader threads. Every mutation/iteration goes through this lock so a register
+# cannot race a broadcast or a teardown.
+_SSE_SUBSCRIBERS_LOCK = threading.Lock()
+_SSE_HEARTBEAT_SECONDS = 15.0
 _KDS_SUBSCRIBERS: list[tuple[int | None, _queue.Queue]] = []
 _CFD_SUBSCRIBERS: list[tuple[int, int, _queue.Queue]] = []
 
@@ -2116,16 +2122,20 @@ def _notify_kds(data, tenant_id: int | None = None):
     msg = f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
     target_tid = tenant_id if tenant_id is not None else data.get("tenant_id")
     stale: list[tuple[int | None, _queue.Queue]] = []
-    for sub_tid, q in _KDS_SUBSCRIBERS[:]:
+    with _SSE_SUBSCRIBERS_LOCK:
+        subscribers = list(_KDS_SUBSCRIBERS)
+    for sub_tid, q in subscribers:
         if target_tid is not None and sub_tid is not None and sub_tid != target_tid:
             continue
         try:
             q.put_nowait(msg)
         except Exception:
             stale.append((sub_tid, q))
-    for entry in stale:
-        if entry in _KDS_SUBSCRIBERS:
-            _KDS_SUBSCRIBERS.remove(entry)
+    if stale:
+        with _SSE_SUBSCRIBERS_LOCK:
+            for entry in stale:
+                if entry in _KDS_SUBSCRIBERS:
+                    _KDS_SUBSCRIBERS.remove(entry)
     if target_tid is not None:
         sse_backplane.publish(f"pos:kds:{target_tid}", {"type": "refresh", "tenant_id": target_tid, "ts": time.time()})
 
@@ -2137,17 +2147,32 @@ def _publish_cfd_refresh(tenant_id: int, session_id: int) -> None:
         return
     payload = {"type": "refresh", "tenant_id": tenant_id, "session_id": session_id, "ts": time.time()}
     stale: list[tuple[int, int, _queue.Queue]] = []
-    for sub_tid, sub_sid, q in _CFD_SUBSCRIBERS[:]:
+    with _SSE_SUBSCRIBERS_LOCK:
+        subscribers = list(_CFD_SUBSCRIBERS)
+    for sub_tid, sub_sid, q in subscribers:
         if sub_tid != tenant_id or sub_sid != session_id:
             continue
         try:
             q.put_nowait(payload)
         except Exception:
             stale.append((sub_tid, sub_sid, q))
-    for entry in stale:
-        if entry in _CFD_SUBSCRIBERS:
-            _CFD_SUBSCRIBERS.remove(entry)
+    if stale:
+        with _SSE_SUBSCRIBERS_LOCK:
+            for entry in stale:
+                if entry in _CFD_SUBSCRIBERS:
+                    _CFD_SUBSCRIBERS.remove(entry)
     sse_backplane.publish(f"pos:cfd:{tenant_id}:{session_id}", payload)
+
+
+def _sse_message(message):
+    """Render a queue item as an SSE data frame.
+
+    In-process notifications arrive pre-rendered as strings; messages fed in by
+    the Redis backplane arrive as dicts and are serialised here.
+    """
+    if isinstance(message, str):
+        return message
+    return f"data: {json.dumps(message, ensure_ascii=False, default=str)}\n\n"
 
 
 @pos_bp.route("/api/kds/stream")
@@ -2158,13 +2183,30 @@ def kds_stream():
 
     def stream():
         q: _queue.Queue = _queue.Queue()
-        _KDS_SUBSCRIBERS.append((subscriber_tid, q))
+        subscriber = (subscriber_tid, q)
+        channel = f"pos:kds:{subscriber_tid}" if subscriber_tid is not None else None
+        with _SSE_SUBSCRIBERS_LOCK:
+            _KDS_SUBSCRIBERS.append(subscriber)
+        # Cross-worker updates are published to this channel by _notify_kds.
+        # Without the subscription a KDS client pinned to another worker never
+        # sees orders raised on this one.
+        unsubscribe = sse_backplane.subscribe(channel, q) if channel else None
         try:
             while True:
-                msg = q.get()
-                yield msg
-        except GeneratorExit:
-            _KDS_SUBSCRIBERS[:] = [entry for entry in _KDS_SUBSCRIBERS if entry[1] is not q]
+                try:
+                    msg = q.get(timeout=_SSE_HEARTBEAT_SECONDS)
+                except _queue.Empty:
+                    # A keep-alive frame forces a write to the socket: a
+                    # half-open client raises here, unwinding into finally.
+                    yield ": keep-alive\n\n"
+                    continue
+                yield _sse_message(msg)
+        finally:
+            if unsubscribe:
+                unsubscribe()
+            with _SSE_SUBSCRIBERS_LOCK:
+                if subscriber in _KDS_SUBSCRIBERS:
+                    _KDS_SUBSCRIBERS.remove(subscriber)
 
     return stream(), {
         "Content-Type": "text/event-stream",
@@ -2265,10 +2307,12 @@ def customer_display_stream(session_id):
     def stream():
         q: _queue.Queue = _queue.Queue()
         subscriber = (display_tenant_id, session_id, q)
-        _CFD_SUBSCRIBERS.append(subscriber)
+        with _SSE_SUBSCRIBERS_LOCK:
+            _CFD_SUBSCRIBERS.append(subscriber)
         channel = f"pos:cfd:{display_tenant_id}:{session_id}"
         unsubscribe = sse_backplane.subscribe(channel, q)
         last_sent = None
+        last_emit = time.monotonic()
         try:
             while True:
                 with app.app_context():
@@ -2279,6 +2323,7 @@ def customer_display_stream(session_id):
                 encoded = json.dumps(payload, ensure_ascii=False)
                 if encoded != last_sent:
                     last_sent = encoded
+                    last_emit = time.monotonic()
                     yield f"data: {encoded}\n\n"
                 # Push-responsive wait: drain refresh messages (in-process or
                 # Redis backplane) every 0.1s, full DB re-poll every ~3s.
@@ -2287,11 +2332,17 @@ def customer_display_stream(session_id):
                         while True:
                             q.get_nowait()
                     time.sleep(0.1)
+                # Force a periodic write so a half-open client fails here and
+                # unwinds into finally instead of leaking its subscriber slot.
+                if time.monotonic() - last_emit >= _SSE_HEARTBEAT_SECONDS:
+                    yield ": keep-alive\n\n"
+                    last_emit = time.monotonic()
         finally:
-            if subscriber in _CFD_SUBSCRIBERS:
-                _CFD_SUBSCRIBERS.remove(subscriber)
             if unsubscribe:
                 unsubscribe()
+            with _SSE_SUBSCRIBERS_LOCK:
+                if subscriber in _CFD_SUBSCRIBERS:
+                    _CFD_SUBSCRIBERS.remove(subscriber)
 
     return stream(), {"Content-Type": "text/event-stream", "Cache-Control": "no-cache"}
 

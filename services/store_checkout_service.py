@@ -18,8 +18,8 @@ from models import Customer, Product, Sale, User, Warehouse
 from services.sale_service import SaleService
 from services.stock_service import StockService
 from services.store_payment_method_service import StorePaymentMethodService
+from services.store_pricing_service import StorePricingService
 from services.store_service import StoreService
-from utils.currency_utils import resolve_default_currency
 
 
 class StoreCheckoutService:
@@ -223,14 +223,27 @@ class StoreCheckoutService:
         from services.store_notification_service import StoreNotificationService
 
         tenant = db.session.get(Tenant, tenant_id)
-        currency = resolve_default_currency(tenant)
+
+        # ONE resolved currency for display and charge. It used to be
+        # tenant.default_currency while the prices came from
+        # get_price_for_customer() in the tenant BASE currency; Sale then
+        # multiplied those base-currency numbers by the currency→base FX rate
+        # again (double conversion) and labelled the result as the default
+        # currency. Price and label now come from the same resolver (audit #1).
+        currency = StorePricingService.resolve_display_currency(store, tenant)
+        exchange_rate = StorePricingService.resolve_store_currency_rate(tenant, currency)
 
         subtotal = Decimal("0")
         for line_data in lines_data:
             product = line_data["product"]
             qty = Decimal(str(line_data["quantity"]))
-            price = product.get_price_for_customer(customer.customer_type)
-            subtotal += qty * Decimal(str(price))
+            price = StorePricingService.resolve_store_price(product, tenant, currency)
+            if price is None:
+                raise ValueError(gettext("تعذر تحديد سعر المنتج."))
+            # Pin the resolved price on the line so SaleService does not fall
+            # back to its own base-currency get_price_for_customer() lookup.
+            line_data["unit_price"] = price
+            subtotal += qty * price
 
         discount_amount = Decimal("0")
         coupon_obj = None
@@ -244,6 +257,7 @@ class StoreCheckoutService:
             lines_data=lines_data,
             warehouse_id=online_wh.id,
             currency=currency,
+            user_exchange_rate=exchange_rate,
             discount_amount=discount_amount,
             shipping_cost=0,
             tax_rate=(Decimal(str(tenant.default_tax_rate or 0)) if (tenant and tenant.enable_tax) else Decimal("0")),

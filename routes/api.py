@@ -351,7 +351,10 @@ def api_search():
                     Product.barcode.ilike(f"%{query}%"),
                 )
             )
-        products = products_query.order_by(Product.name).limit(per_page).all()
+        offset = (page - 1) * per_page
+        products = products_query.order_by(Product.name).limit(per_page + 1).offset(offset).all()
+        has_more = len(products) > per_page
+        products = products[:per_page]
         stock_map = (
             get_branch_stock_map(
                 product_ids=[p.id for p in products],
@@ -381,7 +384,7 @@ def api_search():
             for p in products
         ]
 
-        return success_response(data={"results": results, "has_more": len(results) >= per_page})
+        return success_response(data={"results": results, "has_more": has_more})
 
     elif search_type == "suppliers":
         base_query = _scoped_supplier_query().filter(Supplier.is_active).order_by(Supplier.name)

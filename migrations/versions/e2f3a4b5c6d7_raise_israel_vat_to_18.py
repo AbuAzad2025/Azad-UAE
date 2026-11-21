@@ -30,7 +30,12 @@ def upgrade():
 
 
 def downgrade():
-    # Deliberately no-op: 18% is the statutory rate in force since 2025-01-01;
-    # lowering it again would restate overridden law. Rows upgraded here were
-    # corrected in place, not merged with distinct sources.
+    """Deliberately one-way: 18% is the statutory rate in force since 2025-01-01.
+
+    Lowering it again would restate law that has since been overridden. The
+    affected rows were corrected in place from a single unambiguous old value
+    (17.00), not merged with a distinct source, and any operator-chosen rate
+    was never touched — so there is no per-row history to restore. A data-only
+    repair, not a reversible schema change.
+    """
     pass

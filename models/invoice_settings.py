@@ -199,6 +199,9 @@ class InvoiceSettings(db.Model):
     @staticmethod
     def company_print_context(tenant_id=None):
         """Resolve the unified print context from the pinned tenant profile."""
+        # ARCH-LATE-IMPORT (allowlist): the service adds without_tenant_scope()
+        # fallback and returns the (tenant, settings, company) tuple callers
+        # rely on; the pure utils snapshot helper is NOT equivalent here.
         from services.invoice_profile_service import get_company_print_context
 
         return get_company_print_context(tenant_id=tenant_id)

@@ -58,17 +58,17 @@ class Warehouse(db.Model):
     def _validate_tenant_consistency(self, key, value):
         """Enforce that Warehouse.tenant_id matches Branch.tenant_id when branch is set.
 
-        Prevents the split-brain problem where a warehouse's tenant_id
-        differs from its branch's tenant_id. Skip validation when no
-        request context is active (CLI scripts, tests) to avoid premature
-        DB lookups during model construction.
+        Prevents the split-brain problem where a warehouse's tenant_id differs
+        from its branch's tenant_id. This invariant is enforced unconditionally —
+        in web requests, CLI first-run scripts and Celery tasks alike — because a
+        warehouse created outside a request context is just as capable of being
+        split-brain, and there is no HTTP layer there to catch it.
 
-        NOTE: For full DB-level enforcement, also add a CHECK constraint:
-            CHECK (branch_id IS NULL OR tenant_id = (SELECT tenant_id FROM branches WHERE id = branch_id))
+        The check is a plain DB lookup (identity map first, then a SELECT) and
+        needs no Flask request context; it only needs the app context that any
+        SQLAlchemy model construction already requires.
         """
-        from flask import has_request_context
-
-        if value is not None and self.branch_id and has_request_context():
+        if value is not None and self.branch_id:
             from models.branch import Branch
 
             branch = db.session.get(Branch, self.branch_id)

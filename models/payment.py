@@ -172,6 +172,9 @@ class Payment(db.Model):
                 self.sale.recalculate_payment_status()
             elif self.purchase:
                 # For purchases, check if fully paid and unwind FX revaluation
+                # ARCH-LATE-IMPORT (allowlist): settlement unwinds posted FX
+                # AP revaluation entries inside a savepoint; GL behavior has
+                # no pure model-layer equivalent.
                 from services.fx_revaluation_service import revalue_purchase_at_settlement
 
                 paid = self.purchase.get_paid_amount()

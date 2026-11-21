@@ -1,3 +1,6 @@
+# ARCH-LATE-IMPORT (allowlist): maintenance/owner ops run from CLI and HTTP.
+# create_app() is the only way to obtain an app context when no request exists;
+# current_app is already preferred where possible. Tests patch this fallback.
 """
 Maintenance services for AZADEXA ERP.
 

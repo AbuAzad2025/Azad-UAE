@@ -711,17 +711,33 @@ def _is_nowpayments_ip(remote_addr: str | None) -> bool:
     return False
 
 
-def _is_duplicate_callback(payment_id: str, status: str, ttl_seconds: int = 86400) -> bool:
-    key = f"{payment_id}:{status}"
+def _prune_callback_cache(ttl_seconds: int = 86400) -> None:
     now = datetime.now(UTC).timestamp()
-    # prune old entries
     for k in list(_payment_callback_cache.keys()):
         if now - _payment_callback_cache[k] > ttl_seconds:
             _payment_callback_cache.pop(k, None)
+
+
+def _is_duplicate_callback(payment_id: str, status: str, ttl_seconds: int = 86400, *, claim: bool = True) -> bool:
+    """Duplicate check for the legacy IPN.
+
+    The HTTP handler passes ``claim=False``: it reads the marker without
+    inserting one, so an unauthenticated caller cannot poison the cache. The
+    marker is written by :func:`_mark_callback_processed` only after the
+    signature verified and the callback was processed successfully.
+    """
+    _prune_callback_cache(ttl_seconds)
+    key = f"{payment_id}:{status}"
     if key in _payment_callback_cache:
         return True
-    _payment_callback_cache[key] = now
+    if claim:
+        _payment_callback_cache[key] = datetime.now(UTC).timestamp()
     return False
+
+
+def _mark_callback_processed(payment_id: str, status: str) -> None:
+    """Suppress replays of an IPN that was actually processed."""
+    _payment_callback_cache[f"{payment_id}:{status}"] = datetime.now(UTC).timestamp()
 
 
 @auth_bp.route("/payment/callback", methods=["POST"])
@@ -752,6 +768,10 @@ def payment_callback():
             )
             return error_response(gettext("توقيع مفقود"), status_code=400)
 
+        # NOWPayments signs the exact bytes it sent. Keep them before Flask
+        # re-parses the JSON - re-serializing would change what was signed.
+        raw_body = request.data
+
         payment_data = request.get_json(silent=True)
         if not isinstance(payment_data, dict):
             current_app.logger.warning(
@@ -769,7 +789,9 @@ def payment_callback():
             return error_response(gettext("payment_id مطلوب"), status_code=400)
 
         current_status = payment_data.get("payment_status", "")
-        if _is_duplicate_callback(str(payment_id), str(current_status)):
+        # Read-only check: no marker is written here, so an unauthenticated
+        # caller cannot poison the dedup cache before the signature is checked.
+        if _is_duplicate_callback(str(payment_id), str(current_status), claim=False):
             current_app.logger.info(
                 "NOWPayments callback ignored: duplicate payment_id=%s status=%s",
                 payment_id,
@@ -782,7 +804,7 @@ def payment_callback():
             current_app.logger.warning("NOWPayments callback rejected: IPN secret not configured")
             return error_response("Webhook not configured", status_code=503)
 
-        if not nowpayments.verify_ipn(payment_data, signature):
+        if not nowpayments.verify_ipn(raw_body, signature):
             current_app.logger.warning(
                 "NOWPayments callback rejected: invalid signature (ip=%s payment_id=%s)",
                 remote_addr,
@@ -793,6 +815,9 @@ def payment_callback():
         success = nowpayments.process_payment_callback(payment_data)
 
         if success:
+            # Only a verified, successfully processed callback claims its key;
+            # a failed processing attempt stays retryable.
+            _mark_callback_processed(str(payment_id), str(current_status))
             return success_response(data={"status": "success"})
         else:
             return error_response(gettext("فشل في معالجة الدفعة"), status_code=500)

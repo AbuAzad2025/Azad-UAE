@@ -462,11 +462,12 @@ def carrier_webhook(carrier):
 
         db.session.flush()
         return {"success": True, "status": shipment.status, "carrier_result": result.get("success", False)}, 200
-    except Exception as exc:
+    except Exception:
         import logging
 
         logging.getLogger(__name__).exception("carrier webhook failed")
-        return {"success": False, "error": str(exc)}, 500
+        # Log the raw error, never echo it to an unauthenticated caller.
+        return {"success": False, "error": "tracking sync failed"}, 500
 
 
 @public_bp.route("/verify/<token>")

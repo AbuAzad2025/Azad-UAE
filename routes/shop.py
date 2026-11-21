@@ -744,6 +744,7 @@ def cart_view(slug):
         store.tenant_id,
         cart,
         display_currency=ctx["store_currency"],
+        currency_code=ctx["store_currency"],
         customer_type=_shop_customer_type(store, ctx["shop_account"]),
     )
 
@@ -870,6 +871,7 @@ def cart_update(slug):
             store.tenant_id,
             cart_ajax,
             display_currency=currency_ajax,
+            currency_code=currency_ajax,
             customer_type=_shop_customer_type(store, _shop_account(store)),
         )
         count = int(sum(cart_ajax.values()) or 0)
@@ -938,6 +940,7 @@ def checkout(slug):
         store.tenant_id,
         cart,
         display_currency=ctx["store_currency"],
+        currency_code=ctx["store_currency"],
         customer_type=_shop_customer_type(store, account),
     )
 
@@ -1001,11 +1004,18 @@ def checkout(slug):
                 )
 
                 try:
-                    payment = StoreOnlinePaymentService.create_payment_for_sale(
-                        sale,
-                        store,
-                        customer_email=getattr(account, "email", None),
-                    )
+                    # The sale was already committed by store_checkout above.
+                    # The gateway ref is written with a flush inside the
+                    # service, so it needs its OWN boundary here — otherwise it
+                    # is never committed and the (tenant, sale) idempotency
+                    # guard cannot fire on a later request. This is sequential
+                    # with, never nested inside, the sale transaction.
+                    with atomic_transaction("checkout_payment_init"):
+                        payment = StoreOnlinePaymentService.create_payment_for_sale(
+                            sale,
+                            store,
+                            customer_email=getattr(account, "email", None),
+                        )
                     return redirect(payment["payment_url"])
                 except (ValueError, RequestException) as pe:
                     with atomic_transaction("checkout_payment_fail"):

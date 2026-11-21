@@ -1,3 +1,7 @@
+# ARCH-LATE-IMPORT (allowlist): this module IS the adapter that keeps models off
+# services/. Every wrapper delegates to GL posting, tenant-scoped GL queries,
+# dynamic mapping or locked JE numbering — all service-layer logic with no pure
+# utils/model equivalent. Imports are call-time to avoid a services<->utils cycle.
 """
 GL service wrappers for use by models.
 Provides access to GL posting and account resolution functions

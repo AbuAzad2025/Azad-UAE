@@ -73,21 +73,69 @@ def _is_production_env() -> bool:
     return app_env == "production" and not debug
 
 
-def _is_duplicate_webhook(provider: str, event_id: str | None) -> bool:
-    """Idempotent webhook deduplication via cache (24h TTL)."""
+class WebhookDedupUnavailable(RuntimeError):
+    """The dedup backend is unavailable — a webhook must not be processed."""
+
+
+def _webhook_event_id(provider: str, data: dict | None) -> str | None:
+    """Build a per-event dedup id.
+
+    NOWPayments reuses ``payment_id`` for an entire payment lifecycle: a
+    ``waiting`` IPN followed by the terminal ``finished`` IPN carries the same
+    id. Keying on the id alone suppresses the terminal event for the whole
+    TTL, so the status is part of the key. Stripe already sends a real, unique
+    event id.
+    """
+    if not data:
+        return None
+    if provider == "nowpayments":
+        payment_id = str(data.get("payment_id") or "").strip()
+        status = str(data.get("payment_status") or "").strip()
+        if not payment_id or not status:
+            return None
+        return f"{payment_id}:{status}"
+    event_id = str(data.get("id") or data.get("event_id") or "").strip()
+    return event_id or None
+
+
+def _is_duplicate_webhook(provider: str, event_id: str | None, *, fail_closed: bool = False) -> bool:
+    """Read the dedup marker for a webhook event (24h TTL).
+
+    The public-webhook routes pass ``fail_closed=True``: if the shared cache
+    cannot be reached they refuse the request instead of processing it with
+    dedup disabled (fail-open), which would allow unbounded replays.
+
+    The marker itself is never written here — it is written by
+    :func:`_mark_webhook_processed` only after the event was processed
+    successfully. The default (non fail-closed) behaviour stays for legacy
+    in-process callers that predate this guard.
+    """
     if not event_id:
         return False
+    key = f"webhook:{provider}:{event_id}"
     try:
         from extensions import cache
 
-        key = f"webhook:{provider}:{event_id}"
         if cache.get(key):
             logger.warning("%s webhook replay blocked: %s", provider, event_id)
             return True
-        cache.set(key, "1", timeout=86400)
+        if not fail_closed:
+            # Legacy callers relied on the check itself claiming the key.
+            cache.set(key, "1", timeout=86400)
     except Exception:
         logger.exception("Webhook dedup cache error for %s %s", provider, event_id)
+        if fail_closed:
+            raise WebhookDedupUnavailable(f"{provider} webhook dedup backend unavailable") from None
     return False
+
+
+def _mark_webhook_processed(provider: str, event_id: str | None) -> None:
+    """Persist the dedup marker after a webhook was successfully processed."""
+    if not event_id:
+        return
+    from extensions import cache
+
+    cache.set(f"webhook:{provider}:{event_id}", "1", timeout=86400)
 
 
 def _payment_vault_trusted_origins() -> frozenset[str]:
@@ -1428,9 +1476,12 @@ def api_create_donation():
                 changes={"amount": float(data["amount"]), "method": "crypto"},
             )
 
+            donation_id = getattr(donation, "id", None)
+            if not isinstance(donation_id, int):
+                donation_id = None
             response_data = {
                 "message": gettext("شكراً على تبرعك!"),
-                "donation_id": (donation.id if donation else None),
+                "donation_id": donation_id,
                 "payment_method_display": "crypto",
             }
 
@@ -1735,7 +1786,7 @@ def confirm_platform_fees():
         logger.exception("Platform fee collection confirm failed")
         flash(gettext(f"❌ خطأ: {safe_error(e, context=__name__)}"), "danger")
         if wants_json:
-            return jsonify({"success": False, "error": str(e)}), 400
+            return error_response(message=safe_error(e, context=__name__), status_code=400)
 
     return redirect(url_for("payment_vault.dashboard"))
 
@@ -1978,11 +2029,22 @@ def nowpayments_webhook():
             logger.warning("NOWPayments webhook signature verification failed")
             return error_response(message="Invalid signature", status_code=403)
 
-        event_id = data.get("payment_id") if data else None
-        if _is_duplicate_webhook("nowpayments", event_id):
-            return success_response(data={"status": "duplicate"})
+        event_id = _webhook_event_id("nowpayments", data)
+        try:
+            if _is_duplicate_webhook("nowpayments", event_id, fail_closed=True):
+                return success_response(data={"status": "duplicate"})
+        except WebhookDedupUnavailable:
+            return error_response(message="Webhook deduplication unavailable", status_code=503)
 
         result = WebhookService.process_nowpayments_webhook(data)
+
+        if result.get("success"):
+            try:
+                _mark_webhook_processed("nowpayments", event_id)
+            except Exception:
+                # The event was already processed. A replay cannot slip through
+                # because the dedup READ fails closed until the cache is back.
+                logger.exception("Failed to persist NOWPayments dedup marker for %s", event_id)
 
         if vault:
             PaymentLog.log_action(
@@ -2028,11 +2090,22 @@ def stripe_webhook():
             logger.warning("Stripe webhook signature verification failed")
             return error_response(message="Invalid signature", status_code=403)
 
-        event_id = data.get("id") if data else None
-        if _is_duplicate_webhook("stripe", event_id):
-            return success_response(data={"status": "duplicate"})
+        event_id = _webhook_event_id("stripe", data)
+        try:
+            if _is_duplicate_webhook("stripe", event_id, fail_closed=True):
+                return success_response(data={"status": "duplicate"})
+        except WebhookDedupUnavailable:
+            return error_response(message="Webhook deduplication unavailable", status_code=503)
 
         result = WebhookService.process_stripe_webhook(data)
+
+        if result.get("success"):
+            try:
+                _mark_webhook_processed("stripe", event_id)
+            except Exception:
+                # The event was already processed. A replay cannot slip through
+                # because the dedup READ fails closed until the cache is back.
+                logger.exception("Failed to persist Stripe dedup marker for %s", event_id)
 
         if vault:
             PaymentLog.log_action(

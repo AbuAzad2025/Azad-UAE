@@ -1,3 +1,7 @@
+# ARCH-LATE-IMPORT (allowlist): Celery workers have no request/app context.
+# create_app() + app.app_context() is required to bind db/mail/extensions and
+# make tenant helpers usable; the import is call-time so importing this module
+# does not build the Flask app at worker boot.
 import os
 from datetime import UTC
 from typing import Any

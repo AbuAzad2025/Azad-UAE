@@ -327,9 +327,13 @@ class FixedAsset(db.Model):
         # branch account, which the liquidity validation refuses.
         posting_branch_id = self.branch_id
         if posting_branch_id is None and bank_account:
-            from services.gl_service import gl_helpers
+            # Read-only lookup: use the downward utils helper instead of a
+            # models -> services edge. tenant_id is non-nullable so the
+            # divergent no-tenant branch of gl_helpers.get_account was
+            # unreachable for a persisted asset.
+            from utils.gl_tenant import get_gl_account_by_code
 
-            bank = gl_helpers.get_account(bank_account, getattr(self, "tenant_id", None))
+            bank = get_gl_account_by_code(bank_account, tenant_id=getattr(self, "tenant_id", None))
             posting_branch_id = getattr(bank, "branch_id", None)
 
         if self.disposal_gain_loss > 0:

@@ -52,6 +52,13 @@ def upgrade():
 
 
 def downgrade():
-    # Copied and subsequently edited values cannot be distinguished safely.
-    # Keep them; the preceding migration owns the columns and their removal.
+    """Deliberately one-way: the copy cannot be distinguished from later edits.
+
+    This revision only filled fields that were NULL/blank from the single
+    active legacy settings row. Once copied, a value is indistinguishable from
+    one an operator set afterwards, so a downgrade could not restore the
+    original blanks without also erasing legitimate edits. The source
+    ``invoice_settings`` rows are legacy and are never deleted; the preceding
+    migration owns the columns and their eventual removal.
+    """
     pass

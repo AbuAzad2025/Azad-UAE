@@ -479,7 +479,8 @@ class TestPublicApiErrorPaths:
                 "donor_email": "not-an-email",
             },
         )
-        assert resp.status_code == 201
+        # A failed gateway call must not be reported as a completed donation.
+        assert resp.status_code == 502
 
 
 class TestListFilterBranches:

@@ -1,3 +1,6 @@
+# ARCH-LATE-IMPORT (allowlist): during restore DATABASE_URL is repointed at the
+# target DB, so a fresh create_app() is required; current_app would still point
+# at the source. Env vars are restored immediately after the call.
 """
 Scoped backup export (JSONL) and restore with optional ID remap.
 

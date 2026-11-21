@@ -4,6 +4,8 @@ Auto Approval Service
 """
 
 import logging
+import time
+import weakref
 from datetime import UTC, datetime, timedelta
 
 from flask_babel import gettext
@@ -174,25 +176,53 @@ class AutoApprovalService:
         }
 
 
-def schedule_auto_approval(app):
-    """جدولة القبول التلقائي كل ساعة"""
+# One scheduler per application instance. create_app() is called by the web
+# process *and* by each Celery task, so the guard keeps a second worker thread
+# from being spawned when the same app object is scheduled more than once.
+_auto_approval_schedulers: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
+
+
+def schedule_auto_approval(app, stop_event=None, *, skip_if_scheduled=False):
+    """Start the hourly auto-approval worker.
+
+    Returns a handle ``{"thread": ..., "stop_event": ...}``. Passing a
+    ``threading.Event`` lets the owner (the factory / web process) stop the
+    worker cleanly on shutdown. Deployment callers pass
+    ``skip_if_scheduled=True`` so a second call for the same app reuses the
+    existing handle instead of spawning a duplicate thread.
+    """
     import threading
-    import time
+
+    existing = _auto_approval_schedulers.get(app)
+    if skip_if_scheduled and existing is not None:
+        logger.info("Auto-approval scheduler already started for this app — skipping duplicate")
+        return existing
+
+    if stop_event is None:
+        stop_event = threading.Event()
 
     def approval_task():
-        while True:
+        # create_app() may run before the migration chain has been applied
+        # (boot provisioning, Celery tasks). Give the schema time to come up
+        # instead of querying it immediately at process start.
+        if not stop_event.is_set():
+            time.sleep(60)
+        while not stop_event.is_set():
             try:
                 with app.app_context():
                     result = AutoApprovalService.run_auto_approval()
                     logger.info(f"✅ Auto-approval completed: {result}")
 
-            except Exception as e:
-                logger.error(f"❌ Error in auto-approval task: {str(e)}")
+            except Exception:
+                logger.exception("Error in auto-approval task")
             finally:
-                # الانتظار ساعة واحدة قبل التشغيل التالي
-                time.sleep(3600)  # 3600 ثانية = 1 ساعة
+                if not stop_event.is_set():
+                    # الانتظار ساعة واحدة قبل التشغيل التالي
+                    time.sleep(3600)  # 3600 ثانية = 1 ساعة
 
-    # بدء المهمة في خلفية منفصلة
     thread = threading.Thread(target=approval_task, daemon=True)
     thread.start()
+    handle = {"thread": thread, "stop_event": stop_event}
+    _auto_approval_schedulers[app] = handle
     logger.info("✅ Auto-approval scheduler started")
+    return handle

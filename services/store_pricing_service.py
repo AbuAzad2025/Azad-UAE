@@ -109,13 +109,17 @@ class StorePricingService:
 
     @staticmethod
     def resolve_display_price(product, tenant, target_currency: str | None = None) -> Decimal:
-        """Convert product.regular_price (base currency) to the target display currency.
+        """Display a product at the price checkout actually charges (audit #1).
 
-        Returns a 2-decimal Decimal. When no rate exists the unconverted base
-        price is returned (never a fabricated rate=1 conversion).
+        This used to convert ``product.regular_price`` through ``convert_amount``
+        independently of the checkout resolver, so the basket could show one
+        number while the sale booked another (and explicit per-currency
+        ``StoreProductPrice`` overrides were ignored on display). It now goes
+        through the same ``resolve_store_price`` resolver the checkout uses,
+        quantised to the 2 decimals the storefront templates render.
         """
-        price = Decimal(str(getattr(product, "regular_price", None) or 0))
-        return StorePricingService.convert_amount(price, tenant, target_currency)
+        price = StorePricingService.resolve_store_price(product, tenant, target_currency)
+        return (price if price is not None else Decimal("0")).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
 
     @staticmethod
     def resolve_display_price_for_store(product, store, tenant) -> Decimal:
@@ -160,7 +164,10 @@ class StorePricingService:
                 return Decimal(str(price_row.price)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
         except Exception:
             logger.warning(
-                "StoreProductPrice lookup failed for product %s ccy %s", product.id, currency_code, exc_info=True
+                "StoreProductPrice lookup failed for product %s ccy %s",
+                getattr(product, "id", None),
+                currency_code,
+                exc_info=True,
             )
 
         # 2. Fallback: convert base-currency regular_price
@@ -168,3 +175,27 @@ class StorePricingService:
         return StorePricingService.convert_amount(base_price, tenant, currency_code).quantize(
             Decimal("0.001"), rounding=ROUND_HALF_UP
         )
+
+    @staticmethod
+    def resolve_store_currency_rate(tenant, currency_code: str | None = None) -> Decimal:
+        """Transaction-currency → base rate that matches ``resolve_store_price``.
+
+        ``resolve_store_price`` converts a base-currency price into
+        ``currency_code`` with the base→target rate from ``_resolve_rate`` (the
+        same rate, live then stored, that ``convert_amount`` uses). A sale
+        created in ``currency_code`` must therefore store the reciprocal so
+        ``Sale.calculate_totals`` converts the charged amount back to the
+        tenant base exactly once — no double conversion (audit finding #1).
+
+        When the currency is the base (or no rate can be resolved) the pricing
+        resolver falls back to the unconverted base price, so parity is the
+        matching rate in that case too.
+        """
+        currency_code = StorePricingService._as_currency_code(currency_code)
+        base = StorePricingService._base_currency(tenant)
+        if not currency_code or not base or currency_code == base:
+            return Decimal("1")
+        base_to_target = StorePricingService._resolve_rate(base, currency_code)
+        if base_to_target is None:
+            return Decimal("1")
+        return (Decimal("1") / base_to_target).quantize(Decimal("0.000001"), rounding=ROUND_HALF_UP)

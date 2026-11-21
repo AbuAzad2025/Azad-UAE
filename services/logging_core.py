@@ -2022,12 +2022,19 @@ class LoggingCore:
         return results
 
     @classmethod
-    def schedule_cleanup(cls, app, interval_hours: int = 24):
+    def schedule_cleanup(cls, app, interval_hours: int = 24, *, skip_if_scheduled: bool = False):
         """Schedule periodic auto-cleanup in a background thread.
 
-        Replaces: none (new feature)
+        ``create_app()`` runs once in the web process but once *per task* in
+        Celery. Deployment callers pass ``skip_if_scheduled=True`` so a second
+        call for the same app never starts a second daemon thread.
         """
         import threading
+
+        if skip_if_scheduled and app.extensions.get("logging_cleanup_scheduled"):
+            app.logger.info("Log auto-cleanup already scheduled — skipping duplicate")
+            return
+        app.extensions["logging_cleanup_scheduled"] = True
 
         def _cleanup_worker():
             while True:

@@ -37,6 +37,13 @@ def upgrade():
 
 
 def downgrade():
-    # Rebuilding the cached balances is a one-way repair: the pre-repair
-    # values were wrong by construction and cannot be reconstructed.
+    """Deliberately one-way: rebuilt cached balances have no prior value to restore.
+
+    Like ``f5a6b7c8d9e0`` before it, this revision recomputes the stored
+    customer/supplier/partner balances from every source document. The old
+    cached numbers were wrong by construction and were never snapshotted, so a
+    downgrade could only reinstate stale, document-disagreeing values. The
+    reconciliation is data-only — no schema is added or removed — so there is
+    nothing structural to roll back either.
+    """
     pass

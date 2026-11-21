@@ -7,6 +7,8 @@ import pytest
 
 from extensions import db
 from services.store_checkout_service import StoreCheckoutService
+from services.store_online_payment_service import StoreOnlinePaymentService
+from services.store_pricing_service import StorePricingService
 from utils.db_safety import atomic_transaction
 
 
@@ -564,3 +566,116 @@ class TestCreateWebOrder:
             customer_email="newbuyer@test.com",
         )
         assert sample_customer.email == "newbuyer@test.com"
+
+
+class TestCheckoutSingleCurrency:
+    """Audit finding #1 — one resolved currency for display and charge."""
+
+    def test_prices_come_from_store_resolver_with_matching_rate(
+        self,
+        mocker,
+        tenant_store,
+        sample_tenant,
+        sample_user,
+        sample_product_with_stock,
+        online_warehouse,
+    ):
+        mocker.patch(
+            "services.store_checkout_service.StorePaymentMethodService.validate_for_checkout",
+            return_value=MagicMock(code="cod", name_ar="COD"),
+        )
+        mocker.patch(
+            "services.store_checkout_service.StoreService.online_stock_map",
+            return_value={sample_product_with_stock.id: Decimal("20")},
+        )
+        mocker.patch(
+            "services.store_checkout_service.StockService.check_availability_in_warehouse",
+            return_value=(True, ""),
+        )
+        mocker.patch("services.store_notification_service.StoreNotificationService.notify_new_order")
+        sample_user.is_owner = True
+
+        resolved_price = Decimal("27.230")
+        price_mock = mocker.patch.object(StorePricingService, "resolve_store_price", return_value=resolved_price)
+        currency_mock = mocker.patch.object(StorePricingService, "resolve_display_currency", return_value="USD")
+        rate_mock = mocker.patch.object(
+            StorePricingService, "resolve_store_currency_rate", return_value=Decimal("3.672500")
+        )
+        # The old base-currency path must not be used for the charge.
+        base_price = mocker.patch.object(
+            sample_product_with_stock, "get_price_for_customer", return_value=Decimal("100")
+        )
+        create = mocker.patch(
+            "services.store_checkout_service.SaleService.create_sale",
+            return_value=MagicMock(id=1),
+        )
+
+        StoreCheckoutService.create_web_order(
+            tenant_store,
+            {str(sample_product_with_stock.id): 1},
+            "Web Buyer",
+            "05098765432",
+            "Delivery St",
+        )
+
+        currency_mock.assert_called_once_with(tenant_store, sample_tenant)
+        rate_mock.assert_called_once_with(sample_tenant, "USD")
+        price_mock.assert_called_once_with(sample_product_with_stock, sample_tenant, "USD")
+        base_price.assert_not_called()
+        kwargs = create.call_args.kwargs
+        assert kwargs["currency"] == "USD"
+        assert kwargs["user_exchange_rate"] == Decimal("3.672500")
+        assert kwargs["lines_data"][0]["unit_price"] == resolved_price
+
+
+class TestStoreCurrencyRate:
+    """The rate stored on the sale matches the pricing resolver's conversion."""
+
+    def test_parity_when_display_currency_is_base(self, sample_tenant):
+        tenant = MagicMock()
+        tenant.get_base_currency = MagicMock(return_value="AED")
+        assert StorePricingService.resolve_store_currency_rate(tenant, "AED") == Decimal("1")
+
+    def test_reciprocal_of_base_to_target_rate(self, app, mocker):
+        tenant = MagicMock()
+        tenant.get_base_currency = MagicMock(return_value="AED")
+        mocker.patch.object(StorePricingService, "_resolve_rate", return_value=Decimal("0.27"))
+        with app.app_context():
+            rate = StorePricingService.resolve_store_currency_rate(tenant, "USD")
+        assert rate == (Decimal("1") / Decimal("0.27")).quantize(Decimal("0.000001"))
+
+
+class TestOnlinePaymentIdempotency:
+    """Audit finding #2 — a durable (tenant, sale) idempotency guard."""
+
+    def test_committed_ref_blocks_second_payment(self, app, mocker):
+        import re
+
+        from flask_babel import gettext
+
+        sale = MagicMock(
+            id=17,
+            checkout_gateway_ref="already-initiated",
+            amount_aed=Decimal("50"),
+            total_amount=Decimal("50"),
+            currency="AED",
+        )
+        store = MagicMock(tenant_id=3, title="Shop")
+        mocker.patch(
+            "services.store_online_payment_service.StoreOnlinePaymentService._api_key",
+            return_value="key",
+        )
+        post = mocker.patch("services.store_online_payment_service.requests.post")
+
+        with (
+            app.app_context(),
+            pytest.raises(ValueError, match=re.escape(gettext("يوجد دفع إلكتروني قائم لهذا الطلب."))),
+        ):
+            StoreOnlinePaymentService.create_payment_for_sale(sale, store)
+        post.assert_not_called()
+
+    def test_doubles_do_not_reserve_a_ledger_key(self):
+        # A MagicMock sale is not a persisted ORM row, so the service must not
+        # try to write an IdempotencyKey for it (the gateway contract stays
+        # mockable and no FK/constraint is touched).
+        assert StoreOnlinePaymentService._payment_identity(MagicMock(), MagicMock()) is None

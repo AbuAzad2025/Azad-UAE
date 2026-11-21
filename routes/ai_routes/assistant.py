@@ -182,11 +182,19 @@ def upload_excel():
 
         result = _process_excel_intelligently(file, warehouse_id, current_user)
 
+        # The helper reports domain failures as {"success": False, "error": ...}.
+        # Never wrap a failed inner result in a success envelope: the HTTP body
+        # must agree with the inner result.
+        if isinstance(result, dict) and result.get("success") is False:
+            return error_response(
+                message=result.get("error") or gettext("تعذرت معالجة الملف"),
+                status_code=400,
+            )
         return success_response(data=result)
 
-    except Exception as e:
+    except Exception:
         return error_response(
-            message=gettext(f"خطأ في معالجة الملف: {str(e)}"),
+            message=gettext("خطأ في معالجة الملف. يرجى المحاولة مرة أخرى."),
             status_code=500,
         )
 
@@ -273,9 +281,9 @@ def _process_excel_intelligently(file, warehouse_id, user):
                             )
                         products_created += 1
 
-                except Exception as e:
+                except Exception:
                     if len(errors) < MAX_AI_EXCEL_ERRORS:
-                        errors.append(gettext(f"السطر {cast(int, index) + 2}: {str(e)}"))
+                        errors.append(gettext("السطر {line}: بيانات غير صالحة").format(line=cast(int, index) + 2))
                     elif len(errors) == MAX_AI_EXCEL_ERRORS:
                         errors.append(gettext("… تم إخفاء بقية الأخطاء (الحد الأقصى للعرض)"))
 
@@ -311,8 +319,8 @@ def _process_excel_intelligently(file, warehouse_id, user):
             },
         }
 
-    except Exception as e:
-        return {"success": False, "error": gettext(f"خطأ في المعالجة: {str(e)}")}
+    except Exception:
+        return {"success": False, "error": gettext("تعذرت المعالجة. يرجى مراجعة البيانات والمحاولة مرة أخرى.")}
 
 
 def _intelligent_column_detector(df):

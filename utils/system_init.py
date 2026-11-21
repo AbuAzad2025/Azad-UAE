@@ -141,7 +141,14 @@ def _ensure_system_integrity_inner(app):
     current_app.logger.info("SystemInit: Accounting data repair skipped (handled by migration).")
 
     # 8. Start Silent Telemetry (Security Reporting)
-    if not os.environ.get("DISABLE_TELEMETRY"):
+    #
+    # create_app() is also called once per Celery task. Starting the heartbeat
+    # on every call leaks a daemon thread per task, so mark the app as soon as
+    # the attempt is made (even if it fails) and never start it twice.
+    if app.extensions.get("telemetry_started"):
+        current_app.logger.debug("SystemInit: Telemetry already started for this app — skipping")
+    elif not os.environ.get("DISABLE_TELEMETRY"):
+        app.extensions["telemetry_started"] = True
         try:
             from utils.telemetry import start_telemetry
 

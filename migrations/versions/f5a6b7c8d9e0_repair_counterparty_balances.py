@@ -486,6 +486,13 @@ def upgrade():
 
 
 def downgrade():
-    # Data-only correction: the previous values were wrong by construction
-    # and there is no safe way to reconstruct them. Schema is unchanged.
+    """Deliberately one-way: the pre-repair balances were wrong by construction.
+
+    Every value written here was recomputed from the source documents (sales,
+    payments, maintenance movements, workshop purchases and partner ledger
+    rows). No snapshot of the old, incorrect cached numbers was kept, so there
+    is nothing honest to restore — reverting would reinstate balances that
+    disagreed with the documents. Schema is untouched; this is a data-only
+    repair, not a reversible schema change.
+    """
     pass
