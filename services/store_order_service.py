@@ -587,6 +587,8 @@ class StoreOrderService:
             if customer:
                 customer_id = customer.id
 
+        from utils.tax_settings import effective_tax_rate as _effective_tax_rate
+
         sale = Sale(
             tenant_id=tenant_id,
             customer_id=customer_id,
@@ -599,7 +601,7 @@ class StoreOrderService:
             subtotal=provisional.subtotal_tx_ccy,
             discount_amount=Decimal("0"),
             shipping_cost=Decimal("0"),
-            tax_rate=Decimal("0"),
+            tax_rate=_effective_tax_rate(None, tenant_id=tenant_id),
             tax_amount=Decimal("0"),
             taxable_amount=provisional.subtotal_tx_ccy,
             total_amount=provisional.subtotal_tx_ccy,

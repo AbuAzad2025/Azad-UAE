@@ -27,10 +27,14 @@ from services.store_service import StoreService
 from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.error_messages import ErrorCategory, refuse
+from utils.feature_guards import install_feature_gate
 from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
 from utils.shop_i18n import shop_lang, t
 
 shop_bp = Blueprint("shop", __name__, url_prefix="/s")
+# The primary storefront must honour the tenant's store entitlement just like
+# /store/ does; otherwise a basic-plan tenant can still post sales via /s/.
+install_feature_gate(shop_bp, "store")
 
 
 def safe_float(value, default=0.0):

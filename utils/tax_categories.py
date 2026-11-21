@@ -87,13 +87,16 @@ def compute_amounts(
     else:
         std_base, zero_base, exempt_base = Decimal("0"), Decimal("0"), Decimal("0")
     after_discount = std_base + zero_base + exempt_base
-    taxable_base = _q3(std_base + zero_base)
+    # Exempt lines carry no VAT but are still goods/revenue. Excluding them
+    # from the taxable base left the GL short by exactly that amount and
+    # post_or_fail refused the whole document.
+    taxable_base = _q3(std_base + zero_base + exempt_base)
 
     if prices_include_vat:
         if rate > 0:
             taxable_std = _q3(std_base / (Decimal("1") + rate / Decimal("100")))
             tax_amount = _q3(std_base - taxable_std)
-            taxable_amount = _q3(taxable_std + zero_base)
+            taxable_amount = _q3(taxable_std + zero_base + exempt_base)
         else:
             taxable_amount = taxable_base
             tax_amount = Decimal("0")

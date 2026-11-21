@@ -27,7 +27,7 @@ class EInvoice(db.Model):
     )
     sale_id = db.Column(
         db.Integer,
-        db.ForeignKey("sales.id", ondelete="CASCADE"),
+        db.ForeignKey("sales.id", ondelete="SET NULL"),
         nullable=True,  # credit notes reference a return, not a sale
         index=True,
     )
@@ -38,7 +38,7 @@ class EInvoice(db.Model):
     # Set when this row is the statutory document of a product return.
     return_id = db.Column(
         db.Integer,
-        db.ForeignKey("product_returns.id", ondelete="CASCADE"),
+        db.ForeignKey("product_returns.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )
@@ -47,7 +47,7 @@ class EInvoice(db.Model):
     # same UBL document - but it hangs off its own document, not a sale.
     maintenance_invoice_id = db.Column(
         db.Integer,
-        db.ForeignKey("maintenance_invoices.id", ondelete="CASCADE"),
+        db.ForeignKey("maintenance_invoices.id", ondelete="SET NULL"),
         nullable=True,
         index=True,
     )

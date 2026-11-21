@@ -1044,16 +1044,28 @@ def _post(conn, tid: int, number: str, ref_type: str, ref_id: int, accounts: dic
 
 
 def _create_database(base_url: str) -> str:
+    # Only isolated/scratch databases may be dropped, and only with an
+    # explicit confirmation flag. The old script dropped ANY name from
+    # ISOLATION_DB_NAME with no prompt.
+    import os
+    import sys
+
+    if not DB_NAME.startswith(("azad_isolation_", "azad_browser_", "azad_audit_", "azad_codeaudit_")):
+        raise SystemExit(f"Refusing to drop database '{DB_NAME}' — not an isolated scratch DB.")
+    if "--allow-reset" not in sys.argv and os.environ.get("ALLOW_DB_RESET") != "1":
+        raise SystemExit("Pass --allow-reset (or ALLOW_DB_RESET=1) to rebuild the scratch database.")
     url = sa.engine.make_url(base_url).set(database="postgres")
     admin = sa.create_engine(url, isolation_level="AUTOCOMMIT", poolclass=NullPool)
     try:
         with admin.connect() as conn:
-            conn.execute(sa.text(f"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='{DB_NAME}'"))
-            conn.execute(sa.text(f"DROP DATABASE IF EXISTS {DB_NAME}"))
-            conn.execute(sa.text(f"CREATE DATABASE {DB_NAME}"))
+            conn.execute(
+                sa.text("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=:name"), {"name": DB_NAME}
+            )
+            conn.execute(sa.text(f'DROP DATABASE IF EXISTS "{DB_NAME}"'))
+            conn.execute(sa.text(f'CREATE DATABASE "{DB_NAME}"'))
     finally:
         admin.dispose()
-    return sa.engine.make_url(base_url).set(database=DB_NAME).render_as_string(hide_password=False)
+    return sa.engine.make_url(base_url).set(database=DB_NAME).render_as_string(hide_password=True)
 
 
 def _upgrade(url: str) -> None:

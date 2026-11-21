@@ -563,6 +563,14 @@ class PurchaseService:
         if purchase.status == "cancelled":
             raise ValueError(gettext("فاتورة الشراء ملغاة بالفعل"))
 
+        from models import PurchaseReturn
+
+        # A confirmed return already reduced inventory, AP and the supplier.
+        # Reversing the full original purchase on top of it double-reverses
+        # everything. Cancel the returns first, or net them explicitly.
+        if PurchaseReturn.query.filter_by(purchase_id=purchase.id, tenant_id=purchase.tenant_id).first():
+            raise ValueError(gettext("لا يمكن إلغاء مشترى له مرتجعات. ألغِ المرتجعات أولاً."))
+
         from models import Payment
 
         direct_paid = (

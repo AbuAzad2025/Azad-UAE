@@ -506,7 +506,7 @@ class TestChequesViewEdit:
             resp = cheques_client.post(
                 "/cheques/1/edit",
                 data={
-                    "amount": "900",
+                    "amount": "1000",
                     "issue_date": "2026-01-01",
                     "due_date": "2026-03-01",
                 },
@@ -525,7 +525,7 @@ class TestChequesViewEdit:
             resp = cheques_client.post(
                 "/cheques/1/edit",
                 data={
-                    "amount": "900",
+                    "amount": "1000",
                     "issue_date": "2026-01-01",
                     "due_date": "2026-03-01",
                 },
@@ -547,7 +547,7 @@ class TestChequesViewEdit:
             resp = cheques_client.post(
                 "/cheques/1/edit",
                 data={
-                    "amount": "900",
+                    "amount": "1000",
                     "issue_date": "2026-01-01",
                     "due_date": "2026-03-01",
                 },

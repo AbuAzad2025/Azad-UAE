@@ -13,14 +13,20 @@ import json
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+_CACHE_PATH = str(Path(tempfile.gettempdir()) / "azad_page_access_sweep_cache.json")
 
-os.environ.setdefault("DATABASE_URL", "postgresql+psycopg2://postgres@localhost:5433/azad_browser_settings")
-os.environ.setdefault("SECRET_KEY", "local-dev-secret-key-4f9c2e8a1b7d6c5e")
-os.environ.setdefault("OWNER_PASSWORD", "IsolationSeedOwner1!")
+# Never bake credentials into the script: the access report is a diagnostic
+# run against an explicitly configured local database.
+os.environ.setdefault("DATABASE_URL", os.environ.get("AUDIT_DATABASE_URL", ""))
+os.environ.setdefault("SECRET_KEY", os.environ.get("AUDIT_SECRET_KEY", ""))
+os.environ.setdefault("OWNER_PASSWORD", os.environ.get("AUDIT_OWNER_PASSWORD", ""))
+if not os.environ.get("DATABASE_URL") or not os.environ.get("OWNER_PASSWORD"):
+    raise SystemExit("Set AUDIT_DATABASE_URL and AUDIT_OWNER_PASSWORD before running the access report.")
 
 from app.factory import create_app  # noqa: E402
 
@@ -31,13 +37,14 @@ app.config["DEBUG"] = False
 app.config["PROPAGATE_EXCEPTIONS"] = False
 app.config["WTF_CSRF_ENABLED"] = False
 
+_TENANT_PASSWORD = os.environ.get("AUDIT_TENANT_PASSWORD", "")
 USERS = [
-    ("owner", "owner", "IsolationSeedOwner1!", "مالك المنصة"),
-    ("manager", "iso01_manager", "IsolationSeed1!", "مدير الشركة"),
-    ("accountant", "iso01_accountant", "IsolationSeed1!", "المحاسب"),
-    ("seller", "iso01_seller", "IsolationSeed1!", "البائع"),
-    ("cashier", "iso01_cashier", "IsolationSeed1!", "الكاشير"),
-    ("inventory", "iso01_inventory", "IsolationSeed1!", "أمين المخزون"),
+    ("owner", os.environ.get("AUDIT_OWNER_USERNAME", "owner"), os.environ["OWNER_PASSWORD"], "مالك المنصة"),
+    ("manager", "iso01_manager", _TENANT_PASSWORD, "مدير الشركة"),
+    ("accountant", "iso01_accountant", _TENANT_PASSWORD, "المحاسب"),
+    ("seller", "iso01_seller", _TENANT_PASSWORD, "البائع"),
+    ("cashier", "iso01_cashier", _TENANT_PASSWORD, "الكاشير"),
+    ("inventory", "iso01_inventory", _TENANT_PASSWORD, "أمين المخزون"),
 ]
 
 PAGE_NAME_OVERRIDES = {
@@ -223,14 +230,12 @@ def sweep():
                     code = getattr(exc, "code", 500) or 500
                 result[role][url] = code
                 print(f"{role:10} {code} {url}", flush=True)
-    Path(r"C:\Users\azad1\AppData\Local\Temp\opencode\sweep_cache.json").write_text(
-        json.dumps(result, ensure_ascii=False), encoding="utf-8"
-    )
+    Path(_CACHE_PATH).write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
     return result
 
 
 def main() -> None:
-    cache = Path(r"C:\Users\azad1\AppData\Local\Temp\opencode\sweep_cache.json")
+    cache = Path(_CACHE_PATH)
     if cache.exists():
         access = json.loads(cache.read_text(encoding="utf-8"))
         print(f"Using cached sweep from {cache}")

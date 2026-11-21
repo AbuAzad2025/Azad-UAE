@@ -140,12 +140,12 @@ class PayrollTransaction(db.Model):
     year = db.Column(db.Integer)
 
     # Breakdown
-    basic_amount = db.Column(db.Numeric(10, 2), default=0)  # Base Salary or Days * Rate
+    basic_amount = db.Column(db.Numeric(15, 3), default=0)  # Base Salary or Days * Rate
     days_worked = db.Column(db.Numeric(5, 2), default=0)  # For daily workers
 
-    allowances = db.Column(db.Numeric(10, 2), default=0)
-    deductions = db.Column(db.Numeric(10, 2), default=0)
-    advances_deducted = db.Column(db.Numeric(10, 2), default=0)
+    allowances = db.Column(db.Numeric(15, 3), default=0)
+    deductions = db.Column(db.Numeric(15, 3), default=0)
+    advances_deducted = db.Column(db.Numeric(15, 3), default=0)
     # Statutory withholdings — persisted so the payslip and the payroll GL
     # entry all carry the same breakdown. ``social_insurance_amount`` is the
     # employee share withheld; ``social_insurance_employer_amount`` is the
@@ -156,7 +156,7 @@ class PayrollTransaction(db.Model):
     pension_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
     pension_employer_amount = db.Column(db.Numeric(15, 3), default=Decimal("0"))
 
-    net_salary = db.Column(db.Numeric(10, 2), nullable=False)
+    net_salary = db.Column(db.Numeric(15, 3), nullable=False)
 
     payment_date = db.Column(db.Date, default=datetime.now)
     status = db.Column(db.String(20), default="paid", index=True)  # draft, posted, paid

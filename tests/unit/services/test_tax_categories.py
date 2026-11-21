@@ -36,7 +36,7 @@ def test_zero_rated_line_excluded_from_tax():
     assert total == Decimal("168.000")
 
 
-def test_exempt_line_excluded_from_base_and_tax():
+def test_exempt_line_included_in_base_but_not_in_tax():
     lines = [
         {"line_total": Decimal("100"), "tax_category": "standard"},
         {"line_total": Decimal("50"), "tax_category": "exempt"},
@@ -49,7 +49,9 @@ def test_exempt_line_excluded_from_base_and_tax():
         tax_categories_enabled=True,
     )
     assert tax == Decimal("18.000")
-    assert taxable == Decimal("100.000")
+    # Exempt goods carry no VAT but are still revenue/inventory: excluding
+    # them left the GL short by exactly the exempt amount.
+    assert taxable == Decimal("150.000")
     assert total == Decimal("168.000")
 
 

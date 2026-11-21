@@ -1386,21 +1386,12 @@ def api_create_donation():
             if idempotent:
                 return idempotent
 
-            donation = Donation(
-                amount_usd=float(data["amount"]),
-                payment_method=data["payment_method"],
-                crypto_type=sanitize(data.get("crypto_type"), 20),
-                transaction_type="donation",
-                donor_name=donor_name,
-                donor_email=donor_email,
-                donor_message=donor_message,
-                status="pending",
-                transaction_hash=sanitize(data.get("transaction_id"), 100),
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get("User-Agent", "")[:500],
-            )
-            db.session.add(donation)
+            # NOWPaymentsService.create_payment creates the Donation row itself
+            # on HTTP 201. Creating one here as well produced TWO pending
+            # donations that could both complete and double-count revenue.
+            import uuid
 
+            order_id = f"DONATION_{uuid.uuid4().hex[:16]}"
             nowpayments = NOWPaymentsService()
             crypto_currency = str(data.get("crypto_currency") or data.get("crypto_type") or "btc").strip().lower()
 
@@ -1408,7 +1399,7 @@ def api_create_donation():
                 amount=float(data["amount"]),
                 currency="USD",
                 crypto_currency=crypto_currency,
-                order_id=f"DONATION_{donation.id}",
+                order_id=order_id,
                 customer_email=donor_email,
                 description=gettext(f"تبرع لمشروع Azad Systems - ${data['amount']}"),
                 transaction_type="donation",
@@ -1417,39 +1408,41 @@ def api_create_donation():
                 donor_message=donor_message,
             )
 
-            if payment_result.get("success"):
-                donation.transaction_hash = payment_result.get("payment_id", donation.transaction_hash)
-                donation.wallet_address = payment_result.get("pay_address")
-                donation.gateway_transaction_id = payment_result.get("payment_id")
-                donation.gateway_name = "nowpayments"
+            if not payment_result.get("success"):
+                # A failed gateway call must never be reported as a successful
+                # 201 donation (which auto-approval would later complete).
+                return error_response(
+                    message=payment_result.get("error") or "Could not start crypto payment",
+                    status_code=502,
+                )
 
+            donation = (
+                Donation.query.filter_by(gateway_transaction_id=payment_result.get("payment_id"))
+                .order_by(Donation.id.desc())
+                .first()
+            )
             LoggingCore.log_audit(
-                action=f"donation_created: ${donation.amount_usd}",
+                action=f"donation_created: ${data['amount']}",
                 table_name="donations",
-                record_id=donation.id,
-                changes={
-                    "amount": float(donation.amount_usd),
-                    "method": donation.payment_method,
-                },
+                record_id=(donation.id if donation else None),
+                changes={"amount": float(data["amount"]), "method": "crypto"},
             )
 
             response_data = {
-                "success": True,
                 "message": gettext("شكراً على تبرعك!"),
-                "donation_id": donation.id,
-                "payment_method_display": donation.payment_method,
+                "donation_id": (donation.id if donation else None),
+                "payment_method_display": "crypto",
             }
 
-            if payment_result.get("success"):
-                response_data.update(
-                    {
-                        "payment_address": payment_result.get("pay_address"),
-                        "payment_amount": payment_result.get("pay_amount"),
-                        "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
-                        "payment_id": payment_result.get("payment_id"),
-                        "payment_url": payment_result.get("invoice_url"),
-                    }
-                )
+            response_data.update(
+                {
+                    "payment_address": payment_result.get("pay_address"),
+                    "payment_amount": payment_result.get("pay_amount"),
+                    "crypto_currency": (crypto_currency.upper() if crypto_currency else None),
+                    "payment_id": payment_result.get("payment_id"),
+                    "payment_url": payment_result.get("invoice_url"),
+                }
+            )
 
             _save_idempotency_key(response_data, 201)
             return success_response(

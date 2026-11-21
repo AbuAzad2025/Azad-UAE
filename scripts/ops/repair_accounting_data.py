@@ -162,12 +162,12 @@ def repair_accounting_data(tenant_id: int | None = None):
             ),
             Decimal("0"),
         )
-        from utils.tenant_orm import tenant_query
-
+        # This CLI runs without an active tenant, so tenant_query() is UNSCOPED
+        # and would sum stock across every tenant into this tenant's journal.
         estimated_inventory = sum(
             (
                 Decimal(str(product.current_stock or 0)) * Decimal(str(product.cost_price or 0))
-                for product in tenant_query(Product).all()
+                for product in Product.query.filter(Product.tenant_id == int(target_tenant_id)).all()
             ),
             Decimal("0"),
         )

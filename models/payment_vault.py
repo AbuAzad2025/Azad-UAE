@@ -192,7 +192,7 @@ class PaymentTransaction(db.Model):
     )
 
     transaction_id = db.Column(db.String(100), unique=True, nullable=False)  # معرف المعاملة
-    amount_usd = db.Column(db.Numeric(15, 2), nullable=False)  # المبلغ بالدولار
+    amount_usd = db.Column(db.Numeric(15, 3), nullable=False)  # المبلغ بالدولار
     amount_crypto = db.Column(db.Numeric(20, 8))  # المبلغ بالعملة الرقمية
     crypto_currency = db.Column(db.String(10), nullable=False)  # العملة الرقمية
 

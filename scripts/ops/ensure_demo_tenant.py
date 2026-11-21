@@ -1,5 +1,8 @@
 """Create demo tenant with all features + all user types (idempotent)."""
 
+import os
+import secrets
+import sys
 from urllib.parse import unquote
 
 from sqlalchemy.engine import make_url
@@ -8,8 +11,10 @@ from app.factory import create_app
 from config import Config
 
 database_name = unquote(make_url(Config.SQLALCHEMY_DATABASE_URI).database or "").casefold()
-if database_name in {"erp-full", "erp-lite"}:
-    raise SystemExit("Demo data is not allowed in ERP-full or ERP-lite; use an isolated demo database.")
+if os.environ.get("APP_ENV", "development").lower() == "production" or "--allow-demo" not in sys.argv:
+    raise SystemExit("Demo tenants require APP_ENV != production and an explicit --allow-demo flag.")
+if not database_name.startswith(("azad_demo", "azad_isolation", "azad_browser", "azad_test")):
+    raise SystemExit(f"Refusing to seed demo credentials into database '{database_name}'.")
 
 app = create_app()
 with app.app_context():
@@ -94,16 +99,17 @@ with app.app_context():
 
     # Create users for each role
     demo_users = [
-        ("demo_owner", "مالك تجريبي", "Owner", "Demo@123456!"),
-        ("demo_admin", "مدير عام تجريبي", "Super Admin", "Demo@123456!"),
-        ("demo_manager", "مدير تجريبي", "Manager", "Demo@123456!"),
-        ("demo_seller", "بائع تجريبي", "Seller", "Demo@123456!"),
-        ("demo_cashier", "كاشير تجريبي", "Cashier", "Demo@123456!"),
-        ("demo_accountant", "محاسب تجريبي", "General Accountant", "Demo@123456!"),
-        ("demo_branch_mgr", "مدير فرع تجريبي", "Branch Manager", "Demo@123456!"),
-        ("demo_kitchen", "مطبخ تجريبي", "Kitchen Staff", "Demo@123456!"),
+        ("demo_owner", "مالك تجريبي", "Owner"),
+        ("demo_admin", "مدير عام تجريبي", "Super Admin"),
+        ("demo_manager", "مدير تجريبي", "Manager"),
+        ("demo_seller", "بائع تجريبي", "Seller"),
+        ("demo_cashier", "كاشير تجريبي", "Cashier"),
+        ("demo_accountant", "محاسب تجريبي", "General Accountant"),
+        ("demo_branch_mgr", "مدير فرع تجريبي", "Branch Manager"),
+        ("demo_kitchen", "مطبخ تجريبي", "Kitchen Staff"),
     ]
-    for username, full_ar, role_name, pwd in demo_users:
+    for username, full_ar, role_name in demo_users:
+        pwd = os.environ.get("DEMO_USER_PASSWORD") or secrets.token_urlsafe(16)
         existing = User.query.filter_by(username=username, tenant_id=demo.id).first()
         if existing:
             print(f"User {username} exists ({role_name})")
@@ -127,7 +133,7 @@ with app.app_context():
             u.set_password(pwd)
             db.session.add(u)
             db.session.flush()
-            print(f"Created user {username} / {role_name} pwd={pwd}")
+            print(f"Created user {username} / {role_name} (credentials not printed)")
 
     # Create tenant_store for demo (so login page store links show it)
     from models.tenant_store import TenantStore

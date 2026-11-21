@@ -1,14 +1,13 @@
 import os
 import sys
 from datetime import datetime
-from datetime import datetime as dt
 from pathlib import Path
 
 import psycopg2
 from dotenv import load_dotenv
 from sqlalchemy.engine import make_url
 
-from utils.master_login import _seed_source, build_today_master_cleartext
+from utils.master_login import _seed_source
 
 
 def _configured_database_url():
@@ -107,11 +106,11 @@ os.environ["DATABASE_URL"] = DB
 
 try:
     seed, src = _seed_source()
-    print(f"  Seed source: {src} | Seed: {seed}")
-    print(f"  Today master: {build_today_master_cleartext()}")
-    print(f"  Tomorrow master: {build_today_master_cleartext(dt.now())}")
-except Exception as e:
-    print("  Master build error:", e)
+    # Never print the break-glass seed or derived owner keys: anyone holding
+    # this diagnostic output could authenticate as platform owner.
+    print(f"  Master seed source: {src} | configured: {bool(seed)}")
+except Exception:
+    print("  Master build status: unavailable")
 
 print()
 print("— Startup simplicity —")

@@ -440,6 +440,24 @@ def edit(**kwargs):
                 cheque.bank_branch = request.form.get("bank_branch")
                 cheque.account_number = request.form.get("account_number")
 
+                # Once receive/issue has posted a GL entry, changing the amount
+                # would leave the control account at the old value. Only the
+                # memo fields may change; reverse-and-repost is a separate flow.
+                from models import GLJournalEntry
+                from utils.gl_reference_types import GLRef
+
+                posted = GLJournalEntry.query.filter(
+                    GLJournalEntry.reference_id == cheque.id,
+                    GLJournalEntry.reference_type.in_((GLRef.CHEQUE_RECEIVE, GLRef.CHEQUE_ISSUE, GLRef.CHEQUE_CLEAR)),
+                    GLJournalEntry.is_reversed.is_(False),
+                ).first()
+                if posted and (
+                    Decimal(str(request.form.get("amount") or "0")) != cheque.amount
+                    or (request.form.get("currency") or cheque.currency) != cheque.currency
+                    or request.form.get("exchange_rate", type=float) not in (None, float(cheque.exchange_rate or 1))
+                ):
+                    raise ValueError(gettext("لا يمكن تغيير مبلغ أو عملة شيك تم ترحيله."))
+
                 cheque.amount = Decimal(str(request.form.get("amount") or "0"))
                 try:
                     default_currency = resolve_default_currency()

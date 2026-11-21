@@ -3,6 +3,7 @@ from flask_babel import gettext
 from flask_login import current_user, login_required
 
 from services.ticket_service import TicketService
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 from utils.tenanting import get_active_tenant_id
@@ -37,7 +38,8 @@ def list_tickets():
 def create_ticket():
     if request.method == "POST":
         try:
-            TicketService.create_ticket(request.form, current_user)
+            with atomic_transaction("ticket_create"):
+                TicketService.create_ticket(request.form, current_user)
             flash(gettext("تم إنشاء التذكرة بنجاح"), "success")
             return redirect(url_for("tickets.list_tickets"))
         except Exception as e:
@@ -83,7 +85,8 @@ def ticket_detail(ticket_id):
 @permission_required("support.manage")
 def add_comment(ticket_id):
     try:
-        TicketService.add_comment(ticket_id, request.form, current_user)
+        with atomic_transaction("ticket_comment"):
+            TicketService.add_comment(ticket_id, request.form, current_user)
         flash(gettext("تم إضافة التعليق"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -96,7 +99,8 @@ def add_comment(ticket_id):
 def assign_ticket(ticket_id):
     user_id = request.form.get("assigned_user_id")
     try:
-        TicketService.assign_ticket(ticket_id, user_id, current_user)
+        with atomic_transaction("ticket_assign"):
+            TicketService.assign_ticket(ticket_id, user_id, current_user)
         flash(gettext("تم تعيين التذكرة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -108,7 +112,8 @@ def assign_ticket(ticket_id):
 @permission_required("support.manage")
 def resolve_ticket(ticket_id):
     try:
-        TicketService.resolve_ticket(ticket_id, current_user)
+        with atomic_transaction("ticket_resolve"):
+            TicketService.resolve_ticket(ticket_id, current_user)
         flash(gettext("تم حل التذكرة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -120,7 +125,8 @@ def resolve_ticket(ticket_id):
 @permission_required("support.manage")
 def close_ticket(ticket_id):
     try:
-        TicketService.close_ticket(ticket_id, current_user)
+        with atomic_transaction("ticket_close"):
+            TicketService.close_ticket(ticket_id, current_user)
         flash(gettext("تم إغلاق التذكرة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -132,7 +138,8 @@ def close_ticket(ticket_id):
 @permission_required("support.manage")
 def reopen_ticket(ticket_id):
     try:
-        TicketService.reopen_ticket(ticket_id, current_user)
+        with atomic_transaction("ticket_reopen"):
+            TicketService.reopen_ticket(ticket_id, current_user)
         flash(gettext("تم إعادة فتح التذكرة"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")

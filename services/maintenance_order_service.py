@@ -857,7 +857,18 @@ class MaintenanceService:
             Decimal("0"),
         )
         already_refunded = Decimal(str(order.refunded_amount or 0))
-        credit_balance = returned_value - already_refunded
+        # A cash refund must be backed by cash actually collected. A credit
+        # sale or a partial collection would otherwise pay out money that
+        # never entered the drawer.
+        collected = sum(
+            (
+                Decimal(str(r.amount or 0))
+                for r in cast(Any, order.receipts)
+                if not r.is_refund and not r.is_deposit and (r.payment_mode or "") != "account"
+            ),
+            Decimal("0"),
+        )
+        credit_balance = min(returned_value, collected) - already_refunded
         if credit_balance <= 0:
             raise ValueError(gettext("لا يوجد رصيد دائن للعميل"))
 
@@ -1333,8 +1344,11 @@ class MaintenanceService:
         """
         tid = _require_tenant_id(tenant_id)
         order = _locked_order(order_id, tid)
-        if order.status not in (MaintenanceOrderStatus.CLOSED, MaintenanceOrderStatus.READY):
-            raise ValueError(gettext("لا يمكن إنشاء مرتجع ل أمر في حالة {status}").format(status=order.status))
+        # Parts are only consumed and invoiced at close. A READY order has no
+        # movement and no invoice, so a return would create phantom stock and
+        # reverse GL entries that were never posted.
+        if order.status != MaintenanceOrderStatus.CLOSED:
+            raise ValueError(gettext("لا يمكن إنشاء مرتجع إلا لأمر مغلق ومفوتر"))
         if order.is_archived:
             raise ValueError(gettext("لا يمكن إنشاء مرتجع لأمر مؤرشف"))
         if not tenant_query(User).filter_by(id=returned_by, tenant_id=tid, is_active=True).first():

@@ -6,6 +6,7 @@ from flask_login import current_user, login_required
 
 from services.budget_service import BudgetService
 from utils.api_response import error_response, success_response
+from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
 
@@ -35,7 +36,8 @@ def create():
             # ValueError and KeyError. That is why POST /budgets/create answered
             # 500 instead of showing the validation message the route had already
             # prepared for it.
-            budget = BudgetService.create_budget(data, current_user)
+            with atomic_transaction("budget_create"):
+                budget = BudgetService.create_budget(data, current_user)
             flash(gettext("تم إنشاء الميزانية"), "success")
             return redirect(url_for("budget.detail", budget_id=budget.id))
         except (ValueError, KeyError) as e:
@@ -59,7 +61,8 @@ def edit(budget_id):
     if request.method == "POST":
         try:
             data = _parse_budget_form(request.form)
-            BudgetService.update_budget(budget, data)
+            with atomic_transaction("budget_update"):
+                BudgetService.update_budget(budget, data)
             flash(gettext("تم تحديث الميزانية"), "success")
             return redirect(url_for("budget.detail", budget_id=budget.id))
         except (ValueError, KeyError) as e:
@@ -73,7 +76,8 @@ def edit(budget_id):
 def approve(budget_id):
     budget = BudgetService.get_budget(budget_id, None)
     try:
-        BudgetService.approve_budget(budget, current_user)
+        with atomic_transaction("budget_approve"):
+            BudgetService.approve_budget(budget, current_user)
         flash(gettext("تمت الموافقة على الميزانية"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -86,7 +90,8 @@ def approve(budget_id):
 def activate(budget_id):
     budget = BudgetService.get_budget(budget_id, None)
     try:
-        BudgetService.activate_budget(budget)
+        with atomic_transaction("budget_activate"):
+            BudgetService.activate_budget(budget)
         flash(gettext("تم تنشيط الميزانية"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -99,7 +104,8 @@ def activate(budget_id):
 def close(budget_id):
     budget = BudgetService.get_budget(budget_id, None)
     try:
-        BudgetService.close_budget(budget)
+        with atomic_transaction("budget_close"):
+            BudgetService.close_budget(budget)
         flash(gettext("تم إغلاق الميزانية"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -112,7 +118,8 @@ def close(budget_id):
 def delete(budget_id):
     budget = BudgetService.get_budget(budget_id, None)
     try:
-        BudgetService.delete_budget(budget)
+        with atomic_transaction("budget_delete"):
+            BudgetService.delete_budget(budget)
         flash(gettext("تم حذف الميزانية"), "success")
     except ValueError as e:
         flash(safe_error(e, context=__name__), "danger")
@@ -141,7 +148,8 @@ def variance(budget_id):
 def api_create():
     data = request.get_json(silent=True) or {}
     try:
-        budget = BudgetService.create_budget(data, current_user)
+        with atomic_transaction("budget_api_create"):
+            budget = BudgetService.create_budget(data, current_user)
         return success_response(
             data={"id": budget.id, "budget_number": budget.budget_number},
             message=gettext("تم إنشاء الميزانية"),
