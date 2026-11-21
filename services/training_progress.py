@@ -250,7 +250,10 @@ def get_training_health_report(tenant_id: int) -> dict[str, Any]:
     velocity = metrics.get("learning_velocity", 0.0)
     concept_count = progress.get("total_concepts", 0)
 
-    health_score = round((coverage * 0.4) + (mastery * 0.3) + (min(velocity * 10, 30) * 0.3), 2)
+    # Each component contributes at most its stated weight: capping the
+    # velocity score at 30 before applying its 0.3 weight made a 100/100/100
+    # report top out at 79 and rendered "excellent" unreachable.
+    health_score = round((coverage * 0.4) + (mastery * 0.3) + (min(velocity * 10, 100) * 0.3), 2)
 
     # Determine health status
     if health_score >= 80:

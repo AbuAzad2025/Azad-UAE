@@ -1172,22 +1172,24 @@ class LoggingCore:
             )
         logs = query.order_by(ErrorAuditLog.last_seen_at.desc()).all()
 
-        def _truncate_stack_trace(stack_trace: str | None, max_len: int = 500) -> str:
-            """Truncate stack trace for export, adding truncation notice if needed."""
+        def _truncate_stack_trace(
+            stack_trace: str | None,
+            max_len: int = 500,
+            notice: str = "\n... [TRUNCATED - Full trace available in UI]",
+        ) -> str:
+            """One truncation policy for both export formats."""
             if not stack_trace:
                 return ""
-            if len(stack_trace) <= 500:
+            if len(stack_trace) <= max_len:
                 return stack_trace
-            return stack_trace[:500] + "\n... [TRUNCATED - Full trace available in UI]"
+            return stack_trace[:max_len] + notice
 
         if fmt == "json":
             data = [log.to_dict() for log in logs]
             # Truncate stack traces in JSON export
             for item in data:
                 if item.get("stack_trace"):
-                    item["stack_trace"] = item["stack_trace"][:500] + (
-                        "... [TRUNCATED]" if len(item["stack_trace"]) > 500 else ""
-                    )
+                    item["stack_trace"] = _truncate_stack_trace(item["stack_trace"], notice="... [TRUNCATED]")
             return (
                 json.dumps(data, ensure_ascii=False, indent=2, default=str),
                 "application/json",
@@ -1203,9 +1205,7 @@ class LoggingCore:
             buf.write(f"Source: {log.source} | Time: {log.created_at.isoformat() if log.created_at else '-'}\n")
             buf.write(f"Message: {log.message}\n")
             if log.stack_trace:
-                buf.write(f"Stack: {log.stack_trace[:500]}\n")
-                if len(log.stack_trace) > 500:
-                    buf.write("... [TRUNCATED - Full trace available in UI]\n")
+                buf.write(f"Stack: {_truncate_stack_trace(log.stack_trace)}\n")
             buf.write("-" * 80 + "\n\n")
         return (
             buf.getvalue().encode("utf-8"),

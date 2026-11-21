@@ -204,7 +204,9 @@ class MaintenanceGLService:
         )
         ar_account = MaintenanceGLService._require_account("MAINTENANCE_AR", tid, resolved_branch)
 
-        currency = order.currency if order is not None else receipt.order.currency
+        # A receipt without an order has no order currency to inherit; the old
+        # fallback dereferenced ``receipt.order`` (also None) and raised.
+        currency = order.currency if order is not None else "AED"
         exchange_rate = order.exchange_rate if order is not None else Decimal("1")
 
         lines = [
@@ -276,7 +278,9 @@ class MaintenanceGLService:
         )
         deposit_account = MaintenanceGLService._require_account("MAINTENANCE_DEPOSIT", tid, resolved_branch)
 
-        currency = order.currency if order is not None else receipt.order.currency
+        # A receipt without an order has no order currency to inherit; the old
+        # fallback dereferenced ``receipt.order`` (also None) and raised.
+        currency = order.currency if order is not None else "AED"
         exchange_rate = order.exchange_rate if order is not None else Decimal("1")
 
         entry = post_or_fail(

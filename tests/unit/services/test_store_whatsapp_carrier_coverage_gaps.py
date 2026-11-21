@@ -16,6 +16,7 @@ patched at the service boundary; no production code is touched.
 from __future__ import annotations
 
 import re
+import sys
 from unittest.mock import MagicMock
 
 import pytest
@@ -174,12 +175,22 @@ class TestGenerateProvisionalNumber:
         assert re.fullmatch(r"PRV-7-\d{8}-001", number)
 
 
+@pytest.fixture
+def twilio_rest(mocker):
+    """Twilio is an optional dependency — inject a module when it is absent."""
+    rest = sys.modules.get("twilio.rest")
+    if rest is None:
+        rest = MagicMock()
+        mocker.patch.dict(sys.modules, {"twilio": MagicMock(rest=rest), "twilio.rest": rest})
+    return rest
+
+
 class TestSendMessage:
-    def test_twilio_success(self, monkeypatch, mocker):
+    def test_twilio_success(self, monkeypatch, twilio_rest):
         monkeypatch.setenv("TWILIO_ACCOUNT_SID", "ACxxx")
         monkeypatch.setenv("TWILIO_AUTH_TOKEN", "token")
         client = MagicMock()
-        mocker.patch("twilio.rest.Client", return_value=client)
+        twilio_rest.Client.return_value = client
 
         assert StoreWhatsAppService.send_message("+971501234567", "Hi") is True
 
@@ -189,12 +200,12 @@ class TestSendMessage:
             to="whatsapp:971501234567",
         )
 
-    def test_business_api_used_when_twilio_fails(self, monkeypatch, mocker):
+    def test_business_api_used_when_twilio_fails(self, monkeypatch, mocker, twilio_rest):
         monkeypatch.setenv("TWILIO_ACCOUNT_SID", "ACxxx")
         monkeypatch.setenv("TWILIO_AUTH_TOKEN", "token")
         monkeypatch.setenv("WHATSAPP_API_URL", "https://wa.test/messages")
         monkeypatch.setenv("WHATSAPP_API_TOKEN", "wtoken")
-        mocker.patch("twilio.rest.Client", side_effect=RuntimeError("twilio down"))
+        twilio_rest.Client.side_effect = RuntimeError("twilio down")
         # requests is imported inside send_message, so patch the shared module
         post = mocker.patch("requests.post")
 
@@ -208,12 +219,12 @@ class TestSendMessage:
     def test_no_provider_configured(self):
         assert StoreWhatsAppService.send_message("+971501234567", "Hi") is False
 
-    def test_both_providers_fail(self, monkeypatch, mocker):
+    def test_both_providers_fail(self, monkeypatch, mocker, twilio_rest):
         monkeypatch.setenv("TWILIO_ACCOUNT_SID", "ACxxx")
         monkeypatch.setenv("TWILIO_AUTH_TOKEN", "token")
         monkeypatch.setenv("WHATSAPP_API_URL", "https://wa.test/messages")
         monkeypatch.setenv("WHATSAPP_API_TOKEN", "wtoken")
-        mocker.patch("twilio.rest.Client", side_effect=RuntimeError("twilio down"))
+        twilio_rest.Client.side_effect = RuntimeError("twilio down")
         mocker.patch("requests.post", side_effect=RuntimeError("http down"))
 
         assert StoreWhatsAppService.send_message("+971501234567", "Hi") is False

@@ -735,12 +735,6 @@ def create_package():
         value = re.sub(r"[-\\s]+", "-", value).strip("-")
         return value or f"package-{secrets.token_hex(3)}"
 
-    def _as_float(value, default=0):
-        try:
-            return float(str(value).strip() or default)
-        except (TypeError, ValueError, AttributeError):
-            return float(default)
-
     def _as_int(value, default=0):
         try:
             return int(str(value).strip() or default)
