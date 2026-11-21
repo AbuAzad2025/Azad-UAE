@@ -59,16 +59,16 @@ describe('api.js central client', () => {
     expect(opts.headers['X-Requested-With']).toBe('XMLHttpRequest');
   });
 
-  it('documents that options with a headers key REPLACE the security headers (bug footgun)', async () => {
-    // Known issue: `...options` spreads AFTER the merged headers object, so
-    // passing { headers: {...} } drops X-CSRFToken / X-Requested-With.
+  it('keeps the security headers when the caller supplies extra headers', async () => {
+    // The options are spread first and the merged headers last, so a caller
+    // cannot accidentally drop X-CSRFToken / X-Requested-With.
     global.fetch = vi.fn(() => Promise.resolve({ ok: true }));
     const api = await loadClient();
     await api.post('/submit', {}, { headers: { 'X-Extra': '1' } });
     const [, opts] = global.fetch.mock.calls[0];
     expect(opts.headers['X-Extra']).toBe('1');
-    expect(opts.headers['X-CSRFToken']).toBeUndefined();
-    expect(opts.headers['X-Requested-With']).toBeUndefined();
+    expect(opts.headers['X-CSRFToken']).toBe('csrf-123');
+    expect(opts.headers['X-Requested-With']).toBe('XMLHttpRequest');
   });
 
   it('get() sends GET with CSRF headers', async () => {

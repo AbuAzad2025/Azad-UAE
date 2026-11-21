@@ -43,8 +43,7 @@ const markRateSource = (source, note = "") => {
 	const badge = qs("#exchangeRateSource");
 	if (badge) {
 		badge.dataset.source = state.rateSource;
-		badge.textContent =
-			RATE_LABELS[state.rateSource] || window.t("يدوي");
+		badge.textContent = RATE_LABELS[state.rateSource] || window.t("يدوي");
 	}
 	const noteEl = qs("#exchangeRateNote");
 	if (noteEl) noteEl.textContent = note || "";

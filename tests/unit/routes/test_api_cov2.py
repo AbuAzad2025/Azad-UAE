@@ -183,9 +183,10 @@ class TestSearchEmptyQueryArcs:
         products_q = MagicMock()
         products_q.filter.return_value = products_q
         products_q.order_by.return_value = products_q
-        products_q.limit.return_value.all.return_value = [product]
+        products_q.limit.return_value = products_q
+        products_q.offset.return_value.all.return_value = [product]
         mocker.patch(
-            "services.platform_query_service.PlatformQueryService.products_base_query",
+            "routes.api.PlatformQueryService.products_base_query",
             return_value=products_q,
         )
         mocker.patch("routes.api.get_accessible_warehouse_ids", return_value=[1])

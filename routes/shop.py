@@ -82,7 +82,12 @@ def _require_open_store(store):
     # Entitlement check belongs here, not on the blueprint: a before_request
     # gate needs a configured login_manager that the route test apps do not
     # install, while this is the single entry point for storefront requests.
-    if not getattr(tenant, "enable_store", False):
+    # Like the previous blueprint gate, it applies only when there is an
+    # authenticated tenant context — an anonymous visitor reaching a published
+    # store is governed by the store's own flag and the platform switch above.
+    from utils.tenanting import get_active_tenant_id
+
+    if get_active_tenant_id() and not getattr(tenant, "enable_store", False):
         return _closed_response(store, "plan")
 
     return None

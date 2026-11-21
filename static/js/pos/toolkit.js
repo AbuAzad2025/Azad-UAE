@@ -263,7 +263,9 @@ const runStockLookup = async () => {
 	const breakdown = d.warehouses || d.stock || d.breakdown || [];
 	if (Array.isArray(breakdown) && breakdown.length) {
 		html += breakdown
-			.map((w) => row(w.warehouse_name || w.name || "—", fmt(w.quantity ?? w.stock ?? w.on_hand ?? 0)))
+			.map((w) =>
+				row(w.warehouse_name || w.name || "—", fmt(w.quantity ?? w.stock ?? w.on_hand ?? 0)),
+			)
 			.join("");
 	} else {
 		html += row(t("الكمية"), fmt(d.quantity ?? d.on_hand ?? d.total ?? 0));
@@ -290,7 +292,8 @@ const renderFastCash = async () => {
 	}
 	box.innerHTML = res.data.options
 		.map(
-			(o) => `<button type="button" class="pos-fast-key${o.is_exact ? " exact" : ""}" data-amount="${o.amount}" title="${t("الباقي")}: ${fmt(o.change)}">${fmt(o.amount)}</button>`,
+			(o) =>
+				`<button type="button" class="pos-fast-key${o.is_exact ? " exact" : ""}" data-amount="${o.amount}" title="${t("الباقي")}: ${fmt(o.change)}">${fmt(o.amount)}</button>`,
 		)
 		.join("");
 };

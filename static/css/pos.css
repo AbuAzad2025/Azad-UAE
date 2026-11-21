@@ -23,6 +23,7 @@
 	--pos-warn: #eba900;
 	--pos-radius: 8px;
 	--pos-shadow: 0 1px 3px rgba(10, 40, 80, 0.07);
+
 	background: var(--pos-bg);
 	color: var(--pos-text);
 	font-size: 14px;
@@ -32,6 +33,7 @@
 
 body.pos-layout:has(.pos-app) {
 	background: #eff3f8;
+
 	/* The register is a dense screen: let the page scroll rather than clip
 	   panels or compress one section to make room for another. */
 	height: auto;
@@ -1768,7 +1770,7 @@ body:has(.pos-app) {
 
 .pos-app .pos-logo::before {
 	content: "\f07a";
-	font-family: "Font Awesome 5 Free", "Font Awesome 6 Free";
+	font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", sans-serif;
 	font-weight: 900;
 	margin-inline-end: 10px;
 }

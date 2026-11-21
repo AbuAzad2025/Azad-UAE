@@ -102,7 +102,8 @@ class TestStripeWebhook:
         )
         resp = client.post("/billing-webhook/stripe", data=b"payload")
         assert resp.status_code == 422
-        assert "Tenant 3 not found" in resp.get_json()["message"]
+        # The internal reason is logged, not echoed to an untrusted webhook caller.
+        assert resp.get_json()["message"] == "Provisioning failed"
 
     def test_unhandled_event_type_acknowledged(self, client, stripe_secret, mocker):
         _fake_stripe(mocker, event=_checkout_event(type="customer.created"))
@@ -288,5 +289,10 @@ class TestHelpers:
         fake_cache.set.side_effect = lambda key, value, timeout=None: store.update({key: value})
         mocker.patch("extensions.cache", fake_cache)
 
+        from routes.billing_webhooks import _mark_processed
+
         assert _is_duplicate("stripe", "evt_1") is False
+        # The marker is claimed only after the event was processed, never by
+        # the replay check itself.
+        _mark_processed("stripe", "evt_1")
         assert _is_duplicate("stripe", "evt_1") is True

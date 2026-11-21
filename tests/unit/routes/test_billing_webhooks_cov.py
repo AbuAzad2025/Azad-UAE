@@ -58,8 +58,8 @@ def cov_stripe_secret(app, monkeypatch):
 
 
 class TestGenericWebhookDedupCacheError:
-    def test_cache_failure_falls_through_lines_50_51(self, client, app, mocker):
-        """Lines 50-51: cache error inside _is_duplicate logs and returns False."""
+    def test_cache_failure_fails_closed(self, client, app, mocker):
+        """A public webhook must not be processed with dedup disabled."""
         app.config["BILLING_WEBHOOK_SECRET"] = "cov-secret"
         mocker.patch("extensions.cache.get", side_effect=RuntimeError("redis down"))
         mocker.patch("extensions.cache.set", side_effect=RuntimeError("redis down"))
@@ -77,9 +77,9 @@ class TestGenericWebhookDedupCacheError:
             },
             headers={"X-Webhook-Secret": "cov-secret"},
         )
-        assert resp.status_code == 200
-        assert resp.get_json()["success"] is True
-        provision.assert_called_once_with(tenant_id=3, package_id=4, duration_type="monthly")
+        assert resp.status_code == 503
+        assert resp.get_json()["success"] is False
+        provision.assert_not_called()
 
 
 class TestStripeWebhookOuterExcept:

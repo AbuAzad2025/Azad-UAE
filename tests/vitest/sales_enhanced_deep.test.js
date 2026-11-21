@@ -211,7 +211,8 @@ function makeDOMJQuery() {
 		}
 		return wrap([]);
 	}
-	$.fn = {};
+	// The page loads Select2; the source guards on the plugin being present.
+	$.fn = { select2: () => {} };
 	$.calls = calls;
 	$.ajaxHandlers = [];
 	$.ajax = (opts) => {

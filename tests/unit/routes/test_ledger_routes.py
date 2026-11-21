@@ -542,6 +542,10 @@ class TestLedgerManualEntry:
         with (
             _ledger_patches(),
             patch("routes.ledger.GLService.create_manual_entry", return_value=entry),
+            # The route validates and posts the draft in the same transaction;
+            # the mocked entry has no persisted row, so stub both steps.
+            patch("services.advanced_journal_manager.AdvancedJournalEntryManager.validate_entry"),
+            patch("services.advanced_journal_manager.AdvancedJournalEntryManager.post_entry"),
         ):
             resp = ledger_client.post(
                 "/ledger/manual-entry",

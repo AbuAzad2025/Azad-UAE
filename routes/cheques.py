@@ -37,12 +37,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
-from utils.error_messages import (
-    BusinessRuleError,
-    ErrorMessages,
-    report_system_error,
-    safe_error,
-)
+from utils.error_messages import ErrorMessages, refuse
 from utils.feature_guards import install_feature_gate
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
@@ -114,16 +109,11 @@ def _refuse(error, *, context):
     which is what put psycopg2 messages, constraint names and Python exception
     text in front of cheque operators.
     """
-    if isinstance(error, BusinessRuleError):
-        current_app.logger.info(
-            "cheque refusal category=%s field=%s: %s",
-            error.category,
-            error.field or "-",
-            error.message,
-        )
-        flash(safe_error(error, context=__name__), "warning")
-    else:
-        flash(report_system_error(error, context=context, logger=current_app.logger), "danger")
+    # refuse() is the governance layer's single decision point: a typed
+    # business refusal is shown as written and logged at info, while anything
+    # else is logged with a reference and shown as a calm system sentence.
+    # Calling safe_error() here used to dress a business refusal up as a crash.
+    refuse(error, context=context)
 
 
 @cheques_bp.route("/")

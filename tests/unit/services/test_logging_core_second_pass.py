@@ -348,6 +348,10 @@ class TestTraceAndErrorSecondPass:
         ctx.__enter__.return_value = conn
         mocker.patch("extensions.db.engine.connect", return_value=ctx)
         mock_req = MagicMock()
+        mock_req.url = "http://localhost/form?token=secret"
+        mock_req.method = "POST"
+        mock_req.headers = {}
+        mock_req.remote_addr = "127.0.0.1"
         mock_req.is_json = True
         mock_req.get_json.side_effect = RuntimeError("bad json")
         mock_req.form = None

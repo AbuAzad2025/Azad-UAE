@@ -814,35 +814,35 @@ $(document).ready(() => {
 	// ready handler. Guard both the element and the plugin.
 	const $customer = $("#customer_id");
 	if ($customer.length && typeof $.fn.select2 === "function") {
-	$customer.select2({
-		placeholder: "ابحث عن زبون...",
-		language: "ar",
-		dir: "rtl",
-		width: "100%",
-		ajax: {
-			url: "/api/search",
-			dataType: "json",
-			delay: 250,
-			data: (params) => ({
-				q: params.term,
-				type: "customers",
-				page: params.page || 1,
-			}),
-			processResults: (data) => ({
-				results: data.results,
-				pagination: {
-					more: data.has_more,
-				},
-			}),
-			cache: true,
-		},
-		minimumInputLength: 0,
-		templateResult: (customer) => {
-			if (customer.loading) return customer.text;
-			return $(`<span>${customer.text}</span>`);
-		},
-		templateSelection: (customer) => customer.text,
-	});
+		$customer.select2({
+			placeholder: "ابحث عن زبون...",
+			language: "ar",
+			dir: "rtl",
+			width: "100%",
+			ajax: {
+				url: "/api/search",
+				dataType: "json",
+				delay: 250,
+				data: (params) => ({
+					q: params.term,
+					type: "customers",
+					page: params.page || 1,
+				}),
+				processResults: (data) => ({
+					results: data.results,
+					pagination: {
+						more: data.has_more,
+					},
+				}),
+				cache: true,
+			},
+			minimumInputLength: 0,
+			templateResult: (customer) => {
+				if (customer.loading) return customer.text;
+				return $(`<span>${customer.text}</span>`);
+			},
+			templateSelection: (customer) => customer.text,
+		});
 	}
 
 	addLine();

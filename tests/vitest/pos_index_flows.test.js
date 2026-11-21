@@ -745,7 +745,9 @@ describe("pos/index checkout pipeline", () => {
 				b.lines.some((l) => l.product_id === MARKER_ID),
 			);
 		expect(mine.length).toBeGreaterThan(0);
-		expect(mine[0].paid_amount).toBe(0); // ZERO FRONTEND CALC: paid amount comes from backend checkout response
+		// Cash with no amount entered defaults to the invoice total; the
+		// backend still validates the final amount against the computed total.
+		expect(mine[0].paid_amount).toBe(100);
 		expect(mine[0].quick_customer).toBe(false);
 		expect(mine[0].lines[0]).toMatchObject({ product_id: MARKER_ID, quantity: 1 });
 	});

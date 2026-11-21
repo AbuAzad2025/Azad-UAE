@@ -4,6 +4,14 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _no_confirmed_returns():
+    """These fixtures model purchases with no returns to cancel first."""
+    with patch("models.purchase_return.PurchaseReturn.query") as returns_q:
+        returns_q.filter_by.return_value.first.return_value = None
+        yield
+
+
 class TestPurchaseCancelValidations:
     def test_cancel_already_cancelled(self, app):
         from services.purchase_service import PurchaseService

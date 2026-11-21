@@ -300,7 +300,7 @@
 				const $rows = $tbl.find("tbody tr");
 				const onlySpannedEmptyRow =
 					$rows.length > 0 &&
-					$rows.toArray().every((tr) => {
+					Array.from($rows).every((tr) => {
 						const cells = tr.children;
 						return cells.length === 1 && cells[0].hasAttribute("colspan");
 					});

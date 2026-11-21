@@ -48,27 +48,28 @@ class TestAROpsUnpaid:
 
     @staticmethod
     def _patch_ops_unpaid_queries(mocker, sales_rows, paid_total, receipts_total):
-        sales_q = MagicMock()
-        sales_q.filter.return_value = sales_q
-        sales_q.join.return_value = sales_q
-        sales_q.all.return_value = sales_rows
+        def _query(*, scalar=None, rows=None):
+            q = MagicMock()
+            for method in ("filter", "join", "outerjoin", "group_by", "order_by", "limit", "offset"):
+                getattr(q, method).return_value = q
+            q.scalar.return_value = scalar
+            q.all.return_value = rows if rows is not None else []
+            q.subquery.return_value = MagicMock()
+            return q
 
-        cust_ids_q = MagicMock()
-        cust_ids_q.filter.return_value = cust_ids_q
-
-        refs_q = MagicMock()
-        refs_q.filter.return_value = refs_q
-
-        rcpt_q = MagicMock()
-        rcpt_q.filter.return_value = rcpt_q
-        rcpt_q.scalar.return_value = receipts_total
-
-        pay_q = MagicMock()
-        pay_q.filter.return_value = pay_q
-        pay_q.scalar.return_value = paid_total
+        # The service now aggregates payments in one grouped subquery before
+        # joining the sales; mock the five query() calls in that exact order.
+        cust_ids_q = _query()
+        refs_q = _query()
+        receipts_q = _query(scalar=receipts_total)
+        payments_q = _query(scalar=paid_total)
+        # The fixtures were written for the old per-sale query
+        # (sale_id, amount_aed, customer_id); the grouped join now yields
+        # (amount_aed, paid_aed) for each aggregated sale.
+        sales_q = _query(rows=[(amount, paid_total) for _id, amount, _customer in sales_rows])
 
         session = mocker.patch("services.ar_reconciliation_service.db.session")
-        session.query.side_effect = [sales_q, cust_ids_q, refs_q, rcpt_q, pay_q]
+        session.query.side_effect = [cust_ids_q, refs_q, receipts_q, payments_q, sales_q]
 
     def test_full_payment_zeroes_due(self, mocker):
         self._patch_ops_unpaid_queries(mocker, [(1, Decimal("1000"), 5)], Decimal("1000"), Decimal("0"))
