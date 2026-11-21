@@ -12,9 +12,24 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Warning-level rules are baselined, not xfailed. A count that grows means a
+# new violation slipped in; a count that shrinks means the baseline must be
+# tightened in the same commit, so the ratchet can only move one way.
+BASELINE = {"routes_db_queries": 4, "type_ignore": 20, "function_length": 231}
+
+
+def _assert_baseline(key: str, violations: list[Violation]) -> None:
+    expected = BASELINE[key]
+    actual = len(violations)
+    assert actual == expected, (
+        f"{key}: baseline {expected}, actual {actual}. "
+        + ("New violations added.\n" if actual > expected else "Baseline is stale — tighten it in this commit.\n")
+        + _format_violations(violations[:20])
+    )
+
+
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -82,8 +97,7 @@ def test_models_no_http_concepts():
 def test_routes_no_direct_db_queries():
     """G4: routes/ should not contain direct db.session.query() calls."""
     violations = list(check_routes_db_queries(PROJECT_ROOT))
-    if violations:
-        pytest.xfail("db.session.query() in routes/ (warnings):\n" + _format_violations(violations))
+    _assert_baseline("routes_db_queries", violations)
 
 
 def test_no_bare_except_pass():
@@ -95,17 +109,13 @@ def test_no_bare_except_pass():
 def test_no_type_ignore():
     """G7: No '# type: ignore' — use proper annotations (warning-level)."""
     violations = list(check_type_ignore(PROJECT_ROOT))
-    if violations:
-        count = len(violations)
-        pytest.xfail(f"{count} '# type: ignore' found (warnings):\n" + _format_violations(violations))
+    _assert_baseline("type_ignore", violations)
 
 
 def test_function_length():
     """G7: Functions should not exceed 80 lines."""
     violations = list(check_function_length(PROJECT_ROOT))
-    if violations:
-        count = len(violations)
-        pytest.xfail(f"{count} functions exceed 80 lines (warnings):\n" + _format_violations(violations))
+    _assert_baseline("function_length", violations)
 
 
 def test_root_cleanliness():
@@ -130,3 +140,4 @@ def test_full_compliance_summary():
         for v in sorted(result.violations, key=lambda x: (x.file, x.line)):
             print(f"  {v.format()}")
     print(f"{'=' * 60}")
+    assert not errors, "Error-level Grimoire violations"

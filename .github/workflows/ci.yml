@@ -10,8 +10,7 @@ on:
   push:
     branches: [main, develop]
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
+      # Docs are NOT ignored: check_api_docs.py must run on doc-only changes.
       - '**.svg'
       - '**.png'
       - '**.jpg'
@@ -23,8 +22,7 @@ on:
   pull_request:
     branches: [main]
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
+      # Docs are NOT ignored: check_api_docs.py must run on doc-only changes.
       - '**.svg'
       - '**.png'
       - '**.jpg'
@@ -82,7 +80,7 @@ jobs:
               {"postgres-version":15,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
               {"postgres-version":15,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
               {"postgres-version":15,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
-              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
+              {"postgres-version":15,"test-group":"e2e",     "test-path":"tests/e2e/ tests/e2e_dry_run.py --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           else
             MATRIX='{"include":[
@@ -97,7 +95,7 @@ jobs:
               {"postgres-version":16,"test-group":"scenarios-b","test-path":"tests/integration/business_scenarios/test_wave{8,9}_*.py","cov-flag":"scenarios-b"},
               {"postgres-version":16,"test-group":"scenarios-c","test-path":"tests/integration/business_scenarios/test_wave{10,11,12}_*.py","cov-flag":"scenarios-c"},
               {"postgres-version":16,"test-group":"scenarios-d","test-path":"tests/integration/business_scenarios/test_wave{13,14,15,16}_*.py","cov-flag":"scenarios-d"},
-              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/ --ignore=tests/e2e/tours/","cov-flag":"e2e"}
+              {"postgres-version":16,"test-group":"e2e",     "test-path":"tests/e2e/ tests/e2e_dry_run.py --ignore=tests/e2e/tours/","cov-flag":"e2e"}
             ]}'
           fi
           echo "matrix=$(echo "$MATRIX" | jq -c .)" >> "$GITHUB_OUTPUT"
@@ -115,7 +113,7 @@ jobs:
     # upload hung retrying a tokenless upload long after pytest had passed.
     # That step is now gated on the token and bounded; this number is the
     # backstop, not the fix.
-    timeout-minutes: 1440
+    timeout-minutes: 120
     strategy:
       # Never cancel sibling groups: every directory must report, even when
       # another group fails ?" no part of the test suite may be skipped.
@@ -197,7 +195,7 @@ jobs:
           # and failed later with a confusing UndefinedTable instead of here.
           flask db upgrade
           # Now that the schema is real, prove the models agree with it.
-          python scripts/lint/check_model_schema_parity.py
+          python scripts/lint/check_model_schema_parity.py --require-migrated --indexes
           # Run the assigned test group
           pytest ${{ matrix.test-path }} -v --tb=short \
             --cov=. --cov-config=.coveragerc --cov-report=term \
@@ -401,8 +399,11 @@ jobs:
       - name: Jinja template gate (all templates must parse)
         run: python scripts/lint/check_templates.py
 
-      - name: Strict i18n lint (templates & Python)
-        run: python scripts/check_strict_i18n.py templates routes services --exclude-dirs services
+      # services/ is intentionally NOT named here: its literals are already
+      # Arabic (the target language) and the checker flags them as unwrapped.
+      # Keep the command honest about its real scope.
+      - name: Strict i18n lint (templates & routes)
+        run: python scripts/check_strict_i18n.py templates routes
 
       # i18n regression gates. check_strict_i18n proves every string is *wrapped*
       # in a translation call; these two prove the call actually resolves.
@@ -458,7 +459,7 @@ jobs:
           # to the count, not above it. Lower it in the same commit that removes
           # declarations, never ahead of them.
           python scripts/lint/check_inline_assets.py \
-            --max-static 52 \
+            --max-static 50 \
             --max-dynamic 21 \
             --max-inline-scripts 174
           # A utility class whose stylesheet is linked nowhere resolves to nothing:
@@ -866,7 +867,7 @@ jobs:
           # Deliberately NOT `|| true`. An unmigrated database is exactly the
           # failure this gate was silently reporting as a pass.
           flask db upgrade
-          python scripts/lint/check_model_schema_parity.py
+          python scripts/lint/check_model_schema_parity.py --require-migrated --indexes
       - name: Start app server
         run: |
           # One worker, several threads, on purpose.
@@ -1200,6 +1201,17 @@ jobs:
             echo "::error::No coverage data artifacts found - test jobs failed early"
             exit 1
           fi
+          # A partial combine can still pass the floor and report a plausible
+          # but wrong number. Require every matrix slice to have uploaded.
+          EXPECTED=11
+          if [ '${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}' = 'true' ]; then
+            EXPECTED=13
+          fi
+          echo "Combined ${#files[@]} coverage file(s); expected $EXPECTED"
+          if [ ${#files[@]} -lt "$EXPECTED" ]; then
+            echo "::error::Only ${#files[@]} of $EXPECTED test slices uploaded coverage"
+            exit 1
+          fi
           coverage combine "${files[@]}"
           cp .coverage coverage-combined-data
 
@@ -1226,9 +1238,9 @@ jobs:
             echo "$out" | tail -1
             echo "::endgroup::"
           done <<'FLOORS'
-          routes/* 95
-          services/* 94
-          models/* 98
+          routes/* 98
+          services/* 97
+          models/* 99
           utils/* 96
           app/* 90
           FLOORS

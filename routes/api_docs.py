@@ -4,6 +4,7 @@ API Documentation using OpenAPI/Swagger
 
 import copy
 import os
+import re
 from typing import Any, cast
 
 from flask import Blueprint, abort, current_app, jsonify, render_template_string
@@ -24,6 +25,11 @@ def _protect_api_docs_in_production():
     if _api_docs_public():
         return None
     if not current_user.is_authenticated:
+        abort(404)
+    # The full API map is internal: only administrative roles may read it in
+    # production. Previously any logged-in tenant user could retrieve it.
+    role = getattr(current_user, "role", None)
+    if getattr(role, "slug", "") not in {"super_admin", "owner", "developer", "admin"}:
         abort(404)
     return None
 
@@ -225,10 +231,38 @@ OPENAPI_SPEC = {
 }
 
 
+def _live_paths() -> dict[str, Any]:
+    """Build path entries from the live URL map so the spec cannot go stale.
+
+    The six hand-curated schemas in OPENAPI_SPEC are merged over this result,
+    so rich request/response examples survive while every other endpoint is
+    at least discoverable.
+    """
+    paths: dict[str, Any] = {}
+    for rule in current_app.url_map.iter_rules():
+        if rule.endpoint.startswith(("static", "api_docs")):
+            continue
+        # Keep the fuzzable surface bounded: the public /api/* namespace, not
+        # every HTML page in the ERP.
+        if not str(rule).startswith("/api/"):
+            continue
+        path = re.sub(r"<(?:int|string|float|uuid|path):([^>]+)>", r"{\1}", str(rule))
+        entry = paths.setdefault(path, {})
+        for method in sorted(m for m in rule.methods if m not in {"HEAD", "OPTIONS"}):
+            entry[method.lower()] = {
+                "summary": rule.endpoint,
+                "responses": {"200": {"description": "OK"}},
+            }
+    return paths
+
+
 @api_docs_bp.route("/openapi.json")
 def openapi_spec():
     """Return OpenAPI specification as JSON"""
     spec = cast("dict[str, Any]", copy.deepcopy(OPENAPI_SPEC))
+    generated = _live_paths()
+    generated.update(spec.get("paths", {}))
+    spec["paths"] = generated
     spec["info"]["contact"]["name"] = current_app.config.get("DEVELOPER_NAME", spec["info"]["contact"].get("name"))
     spec["info"]["contact"]["email"] = current_app.config.get("DEVELOPER_EMAIL", spec["info"]["contact"].get("email"))
     spec["info"]["contact"]["url"] = current_app.config.get("DEVELOPER_WEBSITE", spec["info"]["contact"].get("url"))

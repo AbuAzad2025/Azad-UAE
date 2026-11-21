@@ -83,10 +83,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 ### CI — gates that are actually enforced
 - Authoritative status lives in the Actions tab; a run id recorded here goes stale
   the moment anything is pushed, so it is deliberately not cited here.
-- `python scripts/lint/check_migration_head.py` → single head, chain len 69.
-- Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 170`
-  (measured 50 / 21 / 170 — zero headroom by design; lower a budget only in the
-  commit that removes declarations).
+- `python scripts/lint/check_migration_head.py` → single head, chain len 90
+  (`r6s7t8u9v0w1`, after the statutory/provenance and composite-FK migrations).
+- Enforced inline budgets: `--max-static 50 --max-dynamic 21 --max-inline-scripts 174`
+  (measured 50 / 21 / 174 — the script budget was explicitly accepted at 174 when
+  four more pages gained inline bootstraps; it is no longer described as zero
+  headroom. Lower a budget only in the commit that removes declarations).
 - `check_utility_reachability.py` — fails when a page uses a utility class no
   stylesheet in its extends/include chain defines.
 - `check_css_class_collisions.py` — @media-aware; fails when one bare class is
@@ -95,10 +97,25 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   once every slice passed again, so the floor cannot be eroded one slice at a
   time).
 - **Per-layer floors** (the `coverage-report` job): routes 98, services 97,
-  models 99, utils 96, app 90 — measured 98.99 / 98.24 / 99.92 / 97.67 / 93.38.
+  models 99, utils 96, app 90 — restored to the documented values on 2026-11-21
+  after the earlier ratchet down to 95/94/98/96/90.
   The global floor is blind to a layer eroding, because a layer is a small
   part of the total: routes are 28% of the statements, so a route layer at 90%
   would still leave the project above 95.
+- **CI gate repairs (2026-11-21):** docs are no longer in `paths-ignore` (so a
+  doc-only API-reference edit runs the drift gate); the test timeout is 120 min;
+  `check_strict_i18n.py` names only `templates routes` (services literals are
+  already Arabic and were silently excluded); the `coverage-report` job fails when
+  fewer than 11 (PR) / 13 (main) coverage artifacts were combined; the `e2e`
+  slice runs `tests/e2e_dry_run.py` explicitly; schema parity runs with
+  `--require-migrated --indexes` (index drift is informational until the
+  migration/model names are reconciled); and the three warning-level Grimoire
+  rules use count-based baselines in `tests/unit/test_grimoire_compliance.py`
+  instead of `pytest.xfail`, so a new violation fails and an improved count
+  forces the baseline to be tightened in the same commit.
+- `/api-docs/openapi.json` is generated from the live URL map for the `/api/*`
+  namespace with the six curated schemas merged over it, and is restricted to
+  admin roles outside development/debug.
 - **The Lighthouse gate measures the median of 3 runs per URL**, not one run:
   `scripts/lighthouserc.json` sets `collect.numberOfRuns: 3` and
   `scripts/lint/report_lighthouse_scores.py` decides on the median run and on
@@ -452,11 +469,12 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
   wave done — the complete list, copied from `.github/workflows/ci.yml`:
   `ruff check .` · `ruff format . --check` ·
   `mypy . --ignore-missing-imports --no-error-summary --explicit-package-bases` ·
-  `check_templates.py` · `check_strict_i18n.py templates routes services --exclude-dirs services` ·
+  `check_templates.py` · `check_strict_i18n.py templates routes` (services literals are
+  already Arabic and are intentionally out of scope) ·
   `check_i18n_untranslated.py` · `report_catalogue_health.py` · `check_migration_head.py` ·
   `check_txn_boundaries.py` · `check_service_side_effects.py` · `check_tag_shape.py` ·
   `check_a11y_labels.py` · `check_inline_assets.py --max-static 50 --max-dynamic 21
-  --max-inline-scripts 170` · `check_utility_reachability.py` ·
+  --max-inline-scripts 174` · `check_utility_reachability.py` ·
   `check_css_class_collisions.py` · `check_font_assets.py` · `check_api_docs.py` ·
   `cspell` over templates + static JS.
   (`check_strict_i18n.py` lives in `scripts/`, not `scripts/lint/`.)
