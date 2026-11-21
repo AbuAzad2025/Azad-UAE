@@ -248,7 +248,7 @@ def _live_paths() -> dict[str, Any]:
             continue
         path = re.sub(r"<(?:int|string|float|uuid|path):([^>]+)>", r"{\1}", str(rule))
         entry = paths.setdefault(path, {})
-        for method in sorted(m for m in rule.methods if m not in {"HEAD", "OPTIONS"}):
+        for method in sorted(m for m in (rule.methods or set()) if m not in {"HEAD", "OPTIONS"}):
             entry[method.lower()] = {
                 "summary": rule.endpoint,
                 "responses": {"200": {"description": "OK"}},

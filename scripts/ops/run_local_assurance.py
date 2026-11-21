@@ -134,18 +134,18 @@ def main() -> int:
     if url:
         import sqlalchemy as sa
 
-        db_url = sa.engine.make_url(url)
-        admin = sa.create_engine(db_url.set(database="postgres"), poolclass=NullPool)
+        parsed_url = sa.engine.make_url(url)
+        admin = sa.create_engine(parsed_url.set(database="postgres"), poolclass=NullPool)
         try:
             with admin.connect() as conn:
                 exists = conn.execute(
                     sa.text("SELECT 1 FROM pg_database WHERE datname = :n"),
-                    {"n": db_url.database},
+                    {"n": parsed_url.database},
                 ).scalar()
         finally:
             admin.dispose()
         if not exists:
-            print(f"\n=== live CHECK guard ===\n -> SKIPPED: database {db_url.database} no longer exists")
+            print(f"\n=== live CHECK guard ===\n -> SKIPPED: database {parsed_url.database} no longer exists")
         else:
             if not run("live CHECK guard", [sys.executable, "scripts/ops/verify_live_schema_guard.py"]):
                 failures.append("live-check-guard")
