@@ -725,6 +725,7 @@ def approve_provisional_order(provisional_id: int):
         flash(gettext("هذا الطلب غير قابل للموافقة (الحالة الحالية: {}).").format(provisional.status), "warning")
         return redirect(url_for("store.admin_orders"))
 
+    sale = None
     try:
         with atomic_transaction("approve_provisional_order"):
             sale = StoreOrderService.convert_provisional_to_sale(provisional, current_user)
@@ -736,6 +737,10 @@ def approve_provisional_order(provisional_id: int):
     except Exception as exc:
         current_app.logger.error(f"Error approving provisional {provisional_id}: {exc}")
         flash(ErrorMessages.action_failed(gettext("اعتماد الطلب المؤقت")), "danger")
+    # A refused conversion has no sale to show — send the admin back to the
+    # order list instead of dereferencing an unbound local (which used to 500).
+    if sale is None:
+        return redirect(url_for("store.admin_orders"))
     return redirect(url_for("store.admin_order_detail", order_id=sale.id))
 
 
@@ -887,7 +892,8 @@ def public_product_detail(product_id):
         "store/public_product_detail.html",
         product=product,
         store_price=store_price,
-        store_currency=ctx["store_currency"],
+        # store_currency is already in ctx; passing it explicitly as well used
+        # to raise a duplicate-keyword TypeError on every product page.
         related=related,
         reviews=reviews,
         **ctx,

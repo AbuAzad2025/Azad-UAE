@@ -222,9 +222,7 @@ def create():
         except Exception as e:
             current_app.logger.exception("Maintenance order creation failed")
             flash(
-                gettext("فشل إنشاء أمر الصيانة: {safe_error(error, context=__name__)}").format(
-                    error=safe_error(e, context=__name__)
-                ),
+                gettext("فشل إنشاء أمر الصيانة: {error}").format(error=safe_error(e, context=__name__)),
                 "danger",
             )
 
@@ -268,9 +266,7 @@ def add_line(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance line creation failed")
         flash(
-            gettext("فشل إضافة القطعة: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل إضافة القطعة: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -311,9 +307,7 @@ def add_service(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance service line creation failed")
         flash(
-            gettext("فشل إضافة الخدمة: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل إضافة الخدمة: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -419,9 +413,7 @@ def refund_credit(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance refund failed")
         flash(
-            gettext("فشل الاسترداد: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل الاسترداد: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -569,9 +561,7 @@ def collect_deposit(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance deposit collection failed")
         flash(
-            gettext("فشل تحصيل العربون: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل تحصيل العربون: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -611,9 +601,7 @@ def close(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance close failed")
         flash(
-            gettext("فشل إغلاق الأمر: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل إغلاق الأمر: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -692,9 +680,7 @@ def create_return(order_id):
     except Exception as e:
         current_app.logger.exception("Maintenance return creation failed")
         flash(
-            gettext("فشل إنشاء المرتجع: {safe_error(error, context=__name__)}").format(
-                error=safe_error(e, context=__name__)
-            ),
+            gettext("فشل إنشاء المرتجع: {error}").format(error=safe_error(e, context=__name__)),
             "danger",
         )
 
@@ -731,9 +717,7 @@ def service_templates():
         except Exception as e:
             current_app.logger.exception("Service template creation failed")
             flash(
-                gettext("فشل إضافة قالب الخدمة: {safe_error(error, context=__name__)}").format(
-                    error=safe_error(e, context=__name__)
-                ),
+                gettext("فشل إضافة قالب الخدمة: {error}").format(error=safe_error(e, context=__name__)),
                 "danger",
             )
 
