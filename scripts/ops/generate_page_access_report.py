@@ -138,7 +138,8 @@ def route_rows():
 
 def page_meta(ep: str) -> dict:
     func = app.view_functions.get(ep)
-    meta = {"module": ep.split(".")[0], "view": ep.split(".")[-1], "decorators": [], "template": ""}
+    decorators: list[str] = []
+    meta = {"module": ep.split(".")[0], "view": ep.split(".")[-1], "decorators": decorators, "template": ""}
     if func is None:
         return meta
     try:
@@ -157,7 +158,7 @@ def page_meta(ep: str) -> dict:
             "limit",
             "feature_guard",
         }:
-            meta["decorators"].append((dec[0] + ("(" + dec[1][:60] + ")" if dec[1] else "")).strip())
+            decorators.append((dec[0] + ("(" + dec[1][:60] + ")" if dec[1] else "")).strip())
     m = re.search(r'render_template\(\s*["\']([^"\']+)', source)
     if m:
         meta["template"] = m.group(1)

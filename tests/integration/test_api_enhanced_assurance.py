@@ -60,7 +60,8 @@ class TestEnhancedSalesCustomers:
     def test_product_search_requires_query(self, app, auth_client):
         with app.app_context():
             resp = auth_client.get("/api/v2/products/search")
-        assert resp.status_code == 200
+        # A failed request must carry a 4xx, not HTTP 200 with an error body.
+        assert resp.status_code == 400
         assert resp.get_json()["success"] is False
 
     def test_product_search_results(self, app, auth_client, sample_product):

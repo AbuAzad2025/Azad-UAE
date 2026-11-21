@@ -122,7 +122,10 @@ def _create_quotation(args: dict) -> ActionResult:
                     False,
                     f"⚠️ المنتج «{raw.get('product_name') or ''}» غير موجود — تحقق من الاسم أو أنشئ المنتج أولاً",
                 )
-            quantity = float(raw.get("quantity") or 1)
+            # `or 1` turns an explicit 0 into 1, so the zero-quantity guard
+            # below never fired and a worthless line was accepted.
+            raw_qty = raw.get("quantity")
+            quantity = float(1 if raw_qty is None else raw_qty)
             if quantity <= 0:
                 return ActionResult(False, "⚠️ كمية البند يجب أن تكون أكبر من صفر")
             catalog_price = getattr(product, "selling_price", None) or getattr(product, "regular_price", None) or 0

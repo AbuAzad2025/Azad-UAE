@@ -234,10 +234,10 @@ class TestMKT01ThePermissionBoundary:
     def test_awarding_points_needs_the_admin_permission(self, client, db_session, demo_tenant, demo_branch):
         """MKT-05. It is the only route that changes somebody else's standing."""
         _with(client, db_session, demo_tenant, demo_branch, ["view_reports"], "reporter")
-        assert client.get("/gamification/award/sale_created").status_code == 403
+        assert client.post("/gamification/award/sale_created").status_code == 403
 
         _with(client, db_session, demo_tenant, demo_branch, ["admin"], "admin")
-        resp = client.get("/gamification/award/sale_created")
+        resp = client.post("/gamification/award/sale_created")
         assert resp.status_code == 200
 
 
@@ -422,7 +422,7 @@ class TestMKT24PointsAndBadges:
         from services.gamification_service import GamificationService
 
         _with(client, db_session, demo_tenant, demo_branch, ["admin"], "admin")
-        resp = client.get("/gamification/award/sale_created")
+        resp = client.post("/gamification/award/sale_created")
         assert resp.status_code == 200
         data = resp.get_json()["data"]
         assert data["success"] is True
@@ -431,7 +431,7 @@ class TestMKT24PointsAndBadges:
     def test_an_unknown_action_is_worth_nothing(self, client, db_session, demo_tenant, demo_branch):
         """MKT-18. An action the economy does not know is not a bonus."""
         _with(client, db_session, demo_tenant, demo_branch, ["admin"], "admin")
-        resp = client.get("/gamification/award/not-a-real-action")
+        resp = client.post("/gamification/award/not-a-real-action")
         assert resp.status_code == 200
         assert resp.get_json()["data"]["points_awarded"] == 0
 

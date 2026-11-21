@@ -242,7 +242,7 @@ class TestBUD20TheStateMachine:
         with no lines - or, worse, one that reported success while silently
         dropping the line - would constrain nothing while looking configured.
         """
-        from models import Budget, BudgetLine
+        from models import BudgetLine
 
         budget = _create(
             client,
@@ -253,9 +253,9 @@ class TestBUD20TheStateMachine:
             line_0_budgeted_amount="5000",
         )
 
-        assert budget is not None, "the refused create stored no header to inspect"
-        lines = db_session.query(BudgetLine).filter_by(budget_id=budget.id).all()
-        assert not lines, f"budget {budget.id} kept {len(lines)} line(s) for an account that does not exist"
-
-        other = db_session.query(Budget).filter_by(tenant_id=sample_tenant.id).count()
-        assert other >= 1, "the refused create removed every budget, which is not what was asked for"
+        # The route now owns an atomic boundary: a refused line rolls the
+        # header back too, so neither a half-written header nor an orphan line
+        # can survive.
+        assert budget is None, "a refused create must leave no header behind"
+        lines = db_session.query(BudgetLine).all()
+        assert not lines, f"a refused create kept {len(lines)} line(s) for an account that does not exist"

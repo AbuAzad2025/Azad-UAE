@@ -666,29 +666,32 @@ class ExchangeRateService:
             # end that transaction early and leave sequence numbers/GL rows
             # orphaned if a later step failed. The out-of-band manual-rate route
             # owns its own commit boundary.
-            existing = ExchangeRateRecord.query.filter_by(
-                tenant_id=tenant_id,
-                from_currency=from_currency,
-                to_currency=to_currency,
-                effective_date=today,
-                source=source,
-            ).first()
-            if existing:
-                existing.rate = Decimal(str(rate))
-                db.session.flush()
-                return
-
-            record = ExchangeRateRecord(
-                tenant_id=tenant_id,
-                from_currency=from_currency,
-                to_currency=to_currency,
-                rate=Decimal(str(rate)),
-                source=source,
-                api_provider=api_provider,
-                effective_date=today,
-            )
-            db.session.add(record)
-            db.session.flush()
+            # A SAVEPOINT keeps a concurrent duplicate-key failure from
+            # poisoning the caller's money transaction: only the rate write
+            # is rolled back, never the sale/checkout around it.
+            with db.session.begin_nested():
+                existing = ExchangeRateRecord.query.filter_by(
+                    tenant_id=tenant_id,
+                    from_currency=from_currency,
+                    to_currency=to_currency,
+                    effective_date=today,
+                    source=source,
+                ).first()
+                if existing:
+                    existing.rate = Decimal(str(rate))
+                    db.session.flush()
+                else:
+                    record = ExchangeRateRecord(
+                        tenant_id=tenant_id,
+                        from_currency=from_currency,
+                        to_currency=to_currency,
+                        rate=Decimal(str(rate)),
+                        source=source,
+                        api_provider=api_provider,
+                        effective_date=today,
+                    )
+                    db.session.add(record)
+                    db.session.flush()
         except Exception:
             logger.warning(
                 "Failed to save exchange rate record for %s -> %s",

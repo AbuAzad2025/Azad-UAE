@@ -179,6 +179,11 @@ def _patch_cancel_query(mocker, *, direct_paid=Decimal("0"), has_stock=False):
     sm_q = MagicMock()
     sm_q.filter_by.return_value.first.return_value = MagicMock() if has_stock else None
     mocker.patch("models.stock_movement.StockMovement.query", sm_q)
+    # cancel_purchase refuses when confirmed returns exist; these fixtures
+    # model a purchase with no returns.
+    pr_q = MagicMock()
+    pr_q.filter_by.return_value.first.return_value = None
+    mocker.patch("models.purchase_return.PurchaseReturn.query", pr_q)
     mocker.patch("services.purchase_service.StockService.reverse_purchase")
     mocker.patch("services.purchase_service.GLService.reverse_entry")
     mocker.patch("services.purchase_service.LoggingCore.log_audit")

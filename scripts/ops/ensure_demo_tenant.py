@@ -11,10 +11,14 @@ from app.factory import create_app
 from config import Config
 
 database_name = unquote(make_url(Config.SQLALCHEMY_DATABASE_URI).database or "").casefold()
+# Reject the real Full/Lite databases by NAME before any other guard, and
+# keep the original message that the target-safety gate asserts on.
+if database_name in {"erp-full", "erp-lite", "erp_azad_full"} or not database_name.startswith(
+    ("azad_demo", "azad_isolation", "azad_browser", "azad_test")
+):
+    raise SystemExit(f"Demo data is not allowed in database '{database_name}'; use an isolated demo database.")
 if os.environ.get("APP_ENV", "development").lower() == "production" or "--allow-demo" not in sys.argv:
     raise SystemExit("Demo tenants require APP_ENV != production and an explicit --allow-demo flag.")
-if not database_name.startswith(("azad_demo", "azad_isolation", "azad_browser", "azad_test")):
-    raise SystemExit(f"Refusing to seed demo credentials into database '{database_name}'.")
 
 app = create_app()
 with app.app_context():

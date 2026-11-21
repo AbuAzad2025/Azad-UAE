@@ -12,6 +12,7 @@ def _user(**kwargs):
     user.is_owner = kwargs.get("is_owner", False)
     user.has_permission = MagicMock(return_value=kwargs.get("has_permission", True))
     user.is_super_admin = MagicMock(return_value=kwargs.get("is_super_admin", False))
+    user.tenant_id = kwargs.get("tenant_id")
     role = MagicMock()
     role.slug = kwargs.get("role_slug", "seller")
     user.role = role
@@ -303,6 +304,19 @@ class TestOwnerOnly:
             return "owner"
 
         assert view() == "owner"
+
+    def test_tenant_scoped_owner_is_refused(self, deco_ctx, mocker):
+        # A user with is_owner=True but a tenant_id must not reach the
+        # platform-wide surfaces (vault, fees, packages).
+        mocker.patch("utils.decorators.current_user", _user(is_owner=True, tenant_id=1))
+        from utils.decorators import owner_only
+
+        @owner_only
+        def view():
+            return "owner"
+
+        with pytest.raises(Forbidden):
+            view()
 
 
 class TestCompanyAdminRequired:

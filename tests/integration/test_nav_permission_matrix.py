@@ -86,6 +86,7 @@ _GUARD_IDENTITY_TOKENS = {
     "company_admin": ("super_admin", "manager", "is_super_admin"),
     "owner_or_company_admin": ("is_admin", "is_super_admin", "super_admin", "manager", "is_owner"),
     "global_owner": ("is_owner", "developer"),
+    "finance_admin": ("is_admin", "is_super_admin", "super_admin", "manager", "accountant", "is_owner"),
 }
 
 

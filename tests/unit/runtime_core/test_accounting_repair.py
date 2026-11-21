@@ -102,9 +102,12 @@ class TestRepairAccountingData:
 
     def test_posts_positive_inventory_adjustment(self, app, mocker):
         self._base_patches(mocker)
-        tenant_q = MagicMock()
-        tenant_q.all.return_value = [MagicMock(current_stock=100, cost_price=Decimal("2"))]
-        mocker.patch("utils.tenant_orm.tenant_query", return_value=tenant_q)
+        # The CLI sums stock only for the target tenant (no active tenant
+        # scope), so the model query is the boundary to mock here.
+        mocker.patch(
+            "models.Product.query.filter.return_value.all.return_value",
+            [MagicMock(current_stock=100, cost_price=Decimal("2"))],
+        )
         post = mocker.patch("services.gl_service.GLService.post_entry")
         result = repair_accounting_data()
         post.assert_called_once()
@@ -114,9 +117,10 @@ class TestRepairAccountingData:
         self._base_patches(mocker)
         line = MagicMock(debit=Decimal("500"), credit=Decimal("0"))
         mocker.patch("models.gl.GLJournalLine").query.filter.return_value.all.return_value = [line]
-        tenant_q = MagicMock()
-        tenant_q.all.return_value = [MagicMock(current_stock=10, cost_price=Decimal("10"))]
-        mocker.patch("utils.tenant_orm.tenant_query", return_value=tenant_q)
+        mocker.patch(
+            "models.Product.query.filter.return_value.all.return_value",
+            [MagicMock(current_stock=10, cost_price=Decimal("10"))],
+        )
         post = mocker.patch("services.gl_service.GLService.post_entry")
         repair_accounting_data()
         post.assert_called_once()

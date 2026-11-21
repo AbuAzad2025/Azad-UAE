@@ -96,9 +96,13 @@ def _seed_tenant(db):
     db.session.add(wh)
     db.session.flush()
 
-    role = Role(name=f"Cashier {uid}", slug="cashier", is_active=True)
-    db.session.add(role)
-    db.session.flush()
+    # The seeded chart already has a cashier role; reusing it keeps this dry
+    # run idempotent across repeated invocations in the same database.
+    role = Role.query.filter_by(slug="cashier").first()
+    if role is None:
+        role = Role(name=f"Cashier {uid}", slug=f"cashier-{uid}", is_active=True)
+        db.session.add(role)
+        db.session.flush()
 
     user = User(
         tenant_id=tenant.id,

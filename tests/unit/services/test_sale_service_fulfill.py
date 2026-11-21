@@ -124,7 +124,7 @@ class TestFulfillSale:
             SaleService.fulfill_sale(sale, payment_data=payment_data)
             mk_pay.assert_called_once()
 
-    def test_fulfill_overpayment_creates_prepayment(self, app):
+    def test_fulfill_cash_overpayment_is_change_not_prepayment(self, app):
         from services.sale_service import SaleService
 
         sale = _sale(amount_aed=Decimal("100"))
@@ -152,6 +152,40 @@ class TestFulfillSale:
             gl.get_customer_credit_concept.return_value = "AR"
             gl.get_account_code_for_concept.return_value = "4000"
             SaleService.fulfill_sale(sale, payment_data=payment_data)
+            # Cash above the invoice is change handed back at the till — it
+            # must not create a customer credit or a second cash debit.
+            mock_db.add.assert_not_called()
+            sale.customer.apply_receipt.assert_not_called()
+
+    def test_fulfill_card_overpayment_creates_prepayment(self, app):
+        from services.sale_service import SaleService
+
+        sale = _sale(amount_aed=Decimal("100"))
+        payment_data = {
+            "amount": 150,
+            "currency": "AED",
+            "exchange_rate": 1.0,
+            "payment_method": "card",
+        }
+        with (
+            patch.object(SaleService, "has_inventory_posted", return_value=False),
+            patch.object(SaleService, "create_payment_for_sale"),
+            patch("services.sale_service.StockService") as stock,
+            patch("services.sale_service.GLService") as gl,
+            patch("services.sale_service.post_or_fail"),
+            patch("services.sale_service.post_sale_commissions"),
+            patch("services.einvoice_service.EInvoiceService.generate_for_sale"),
+            patch("services.sale_service.should_post_vat_gl", return_value=False),
+            patch("services.sale_service.generate_number", return_value="PRE-1"),
+            patch("services.sale_service.db.session") as mock_db,
+        ):
+            stock.check_availability_in_warehouse.return_value = (True, "")
+            stock.calculate_sale_cogs_and_deduct.return_value = Decimal("0")
+            gl.get_customer_credit_account.return_value = "1200"
+            gl.get_customer_credit_concept.return_value = "AR"
+            gl.get_account_code_for_concept.return_value = "4000"
+            SaleService.fulfill_sale(sale, payment_data=payment_data)
+            # A card overpayment IS a genuine customer prepayment.
             mock_db.add.assert_called()
             sale.customer.apply_receipt.assert_called()
 

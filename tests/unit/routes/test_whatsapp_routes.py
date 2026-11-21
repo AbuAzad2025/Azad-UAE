@@ -79,7 +79,8 @@ class TestSendInvoice:
         sale = MagicMock(customer=None)
         with _whatsapp_patches(sale=sale) as mocks:
             resp = whatsapp_client.post("/whatsapp/send-invoice/5")
-        assert resp.status_code == 200
+        # Validation failures carry a 4xx, not an HTTP 200 error body.
+        assert resp.status_code == 400
         data = resp.get_json()
         assert data["success"] is False
         assert "phone" in data["message"].lower()

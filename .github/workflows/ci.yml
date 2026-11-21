@@ -154,6 +154,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # The cache-busting tests run scripts/build/minify-js.js from a temp dir
+      # with NODE_PATH pointing here; without node_modules they fail on require.
+      - name: Install Node dependencies
+        run: npm ci --no-audit --no-fund
+
       - name: Set up Python
         uses: actions/setup-python@v7
         with:

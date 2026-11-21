@@ -55,16 +55,20 @@ class TestApiDocsProtection:
                     else:
                         assert resp.status_code == 404
 
-    def test_protected_allows_authenticated_user(self, app, client):
+    def test_protected_allows_administrator(self, app, client):
+        admin = MagicMock(is_authenticated=True)
+        admin.role.slug = "admin"
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=True)):
+            with patch("routes.api_docs.current_user", admin):
                 with app.app_context():
                     resp = client.get("/api-docs/openapi.json")
         assert resp.status_code == 200
 
     def test_openapi_strips_servers_when_not_public(self, app, client):
+        admin = MagicMock(is_authenticated=True)
+        admin.role.slug = "admin"
         with patch("routes.api_docs._api_docs_public", return_value=False):
-            with patch("routes.api_docs.current_user", MagicMock(is_authenticated=True)):
+            with patch("routes.api_docs.current_user", admin):
                 with app.app_context():
                     resp = client.get("/api-docs/openapi.json")
         assert "servers" not in resp.get_json()

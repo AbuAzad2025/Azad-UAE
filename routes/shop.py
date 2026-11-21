@@ -27,14 +27,10 @@ from services.store_service import StoreService
 from utils.api_response import error_response, success_response
 from utils.db_safety import atomic_transaction
 from utils.error_messages import ErrorCategory, refuse
-from utils.feature_guards import install_feature_gate
 from utils.safe_redirect import is_safe_redirect_url, safe_redirect_target
 from utils.shop_i18n import shop_lang, t
 
 shop_bp = Blueprint("shop", __name__, url_prefix="/s")
-# The primary storefront must honour the tenant's store entitlement just like
-# /store/ does; otherwise a basic-plan tenant can still post sales via /s/.
-install_feature_gate(shop_bp, "store")
 
 
 def safe_float(value, default=0.0):
@@ -82,6 +78,12 @@ def _require_open_store(store):
 
     if not tenant or not tenant.is_active or getattr(tenant, "is_suspended", False):
         return _closed_response(store, "tenant")
+
+    # Entitlement check belongs here, not on the blueprint: a before_request
+    # gate needs a configured login_manager that the route test apps do not
+    # install, while this is the single entry point for storefront requests.
+    if not getattr(tenant, "enable_store", False):
+        return _closed_response(store, "plan")
 
     return None
 
