@@ -88,7 +88,9 @@ class TestDisplayPrice:
         with caplog.at_level("WARNING", logger="services.store_pricing_service"), app.app_context():
             price = StorePricingService.resolve_display_price(_product("100"), _tenant(base="ILS"), "USD")
         assert price == Decimal("100.00")
-        assert any("NO rate" in rec.message for rec in caplog.records)
+        # getMessage() works with every formatter; `record.message` is only
+        # populated by formatters that explicitly set it (not the JSON one).
+        assert any("NO rate" in rec.getMessage() for rec in caplog.records)
 
     def test_convert_amount_used_for_addons(self, app, mocker):
         mocker.patch(

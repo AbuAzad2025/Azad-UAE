@@ -258,9 +258,10 @@ class TestVerifyIpn:
     def test_invalid_signature(self, svc):
         assert svc.verify_ipn({"payment_id": "x"}, "bad-sig") is False
 
-    def test_exception_returns_false(self, svc, mocker):
-        mocker.patch("services.nowpayments_service.json.dumps", side_effect=TypeError("bad"))
-        assert svc.verify_ipn({"a": 1}, "sig") is False
+    def test_exception_returns_false(self, svc):
+        # An unserializable body makes json.dumps raise inside verify_ipn.
+        # Patching json.dumps globally also breaks the logging formatter.
+        assert svc.verify_ipn(object(), "sig") is False
 
 
 class TestProcessPaymentCallback:
