@@ -50,7 +50,10 @@ omit =
     tools/**
     scripts/**
     load_tests/**
-    exclude_lines =
+# Keep exclude_lines at the same indentation as other keys: indenting it
+# made it part of the preceding multi-line `omit` value, so type-checker-only
+# lines were counted as missed.
+exclude_lines =
     pragma: no cover
     if TYPE_CHECKING:
     if __name__ == .__main__.:

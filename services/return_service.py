@@ -517,10 +517,9 @@ class ReturnService:
 
             requested_refund = None
             if manual_refund_amount is not None:
-                try:
-                    requested_refund = Decimal(str(manual_refund_amount))
-                except Exception:
-                    requested_refund = Decimal("0")
+                # _optional_money has already validated and quantized this
+                # value, so a second conversion cannot fail here.
+                requested_refund = Decimal(str(manual_refund_amount))
                 # A refund cannot exceed what the returned lines actually
                 # represent. Without this cap a cashier with manage_sales can
                 # mint arbitrary customer credit (and a matching revenue

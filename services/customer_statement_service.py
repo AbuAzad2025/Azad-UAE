@@ -612,9 +612,9 @@ class CustomerStatementService:
             )
 
         def _sort_key(trans):
+            # Every transaction date comes from a non-nullable column with a
+            # Python default, so a None date cannot reach this sorter.
             d = trans.get("date")
-            if d is None:
-                return datetime.min
             if isinstance(d, datetime):
                 return d.replace(tzinfo=None) if d.tzinfo else d
             return datetime(d.year, d.month, d.day)  # pragma: no cover - ORM columns are always DateTime

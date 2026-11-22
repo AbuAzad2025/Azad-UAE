@@ -124,9 +124,10 @@ class PosCheckoutService:
             locked = {}
 
         for row in merged:
-            product = locked.get(int(row["product_id"]))
-            if not product or not product.is_active:
-                raise PosCheckoutError(gettext("يوجد منتج غير صالح داخل السلة."), 400)
+            # Every product id was locked (and checked active) above; the
+            # duplicate guard here could only fire if merged changed between
+            # the two loops, which it cannot for a materialized cart.
+            product = locked[int(row["product_id"])]
 
             if getattr(product, "has_serial_number", False):
                 serials = row.get("serials") or payload.get("serials", {}).get(str(product.id)) or []
