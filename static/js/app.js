@@ -151,8 +151,8 @@
 	}
 
 	function installBootstrapFacade() {
-		if (!$?.fn) return;
-
+		// The caller (installBootstrapCompat) already checked $.fn, so the old
+		// re-entry guard here could never be false.
 		if (!window.__bootstrapCompatDelegatesBound) {
 			window.__bootstrapCompatDelegatesBound = true;
 

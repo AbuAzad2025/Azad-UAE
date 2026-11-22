@@ -21,7 +21,6 @@
 	let nextQueueId = 1;
 	let dbPromise = null;
 	let flushing = false;
-	let booted = false;
 
 	const safe = (fn) => {
 		try {
@@ -204,19 +203,14 @@
 		if (flushing || queue.length === 0) return;
 		const batch = queue.splice(0, MAX_BATCH_SEND);
 		flushing = true;
-		sendBatch(JSON.stringify({ events: batch }))
-			.then((ok) => {
-				flushing = false;
-				if (ok) {
-					idbRemove(batch.map((event) => event.qid));
-				} else {
-					requeue(batch);
-				}
-			})
-			.catch(() => {
-				flushing = false;
+		sendBatch(JSON.stringify({ events: batch })).then((ok) => {
+			flushing = false;
+			if (ok) {
+				idbRemove(batch.map((event) => event.qid));
+			} else {
 				requeue(batch);
-			});
+			}
+		});
 	};
 
 	const enqueue = (event) => {
@@ -405,8 +399,7 @@
 	};
 
 	const boot = () => {
-		if (booted) return;
-		booted = true;
+		// Called once at module load; no re-entry path exists.
 		safe(armErrorTrap);
 		safe(armClickBreadcrumbs);
 		safe(armRouteBreadcrumbs);

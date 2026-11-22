@@ -29,12 +29,10 @@
 		offlineStatusBar = bar;
 	}
 
-	function setOfflineVisible(visible, message) {
+	function setOfflineVisible(visible) {
 		if (!offlineStatusBar) return;
-		if (message) {
-			const msgEl = document.getElementById("posOfflineMsg");
-			if (msgEl) msgEl.textContent = message;
-		}
+		// No caller supplies a custom message: the banner text is static in
+		// the template, so the old optional-message branch was dead code.
 		offlineStatusBar.classList.toggle("d-none", !visible);
 		// For consumers that check navigator.onLine, expose a data attribute
 		document.documentElement.dataset.posOnline = visible ? "false" : "true";

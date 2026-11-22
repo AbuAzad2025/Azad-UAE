@@ -353,7 +353,8 @@ function _serialSyncFromHidden(lineIndex) {
 }
 
 function _serialRenderList() {
-	if (_serialModalLine === null) return;
+	// Every caller sets _serialModalLine before rendering (or guards it
+	// itself), so the old null check could only be hit from a broken caller.
 	const serials = _serialStore.get(_serialModalLine) || [];
 	const list = $("#serial_list");
 	list.empty();
