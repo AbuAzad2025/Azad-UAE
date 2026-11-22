@@ -87,7 +87,11 @@ const loadRateForCurrency = async () => {
 	await updateCartPrices();
 };
 
+let recalcSeq = 0;
 const recalc = async () => {
+	// Rapid cart edits fire several totals requests. A slower, stale response
+	// must never overwrite the newest totals (observed 7.50 instead of 46.50).
+	const seq = ++recalcSeq;
 	const taxRate = Math.max(0, Math.min(100, toNum(qs("#taxRate").value)));
 	const shipping = Math.max(0, toNum(qs("#shippingCost").value));
 	const discountAmount = Math.max(0, toNum(qs("#discountAmount").value));
@@ -124,10 +128,6 @@ const recalc = async () => {
 			const response = await r.json();
 			const data = response?.data ? response.data : response;
 			if (response.success) {
-				qs("#kpiSubtotal").textContent = fmt(data.subtotal);
-				qs("#kpiDiscount").textContent = fmt(data.discount);
-				qs("#kpiTotal").textContent = fmt(data.total);
-				qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 				const exactTotals = {
 					subtotal: data.subtotal,
 					tax: data.tax_amount,
@@ -137,6 +137,11 @@ const recalc = async () => {
 					total: data.total,
 					prices_include_vat: data.prices_include_vat,
 				};
+				if (seq !== recalcSeq) return exactTotals;
+				qs("#kpiSubtotal").textContent = fmt(data.subtotal);
+				qs("#kpiDiscount").textContent = fmt(data.discount);
+				qs("#kpiTotal").textContent = fmt(data.total);
+				qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 				if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
 				state.lastTotals = exactTotals;
 				window.dispatchEvent(new CustomEvent("pos:totals", { detail: exactTotals }));
@@ -156,6 +161,7 @@ const recalc = async () => {
 		total: 0,
 		prices_include_vat: pricesIncludeVatMeta,
 	};
+	if (seq !== recalcSeq) return quickTotals;
 	if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, quickTotals);
 	state.lastTotals = quickTotals;
 	window.dispatchEvent(new CustomEvent("pos:totals", { detail: quickTotals }));
@@ -223,7 +229,7 @@ const renderCart = async () => {
 	if (cnt) cnt.textContent = String(state.cart.length);
 	if (!state.cart.length) {
 		body.innerHTML =
-			'<tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
+			'<tr id="cartEmptyRow"><td colspan="5" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
 		await recalc();
 		scheduleUpsellEval();
 		return;
@@ -236,23 +242,31 @@ const renderCart = async () => {
 		const meta =
 			(it.sku ? `SKU: ${esc(it.sku)}` : "") + (it.barcode ? ` | ${esc(it.barcode)}` : "");
 		tr.innerHTML = `
-                <td>
-                    <div class="pos-cart-item">
-                        <div class="ci-top">
-                            <span class="ci-name">${esc(it.name)}</span>
-	                        <span class="ci-price">${fmt(it.basePrice)} ${sym} / وحدة</span>
-                        </div>
-                        ${meta ? `<div class="ci-meta">${meta}</div>` : ""}
-                        ${it.serial ? `<div class="ci-meta">SN: ${esc(it.serial)}</div>` : ""}
-                        <div class="ci-controls">
-                            <button class="ci-remove" data-k="del" data-i="${idx}" title="حذف">✕</button>
-                            <button class="pos-qty-btn" data-act="dec" data-i="${idx}" type="button" aria-label="نقص">−</button>
-                            <input class="ci-qty" data-k="qty" data-i="${idx}" type="number" step="0.001" min="0.001" value="${it.qty}" aria-label="الكمية">
-                            <button class="pos-qty-btn" data-act="inc" data-i="${idx}" type="button" aria-label="زد">+</button>
-                            <input class="ci-price-in" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}" title="سعر" aria-label="السعر">
-                            <input class="ci-disc" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}" title="خصم %" aria-label="خصم">
-                        </div>
+                <td class="ci-idx">${idx + 1}</td>
+                <td class="ci-item">
+                    <span class="ci-name">${esc(it.name)}</span>
+                    ${meta ? `<span class="ci-meta">${meta}</span>` : ""}
+                    ${it.serial ? `<span class="ci-meta">SN: ${esc(it.serial)}</span>` : ""}
+                </td>
+                <td class="ci-qty-cell">
+                    <div class="ci-inline">
+                        <button class="pos-qty-btn" data-act="dec" data-i="${idx}" type="button" aria-label="نقص">−</button>
+                        <input class="ci-qty" data-k="qty" data-i="${idx}" type="number" step="0.001" min="0.001" value="${it.qty}" aria-label="الكمية">
+                        <button class="pos-qty-btn" data-act="inc" data-i="${idx}" type="button" aria-label="زد">+</button>
                     </div>
+                </td>
+                <td class="ci-price-cell">
+                    <div class="ci-inline">
+                        <input class="ci-price-in" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}" title="سعر" aria-label="السعر">
+                        <span class="ci-price-unit">${sym}</span>
+                    </div>
+                    <div class="ci-inline ci-disc-line">
+                        <input class="ci-disc" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}" title="خصم %" aria-label="خصم">
+                        <span class="ci-disc-unit">% خصم</span>
+                    </div>
+                </td>
+                <td class="ci-del-cell">
+                    <button class="ci-remove" data-k="del" data-i="${idx}" title="حذف" aria-label="حذف">✕</button>
                 </td>
             `;
 		body.appendChild(tr);

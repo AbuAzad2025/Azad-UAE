@@ -2633,6 +2633,374 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 	overflow: hidden;
 }
 
+/* ==========================================================================
+   Cashier clarity pass — inspired by the real Al-Shamel cashier screen:
+   one clear header, generous spacing, colour-coded actions and totals.
+   Only presentation changes: ids, handlers and document contracts untouched.
+   ========================================================================== */
+.pos-app .pos-sale-badge {
+	background: #dcfce7;
+	border: 1px solid #86efac;
+	border-radius: 999px;
+	color: #166534;
+	font-weight: 700;
+	padding: 4px 12px;
+}
+
+.pos-app:has(.pos-workspace) .pos-topbar {
+	border-radius: 14px;
+	padding: 10px 18px;
+}
+
+.pos-app .pos-workspace {
+	gap: 14px;
+	grid-template-columns: 150px minmax(0, 1fr) 380px;
+}
+
+.pos-app .pos-cart-col,
+.pos-app .pos-cats-col {
+	border-radius: 14px;
+	box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+}
+
+.pos-app .pos-cart-top {
+	background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+	padding: 14px;
+}
+
+.pos-app .pos-cart-head th {
+	background: #e8f5ee;
+	color: #14532d;
+	padding: 10px 8px;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.pos-app .pos-cart-table td {
+	padding: 10px 8px;
+}
+
+.pos-app #cartBody tr:nth-child(odd) {
+	background: #f8fafc;
+}
+
+.pos-app .pos-totals {
+	padding: 14px;
+}
+
+.pos-app .pos-totals .row {
+	font-size: 13px;
+	padding: 5px 10px;
+}
+
+.pos-app .pos-totals .row.grand {
+	font-size: 22px;
+	padding: 10px 14px;
+}
+
+.pos-app .pos-fast-cash {
+	gap: 8px;
+	padding: 8px 0;
+}
+
+.pos-app .pos-fast-key {
+	background: #fef3c7;
+	border-color: #fcd34d;
+	border-radius: 10px;
+	color: #92400e;
+	font-weight: 700;
+	min-width: 56px;
+	padding: 8px 12px;
+}
+
+.pos-app .pos-fast-key.exact {
+	background: #dcfce7;
+	border-color: #86efac;
+	color: #166534;
+}
+
+.pos-app .pos-pay-method .pm {
+	border-radius: 12px;
+	min-height: 64px;
+	padding: 14px 8px;
+}
+
+.pos-app .pos-pay-method .pm[data-method="cash"] {
+	background: #f0fdf4;
+	border-color: #86efac;
+}
+
+.pos-app .pos-pay-method .pm[data-method="card"] {
+	background: #eff6ff;
+	border-color: #93c5fd;
+}
+
+.pos-app .pos-pay-method .pm[data-method="bank_transfer"] {
+	background: #faf5ff;
+	border-color: #d8b4fe;
+}
+
+.pos-app .pos-pay-method .pm[data-method="e_wallet"] {
+	background: #f0fdfa;
+	border-color: #99f6e4;
+}
+
+.pos-app .pos-calc-grid button {
+	border-radius: 10px;
+	font-size: 18px;
+	min-height: 48px;
+}
+
+.pos-app .pos-btn-primary {
+	background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+	border-color: #166534;
+}
+
+.pos-app .pos-btn-ghost {
+	background: #eff6ff;
+	border-color: #93c5fd;
+	color: #1e40af;
+}
+
+/* Shamel-style sales tab + blue action tiles on their own full-width row,
+   so the session summary keeps its space instead of being squeezed. */
+.pos-app .pos-topbar {
+	flex-wrap: wrap;
+}
+
+.pos-app .pos-brand {
+	order: 1;
+}
+
+.pos-app .pos-topbar-center {
+	flex: 1 1 260px;
+	min-width: 260px;
+	order: 2;
+}
+
+.pos-app .pos-topbar-actions {
+	flex: 0 0 100%;
+	flex-wrap: wrap;
+	gap: 8px;
+	order: 3;
+}
+
+.pos-app .pos-sales-tab {
+	align-items: center;
+	background: linear-gradient(180deg, #22c55e 0%, #15803d 100%);
+	border: 1px solid #166534;
+	border-radius: 10px;
+	color: #fff !important;
+	display: inline-flex;
+	font-size: 15px;
+	font-weight: 700;
+	gap: 8px;
+	padding: 12px 18px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-action-tiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.pos-app .pos-tile {
+	align-items: center;
+	background: linear-gradient(180deg, #2f80ed 0%, #1d6fd0 100%);
+	border: 1px solid #1b5fb4;
+	border-radius: 10px;
+	color: #fff !important;
+	display: inline-flex;
+	flex-direction: column;
+	font-size: 11px;
+	font-weight: 600;
+	gap: 5px;
+	justify-content: center;
+	line-height: 1.1;
+	min-height: 54px;
+	min-width: 82px;
+	padding: 8px 10px;
+	text-align: center;
+	text-decoration: none;
+}
+
+.pos-app .pos-tile i {
+	font-size: 18px;
+}
+
+.pos-app .pos-tile:hover {
+	background: linear-gradient(180deg, #1d6fd0 0%, #1558a8 100%);
+	color: #fff !important;
+}
+
+.pos-app .pos-tile.disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Clear section separators inside the cart column. */
+.pos-app .pos-cart-bottom {
+	border-top: 1px solid var(--line);
+}
+
+/* Cart table gets a tall, roomy area of its own — Shamel-style columns. */
+.pos-app .pos-workspace {
+	grid-template-columns: 460px minmax(0, 1fr) 140px;
+}
+
+.pos-app .pos-cart-scroll {
+	min-height: 330px;
+}
+
+.pos-app .pos-cart-bottom {
+	max-height: 38%;
+}
+
+.pos-app .pos-cart-table thead th {
+	background: #e8f5ee;
+	color: #14532d;
+	font-size: 12px;
+	padding: 10px 8px;
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+
+.pos-app .pos-cart-table tbody td {
+	font-size: 13px;
+	padding: 9px 7px;
+	vertical-align: middle;
+}
+
+.pos-app .pos-cart-table .ci-idx {
+	color: #64748b;
+	text-align: center;
+	width: 26px;
+}
+
+.pos-app .pos-cart-table .ci-item .ci-name {
+	display: block;
+	font-weight: 700;
+}
+
+.pos-app .pos-cart-table .ci-item .ci-meta {
+	color: #94a3b8;
+	display: block;
+	font-size: 10px;
+	margin-top: 2px;
+}
+
+.pos-app .pos-cart-table .ci-inline {
+	align-items: center;
+	display: flex;
+	gap: 3px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-cart-table .ci-qty {
+	text-align: center;
+	width: 44px;
+}
+
+.pos-app .pos-cart-table .ci-price-in {
+	width: 58px;
+}
+
+.pos-app .pos-cart-table .ci-disc {
+	width: 40px;
+}
+
+.pos-app .pos-cart-table .ci-price-unit {
+	color: #64748b;
+}
+
+.pos-app .pos-cart-table .ci-del-cell {
+	text-align: center;
+	width: 30px;
+}
+
+.pos-app .pos-cart-bottom .pos-actions {
+	background: var(--surface);
+	bottom: 0;
+	padding-top: 6px;
+	position: sticky;
+}
+
+/* ==========================================================================
+   Full-width cart table + lower working row (Shamel-style organisation).
+   ========================================================================== */
+.pos-app .pos-workspace {
+	grid-template-columns: minmax(0, 1fr);
+	grid-template-rows: minmax(230px, 42%) minmax(0, 1fr);
+}
+
+.pos-app .pos-cart-band {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+	display: flex;
+	flex-direction: column;
+	grid-column: 1;
+	grid-row: 1;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pos-app .pos-cart-band .pos-cart-scroll {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.pos-app .pos-cart-band .pos-totals {
+	border-top: 1px solid var(--line);
+	flex: 0 0 auto;
+}
+
+.pos-app .pos-lower {
+	display: grid;
+	gap: 12px;
+	grid-column: 1;
+	grid-row: 2;
+	grid-template-columns: 140px minmax(0, 1fr) 420px;
+	min-height: 0;
+}
+
+.pos-app .pos-lower .pos-cats-col {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.pos-app .pos-lower .pos-center-col {
+	grid-column: 2;
+	grid-row: 1;
+}
+
+.pos-app .pos-lower .pos-pay-col {
+	grid-column: 3;
+	grid-row: 1;
+}
+
+.pos-app .pos-pay-col {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.pos-app .pos-pay-col .pos-pay,
+.pos-app .pos-pay-col .pos-settings {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 14px;
+}
+
+.pos-app .pos-pay-col .pos-pay {
+	padding: 12px;
+}
+
 .pos-app:has(.pos-workspace) {
 	height: 100vh;
 	min-height: 0;
@@ -2694,13 +3062,15 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 .pos-app .pos-cart-scroll {
 	flex: 1 1 0%;
 	max-height: none;
-	min-height: 0;
-	overflow-y: auto;
+	min-height: 190px;
+	overflow: auto;
 }
 
 .pos-app .pos-cart-bottom {
 	border-top: 1px solid var(--line);
-	flex: 0 0 auto;
+	flex: 0 1 auto;
+	max-height: 52%;
+	overflow-y: auto;
 }
 
 .pos-app .pos-center-col {
@@ -2964,4 +3334,126 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 	.pos-app .pos-workspace {
 		grid-template-columns: 120px minmax(0, 1fr) 340px;
 	}
+}
+
+/* Final authority: keep the cart table full-width at every viewport. */
+.pos-app .pos-workspace {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 1200px) {
+	.pos-app .pos-lower {
+		grid-template-columns: 120px minmax(0, 1fr) 380px;
+	}
+
+	.pos-app .pos-cart-band .pos-totals {
+		gap: 8px;
+	}
+}
+
+/* Totals become a compact horizontal strip under the full-width table. */
+.pos-app .pos-cart-band .pos-totals {
+	align-items: center;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 14px;
+	padding: 8px 14px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row,
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	gap: 10px;
+	height: auto;
+	line-height: 1.4;
+	min-height: 0;
+	padding: 4px 10px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	font-size: 18px;
+}
+
+.pos-app .pos-workspace {
+	grid-template-rows: minmax(320px, 64%) minmax(0, 1fr);
+}
+
+/* Products and numpad share the lower row side by side, both full height. */
+.pos-app .pos-center-col {
+	display: grid;
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) 340px;
+	grid-template-rows: minmax(0, 1fr);
+}
+
+.pos-app .pos-top-zone {
+	grid-column: 1;
+	grid-row: 1;
+}
+
+.pos-app .pos-bottom-zone {
+	flex: none;
+	grid-column: 2;
+	grid-row: 1;
+	grid-template-columns: minmax(0, 1fr);
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pos-app .pos-top-zone .pos-card {
+	min-height: 92px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc {
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button {
+	min-height: 38px;
+}
+
+.pos-app .pos-cart-band .pos-cart-top {
+	align-items: center;
+	display: flex;
+	gap: 16px;
+	padding: 8px 12px;
+}
+
+.pos-app .pos-cart-band .pos-cart-top .pos-side-head {
+	flex: 0 0 auto;
+	padding: 0;
+}
+
+.pos-app .pos-cart-band .pos-cart-top .pos-search {
+	flex: 1 1 auto;
+}
+
+.pos-app .pos-cart-band .pos-totals .row {
+	flex-wrap: nowrap;
+	height: 32px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	font-size: 15px;
+	height: 40px;
+	width: 240px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand > * {
+	flex: 0 1 auto;
+	min-width: 0;
+}
+
+.pos-app .pos-cart-table .ci-price-cell {
+	min-width: 118px;
+}
+
+.pos-app .pos-cart-table .ci-price-cell .ci-disc-line {
+	margin-top: 3px;
+}
+
+.pos-app .pos-cart-table .ci-disc-unit {
+	color: #b45309;
+	font-size: 10px;
 }

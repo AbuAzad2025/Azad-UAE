@@ -44,29 +44,31 @@
     </div>
 
     <div class="pos-topbar-actions">
+      <div class="pos-sales-tab active" aria-current="page"><i class="fas fa-cash-register" aria-hidden="true"></i> {{ _('مبيعات') }}</div>
+      <div class="pos-action-tiles" role="toolbar" aria-label="{{ _('إجراءات نقطة البيع') }}">
+        <button id="stockLookupBtn" type="button" class="pos-tile" title="{{ _('استعلام المخزون') }}"><i class="fas fa-warehouse" aria-hidden="true"></i><span>{{ _('استعلام المخزون') }}</span></button>
+        <button id="returnsBtn" type="button" class="pos-tile" title="{{ _('المرتجعات') }}"><i class="fas fa-undo" aria-hidden="true"></i><span>{{ _('المرتجعات') }}</span></button>
+        <button id="cashMovementBtn" type="button" class="pos-tile" title="{{ _('حركات الدرج') }}"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span>{{ _('حركات الدرج') }}</span></button>
+        <button id="sessionReportBtn" type="button" class="pos-tile" title="{{ _('تقرير الجلسة') }}"><i class="fas fa-chart-pie" aria-hidden="true"></i><span>{{ _('تقرير الجلسة') }}</span></button>
+        <button id="customerDisplayBtn" type="button" class="pos-tile disabled" title="{{ _('شاشة الزبون') }}" aria-disabled="true"><i class="fas fa-desktop" aria-hidden="true"></i><span>{{ _('شاشة الزبون') }}</span></button>
+        <button id="posTablesBtn" type="button" class="pos-tile d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair" aria-hidden="true"></i><span>{{ _('إدارة الطاولات') }}</span></button>
+        <button id="posHoldBtn" type="button" class="pos-tile d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause" aria-hidden="true"></i><span>{{ _('تعليق الفاتورة') }}</span></button>
+        <a href="{{ url_for('pos.held_carts') }}" class="pos-tile" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i><span>{{ _('السلال المعلّقة') }}</span></a>
+        <!-- grid POS removed: unified single screen -->
+        <a href="{{ url_for('sales.index') }}" class="pos-tile" title="{{ _('سجل الفواتير') }}"><i class="fas fa-file-invoice" aria-hidden="true"></i><span>{{ _('سجل الفواتير') }}</span></a>
+        <a href="{{ url_for('main.dashboard') }}" class="pos-tile" title="{{ _('الرئيسية') }}"><i class="fas fa-home" aria-hidden="true"></i><span>{{ _('الرئيسية') }}</span></a>
+      </div>
       <span id="hardwareStatusBadge" class="pos-hw-badge" data-state="unknown" title="{{ _('حالة الأجهزة') }}"><i class="fas fa-plug" aria-hidden="true"></i></span>
-      <button id="stockLookupBtn" type="button" class="pos-icon-btn" title="{{ _('استعلام المخزون') }}"><i class="fas fa-warehouse" aria-hidden="true"></i></button>
-      <button id="returnsBtn" type="button" class="pos-icon-btn" title="{{ _('المرتجعات') }}"><i class="fas fa-undo" aria-hidden="true"></i></button>
-      <button id="cashMovementBtn" type="button" class="pos-icon-btn" title="{{ _('حركات الدرج') }}"><i class="fas fa-exchange-alt" aria-hidden="true"></i></button>
-      <button id="sessionReportBtn" type="button" class="pos-icon-btn" title="{{ _('تقرير الجلسة') }}"><i class="fas fa-chart-pie" aria-hidden="true"></i></button>
-      <button id="customerDisplayBtn" type="button" class="pos-icon-btn disabled" title="{{ _('شاشة الزبون') }}" aria-disabled="true"><i class="fas fa-desktop" aria-hidden="true"></i></button>
-      <button id="posTablesBtn" type="button" class="pos-icon-btn d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair" aria-hidden="true"></i></button>
-      <button id="posHoldBtn" type="button" class="pos-icon-btn d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause" aria-hidden="true"></i></button>
-      <a href="{{ url_for('pos.held_carts') }}" class="pos-icon-btn" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i></a>
-      <!-- grid POS removed: unified single screen -->
-      <a href="{{ url_for('sales.index') }}" class="pos-icon-btn" title="{{ _('سجل الفواتير') }}"><i class="fas fa-file-invoice" aria-hidden="true"></i></a>
-      <a href="{{ url_for('main.dashboard') }}" class="pos-icon-btn" title="{{ _('الرئيسية') }}"><i class="fas fa-home" aria-hidden="true"></i></a>
     </div>
   </div>
 
   <div id="posAlert" class="alert d-none m-3" aria-live="polite"></div>
 
-  <!-- ===== Main workspace: locked viewport, 3 columns ===== -->
+  <!-- ===== Main workspace: full-width cart table, then the working row ===== -->
   <div class="pos-workspace">
 
-    <!-- LEFT: cart & checkout only -->
-    <div class="pos-cart-col">
-
+    <!-- FULL WIDTH: the sale basket gets a tall, readable table of its own -->
+    <div class="pos-cart-band">
       <div class="pos-cart-top">
         <div class="pos-side-head">
           <h3>{{ t('Cart') }}</h3>
@@ -94,18 +96,16 @@
               <th scope="col">#</th>
               <th scope="col">{{ _('الصنف') }}</th>
               <th scope="col">{{ _('الكمية') }}</th>
-              <th scope="col">{{ _('سعر الوحدة') }}</th>
-              <th scope="col">{{ _('الإجمالي') }}</th>
+              <th scope="col">{{ _('السعر') }}</th>
               <th scope="col"><span class="sr-only">{{ _('حذف') }}</span></th>
             </tr>
           </thead>
           <tbody id="cartBody">
-            <tr id="cartEmptyRow"><td colspan="6" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
+            <tr id="cartEmptyRow"><td colspan="5" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="pos-cart-bottom">
       <!-- totals -->
       <div class="pos-totals">
         <div class="row"><span>{{ _('المجموع') }}</span><b id="kpiSubtotal">0.00</b></div>
@@ -114,8 +114,12 @@
         <div class="row grand"><span>الباقي للعميل</span><span class="amt"><span id="kpiChange">0.00</span></span></div>
       </div>
       <div id="upsellBar" class="pos-upsell-bar d-none" role="status" aria-live="polite"></div>
+    </div><!-- /pos-cart-band -->
 
-      <!-- payment -->
+    <div class="pos-lower">
+
+      <!-- LEFT: payment + checkout + invoice settings -->
+      <div class="pos-pay-col">
       <div class="pos-pay">
         <label class="small text-muted">{{ _('طريقة الدفع') }}</label>
         <div class="pos-pay-method" id="posPayMethod">
@@ -184,10 +188,65 @@
           <div class="small text-muted mt-1">اختصارات: <span class="kbd">F2</span> بحث · <span class="kbd">F4</span> عميل · <span class="kbd">F8</span> بيع+طباعة</div>
         </div>
       </div>
-      </div><!-- /pos-cart-bottom -->
-    </div><!-- /pos-cart-col -->
 
-    <!-- CENTER: products on top, numpad + order settings underneath -->
+      <!-- invoice settings moved here so the cart table owns the full width -->
+      <div class="pos-settings">
+        <button class="pos-settings-toggle" type="button" data-toggle="collapse" data-target="#posSettingsBody" aria-expanded="false">
+          <span><i class="fas fa-sliders-h mr-2" aria-hidden="true"></i>{{ _('إعدادات الفاتورة') }}</span>
+          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="collapse" id="posSettingsBody">
+          <div class="pos-settings-body">
+            <div class="field">
+              <label for="warehouseId">{{ _('المستودع') }}</label>
+              <select id="warehouseId" class="form-control">
+                <option value="">{{ _('تلقائي') }} ({{ _('الرئيسي') }})</option>
+                {% for w in warehouses %}
+                <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} ({{ _('الرئيسي') }}){% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="row2">
+              <div class="field">
+                <label>{{ _('العملة') }}
+                  {% from 'macros/currency_options.html' import currency_select %}
+                  {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
+                </label>
+              </div>
+              <div class="field">
+                <label for="exchangeRate">{{ _('سعر الصرف') }}
+                  <button id="refreshRateBtn" type="button" class="pos-rate-refresh" title="{{ _('تحديث السعر من الإنترنت') }}"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
+                  <span id="exchangeRateSource" class="pos-rate-source" data-source="default">{{ _('افتراضي') }}</span>
+                </label>
+                <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1">
+                <small id="exchangeRateNote" class="text-muted small"></small>
+              </div>
+            </div>
+            <div id="pos-tax-row" class="row2{% if not tenant_enable_tax %} d-none{% endif %}">
+              <div class="field">
+                <label for="taxRate">{{ _('الضريبة') }} %</label>
+                {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
+                <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}">
+              </div>
+              <div class="field">
+                <label for="shippingCost">{{ _('الشحن') }}</label>
+                <input id="shippingCost" type="number" step="0.01" class="form-control" value="0">
+              </div>
+            </div>
+            <div class="field">
+              <label for="discountAmount">{{ _('خصم عام') }}</label>
+              <input id="discountAmount" type="number" step="0.01" class="form-control" value="0">
+            </div>
+            <div class="field">
+              <label for="orderNote">{{ _('ملاحظة الطلب') }}</label>
+              <textarea id="orderNote" class="form-control" rows="2" placeholder="{{ _('ملاحظات على الفاتورة (اختياري)') }}"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /pos-pay-col -->
+
+    <!-- CENTER: products on top, numpad underneath -->
     <div class="pos-center-col">
       <div class="pos-top-zone">
         <div class="pos-search-row">
@@ -240,61 +299,6 @@
           </div>
         </div>
 
-        <!-- invoice settings / quick info -->
-        <div class="pos-settings">
-          <button class="pos-settings-toggle" type="button" data-toggle="collapse" data-target="#posSettingsBody" aria-expanded="false">
-            <span><i class="fas fa-sliders-h mr-2" aria-hidden="true"></i>{{ _('إعدادات الفاتورة') }}</span>
-            <i class="fas fa-chevron-down" aria-hidden="true"></i>
-          </button>
-          <div class="collapse" id="posSettingsBody">
-            <div class="pos-settings-body">
-              <div class="field">
-                <label for="warehouseId">{{ _('المستودع') }}</label>
-                <select id="warehouseId" class="form-control">
-                  <option value="">{{ _('تلقائي') }} ({{ _('الرئيسي') }})</option>
-                  {% for w in warehouses %}
-                  <option value="{{ w.id }}">{{ w.name_ar or w.name }}{% if w.is_main %} ({{ _('الرئيسي') }}){% endif %}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="row2">
-                <div class="field">
-                  <label>{{ _('العملة') }}
-                    {% from 'macros/currency_options.html' import currency_select %}
-                    {{ currency_select(name='currency', id='currency', default_code=tenant_default_currency) }}
-                  </label>
-                </div>
-                <div class="field">
-                  <label for="exchangeRate">{{ _('سعر الصرف') }}
-                    <button id="refreshRateBtn" type="button" class="pos-rate-refresh" title="{{ _('تحديث السعر من الإنترنت') }}"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
-                    <span id="exchangeRateSource" class="pos-rate-source" data-source="default">{{ _('افتراضي') }}</span>
-                  </label>
-                  <input id="exchangeRate" type="number" step="0.000001" class="form-control" value="1">
-                  <small id="exchangeRateNote" class="text-muted small"></small>
-                </div>
-              </div>
-              <div id="pos-tax-row" class="row2{% if not tenant_enable_tax %} d-none{% endif %}">
-                <div class="field">
-                  <label for="taxRate">{{ _('الضريبة') }} %</label>
-                  {% set _default_tax_rate = (tenant_default_tax_rate if tenant_enable_tax else 0) %}
-                  <input id="taxRate" type="number" step="0.01" class="form-control" value="{{ _default_tax_rate }}">
-                </div>
-                <div class="field">
-                  <label for="shippingCost">{{ _('الشحن') }}</label>
-                  <input id="shippingCost" type="number" step="0.01" class="form-control" value="0">
-                </div>
-              </div>
-              <div class="field">
-                <label for="discountAmount">{{ _('خصم عام') }}</label>
-                <input id="discountAmount" type="number" step="0.01" class="form-control" value="0">
-              </div>
-              <div class="field">
-                <label for="orderNote">{{ _('ملاحظة الطلب') }}</label>
-                <textarea id="orderNote" class="form-control" rows="2" placeholder="{{ _('ملاحظات على الفاتورة (اختياري)') }}"></textarea>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div><!-- /pos-center-col -->
 
@@ -308,6 +312,8 @@
         <div class="ps-row ps-out"><span class="ps-dot"></span><span>{{ _('صنف نافد') }}</span><b id="stockOut">—</b></div>
       </div>
     </div>
+
+    </div><!-- /pos-lower -->
 
   </div><!-- /pos-workspace -->
 
