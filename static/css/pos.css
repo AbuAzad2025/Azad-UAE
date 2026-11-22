@@ -3445,15 +3445,365 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 	min-width: 0;
 }
 
-.pos-app .pos-cart-table .ci-price-cell {
-	min-width: 118px;
+/* ==========================================================================
+   FINAL AUTHORITY — fit everything on one screen, no scrollbars anywhere.
+   Compact chrome, generous table, full-height lower working row.
+   ========================================================================== */
+.pos-app .pos-topbar {
+	flex-wrap: nowrap;
+	gap: 10px;
+	padding: 6px 12px;
 }
 
-.pos-app .pos-cart-table .ci-price-cell .ci-disc-line {
-	margin-top: 3px;
+.pos-app .pos-topbar-actions {
+	flex: 0 1 auto;
+}
+
+.pos-app .pos-brand {
+	font-size: 14px;
+}
+
+.pos-app .pos-brand .pos-logo,
+.pos-app .pos-brand h1,
+.pos-app .pos-brand h2 {
+	font-size: 17px;
+}
+
+.pos-app .pos-sales-tab {
+	font-size: 13px;
+	padding: 8px 12px;
+}
+
+.pos-app .pos-tile {
+	font-size: 9px;
+	gap: 3px;
+	min-height: 42px;
+	min-width: 64px;
+	padding: 4px 6px;
+}
+
+.pos-app .pos-tile i {
+	font-size: 14px;
+}
+
+.pos-app .pos-topbar-center #posSessionBar,
+.pos-app .pos-topbar-center #posSessionRequired {
+	font-size: 11px;
+	gap: 8px;
+}
+
+.pos-app .pos-topbar-center .info {
+	font-size: 11px;
+	gap: 8px;
+}
+
+.pos-app .footer {
+	padding: 4px 12px;
+}
+
+.pos-app .pos-footer {
+	padding: 2px 12px;
+}
+
+.pos-app .pos-footer-inner {
+	font-size: 11px;
+}
+
+.pos-app .pos-workspace {
+	grid-template-rows: minmax(280px, 45%) minmax(0, 1fr);
+	overflow: hidden;
+}
+
+.pos-app .pos-cart-band {
+	overflow: hidden;
+}
+
+.pos-app .pos-cart-band .pos-cart-top {
+	padding: 4px 10px;
+}
+
+.pos-app .pos-cart-band .pos-cart-top .pos-side-head h3 {
+	font-size: 14px;
+}
+
+.pos-app .pos-cart-band .pos-cart-scroll {
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pos-app .pos-cart-table thead th {
+	padding: 6px 8px;
+}
+
+.pos-app .pos-cart-table tbody td {
+	padding: 0 6px;
+}
+
+.pos-app .pos-cart-table .ci-inline input,
+.pos-app .pos-cart-table .ci-inline button {
+	height: 20px;
+	min-height: 20px;
+	padding: 1px 4px;
+}
+
+.pos-app .pos-cart-table .ci-qty {
+	width: 36px;
+}
+
+.pos-app .pos-cart-table .ci-price-in {
+	width: 42px;
+}
+
+.pos-app .pos-cart-table .ci-disc {
+	width: 30px;
+}
+
+.pos-app .pos-cart-table .ci-item .ci-meta {
+	font-size: 9px;
+}
+
+.pos-app .pos-cart-band .pos-totals {
+	gap: 10px;
+	padding: 5px 12px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row,
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	font-size: 13px;
+	height: 30px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	font-size: 14px;
+	width: 220px;
+}
+
+.pos-app .pos-lower {
+	gap: 10px;
+	overflow: hidden;
+}
+
+.pos-app .pos-pay-col {
+	gap: 6px;
+	overflow: hidden;
+}
+
+.pos-app .pos-pay-col .pos-pay {
+	display: grid;
+	gap: 4px 8px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	padding: 8px;
+}
+
+.pos-app .pos-pay-col .pos-pay > label.small,
+.pos-app .pos-pay-col .pos-pay > .pos-pay-method,
+.pos-app .pos-pay-col .pos-pay > .pos-mixed-btn,
+.pos-app .pos-pay-col .pos-pay > .pos-actions,
+.pos-app .pos-pay-col .pos-pay > #splitTenderBox {
+	grid-column: 1 / -1;
+}
+
+.pos-app .pos-pay-method .pm {
+	font-size: 11px;
+	min-height: 44px;
+	padding: 6px 4px;
+}
+
+.pos-app .pos-pay-col .pos-pay .field,
+.pos-app .pos-pay-col .pos-pay .ref-field {
+	margin: 0;
+}
+
+.pos-app .pos-pay-col .pos-pay .form-control,
+.pos-app .pos-pay-col .pos-pay input {
+	padding: 4px 8px;
+}
+
+.pos-app .pos-pay-col .pos-btn {
+	min-height: 36px;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-pay-col .pos-settings .pos-settings-toggle {
+	font-size: 12px;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-center-col {
+	overflow: hidden;
+}
+
+.pos-app .pos-top-zone {
+	padding: 8px;
+}
+
+.pos-app .pos-top-zone .pos-card {
+	min-height: 80px;
+	padding: 6px;
+}
+
+.pos-app .pos-top-zone .pos-card .icon {
+	font-size: 18px;
+}
+
+.pos-app .pos-top-zone .pos-card .price {
+	font-size: 11px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc {
+	overflow: hidden;
+	padding: 6px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-display {
+	font-size: 18px;
+	padding: 4px 8px;
+}
+
+.pos-app .pos-fast-cash {
+	padding: 4px 0;
+}
+
+.pos-app .pos-fast-key {
+	font-size: 11px;
+	min-width: 44px;
+	padding: 4px 6px;
+}
+
+.pos-app .pos-calc-grid button {
+	font-size: 15px;
+	min-height: 42px;
+}
+
+.pos-app .pos-cats-col {
+	overflow: hidden;
+}
+
+.pos-app .pos-tile {
+	font-size: 8px;
+	min-width: 44px;
+	width: 44px;
+}
+
+.pos-app .pos-tile span {
+	line-height: 1.1;
+	white-space: normal;
+}
+
+.pos-app .pos-topbar-center {
+	flex: 0 0 390px;
+	min-width: 390px;
+}
+
+.pos-app .pos-topbar-center {
+	overflow: hidden;
+}
+
+.pos-app .pos-topbar-center #posSessionBar,
+.pos-app .pos-topbar-center #posSessionRequired,
+.pos-app .pos-topbar-center #posSessionBar .info,
+.pos-app .pos-topbar-center #posSessionRequired .info,
+.pos-app .pos-topbar-center .info {
+	flex-wrap: wrap;
+	font-size: 10px;
+	gap: 4px;
+	white-space: normal;
+}
+
+.pos-app .pos-topbar-actions {
+	flex-wrap: nowrap;
+}
+
+.pos-app .pos-topbar .pos-chip {
+	font-size: 11px;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-cart-table .ci-item .ci-meta {
+	display: inline;
+	margin-inline-start: 6px;
+}
+
+@media (max-width: 1200px) {
+	.pos-app .pos-topbar {
+		flex-wrap: wrap;
+	}
+
+	.pos-app .pos-topbar-actions {
+		flex: 0 0 100%;
+	}
+
+	.pos-app .pos-lower {
+		grid-template-columns: 100px minmax(0, 1fr) 340px;
+	}
+}
+
+.pos-app .pos-cart-table .ci-price-cell {
+	min-width: 130px;
+}
+
+.pos-app .pos-cart-table .ci-price-in {
+	width: 48px;
+}
+
+.pos-app .pos-cart-table .ci-disc {
+	width: 34px;
 }
 
 .pos-app .pos-cart-table .ci-disc-unit {
 	color: #b45309;
 	font-size: 10px;
+}
+
+/* Dense payment column — every control stays visible without scrolling. */
+.pos-app .pos-pay-col .pos-pay > label.small {
+	font-size: 11px;
+	margin: 0;
+}
+
+.pos-app .pos-pay-method {
+	display: grid;
+	gap: 4px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pos-app .pos-pay-method .pm {
+	min-height: 36px;
+}
+
+.pos-app .pos-pay-col .pos-pay .field,
+.pos-app .pos-pay-col .pos-pay .ref-field {
+	align-items: center;
+	display: flex;
+	gap: 6px;
+	margin: 0;
+}
+
+.pos-app .pos-pay-col .pos-pay .field > label,
+.pos-app .pos-pay-col .pos-pay .ref-field > label {
+	font-size: 11px;
+	margin: 0;
+	white-space: nowrap;
+}
+
+.pos-app .pos-pay-col .pos-pay .form-control,
+.pos-app .pos-pay-col .pos-pay input {
+	font-size: 12px;
+	padding: 3px 6px;
+}
+
+.pos-app .pos-pay-col .pos-mixed-btn {
+	min-height: 28px;
+}
+
+.pos-app .pos-pay-col .pos-btn {
+	min-height: 32px;
+}
+
+.pos-app .pos-pay-col .pos-actions .small {
+	display: none;
+}
+
+.pos-app .pos-cart-table thead th {
+	padding: 3px 8px;
 }

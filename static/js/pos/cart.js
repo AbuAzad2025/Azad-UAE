@@ -259,10 +259,8 @@ const renderCart = async () => {
                     <div class="ci-inline">
                         <input class="ci-price-in" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}" title="سعر" aria-label="السعر">
                         <span class="ci-price-unit">${sym}</span>
-                    </div>
-                    <div class="ci-inline ci-disc-line">
                         <input class="ci-disc" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}" title="خصم %" aria-label="خصم">
-                        <span class="ci-disc-unit">% خصم</span>
+                        <span class="ci-disc-unit">%</span>
                     </div>
                 </td>
                 <td class="ci-del-cell">
