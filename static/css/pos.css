@@ -4190,38 +4190,38 @@ body.pos-layout .pos-page .form-check-label {
 	width: 100%;
 }
 
+/* Percentages sum to 100% so the table stays full width while no single
+   column (item or barcode) hogs the extra space on wide screens. */
 .pos-app .pos-cart-table .pos-col-idx {
-	width: 40px;
+	width: 3%;
 }
 
-/* Keep the item column compact; the barcode column absorbs the remaining
-   width so the table still fills the workspace on wide screens. */
 .pos-app .pos-cart-table .pos-col-item {
-	width: clamp(220px, 22vw, 330px);
-}
-
-.pos-app .pos-cart-table .pos-col-qty {
-	width: 140px;
-}
-
-.pos-app .pos-cart-table .pos-col-price {
-	width: 110px;
-}
-
-.pos-app .pos-cart-table .pos-col-disc {
-	width: 90px;
-}
-
-.pos-app .pos-cart-table .pos-col-del {
-	width: 50px;
+	width: 20%;
 }
 
 .pos-app .pos-cart-table .pos-col-barcode {
-	width: auto;
+	width: 21%;
+}
+
+.pos-app .pos-cart-table .pos-col-qty {
+	width: 14%;
+}
+
+.pos-app .pos-cart-table .pos-col-price {
+	width: 11%;
+}
+
+.pos-app .pos-cart-table .pos-col-disc {
+	width: 8%;
 }
 
 .pos-app .pos-cart-table .pos-col-total {
-	width: 110px;
+	width: 18%;
+}
+
+.pos-app .pos-cart-table .pos-col-del {
+	width: 5%;
 }
 
 .pos-app .pos-cart-table .ci-barcode,
