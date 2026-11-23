@@ -18,11 +18,21 @@ def pos_client(app_factory, bypass_permission_auth):
 
 
 def test_quick_customer_create(pos_client):
-    customer = MagicMock(id=42, phone="", customer_type="individual")
+    customer = MagicMock(
+        id=42,
+        phone="",
+        customer_type="individual",
+        email=None,
+        name_ar="",
+        preferred_currency="AED",
+    )
     customer.name = "New Customer"
     with _pos_enabled_patches():
         with (
             patch("routes.pos.atomic_transaction"),
+            patch("utils.tenant_limits.check_customers_limit"),
+            patch("utils.currency_utils.resolve_default_currency", return_value="AED"),
+            patch("services.logging_core.LoggingCore.log_audit"),
             patch("services.customer_service.CustomerService.create_customer", return_value=customer),
         ):
             resp = pos_client.post("/pos/api/customers/create", json={"name": "New Customer"})
