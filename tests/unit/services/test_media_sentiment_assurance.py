@@ -38,7 +38,7 @@ class TestProductImageService:
 
         from services.product_image_service import ProductImageService
 
-        rows = ProductImageService.get_images_for_product(5, image_type="gallery")
+        rows = ProductImageService.get_images_for_product(5, image_type="gallery", tenant_id=2)
         assert len(rows) == 1
         assert mock_q.filter_by.call_count >= 2
 

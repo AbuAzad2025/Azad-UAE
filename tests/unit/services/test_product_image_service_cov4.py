@@ -21,7 +21,7 @@ def test_upload_image(app, db_session, sample_product):
     f = _File()
     with app.app_context(), patch("os.makedirs"):
         img = ProductImageService.upload_image(sample_product, f, "main", caption_ar="ع", caption_en="en")
-        assert img.image_url.startswith("/static/uploads/products/")
+        assert img.image_url.startswith("/static/uploads/tenants/")
         assert img.image_url.endswith(".jpg")
         assert f.saved_to is not None
     db_session.flush()
@@ -33,7 +33,7 @@ def test_get_images_filter(app, db_session, sample_product):
         f = _File()
         img = ProductImageService.upload_image(sample_product, f, "main", caption_ar="ع", caption_en="en")
         db_session.flush()
-        assert img.image_url.startswith("/static/uploads/products/")
+        assert img.image_url.startswith("/static/uploads/tenants/")
         assert img.image_url.endswith(".jpg")
         assert f.saved_to is not None
         assert ProductImageService.get_images_for_product(sample_product.id) != []
