@@ -38,7 +38,11 @@ function _loadTerminalSdk() {
 async function _postJson(url, body) {
 	const res = await fetch(url, {
 		method: "POST",
-		headers: { "Content-Type": "application/json" },
+		headers: {
+			"Content-Type": "application/json",
+			"X-CSRFToken":
+				document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "",
+		},
 		body: JSON.stringify(body || {}),
 	});
 	const data = await res.json().catch(() => ({}));

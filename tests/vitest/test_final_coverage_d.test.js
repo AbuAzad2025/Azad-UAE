@@ -481,6 +481,7 @@ describe("pos/index — uncovered interaction branches", () => {
               success: true,
               sale_id: 913,
               data: {
+                sale_id: 913,
                 sale_number: "S-2024-77",
                 view_url: "/v",
                 print_url: "/p",

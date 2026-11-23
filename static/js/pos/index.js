@@ -371,7 +371,9 @@ const checkout = async (autoPrint) => {
 		lines: state.cart.map((it) => ({
 			product_id: it.id,
 			quantity: it.qty,
-			unit_price: it.price,
+			// The backend validates against base-currency standard prices; the
+			// displayed `price` is FX-converted, so post the original base price.
+			unit_price: it.basePrice ?? it.price,
 			discount_percent: it.discountPercent,
 		})),
 	};
@@ -446,7 +448,7 @@ const checkout = async (autoPrint) => {
 			window.open(d.print_url, "_blank", "noopener");
 		}
 		await resetAfterSale();
-		if (state.selectedTable && j.sale_id) {
+		if (state.selectedTable && d.sale_id) {
 			try {
 				await fetch(`/pos/api/tables/${state.selectedTable.id}/assign`, {
 					method: "POST",
@@ -455,7 +457,7 @@ const checkout = async (autoPrint) => {
 						"X-CSRFToken": csrf,
 					},
 					credentials: "same-origin",
-					body: JSON.stringify({ sale_id: j.sale_id }),
+					body: JSON.stringify({ sale_id: d.sale_id }),
 				});
 			} catch (_) {}
 			state.selectedTable = null;

@@ -3804,6 +3804,19 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 	display: none;
 }
 
+.pos-app {
+	position: relative;
+}
+
+.pos-app #posAlert {
+	left: 16px;
+	margin: 0;
+	position: absolute;
+	right: 16px;
+	top: 116px;
+	z-index: 80;
+}
+
 .pos-app .pos-cart-table thead th {
 	padding: 3px 8px;
 }
@@ -3862,16 +3875,58 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 /* Quick-cash keys appear once a cart has items — fit them on one line. */
 .pos-app .pos-fast-key {
 	font-size: 9px;
-	min-width: 36px;
-	padding: 2px 3px;
+	min-width: 30px;
+	padding: 2px 2px;
 }
 
 .pos-app .pos-fast-cash {
 	flex-wrap: nowrap;
-	gap: 4px;
+	gap: 3px;
 }
 
 .pos-app .pos-calc-grid button {
-	min-height: 36px;
-	padding: 2px;
+	min-height: 34px;
+	padding: 1px 2px;
 }
+
+/* Invoice settings expand as a floating panel so the locked POS viewport
+   never grows and no scrollbar appears on the main screen. */
+.pos-app .pos-pay-col .pos-settings {
+	position: relative;
+}
+
+.pos-app .pos-pay-col .pos-settings .collapse.show {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 12px;
+	bottom: calc(100% + 6px);
+	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+	left: 0;
+	padding: 10px;
+	position: absolute;
+	right: 0;
+	z-index: 60;
+}
+
+.pos-app .pos-pay-col .pos-settings-body {
+	display: grid;
+	gap: 4px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pos-app .pos-pay-col .pos-settings-body label {
+	font-size: 10px;
+	margin: 0;
+	white-space: nowrap;
+}
+
+.pos-app .pos-pay-col .pos-settings-body input,
+.pos-app .pos-pay-col .pos-settings-body select {
+	height: 28px;
+	padding: 3px 6px;
+}
+
+.pos-app .pos-pay-col .pos-settings-body textarea {
+	min-height: 62px;
+}
+
