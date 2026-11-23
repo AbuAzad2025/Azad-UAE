@@ -3807,3 +3807,71 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 .pos-app .pos-cart-table thead th {
 	padding: 3px 8px;
 }
+
+/* Polish pass — use the available space and improve readability. */
+.pos-app .pos-cart-table #cartBody tr:nth-child(odd) {
+	background: #f8fafc;
+}
+
+.pos-app .pos-cart-table .ci-item .ci-name {
+	font-size: 12px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	border-color: #86efac;
+	font-weight: 700;
+}
+
+.pos-app .pos-top-zone .pos-products {
+	align-content: start;
+}
+
+.pos-app .pos-top-zone .pos-card {
+	min-height: 232px;
+	padding: 12px;
+}
+
+.pos-app .pos-top-zone .pos-card .icon {
+	font-size: 32px;
+	margin-bottom: 6px;
+}
+
+.pos-app .pos-top-zone .pos-card .name {
+	font-size: 14px;
+}
+
+.pos-app .pos-top-zone .pos-card .price {
+	font-size: 13px;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-cats-col {
+	background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.pos-app .pos-calc-grid button {
+	min-height: 40px;
+}
+
+.pos-app .pos-topbar-center #posSessionBar,
+.pos-app .pos-topbar-center #posSessionRequired {
+	font-size: 11px;
+	gap: 6px;
+}
+
+/* Quick-cash keys appear once a cart has items — fit them on one line. */
+.pos-app .pos-fast-key {
+	font-size: 9px;
+	min-width: 36px;
+	padding: 2px 3px;
+}
+
+.pos-app .pos-fast-cash {
+	flex-wrap: nowrap;
+	gap: 4px;
+}
+
+.pos-app .pos-calc-grid button {
+	min-height: 36px;
+	padding: 2px;
+}
