@@ -2,6 +2,7 @@ import {
 	baseCurrency,
 	csrf,
 	currencySymbolFor,
+	currentRate,
 	esc,
 	fmt,
 	newCartKey,
@@ -23,6 +24,17 @@ const updateCartPrices = async () => {
 		it.price = priceForCurrency(it.basePrice);
 	});
 	await renderCart();
+};
+
+// The backend totals API prices lines in the tenant's base currency (the cart
+// sends basePrice). Display them in the selected currency with the same
+// conversion the line prices use, otherwise the band shows the base-currency
+// number under the newly selected currency's symbol.
+const convertTotal = (amount) => {
+	const rate = currentRate();
+	return selectedCurrency() !== baseCurrency && rate > 0
+		? Number(amount || 0) / rate
+		: Number(amount || 0);
 };
 
 const RATE_LABELS = {
@@ -138,16 +150,18 @@ const recalc = async () => {
 					prices_include_vat: data.prices_include_vat,
 				};
 				if (seq !== recalcSeq) return exactTotals;
-				qs("#kpiSubtotal").textContent = fmt(data.subtotal);
-				qs("#kpiDiscount").textContent = fmt(data.discount);
-				qs("#kpiTotal").textContent = fmt(data.total);
+				qs("#kpiSubtotal").textContent = fmt(convertTotal(data.subtotal));
+				qs("#kpiDiscount").textContent = fmt(convertTotal(data.discount));
+				qs("#kpiTotal").textContent = fmt(convertTotal(data.total));
 				qs("#kpiCurrency").textContent = currencySymbolFor(selectedCurrency());
 				if (window.cfdBroadcast) cfdBroadcast.sendCart(state.cart, exactTotals);
 				state.lastTotals = exactTotals;
 				window.dispatchEvent(new CustomEvent("pos:totals", { detail: exactTotals }));
 				const chg = qs("#kpiChange");
 				if (chg)
-					chg.textContent = fmt(Math.max(0, (toNum(qs("#paidAmount").value) || 0) - data.total));
+					chg.textContent = fmt(
+						Math.max(0, (toNum(qs("#paidAmount").value) || 0) - convertTotal(data.total)),
+					);
 				return exactTotals;
 			}
 		} catch (_) {}
