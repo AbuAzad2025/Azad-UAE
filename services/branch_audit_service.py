@@ -89,9 +89,7 @@ def register_branch_event_listeners():
                 "صندوق",
                 "صندوق",
             )
-            ensure_branch_liquidity_account(
-                connection, target, bank_account, "bank", "بنك", "بنك"
-            )
+            ensure_branch_liquidity_account(connection, target, bank_account, "bank", "بنك", "بنك")
         except GLMappingError as e:
             logger.error("فشل resolving حساب السيولة للفرع %s: %s", target.id, e)
             raise

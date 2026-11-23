@@ -611,11 +611,7 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب "{account.type}" ولا يمكن استخدامه كمصروف.'))
     # السماح فقط بحسابات المصروفات (5xxx، 6xxx) أو الاستثناء الموثق (فروقات صندوق نقاط البيع)
     if account.type != "expense" and account.code != "6500":
-        raise ValueError(
-            gettext(
-                f'⚠️ حساب "{account.name}" ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'
-            )
-        )
+        raise ValueError(gettext(f'⚠️ حساب "{account.name}" ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'))
     return True
 
 
