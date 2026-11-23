@@ -75,12 +75,21 @@ def register_branch_event_listeners():
         if not target.id or not target.tenant_id or not target.is_active:
             return
         try:
-            cash_account = GLService.get_account_code_for_concept(
-                "CASH", tenant_id=target.tenant_id, branch_id=target.id
-            )
-            bank_account = GLService.get_account_code_for_concept(
-                "BANK", tenant_id=target.tenant_id, branch_id=target.id
-            )
+            try:
+                cash_account = GLService.get_account_code_for_concept(
+                    "CASH", tenant_id=target.tenant_id, branch_id=target.id
+                )
+            except GLMappingError:
+                # Branch provisioning is not a reason to block branch creation:
+                # fall back to the legacy static codes when the concept has no
+                # active mapping on this branch.
+                cash_account = "1110"
+            try:
+                bank_account = GLService.get_account_code_for_concept(
+                    "BANK", tenant_id=target.tenant_id, branch_id=target.id
+                )
+            except GLMappingError:
+                bank_account = "1120"
             ensure_branch_liquidity_account(
                 connection,
                 target,
