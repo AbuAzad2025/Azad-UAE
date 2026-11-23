@@ -679,9 +679,14 @@ def upload_product_image():
     if not file:
         return error_response(message=gettext("لم يتم إرسال ملف"), status_code=400)
     try:
+        from utils.static_asset_paths import tenant_upload_dir
+
+        tid = get_active_tenant_id(current_user)
+        if not tid:
+            return error_response(message=gettext("لا توجد شركة نشطة."), status_code=403)
         path = save_uploaded_file(
             file,
-            upload_folder="uploads/products",
+            upload_folder=tenant_upload_dir(tid, "products"),
             allowed_extensions={"png", "jpg", "jpeg", "gif", "webp"},
         )
         if not path:

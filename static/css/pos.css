@@ -3975,12 +3975,12 @@ body.pos-layout .pos-page .form-check-label {
 
 .pos-app .pos-top-zone .pos-products {
 	align-content: start;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .pos-app .pos-top-zone .pos-card {
-	min-height: 120px;
-	padding: 10px;
+	min-height: 95px;
+	padding: 8px;
 }
 
 .pos-app .pos-top-zone .pos-card .icon {

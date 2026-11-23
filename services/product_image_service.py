@@ -9,24 +9,25 @@ from extensions import db
 class ProductImageService:
     @staticmethod
     def upload_image(product, file, image_type, caption_ar=None, caption_en=None):
+        from utils.helpers import save_uploaded_file
+        from utils.static_asset_paths import tenant_upload_dir
+
         from models.product_image import ProductImage
 
-        upload_dir: str = os.path.join(
-            str(current_app.root_path),
-            "static",
-            "uploads",
-            "products",
-            str(product.tenant_id),
+        tenant_id = getattr(product, "tenant_id", None)
+        if not tenant_id:
+            raise ValueError("tenant_id required")
+        path = save_uploaded_file(
+            file,
+            upload_folder=tenant_upload_dir(tenant_id, "products"),
+            allowed_extensions={"png", "jpg", "jpeg", "gif", "webp"},
         )
-        os.makedirs(upload_dir, exist_ok=True)
-        filename: str = f"{product.id}_{image_type}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}.{str(file.filename or '').rsplit('.', 1)[-1].lower()}"
-        filepath: str = os.path.join(upload_dir, filename)
-        file.save(filepath)
-        image_url = f"/static/uploads/products/{product.tenant_id}/{filename}"
+        if not path:
+            raise ValueError("failed to save image")
         image = ProductImage(
-            tenant_id=product.tenant_id,
+            tenant_id=tenant_id,
             product_id=product.id,
-            image_url=image_url,
+            image_url=path,
             image_type=image_type,
             caption_ar=caption_ar,
             caption_en=caption_en,
@@ -35,27 +36,45 @@ class ProductImageService:
         return image
 
     @staticmethod
-    def get_images_for_product(product_id, image_type=None):
+    def get_images_for_product(product_id, image_type=None, tenant_id=None):
+        from models.product import Product
         from models.product_image import ProductImage
 
-        query = ProductImage.query.filter_by(product_id=product_id, is_active=True)
+        if tenant_id is None:
+            product = Product.query.get(product_id)
+            tenant_id = getattr(product, "tenant_id", None) if product is not None else None
+        if tenant_id is None:
+            return []
+        query = ProductImage.query.filter_by(
+            product_id=product_id, tenant_id=tenant_id, is_active=True
+        )
         if image_type:
             query = query.filter_by(image_type=image_type)
         return query.order_by(ProductImage.sort_order).all()
 
     @staticmethod
-    def reorder_images(product_id, ordered_ids):
+    def reorder_images(product_id, ordered_ids, tenant_id=None):
+        from models.product import Product
         from models.product_image import ProductImage
 
+        if tenant_id is None:
+            product = Product.query.get(product_id)
+            tenant_id = getattr(product, "tenant_id", None) if product is not None else None
+        if tenant_id is None:
+            return
         for idx, img_id in enumerate(ordered_ids):
             img = ProductImage.query.get(img_id)
-            if img and img.product_id == product_id:
+            if img and img.product_id == product_id and img.tenant_id == tenant_id:
                 img.sort_order = idx
 
     @staticmethod
-    def delete_image(image_id):
+    def delete_image(image_id, tenant_id=None):
         from models.product_image import ProductImage
 
         img = ProductImage.query.get(image_id)
-        if img:
-            img.is_active = False
+        if not img:
+            return None
+        if tenant_id is not None and img.tenant_id != tenant_id:
+            return None
+        img.is_active = False
+        return img

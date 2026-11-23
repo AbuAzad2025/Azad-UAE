@@ -265,7 +265,11 @@ const loadProducts = async (categoryId) => {
 					: p.stock != null && Number(p.stock) <= 5 && Number(p.stock) > 0
 						? `<span class="badge warn">${fmt(p.stock)}</span>`
 						: "";
-			const imageUrl = String(p.image_url || "").trim();
+			const rawImageUrl = String(p.image_url || "").trim();
+			const imageUrl =
+				rawImageUrl && !/^https?:\/\//i.test(rawImageUrl) && !rawImageUrl.startsWith("/")
+					? `/static/${rawImageUrl}`
+					: rawImageUrl;
 			card.innerHTML = `
                     ${imageUrl ? `<img class="card-img" src="${esc(imageUrl)}" alt="" loading="lazy">` : ""}
                     <div class="icon" aria-hidden="true">📦</div>
