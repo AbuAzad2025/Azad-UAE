@@ -161,7 +161,21 @@ def register_context_processors(app):
                 tenant_favicon_url = (tenant.favicon_url or "").strip()
                 tenant_default_currency = tenant.get_base_currency if tenant else ""
                 tenant_enable_tax = bool(getattr(tenant, "enable_tax", True))
-                tenant_default_tax_rate = getattr(tenant, "default_tax_rate", None)
+                stored_rate = getattr(tenant, "default_tax_rate", None)
+                statutory_rate = None
+                try:
+                    from utils.country_tax import vat_rate_for_country
+
+                    statutory_rate = float(vat_rate_for_country(getattr(tenant, "country", None)))
+                except Exception:
+                    statutory_rate = None
+                # The backend locks the POS tax rate to the statutory rate for
+                # the tenant's country (or 0 for exempt). A stale stored value
+                # such as 5% for a PS tenant would otherwise block checkout.
+                if stored_rate is None or (statutory_rate is not None and float(stored_rate) not in (statutory_rate, 0.0)):
+                    tenant_default_tax_rate = statutory_rate if statutory_rate is not None else stored_rate
+                else:
+                    tenant_default_tax_rate = stored_rate
                 tenant_enable_pos = bool(getattr(tenant, "enable_pos", True))
             if tenant:
                 from utils.tenant_branding import resolve_tenant_branding
