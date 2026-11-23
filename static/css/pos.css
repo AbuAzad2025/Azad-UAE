@@ -4111,6 +4111,8 @@ body.pos-layout .pos-page .form-check-label {
 /* Cart table clarity — clear headers, readable rows, tidy fields. */
 .pos-app .pos-cart-table thead th {
 	background: #d1fae5;
+	border: 1px solid #a7f3d0;
+	border-bottom: 2px solid #34d399;
 	color: #14532d;
 	font-size: 13px;
 	font-weight: 700;
@@ -4119,6 +4121,7 @@ body.pos-layout .pos-page .form-check-label {
 }
 
 .pos-app .pos-cart-table tbody td {
+	border: 1px solid #e2e8f0;
 	padding: 6px 8px;
 	vertical-align: middle;
 }
@@ -4182,6 +4185,7 @@ body.pos-layout .pos-page .form-check-label {
 
 /* Header/body alignment — one fixed column per visible field. */
 .pos-app .pos-cart-table {
+	border: 1px solid #cbd5e1;
 	table-layout: fixed;
 	width: 100%;
 }

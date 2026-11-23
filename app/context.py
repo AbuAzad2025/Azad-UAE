@@ -172,7 +172,9 @@ def register_context_processors(app):
                 # The backend locks the POS tax rate to the statutory rate for
                 # the tenant's country (or 0 for exempt). A stale stored value
                 # such as 5% for a PS tenant would otherwise block checkout.
-                if stored_rate is None or (statutory_rate is not None and float(stored_rate) not in (statutory_rate, 0.0)):
+                if stored_rate is None or (
+                    statutory_rate is not None and float(stored_rate) not in (statutory_rate, 0.0)
+                ):
                     tenant_default_tax_rate = statutory_rate if statutory_rate is not None else stored_rate
                 else:
                     tenant_default_tax_rate = stored_rate

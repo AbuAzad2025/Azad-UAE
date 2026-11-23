@@ -42,9 +42,7 @@ class ProductImageService:
             tenant_id = getattr(product, "tenant_id", None) if product is not None else None
         if tenant_id is None:
             return []
-        query = ProductImage.query.filter_by(
-            product_id=product_id, tenant_id=tenant_id, is_active=True
-        )
+        query = ProductImage.query.filter_by(product_id=product_id, tenant_id=tenant_id, is_active=True)
         if image_type:
             query = query.filter_by(image_type=image_type)
         return query.order_by(ProductImage.sort_order).all()
