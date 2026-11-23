@@ -2,6 +2,7 @@ import contextlib
 import json
 import os as _os
 import queue as _queue
+import re
 import threading
 import time
 from datetime import UTC
@@ -741,32 +742,70 @@ def api_create_quick_customer():
     name = str(data.get("name") or "").strip()
     if not name:
         return error_response(message=gettext("الاسم مطلوب."), status_code=400)
+
+    customer_type = str(data.get("customer_type") or "regular").strip() or "regular"
+    if customer_type not in {"regular", "merchant", "partner"}:
+        return error_response(message=gettext("نوع الزبون غير صالح."), status_code=400)
+
+    email = str(data.get("email") or "").strip() or None
+    if email and not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+        return error_response(message=gettext("البريد الإلكتروني غير صحيح."), status_code=400)
+
     try:
         from services.customer_service import CustomerService
+        from utils.currency_utils import resolve_default_currency
+        from utils.field_validators import (
+            FieldValidationError,
+            normalize_phone_optional,
+            validate_currency_code,
+        )
+        from utils.tenant_limits import TenantLimitError, check_customers_limit
+
+        try:
+            check_customers_limit()
+        except TenantLimitError as exc:
+            return error_response(message=str(exc), status_code=403)
+
+        raw_currency = str(data.get("preferred_currency") or "").strip()
+        try:
+            currency = validate_currency_code(raw_currency or resolve_default_currency())
+            phone = normalize_phone_optional(str(data.get("phone") or ""))
+        except FieldValidationError as exc:
+            return error_response(message=str(exc), status_code=400)
 
         tenant_id = get_active_tenant_id(current_user)
         with atomic_transaction("pos_quick_customer_create"):
             customer = CustomerService.create_customer(
                 name=name,
                 name_ar=str(data.get("name_ar") or "").strip() or None,
-                phone=str(data.get("phone") or "").strip() or None,
-                customer_type="individual",
+                customer_type=customer_type,
+                phone=phone,
+                email=email,
+                address=str(data.get("address") or "").strip() or None,
+                tax_number=str(data.get("tax_number") or "").strip() or None,
+                preferred_currency=currency,
+                notes=str(data.get("notes") or "").strip() or None,
                 tenant_id=tenant_id,
             )
-        phone = (customer.phone or "").strip()
-        label = customer.name + (f" - {phone}" if phone else "")
+            db.session.flush()
+            LoggingCore.log_audit("create", "customers", customer.id)
+        phone_label = (customer.phone or "").strip()
+        label = customer.name + (f" - {phone_label}" if phone_label else "")
         return success_response(
             data={
                 "id": customer.id,
                 "name": customer.name,
+                "name_ar": customer.name_ar,
                 "phone": customer.phone,
+                "email": customer.email,
                 "customer_type": customer.customer_type,
+                "preferred_currency": customer.preferred_currency,
                 "text": label,
             },
             status_code=201,
         )
     except Exception as exc:
-        current_app.logger.error("POS quick customer create failed: %s", exc, exc_info=True)
+        current_app.logger.error("POS customer create failed: %s", exc, exc_info=True)
         return error_response(message=ErrorMessages.unexpected_error(), status_code=400)
 
 

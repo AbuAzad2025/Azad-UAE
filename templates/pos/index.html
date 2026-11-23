@@ -388,6 +388,77 @@
   </div>
 </div>
 
+<div class="modal fade" id="posCustomerModal" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-user-plus mr-2" aria-hidden="true"></i>{{ _('إضافة زبون جديد') }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="{{ _('إغلاق') }}"><span aria-hidden="true">&times;</span></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerName">{{ _('الاسم') }} <span class="text-danger">*</span></label>
+            <input id="posCustomerName" type="text" class="form-control" autocomplete="off">
+          </div>
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerNameAr">{{ _('الاسم بالعربية') }}</label>
+            <input id="posCustomerNameAr" type="text" class="form-control" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerType">{{ _('النوع') }}</label>
+            <select id="posCustomerType" class="form-control">
+              <option value="regular">{{ _('عادي') }}</option>
+              <option value="merchant">{{ _('تاجر') }}</option>
+              <option value="partner">{{ _('شريك') }}</option>
+            </select>
+          </div>
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerCurrency">{{ _('العملة الافتراضية') }}</label>
+            <select id="posCustomerCurrency" class="form-control">
+              <option value="AED">{{ _('درهم إماراتي') }}</option>
+              <option value="USD">{{ _('دولار أمريكي') }}</option>
+              <option value="EUR">{{ _('يورو') }}</option>
+              <option value="ILS">{{ _('شيقل إسرائيلي') }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerPhone">{{ _('الهاتف') }}</label>
+            <input id="posCustomerPhone" type="text" class="form-control" autocomplete="off">
+          </div>
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerEmail">{{ _('البريد الإلكتروني') }}</label>
+            <input id="posCustomerEmail" type="email" class="form-control" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerTax">{{ _('الرقم الضريبي') }}</label>
+            <input id="posCustomerTax" type="text" class="form-control" autocomplete="off">
+          </div>
+          <div class="form-group col-md-6 mb-2">
+            <label for="posCustomerAddress">{{ _('العنوان') }}</label>
+            <input id="posCustomerAddress" type="text" class="form-control" autocomplete="off">
+          </div>
+        </div>
+        <div class="form-group mb-2">
+          <label for="posCustomerNotes">{{ _('ملاحظات') }}</label>
+          <textarea id="posCustomerNotes" class="form-control" rows="2"></textarea>
+        </div>
+        <div id="posCustomerError" class="text-danger small d-none" role="alert"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">{{ _('إلغاء') }}</button>
+        <button type="button" id="posCustomerConfirm" class="btn btn-primary">{{ _('إضافة') }}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="openSessionModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static" data-keyboard="false">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">

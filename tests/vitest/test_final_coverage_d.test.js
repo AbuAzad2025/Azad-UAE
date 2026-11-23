@@ -45,7 +45,7 @@ function buildDom() {
   const divIds = [
     "cartBody", "cartCount", "kpiSubtotal", "kpiDiscount", "kpiTotal", "kpiCurrency",
     "productResults", "productLoading", "customerResults", "customerSelectedHint",
-    "posAlert", "posPinModal", "posPinError", "upsellBar", "doneSaleNumber",
+    "posAlert", "posPinModal", "posPinError", "posCustomerModal", "posCustomerError", "upsellBar", "doneSaleNumber",
     "doneViewBtn", "donePrintBtn", "doneUpsellList", "openSessionModal",
     "closeSessionModal", "openSessionAlert", "closeSessionAlert", "tableField",
     "posTablesGrid", "posTableClear", "posCategories", "posProductGrid",
@@ -65,7 +65,7 @@ function buildDom() {
   for (const id of [
     "taxRate", "shippingCost", "discountAmount", "paidAmount", "referenceNumber",
     "orderNote", "openSessionBalance", "openSessionNotes", "closeSessionBalance",
-    "closeSessionNotes", "exchangeRate",
+    "closeSessionNotes", "exchangeRate", "posCustomerName",
   ]) {
     addEl("input", id);
   }
@@ -89,7 +89,7 @@ function buildDom() {
     "posPinConfirm", "openSessionBtn", "openSessionConfirm", "closeSessionBtn",
     "closeSessionConfirm", "clearProductSearch", "clearCartBtn", "cameraScanBtn",
     "scaleConnectBtn", "refreshRateBtn", "pushTerminalBtn", "posTablesBtn",
-    "posHoldBtn", "posPinInput",
+    "posHoldBtn", "posPinInput", "posCustomerConfirm",
   ]) {
     addEl("button", id);
   }
@@ -311,8 +311,8 @@ describe("pos/index — uncovered interaction branches", () => {
         }),
     });
     await loadIndex();
-    window.prompt.mockReturnValueOnce("  New Client  ");
-    document.getElementById("addCustomerBtn").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    document.getElementById("posCustomerName").value = "  New Client  ";
+    document.getElementById("posCustomerConfirm").dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await sleep(20);
     expect(window._posState.customer.id).toBe(42);
     expect(document.getElementById("customerSearch").value).toBe("New Client");
@@ -329,10 +329,10 @@ describe("pos/index — uncovered interaction branches", () => {
         }),
     });
     await loadIndex();
-    window.prompt.mockReturnValueOnce("Dup");
-    document.getElementById("addCustomerBtn").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    document.getElementById("posCustomerName").value = "Dup";
+    document.getElementById("posCustomerConfirm").dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await sleep(20);
-    expect(document.getElementById("posAlert").textContent).toContain("duplicate");
+    expect(document.getElementById("posCustomerError").textContent).toContain("duplicate");
   });
 
   it("add-customer button degrades to an alert on a network error (214-215)", async () => {
@@ -340,10 +340,10 @@ describe("pos/index — uncovered interaction branches", () => {
       "/pos/api/customers/create": () => Promise.reject(new TypeError("offline")),
     });
     await loadIndex();
-    window.prompt.mockReturnValueOnce("Someone");
-    document.getElementById("addCustomerBtn").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    document.getElementById("posCustomerName").value = "Someone";
+    document.getElementById("posCustomerConfirm").dispatchEvent(new MouseEvent("click", { bubbles: true }));
     await sleep(20);
-    expect(document.getElementById("posAlert").textContent).toBeTruthy();
+    expect(document.getElementById("posCustomerError").textContent).toBeTruthy();
   });
 
   it("product search Enter adds the first cached result (226-228)", async () => {

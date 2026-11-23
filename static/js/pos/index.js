@@ -226,23 +226,74 @@ qs("#walkinCustomer").addEventListener("click", async () => {
 	customerHint();
 	qs("#productSearch").focus();
 });
-qs("#addCustomerBtn")?.addEventListener("click", async () => {
-	const name = window.prompt(window.t("اسم الزبون الجديد"));
-	if (!name || !name.trim()) return;
+const showCustomerError = (msg) => {
+	const err = qs("#posCustomerError");
+	if (!err) return showAlert(msg || window.t("تعذر إضافة الزبون"));
+	err.textContent = msg || window.t("تعذر إضافة الزبون");
+	err.classList.remove("d-none");
+};
+qs("#addCustomerBtn")?.addEventListener("click", () => {
+	[
+		"posCustomerName",
+		"posCustomerNameAr",
+		"posCustomerPhone",
+		"posCustomerEmail",
+		"posCustomerTax",
+		"posCustomerAddress",
+		"posCustomerNotes",
+	].forEach((id) => {
+		const el = qs(`#${id}`);
+		if (el) el.value = "";
+	});
+	const type = qs("#posCustomerType");
+	if (type) type.value = "regular";
+	const currency = qs("#posCustomerCurrency");
+	if (currency) currency.value = "AED";
+	const err = qs("#posCustomerError");
+	if (err) {
+		err.textContent = "";
+		err.classList.add("d-none");
+	}
+	window.$?.("#posCustomerModal")?.modal?.("show");
+	window.setTimeout(() => qs("#posCustomerName")?.focus(), 150);
+});
+qs("#posCustomerConfirm")?.addEventListener("click", async () => {
+	const val = (id) => (qs(`#${id}`)?.value || "").trim();
+	const name = val("posCustomerName");
+	if (!name) return showCustomerError(window.t("الاسم مطلوب."));
+	const btn = qs("#posCustomerConfirm");
+	if (btn) btn.disabled = true;
 	try {
 		const res = await fetch("/pos/api/customers/create", {
 			method: "POST",
 			headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
-			body: JSON.stringify({ name: name.trim() }),
+			body: JSON.stringify({
+				name,
+				name_ar: val("posCustomerNameAr"),
+				customer_type: val("posCustomerType") || "regular",
+				preferred_currency: val("posCustomerCurrency") || "AED",
+				phone: val("posCustomerPhone"),
+				email: val("posCustomerEmail"),
+				tax_number: val("posCustomerTax"),
+				address: val("posCustomerAddress"),
+				notes: val("posCustomerNotes"),
+			}),
 		});
-		const body = await res.json();
-		if (!res.ok || !body.success) return showAlert(body.message || window.t("تعذر إضافة الزبون"));
+		const body = await res.json().catch(() => ({}));
+		if (!res.ok || !body.success) {
+			return showCustomerError(body.message || window.t("تعذر إضافة الزبون"));
+		}
 		state.customer = body.data;
 		qs("#customerSearch").value = body.data.text || body.data.name;
 		customerHint();
+		qs("#posCustomerError")?.classList.add("d-none");
+		window.$?.("#posCustomerModal")?.modal?.("hide");
 		showAlert(window.t("تمت إضافة الزبون"), "success");
+		qs("#productSearch")?.focus();
 	} catch (err) {
-		showAlert(window.t("تعذر إضافة الزبون"));
+		showCustomerError(window.t("تعذر إضافة الزبون"));
+	} finally {
+		if (btn) btn.disabled = false;
 	}
 });
 
