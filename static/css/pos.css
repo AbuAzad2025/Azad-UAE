@@ -4187,31 +4187,37 @@ body.pos-layout .pos-page .form-check-label {
 }
 
 .pos-app .pos-cart-table .pos-col-idx {
-	width: 38px;
+	width: 40px;
+}
+
+/* Keep the item column compact; the barcode column absorbs the remaining
+   width so the table still fills the workspace on wide screens. */
+.pos-app .pos-cart-table .pos-col-item {
+	width: clamp(220px, 22vw, 330px);
 }
 
 .pos-app .pos-cart-table .pos-col-qty {
-	width: 138px;
+	width: 140px;
 }
 
 .pos-app .pos-cart-table .pos-col-price {
-	width: 96px;
+	width: 110px;
 }
 
 .pos-app .pos-cart-table .pos-col-disc {
-	width: 76px;
+	width: 90px;
 }
 
 .pos-app .pos-cart-table .pos-col-del {
-	width: 46px;
+	width: 50px;
 }
 
 .pos-app .pos-cart-table .pos-col-barcode {
-	width: 130px;
+	width: auto;
 }
 
 .pos-app .pos-cart-table .pos-col-total {
-	width: 96px;
+	width: 110px;
 }
 
 .pos-app .pos-cart-table .ci-barcode,
