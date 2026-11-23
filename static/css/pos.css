@@ -4404,3 +4404,44 @@ body.pos-layout .pos-page .form-check-label {
 	}
 }
 
+/* Payment corner — one labelled control per row, nothing cramped into 147px. */
+.pos-app .pos-pay-col .pos-pay > .field,
+.pos-app .pos-pay-col .pos-pay > .ref-field {
+	display: block;
+	grid-column: 1 / -1;
+}
+
+.pos-app .pos-pay-col .pos-pay > .field > label,
+.pos-app .pos-pay-col .pos-pay > .ref-field > label {
+	display: block;
+	margin-bottom: 2px;
+}
+
+.pos-app .pos-pay-col .pos-pay > .field .form-control,
+.pos-app .pos-pay-col .pos-pay > .ref-field .form-control {
+	height: 28px;
+	min-height: 28px;
+	padding: 2px 6px;
+	width: 100%;
+}
+
+.pos-app .pos-pay-col .pos-pay > .field > label,
+.pos-app .pos-pay-col .pos-pay > .ref-field > label {
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.pos-app .pos-pay-col .pos-pay > .field label a {
+	display: inline-block;
+	font-size: 14px;
+	height: 18px !important;
+	line-height: 18px;
+	min-height: 0 !important;
+	padding: 0;
+	vertical-align: middle;
+}
+
+.pos-app .pos-pay-col .pos-pay > .field .custom-control-label {
+	white-space: nowrap;
+}
+
