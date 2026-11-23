@@ -232,6 +232,7 @@ beforeEach(() => {
 
   localStorage.clear();
   sessionStorage.clear();
+  window.history.replaceState({}, "", "/pos/");
   vi.resetModules();
 });
 
@@ -1129,5 +1130,113 @@ describe("pos/offline-catalog — uncovered paths", () => {
     expect(hit).not.toBeNull();
     expect(hit.name).toBe("Fresh");
     delete globalThis.indexedDB;
+  });
+});
+
+describe("pos/index — shift control and held-cart resume", () => {
+  it("opens a shift from the register when the feature is enabled", async () => {
+    window.POS_CONFIG = { enable_tables: false, enable_hold: true, enable_pos_shifts: true };
+    addEl("button", "posShiftOpenBtn");
+    const spy = mockFetch({
+      "/pos/api/shift/open": () =>
+        Promise.resolve({
+          ok: true,
+          status: 201,
+          json: () => Promise.resolve({ success: true, data: { shift: { id: 1 } } }),
+        }),
+    });
+    await loadIndex();
+    const btn = document.getElementById("posShiftOpenBtn");
+    expect(btn.classList.contains("d-none")).toBe(false);
+    btn.click();
+    await sleep(40);
+    expect(spy).toHaveBeenCalledWith("/pos/api/shift/open", expect.anything());
+    expect(btn.classList.contains("d-none")).toBe(true);
+  });
+
+  it("warns when the shift service refuses the request", async () => {
+    window.POS_CONFIG = { enable_tables: false, enable_hold: true, enable_pos_shifts: true };
+    addEl("button", "posShiftOpenBtn");
+    mockFetch({
+      "/pos/api/shift/open": () =>
+        Promise.resolve({
+          ok: false,
+          status: 403,
+          json: () => Promise.resolve({ success: false, message: "refused" }),
+        }),
+    });
+    await loadIndex();
+    document.getElementById("posShiftOpenBtn").click();
+    await sleep(40);
+    expect(document.getElementById("posAlert").textContent).toContain("refused");
+  });
+
+  it("warns when the shift request throws", async () => {
+    window.POS_CONFIG = { enable_tables: false, enable_hold: true, enable_pos_shifts: true };
+    addEl("button", "posShiftOpenBtn");
+    mockFetch({
+      "/pos/api/shift/open": () => Promise.reject(new Error("offline")),
+    });
+    await loadIndex();
+    document.getElementById("posShiftOpenBtn").click();
+    await sleep(40);
+    expect(document.getElementById("posAlert").textContent).toContain("تعذر فتح الوردية");
+  });
+
+  it("resumes the held cart referenced in the query string", async () => {
+    window.history.replaceState({}, "", "/pos/?resume_cart=7");
+    const payload = {
+      lines: [
+        {
+          product_id: 991,
+          name: "Item",
+          sku: "SKU-1",
+          quantity: 2,
+          unit_price: 10,
+          basePrice: 10,
+          price: 10,
+          discount_percent: 0,
+        },
+      ],
+      customer: { id: 11 },
+      note: "held note",
+    };
+    mockFetch({
+      "/pos/api/carts/7": () =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, data: { cart: { payload: JSON.stringify(payload) } } }),
+        }),
+    });
+    await loadIndex();
+    await sleep(80);
+    expect(window._posState.cart).toHaveLength(1);
+    expect(window._posState.cart[0].qty).toBe(2);
+    expect(document.getElementById("orderNote").value).toBe("held note");
+    expect(window.location.search).toBe("");
+  });
+
+  it("ignores a held-cart response without a payload", async () => {
+    window.history.replaceState({}, "", "/pos/?resume_cart=8");
+    mockFetch({
+      "/pos/api/carts/8": () =>
+        Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ success: true, data: {} }) }),
+    });
+    await loadIndex();
+    await sleep(60);
+    expect(window._posState.cart).toHaveLength(0);
+    expect(window.location.search).toBe("");
+  });
+
+  it("survives a network error while resuming a held cart", async () => {
+    window.history.replaceState({}, "", "/pos/?resume_cart=9");
+    mockFetch({
+      "/pos/api/carts/9": () => Promise.reject(new Error("offline")),
+    });
+    await loadIndex();
+    await sleep(60);
+    expect(window._posState.cart).toHaveLength(0);
+    expect(window.location.search).toBe("");
   });
 });

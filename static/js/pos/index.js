@@ -649,6 +649,19 @@ if (tablesBtn) {
 		});
 }
 
+const hydrateHeldLines = (lines) =>
+	(lines || []).map((l) => ({
+		id: l.product_id ?? l.id,
+		name: l.name || String(l.product_id ?? ""),
+		sku: l.sku || "",
+		barcode: l.barcode || "",
+		qty: Number(l.quantity ?? l.qty ?? 1),
+		basePrice: Number(l.basePrice ?? l.unit_price ?? l.price ?? 0),
+		price: Number(l.price ?? l.unit_price ?? 0),
+		discountPercent: Number(l.discountPercent ?? l.discount_percent ?? 0),
+		...(l.serial ? { serial: l.serial } : {}),
+	}));
+
 if (holdBtn) {
 	holdBtn.addEventListener("click", async () => {
 		// Resume path: empty cart → try server parked carts first, then local hold
@@ -673,7 +686,7 @@ if (holdBtn) {
 						if (detail?.payload) {
 							const p =
 								typeof detail.payload === "string" ? JSON.parse(detail.payload) : detail.payload;
-							state.cart = p.cart || p.lines || [];
+							state.cart = hydrateHeldLines(p.lines || p.cart);
 							state.customer = p.customer || null;
 							state.selectedTable = p.table || null;
 							state.idemKey = newCartKey();
@@ -695,7 +708,7 @@ if (holdBtn) {
 			}
 			const last = list.pop();
 			localStorage.setItem(HOLD_KEY, JSON.stringify(list));
-			state.cart = last.cart || [];
+			state.cart = hydrateHeldLines(last.lines || last.cart);
 			state.idemKey = newCartKey();
 			state.customer = last.customer || null;
 			state.selectedTable = last.table || null;
@@ -708,9 +721,23 @@ if (holdBtn) {
 		}
 		// Park path: try server first when online, always mirror to local for offline resilience
 		const payload = {
-			cart: state.cart,
+			lines: state.cart.map((it) => ({
+				product_id: it.id,
+				name: it.name || "",
+				sku: it.sku || "",
+				barcode: it.barcode || "",
+				quantity: it.qty,
+				qty: it.qty,
+				unit_price: it.basePrice ?? it.price,
+				basePrice: it.basePrice ?? it.price,
+				price: it.price,
+				discount_percent: it.discountPercent || 0,
+				discountPercent: it.discountPercent || 0,
+				...(it.serial ? { serial: it.serial } : {}),
+			})),
 			customer: state.customer,
 			table: state.selectedTable,
+			notes: qs("#orderNote") ? qs("#orderNote").value || "" : "",
 			note: qs("#orderNote") ? qs("#orderNote").value || "" : "",
 			ts: Date.now(),
 		};
@@ -743,6 +770,64 @@ if (holdBtn) {
 			"success",
 		);
 	});
+}
+
+// Shift control — only tenants with the shifts feature can open a shift here.
+if (POS_CONFIG.enable_pos_shifts) {
+	const shiftBtn = qs("#posShiftOpenBtn");
+	if (shiftBtn) {
+		shiftBtn.classList.remove("d-none");
+		shiftBtn.addEventListener("click", async () => {
+			try {
+				const r = await fetch("/pos/api/shift/open", {
+					method: "POST",
+					credentials: "same-origin",
+					headers: { "Content-Type": "application/json", "X-CSRFToken": csrf },
+					body: JSON.stringify({ starting_cash: 0 }),
+				});
+				const j = await r.json().catch(() => ({}));
+				if (r.ok || r.status === 409 || j?.data?.shift) {
+					shiftBtn.classList.add("d-none");
+					showAlert(
+						j?.data?.shift ? window.t("تم فتح الوردية") : window.t("الوردية مفتوحة بالفعل"),
+						"success",
+					);
+				} else {
+					showAlert(j.message || j.error || window.t("تعذر فتح الوردية"), "warning");
+				}
+			} catch (_) {
+				showAlert(window.t("تعذر فتح الوردية"), "warning");
+			}
+		});
+	}
+}
+
+// Resume a held cart opened from the held-carts page (?resume_cart=<id>).
+const resumeCartId = new URLSearchParams(location.search).get("resume_cart");
+if (resumeCartId) {
+	void (async () => {
+		try {
+			const r = await fetch(`/pos/api/carts/${encodeURIComponent(resumeCartId)}`, {
+				credentials: "same-origin",
+				headers: { Accept: "application/json" },
+			});
+			const j = await r.json().catch(() => ({}));
+			const detail = j.data?.cart || j.cart || j.data;
+			if (r.ok && detail?.payload) {
+				const p = typeof detail.payload === "string" ? JSON.parse(detail.payload) : detail.payload;
+				state.cart = hydrateHeldLines(p.lines || p.cart);
+				state.customer = p.customer || null;
+				state.selectedTable = p.table || null;
+				state.idemKey = newCartKey();
+				if (qs("#orderNote") && p.note) qs("#orderNote").value = p.note;
+				await renderCart();
+				customerHint();
+				refreshHoldBadge();
+				showAlert(window.t("استئناف الفاتورة المعلّقة"), "success");
+			}
+		} catch (_) {}
+		history.replaceState(null, "", location.pathname);
+	})();
 }
 
 async function loadSession() {
@@ -901,14 +986,19 @@ qs("#closeSessionConfirm").addEventListener("click", async () => {
 		window.$("#closeSessionModal").modal("hide");
 		await loadSession();
 		const closed = j.data?.session || j.session;
-		const diff = closed.difference;
-		if (Math.abs(diff) > 0.01) {
+		const diff = closed?.difference;
+		if (typeof diff === "number" && Math.abs(diff) > 0.01) {
 			showAlert(
 				`${window.t("تم إغلاق الجلسة. فرق الرصيد")}: ${fmt(diff)}`,
 				diff < 0 ? "danger" : "warning",
 			);
 		} else {
-			showAlert("تم إغلاق الجلسة بنجاح. الرصيد مطابق.", "success");
+			showAlert(
+				typeof diff === "number"
+					? "تم إغلاق الجلسة بنجاح. الرصيد مطابق."
+					: window.t("تعذر التحقق من الرصيد"),
+				typeof diff === "number" ? "success" : "warning",
+			);
 		}
 	} catch (err) {
 		showModalAlert("closeSession", err.message, "danger");

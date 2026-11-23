@@ -53,6 +53,9 @@
         <button id="customerDisplayBtn" type="button" class="pos-tile disabled" title="{{ _('شاشة الزبون') }}" aria-disabled="true"><i class="fas fa-desktop" aria-hidden="true"></i><span>{{ _('شاشة الزبون') }}</span></button>
         <button id="posTablesBtn" type="button" class="pos-tile d-none" title="{{ _('إدارة الطاولات') }}"><i class="fas fa-chair" aria-hidden="true"></i><span>{{ _('إدارة الطاولات') }}</span></button>
         <button id="posHoldBtn" type="button" class="pos-tile d-none" title="{{ _('تعليق الفاتورة') }}"><i class="fas fa-pause" aria-hidden="true"></i><span>{{ _('تعليق الفاتورة') }}</span></button>
+        <button id="posShiftOpenBtn" type="button" class="pos-tile d-none" title="{{ _('فتح الوردية') }}"><i class="fas fa-clock" aria-hidden="true"></i><span>{{ _('فتح الوردية') }}</span></button>
+        <a href="{{ url_for('pos.printer_settings') }}" class="pos-tile" title="{{ _('إعدادات الطابعة') }}"><i class="fas fa-print" aria-hidden="true"></i><span>{{ _('إعدادات الطابعة') }}</span></a>
+        <a href="{{ url_for('pos.kds_dashboard') }}" class="pos-tile" title="{{ _('شاشة المطبخ') }}"><i class="fas fa-stream" aria-hidden="true"></i><span>{{ _('شاشة المطبخ') }}</span></a>
         <a href="{{ url_for('pos.held_carts') }}" class="pos-tile" title="{{ _('السلال المعلّقة') }}"><i class="fas fa-clipboard-list" aria-hidden="true"></i><span>{{ _('السلال المعلّقة') }}</span></a>
         <!-- grid POS removed: unified single screen -->
         <a href="{{ url_for('sales.index') }}" class="pos-tile" title="{{ _('سجل الفواتير') }}"><i class="fas fa-file-invoice" aria-hidden="true"></i><span>{{ _('سجل الفواتير') }}</span></a>
