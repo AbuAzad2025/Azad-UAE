@@ -1,6 +1,6 @@
 // Bump when hashed POS assets change so returning cashiers never get a stale
 // cart renderer from the cache-first static strategy (misaligned columns).
-const POS_CACHE = "pos-cache-v7";
+const POS_CACHE = "pos-cache-v8";
 const POS_QUEUE_DB = "pos-offline-queue";
 const POS_QUEUE_STORE = "checkout-queue";
 
@@ -186,8 +186,17 @@ async function fetchAndCache(request) {
 		// Don't cache API JSON that is user-specific and may be stale (products, session)
 		// Only cache static assets and the offline catalog snapshot
 		const url = new URL(request.url);
+		// Cache the POS shell on a real (non-redirected) navigation so a cold
+		// reload still opens the app when the network is down. A login redirect
+		// is never cached — that would show the wrong user's page offline.
+		const isPosPage =
+			request.mode === "navigate" &&
+			url.pathname.startsWith("/pos/") &&
+			!response.redirected &&
+			new URL(response.url).pathname.startsWith("/pos/");
 		const shouldCache =
 			isStaticAsset(request) ||
+			isPosPage ||
 			url.pathname === "/pos/api/catalog/snapshot" ||
 			url.pathname === "/pos/api/categories";
 		if (shouldCache) {

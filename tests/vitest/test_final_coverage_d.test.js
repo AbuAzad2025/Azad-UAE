@@ -693,7 +693,8 @@ describe("pos/index — uncovered interaction branches", () => {
       new MouseEvent("click", { bubbles: true }),
     );
     await sleep(20);
-    expect(document.getElementById("posAlert").textContent.length).toBeGreaterThan(0);
+    // A failed walk-in lookup now falls back to a local customer instead of an alert.
+    expect(document.getElementById("customerSearch").value.length).toBeGreaterThan(0);
   });
 
   it("PIN confirm button and the hidden modal settle override confirmation", async () => {

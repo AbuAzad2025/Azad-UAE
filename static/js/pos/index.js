@@ -74,6 +74,29 @@ import {
 	toggleTableField,
 } from "./ui.js";
 
+// A walk-in customer is resolved server-side from `quick_customer`, so an
+// offline sale only needs a local marker. Keep the last real one for offline use.
+const WALKIN_CACHE_KEY = "pos_walkin_customer";
+const localWalkin = () => {
+	try {
+		const cached = JSON.parse(localStorage.getItem(WALKIN_CACHE_KEY) || "null");
+		if (cached && cached.is_walkin) return cached;
+	} catch (_) {}
+	return {
+		id: -1,
+		name: "عميل نقدي",
+		text: "عميل نقدي",
+		customer_type: "individual",
+		is_walkin: true,
+	};
+};
+const rememberWalkin = (c) => {
+	if (!c || !c.is_walkin) return;
+	try {
+		localStorage.setItem(WALKIN_CACHE_KEY, JSON.stringify(c));
+	} catch (_) {}
+};
+
 qs("#cartBody").addEventListener("click", (e) => {
 	const btn = e.target.closest("button[data-act]");
 	if (!btn) return;
@@ -189,8 +212,15 @@ qs("#clearCustomer").addEventListener("click", () => {
 });
 qs("#walkinCustomer").addEventListener("click", async () => {
 	const res = await fetchJson("/pos/api/walkin-customer");
-	if (!res.ok) return showAlert(res.error || "تعذر تحميل عميل نقدي");
+	if (!res.ok || !res.data) {
+		state.customer = localWalkin();
+		qs("#customerSearch").value = state.customer.text;
+		customerHint();
+		qs("#productSearch").focus();
+		return;
+	}
 	const c = res.data;
+	rememberWalkin(c);
 	state.customer = c;
 	qs("#customerSearch").value = c.text || c.name;
 	customerHint();
@@ -330,11 +360,13 @@ const checkout = async (autoPrint) => {
 			const res = await fetchJson("/pos/api/walkin-customer");
 			if (res.ok && res.data) {
 				state.customer = res.data;
+				rememberWalkin(res.data);
 				qs("#customerSearch").value = res.data.text || res.data.name || "";
 				customerHint();
 			}
 		} catch (_) {}
 	}
+	if (!state.customer) state.customer = localWalkin();
 	if (!state.customer) {
 		showAlert("تعذر تحميل عميل نقدي — تحقق من الاتصال.", "warning");
 		return;

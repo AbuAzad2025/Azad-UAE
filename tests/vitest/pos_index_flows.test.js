@@ -837,7 +837,7 @@ describe("pos/index checkout pipeline", () => {
 		expect(document.getElementById("posAlert").textContent).toContain("السلة فارغة");
 	});
 
-	it("missing customer attempts walk-in fetch then aborts with guidance", async () => {
+	it("missing customer falls back to a local walk-in when the fetch fails", async () => {
 		mockFetch({
 			"/pos/api/walkin-customer": () =>
 				Promise.resolve({ ok: false, json: () => Promise.resolve({ error: "x" }) }),
@@ -847,9 +847,7 @@ describe("pos/index checkout pipeline", () => {
 		st.customer = null;
 		st.cart = [{ id: 1, qty: 1, price: 5 }];
 		await window._posCheckout(false);
-		expect(document.getElementById("posAlert").textContent).toContain(
-			"تعذر تحميل عميل نقدي",
-		);
+		expect(st.customer?.is_walkin).toBe(true);
 	});
 });
 
