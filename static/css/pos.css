@@ -3808,6 +3808,79 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 	position: relative;
 }
 
+/* Shared POS shell for configuration screens (order types, printers). */
+body.pos-layout .pos-page {
+	background: var(--surface-soft, #eef2f7);
+	color: var(--ink, #0f172a);
+	height: 100%;
+	overflow-y: auto;
+	padding: 18px;
+}
+
+body.pos-layout .pos-page-head {
+	align-items: center;
+	background: var(--surface, #fff);
+	border: 1px solid var(--line, #e2e8f0);
+	border-radius: 14px;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 14px;
+	padding: 14px 18px;
+}
+
+body.pos-layout .pos-page-head h1 {
+	font-size: 20px;
+	margin: 0;
+}
+
+body.pos-layout .pos-page .card {
+	border: 1px solid var(--line, #e2e8f0);
+	border-radius: 14px;
+}
+
+body.pos-layout .pos-page .card-header {
+	background: #e8f5ee;
+	color: #14532d;
+	font-weight: 700;
+}
+
+body.pos-layout .pos-page .form-row {
+	margin: 0 -5px;
+}
+
+body.pos-layout .pos-page .form-group {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+body.pos-layout .pos-page .form-group.d-flex {
+	flex-wrap: wrap;
+	gap: 4px;
+}
+
+body.pos-layout .pos-page .form-check {
+	margin-right: 6px;
+}
+
+body.pos-layout .pos-page .form-check-label {
+	font-size: 11px;
+}
+
+.pos-app .pos-top-zone .pos-search-row {
+	flex-wrap: nowrap;
+	gap: 6px;
+}
+
+.pos-app .pos-top-zone .pos-search-row .pos-search {
+	flex: 1 1 0;
+	min-width: 0;
+}
+
+.pos-app .pos-top-zone .pos-search-row .pos-search input {
+	min-width: 0;
+	width: 100%;
+}
+
 .pos-app #posAlert {
 	left: 16px;
 	margin: 0;
@@ -3837,6 +3910,7 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 
 .pos-app .pos-top-zone .pos-products {
 	align-content: start;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .pos-app .pos-top-zone .pos-card {
