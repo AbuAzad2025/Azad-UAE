@@ -3979,7 +3979,7 @@ body.pos-layout .pos-page .form-check-label {
 }
 
 .pos-app .pos-top-zone .pos-card {
-	min-height: 95px;
+	min-height: 118px;
 	padding: 8px;
 }
 
@@ -4069,6 +4069,171 @@ body.pos-layout .pos-page .form-check-label {
 	min-height: 50px;
 }
 
+/* Final pay-method compaction — tiles must not stretch. */
+.pos-app .pos-pay-method .pm {
+	height: 28px !important;
+	min-height: 24px !important;
+	overflow: hidden !important;
+	padding: 1px 2px !important;
+}
+
+.pos-app .pos-pay-method .pm i {
+	font-size: 10px !important;
+}
+
+.pos-app .pos-pay-method .pm span {
+	font-size: 9px !important;
+	line-height: 1 !important;
+}
+
+/* Cart scrollbar must appear when the basket has many lines. */
+.pos-app .pos-cart-scroll {
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+}
+
+.pos-app .pos-pay-method .pm {
+	height: 34px !important;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button {
+	min-height: 26px !important;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-display {
+	height: 34px !important;
+}
+
+.pos-app .pos-bottom-zone .pos-fast-cash {
+	height: 22px !important;
+}
+
+/* Cart table clarity — clear headers, readable rows, tidy fields. */
+.pos-app .pos-cart-table thead th {
+	background: #d1fae5;
+	color: #14532d;
+	font-size: 13px;
+	font-weight: 700;
+	padding: 8px 10px;
+	text-align: center;
+}
+
+.pos-app .pos-cart-table tbody td {
+	padding: 6px 8px;
+	vertical-align: middle;
+}
+
+.pos-app .pos-cart-table tbody tr:nth-child(odd) {
+	background: #f8fafc;
+}
+
+.pos-app .pos-cart-table .ci-name {
+	font-size: 13px;
+	font-weight: 700;
+}
+
+.pos-app .pos-cart-table .ci-meta {
+	color: #94a3b8;
+	font-size: 10px;
+}
+
+.pos-app .pos-cart-table .ci-inline {
+	align-items: center;
+	display: flex;
+	gap: 4px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-cart-table .ci-idx {
+	color: #64748b;
+	font-weight: 700;
+	text-align: center;
+}
+
+.pos-app .pos-cart-table .ci-qty {
+	font-size: 12px;
+	text-align: center;
+	width: 46px;
+}
+
+.pos-app .pos-cart-table .ci-price-in {
+	font-size: 12px;
+	width: 50px;
+}
+
+.pos-app .pos-cart-table .ci-disc {
+	font-size: 12px;
+	width: 38px;
+}
+
+.pos-app .pos-cart-table .ci-price-unit {
+	color: #64748b;
+	font-size: 11px;
+}
+
+.pos-app .pos-cart-table .ci-disc-unit {
+	color: #b45309;
+	font-size: 10px;
+}
+
+.pos-app .pos-cart-table .ci-del-cell {
+	text-align: center;
+}
+
+/* Header/body alignment — one fixed column per visible field. */
+.pos-app .pos-cart-table {
+	table-layout: fixed;
+	width: 100%;
+}
+
+.pos-app .pos-cart-table .pos-col-idx {
+	width: 38px;
+}
+
+.pos-app .pos-cart-table .pos-col-qty {
+	width: 138px;
+}
+
+.pos-app .pos-cart-table .pos-col-price {
+	width: 96px;
+}
+
+.pos-app .pos-cart-table .pos-col-disc {
+	width: 76px;
+}
+
+.pos-app .pos-cart-table .pos-col-del {
+	width: 46px;
+}
+
+.pos-app .pos-cart-table .pos-col-barcode {
+	width: 130px;
+}
+
+.pos-app .pos-cart-table .pos-col-total {
+	width: 96px;
+}
+
+.pos-app .pos-cart-table .ci-barcode,
+.pos-app .pos-cart-table .ci-line-total {
+	font-size: 11px;
+	white-space: nowrap;
+}
+
+.pos-app .pos-cart-table .ci-line-total {
+	color: #166534;
+	font-weight: 700;
+}
+
+.pos-app .pos-cart-table th,
+.pos-app .pos-cart-table td {
+	text-align: center;
+}
+
+.pos-app .pos-cart-table .ci-item {
+	text-align: right;
+}
+
 .pos-app .pos-pay-col .pos-settings .collapse.show {
 	padding: 6px;
 }
@@ -4109,7 +4274,55 @@ body.pos-layout .pos-page .form-check-label {
 	}
 
 	.pos-app .pos-top-zone .pos-card {
-		min-height: 120px;
+		min-height: 118px;
+		padding: 4px;
+	}
+
+	.pos-app .pos-top-zone .pos-card .icon {
+		font-size: 20px;
+		margin-bottom: 4px;
+	}
+
+	.pos-app .pos-top-zone .pos-card .name {
+		font-size: 12px;
+	}
+
+	.pos-app .pos-top-zone .pos-card .price {
+		font-size: 11px;
+		padding: 4px 8px;
+	}
+
+	.pos-app .pos-pay-method {
+		display: grid !important;
+		gap: 4px !important;
+		grid-auto-rows: auto !important;
+		grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+	}
+
+	.pos-app .pos-pay-method .pm {
+		align-content: center;
+		padding: 2px 4px !important;
+	}
+
+	.pos-app .pos-pay-method .pm {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-pay {
+		gap: 2px !important;
+		padding: 4px !important;
+	}
+
+	.pos-app .pos-mixed-btn {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-btn {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-actions .small {
+		display: none !important;
 	}
 
 	.pos-app .pos-top-zone .pos-card .icon {
@@ -4117,8 +4330,12 @@ body.pos-layout .pos-page .form-check-label {
 	}
 
 	.pos-app .pos-top-zone .pos-products {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 4px;
+	}
+
+	.pos-app .pos-top-zone .pos-card {
+		min-height: 90px;
 	}
 
 	.pos-app .pos-cart-table tbody td {

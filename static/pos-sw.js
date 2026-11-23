@@ -1,4 +1,6 @@
-const POS_CACHE = "pos-cache-v5";
+// Bump when hashed POS assets change so returning cashiers never get a stale
+// cart renderer from the cache-first static strategy (misaligned columns).
+const POS_CACHE = "pos-cache-v6";
 const POS_QUEUE_DB = "pos-offline-queue";
 const POS_QUEUE_STORE = "checkout-queue";
 

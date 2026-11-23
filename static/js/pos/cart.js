@@ -229,7 +229,7 @@ const renderCart = async () => {
 	if (cnt) cnt.textContent = String(state.cart.length);
 	if (!state.cart.length) {
 		body.innerHTML =
-			'<tr id="cartEmptyRow"><td colspan="5" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
+			'<tr id="cartEmptyRow"><td colspan="8" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
 		await recalc();
 		scheduleUpsellEval();
 		return;
@@ -239,8 +239,7 @@ const renderCart = async () => {
 		const tr = document.createElement("tr");
 		// ZERO FRONTEND CALC: backend provides exact total; no client-side lineTotal
 		// (line total removed — see audit report /sales/api/calculate-totals)
-		const meta =
-			(it.sku ? `SKU: ${esc(it.sku)}` : "") + (it.barcode ? ` | ${esc(it.barcode)}` : "");
+		const meta = it.sku ? `SKU: ${esc(it.sku)}` : "";
 		tr.innerHTML = `
                 <td class="ci-idx">${idx + 1}</td>
                 <td class="ci-item">
@@ -248,6 +247,7 @@ const renderCart = async () => {
                     ${meta ? `<span class="ci-meta">${meta}</span>` : ""}
                     ${it.serial ? `<span class="ci-meta">SN: ${esc(it.serial)}</span>` : ""}
                 </td>
+                <td class="ci-barcode">${esc(it.barcode || "—")}</td>
                 <td class="ci-qty-cell">
                     <div class="ci-inline">
                         <button class="pos-qty-btn" data-act="dec" data-i="${idx}" type="button" aria-label="نقص">−</button>
@@ -259,10 +259,15 @@ const renderCart = async () => {
                     <div class="ci-inline">
                         <input class="ci-price-in" data-k="price" data-i="${idx}" type="number" step="0.01" min="0" value="${it.price}" title="سعر" aria-label="السعر">
                         <span class="ci-price-unit">${sym}</span>
+                    </div>
+                </td>
+                <td class="ci-disc-cell">
+                    <div class="ci-inline">
                         <input class="ci-disc" data-k="disc" data-i="${idx}" type="number" step="0.01" min="0" max="100" value="${it.discountPercent}" title="خصم %" aria-label="خصم">
                         <span class="ci-disc-unit">%</span>
                     </div>
                 </td>
+                <td class="ci-line-total">${fmt(Number(it.qty) * Number(it.price) * (1 - Number(it.discountPercent || 0) / 100))} ${sym}</td>
                 <td class="ci-del-cell">
                     <button class="ci-remove" data-k="del" data-i="${idx}" title="حذف" aria-label="حذف">✕</button>
                 </td>
