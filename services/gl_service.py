@@ -860,13 +860,13 @@ class GLService:
 
     @staticmethod
     def _customer_credit_fallback_code(customer):
-        """The documented static account that carries a customer's credit balance."""
+        """الحساب الاحتياطي لرصيد العميل عبر خريطة المفاهيم."""
         customer_type = getattr(customer, "customer_type", None) if customer else None
         if customer_type == "partner":
-            return "2150"  # PARTNER_CURRENT_ACCOUNT
+            return GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
         if customer_type == "merchant":
-            return "2115"  # MERCHANT_CURRENT_ACCOUNT
-        return "1130"  # RECEIVABLE
+            return GLService.get_account_code_for_concept("MERCHANT_CURRENT_ACCOUNT")
+        return GLService.get_account_code_for_concept("AR")
 
     @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):

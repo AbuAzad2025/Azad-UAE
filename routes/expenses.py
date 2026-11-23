@@ -606,14 +606,14 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" غير نشط.'))
     code_str = str(gl_account_code)
     first_digit = code_str[0] if code_str else ""
-    restricted_prefixes = ["1", "2", "3", "4"]
-    restricted_codes = ["1130", "1150", "1160", "2110", "2120", "2140", "3130", "3350"]
-    if code_str in restricted_codes:
-        raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب أصول/خصوم/حقوق ملكية ولا يمكن استخدامه كمصروف.'))
-    if first_digit in restricted_prefixes and code_str != "6500":
+    # الحسابات الأصولية والخصومية والحقوقية والإيرادية لا تُستخدم كمصروفات
+    if account.type in ("asset", "liability", "equity", "revenue"):
+        raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب "{account.type}" ولا يمكن استخدامه كمصروف.'))
+    # السماح فقط بحسابات المصروفات (5xxx، 6xxx) أو الاستثناء الموثق (فروقات صندوق نقاط البيع)
+    if account.type != "expense" and account.code != "6500":
         raise ValueError(
             gettext(
-                f'⚠️ حساب "{account.name}" (يبدأ بـ {first_digit}) ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'
+                f'⚠️ حساب "{account.name}" ليس حساب مصروفات. استخدم حساب من فئة 5xxx أو 6xxx.'
             )
         )
     return True

@@ -686,14 +686,14 @@ class PartnerService:
                 partner_account = GLService.get_account_code_for_concept(
                     "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id
                 )
-            except Exception:
-                partner_account = "2150"
+            except GLMappingError:
+                partner_account = GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
             try:
                 bank_account = GLService.get_default_liquidity_account(
                     "bank", tenant_id=dist.tenant_id, branch_id=branch_id
                 )
-            except Exception:
-                bank_account = "1120"
+            except GLMappingError:
+                bank_account = GLService.get_account_code_for_concept("BANK", tenant_id=dist.tenant_id)
             lines = [
                 {
                     "account": partner_account,
@@ -809,14 +809,14 @@ class PartnerService:
                 partner_account = GLService.get_account_code_for_concept(
                     "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id, branch_id=branch_id
                 )
-            except Exception:
-                partner_account = "2150"
+            except GLMappingError:
+                partner_account = GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
             try:
                 bank_account = GLService.get_default_liquidity_account(
                     "bank", tenant_id=partner.tenant_id, branch_id=branch_id
                 )
-            except Exception:
-                bank_account = "1120"
+            except GLMappingError:
+                bank_account = GLService.get_account_code_for_concept("BANK", tenant_id=partner.tenant_id)
             amt = float(abs(amount_base))
             if amount_base > 0:
                 lines = [

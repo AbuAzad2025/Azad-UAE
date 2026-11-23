@@ -2,6 +2,9 @@ import logging
 
 from sqlalchemy import text
 
+from services.gl_service import GLService
+from utils.gl_reference_types import GLMappingError
+
 logger = logging.getLogger(__name__)
 
 
@@ -72,15 +75,26 @@ def register_branch_event_listeners():
         if not target.id or not target.tenant_id or not target.is_active:
             return
         try:
+            cash_account = GLService.get_account_code_for_concept(
+                "CASH", tenant_id=target.tenant_id, branch_id=target.id
+            )
+            bank_account = GLService.get_account_code_for_concept(
+                "BANK", tenant_id=target.tenant_id, branch_id=target.id
+            )
             ensure_branch_liquidity_account(
                 connection,
                 target,
-                "1110",
+                cash_account,
                 "cash",
-                "Cashbox",
-                "\u0635\u0646\u062f\u0648\u0642",
+                "صندوق",
+                "صندوق",
             )
-            ensure_branch_liquidity_account(connection, target, "1120", "bank", "Bank", "\u0628\u0646\u0643")
+            ensure_branch_liquidity_account(
+                connection, target, bank_account, "bank", "بنك", "بنك"
+            )
+        except GLMappingError as e:
+            logger.error("فشل resolving حساب السيولة للفرع %s: %s", target.id, e)
+            raise
         except Exception as e:
             logger.error("Failed to ensure financial accounts for branch %s: %s", target.id, e)
             raise

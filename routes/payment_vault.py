@@ -25,6 +25,7 @@ from models import (
     PaymentVault,
 )
 from models.package import TENANT_FLAG_COLUMNS, TENANT_LIMIT_COLUMNS
+from services.gl_service import GLService
 from services.idempotency_service import (
     IdempotencyHashMismatchError,
     IdempotencyInFlightError,
@@ -615,8 +616,14 @@ def settings():
         vault.donation_title_en = request.form.get("donation_title_en") or vault.donation_title_en
         vault.donation_intro_ar = request.form.get("donation_intro_ar") or vault.donation_intro_ar
         vault.donation_intro_en = request.form.get("donation_intro_en") or vault.donation_intro_en
-        vault.donation_debit_account = (request.form.get("donation_debit_account") or "1120").strip()
-        vault.donation_credit_account = (request.form.get("donation_credit_account") or "4200").strip()
+        default_debit = GLService.get_account_code_for_concept(
+            "BANK", tenant_id=vault.tenant_id
+        ) or "1120"
+        default_credit = GLService.get_account_code_for_concept(
+            "DONATION_REVENUE", tenant_id=vault.tenant_id
+        ) or "4500"
+        vault.donation_debit_account = (request.form.get("donation_debit_account") or default_debit).strip()
+        vault.donation_credit_account = (request.form.get("donation_credit_account") or default_credit).strip()
 
         vault.require_2fa = bool(request.form.get("require_2fa"))
         vault.auto_lock_minutes = _as_int(request.form.get("auto_lock_minutes"), vault.auto_lock_minutes)
