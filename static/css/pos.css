@@ -376,6 +376,11 @@ body.pos-layout:has(.pos-app) .pos-fullscreen {
 	.pos-app .pos-card {
 		min-height: 140px;
 	}
+	/* A photo card needs more than the compact text-only height, otherwise
+	   the price is clipped below the card. */
+	.pos-app .pos-card.has-img {
+		min-height: 190px;
+	}
 }
 
 
@@ -4371,6 +4376,9 @@ body.pos-layout .pos-page .form-check-label {
 
 	.pos-app .pos-top-zone .pos-card {
 		min-height: 90px;
+	}
+	.pos-app .pos-top-zone .pos-card.has-img {
+		min-height: 172px;
 	}
 
 	.pos-app .pos-cart-table tbody td {
