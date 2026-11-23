@@ -278,8 +278,10 @@ class Tenant(db.Model):
             if user and getattr(user, "is_authenticated", False):
                 active_tid = get_active_tenant_id(user)
                 if active_tid:
-                    tenant = Tenant.query.filter_by(id=int(active_tid), is_active=True).first()
-                    if tenant:
+                    # Unscoped lookup: Tenant.query is tenant-scoped, so it would
+                    # never resolve the tenant that owns the current request.
+                    tenant = db.session.get(Tenant, int(active_tid))
+                    if tenant and getattr(tenant, "is_active", True):
                         return tenant
                 if not is_platform_owner(user):
                     rel = getattr(user, "tenant", None)

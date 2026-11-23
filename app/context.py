@@ -149,7 +149,7 @@ def register_context_processors(app):
         try:
             from models import Tenant
 
-            tenant = Tenant.get_current()
+            tenant = Tenant.get_current(current_user)
             if tenant:
                 tenant_name_ar = (tenant.name_ar or "").strip()
                 tenant_name = (tenant.name_en or tenant.name or "").strip()

@@ -1353,8 +1353,8 @@ body.pos-layout .erp-mobile-nav {
 
 .pos-pay-method {
 	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 8px;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 4px;
 }
 
 .pos-pay-method .pm {
@@ -2960,10 +2960,10 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 
 .pos-app .pos-lower {
 	display: grid;
-	gap: 12px;
+	gap: 10px;
 	grid-column: 1;
 	grid-row: 2;
-	grid-template-columns: 140px minmax(0, 1fr) 420px;
+	grid-template-columns: 90px minmax(0, 1fr) 320px;
 	min-height: 0;
 }
 
@@ -3381,7 +3381,7 @@ body.pos-layout:has(.pos-workspace) .pos-fullscreen {
 .pos-app .pos-center-col {
 	display: grid;
 	gap: 10px;
-	grid-template-columns: minmax(0, 1fr) 340px;
+	grid-template-columns: minmax(0, 1fr) 300px;
 	grid-template-rows: minmax(0, 1fr);
 }
 
@@ -3881,6 +3881,71 @@ body.pos-layout .pos-page .form-check-label {
 	width: 100%;
 }
 
+/* Narrower review/desktop widths — keep every panel inside the viewport. */
+@media (max-width: 1200px) {
+	.pos-app .pos-workspace {
+		grid-template-rows: minmax(280px, 48%) minmax(0, 1fr);
+	}
+
+	.pos-app .pos-lower {
+		grid-template-columns: 90px minmax(0, 1fr) 320px;
+	}
+
+	.pos-app .pos-center-col {
+		grid-template-columns: minmax(0, 1fr) 300px;
+	}
+
+	.pos-app .pos-top-zone .pos-card {
+		min-height: 128px;
+		padding: 6px;
+	}
+
+	.pos-app .pos-top-zone .pos-card .icon {
+		font-size: 22px;
+	}
+
+	.pos-app .pos-cart-table tbody td {
+		padding: 0 4px;
+	}
+
+	.pos-app .pos-cart-table .ci-inline input,
+	.pos-app .pos-cart-table .ci-inline button {
+		height: 18px;
+		min-height: 18px;
+	}
+
+	.pos-app .pos-pay-col .pos-pay {
+		gap: 2px;
+		padding: 4px;
+	}
+
+	.pos-app .pos-pay-method .pm {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-mixed-btn {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-btn {
+		min-height: 24px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-pay {
+		gap: 1px !important;
+		padding: 3px !important;
+	}
+
+	.pos-app .pos-calc-grid button {
+		min-height: 30px;
+	}
+
+	.pos-app .pos-fast-key {
+		font-size: 8px;
+		min-width: 28px;
+	}
+}
+
 .pos-app #posAlert {
 	left: 16px;
 	margin: 0;
@@ -3910,12 +3975,12 @@ body.pos-layout .pos-page .form-check-label {
 
 .pos-app .pos-top-zone .pos-products {
 	align-content: start;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .pos-app .pos-top-zone .pos-card {
-	min-height: 232px;
-	padding: 12px;
+	min-height: 120px;
+	padding: 10px;
 }
 
 .pos-app .pos-top-zone .pos-card .icon {
@@ -3973,12 +4038,12 @@ body.pos-layout .pos-page .form-check-label {
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: 12px;
-	bottom: calc(100% + 6px);
+	bottom: 100px;
 	box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
-	left: 0;
 	padding: 10px;
-	position: absolute;
-	right: 0;
+	position: fixed;
+	right: 16px;
+	width: 420px;
 	z-index: 60;
 }
 
@@ -3996,11 +4061,110 @@ body.pos-layout .pos-page .form-check-label {
 
 .pos-app .pos-pay-col .pos-settings-body input,
 .pos-app .pos-pay-col .pos-settings-body select {
-	height: 28px;
-	padding: 3px 6px;
+	height: 26px;
+	padding: 2px 5px;
 }
 
 .pos-app .pos-pay-col .pos-settings-body textarea {
-	min-height: 62px;
+	min-height: 50px;
+}
+
+.pos-app .pos-pay-col .pos-settings .collapse.show {
+	padding: 6px;
+}
+
+/* Final authority for widths <=1200 (the Review-pane tab is ~1082px). */
+@media (max-width: 1200px) {
+	.pos-app .pos-topbar-center {
+		flex-basis: 480px;
+		min-width: 480px;
+	}
+
+	.pos-app .pos-action-tiles {
+		gap: 4px;
+	}
+
+	.pos-app .pos-tile {
+		font-size: 7px;
+		min-width: 38px;
+		padding: 2px;
+		width: 38px;
+	}
+
+	.pos-app .pos-sales-tab {
+		font-size: 11px;
+		padding: 6px 8px;
+	}
+
+	.pos-app .pos-workspace {
+		grid-template-rows: minmax(280px, 48%) minmax(0, 1fr);
+	}
+
+	.pos-app .pos-lower {
+		grid-template-columns: 90px minmax(0, 1fr) 320px;
+	}
+
+	.pos-app .pos-center-col {
+		grid-template-columns: minmax(0, 1fr) 300px;
+	}
+
+	.pos-app .pos-top-zone .pos-card {
+		min-height: 120px;
+	}
+
+	.pos-app .pos-top-zone .pos-card .icon {
+		font-size: 20px;
+	}
+
+	.pos-app .pos-top-zone .pos-products {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 4px;
+	}
+
+	.pos-app .pos-cart-table tbody td {
+		padding: 0 4px;
+	}
+
+	.pos-app .pos-cart-table .ci-inline input,
+	.pos-app .pos-cart-table .ci-inline button {
+		height: 18px;
+		min-height: 18px;
+	}
+
+	.pos-app .pos-pay-col .pos-pay {
+		gap: 2px;
+		padding: 4px;
+	}
+
+	.pos-app .pos-pay-method .pm {
+		min-height: 26px;
+	}
+
+	.pos-app .pos-mixed-btn {
+		min-height: 26px;
+	}
+
+	.pos-app .pos-pay-col .pos-btn {
+		min-height: 26px;
+	}
+
+	.pos-app .pos-bottom-zone .pos-calc-grid button {
+		min-height: 28px !important;
+	}
+
+	.pos-app .pos-fast-cash .pos-fast-key {
+		font-size: 8px !important;
+		min-width: 28px !important;
+		padding: 2px !important;
+	}
+
+	.pos-app .pos-pay-method .pm {
+		min-height: 26px !important;
+	}
+
+	.pos-app .pos-pay-col .pos-btn,
+	.pos-app .pos-pay-col .pos-mixed-btn {
+		min-height: 26px !important;
+	}
 }
 
