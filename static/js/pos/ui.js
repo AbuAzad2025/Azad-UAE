@@ -16,6 +16,11 @@ const _customerTimer = null;
 const _productTimer = null;
 let productBusy = false;
 
+// The POS offline service worker answers static assets cache-first by URL, so
+// product photos that changed behind the same name need a version query to
+// revalidate; bump this when the tenant photo set is replaced.
+const POS_IMG_BUSTER = "2";
+
 let _alertTimer = null;
 const showAlert = (msg, level = "danger") => {
 	const el = qs("#posAlert");
@@ -266,10 +271,13 @@ const loadProducts = async (categoryId) => {
 						? `<span class="badge warn">${fmt(p.stock)}</span>`
 						: "";
 			const rawImageUrl = String(p.image_url || "").trim();
-			const imageUrl =
+			const baseImageUrl =
 				rawImageUrl && !/^https?:\/\//i.test(rawImageUrl) && !rawImageUrl.startsWith("/")
 					? `/static/${rawImageUrl}`
 					: rawImageUrl;
+			const imageUrl = baseImageUrl
+				? `${baseImageUrl}${baseImageUrl.includes("?") ? "&" : "?"}v=${POS_IMG_BUSTER}`
+				: baseImageUrl;
 			card.innerHTML = `
                     ${imageUrl ? `<img class="card-img" src="${esc(imageUrl)}" alt="" loading="lazy">` : ""}
                     <div class="icon" aria-hidden="true">📦</div>
