@@ -2,8 +2,8 @@ import logging
 
 from sqlalchemy import text
 
+from services.gl_account_resolver import GLMappingError
 from services.gl_service import GLService
-from utils.gl_reference_types import GLMappingError
 
 logger = logging.getLogger(__name__)
 

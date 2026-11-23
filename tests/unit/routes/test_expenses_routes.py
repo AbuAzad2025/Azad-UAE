@@ -726,10 +726,10 @@ class TestExpenseCategories:
     def test_validate_gl_account_restricted_code(self):
         from routes.expenses import _validate_gl_account_code
 
-        account = MagicMock(name="Cash", is_header=False, is_active=True)
+        account = MagicMock(name="Cash", is_header=False, is_active=True, type="asset")
         with patch("models.GLAccount") as gl:
             gl.query.filter_by.return_value.first.return_value = account
-            with pytest.raises(ValueError, match="أصول"):
+            with pytest.raises(ValueError, match="asset"):
                 _validate_gl_account_code("1130", 1)
 
     def test_validate_gl_account_inactive(self):
@@ -775,7 +775,7 @@ class TestExpenseCategories:
     def test_validate_gl_account_6990_allowed(self):
         from routes.expenses import _validate_gl_account_code
 
-        account = MagicMock(name="Misc", is_header=False, is_active=True)
+        account = MagicMock(name="Misc", is_header=False, is_active=True, type="expense")
         with patch("models.GLAccount") as gl:
             gl.query.filter_by.return_value.first.return_value = account
             assert _validate_gl_account_code("6990", 1) is True

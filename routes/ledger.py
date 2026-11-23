@@ -737,6 +737,9 @@ def aging_analysis_export():
     analysis_type = request.args.get("type", "payables", type=str)
     as_of_date = request.args.get("as_of_date", type=str)
     branch_id = _effective_branch_id()
+    from utils.tenanting import get_active_tenant_id
+
+    tenant_id = get_active_tenant_id(current_user)
 
     if analysis_type not in ("receivables", "payables"):
         flash(gettext("نوع التحليل غير صالح."), "danger")
@@ -746,11 +749,15 @@ def aging_analysis_export():
         if analysis_type == "receivables":
             report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id=branch_id)
             title = gettext("تحليل عمر الذمم المدينة")
-            gl_verify = AgingAnalysisService.verify_receivables_with_gl(as_of_date, branch_id=branch_id)
+            gl_verify = AgingAnalysisService.verify_receivables_with_gl(
+                as_of_date, branch_id=branch_id, tenant_id=tenant_id
+            )
         else:
             report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id=branch_id)
             title = gettext("تحليل عمر الذمم الدائنة")
-            gl_verify = AgingAnalysisService.verify_payables_with_gl(as_of_date, branch_id=branch_id)
+            gl_verify = AgingAnalysisService.verify_payables_with_gl(
+                as_of_date, branch_id=branch_id, tenant_id=tenant_id
+            )
 
         context = {
             "report": report,

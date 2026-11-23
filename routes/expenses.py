@@ -604,8 +604,6 @@ def _validate_gl_account_code(gl_account_code, tenant_id):
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب رئيسي ولا يمكن الترحيل إليه.'))
     if not account.is_active:
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" غير نشط.'))
-    code_str = str(gl_account_code)
-    first_digit = code_str[0] if code_str else ""
     # الحسابات الأصولية والخصومية والحقوقية والإيرادية لا تُستخدم كمصروفات
     if account.type in ("asset", "liability", "equity", "revenue"):
         raise ValueError(gettext(f'⚠️ حساب "{account.name}" هو حساب "{account.type}" ولا يمكن استخدامه كمصروف.'))

@@ -37,7 +37,7 @@ from utils.branching import should_show_all_branch_columns
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, branch_scope_id, permission_required
-from utils.error_messages import ErrorMessages, refuse
+from utils.error_messages import BusinessRuleError, ErrorCategory, ErrorMessages, refuse
 from utils.feature_guards import install_feature_gate
 from utils.helpers import generate_number
 from utils.tenanting import get_active_tenant_id
@@ -252,6 +252,13 @@ def create():
                     today=date.today(),
                 )
             amount = Decimal(str(request.form.get("amount") or "0"))
+            if not amount or amount <= 0:
+                # CHQ-15: amount is required - a cheque for nothing is not a cheque.
+                raise BusinessRuleError(
+                    gettext("المبلغ يجب أن يكون أكبر من صفر. أدخل المبلغ الفعلي للشيك."),
+                    category=ErrorCategory.VALIDATION,
+                    field="amount",
+                )
             try:
                 default_currency = resolve_default_currency()
             except Exception as e:

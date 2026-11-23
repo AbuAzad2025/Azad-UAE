@@ -859,14 +859,22 @@ class GLService:
         return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod
-    def _customer_credit_fallback_code(customer):
+    def _customer_credit_fallback_code(customer, branch_id=None, tenant_id=None):
         """الحساب الاحتياطي لرصيد العميل عبر خريطة المفاهيم."""
         customer_type = getattr(customer, "customer_type", None) if customer else None
         if customer_type == "partner":
-            return GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
-        if customer_type == "merchant":
-            return GLService.get_account_code_for_concept("MERCHANT_CURRENT_ACCOUNT")
-        return GLService.get_account_code_for_concept("AR")
+            concept, static = "PARTNER_CURRENT_ACCOUNT", "2150"
+        elif customer_type == "merchant":
+            concept, static = "MERCHANT_CURRENT_ACCOUNT", "2115"
+        else:
+            concept, static = "AR", "1130"
+        try:
+            return GLService.get_account_code_for_concept(concept, branch_id=branch_id, tenant_id=tenant_id)
+        except (GLMappingError, ValueError):
+            # The mapping API refuses loudly when the concept has no mapping or
+            # the feature is off; the static codes are the legacy fallback the
+            # callers still rely on when there is nothing to map through.
+            return static
 
     @staticmethod
     def get_customer_credit_account(customer, branch_id=None, tenant_id=None):
@@ -883,7 +891,7 @@ class GLService:
         when the code for it is picked.
         """
         concept = GLService.get_customer_credit_concept(customer)
-        fallback_code = GLService._customer_credit_fallback_code(customer)
+        fallback_code = GLService._customer_credit_fallback_code(customer, branch_id=branch_id, tenant_id=tenant_id)
         if not (tenant_id and is_dynamic_gl_mapping_enabled()):
             return fallback_code
         try:

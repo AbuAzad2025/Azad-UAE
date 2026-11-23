@@ -9,6 +9,7 @@ from sqlalchemy import case as sa_case
 from sqlalchemy import func
 
 from extensions import db
+from services.gl_account_resolver import GLMappingError
 
 logger = logging.getLogger(__name__)
 
