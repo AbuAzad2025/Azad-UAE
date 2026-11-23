@@ -229,7 +229,7 @@ const renderCart = async () => {
 	if (cnt) cnt.textContent = String(state.cart.length);
 	if (!state.cart.length) {
 		body.innerHTML =
-			'<tr id="cartEmptyRow"><td colspan="8" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
+			'<tr id="cartEmptyRow"><td colspan="9" class="text-center text-muted py-4">السلة فارغة — امسح الباركود أو اضغط F2 وابدأ البيع</td></tr>';
 		await recalc();
 		scheduleUpsellEval();
 		return;
@@ -239,15 +239,14 @@ const renderCart = async () => {
 		const tr = document.createElement("tr");
 		// ZERO FRONTEND CALC: backend provides exact total; no client-side lineTotal
 		// (line total removed — see audit report /sales/api/calculate-totals)
-		const meta = it.sku ? `SKU: ${esc(it.sku)}` : "";
 		tr.innerHTML = `
                 <td class="ci-idx">${idx + 1}</td>
                 <td class="ci-item">
                     <span class="ci-name">${esc(it.name)}</span>
-                    ${meta ? `<span class="ci-meta">${meta}</span>` : ""}
                     ${it.serial ? `<span class="ci-meta">SN: ${esc(it.serial)}</span>` : ""}
                 </td>
                 <td class="ci-barcode">${esc(it.barcode || "—")}</td>
+                <td class="ci-sku">${esc(it.sku || "—")}</td>
                 <td class="ci-qty-cell">
                     <div class="ci-inline">
                         <button class="pos-qty-btn" data-act="dec" data-i="${idx}" type="button" aria-label="نقص">−</button>

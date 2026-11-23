@@ -4197,27 +4197,31 @@ body.pos-layout .pos-page .form-check-label {
 }
 
 .pos-app .pos-cart-table .pos-col-item {
-	width: 20%;
+	width: 18%;
 }
 
 .pos-app .pos-cart-table .pos-col-barcode {
-	width: 21%;
+	width: 19%;
+}
+
+.pos-app .pos-cart-table .pos-col-sku {
+	width: 9%;
 }
 
 .pos-app .pos-cart-table .pos-col-qty {
-	width: 14%;
+	width: 13%;
 }
 
 .pos-app .pos-cart-table .pos-col-price {
-	width: 11%;
+	width: 10%;
 }
 
 .pos-app .pos-cart-table .pos-col-disc {
-	width: 8%;
+	width: 7%;
 }
 
 .pos-app .pos-cart-table .pos-col-total {
-	width: 18%;
+	width: 16%;
 }
 
 .pos-app .pos-cart-table .pos-col-del {
@@ -4225,9 +4229,14 @@ body.pos-layout .pos-page .form-check-label {
 }
 
 .pos-app .pos-cart-table .ci-barcode,
+.pos-app .pos-cart-table .ci-sku,
 .pos-app .pos-cart-table .ci-line-total {
 	font-size: 11px;
 	white-space: nowrap;
+}
+
+.pos-app .pos-cart-table .ci-sku {
+	color: #64748b;
 }
 
 .pos-app .pos-cart-table .ci-line-total {

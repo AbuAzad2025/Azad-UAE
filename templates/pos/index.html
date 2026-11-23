@@ -98,6 +98,7 @@
             <col class="pos-col-idx">
             <col class="pos-col-item">
             <col class="pos-col-barcode">
+            <col class="pos-col-sku">
             <col class="pos-col-qty">
             <col class="pos-col-price">
             <col class="pos-col-disc">
@@ -109,6 +110,7 @@
               <th scope="col">#</th>
               <th scope="col">{{ _('الصنف') }}</th>
               <th scope="col">{{ _('الباركود') }}</th>
+              <th scope="col">{{ _('SKU') }}</th>
               <th scope="col">{{ _('الكمية') }}</th>
               <th scope="col">{{ _('سعر الوحدة') }}</th>
               <th scope="col">{{ _('خصم %') }}</th>
@@ -117,7 +119,7 @@
             </tr>
           </thead>
           <tbody id="cartBody">
-            <tr id="cartEmptyRow"><td colspan="8" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
+            <tr id="cartEmptyRow"><td colspan="9" class="text-center text-muted py-4">{{ _('السلة فارغة') }}</td></tr>
           </tbody>
         </table>
       </div>
