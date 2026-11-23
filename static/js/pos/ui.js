@@ -19,7 +19,7 @@ let productBusy = false;
 // The POS offline service worker answers static assets cache-first by URL, so
 // product photos that changed behind the same name need a version query to
 // revalidate; bump this when the tenant photo set is replaced.
-const POS_IMG_BUSTER = "2";
+const POS_IMG_BUSTER = "3";
 
 let _alertTimer = null;
 const showAlert = (msg, level = "danger") => {
