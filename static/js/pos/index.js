@@ -612,7 +612,7 @@ const refreshHoldBadge = () => {
 	const n = heldCount();
 	const b = qs("#posHoldBtn");
 	if (b)
-		b.innerHTML = `<i class="fas fa-pause"></i>${n ? `<span class="badge warn">${n}</span>` : ""}`;
+		b.innerHTML = `<i class="fas fa-pause"></i><span>${window.t("تعليق الفاتورة")}</span>${n ? `<span class="badge warn">${n}</span>` : ""}`;
 };
 if (POS_CONFIG.enable_tables && tablesBtn) tablesBtn.classList.remove("d-none");
 if (POS_CONFIG.enable_hold && holdBtn) holdBtn.classList.remove("d-none");

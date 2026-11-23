@@ -525,7 +525,7 @@ body.pos-layout .erp-mobile-nav {
 	bottom: 0;
 	width: 38%;
 	background: #dc2626;
-	clip-path: polygon(0 50%, 100% 35%, 100% 65%);
+	clip-path: polygon(0 0, 0 100%, 48% 50%);
 }
 
 .pos-logo {
