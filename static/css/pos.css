@@ -2089,6 +2089,22 @@ body:has(.pos-app) {
 	width: 100%;
 }
 
+/* A card with a photo carries three stacked blocks (image, name, price).
+   The 165px default only fits the text-only card; give the photo card enough
+   room and keep the price pinned so it can never be pushed out of view. */
+.pos-app .pos-card.has-img {
+	min-height: 210px;
+}
+
+.pos-app .pos-card.has-img .meta {
+	flex: 0 0 auto;
+	margin-top: auto;
+}
+
+.pos-app .pos-card.has-img .price {
+	flex: 0 0 auto;
+}
+
 .pos-app .pos-card.has-img .icon {
 	display: none;
 }
