@@ -15,8 +15,9 @@
     ] %}
   {% endif %}
   {% for code, data in constants %}
+    {% set label = data.name if code in data.name else data.name ~ ' (' ~ code ~ ')' %}
     <option value="{{ code }}" {% if default_code == code %}selected{% endif %}>
-      {{ data.name }} ({{ code }})
+      {{ label }}
     </option>
   {% endfor %}
 {% endmacro %}

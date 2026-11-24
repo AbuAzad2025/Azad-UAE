@@ -789,3 +789,43 @@ input[name="mobile"] {
 	padding-inline: 0;
 	width: auto;
 }
+
+/* POS invoice-settings panel: it used to force every field into two narrow
+   columns (`.row2` inside a grid cell), so the warehouse/notes occupied half
+   the panel and the labels wrapped into a cramped stack. Keep the paired
+   controls in two columns, but give the single fields the full width. */
+.pos-app .pos-pay-col .pos-settings .collapse.show {
+	max-height: calc(100vh - 120px);
+	overflow-y: auto;
+	padding: 14px;
+	width: 440px;
+}
+
+.pos-app .pos-pay-col .pos-settings-body {
+	gap: 12px;
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.pos-app .pos-pay-col .pos-settings-body .row2 {
+	gap: 12px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pos-app .pos-pay-col .pos-settings-body label {
+	white-space: normal;
+}
+
+.pos-app .pos-pay-col .pos-settings-body label select {
+	min-width: 140px;
+	width: auto;
+}
+
+.pos-app .pos-pay-col .pos-settings-body input,
+.pos-app .pos-pay-col .pos-settings-body select {
+	height: 38px;
+	padding: 4px 8px;
+}
+
+.pos-app .pos-pay-col .pos-settings-body textarea {
+	min-height: 64px;
+}
