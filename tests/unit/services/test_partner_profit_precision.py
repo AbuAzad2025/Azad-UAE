@@ -428,6 +428,9 @@ class TestFlushFailures:
         mock_db.session.get.return_value = partner
         mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
         mocker.patch("models.PartnerTransaction", return_value=MagicMock(id=1))
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch("services.gl_service.GLService.get_account_code_for_concept", return_value="2150")
+        mocker.patch("services.gl_service.GLService.get_default_liquidity_account", return_value="1120-B1")
         mocker.patch("services.gl_posting.post_or_fail")
         mock_db.session.flush.side_effect = [None, RuntimeError("fail")]
         with pytest.raises(RuntimeError):

@@ -607,7 +607,7 @@ class TestResolveArcs:
             ),
         )
         code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert code == "2115" == "2115"
+        assert code == "2151" == "2151"
 
         # (b) The concept the customer type names is not one the registry
         #     knows, so the resolver refuses it ...
@@ -618,7 +618,7 @@ class TestResolveArcs:
         # ... and the helper absorbs that refusal and hands back the
         # merchant's static account.
         code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert code == "2115" == "2115"
+        assert code == "2151" == "2151"
 
     def test_dynamic_record_branch_arc(self, db_session, sample_tenant, sample_branch, sample_gl_accounts, mocker):
         from models import GLAccount

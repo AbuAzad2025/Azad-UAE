@@ -863,11 +863,12 @@ class GLService:
         """الحساب الاحتياطي لرصيد العميل عبر خريطة المفاهيم."""
         customer_type = getattr(customer, "customer_type", None) if customer else None
         if customer_type == "partner":
-            concept, static = "PARTNER_CURRENT_ACCOUNT", "2150"
+            concept = "PARTNER_CURRENT_ACCOUNT"
         elif customer_type == "merchant":
-            concept, static = "MERCHANT_CURRENT_ACCOUNT", "2115"
+            concept = "MERCHANT_CURRENT_ACCOUNT"
         else:
-            concept, static = "AR", "1130"
+            concept = "AR"
+        static = str(GL_CONCEPT_REGISTRY[concept]["legacy_code"])
         try:
             return GLService.get_account_code_for_concept(concept, branch_id=branch_id, tenant_id=tenant_id)
         except (GLMappingError, ValueError):

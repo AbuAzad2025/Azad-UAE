@@ -61,7 +61,7 @@ REPORT_REGISTRY = [
         "category": "مالية",
         "permission": "view_reports",
         "has_export": False,
-        "description": "مطابقة حسابات الذمم (1130/3350/2115)",
+        "description": "مطابقة حسابات الذمم (1130/2150/2151)",
     },
     {
         "id": "inventory_reconciliation",

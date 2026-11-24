@@ -274,7 +274,7 @@ class TestLiquidityAccounts:
         partner = MagicMock(customer_type="partner")
         merchant = MagicMock(customer_type="merchant")
         assert GLService.get_customer_credit_account(partner, tenant_id=sample_tenant.id) == "2150"
-        assert GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id) == "2115"
+        assert GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id) == "2151"
         assert GLService.get_customer_credit_account(None, tenant_id=sample_tenant.id) == "1130"
 
     def test_payment_credit_account_cheque(self, db_session, sample_tenant, sample_gl_accounts, mocker):
@@ -603,7 +603,7 @@ class TestDynamicMappingPaths:
         assert partner_code == "2150" == "2150"
 
         merchant_code = GLService.get_customer_credit_account(merchant, tenant_id=sample_tenant.id)
-        assert merchant_code == "2115" == "2115"
+        assert merchant_code == "2151" == "2151"
 
     def test_cheque_debit_dynamic_mapping(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=True)

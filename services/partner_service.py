@@ -688,13 +688,12 @@ class PartnerService:
                     "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id, branch_id=branch_id
                 )
             except GLMappingError:
-                partner_account = GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
-            try:
-                bank_account = GLService.get_default_liquidity_account(
-                    "bank", tenant_id=dist.tenant_id, branch_id=branch_id
+                partner_account = GLService.get_account_code_for_concept(
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=dist.tenant_id
                 )
-            except GLMappingError:
-                bank_account = GLService.get_account_code_for_concept("BANK", tenant_id=dist.tenant_id)
+            bank_account = GLService.get_default_liquidity_account(
+                "bank", tenant_id=dist.tenant_id, branch_id=branch_id
+            )
             lines = [
                 {
                     "account": partner_account,
@@ -811,13 +810,12 @@ class PartnerService:
                     "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id, branch_id=branch_id
                 )
             except GLMappingError:
-                partner_account = GLService.get_account_code_for_concept("PARTNER_CURRENT_ACCOUNT")
-            try:
-                bank_account = GLService.get_default_liquidity_account(
-                    "bank", tenant_id=partner.tenant_id, branch_id=branch_id
+                partner_account = GLService.get_account_code_for_concept(
+                    "PARTNER_CURRENT_ACCOUNT", tenant_id=partner.tenant_id
                 )
-            except GLMappingError:
-                bank_account = GLService.get_account_code_for_concept("BANK", tenant_id=partner.tenant_id)
+            bank_account = GLService.get_default_liquidity_account(
+                "bank", tenant_id=partner.tenant_id, branch_id=branch_id
+            )
             amt = float(abs(amount_base))
             if amount_base > 0:
                 lines = [

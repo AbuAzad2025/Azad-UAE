@@ -28,6 +28,7 @@ from utils.db_safety import atomic_transaction
 from utils.decorators import branch_scope_id, finance_admin_required, permission_required
 from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
+from utils.tenanting import get_active_tenant_id
 
 ledger_bp = Blueprint("ledger", __name__, url_prefix="/ledger")
 
@@ -700,16 +701,21 @@ def aging_analysis():
     analysis_type = request.args.get("type", "receivables", type=str)  # receivables or payables
     as_of_date = request.args.get("as_of_date", type=str)
     branch_id = _effective_branch_id()
+    tenant_id = get_active_tenant_id(current_user)
 
     try:
         if analysis_type == "receivables":
-            report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id=branch_id)
+            report = AgingAnalysisService.get_receivables_aging(as_of_date, branch_id=branch_id, tenant_id=tenant_id)
             title = gettext("تحليل عمر الذمم المدينة")
-            gl_verify = AgingAnalysisService.verify_receivables_with_gl(as_of_date, branch_id=branch_id)
+            gl_verify = AgingAnalysisService.verify_receivables_with_gl(
+                as_of_date, branch_id=branch_id, tenant_id=tenant_id
+            )
         else:
-            report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id=branch_id)
+            report = AgingAnalysisService.get_payables_aging(as_of_date, branch_id=branch_id, tenant_id=tenant_id)
             title = gettext("تحليل عمر الذمم الدائنة")
-            gl_verify = AgingAnalysisService.verify_payables_with_gl(as_of_date, branch_id=branch_id)
+            gl_verify = AgingAnalysisService.verify_payables_with_gl(
+                as_of_date, branch_id=branch_id, tenant_id=tenant_id
+            )
 
         return render_template(
             "ledger/aging_analysis.html",
@@ -737,8 +743,6 @@ def aging_analysis_export():
     analysis_type = request.args.get("type", "payables", type=str)
     as_of_date = request.args.get("as_of_date", type=str)
     branch_id = _effective_branch_id()
-    from utils.tenanting import get_active_tenant_id
-
     tenant_id = get_active_tenant_id(current_user)
 
     if analysis_type not in ("receivables", "payables"):

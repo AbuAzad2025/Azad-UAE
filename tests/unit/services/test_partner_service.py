@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 import models
+from services.gl_account_resolver import GLMappingError
 from services.partner_service import PartnerService
 
 
@@ -268,17 +269,45 @@ class TestDistributionLifecycle:
         mock_db = mocker.patch("services.partner_service.db")
         mock_db.session.get.side_effect = [dist, partner]
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
-        mocker.patch(
+        concept_lookup = mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
-            side_effect=RuntimeError(),
+            side_effect=[
+                GLMappingError(
+                    tenant_id=1,
+                    concept_code="PARTNER_CURRENT_ACCOUNT",
+                    branch_id=1,
+                    issue="No branch mapping; tenant mapping remains available.",
+                ),
+                "2150",
+            ],
         )
         mocker.patch(
             "services.gl_service.GLService.get_default_liquidity_account",
-            side_effect=RuntimeError(),
+            return_value="1120-B1",
         )
         post = mocker.patch("services.gl_posting.post_or_fail")
         PartnerService.pay_distribution(3)
         post.assert_called_once()
+        concept_lookup.assert_any_call("PARTNER_CURRENT_ACCOUNT", tenant_id=1)
+        lines = post.call_args.args[0]
+        assert {line["concept_code"]: line["account"] for line in lines} == {
+            "PARTNER_CURRENT_ACCOUNT": "2150",
+            "BANK": "1120-B1",
+        }
+
+    def test_pay_distribution_unexpected_gl_error_propagates(self, mocker):
+        dist = MagicMock(status="approved", tenant_id=1, net_due=50.0, id=3)
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = dist
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            side_effect=RuntimeError("unexpected GL failure"),
+        )
+        post = mocker.patch("services.gl_posting.post_or_fail")
+        with pytest.raises(RuntimeError, match="unexpected GL failure"):
+            PartnerService.pay_distribution(3)
+        post.assert_not_called()
 
     def test_pay_distribution_not_approved(self, mocker):
         mock_db = mocker.patch("services.partner_service.db")
@@ -344,17 +373,51 @@ class TestAddTransaction:
         tx = MagicMock(id=77)
         tx_cls.return_value = tx
         mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
-        mocker.patch(
+        concept_lookup = mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
-            side_effect=RuntimeError(),
+            side_effect=[
+                GLMappingError(
+                    tenant_id=1,
+                    concept_code="PARTNER_CURRENT_ACCOUNT",
+                    branch_id=1,
+                    issue="No branch mapping; tenant mapping remains available.",
+                ),
+                "2150",
+            ],
         )
         mocker.patch(
             "services.gl_service.GLService.get_default_liquidity_account",
-            side_effect=RuntimeError(),
+            return_value="1120-B1",
         )
         post = mocker.patch("services.gl_posting.post_or_fail")
         PartnerService.add_transaction(1, "additional_investment", Decimal("500"))
         post.assert_called_once()
+        concept_lookup.assert_any_call("PARTNER_CURRENT_ACCOUNT", tenant_id=1)
+        lines = post.call_args.args[0]
+        assert {line["concept_code"]: line["account"] for line in lines} == {
+            "PARTNER_CURRENT_ACCOUNT": "2150",
+            "BANK": "1120-B1",
+        }
+
+    def test_add_transaction_missing_bank_account_fails_closed(self, mocker):
+        partner = _partner(current_balance=Decimal("0"))
+        mock_db = mocker.patch("services.partner_service.db")
+        mock_db.session.get.return_value = partner
+        mocker.patch("utils.currency_utils.get_system_default_currency", return_value="AED")
+        mocker.patch("models.PartnerTransaction", return_value=MagicMock(id=77))
+        mocker.patch("utils.tax_settings._resolve_main_branch", return_value=1)
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            return_value="2150",
+        )
+        mocker.patch(
+            "services.gl_service.GLService.get_default_liquidity_account",
+            side_effect=ValueError("No default bank account configured for tenant_id=1"),
+        )
+        post = mocker.patch("services.gl_posting.post_or_fail")
+        with pytest.raises(ValueError, match="No default bank account"):
+            PartnerService.add_transaction(1, "additional_investment", Decimal("500"))
+        post.assert_not_called()
 
     def test_zero_amount_skips_gl(self, mocker):
         partner = _partner(current_balance=Decimal("0"))

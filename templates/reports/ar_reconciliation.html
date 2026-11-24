@@ -27,7 +27,7 @@
 <div class="card">
   <div class="card-header bg-gradient-primary d-flex justify-content-between align-items-center">
     <h3 class="card-title text-white mb-0">
-      <i class="fas fa-balance-scale mr-2" aria-hidden="true"></i>{{ t('Reconciliation_2') }} {{ t('Receivables_2') }} (1130 + 3350 + 2115)
+      <i class="fas fa-balance-scale mr-2" aria-hidden="true"></i>{{ t('Reconciliation_2') }} {{ t('Receivables_2') }} (1130 + 2150 + 2151)
     </h3>
     {% if report.all_matched %}
     <span class="badge badge-success"><i class="fas fa-check" aria-hidden="true"></i> {{ t('متطابق') }}</span>
@@ -80,8 +80,8 @@
   </div>
   <div class="card-footer text-muted small">
     <strong>1130</strong> — {{ t('Customers_3') }} {{ t('عاديون') }} &nbsp;|&nbsp;
-    <strong>3350</strong> — {{ t('شركاء') }} &nbsp;|&nbsp;
-    <strong>2115</strong> — {{ t('تجار') }}. {{ t('Receivables_2') }} {{ t('التشغيلية') }} = {{ t('Total_4') }} ({{ t('Total_2') }} {{ t('Invoice_2') }} − {{ t('Paid') }}) {{ t('Invoices_2') }} {{ t('Confirmed_3') }} {{ t('حسب') }} {{ t('نوع') }} {{ t('Customer') }}.
+    <strong>2150</strong> — {{ t('شركاء') }} &nbsp;|&nbsp;
+    <strong>2151</strong> — {{ t('تجار') }}. {{ t('Receivables_2') }} {{ t('التشغيلية') }} = {{ t('Total_4') }} ({{ t('Total_2') }} {{ t('Invoice_2') }} − {{ t('Paid') }}) {{ t('Invoices_2') }} {{ t('Confirmed_3') }} {{ t('حسب') }} {{ t('نوع') }} {{ t('Customer') }}.
   </div>
 </div>
 {% endblock %}
