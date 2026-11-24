@@ -762,6 +762,21 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .nav-sidebar {
 	padding-inline: 0;
 }
 
+/* Expanded rail: section captions used different horizontal metrics from the
+   nav links, so their right edge sat 4px off and the labels looked skewed. */
+body .nav-sidebar .erp-sidebar-section-label > .nav-link {
+	margin-inline: 10px;
+	padding-inline: 16px !important;
+}
+
+/* RTL sidebar: the icon must sit on the outer (right) edge before the label.
+   AdminLTE's `row-reverse` override put it on the left and contradicted the
+   10px icon margin written for the RTL layout. In LTR the default row keeps
+   the icon on the left, so no override is needed there. */
+html[dir="rtl"] .nav-sidebar .nav-link {
+	flex-direction: row;
+}
+
 /* Phone numbers are LTR tokens inside an RTL document. Without an explicit
    direction the leading + is painted after the digits (971...+). */
 input[name="phone"],
