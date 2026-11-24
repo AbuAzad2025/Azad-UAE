@@ -12,7 +12,7 @@ from __future__ import annotations
 
 # Platform owner — Azad Smart Systems
 AZAD_LOGO = "assets/brand/azad/logos/logo.png"
-AZAD_LOGO_DARK = "assets/brand/azad/logos/logo-dark.png"
+AZAD_LOGO_DARK = AZAD_LOGO
 AZAD_FAVICON = "assets/brand/azad/favicons/favicon.png"
 AZAD_ICON_192 = "assets/brand/azad/icons/icon-192.png"
 AZAD_ICON_512 = "assets/brand/azad/icons/icon-512.png"

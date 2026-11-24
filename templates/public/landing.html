@@ -25,7 +25,7 @@
     <meta property="og:description" content="{{ _('Accounting, inventory, sales, AI, POS, e-commerce') }}">
     <meta property="og:locale" content="{{ _('og_locale') }}">
     <meta property="og:site_name" content="{{ _('Azad Smart Systems') }}">
-    {% set _logo_path_og = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') %}
+    {% set _logo_path_og = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png') %}
     {% if _logo_path_og.startswith('/static/') %}{% set _logo_path_og = _logo_path_og[8:] %}{% elif _logo_path_og.startswith('static/') %}{% set _logo_path_og = _logo_path_og[7:] %}{% endif %}
     <meta property="og:image" content="{{ url_for('static', filename=_logo_path_og, _external=True) }}">
     <meta property="og:image:width" content="1200">
@@ -92,7 +92,7 @@
 {% set _free_trial = _('Start Free Trial') %}
 {% set _contact_sales = _('Contact Sales') %}
 
-{% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo-gold-web.png') %}
+{% set _logo_path = (config.COMPANY_LOGO or 'assets/brand/azad/logos/logo.png') %}
 {% if _logo_path.startswith('/static/') %}{% set _logo_path = _logo_path[8:] %}{% elif _logo_path.startswith('static/') %}{% set _logo_path = _logo_path[7:] %}{% endif %}
 
 {% set _wa_msg_sales = _('Hello, I want to buy the system or talk to sales') %}

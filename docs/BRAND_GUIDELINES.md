@@ -14,8 +14,8 @@
 ## 2. Logo Usage | استخدام الشعار
 
 ### 2.1 Primary Logo | الشعار الأساسي
-**EN:** Full-color logo on white or light backgrounds. Dark logo (`logo-dark.png`) on colored or dark backgrounds. Minimum display width: 120 px digital, 20 mm print.
-**AR:** الشعار بالألوان الكاملة على خلفيات بيضاء أو فاتحة. الشعار الداكن (`logo-dark.png`) على خلفيات ملونة أو داكنة. الحد الأدنى لعرض العرض: 120 بكسل رقمي، 20 ملم مطبوع.
+**EN:** Full-color logo on white or light backgrounds. Dark logo (`logo.png`) on colored or dark backgrounds. Minimum display width: 120 px digital, 20 mm print.
+**AR:** الشعار بالألوان الكاملة على خلفيات بيضاء أو فاتحة. الشعار الداكن (`logo.png`) على خلفيات ملونة أو داكنة. الحد الأدنى لعرض العرض: 120 بكسل رقمي، 20 ملم مطبوع.
 
 ### 2.2 Clear Space | المساحة الخالية
 **EN:** Maintain clear space around the logo equal to the height of the "A" in "AZAD".
@@ -26,10 +26,10 @@
 **AR:** لا تشد الشعار أو تشوهه أو تدوّره. لا تغيّر ألوان الشعار. لا تضع الشعار على خلفيات مشغولة أو ذات تباين منخفض. لا تُضيف تأثيرات (ظلال، توهج، حدود).
 
 ### 2.4 File Locations | مواقع الملفات
-- `static/assets/brand/azad/logos/logo.png` — Primary / أساسي
-- `static/assets/brand/azad/logos/logo-dark.png` — Dark variant / النسخة الداكنة
-- `static/assets/brand/azad/logos/logo-web.png` — Web-optimized / مُحسّن للويب
-- `static/assets/brand/azad/logos/logo-mark.png` — Icon only / الأيقونة فقط
+- `static/assets/brand/azad/logos/logo.png` — Single canonical logo for every use / الشعار الرسمي الموحّد لكل الاستخدامات
+- `static/assets/brand/azad/icons/icon-192.png` — 192px app icon / أيقونة التطبيق 192 بكسل
+- `static/assets/brand/azad/icons/icon-512.png` — 512px app icon / أيقونة التطبيق 512 بكسل
+- `static/assets/brand/azad/favicons/favicon.png` — Favicon / أيقونة المتصفح
 
 ## 3. Color Palette | لوحة الألوان
 
