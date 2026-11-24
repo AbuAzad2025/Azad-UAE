@@ -142,6 +142,54 @@ describe("pos/ui.js — loadProducts", () => {
     expect(document.getElementById("posProductGrid").textContent).toContain("Burger");
   });
 
+  it("uses the tenant logo when a product has no photo", async () => {
+    window.POS_CONFIG = { tenant_logo_url: "assets/tenants/demo/logos/logo.png" };
+    mockFetch({
+      "/pos/api/products?per_page=60": () =>
+        Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([{ id: 1, name: "Part", price: 25, stock: 10 }]) }),
+    });
+    const { loadProducts } = await loadModule();
+    await loadProducts("");
+    const card = document.querySelector(".pos-card");
+    expect(card.classList.contains("has-img")).toBe(true);
+    expect(card.querySelector(".card-img").getAttribute("src")).toBe("/static/assets/tenants/demo/logos/logo.png?v=3");
+  });
+
+  it("falls back to the tenant logo when a product photo fails", async () => {
+    window.POS_CONFIG = { tenant_logo_url: "/static/assets/tenants/demo/logos/logo.png" };
+    mockFetch({
+      "/pos/api/products?per_page=60": () =>
+        Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([{ id: 1, name: "Part", price: 25, stock: 10, image_url: "assets/tenants/demo/products/missing.jpg" }]) }),
+    });
+    const { loadProducts } = await loadModule();
+    await loadProducts("");
+    const card = document.querySelector(".pos-card");
+    const image = card.querySelector(".card-img");
+    image.dispatchEvent(new Event("error"));
+    expect(image.getAttribute("src")).toBe("/static/assets/tenants/demo/logos/logo.png?v=3");
+    image.dispatchEvent(new Event("error"));
+    expect(card.querySelector(".card-img")).toBeNull();
+    expect(card.classList.contains("has-img")).toBe(false);
+  });
+
+  it("refreshes product-card prices when the exchange rate changes", async () => {
+    document.querySelector('meta[name="pos-base-currency"]').content = "AED";
+    const currency = document.getElementById("currency");
+    currency.innerHTML = '<option value="AED">AED</option><option value="EUR">EUR</option>';
+    currency.value = "EUR";
+    document.getElementById("exchangeRate").value = "4";
+    mockFetch({
+      "/pos/api/products?per_page=60": () =>
+        Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([{ id: 1, name: "Part", price: 25, stock: 10 }]) }),
+    });
+    const { loadProducts, refreshProductPrices } = await loadModule();
+    await loadProducts("");
+    expect(document.querySelector(".pos-card .price").textContent).toBe("6.25 €");
+    document.getElementById("exchangeRate").value = "2";
+    refreshProductPrices();
+    expect(document.querySelector(".pos-card .price").textContent).toBe("12.50 €");
+  });
+
   it("shows empty state", async () => {
     mockFetch({
       "/pos/api/products?per_page=60": () =>

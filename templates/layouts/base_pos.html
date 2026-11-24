@@ -12,6 +12,7 @@
     <title>{% block title %}POS — {{ tenant_name_ar or company_name_ar or 'Azad' }}{% endblock %}</title>
     {% include 'partials/head.html' %}
     <link rel="stylesheet" href="{{ dist_url('css/pos.css') }}">
+    <link rel="stylesheet" href="{{ dist_url('css/readability.css') }}">
     {# layout-utilities.css (the w-* classes used by pos/index.html and
        pos/held_carts.html) is linked once, unconditionally, by the
        partials/head.html include above. It must not be linked again here. #}

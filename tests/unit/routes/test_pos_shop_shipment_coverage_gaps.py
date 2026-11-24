@@ -186,6 +186,7 @@ class TestPosCoverageGaps:
         from routes.pos import _pos_register_context
 
         tenant = MagicMock(name_ar="متجر", name="Store")
+        tenant.id = 1
         with (
             patch("routes.pos.get_accessible_warehouses", return_value=[]),
             patch("routes.pos.Tenant.get_current", return_value=tenant),
@@ -193,6 +194,10 @@ class TestPosCoverageGaps:
             patch("utils.currency_utils.get_currency_symbol", return_value="د.إ"),
             patch("utils.tax_settings.get_prices_include_vat", return_value=True),
             patch("services.industry_service.get_pos_profile", return_value={}),
+            patch(
+                "utils.tenant_branding.resolve_tenant_branding",
+                return_value={"logo_url": "assets/tenants/demo/logos/logo.png"},
+            ),
             patch("routes.pos.get_active_branch_id", return_value=2),
             patch("utils.branching.get_active_branch", return_value=None),
             patch("routes.pos.get_active_tenant_id", return_value=tid),
@@ -205,6 +210,7 @@ class TestPosCoverageGaps:
             ctx = _pos_register_context()
         assert ctx["branch_name"] == "متجر"
         assert ctx["invoice_preview"] == ""
+        assert ctx["pos_config"]["tenant_logo_url"] == "assets/tenants/demo/logos/logo.png"
         if tid:
             app.logger.debug.assert_called()
 

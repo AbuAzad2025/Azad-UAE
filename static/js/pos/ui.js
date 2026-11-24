@@ -6,6 +6,7 @@ import {
 	fmt,
 	priceForCurrency,
 	qs,
+	qsa,
 	selectedCurrency,
 	state,
 	t,
@@ -252,6 +253,7 @@ const loadProducts = async (categoryId) => {
 		products.forEach((p) => {
 			const card = document.createElement("div");
 			card.className = `pos-card${p.is_out_of_stock ? " out" : ""}`;
+			card.dataset.basePrice = String(p.price ?? 0);
 			// Keep both names in the DOM (tests and search rely on the English one)
 			// but render them on separate lines with explicit direction so mixed
 			// Arabic/LTR text cannot produce tangled brackets in RTL cards.
@@ -271,13 +273,16 @@ const loadProducts = async (categoryId) => {
 						? `<span class="badge warn">${fmt(p.stock)}</span>`
 						: "";
 			const rawImageUrl = String(p.image_url || "").trim();
-			const baseImageUrl =
-				rawImageUrl && !/^https?:\/\//i.test(rawImageUrl) && !rawImageUrl.startsWith("/")
-					? `/static/${rawImageUrl}`
-					: rawImageUrl;
-			const imageUrl = baseImageUrl
-				? `${baseImageUrl}${baseImageUrl.includes("?") ? "&" : "?"}v=${POS_IMG_BUSTER}`
-				: baseImageUrl;
+			const rawTenantLogoUrl = String(window.POS_CONFIG?.tenant_logo_url || "").trim();
+			const toStaticUrl = (value) =>
+				value && !/^https?:\/\//i.test(value) && !value.startsWith("/")
+					? `/static/${value}`
+					: value;
+			const withCacheBuster = (value) =>
+				value ? `${value}${value.includes("?") ? "&" : "?"}v=${POS_IMG_BUSTER}` : value;
+			const baseImageUrl = toStaticUrl(rawImageUrl);
+			const tenantLogoUrl = toStaticUrl(rawTenantLogoUrl);
+			const imageUrl = withCacheBuster(baseImageUrl || tenantLogoUrl);
 			card.innerHTML = `
                     ${imageUrl ? `<img class="card-img" src="${esc(imageUrl)}" alt="" loading="lazy">` : ""}
                     <div class="icon" aria-hidden="true">📦</div>
@@ -290,7 +295,18 @@ const loadProducts = async (categoryId) => {
 			const cardImage = card.querySelector(".card-img");
 			if (cardImage) {
 				card.classList.add("has-img");
+				let fallbackAttempted = false;
 				cardImage.addEventListener("error", () => {
+					if (
+						!fallbackAttempted &&
+						baseImageUrl &&
+						tenantLogoUrl &&
+						baseImageUrl !== tenantLogoUrl
+					) {
+						fallbackAttempted = true;
+						cardImage.src = withCacheBuster(tenantLogoUrl);
+						return;
+					}
 					cardImage.remove();
 					card.classList.remove("has-img");
 				});
@@ -431,6 +447,14 @@ const loadTables = async (floorId) => {
 	});
 };
 
+const refreshProductPrices = () => {
+	qsa("#posProductGrid .pos-card").forEach((card) => {
+		const price = card.querySelector(".price");
+		if (!price || card.dataset.basePrice == null) return;
+		price.textContent = `${fmt(priceForCurrency(card.dataset.basePrice))} ${currencySymbolFor(selectedCurrency())}`;
+	});
+};
+
 window.addEventListener("pos:alert", (e) => {
 	showAlert(e.detail?.msg || "", e.detail?.level || "danger");
 });
@@ -445,6 +469,7 @@ export {
 	loadProducts,
 	loadTableOptions,
 	loadTables,
+	refreshProductPrices,
 	renderProductResults,
 	runProductSearch,
 	showAlert,

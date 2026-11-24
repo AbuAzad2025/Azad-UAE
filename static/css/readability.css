@@ -1,0 +1,760 @@
+/* AZAD high-contrast readability layer.
+   Loaded after the theme and POS bundles so dense dashboard controls never
+   shrink below a legible size. Scoped to body/pos-app to avoid bare-class
+   collisions with the design-system stylesheets. */
+
+:root {
+	--az-font-size-xs: 0.875rem;
+	--az-font-size-sm: 0.9375rem;
+	--az-font-size-base: 1rem;
+	--az-font-size-lg: 1.125rem;
+	--az-font-size-xl: 1.375rem;
+	--az-font-size-2xl: 1.75rem;
+	--az-text: #111827;
+	--az-text-muted: #374151;
+	--az-border: #6b7280;
+	--az-input-placeholder: #4b5563;
+	--az-shadow-sm: none;
+	--az-shadow: none;
+	--az-shadow-md: none;
+	--az-shadow-lg: none;
+	--az-navbar-bg: #0f172a;
+	--az-sidebar-bg: #111827;
+	--az-footer-bg: #e5e7eb;
+}
+
+html[data-ui-mode="light"] body {
+	background: #f3f4f6;
+	color: #111827;
+	font-size: 1rem;
+	line-height: 1.65;
+}
+
+html[data-ui-mode="dark"] body {
+	background: #0b1220;
+	color: #f8fafc;
+	font-size: 1rem;
+	line-height: 1.65;
+
+	--az-text: #f8fafc;
+	--az-text-muted: #cbd5e1;
+	--az-border: #94a3b8;
+	--az-input-placeholder: #cbd5e1;
+}
+
+body :focus-visible,
+.pos-app :focus-visible {
+	outline: 3px solid #1d4ed8;
+	outline-offset: 2px;
+}
+
+body .content-header h1 {
+	color: #111827;
+	font-size: 1.75rem;
+	font-weight: 800;
+}
+
+html[data-ui-mode="dark"] body .content-header h1 {
+	color: #f8fafc;
+}
+
+body .content-header {
+	border-bottom: 2px solid #9ca3af;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+}
+
+body .card {
+	background: #ffffff;
+	border: 2px solid #9ca3af;
+	box-shadow: none;
+}
+
+html[data-ui-mode="dark"] body .card {
+	background: #111827;
+	border-color: #64748b;
+}
+
+body .card-header {
+	background: #e5e7eb;
+	border-bottom: 2px solid #6b7280;
+	color: #111827;
+	font-size: 1.0625rem;
+	font-weight: 800;
+}
+
+html[data-ui-mode="dark"] body .card-header {
+	background: #1e293b;
+	color: #f8fafc;
+}
+
+body .table {
+	color: #111827;
+	font-size: 0.9375rem;
+}
+
+html[data-ui-mode="dark"] body .table {
+	color: #f8fafc;
+}
+
+body .table th {
+	background: #e5e7eb;
+	border: 1px solid #6b7280;
+	color: #111827;
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+body .table td {
+	border: 1px solid #cbd5e1;
+	vertical-align: middle;
+}
+
+html[data-ui-mode="dark"] body .table th {
+	background: #1e293b;
+	color: #f8fafc;
+}
+
+html[data-ui-mode="dark"] body .table td {
+	border-color: #475569;
+}
+
+body .text-muted,
+body .small.text-muted,
+body .form-text {
+	color: #374151 !important;
+}
+
+html[data-ui-mode="dark"] body .text-muted,
+html[data-ui-mode="dark"] body .small.text-muted,
+html[data-ui-mode="dark"] body .form-text {
+	color: #cbd5e1 !important;
+}
+
+body .form-control,
+body .form-select,
+body .input-group-text {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 8px;
+	color: #111827;
+	font-size: 1rem;
+	min-height: 44px;
+}
+
+body .form-control::placeholder {
+	color: #4b5563;
+	opacity: 1;
+}
+
+html[data-ui-mode="dark"] body .form-control,
+html[data-ui-mode="dark"] body .form-select,
+html[data-ui-mode="dark"] body .input-group-text {
+	background: #0f172a;
+	border-color: #94a3b8;
+	color: #f8fafc;
+}
+
+body .btn {
+	background-image: none;
+	border-width: 2px;
+	box-shadow: none;
+	font-size: 0.9375rem;
+	font-weight: 800;
+	min-height: 44px;
+}
+
+body .btn-primary {
+	background: #166534;
+	border-color: #14532d;
+	color: #ffffff;
+}
+
+body .btn-success {
+	background: #166534;
+	border-color: #14532d;
+	color: #ffffff;
+}
+
+body .btn-danger {
+	background: #b91c1c;
+	border-color: #991b1b;
+	color: #ffffff;
+}
+
+body .btn-warning {
+	background: #b45309;
+	border-color: #92400e;
+	color: #ffffff;
+}
+
+body .btn-info {
+	background: #1d4ed8;
+	border-color: #1e40af;
+	color: #ffffff;
+}
+
+body .btn-secondary,
+body .btn-outline-secondary {
+	background: #ffffff;
+	border-color: #374151;
+	color: #111827;
+}
+
+body .badge {
+	font-size: 0.8125rem;
+	font-weight: 800;
+	padding: 0.375rem 0.625rem;
+}
+
+body .main-header {
+	background: #0f172a;
+	background-image: none;
+	border-bottom: 2px solid #0f172a;
+}
+
+body .main-sidebar {
+	background: #111827;
+	background-image: none;
+}
+
+body .main-sidebar .nav-link {
+	color: #ffffff;
+	font-size: 0.9375rem;
+	min-height: 44px;
+}
+
+body .main-sidebar .nav-link.active {
+	background: #ffffff;
+	border: 2px solid #facc15;
+	color: #111827;
+}
+
+body .main-sidebar .nav-header {
+	color: #e5e7eb;
+	font-size: 0.8125rem;
+	font-weight: 800;
+}
+
+body .main-footer {
+	background: #e5e7eb;
+	color: #111827;
+	font-size: 0.8125rem;
+}
+
+/* POS register: high contrast, readable controls, internal scrolling only. */
+.pos-app {
+	background: #f3f4f6;
+	color: #111827;
+	font-size: 1rem;
+	gap: 10px;
+	padding: 12px;
+}
+
+.pos-app .pos-topbar {
+	background: #0f172a;
+	background-image: none;
+	border: 2px solid #0f172a;
+	border-radius: 10px;
+	box-shadow: none;
+	color: #ffffff;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 8px 12px;
+}
+
+.pos-app .pos-brand,
+.pos-app .pos-logo,
+.pos-app .pos-user-badge,
+.pos-app .pos-branch-badge,
+.pos-app .pos-topbar-center {
+	color: #ffffff;
+	font-size: 0.9375rem;
+}
+
+.pos-app .pos-topbar-actions {
+	flex: 1 1 100%;
+	min-width: 0;
+}
+
+.pos-app .pos-action-tiles {
+	flex-wrap: nowrap;
+	overflow-x: auto;
+	padding-bottom: 4px;
+}
+
+.pos-app .pos-tile {
+	background: #1d4ed8;
+	background-image: none;
+	border: 2px solid #1e40af;
+	border-radius: 8px;
+	box-shadow: none;
+	color: #ffffff;
+	flex: 0 0 auto;
+	font-size: 0.75rem;
+	font-weight: 800;
+	gap: 4px;
+	min-height: 56px;
+	min-width: 92px;
+	padding: 6px 8px;
+}
+
+.pos-app .pos-tile i {
+	font-size: 1.125rem;
+}
+
+.pos-app .pos-sales-tab {
+	background: #166534;
+	border: 2px solid #14532d;
+	font-size: 0.9375rem;
+	min-height: 48px;
+}
+
+.pos-app .pos-chip {
+	background: #1e293b;
+	border: 2px solid #64748b;
+	color: #ffffff;
+	font-size: 0.875rem;
+	min-height: 44px;
+}
+
+.pos-app .pos-workspace {
+	gap: 10px;
+	grid-template-rows: minmax(220px, 35%) minmax(0, 1fr);
+}
+
+.pos-app .pos-cart-band,
+.pos-app .pos-pay-col .pos-pay,
+.pos-app .pos-pay-col .pos-settings,
+.pos-app .pos-top-zone,
+.pos-app .pos-bottom-zone .pos-calc {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 10px;
+	box-shadow: none;
+}
+
+.pos-app .pos-cart-top {
+	background: #ffffff;
+	border-bottom: 2px solid #6b7280;
+	padding: 8px 10px;
+}
+
+.pos-app .pos-side-head h3 {
+	color: #111827;
+	font-size: 1.125rem;
+}
+
+.pos-app .pos-search {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 8px;
+}
+
+.pos-app .pos-search input {
+	color: #111827;
+	font-size: 1rem;
+	min-height: 36px;
+}
+
+.pos-app .pos-search input::placeholder {
+	color: #4b5563;
+	opacity: 1;
+}
+
+.pos-app .pos-cart-scroll {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.pos-app .pos-cart-table {
+	border: 2px solid #6b7280;
+	table-layout: fixed;
+}
+
+.pos-app .pos-cart-table thead th {
+	background: #0f172a;
+	border: 1px solid #0f172a;
+	color: #ffffff;
+	font-size: 0.875rem;
+	font-weight: 800;
+	padding: 10px 8px;
+}
+
+.pos-app .pos-cart-table tbody td {
+	border: 1px solid #9ca3af;
+	color: #111827;
+	font-size: 0.9375rem;
+	padding: 8px;
+}
+
+.pos-app .pos-cart-table .ci-name {
+	font-size: 0.9375rem;
+	font-weight: 800;
+}
+
+.pos-app .pos-cart-table .ci-meta,
+.pos-app .pos-cart-table .ci-sku,
+.pos-app .pos-cart-table .ci-price-unit {
+	color: #374151;
+	font-size: 0.8125rem;
+}
+
+.pos-app .pos-cart-table .ci-qty,
+.pos-app .pos-cart-table .ci-price-in,
+.pos-app .pos-cart-table .ci-disc {
+	border: 2px solid #6b7280;
+	font-size: 0.9375rem;
+	min-height: 36px;
+}
+
+.pos-app .pos-cart-band .pos-totals {
+	background: #ffffff;
+	border-top: 2px solid #6b7280;
+	gap: 10px;
+	padding: 8px 12px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row {
+	color: #111827;
+	font-size: 0.9375rem;
+	min-height: 36px;
+}
+
+.pos-app .pos-cart-band .pos-totals .row.grand {
+	background: #dcfce7;
+	border: 2px solid #166534;
+	border-radius: 8px;
+	color: #14532d;
+	font-size: 1.125rem;
+	font-weight: 800;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-lower {
+	gap: 10px;
+	grid-template-columns: 70px minmax(0, 1fr) 240px;
+}
+
+.pos-app .pos-center-col {
+	gap: 10px;
+	grid-template-columns: minmax(0, 1fr) 150px;
+}
+
+.pos-app .pos-pay-col {
+	overflow-y: auto;
+}
+
+.pos-app .pos-pay-col .pos-pay {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+}
+
+.pos-app .pos-pay-method {
+	display: grid;
+	gap: 6px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pos-app .pos-pay-method .pm {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 8px;
+	color: #111827;
+	font-size: 0.8125rem;
+	font-weight: 800;
+	height: auto;
+	min-height: 52px;
+	padding: 6px;
+}
+
+.pos-app .pos-pay-method .pm.active {
+	background: #dcfce7;
+	border-color: #166534;
+	color: #14532d;
+}
+
+.pos-app .pos-pay-method .pm[data-method="card"].active {
+	background: #dbeafe;
+	border-color: #1d4ed8;
+	color: #1e3a8a;
+}
+
+.pos-app .pos-pay-method .pm[data-method="bank_transfer"].active {
+	background: #f3e8ff;
+	border-color: #7e22ce;
+	color: #581c87;
+}
+
+.pos-app .pos-pay-method .pm[data-method="e_wallet"].active {
+	background: #ccfbf1;
+	border-color: #0f766e;
+	color: #134e4a;
+}
+
+.pos-app .pos-pay-col .field,
+.pos-app .pos-pay-col .ref-field {
+	display: block;
+}
+
+.pos-app .pos-pay-col .field label,
+.pos-app .pos-pay-col .ref-field label {
+	color: #111827;
+	font-size: 0.875rem;
+	font-weight: 800;
+}
+
+.pos-app .pos-pay-col .form-control,
+.pos-app .pos-pay-col input,
+.pos-app .pos-pay-col select {
+	border: 2px solid #6b7280;
+	color: #111827;
+	font-size: 0.9375rem;
+	min-height: 44px;
+}
+
+.pos-app .pos-btn {
+	border-width: 2px;
+	box-shadow: none;
+	font-size: 1rem;
+	font-weight: 800;
+	min-height: 48px;
+}
+
+.pos-app .pos-btn-primary {
+	background: #166534;
+	border-color: #14532d;
+}
+
+.pos-app .pos-btn-ghost {
+	background: #ffffff;
+	border-color: #1d4ed8;
+	color: #1e3a8a;
+}
+
+.pos-app .pos-top-zone {
+	padding: 10px;
+}
+
+.pos-app .pos-top-zone .pos-products {
+	gap: 10px;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.pos-app .pos-top-zone .pos-card {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 10px;
+	box-shadow: none;
+	gap: 8px;
+	min-height: 150px;
+	padding: 10px;
+}
+
+.pos-app .pos-top-zone .pos-card.has-img {
+	gap: 6px;
+	min-height: 180px;
+	padding: 8px;
+}
+
+.pos-app .pos-top-zone .pos-card .card-img {
+	height: 90px;
+}
+
+.pos-app .pos-top-zone .pos-card .name {
+	color: #111827;
+	font-size: 1rem;
+	font-weight: 800;
+	line-height: 1.35;
+}
+
+.pos-app .pos-top-zone .pos-card .price {
+	background: #166534;
+	border-radius: 6px;
+	color: #ffffff;
+	font-size: 1.0625rem;
+	font-weight: 800;
+	padding: 6px 10px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc {
+	padding: 8px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-display {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	color: #111827;
+	font-size: 1.125rem;
+	font-weight: 800;
+	min-height: 44px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid {
+	gap: 6px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button {
+	background: #e5e7eb;
+	border: 2px solid #6b7280;
+	border-radius: 6px;
+	color: #111827;
+	font-size: 1rem;
+	font-weight: 800;
+	min-height: 44px;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button.enter {
+	background: #166534;
+	border-color: #14532d;
+	color: #ffffff;
+}
+
+.pos-app .pos-bottom-zone .pos-calc-grid button.clear {
+	background: #fee2e2;
+	border-color: #b91c1c;
+	color: #7f1d1d;
+}
+
+.pos-app .pos-cats-col {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 10px;
+}
+
+.pos-app .pos-categories {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	overflow-y: auto;
+}
+
+.pos-app .pos-cat {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	border-radius: 8px;
+	color: #111827;
+	font-size: 0.8125rem;
+	font-weight: 800;
+	min-height: 44px;
+	padding: 8px;
+	white-space: normal;
+}
+
+.pos-app .pos-cat.active {
+	background: #166534;
+	border-color: #14532d;
+	color: #ffffff;
+}
+
+.pos-app .pos-stock-summary {
+	background: #ffffff;
+	border: 2px solid #6b7280;
+	color: #111827;
+	font-size: 0.8125rem;
+}
+
+.pos-app .pos-footer {
+	background: #e5e7eb;
+	border-top: 2px solid #6b7280;
+	color: #111827;
+	font-size: 0.8125rem;
+}
+
+@media (max-width: 1200px) {
+	.pos-app .pos-workspace {
+		grid-template-rows: minmax(220px, 35%) minmax(0, 1fr);
+	}
+
+	.pos-app .pos-lower {
+		grid-template-columns: 70px minmax(0, 1fr) 240px;
+	}
+
+	.pos-app .pos-center-col {
+		grid-template-columns: minmax(0, 1fr) 150px;
+	}
+}
+
+/* Final authority: older dashboard rules set white table cells with white
+   text in dark mode and left 11px footer labels. These declarations win so
+   every body cell, input and small caption stays readable in both modes. */
+body .table {
+	font-size: 0.9375rem !important;
+}
+
+body .table thead th {
+	background: #e5e7eb !important;
+	border-color: #6b7280 !important;
+	color: #111827 !important;
+	font-size: 0.875rem !important;
+}
+
+body .table tbody td {
+	background: #ffffff !important;
+	border-color: #9ca3af !important;
+	color: #111827 !important;
+	font-size: 0.9375rem !important;
+}
+
+html[data-ui-mode="dark"] body .content-wrapper {
+	background: #0b1220 !important;
+	color: #f8fafc !important;
+}
+
+html[data-ui-mode="dark"] body .table thead th {
+	background: #1e293b !important;
+	border-color: #64748b !important;
+	color: #f8fafc !important;
+}
+
+html[data-ui-mode="dark"] body .table tbody td {
+	background: #111827 !important;
+	border-color: #475569 !important;
+	color: #f8fafc !important;
+}
+
+body .main-sidebar,
+html[data-ui-mode="dark"] body .main-sidebar {
+	background-image: none !important;
+	background-color: #111827 !important;
+}
+
+body .main-sidebar .nav-link {
+	color: #ffffff !important;
+	font-size: 0.9375rem !important;
+}
+
+body .main-sidebar .nav-link.active {
+	background: #ffffff !important;
+	color: #111827 !important;
+}
+
+body .form-control,
+body .form-select,
+body .input-group-text {
+	font-size: 1rem !important;
+	min-height: 44px !important;
+}
+
+body .erp-footer-muted,
+body .erp-footer-chip,
+body .erp-footer-copyright,
+body .erp-footer-sep,
+body .main-footer,
+body .small,
+body .text-muted {
+	font-size: 0.75rem !important;
+	color: #374151 !important;
+}
+
+html[data-ui-mode="dark"] body .erp-footer-muted,
+html[data-ui-mode="dark"] body .erp-footer-chip,
+html[data-ui-mode="dark"] body .erp-footer-copyright,
+html[data-ui-mode="dark"] body .erp-footer-sep,
+html[data-ui-mode="dark"] body .main-footer,
+html[data-ui-mode="dark"] body .small,
+html[data-ui-mode="dark"] body .text-muted {
+	color: #cbd5e1 !important;
+}

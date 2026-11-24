@@ -285,6 +285,7 @@ def _pos_register_context():
     from services.industry_service import get_pos_profile
     from utils.currency_utils import get_currency_symbol, resolve_default_currency
     from utils.tax_settings import get_prices_include_vat
+    from utils.tenant_branding import resolve_tenant_branding
 
     warehouses = [
         w for w in get_accessible_warehouses(current_user) if w.is_active and w.warehouse_type != w.TYPE_ONLINE
@@ -330,6 +331,7 @@ def _pos_register_context():
                 # buttons that the server would refuse with a 403.
                 "enable_pos_returns": pos_feature_enabled(tenant, "pos_returns"),
                 "enable_pos_shifts": pos_feature_enabled(tenant, "pos_shifts"),
+                "tenant_logo_url": resolve_tenant_branding(tenant.id).get("logo_url", ""),
             }
             if tenant
             else {
@@ -340,6 +342,7 @@ def _pos_register_context():
                 "enable_kds": True,
                 "enable_pos_returns": False,
                 "enable_pos_shifts": False,
+                "tenant_logo_url": "",
             }
         ),
     }

@@ -33,20 +33,29 @@ def _iter_nodes(node: nodes.Node) -> Iterator[nodes.Node]:
 
 def _declared_blocks(ast: nodes.Template) -> set[str]:
     """Block names a template defines (the ones a child may override)."""
-    return {n.name for n in _iter_nodes(ast) if isinstance(n, nodes.Block)}
+    return {getattr(n, "name", "") for n in _iter_nodes(ast) if isinstance(n, nodes.Block)}
 
 
 def _overridden_blocks(ast: nodes.Template) -> dict[str, int]:
     """Top-level block overrides: name -> line, excluding self-recursive refs."""
-    return {n.name: n.lineno for n in ast.body if isinstance(n, nodes.Block)}
+    return {n.name: n.lineno for n in ast.body if isinstance(n, nodes.Block)}  # type: ignore[attr-defined]
+
+
+def _const_template(node: nodes.Node) -> str | None:
+    """Read a Jinja template-name constant without depending on private attrs."""
+    template = getattr(node, "template", None)
+    if not isinstance(template, nodes.Const):
+        return None
+    value = getattr(template, "value", None)
+    return value if isinstance(value, str) else None
 
 
 def _resolve_extends(ast: nodes.Template) -> str | None:
     """Return the template path this one extends, normalised to a posix relpath."""
     for node in _iter_nodes(ast):
-        if isinstance(node, nodes.Extends) and isinstance(node.template, nodes.Const):
-            value = node.template.value
-            if isinstance(value, str):
+        if isinstance(node, nodes.Extends):
+            value = _const_template(node)
+            if value is not None:
                 return PurePosixPath(value).as_posix()
     return None
 
@@ -63,21 +72,15 @@ def _template_references(ast: nodes.Template) -> list[tuple[str, str, int]]:
     """
     found: list[tuple[str, str, int]] = []
     for node in _iter_nodes(ast):
-        template_node: nodes.Expr | None = None
-        kind = ""
-        if isinstance(node, nodes.Extends):
-            template_node, kind = node.template, "extends"
-        elif isinstance(node, nodes.Include):
-            template_node, kind = node.template, "include"
-        elif isinstance(node, nodes.FromImport):
-            template_node, kind = node.template, "from"
-        elif isinstance(node, nodes.Import):
-            template_node, kind = node.template, "import"
-        if template_node is None or not isinstance(template_node, nodes.Const):
+        if not isinstance(node, (nodes.Extends, nodes.Include, nodes.FromImport, nodes.Import)):
             continue
-        value = template_node.value
-        if isinstance(value, str) and not value.startswith(("http://", "https://")):
-            found.append((kind, PurePosixPath(value).as_posix(), node.lineno))
+        target = _const_template(node)
+        if target is None:
+            continue
+        if not target.startswith(("http://", "https://")):
+            line = getattr(node, "lineno", 0)
+            kind = type(node).__name__.lower()
+            found.append((kind, PurePosixPath(target).as_posix(), line))
     return found
 
 

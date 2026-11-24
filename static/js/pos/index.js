@@ -67,6 +67,7 @@ import {
 	loadProducts,
 	loadTableOptions,
 	loadTables,
+	refreshProductPrices,
 	renderProductResults,
 	runProductSearch,
 	showAlert,
@@ -80,7 +81,7 @@ const WALKIN_CACHE_KEY = "pos_walkin_customer";
 const localWalkin = () => {
 	try {
 		const cached = JSON.parse(localStorage.getItem(WALKIN_CACHE_KEY) || "null");
-		if (cached && cached.is_walkin) return cached;
+		if (cached?.is_walkin) return cached;
 	} catch (_) {}
 	return {
 		id: -1,
@@ -91,7 +92,7 @@ const localWalkin = () => {
 	};
 };
 const rememberWalkin = (c) => {
-	if (!c || !c.is_walkin) return;
+	if (!c?.is_walkin) return;
 	try {
 		localStorage.setItem(WALKIN_CACHE_KEY, JSON.stringify(c));
 	} catch (_) {}
@@ -164,14 +165,19 @@ qsa("#taxRate,#shippingCost,#discountAmount").forEach((el) => {
 	el.addEventListener("input", recalc);
 	el.addEventListener("change", recalc);
 });
-qs("#currency").addEventListener("change", loadRateForCurrency);
+qs("#currency").addEventListener("change", async () => {
+	await loadRateForCurrency();
+	refreshProductPrices();
+});
 qs("#exchangeRate").addEventListener("input", () => {
 	markRateSource("user_manual", window.t("تم تعديل السعر يدوياً"));
 	updateCartPrices();
+	refreshProductPrices();
 });
 qs("#exchangeRate").addEventListener("change", () => {
 	markRateSource("user_manual", window.t("تم تعديل السعر يدوياً"));
 	updateCartPrices();
+	refreshProductPrices();
 });
 qs("#refreshRateBtn")?.addEventListener("click", () => void loadRateForCurrency());
 
@@ -290,7 +296,7 @@ qs("#posCustomerConfirm")?.addEventListener("click", async () => {
 		window.$?.("#posCustomerModal")?.modal?.("hide");
 		showAlert(window.t("تمت إضافة الزبون"), "success");
 		qs("#productSearch")?.focus();
-	} catch (err) {
+	} catch (_err) {
 		showCustomerError(window.t("تعذر إضافة الزبون"));
 	} finally {
 		if (btn) btn.disabled = false;
