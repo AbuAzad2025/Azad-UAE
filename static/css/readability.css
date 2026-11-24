@@ -742,6 +742,7 @@ body .small,
 body small,
 body code,
 body kbd,
-body .text-muted {
+body .text-muted,
+body .form-check-label {
 	font-size: 0.875rem !important;
 }
