@@ -12,7 +12,7 @@
      inline scripts run during parse (e.g. owner invoice settings). #}
   <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
 
-  {# Chart.js is lazy-loaded for most pages, but several pages initialise charts
+  {# Chart.js is lazy-loaded for most pages, but several pages initialize charts
      from inline scripts in the content block, before the bottom lazy-loader can
      run. Preload it on those routes only. #}
   {% set chart_paths = ['/', '/dashboard', '/ledger/aging-analysis', '/ledger/cash-flow', '/ledger/advanced/advanced-analytics', '/ledger/advanced/professional-reports', '/store/reports', '/payment-vault/dashboard', '/payment-vault/reports', '/payment-vault/packages-management'] %}
