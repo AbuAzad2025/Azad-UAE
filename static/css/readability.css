@@ -749,6 +749,19 @@ body .pos-app .pos-chip {
 	font-size: 0.875rem !important;
 }
 
+/* Collapsed sidebar alignment: AdminLTE's 0.8rem padding + 0.4rem margin
+   around a 26px icon needs ~64px, but the collapsed rail gives 48px, so the
+   links overflowed and the icons drifted off the rail's centre. */
+body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .nav-sidebar .nav-link {
+	margin: 0.25rem !important;
+	padding: 0.35rem !important;
+	text-align: center;
+}
+
+body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .nav-sidebar {
+	padding-inline: 0;
+}
+
 /* Phone numbers are LTR tokens inside an RTL document. Without an explicit
    direction the leading + is painted after the digits (971...+). */
 input[name="phone"],
