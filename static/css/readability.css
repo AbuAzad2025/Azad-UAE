@@ -433,7 +433,7 @@ body .main-footer {
 
 .pos-app .pos-lower {
 	gap: 10px;
-	grid-template-columns: 70px minmax(0, 1fr) 240px;
+	grid-template-columns: 140px minmax(0, 1fr) 240px;
 }
 
 .pos-app .pos-center-col {
@@ -669,7 +669,7 @@ body .main-footer {
 	}
 
 	.pos-app .pos-lower {
-		grid-template-columns: 70px minmax(0, 1fr) 240px;
+		grid-template-columns: 140px minmax(0, 1fr) 240px;
 	}
 
 	.pos-app .pos-center-col {
@@ -743,6 +743,49 @@ body small,
 body code,
 body kbd,
 body .text-muted,
-body .form-check-label {
+body .form-check-label,
+body .pos-app label,
+body .pos-app .pos-chip {
 	font-size: 0.875rem !important;
+}
+
+/* Phone numbers are LTR tokens inside an RTL document. Without an explicit
+   direction the leading + is painted after the digits (971...+). */
+input[name="phone"],
+input[name="phone_1"],
+input[name="phone_2"],
+input[name="phone2"],
+input[name="customer_phone"],
+input[name="phone_number"],
+input[name="mobile"] {
+	direction: ltr;
+}
+
+/* Ageing report: the six summary cards share one row, so the AdminLTE
+   ellipsis rule truncated the bucket captions (91-120 ...). Let them wrap
+   instead of hiding the label; the icon gives up a little width. */
+.erp-report-print .info-box .info-box-icon {
+	width: 48px;
+}
+
+.erp-report-print .info-box .info-box-content .info-box-text {
+	overflow: visible;
+	text-overflow: clip;
+	white-space: normal;
+}
+
+/* POS totals rows are plain flex rows, not Bootstrap grid rows. Bootstrap's
+   `.row > *` gives every child width:100% + gutter padding, so the label and
+   its value overflowed the strip and the value was clipped. */
+.pos-app .pos-totals.row,
+.pos-app .pos-totals .row {
+	margin-inline: 0;
+}
+
+.pos-app .pos-totals .row > * {
+	flex: 0 0 auto;
+	margin: 0;
+	max-width: none;
+	padding-inline: 0;
+	width: auto;
 }

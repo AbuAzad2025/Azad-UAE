@@ -19,8 +19,8 @@
         <tbody>
           {% for entry in entries %}
           <tr>
-            <td>{{ entry.entry_number }}</td>
-            <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
+            <td class="erp-dir-ltr text-nowrap">{{ entry.entry_number }}</td>
+            <td class="erp-dir-ltr text-nowrap">{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
             <td>{{ entry.description }}</td>
             <td class="text-success">{{ format_currency(entry.total_debit or 0, tenant_default_currency) }}</td>
             <td class="text-danger">{{ format_currency(entry.total_credit or 0, tenant_default_currency) }}</td>
