@@ -331,7 +331,11 @@ def _pos_register_context():
                 # buttons that the server would refuse with a 403.
                 "enable_pos_returns": pos_feature_enabled(tenant, "pos_returns"),
                 "enable_pos_shifts": pos_feature_enabled(tenant, "pos_shifts"),
-                "tenant_logo_url": resolve_tenant_branding(tenant.id).get("logo_url", ""),
+                "tenant_logo_url": (
+                    resolve_tenant_branding(tenant.id).get("logo_url", "")
+                    if isinstance(getattr(tenant, "id", None), int) and tenant.id > 0
+                    else ""
+                ),
             }
             if tenant
             else {

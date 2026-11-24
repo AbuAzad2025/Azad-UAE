@@ -22,10 +22,10 @@
             <td>{{ entry.entry_number }}</td>
             <td>{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
             <td>{{ entry.description }}</td>
-            <td class="text-success">{{ format_currency(entry.total_debit, tenant_default_currency) }}</td>
-            <td class="text-danger">{{ format_currency(entry.total_credit, tenant_default_currency) }}</td>
+            <td class="text-success">{{ format_currency(entry.total_debit or 0, tenant_default_currency) }}</td>
+            <td class="text-danger">{{ format_currency(entry.total_credit or 0, tenant_default_currency) }}</td>
             <td>
-              {% if (entry.total_debit - entry.total_credit)|abs < 0.01 %}
+              {% if ((entry.total_debit or 0) - (entry.total_credit or 0))|abs < 0.01 %}
               <span class="badge badge-success">{{ t('متوازن') }}</span>
               {% else %}
               <span class="badge badge-danger">{{ t('Unbalanced') }}</span>

@@ -7,6 +7,19 @@
   <meta name="theme-color" content="#0b1220" media="(prefers-color-scheme: dark)">
   <title>{% block title %}{{ tenant_name_ar or company_name_ar or 'نظام المحاسبة' }}{% endblock %}</title>
 
+  {# jQuery must exist before page-level inline scripts in the content block.
+     The old bottom-of-body include let $(document).ready throw on pages whose
+     inline scripts run during parse (e.g. owner invoice settings). #}
+  <script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
+
+  {# Chart.js is lazy-loaded for most pages, but several pages initialise charts
+     from inline scripts in the content block, before the bottom lazy-loader can
+     run. Preload it on those routes only. #}
+  {% set chart_paths = ['/', '/dashboard', '/ledger/aging-analysis', '/ledger/cash-flow', '/ledger/advanced/advanced-analytics', '/ledger/advanced/professional-reports', '/store/reports', '/payment-vault/dashboard', '/payment-vault/reports', '/payment-vault/packages-management'] %}
+  {% if request.path in chart_paths %}
+  <script src="{{ url_for('static', filename='adminlte/plugins/chartjs/Chart.min.js') }}"></script>
+  {% endif %}
+
   <!-- PWA & Icons -->
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
@@ -33,7 +46,7 @@
     })();
   </script>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
+<body class="hold-transition sidebar-mini layout-fixed sidebar-collapse" data-sidebar-side="{{ 'right' if is_rtl else 'left' }}">
 
   <!-- Skip link for accessibility -->
   <a href="#main-content" class="sr-only sr-only-focusable">{{ _('تخطي إلى المحتوى الرئيسي') }}</a>

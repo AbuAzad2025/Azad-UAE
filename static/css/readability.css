@@ -738,23 +738,10 @@ body .input-group-text {
 	min-height: 44px !important;
 }
 
-body .erp-footer-muted,
-body .erp-footer-chip,
-body .erp-footer-copyright,
-body .erp-footer-sep,
-body .main-footer,
 body .small,
+body small,
+body code,
+body kbd,
 body .text-muted {
-	font-size: 0.75rem !important;
-	color: #374151 !important;
-}
-
-html[data-ui-mode="dark"] body .erp-footer-muted,
-html[data-ui-mode="dark"] body .erp-footer-chip,
-html[data-ui-mode="dark"] body .erp-footer-copyright,
-html[data-ui-mode="dark"] body .erp-footer-sep,
-html[data-ui-mode="dark"] body .main-footer,
-html[data-ui-mode="dark"] body .small,
-html[data-ui-mode="dark"] body .text-muted {
-	color: #cbd5e1 !important;
+	font-size: 0.875rem !important;
 }

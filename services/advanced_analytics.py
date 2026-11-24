@@ -132,7 +132,7 @@ class AdvancedFinancialAnalytics:
                 # Asset/Expense: Normal Balance is Debit (+)
                 # Liability/Equity/Revenue: Normal Balance is Credit (-)
 
-                val = line.amount_aed
+                val = Decimal(str(line.amount_aed or 0))
 
                 if account.type in ["asset", "expense"]:
                     total += val
@@ -175,13 +175,13 @@ class AdvancedFinancialAnalytics:
 
                 for line in lines:
                     if account_type in ["asset", "expense"]:
-                        total += line.amount_aed
+                        total += Decimal(str(line.amount_aed or 0))
                     else:
-                        total -= line.amount_aed
+                        total -= Decimal(str(line.amount_aed or 0))
             else:
                 # الرصيد الكامل
-                balance = account.get_balance()
-                total += abs(balance)
+                balance = account.get_balance() or Decimal("0")
+                total += abs(Decimal(str(balance)))
 
         return total
 

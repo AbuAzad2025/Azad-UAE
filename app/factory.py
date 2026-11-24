@@ -442,8 +442,11 @@ def create_app(config_class=Config) -> Flask:
             "default-src 'self'; "
             f"script-src 'self' {nonce_directive}{unsafe_inline}{unsafe_eval}https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
             f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-            "font-src 'self' https://cdnjs.cloudflare.com; "
-            "img-src 'self' data: blob:; "
+            # ReDoc ships its UI font as an embedded data URI and its mini logo
+            # from cdn.redoc.ly. Allow only those two documented exceptions;
+            # no third-party font host is reintroduced.
+            "font-src 'self' https://cdnjs.cloudflare.com data:; "
+            "img-src 'self' data: blob: https://cdn.redoc.ly; "
             "media-src 'self' data: blob:; "
             "connect-src 'self' wss: https://cdn.jsdelivr.net; "
             "frame-ancestors 'self'; "

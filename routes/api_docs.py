@@ -291,7 +291,7 @@ def swagger_ui():
         <div id="swagger-ui"></div>
         <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
-        <script>
+        <script nonce="{{ csp_nonce() }}">
             window.onload = function() {
                 SwaggerUIBundle({
                     url: '/api-docs/openapi.json',
@@ -334,7 +334,7 @@ def redoc():
     </head>
     <body>
         <redoc spec-url='/api-docs/openapi.json'></redoc>
-        <script src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
+        <script type="module" src="https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js"></script>
     </body>
     </html>
     """

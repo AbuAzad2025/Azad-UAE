@@ -1,5 +1,4 @@
-<!-- Core Libraries (load first) -->
-<script src="{{ url_for('static', filename='adminlte/plugins/jquery/jquery.min.js') }}"></script>
+<!-- Core Libraries (load first). jQuery is loaded in the head so inline page scripts can use it. -->
 <script src="{{ url_for('static', filename='adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ url_for('static', filename='adminlte/js/adminlte.min.js') }}"></script>
 
@@ -94,9 +93,9 @@
 
 <!-- DataTables (lazy-loaded when needed) -->
 <script id="datatables-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
-<script id="datatables-bs5-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+<script id="datatables-bs5-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 <script id="datatables-buttons-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js') }}"></script>
-<script id="datatables-buttons-bs5-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/js/buttons.bootstrap5.min.js') }}"></script>
+<script id="datatables-buttons-bs5-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js') }}"></script>
 <script id="datatables-buttons-html5-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script id="datatables-buttons-print-js" data-src="{{ url_for('static', filename='adminlte/plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 
@@ -134,14 +133,12 @@
   // Expose lazy loader globally
   window.lazyLoad = {
     sweetalert2: () => loadScript('sweetalert2-js'),
-    datatables: () => Promise.all([
-      loadScript('datatables-js'),
-      loadScript('datatables-bs5-js'),
-      loadScript('datatables-buttons-js'),
-      loadScript('datatables-buttons-bs5-js'),
-      loadScript('datatables-buttons-html5-js'),
-      loadScript('datatables-buttons-print-js'),
-    ]),
+    datatables: () => loadScript('datatables-js')
+      .then(() => loadScript('datatables-bs5-js'))
+      .then(() => loadScript('datatables-buttons-js'))
+      .then(() => loadScript('datatables-buttons-bs5-js'))
+      .then(() => loadScript('datatables-buttons-html5-js'))
+      .then(() => loadScript('datatables-buttons-print-js')),
     select2: () => loadScript('select2-js'),
     sortable: () => loadScript('sortable-js'),
     chartjs: () => loadScript('chart-js'),
