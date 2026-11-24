@@ -355,25 +355,15 @@ function populateFxDisplay(data) {
 	const stale = data.stale || false;
 	const source = data.source || "unknown";
 
-	const fxLabelsAr = {
-		estimated_rate: "سعر تقديري",
-		last_saved_rate: "آخر سعر محفوظ",
-		live_rate: "سعر مباشر",
-		last_updated: "آخر تحديث",
-	};
-	const fxLabel = (key, fallbackAr) => {
-		const translated = _safeT(key);
-		return translated && translated !== key ? translated : fxLabelsAr[key] || fallbackAr;
-	};
 	const labels = {
-		USD: { ar: fxLabel("currency_usd", "دولار أمريكي"), sym: "$" },
-		ILS: { ar: fxLabel("currency_ils", "شيكل إسرائيلي"), sym: "₪" },
-		JOD: { ar: fxLabel("currency_jod", "دينار أردني"), sym: "JD" },
-		EUR: { ar: fxLabel("currency_eur", "يورو"), sym: "€" },
-		AED: { ar: fxLabel("currency_aed", "درهم إماراتي"), sym: "د.إ" },
-		SAR: { ar: fxLabel("currency_sar", "ريال سعودي"), sym: "ر.س" },
-		EGP: { ar: fxLabel("currency_egp", "جنيه مصري"), sym: "ج.م" },
-		GBP: { ar: fxLabel("currency_gbp", "جنيه إسترليني"), sym: "£" },
+		USD: { ar: _safeT("currency_usd"), sym: "$" },
+		ILS: { ar: _safeT("currency_ils"), sym: "₪" },
+		JOD: { ar: _safeT("currency_jod"), sym: "JD" },
+		EUR: { ar: _safeT("currency_eur"), sym: "€" },
+		AED: { ar: _safeT("currency_aed"), sym: "د.إ" },
+		SAR: { ar: _safeT("currency_sar"), sym: "ر.س" },
+		EGP: { ar: _safeT("currency_egp"), sym: "ج.م" },
+		GBP: { ar: _safeT("currency_gbp"), sym: "£" },
 	};
 	labels[window._FX_FALLBACK_BASE || "USD"] = {
 		ar: window._CURRENCY_NAME_AR,
@@ -399,13 +389,13 @@ function populateFxDisplay(data) {
 		badge.style.display = "inline-block";
 		if (source === "fallback_static") {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = fxLabel("estimated_rate", "سعر تقديري");
+			badge.textContent = _safeT("estimated_rate");
 		} else if (stale) {
 			badge.className = "badge badge-warning ml-1";
-			badge.textContent = fxLabel("last_saved_rate", "آخر سعر محفوظ");
+			badge.textContent = _safeT("last_saved_rate");
 		} else {
 			badge.className = "badge badge-success ml-1";
-			badge.textContent = fxLabel("live_rate", "سعر مباشر");
+			badge.textContent = _safeT("live_rate");
 		}
 	}
 
@@ -415,7 +405,7 @@ function populateFxDisplay(data) {
 		const timeStr = Number.isNaN(d.getTime())
 			? "--"
 			: d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" });
-		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>${fxLabel("last_updated", "آخر تحديث")}: ${timeStr}`;
+		updatedEl.innerHTML = `<i class="fas fa-clock mr-1"></i>${_safeT("last_updated")}: ${timeStr}`;
 	}
 }
 
