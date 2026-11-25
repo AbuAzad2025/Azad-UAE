@@ -3,13 +3,14 @@ from flask_login import current_user
 
 from extensions import db
 from models import Customer, Product, Sale
+from utils.auth_helpers import is_global_owner_user
 from utils.tenanting import assign_tenant_id, tenant_query
 
 
 def _require_permission(permission_code):
     if not current_user.is_authenticated:
         raise PermissionError("Authentication required")
-    if getattr(current_user, "is_owner", False):
+    if is_global_owner_user(current_user):
         return
     if not current_user.has_permission(permission_code):
         raise PermissionError(f"Missing permission: {permission_code}")
@@ -129,7 +130,7 @@ class Query(graphene.ObjectType):
             name=product.name,
             part_number=product.part_number,
             regular_price=float(product.regular_price) if product.regular_price else 0,
-            cost_price=float(product.cost_price) if product.cost_price else 0,
+            cost_price=float(product.cost_price) if current_user.can_see_costs() and product.cost_price else None,
             current_stock=product.current_stock,
             is_active=product.is_active,
         )

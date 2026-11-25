@@ -84,6 +84,17 @@ def integrations():
 @owner_required
 def update_integration(service):
     """تحديث إعدادات التكامل - حفظ حقيقي في قاعدة البيانات"""
+    allowed_services = {
+        "whatsapp",
+        "email",
+        "smtp",
+        "redis",
+        "currency_api",
+        "shipping",
+        "sms",
+    }
+    if service not in allowed_services:
+        abort(404)
     try:
         integration = IntegrationSettings.get_service_config(service)
 
@@ -284,6 +295,8 @@ def reports():
 def company_info():
     """معلومات الشركة/الكراج"""
     tenant = Tenant.get_current(user=current_user)
+    if tenant is None:
+        abort(404)
 
     if request.method == "POST":
         try:
@@ -1082,7 +1095,6 @@ def exchange_rates():
             from_currency = (request.form.get("from_currency") or "USD").upper()
             to_currency = (request.form.get("to_currency") or FALLBACK_CURRENCY).upper()
             rate_val = request.form.get("rate", type=float)
-            request.form.get("effective_date") or today
 
             if rate_val and rate_val > 0:
                 with atomic_transaction("exchange_rate_manual_save"):
@@ -1133,6 +1145,8 @@ def payment_gateways():
     from utils.tenanting import without_tenant_scope
 
     vault = PaymentVault.get_platform_vault()
+    if not vault and not current_app.config.get("SECRET_KEY"):
+        abort(500, description="SECRET_KEY must be configured before creating the platform vault")
     if not vault:
         # The platform vault is tenant-less by design, and the ORM's auto-stamp
         # would give it the active tenant instead - which both defeats the point
@@ -1140,7 +1154,7 @@ def payment_gateways():
         # through the commit, because that is where the stamp happens.
         with without_tenant_scope(), atomic_transaction("payment_gateway_create_vault"):
             vault = PaymentVault(tenant_id=None)
-            vault.set_vault_password(current_app.config.get("SECRET_KEY", "default-vault-password"))
+            vault.set_vault_password(current_app.config["SECRET_KEY"])
             db.session.add(vault)
         _invalidate_owner_changes()
 
@@ -1284,6 +1298,10 @@ def api_update_tenant_settings():
                 parsed = Decimal(str(value))
             except Exception:
                 return error_response(message="Invalid tax rate value", status_code=400)
+            from utils.tax_settings import suggested_rate_for_country
+
+            if tenant.enable_tax and parsed != suggested_rate_for_country(tenant.vat_country or "PS"):
+                return error_response(message="Tax rate must match the country's statutory rate", status_code=400)
             with atomic_transaction("api_update_tenant_settings"):
                 tenant.default_tax_rate = parsed
         else:

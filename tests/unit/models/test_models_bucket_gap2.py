@@ -177,16 +177,16 @@ class TestPackageApply:
         pkg.apply_to_tenant(sample_tenant)
         assert sample_tenant.enable_reports is True
 
-    def test_tier_fills_defaulted_flags_coherently(self, db_session, sample_tenant):
-        sample_tenant.enable_ai = False
-        sample_tenant.enable_payroll = False
+    def test_package_flags_are_copied_exactly(self, db_session, sample_tenant):
+        sample_tenant.enable_ai = True
+        sample_tenant.enable_payroll = True
         pkg = self._package(flags=False)
-        pkg.tier_level = 20  # pro tier
-        pkg.enable_ai = False  # explicitly at column default → tier resolves True
-        pkg.enable_payroll = False  # explicitly at default → tier resolves True
+        pkg.tier_level = 20  # tier no longer silently overrides explicit flags
+        pkg.enable_ai = False
+        pkg.enable_payroll = False
         pkg.apply_to_tenant(sample_tenant)
-        assert sample_tenant.enable_ai is True
-        assert sample_tenant.enable_payroll is True
+        assert sample_tenant.enable_ai is False
+        assert sample_tenant.enable_payroll is False
 
     def test_explicit_flag_beats_tier(self, db_session, sample_tenant):
         pkg = self._package(flags=False)

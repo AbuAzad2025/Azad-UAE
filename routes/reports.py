@@ -8,7 +8,11 @@ from flask_login import current_user, login_required
 
 from services.reports_query_service import ReportsQueryService
 from utils.api_response import error_response, success_response
-from utils.decorators import permission_required, report_branch_scope_id
+from utils.decorators import (
+    permission_required,
+    report_branch_scope_id,
+    require_subscription_feature,
+)
 from utils.feature_guards import install_feature_gate
 from utils.tenanting import (
     get_active_tenant_id,
@@ -42,6 +46,7 @@ def index():
 @reports_bp.route("/partners")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("partners")
 def partners():
     """تقرير الشركاء والمنتجات التابعة للتجار"""
     date_from = request.args.get("date_from", "", type=str)
@@ -370,6 +375,7 @@ def purchases_export():
 @reports_bp.route("/ar-reconciliation")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def ar_reconciliation():
     from services.ar_reconciliation_service import ARReconciliationService
     from utils.branching import get_accessible_branches, user_can_access_branch
@@ -401,6 +407,7 @@ def ar_reconciliation():
 @reports_bp.route("/inventory-reconciliation")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def inventory_reconciliation():
     from services.inventory_reconciliation_service import InventoryReconciliationService
     from utils.branching import (
@@ -455,6 +462,7 @@ def inventory_reconciliation():
 @reports_bp.route("/inventory-reconciliation/export")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def inventory_reconciliation_export():
     from flask import send_file
 

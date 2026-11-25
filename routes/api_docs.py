@@ -29,7 +29,7 @@ def _protect_api_docs_in_production():
     # The full API map is internal: only administrative roles may read it in
     # production. Previously any logged-in tenant user could retrieve it.
     role = getattr(current_user, "role", None)
-    if getattr(role, "slug", "") not in {"super_admin", "owner", "developer", "admin"}:
+    if getattr(role, "slug", "") not in {"super_admin", "owner", "developer"}:
         abort(404)
     return None
 

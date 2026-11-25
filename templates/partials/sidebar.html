@@ -1,6 +1,6 @@
-<aside class="main-sidebar sidebar-dark-primary elevation-4" role="complementary" aria-label="{{ _('القائمة الجانبية') }}">
+<aside class="main-sidebar sidebar-dark-primary elevation-4{{ ' owner-shell' if is_platform_owner_shell else '' }}" role="complementary" aria-label="{{ _('القائمة الجانبية') }}">
     <!-- Brand Link -->
-    <a href="{{ url_for('main.dashboard') }}" class="brand-link erp-sidebar-brand-link" aria-label="{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}">
+    <a href="{{ url_for('owner.dashboard' if is_platform_owner_shell else 'main.dashboard') }}" class="brand-link erp-sidebar-brand-link" aria-label="{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}">
       {% if tenant_logo_url %}
       <img src="{{ tenant_logo_url if tenant_logo_url.startswith('http') else url_for('static', filename=tenant_logo_url) }}" alt="{{ tenant_name_ar or company_name_ar or t('Default_Brand') }}" class="erp-sidebar-brand-logo">
       {% else %}
@@ -42,9 +42,9 @@
       </div>
 
       <!-- Navigation Macros -->
-      {% macro _sec(label, perms) %}
+      {% macro _sec(label, perms, unit='') %}
         {% if perms %}
-        <li class="nav-item erp-sidebar-section-label" role="separator" aria-label="{{ label }}">
+        <li class="nav-item erp-sidebar-section-label" {% if unit %}data-owner-unit="{{ unit }}"{% endif %} role="separator" aria-label="{{ label }}">
           <span class="nav-link">{{ label }}</span>
         </li>
         {% endif %}
@@ -62,10 +62,10 @@
         {% endif %}
       {% endmacro %}
 
-      {% macro _tree(icon, label, match, perm=true) %}
+      {% macro _tree(icon, label, match, perm=true, unit='') %}
         {% if perm %}
         {% set _is_open = request.endpoint and match in request.endpoint %}
-        <li class="nav-item has-treeview{% if _is_open %} menu-open{% endif %}">
+        <li class="nav-item has-treeview{% if _is_open %} menu-open{% endif %}" {% if unit %}data-owner-unit="{{ unit }}"{% endif %}>
           <a href="#" class="nav-link{% if _is_open %} active{% endif %}" role="button" aria-haspopup="true" aria-expanded="{{ 'true' if _is_open else 'false' }}">
             <i class="nav-icon {{ icon }}" aria-hidden="true"></i>
             <p>{{ label }}<i class="right fas fa-angle-left" aria-hidden="true"></i></p>
@@ -85,6 +85,7 @@
       <nav class="mt-2">
         <ul class="nav nav-pills nav-sidebar flex-column erp-sidebar-nav" data-widget="treeview">
 
+        {% if not is_platform_owner_shell %}
           <!-- Dashboard -->
           {{ _nav(url_for('main.dashboard'), 'fas fa-tachometer-alt', t('Dashboard'), 'main.dashboard') }}
 
@@ -115,7 +116,7 @@
           {{ _end(_cust) }}
 
           {% set _rep = current_user.is_authenticated and current_user.has_permission('view_reports') %}
-          {{ _nav(url_for('partners.index'), 'fas fa-handshake', t('Partners'), _rep) }}
+          {{ _nav(url_for('partners.index'), 'fas fa-handshake', t('Partners'), _rep and tenant_flags.get('enable_partners', True)) }}
 
           {# ═══════════════════════════════════════════════════════ #}
           {#  2. المشتريات والتوريد (Procurement)                     #}
@@ -334,6 +335,12 @@
               </a>
             </li>
             <li class="nav-item">
+              <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
+                <i class="fas fa-exchange-alt nav-icon text-warning" aria-hidden="true"></i>
+                <p>{{ t('Inventory_Transfer') }}</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
                 <i class="fas fa-cog nav-icon text-secondary" aria-hidden="true"></i>
                 <p>{{ t('Settings') }}</p>
@@ -386,36 +393,6 @@
             {% endif %}
           {{ _end(_wh) }}
 
-          {% set _sto = current_user.is_authenticated and current_user.has_permission('manage_store') %}
-          {{ _tree('fas fa-store', t('Ecommerce_Store'), 'store', _sto) }}
-            {% if _sto %}
-            <li class="nav-item">
-              <a href="{{ url_for('store.admin_index') }}" class="nav-link">
-                <i class="fas fa-tachometer-alt nav-icon text-info" aria-hidden="true"></i>
-                <p>{{ t('Store_Dashboard') }}</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('store.admin_catalog') }}" class="nav-link">
-                <i class="fas fa-boxes nav-icon text-success" aria-hidden="true"></i>
-                <p>{{ t('Store_Products') }}</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('store.admin_transfer') }}" class="nav-link">
-                <i class="fas fa-exchange-alt nav-icon text-warning" aria-hidden="true"></i>
-                <p>{{ t('Inventory_Transfer') }}</p>
-              </a>
-            </li>
-            <li class="nav-item">
-              <a href="{{ url_for('store.admin_settings') }}" class="nav-link">
-                <i class="fas fa-cog nav-icon" aria-hidden="true"></i>
-                <p>{{ t('Store_Settings') }}</p>
-              </a>
-            </li>
-            {% endif %}
-          {{ _end(_sto) }}
-
           {# ═══════════════════════════════════════════════════════ #}
           {#  4. المالية والمحاسبة (Finance & Accounting)             #}
           {# ═══════════════════════════════════════════════════════ #}
@@ -440,8 +417,9 @@
             {% endif %}
           {{ _end(_pay) }}
 
-          {{ _tree('fas fa-money-check-alt', t('Cheque_Management'), 'cheques', _pay) }}
-            {% if _pay %}
+          {% set _cheque = _pay and tenant_flags.get('enable_cheques', True) %}
+          {{ _tree('fas fa-money-check-alt', t('Cheque_Management'), 'cheques', _cheque) }}
+            {% if _cheque %}
             <li class="nav-item">
               <a href="{{ url_for('cheques.index') }}" class="nav-link">
                 <i class="fas fa-list nav-icon text-info" aria-hidden="true"></i>
@@ -455,7 +433,7 @@
               </a>
             </li>
             {% endif %}
-          {{ _end(_pay) }}
+          {{ _end(_cheque) }}
 
           {% set _exp = current_user.is_authenticated and current_user.has_permission('manage_expenses') %}
           {{ _tree('fas fa-receipt', t('Expenses'), 'expenses', _exp) }}
@@ -502,7 +480,7 @@
                 <p>{{ t('Balance_Sheet') }}</p>
               </a>
             </li>
-            {% if current_user.is_authenticated and current_user.is_admin() %}
+            {% if current_user.is_authenticated and (current_user.is_admin() or (current_user.role and current_user.role.slug in ['manager', 'accountant'])) %}
             <li class="nav-item">
               <a href="{{ url_for('ledger.admin_dashboard') }}" class="nav-link">
                 <i class="fas fa-cogs nav-icon" aria-hidden="true"></i>
@@ -639,17 +617,86 @@
           {% set _bak = current_user.is_authenticated and not current_user.is_owner and current_user.has_permission('manage_backups') %}
           {{ _nav(url_for('tenant_backups.index'), 'fas fa-database', t('Backups'), _bak) }}
 
+        {% else %}
+          {# Platform owner: every admin surface, grouped. No tenant operations. #}
+          {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Owner_Dashboard'), 'owner.dashboard') }}
+
+          {{ _tree('fas fa-building', t('Manage_Tenants'), 'owner.tenants_list', true, 'tenants') }}
+          {{ _nav(url_for('owner.tenants_list'), 'fas fa-building', t('Manage_Tenants'), 'owner.tenants_list') }}
+          {{ _nav(url_for('payment_vault.packages_management'), 'fas fa-tags', t('SaaS_Plans'), 'payment_vault.packages_management') }}
+          {{ _nav(url_for('owner.tenant_stores'), 'fas fa-store', t('Tenant_Stores'), 'owner.tenant_stores') }}
+          {{ _nav(url_for('owner.tenant_ai'), 'fas fa-robot', t('Tenant_AI'), 'owner.tenant_ai') }}
+          {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Platform_Users'), 'owner.users_list') }}
+          {{ _nav(url_for('owner.roles_permissions'), 'fas fa-user-shield', t('Roles_And_Permissions'), 'owner.roles_permissions') }}
+          {{ _nav(url_for('owner.reports'), 'fas fa-chart-pie', t('Reports'), 'owner.reports') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-heartbeat', t('System'), 'owner.system_health', true, 'system') }}
+          {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('System_Health'), 'owner.system_health') }}
+          {{ _nav(url_for('owner.activity_monitor'), 'fas fa-chart-line', t('Live_Monitoring'), 'owner.activity_monitor') }}
+          {{ _nav(url_for('owner.performance_metrics'), 'fas fa-tachometer-alt', t('Performance'), 'owner.performance_metrics') }}
+          {{ _nav(url_for('owner.security_alerts'), 'fas fa-shield-alt', t('Security_Alerts'), 'owner.security_alerts') }}
+          {{ _nav(url_for('owner.audit_logs'), 'fas fa-clipboard-list', t('Audit_Log'), 'owner.audit_logs') }}
+          {{ _nav(url_for('owner.error_audit_logs'), 'fas fa-exclamation-triangle', t('Error_Log'), 'owner.error_audit_logs') }}
+          {{ _nav(url_for('owner.login_history'), 'fas fa-history', t('Login_Log'), 'owner.login_history') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-database', t('Backups'), 'owner.list_backups', true, 'backups') }}
+          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('System_Backups'), 'owner.list_backups') }}
+          {{ _nav(url_for('owner.scheduled_backups'), 'fas fa-clock', t('Scheduled_Backups'), 'owner.scheduled_backups') }}
+          {{ _nav(url_for('owner.verify_backups'), 'fas fa-check-double', t('Verify_Backups'), 'owner.verify_backups') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-server', t('Database'), 'owner.database', true, 'database') }}
+          {{ _nav(url_for('owner.database_tools'), 'fas fa-table', t('Database'), 'owner.database_tools') }}
+          {{ _nav(url_for('owner.config'), 'fas fa-sliders-h', t('Database_Settings'), 'owner.config') }}
+          {{ _nav(url_for('owner.system_stats'), 'fas fa-chart-bar', t('Database_Stats'), 'owner.system_stats') }}
+          {{ _nav(url_for('owner.sql_console'), 'fas fa-code', t('SQL_Console'), 'owner.sql_console') }}
+          {{ _nav(url_for('owner.data_cleanup'), 'fas fa-broom', t('Data_Cleanup'), 'owner.data_cleanup') }}
+          {{ _nav(url_for('owner.import_export_tools'), 'fas fa-file-export', t('Import_Export'), 'owner.import_export_tools') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-cogs', t('System_Settings'), 'owner.tax_settings', true, 'settings') }}
+          {{ _nav(url_for('owner.system_config'), 'fas fa-cogs', t('System_Settings'), 'owner.system_config') }}
+          {{ _nav(url_for('owner.tax_settings'), 'fas fa-percent', t('Taxes'), 'owner.tax_settings') }}
+          {{ _nav(url_for('owner.currency_settings'), 'fas fa-dollar-sign', t('Currencies'), 'owner.currency_settings') }}
+          {{ _nav(url_for('owner.exchange_rates'), 'fas fa-exchange-alt', t('Exchange_Rates'), 'owner.exchange_rates') }}
+          {{ _nav(url_for('owner.payment_gateways'), 'fas fa-credit-card', t('Payment_Gateways'), 'owner.payment_gateways') }}
+          {{ _nav(url_for('owner.email_settings'), 'fas fa-envelope', t('Email'), 'owner.email_settings') }}
+          {{ _nav(url_for('owner.sms_settings'), 'fas fa-sms', t('SMS'), 'owner.sms_settings') }}
+          {{ _nav(url_for('owner.whatsapp_settings'), 'fab fa-whatsapp', t('WhatsApp'), 'owner.whatsapp_settings') }}
+          {{ _nav(url_for('owner.notification_templates'), 'fas fa-bell', t('Notification_Templates'), 'owner.notification_templates') }}
+          {{ _nav(url_for('owner.store_payment_methods'), 'fas fa-credit-card', t('Store_Payment_Methods'), 'owner.store_payment_methods') }}
+          {{ _nav(url_for('owner.developer_settings'), 'fas fa-building', t('Developer_Company_Settings'), 'owner.developer_settings') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-brain', t('AI_And_Integrations'), 'owner.ai_training', true, 'ai') }}
+          {{ _nav(url_for('owner.ai_training'), 'fas fa-brain', t('AI_Training'), 'owner.ai_training') }}
+          {{ _nav(url_for('owner.ai_training_upload'), 'fas fa-upload', t('AI_Training_Upload'), 'owner.ai_training_upload') }}
+          {{ _nav(url_for('owner.ai_training_progress'), 'fas fa-chart-line', t('AI_Training_Progress'), 'owner.ai_training_progress') }}
+          {{ _nav(url_for('owner.integrations'), 'fas fa-plug', t('Integrations'), 'owner.integrations') }}
+          {{ _nav(url_for('ai.config'), 'fas fa-key', t('AI_Keys'), 'ai.config') }}
+          {{ _end() }}
+
+          {{ _tree('fas fa-user-lock', t('System_Tools'), 'owner.api_keys', true, 'security') }}
+          {{ _nav(url_for('owner.api_keys'), 'fas fa-key', t('API_Key_Management'), 'owner.api_keys') }}
+          {{ _nav(url_for('owner.ip_whitelist'), 'fas fa-network-wired', t('IP_Whitelist'), 'owner.ip_whitelist') }}
+          {{ _nav(url_for('owner.master_login_info'), 'fas fa-user-shield', t('Master_Password'), 'owner.master_login_info') }}
+          {{ _nav(url_for('payment_vault.index'), 'fas fa-vault', t('Secret_Vault'), 'payment_vault.index') }}
+          {{ _end() }}
+        {% endif %}
+
+          {% if not is_platform_owner_shell %}
           {# ═══════════════════════════════════════════════════════ #}
           {#  8. الشركة والمالك (Company & Owner)                     #}
           {# ═══════════════════════════════════════════════════════ #}
           {% set _co_perm = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in ['developer','super_admin','manager'])) %}
-          {{ _sec(t('Company_Management'), _co_perm) }}
+          {{ _sec(t('System_Tools') if is_platform_owner_shell else t('Company_Management'), _co_perm) }}
 
           {% if current_user.is_authenticated and ((current_user.is_owner and not current_user.tenant_id) or (current_user.role and current_user.role.slug == 'developer')) %}
           {{ _nav(url_for('owner.dashboard'), 'fas fa-crown text-warning', t('Owner_Dashboard'), 'owner.dashboard') }}
           {{ _nav(url_for('owner.system_config'), 'fas fa-cogs text-info', t('System_Settings'), 'owner.system_config') }}
           {{ _nav(url_for('owner.users_list'), 'fas fa-users-cog', t('Platform_Users')) }}
-          {{ _nav(url_for('owner.list_backups'), 'fas fa-database', t('System_Backups')) }}
           {{ _nav(url_for('owner.system_health'), 'fas fa-heartbeat', t('System_Health')) }}
           {{ _nav(url_for('ai.config'), 'fas fa-key text-info', t('AI_Keys')) }}
           {% endif %}
@@ -663,6 +710,7 @@
           {% endif %}
           {% if current_user.is_authenticated and current_user.is_admin() %}
           {{ _nav(url_for('printing.print_settings'), 'fas fa-print', t('Print_Settings')) }}
+          {% endif %}
           {% endif %}
           {% endif %}
 

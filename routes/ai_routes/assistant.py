@@ -64,11 +64,18 @@ def config():
 
         if not api_key:
             return error_response(message=gettext("المفتاح مطلوب"), status_code=400)
+        if any(c in api_key for c in "\r\n"):
+            return error_response(message=gettext("المفتاح يحتوي على سطر جديد غير مسموح"), status_code=400)
 
         try:
             from pathlib import Path
 
-            base_env_path = Path(__file__).resolve().parent.parent / ".env"
+            # Prefer the nearest existing .env walking up from the classic
+            # routes/ location to the repository root (where config.py loads it).
+            env_root = Path(__file__).resolve().parent.parent
+            base_env_path = env_root / ".env"
+            if not base_env_path.exists():
+                base_env_path = env_root.parent / ".env"
 
             env_file = base_env_path
 
@@ -115,7 +122,7 @@ def config():
             current_app.logger.exception("Failed to save AI API key")
             return error_response(
                 message=gettext("تعذر حفظ إعدادات AI حالياً"),
-                status_code=200,
+                status_code=500,
             )
 
     current_groq = os.environ.get("GROQ_API_KEY", "")

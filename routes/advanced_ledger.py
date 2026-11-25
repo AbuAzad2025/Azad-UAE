@@ -27,10 +27,13 @@ from utils.api_response import error_response, success_response
 from utils.currency_utils import get_system_default_currency, resolve_default_currency
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required, permission_required
+from utils.feature_guards import install_feature_gate
 from utils.gl_tenant import active_tenant_id, gl_account_query, gl_entry_query
 from utils.tenanting import get_active_tenant_id, tenant_get_or_404
 
 advanced_ledger_bp = Blueprint("advanced_ledger", __name__, url_prefix="/ledger/advanced")
+# Analytics, journal management and GL writes here all require the GL module.
+install_feature_gate(advanced_ledger_bp, "gl")
 
 
 def _accounts():

@@ -355,6 +355,7 @@ def register_context_processors(app):
         tenant_usage = {}
         tenant_subscription = {}
         wa_upgrade_link = ""
+        _t = None
         try:
             from sqlalchemy import func, select
 
@@ -401,9 +402,7 @@ def register_context_processors(app):
                     "is_trial": getattr(_t, "is_trial", False),
                     "is_active": _t.is_active,
                     "is_suspended": getattr(_t, "is_suspended", False),
-                    "expiry_date": (
-                        _t.subscription_end_at.isoformat() if getattr(_t, "subscription_end_at", None) else None
-                    ),
+                    "expiry_date": (_t.subscription_end.isoformat() if getattr(_t, "subscription_end", None) else None),
                 }
                 wa_upgrade_link = developer_whatsapp_link or _normalize_whatsapp_link(
                     developer_whatsapp or developer_phone
@@ -434,6 +433,35 @@ def register_context_processors(app):
             "get_currency_symbol": get_currency_symbol,
             "number_to_arabic_words": number_to_arabic_words,
             "current_user_permissions": current_user_permissions,
+            # Exact tenant module flags for UI gating. The sidebar used to
+            # infer them from permissions, which diverges from blueprint
+            # gates (e.g. cheques used manage_payments but the route checks
+            # enable_cheques), producing links that always 403.
+            "tenant_flags": {
+                flag: bool(getattr(_t, flag, True)) if _t is not None else True
+                for flag in (
+                    "enable_ai",
+                    "enable_api",
+                    "enable_bank_reconciliation",
+                    "enable_campaigns",
+                    "enable_cheques",
+                    "enable_donations",
+                    "enable_expenses",
+                    "enable_fixed_assets",
+                    "enable_gl",
+                    "enable_maintenance",
+                    "enable_multi_currency",
+                    "enable_multi_warehouse",
+                    "enable_partners",
+                    "enable_payroll",
+                    "enable_pos",
+                    "enable_reports",
+                    "enable_shipments",
+                    "enable_store",
+                    "enable_warranty_tracking",
+                    "enable_azad_platform",
+                )
+            },
             "app_enums": app_enums,
             "role_enum": {
                 "OWNER": "owner",

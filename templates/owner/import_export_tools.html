@@ -14,25 +14,15 @@
     <div class="card-body">
       <h5 class="mb-4">{{ _('تصدير إلى Excel') }}</h5>
       <div class="row">
-        <div class="col-md-3">
-          <a href="{{ url_for('owner.export_excel', table_name='customers') }}" class="btn btn-success btn-block btn-lg mb-3">
+        <div class="col-md-6">
+          <a href="{{ url_for('owner.export_excel', table_name='tenants') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2" aria-hidden="true"></i>
-            <br>{{ _('العملاء') }}</a>
+            <br>{{ _('Tenants') }}</a>
         </div>
-        <div class="col-md-3">
-          <a href="{{ url_for('owner.export_excel', table_name='products') }}" class="btn btn-success btn-block btn-lg mb-3">
+        <div class="col-md-6">
+          <a href="{{ url_for('owner.export_excel', table_name='users') }}" class="btn btn-success btn-block btn-lg mb-3">
             <i class="fas fa-file-excel fa-2x mb-2" aria-hidden="true"></i>
-            <br>{{ _('المنتجات') }}</a>
-        </div>
-        <div class="col-md-3">
-          <a href="{{ url_for('owner.export_excel', table_name='sales') }}" class="btn btn-success btn-block btn-lg mb-3">
-            <i class="fas fa-file-excel fa-2x mb-2" aria-hidden="true"></i>
-            <br>{{ _('المبيعات') }}</a>
-        </div>
-        <div class="col-md-3">
-          <a href="{{ url_for('owner.export_excel', table_name='expenses') }}" class="btn btn-success btn-block btn-lg mb-3">
-            <i class="fas fa-file-excel fa-2x mb-2" aria-hidden="true"></i>
-            <br>{{ _('المصروفات') }}</a>
+            <br>{{ _('Users') }}</a>
         </div>
       </div>
 

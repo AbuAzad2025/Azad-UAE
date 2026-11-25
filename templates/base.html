@@ -61,6 +61,7 @@
 
   <div class="wrapper">
     {% set is_global_scope_user = current_user.is_authenticated and (current_user.is_owner or (current_user.role and current_user.role.slug in role_enum.global_scope)) %}
+    {% set is_platform_owner_shell = current_user.is_authenticated and not current_user.tenant_id and (current_user.is_owner or (current_user.role and current_user.role.slug == 'developer')) %}
 
     {% include 'partials/navbar.html' %}
     {% if current_user.is_authenticated %}

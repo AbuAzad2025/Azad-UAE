@@ -7,7 +7,7 @@ from extensions import db
 from models import Campaign, Shipment, WarrantyClaim
 from services.logging_core import LoggingCore
 from utils.db_safety import atomic_transaction
-from utils.decorators import permission_required
+from utils.decorators import permission_required, require_subscription_feature
 from utils.error_messages import safe_error
 from utils.numeric_input import parse_decimal_field
 from utils.tenanting import get_active_tenant_id
@@ -18,6 +18,7 @@ uinv_bp = Blueprint("unified_inventory", __name__, url_prefix="/uinv")
 @uinv_bp.route("/campaigns")
 @login_required
 @permission_required("manage_products")
+@require_subscription_feature("campaigns")
 def campaigns_index():
     tid = get_active_tenant_id(current_user)
     from services.campaign_service import CampaignService
@@ -29,6 +30,7 @@ def campaigns_index():
 @uinv_bp.route("/campaigns", methods=["POST"])
 @login_required
 @permission_required("manage_products")
+@require_subscription_feature("campaigns")
 def campaigns_create():
     tid = get_active_tenant_id(current_user)
     if not tid:
@@ -58,6 +60,7 @@ def campaigns_create():
 @uinv_bp.route("/warranty")
 @login_required
 @permission_required("manage_products")
+@require_subscription_feature("warranty_tracking")
 def warranty_index():
     tid = get_active_tenant_id(current_user)
     from services.warranty_service import WarrantyService
@@ -69,6 +72,7 @@ def warranty_index():
 @uinv_bp.route("/warranty", methods=["POST"])
 @login_required
 @permission_required("manage_products")
+@require_subscription_feature("warranty_tracking")
 def warranty_create():
     tid = get_active_tenant_id(current_user)
     if not tid:

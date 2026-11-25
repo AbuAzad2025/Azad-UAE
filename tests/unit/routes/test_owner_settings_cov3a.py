@@ -64,8 +64,8 @@ class TestIntegrationCov3a:
             patch("routes.owner.settings.IntegrationSettings", cls),
         ):
             resp = app.test_client().post("/owner/integrations/update/slack", data={"enabled": "on"})
-        assert resp.status_code == 302
-        integration.set_config.assert_called_once_with({})
+        assert resp.status_code == 404
+        cls.get_service_config.assert_not_called()
 
     def test_cov3_save_exception_flashes_error(self, app_factory, bypass_owner_auth):
         app = app_factory(owner_bp)

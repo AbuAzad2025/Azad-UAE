@@ -173,6 +173,28 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="edit_tier_level">{{ _('Level') }} (10 / 20 / 30)</label>
+                                <select class="form-control" name="tier_level" id="edit_tier_level" aria-label="tier level">
+                                    <option value="10" {% if package.tier_level == 10 %}selected{% endif %}>10 — Basic</option>
+                                    <option value="20" {% if package.tier_level == 20 %}selected{% endif %}>20 — Pro</option>
+                                    <option value="30" {% if package.tier_level == 30 %}selected{% endif %}>30 — Enterprise</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="custom-control custom-switch">
+                                <input type="checkbox" class="custom-control-input" id="edit_has_pos"
+                                       name="has_pos" {% if package.has_pos %}checked{% endif %} aria-label="enable pos">
+                                <label class="custom-control-label" for="edit_has_pos">
+                                    <i class="fas fa-cash-register text-info" aria-hidden="true"></i> {{ _('Point of Sale') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                     
                     <hr class="my-4">
                     

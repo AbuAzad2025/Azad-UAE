@@ -19,6 +19,12 @@ from .blueprint import ai_bp
 logger = logging.getLogger(__name__)
 
 
+def _fail(e):
+    """Log the exception server-side and return a safe generic message."""
+    logger.exception("AI knowledge endpoint failure")
+    return error_response(message=gettext("حدث خطأ غير متوقع"), status_code=500)
+
+
 @ai_bp.route("/contextual-help/<page>", methods=["GET"])
 @login_required
 @permission_required("view_reports")
@@ -38,7 +44,7 @@ def learning_status():
         insights = learning_system.get_learning_insights()
         return success_response(data={"learning_insights": insights})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/learning/evolve", methods=["POST"])
@@ -50,7 +56,7 @@ def evolve_knowledge():
         evolution = learning_system.evolve_knowledge()
         return success_response(data={"evolution": evolution})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/improvement/status")
@@ -62,7 +68,7 @@ def improvement_status():
         status = self_improvement.get_improvement_status()
         return success_response(data={"improvement_status": status})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/improvement/auto-improve", methods=["POST"])
@@ -74,7 +80,7 @@ def auto_improve():
         improvements = self_improvement.auto_improve()
         return success_response(data={"improvements": improvements})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/improvement/progress")
@@ -86,7 +92,7 @@ def improvement_progress():
         progress = self_improvement.track_progress()
         return success_response(data={"progress": progress})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/improvement/set-goal", methods=["POST"])
@@ -114,7 +120,7 @@ def set_improvement_goal():
         result = self_improvement.set_improvement_goal(area, target_score, timeframe)
         return success_response(data=result)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/global/insights")
@@ -126,7 +132,7 @@ def global_insights():
         insights = global_connector.get_global_insights()
         return success_response(data={"global_insights": insights})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/global/expertise-update")
@@ -138,7 +144,7 @@ def update_global_expertise():
         updates = expertise_updater.update_expertise()
         return success_response(data={"expertise_updates": updates})
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/performance/analysis")
@@ -166,7 +172,7 @@ def performance_analysis():
             },
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/knowledge/add-website", methods=["POST"])
@@ -194,7 +200,7 @@ def add_knowledge_website():
         result = knowledge_expander.add_website(url, category, description)
         return success_response(data=result)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/knowledge/add-document", methods=["POST"])
@@ -223,7 +229,7 @@ def add_knowledge_document():
         result = knowledge_expander.add_document(content, title, category, description)
         return success_response(data=result)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/knowledge/search")
@@ -244,7 +250,7 @@ def search_knowledge():
         result = knowledge_expander.search_knowledge(query, category)
         return success_response(data=result)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)
 
 
 @ai_bp.route("/knowledge/summary")
@@ -256,4 +262,4 @@ def get_knowledge_summary():
         result = knowledge_expander.get_knowledge_summary()
         return success_response(data=result)
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return _fail(e)

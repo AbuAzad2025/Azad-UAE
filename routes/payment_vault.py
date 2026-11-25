@@ -42,6 +42,7 @@ from utils.decorators import owner_only
 from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 from utils.numeric_input import parse_decimal_field, parse_int_field
+from utils.safe_redirect import safe_redirect_target
 from utils.tenanting import tenant_query
 
 payment_vault_bp = Blueprint("payment_vault", __name__, url_prefix="/payment-vault")
@@ -371,6 +372,14 @@ def index():
     return render_template("payment_vault/index.html")
 
 
+def _unlock_return_url():
+    """Where to land after unlocking: the page that asked for it, safely."""
+    return safe_redirect_target(
+        request.values.get("next"),
+        "payment_vault.dashboard",
+    )
+
+
 @payment_vault_bp.route("/unlock", methods=["GET", "POST"])
 @owner_only
 @limiter.limit("5 per minute")
@@ -398,41 +407,35 @@ def unlock_vault():
             # or the row would inherit the session's active tenant.
             with without_tenant_scope(), atomic_transaction("vault_creation"):
                 db.session.add(vault)
-
-            PaymentLog.log_action(
-                vault_id=vault.id,
-                action="vault_created",
-                description=gettext("تم إنشاء الخزينة السرية"),
-                level="info",
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get("User-Agent"),
-            )
+                PaymentLog.log_action(
+                    vault_id=vault.id,
+                    action="vault_created",
+                    description=gettext("تم إنشاء الخزينة السرية"),
+                    level="info",
+                    ip_address=request.remote_addr,
+                    user_agent=request.headers.get("User-Agent"),
+                )
 
             flash(gettext("✅ تم إنشاء الخزينة السرية بنجاح!"), "success")
-            return redirect(url_for("payment_vault.dashboard"))
+            return redirect(_unlock_return_url())
 
-        if vault.unlock_vault(password):
+        # unlock_vault() only flushes; commit here or is_locked and the failed
+        # attempt counter are rolled back when the request session is removed.
+        with atomic_transaction("payment_vault_unlock"):
+            unlocked = vault.unlock_vault(password)
             PaymentLog.log_action(
                 vault_id=vault.id,
-                action="vault_unlocked",
-                description=gettext("تم فتح الخزينة السرية"),
-                level="info",
+                action="vault_unlocked" if unlocked else "vault_unlock_failed",
+                description=gettext("تم فتح الخزينة السرية" if unlocked else "محاولة فتح فاشلة - كلمة مرور خاطئة"),
+                level="info" if unlocked else "warning",
                 ip_address=request.remote_addr,
                 user_agent=request.headers.get("User-Agent"),
             )
 
+        if unlocked:
             flash(gettext("✅ تم فتح الخزينة السرية بنجاح!"), "success")
-            return redirect(url_for("payment_vault.dashboard"))
+            return redirect(_unlock_return_url())
         else:
-            PaymentLog.log_action(
-                vault_id=vault.id,
-                action="vault_unlock_failed",
-                description=gettext("محاولة فتح فاشلة - كلمة مرور خاطئة"),
-                level="warning",
-                ip_address=request.remote_addr,
-                user_agent=request.headers.get("User-Agent"),
-            )
-
             if vault.is_locked_out():
                 flash(
                     gettext("❌ تم قفل الخزينة بسبب المحاولات الفاشلة المتكررة!"),
@@ -697,7 +700,12 @@ def packages_management():
     vault = _get_vault_for_current_tenant()
     if not vault or vault.is_locked:
         flash(gettext("❌ يجب فتح الخزينة أولاً"), "warning")
-        return redirect(url_for("payment_vault.unlock_vault"))
+        return redirect(
+            url_for(
+                "payment_vault.unlock_vault",
+                next=request.full_path.rstrip("?"),
+            )
+        )
 
     packages = VaultQueryService.list_packages_ordered()
 
@@ -730,6 +738,18 @@ def _package_limits_flags_from_form(form, current=None):
         data[col] = _package_form_int(form.get(col), fallback)
     for col in TENANT_FLAG_COLUMNS:
         data[col] = form.get(col) == "on"
+    # POS sub-features inherit from tier_level, and enable_pos comes from
+    # has_pos. Both were invisible in the form, so owner-created packages were
+    # silently basic-tier with POS disabled.
+    raw_tier = form.get("tier_level")
+    if raw_tier not in (None, ""):
+        try:
+            data["tier_level"] = int(raw_tier)
+        except (TypeError, ValueError):
+            data["tier_level"] = 10
+    else:
+        data["tier_level"] = getattr(current, "tier_level", 10) if current is not None else 10
+    data["has_pos"] = form.get("has_pos") == "on"
     return data
 
 
@@ -978,16 +998,16 @@ def lock_vault():
     )
 
     if vault:
-        vault.lock_vault()
-
-        PaymentLog.log_action(
-            vault_id=vault.id,
-            action="vault_locked",
-            description=gettext("تم قفل الخزينة السرية"),
-            level="info",
-            ip_address=request.remote_addr,
-            user_agent=request.headers.get("User-Agent"),
-        )
+        with atomic_transaction("payment_vault_lock"):
+            vault.lock_vault()
+            PaymentLog.log_action(
+                vault_id=vault.id,
+                action="vault_locked",
+                description=gettext("تم قفل الخزينة السرية"),
+                level="info",
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get("User-Agent"),
+            )
 
         flash(gettext("✅ تم قفل الخزينة السرية بنجاح!"), "success")
 
@@ -1276,8 +1296,14 @@ def api_create_purchase():
             if idempotent:
                 return idempotent
 
+            buyer_tenant = data.get("tenant_id")
             purchase = PackagePurchase(
                 package_id=parse_int_field(data.get("package_id"), field="package_id", minimum=1),
+                tenant_id=(
+                    parse_int_field(buyer_tenant, field="tenant_id", minimum=1)
+                    if buyer_tenant not in (None, "")
+                    else None
+                ),
                 customer_name=customer_name,
                 customer_email=customer_email,
                 customer_phone=customer_phone,

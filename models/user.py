@@ -229,7 +229,10 @@ class User(UserMixin, db.Model):
         return self.role and self.role.slug == RoleEnum.SELLER.value
 
     def has_permission(self, permission_code):
-        if self.is_owner:
+        # Only a platform owner (no tenant) bypasses the plan/feature layer.
+        # A tenant-scoped owner must still obey the tenant's enabled modules —
+        # otherwise the sidebar promises features the blueprint gate refuses.
+        if self.is_owner and self.tenant_id is None:
             return True
         code = permission_code.value if isinstance(permission_code, PermissionEnum) else permission_code
         if not (self.role and self.role.has_permission(code)):

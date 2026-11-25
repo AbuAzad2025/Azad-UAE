@@ -17,7 +17,7 @@ from utils.owner_panel import (
 
 def test_plan_price_branches():
     assert _plan_monthly_price(None) == Decimal("0")  # line 33-34
-    assert _plan_monthly_price("BASIC") == Decimal("199")
+    assert _plan_monthly_price("BASIC") == Decimal("299")
     assert _plan_monthly_price("unknown-plan") == Decimal("0")  # .get default
 
 

@@ -149,7 +149,7 @@ describe('smart-print.js', () => {
     vi.resetModules();
   });
 
-  it('exposes SmartPrint without the DataTables print extension and warns', async () => {
+  it('exposes SmartPrint without the DataTables print extension and warns only when print is used', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     $ = makeJQuery();
     const SmartPrint = await importSmartPrint($);
@@ -157,6 +157,9 @@ describe('smart-print.js', () => {
     expect(typeof SmartPrint.buildButtons).toBe('function');
     expect(typeof SmartPrint.attachTrigger).toBe('function');
     expect(typeof SmartPrint.trigger).toBe('function');
+    // Loading the global script must stay silent on pages that never print.
+    expect(warn).not.toHaveBeenCalled();
+    SmartPrint._getPrintAction();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('SmartPrint'));
     warn.mockRestore();
   });

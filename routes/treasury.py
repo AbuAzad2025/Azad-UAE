@@ -11,15 +11,23 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from utils.branching import get_accessible_branches, user_can_access_branch
-from utils.decorators import permission_required, report_branch_scope_id
+from utils.decorators import (
+    permission_required,
+    report_branch_scope_id,
+    require_subscription_feature,
+)
+from utils.feature_guards import install_feature_gate
 from utils.tenanting import get_active_tenant_id
 
 treasury_bp = Blueprint("treasury", __name__, url_prefix="/reports")
+# Shares the /reports prefix with reports_bp, so it needs the same flag gate.
+install_feature_gate(treasury_bp, "reports")
 
 
 @treasury_bp.route("/treasury")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def treasury():
     from services.treasury_service import TreasuryService
 
@@ -54,6 +62,7 @@ def treasury():
 @treasury_bp.route("/treasury/export")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def treasury_export():
     from services.export_service import ExportService
     from services.treasury_service import TreasuryService
@@ -115,6 +124,7 @@ def treasury_export():
 @treasury_bp.route("/vat-return")
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("gl")
 def vat_return():
     from services.tax_service import TaxService
 
@@ -128,6 +138,8 @@ def vat_return():
 @treasury_bp.route("/wps-export")
 @login_required
 @permission_required("view_reports")
+@permission_required("manage_payroll")
+@require_subscription_feature("payroll")
 def wps_export():
     from flask import Response
 

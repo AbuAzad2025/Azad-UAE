@@ -376,7 +376,9 @@ def api_search():
                 "regular_price": float(p.regular_price or 0),
                 "merchant_price": float(p.merchant_price) if p.merchant_price else None,
                 "partner_price": float(p.partner_price) if p.partner_price else None,
-                "cost_price": float(p.cost_price) if p.cost_price else 0,
+                # Cost visibility is a role decision, not a plan decision:
+                # never leak cost to a user the reports UI would hide it from.
+                "cost_price": float(p.cost_price) if current_user.can_see_costs() and p.cost_price else None,
                 "unit": p.unit,
                 "is_low_stock": p.is_low_stock(),
                 "has_serial_number": getattr(p, "has_serial_number", False),

@@ -134,13 +134,15 @@ PLATFORM_SEEDS: tuple[SeedSet, ...] = (
     ),
     SeedSet(
         key="roles",
-        label="System roles (owner, super_admin, developer + 6 functional)",
+        label="System roles (owner, super_admin, developer + 14 functional)",
         scope="platform",
         seeder="utils.system_init._ensure_owner_role/_ensure_super_admin_role/"
         "_ensure_developer_role/_ensure_functional_roles",
-        expected=9,
+        expected=17,
         source="utils/system_init.py",
-        note="owner, super_admin, developer, manager, seller, branch_manager, accountant, kitchen, cashier",
+        note="owner, super_admin, developer, manager, seller, branch_manager, accountant, "
+        "kitchen, cashier, inventory, viewer, maintenance_reception, maintenance_engineer, "
+        "maintenance_cashier, maintenance_closer, maintenance_discount, maintenance_settings",
         verify="utils.seed_manifest_probe.count_roles",
         tags=("rbac",),
     ),

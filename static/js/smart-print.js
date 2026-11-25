@@ -611,11 +611,9 @@
 		},
 	};
 
-	// Eager check for test coverage: warn immediately if print extension missing
-	getPrintAction();
-
 	window.SmartPrint = SmartPrint;
 	// Expose internals for test coverage
+	SmartPrint._getPrintAction = getPrintAction;
 	SmartPrint._buildRowsSelector = buildRowsSelector;
 	SmartPrint._updateInputStates = updateInputStates;
 	SmartPrint._resetModal = resetModal;

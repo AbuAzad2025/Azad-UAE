@@ -335,6 +335,25 @@ def _ensure_functional_roles():
                 "assets:view",
                 "assets:manage",
                 "assets:depreciate",
+                # Tenant business modules: the manager must be able to open
+                # every surface the sidebar shows, or the UI promises a page
+                # the route then refuses with 403.
+                "crm.view",
+                "crm.manage",
+                "view_customers",
+                "support.view",
+                "support.manage",
+                "project.view",
+                "project.manage",
+                "hr.view",
+                "hr.manage",
+                "hr:leave_manage",
+                "marketing.manage",
+                "budget:create",
+                "budget:approve",
+                "grn:manage",
+                "purchase_req:create",
+                "purchase_req:approve",
             ]
             manager_role.permissions = get_perms(*manager_codes)
 
@@ -343,6 +362,7 @@ def _ensure_functional_roles():
             seller_codes = [
                 "manage_sales",
                 "manage_customers",
+                "view_customers",
                 "view_reports",
                 "view_kds",
             ]
@@ -410,6 +430,7 @@ def _ensure_functional_roles():
             cashier_codes = [
                 "manage_sales",
                 "manage_customers",
+                "view_customers",
                 "view_kds",
                 "pos_void_line",
                 "pos_discount_override",

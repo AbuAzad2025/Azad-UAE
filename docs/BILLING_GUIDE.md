@@ -4,9 +4,9 @@
 
 | Plan (EN) | الباقة (AR) | Monthly (AED) | شهري (درهم) | Annual (AED) | سنوي (درهم) | Users | المستخدمين | Branches | الفروع | Modules | الوحدات |
 |-----------|-------------|---------------|--------------|--------------|-------------|-------|------------|----------|--------|---------|---------|
-| Starter | البداية | 299 | 299 | 2,990 (2 months free) | 2,990 (شهران مجاني) | 3 | 3 | 1 | 1 | Core + Sales + Inventory | الأساسي + المبيعات + المخزون |
-| Professional | الاحترافية | 799 | 799 | 7,990 (2 months free) | 7,990 (شهران مجاني) | 10 | 10 | 3 | 3 | All except AI + E-commerce advanced | الكل باستثناء AI + التجارة المتقدمة |
-| Enterprise | المؤسسات | 1,999 | 1,999 | 19,990 (2 months free) | 19,990 (شهران مجاني) | Unlimited | غير محدود | Unlimited | غير محدود | All modules + API + AI | جميع الوحدات + API + AI |
+| Basic / Starter | الأساسية | 299 | 299 | 2,990 (2 months free) | 2,990 (شهران مجاني) | 2 | 2 | 1 | 1 | POS + Sales + Inventory + GL + Expenses + Cheques + basic reports | نقاط بيع + مبيعات + مخزون + دفتر أستاذ + مصروفات + شيكات + تقارير أساسية |
+| Pro / Professional | الاحترافية | 799 | 799 | 7,990 (2 months free) | 7,990 (شهران مجاني) | 10 | 10 | 3 | 3 | Everything in Basic + Payroll + advanced reports + wider quotas (no AI, Store or API) | كل ما في الأساسية + رواتب + تقارير متقدمة + سعة أوسع (بدون AI أو متجر أو API) |
+| Enterprise | المؤسسات | 1,999 | 1,999 | 19,990 (2 months free) | 19,990 (شهران مجاني) | Unlimited | غير محدود | Unlimited | غير محدود | All modules + AI + Online Store + API + integrations | جميع الوحدات + AI + المتجر الإلكتروني + API + التكاملات |
 
 ## 2. Add-Ons | الإضافات
 
@@ -49,7 +49,7 @@
 | Type (EN) | النوع (AR) | Duration | المدة | Features | الميزات | Conversion | التحويل |
 |-----------|-----------|----------|-------|----------|---------|------------|---------|
 | Free demo | عرض توضيحي مجاني | 30 minutes | 30 دقيقة | Guided tour with real data | جولة إرشادية ببيانات حقيقية | Booked via email/WhatsApp | مُحجز عبر البريد/واتساب |
-| Free trial | تجربة مجانية | 14 days | 14 يوماً | Full Professional plan | باقة الاحترافية الكاملة | Auto-converts to Starter if not cancelled | يتحول تلقائياً إلى البداية إذا لم يُلغَ |
+| Free trial | تجربة مجانية | 7 days | 7 أيام | Full Pro plan | باقة الاحترافية الكاملة | Reverts to Basic when the window expires unless a package is purchased | تعود إلى الأساسية عند انتهاء المدة ما لم تُشترَ باقة |
 
 ## 7. Refund Policy | سياسة الاسترداد
 

@@ -1,10 +1,10 @@
-from flask import Blueprint, request
+from flask import Blueprint, abort, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
 from utils.api_response import error_response, paginated_response, success_response
 from utils.cache_decorators import cached_query
-from utils.decorators import permission_required
+from utils.decorators import permission_required, require_subscription_feature
 from utils.query_optimizer import optimize_query, paginate_optimized
 from utils.tenanting import get_active_tenant_id
 
@@ -103,6 +103,7 @@ def search_products():
 @api_enhanced_bp.route("/analytics/sales-forecast", methods=["GET"])
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("ai")
 @cached_query(timeout=300, key_prefix="api_sales_forecast")
 def sales_forecast():
     from services.ai_service import AIService
@@ -116,9 +117,12 @@ def sales_forecast():
 @api_enhanced_bp.route("/analytics/profit-margins", methods=["GET"])
 @login_required
 @permission_required("view_reports")
+@require_subscription_feature("ai")
 @cached_query(timeout=300, key_prefix="api_profit_margins")
 def profit_margins():
     from services.ai_service import AIService
 
+    if not current_user.can_see_costs():
+        abort(403)
     analysis = AIService.analyze_profit_margins()
     return success_response(data=analysis)

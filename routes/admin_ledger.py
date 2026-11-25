@@ -22,6 +22,7 @@ from utils.currency_utils import get_system_default_currency, resolve_default_cu
 from utils.db_safety import atomic_transaction
 from utils.decorators import admin_required
 from utils.error_messages import safe_error
+from utils.feature_guards import install_feature_gate
 from utils.gl_tenant import (
     active_tenant_id,
     gl_account_query,
@@ -31,6 +32,9 @@ from utils.gl_tenant import (
 from utils.tenanting import tenant_query
 
 admin_ledger_bp = Blueprint("admin_ledger", __name__, url_prefix="/admin/ledger")
+# This blueprint exposes GL accounts, journals and GL-backed statements.
+# It must obey the tenant's GL entitlement just like /ledger does.
+install_feature_gate(admin_ledger_bp, "gl")
 
 
 def _accounts():

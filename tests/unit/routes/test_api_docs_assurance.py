@@ -58,7 +58,7 @@ class TestApiDocsProtection:
 
     def test_protected_authenticated_ok(self, api_docs_client):
         admin = MagicMock(is_authenticated=True)
-        admin.role.slug = "admin"
+        admin.role.slug = "super_admin"  # 'admin' is a permission, not a seeded role
         with patch("routes.api_docs._api_docs_public", return_value=False):
             with patch("routes.api_docs.current_user", admin):
                 resp = api_docs_client.get("/api-docs/openapi.json")

@@ -335,7 +335,11 @@ def create_app(config_class=Config) -> Flask:
 
         from flask_login import current_user as _cu
 
-        from utils.auth_helpers import is_global_owner_user
+        from utils.auth_helpers import (
+            PLATFORM_OWNER_BLOCKED_BLUEPRINTS,
+            is_global_owner_user,
+        )
+        from utils.feature_guards import system_module_denial
         from utils.tenanting import _current_request_id, get_active_tenant_id, get_tenant_status
 
         g.active_tenant_id = None
@@ -352,8 +356,15 @@ def create_app(config_class=Config) -> Flask:
         if _cu.is_authenticated:
             g.active_tenant_id = get_active_tenant_id(_cu)
             _bp = request.blueprint or ""
+            # A tenantless platform owner works on tenants and the system only.
+            # Tenant operations are off-limits even when the URL is pasted
+            # directly; switching into a tenant restores the full surface.
+            if is_global_owner_user(_cu) and g.active_tenant_id is None and _bp in PLATFORM_OWNER_BLOCKED_BLUEPRINTS:
+                abort(403)
             _skip = {"", "auth", "public", "language", "tenants", "owner", "stock_sync"}
             if _bp not in _skip and request.endpoint != "static":
+                if not is_global_owner_user(_cu):
+                    system_module_denial(_bp)
                 if not is_global_owner_user(_cu) and g.active_tenant_id is None:
                     abort(403)
                 if g.active_tenant_id is not None and not is_global_owner_user(_cu):

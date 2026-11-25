@@ -87,7 +87,8 @@ describe('ui-theme.js', () => {
     expect(sidebar.style.right).toBe('0px');
     expect(sidebar.style.left).toBe('auto');
     const content = document.querySelector('.content-wrapper');
-    expect(content.style.getPropertyValue('margin-right')).toBe('250px');
+    // CSS owns the content offset via data-sidebar-side; no inline margin.
+    expect(content.style.getPropertyValue('margin-right')).toBe('');
     expect(document.body.dataset.sidebarSide).toBe('right');
   });
 
@@ -110,7 +111,9 @@ describe('ui-theme.js', () => {
     document.body.innerHTML = '<div class="content-wrapper"></div>';
     await importTheme();
     const content = document.querySelector('.content-wrapper');
-    expect(content.style.getPropertyValue('margin-right')).toBe('4.6rem');
+    // The collapsed offset is driven by CSS (--az-sidebar-collapsed), not JS.
+    expect(content.style.getPropertyValue('margin-right')).toBe('');
+    expect(document.body.classList.contains('sidebar-collapse')).toBe(true);
   });
 
   it('falls back to light mode when matchMedia throws', async () => {

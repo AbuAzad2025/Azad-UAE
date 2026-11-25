@@ -139,19 +139,17 @@ class TestOWN57TheOwnerConsoleRenders:
         resp = client.get("/owner/system-stats", follow_redirects=False)
         assert resp.status_code == 200, f"the system stats page answered {resp.status_code}"
 
-    def test_the_company_dashboard_404s_a_platform_owner(self, client, db_session):
-        """OWN-62. The one page where the owner is deliberately excluded.
+    def test_the_company_dashboard_is_reachable_by_a_platform_owner(self, client, db_session):
+        """OWN-62. The developer-owner is not excluded from any surface.
 
-        ``@company_admin_required`` inverts every other rule in this blueprint:
-        it requires an active tenant and 404s a global owner, because the page
-        shows one company's data and a platform owner has no company. A test
-        asserting the owner reaches every owner page would fail here, and
-        correctly.
+        ``@company_admin_required`` lets the global owner through: the platform
+        developer must be able to inspect every panel, including one scoped to
+        a company.
         """
         _owner(db_session, client)
 
         resp = client.get("/owner/company-dashboard", follow_redirects=False)
-        assert resp.status_code == 404, f"a platform owner reached the company dashboard: {resp.status_code}"
+        assert resp.status_code == 200, f"a platform owner could not reach the company dashboard: {resp.status_code}"
 
     def test_the_two_factor_decorator_does_not_block_a_single_factor_owner(self, client, db_session):
         """OWN-63. ``@two_factor_required`` only bites when 2FA is on.

@@ -41,7 +41,12 @@ from utils.branching import (
     should_show_all_branch_columns,
 )
 from utils.db_safety import atomic_transaction
-from utils.decorators import any_permission_required, branch_scope_id, permission_required
+from utils.decorators import (
+    any_permission_required,
+    branch_scope_id,
+    enforce_resource_limit,
+    permission_required,
+)
 from utils.error_messages import ErrorCategory, ErrorMessages, refuse, safe_error
 from utils.gl_reference_types import GLRef
 from utils.helpers import generate_barcode, generate_sku, save_uploaded_file
@@ -307,6 +312,7 @@ def _read_import_dataframe(filepath, ext):
 @products_bp.route("/import", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_products")
+@enforce_resource_limit("storage")
 def import_products():
     import os
 
@@ -580,6 +586,7 @@ def index():
 @login_required
 @permission_required("manage_products")
 @limiter.limit("10 per minute", methods=["POST"])
+@enforce_resource_limit("storage")
 def create():
     from forms.product import ProductForm
 
@@ -865,6 +872,7 @@ def view(**kwargs):
 @products_bp.route("/<int:id>/edit", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_products")
+@enforce_resource_limit("storage")
 def edit(**kwargs):
     record_id = kwargs.pop("id")
     product = tenant_get_or_404(Product, record_id)

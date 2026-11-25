@@ -7,6 +7,53 @@ from extensions import db
 from models.enums import RoleEnum
 from utils.constants import ROLE_LEVELS
 
+# Tenant business blueprints. A tenantless platform owner has no operational
+# reason to open any of these surfaces — not even by pasting the URL. Tenant
+# users and owners who have switched into a tenant keep full access.
+PLATFORM_OWNER_BLOCKED_BLUEPRINTS = frozenset(
+    {
+        "main",
+        "sales",
+        "purchases",
+        "customers",
+        "suppliers",
+        "products",
+        "warehouse",
+        "branches",
+        "expenses",
+        "payments",
+        "ledger",
+        "advanced_ledger",
+        "admin_ledger",
+        "treasury",
+        "reports",
+        "pos",
+        "payroll",
+        "hr",
+        "cheques",
+        "assets",
+        "donations",
+        "partners",
+        "projects",
+        "crm",
+        "quotations",
+        "returns",
+        "transfers",
+        "shipments",
+        "maintenance",
+        "tickets",
+        "gamification",
+        "email_marketing",
+        "unified_inventory",
+        "uinv",
+        "stock_sync",
+        "printing",
+        "store",
+        "shop",
+        "whatsapp",
+    }
+)
+
 
 def role_level_for(slug):
     """ترتيب الدور (أعلى = أكثر صلاحية). يُستخدم لفلترة الأدوار التي يمكن للمستخدم الحالي تعيينها."""

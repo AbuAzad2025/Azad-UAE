@@ -52,9 +52,6 @@
 		localStorage.setItem(STORAGE_SIDEBAR_DIR, html.getAttribute("dir") || "rtl");
 
 		const sidebar = document.querySelector(".main-sidebar");
-		const content = document.querySelector(".content-wrapper");
-		const header = document.querySelector(".main-header");
-		const footer = document.querySelector(".main-footer");
 
 		if (sidebar) {
 			sidebar.style.transition = "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
@@ -66,20 +63,6 @@
 				sidebar.style.right = "auto";
 			}
 		}
-
-		const marginProp = normalized === "right" ? "margin-right" : "margin-left";
-		const otherProp = normalized === "right" ? "margin-left" : "margin-right";
-		const width =
-			body.classList.contains("sidebar-mini") && body.classList.contains("sidebar-collapse")
-				? "4.6rem"
-				: "250px";
-
-		[content, header, footer].forEach((el) => {
-			if (!el) return;
-			el.style.transition = "margin 0.35s cubic-bezier(0.4, 0, 0.2, 1)";
-			el.style.setProperty(marginProp, width, "important");
-			el.style.setProperty(otherProp, "0px", "important");
-		});
 	}
 
 	function updateModeToggle(mode) {

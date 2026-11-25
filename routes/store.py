@@ -36,7 +36,7 @@ from services.store_whatsapp_service import StoreWhatsAppService
 from utils.branching import get_branch_stock_map
 from utils.currency_utils import convert_and_quantize_aed
 from utils.db_safety import atomic_transaction
-from utils.decorators import permission_required
+from utils.decorators import enforce_resource_limit, permission_required
 from utils.error_messages import ErrorMessages, safe_error
 from utils.feature_guards import install_feature_gate
 from utils.helpers import save_uploaded_file
@@ -94,6 +94,7 @@ def admin_index():
 @store_bp.route("/admin/settings", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_store")
+@enforce_resource_limit("storage")
 def admin_settings():
     tenant_id = _tenant_id()
     store = StoreService.ensure_tenant_store(tenant_id)

@@ -65,8 +65,8 @@
 
 **Q (EN):** What is WAC and why did my cost price change?
 **Q (AR):** ما هو WAC ولماذا تغير سعر التكلفة؟
-**A (EN):** WAC (Weighted Average Cost) recalculates after every purchase receipt. This ensures your cost of goods sold reflects the average price paid. It is the default method. You can switch to FIFO in Settings → Inventory (Enterprise plan only).
-**A (AR):** WAC (التكلفة المتوسطة المرجحة) تُعاد حسابها بعد كل إيصال شراء. هذا يضمن أن تكلفة البضاعة المباعة تعكس متوسط السعر المدفوع. إنها الطريقة الافتراضية. يمكنك التبديل إلى FIFO في الإعدادات → المخزون (باقة المؤسسات فقط).
+**A (EN):** WAC (Weighted Average Cost) is recalculated after every purchase receipt and is the only inventory valuation method implemented. This ensures your cost of goods sold reflects the average price paid. There is no FIFO switch in Settings → Inventory on any plan. (FIFO below refers only to the order in which supplier payments are allocated to old invoices in aging reports.)
+**A (AR):** WAC (التكلفة المتوسطة المرجحة) تُعاد حسابها بعد كل إيصال شراء، وهي طريقة تقييم المخزون الوحيدة المطبّقة ولا يمكن التبديل إلى FIFO من الإعدادات → المخزون في أي باقة. (يشير FIFO أدناه فقط إلى ترتيب توزيع مدفوعات الموردين على الفواتير الأقدم في تقارير الأعمار).
 
 ## 5. Payments and Cheques | المدفوعات والشيكات
 
@@ -128,8 +128,8 @@
 
 **Q (EN):** Can I schedule reports to email automatically?
 **Q (AR):** هل يمكنني جدولة التقارير لإرسالها بالبريد تلقائياً؟
-**A (EN):** Scheduled reports are available on Professional and Enterprise plans. Go to Reports → Scheduled → New.
-**A (AR):** التقارير المجدولة متاحة في باقات الاحترافية والمؤسسات. اذهب إلى تقارير → مجدولة → جديد.
+**A (EN):** Automatic report emailing is not implemented on any plan. Reports are generated on demand and can be exported to Excel or PDF from the report page. Only database backups can be scheduled (Platform → Scheduled Backups).
+**A (AR):** إرسال التقارير بالبريد تلقائياً غير مطبّق في أي باقة. تُنتج التقارير عند الطلب ويمكن تصديرها إلى Excel أو PDF من صفحة التقرير. المجدول المتاح حالياً هو النسخ الاحتياطي فقط (المنصة → النسخ المجدولة).
 
 **Q (EN):** My trial balance does not balance.
 **Q (AR):** ميزان مراجعتي لا يتوازن.

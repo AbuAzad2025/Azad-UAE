@@ -324,9 +324,9 @@ class Tenant(db.Model):
         return 9999
 
     def get_subscription_duration_display(self, lang="ar"):
-        labels = {"monthly": "شهري", "annual": "سنوي", "lifetime": "مدى الحياة"}
+        labels = {"monthly": "شهري", "annual": "سنوي", "lifetime": "مدى الحياة", "trial": "تجريبي"}
         if lang == "en":
-            labels = {"monthly": "Monthly", "annual": "Annual", "lifetime": "Lifetime"}
+            labels = {"monthly": "Monthly", "annual": "Annual", "lifetime": "Lifetime", "trial": "Trial"}
         return labels.get(self.subscription_plan_duration, self.subscription_plan_duration)
 
     def extend_subscription(self, days: int) -> "Tenant":

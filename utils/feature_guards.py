@@ -50,8 +50,16 @@ def feature_required(feature_name: str):
 
 def _feature_denial(feature_name: str):
     """Return a denial response when the feature is locked, else None."""
+    from flask_login import current_user
+
     from models.tenant import Tenant
+    from utils.auth_helpers import is_global_owner_user
     from utils.tenanting import get_active_tenant_id
+
+    # Platform owner/developer manages modules and packages, not tenant data.
+    # Tenant-scoped owners stay gated like any other tenant user.
+    if is_global_owner_user(current_user):
+        return None
 
     tid = get_active_tenant_id()
     if not tid:
@@ -60,7 +68,12 @@ def _feature_denial(feature_name: str):
     if tenant is None:
         abort(403, description=gettext("المستأجر غير موجود"))
 
-    enabled = getattr(tenant, f"enable_{feature_name}", True)
+    # Accept either a column name as-is (e.g. allow_custom_integrations) or
+    # the usual enable_<name> form. The old code only tried the latter, so a
+    # gate on an existing non-prefixed column silently allowed everyone.
+    enabled = getattr(tenant, feature_name, None)
+    if enabled is None:
+        enabled = getattr(tenant, f"enable_{feature_name}", True)
     if enabled is None and feature_name in POS_SUBFEATURES:
         # Nullable POS sub-feature: NULL inherits the plan default.
         enabled = pos_feature_enabled(tenant, feature_name)
@@ -74,6 +87,47 @@ def _feature_denial(feature_name: str):
         description=gettext(
             "Feature %(feature)s is not enabled on your current plan. Upgrade your plan to enable it.",
             feature=feature_name,
+        ),
+    )
+
+
+# Platform-wide module switches from System Settings. These were rendered as
+# owner-panel checkboxes but never enforced, so turning one off changed nothing.
+SYSTEM_MODULE_FLAGS = {
+    "sales": "enable_sales",
+    "returns": "enable_sales",
+    "quotations": "enable_sales",
+    "purchases": "enable_purchases",
+    "products": "enable_inventory",
+    "warehouse": "enable_inventory",
+    "transfers": "enable_inventory",
+    "uinv": "enable_inventory",
+    "customers": "enable_customers",
+    "suppliers": "enable_suppliers",
+    "expenses": "enable_expenses",
+    "ledger": "enable_gl",
+    "advanced_ledger": "enable_gl",
+    "admin_ledger": "enable_gl",
+    "reports": "enable_reports",
+    "treasury": "enable_reports",
+}
+
+
+def system_module_denial(blueprint: str):
+    """Deny a tenant blueprint whose platform-wide module switch is off."""
+    flag = SYSTEM_MODULE_FLAGS.get(blueprint)
+    if not flag:
+        return None
+    from models.system_settings import SystemSettings
+
+    settings = SystemSettings.query.filter_by(is_active=True).first()
+    if settings is None or bool(getattr(settings, flag, True)):
+        return None
+    abort(
+        403,
+        description=gettext(
+            "Module %(flag)s is disabled for this installation.",
+            flag=flag,
         ),
     )
 

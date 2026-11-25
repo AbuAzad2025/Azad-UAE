@@ -1,78 +1,89 @@
 <footer class="main-footer erp-footer" role="contentinfo">
-    <div class="erp-footer-inner">
-      <div class="container-fluid">
-        {% set _developer_title = (developer_name_ar or developer_name or 'AZAD') %}
-        {% set _developer_credit_text = (developer_credit or config.DEVELOPER_CREDIT) %}
-        {% set _developer_logo_path = (developer_logo or config.DEVELOPER_LOGO or 'assets/brand/azad/logos/logo.png')|trim %}
-        {% set _developer_logo_rel = _developer_logo_path %}
-        {% if _developer_logo_rel.startswith('/static/') %}
-          {% set _developer_logo_rel = _developer_logo_rel[8:] %}
-        {% endif %}
-        {% if _developer_logo_rel.startswith('static/') %}
-          {% set _developer_logo_rel = _developer_logo_rel[7:] %}
-        {% endif %}
-        {% set _footer_phone = (developer_phone or '')|trim %}
-        {% set _footer_email = (developer_email or '')|trim %}
-        {% set _made_label = t('Made_With_Love') if 'Made_With_Love' in t('Made_With_Love') else 'Made with love in' %}
-        {% set _developer_name_span = (developer_name_ar or developer_name or _developer_title) %}
+  <div class="erp-footer-inner">
+    <div class="container-fluid">
+      {# Platform-only footer — no tenant identity, branding or data appears here. #}
+      {% set _is_arabic = (current_language|default('ar')) == 'ar' %}
+      {% set _platform_name = (developer_name_ar if _is_arabic else developer_name) or developer_name_ar or developer_name or 'AZAD' %}
+      {% set _credit_raw = (developer_credit or config.DEVELOPER_CREDIT or '')|trim %}
+      {% if '|' in _credit_raw %}
+        {% set _credit = (_credit_raw.split('|')[0] if _is_arabic else _credit_raw.split('|')[1])|trim %}
+      {% else %}
+        {% set _credit = _credit_raw %}
+      {% endif %}
+      {% set _logo_path = (developer_logo or config.DEVELOPER_LOGO or 'assets/brand/azad/logos/logo.png')|trim %}
+      {% set _logo_rel = _logo_path %}
+      {% if _logo_rel.startswith('/static/') %}
+        {% set _logo_rel = _logo_rel[8:] %}
+      {% endif %}
+      {% if _logo_rel.startswith('static/') %}
+        {% set _logo_rel = _logo_rel[7:] %}
+      {% endif %}
+      {% set _phone = (developer_phone or '')|trim %}
+      {% set _email = (developer_email or '')|trim %}
 
-        <div class="erp-footer-row">
-          <div class="erp-footer-brand">
-            <img
-              src="{{ _developer_logo_path if (_developer_logo_path.startswith('http') or _developer_logo_path.startswith('/')) else url_for('static', filename=_developer_logo_rel) }}"
-              data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
-              alt="{{ _developer_title }}"
-              loading="lazy"
-              class="erp-footer-logo"
-              data-fallback-img
-            >
-            <div class="erp-footer-brand-text">
-              <div class="erp-footer-title footer-gradient-text">{{ _developer_title }}</div>
-              <div class="erp-footer-muted"><i class="fas fa-code" aria-hidden="true"></i> {{ _developer_credit_text }}</div>
-            </div>
+      <div class="erp-footer-grid">
+        <section class="erp-footer-cell erp-footer-cell--brand">
+          <img
+            src="{{ _logo_path if (_logo_path.startswith('http') or _logo_path.startswith('/')) else url_for('static', filename=_logo_rel) }}"
+            data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
+            alt="{{ _platform_name }}"
+            loading="lazy"
+            class="erp-footer-logo"
+            data-fallback-img
+          >
+          <div class="erp-footer-brand-text">
+            <div class="erp-footer-title footer-gradient-text">{{ _platform_name }}</div>
+            {% if _credit %}
+              <div class="erp-footer-muted"><i class="fas fa-code" aria-hidden="true"></i> {{ _credit }}</div>
+            {% endif %}
           </div>
+        </section>
 
-          <div class="erp-footer-center">
-            <span class="erp-footer-chip" title="{{ t('Version') }}">
-              <i class="fas fa-code-branch" aria-hidden="true"></i>v{{ config.APP_VERSION }}
-            </span>
-            <span class="erp-footer-chip" title="{{ t('AI Powered') if 'AI Powered' in t('AI Powered') else 'مدعوم بالذكاء الاصطناعي' }}">
-              <i class="fas fa-robot" aria-hidden="true"></i> AI
-            </span>
-          </div>
+        <nav class="erp-footer-cell erp-footer-cell--links" aria-label="{{ t('Platform') }}">
+          <h3 class="erp-footer-heading"><i class="fas fa-layer-group" aria-hidden="true"></i> {{ t('Platform') }}</h3>
+          <a class="erp-footer-link" href="{{ url_for('public.landing') }}"><i class="fas fa-home" aria-hidden="true"></i>{{ t('Home') }}</a>
+          <a class="erp-footer-link" href="{{ url_for('public.features') }}"><i class="fas fa-star" aria-hidden="true"></i>{{ t('Features') }}</a>
+          <a class="erp-footer-link" href="{{ url_for('public.pricing') }}"><i class="fas fa-tags" aria-hidden="true"></i>{{ t('Pricing') }}</a>
+          <a class="erp-footer-link" href="{{ url_for('public.contact') }}"><i class="fas fa-comments" aria-hidden="true"></i>{{ t('Contact') }}</a>
+        </nav>
 
+        <section class="erp-footer-cell erp-footer-cell--contact">
+          <h3 class="erp-footer-heading"><i class="fas fa-headset" aria-hidden="true"></i> {{ t('Support') }}</h3>
           <div class="erp-footer-actions">
             {% if developer_whatsapp_link %}
-              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action" title="WhatsApp">
-                <i class="fab fa-whatsapp" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('WhatsApp') }}</span>
+              <a href="https://wa.me/{{ developer_whatsapp_link }}" target="_blank" rel="noopener noreferrer" class="erp-footer-action" title="{{ t('WhatsApp') }}">
+                <i class="fab fa-whatsapp" aria-hidden="true"></i><span>{{ t('WhatsApp') }}</span>
               </a>
             {% endif %}
-            {% if _footer_phone %}
-              <a href="tel:{{ _footer_phone }}" class="erp-footer-action" title="{{ t('Call') }}">
-                <i class="fas fa-phone" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('Call') }}</span>
+            {% if _phone %}
+              <a href="tel:{{ _phone }}" class="erp-footer-action" title="{{ t('Call') }}">
+                <i class="fas fa-phone" aria-hidden="true"></i><span>{{ t('Call') }}</span>
               </a>
             {% endif %}
-            {% if _footer_email %}
-              <a href="mailto:{{ _footer_email }}" class="erp-footer-action" title="{{ t('Email') }}">
-                <i class="fas fa-envelope" aria-hidden="true"></i><span class="d-none d-sm-inline">{{ t('Email') }}</span>
+            {% if _email %}
+              <a href="mailto:{{ _email }}" class="erp-footer-action" title="{{ t('Email') }}">
+                <i class="fas fa-envelope" aria-hidden="true"></i><span>{{ t('Email') }}</span>
               </a>
             {% endif %}
           </div>
-        </div>
+        </section>
 
-        <div class="erp-footer-copyright">
-          &copy; {{ current_year }} {{ tenant_name_ar or company_name_ar or _developer_title }} &mdash; {{ t('All Rights Reserved') }}
-          <span class="erp-footer-sep">|</span>
-          <span class="erp-footer-made-in" title="{{ _made_label }} {{ _developer_name_span }}">
-            <span class="made-label">{{ _made_label }}</span>
-            <i class="fas fa-heart footer-heart" aria-label="{{ t('Love') }}"></i>
-            <span class="palestine-name">{{ _developer_name_span }}</span>
-          </span>
-        </div>
+        <section class="erp-footer-cell erp-footer-cell--meta">
+          <h3 class="erp-footer-heading"><i class="fas fa-microchip" aria-hidden="true"></i> {{ t('Version') }}</h3>
+          <div class="erp-footer-center">
+            <span class="erp-footer-chip" title="{{ t('Version') }}"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span>
+            <span class="erp-footer-chip erp-footer-chip--live" title="{{ t('AI Powered') if 'AI Powered' in t('AI Powered') else 'مدعوم بالذكاء الاصطناعي' }}"><i class="fas fa-robot" aria-hidden="true"></i> AI</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="erp-footer-copyright">
+        <span class="erp-footer-legal">&copy; {{ current_year }} &mdash; {{ t('All Rights Reserved') }}</span>
       </div>
     </div>
-  </footer>
-  <script nonce="{{ csp_nonce() }}">
+  </div>
+</footer>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener("error", (e) => {
     const img = e.target;
     if (img && img.matches && img.matches("img[data-fallback-img]") && img.dataset.fallback) {
@@ -80,4 +91,4 @@
       img.removeAttribute("data-fallback-img");
     }
   }, true);
-  </script>
+</script>

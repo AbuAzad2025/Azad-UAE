@@ -33,9 +33,12 @@ from utils.api_response import success_response
 from utils.db_safety import atomic_transaction
 from utils.decorators import permission_required
 from utils.error_messages import safe_error
+from utils.feature_guards import install_feature_gate
 from utils.tenanting import get_active_tenant_id, tenant_query
 
 partners_bp = Blueprint("partners", __name__, url_prefix="/partners")
+# Partner data and commission reporting belong to the partners module.
+install_feature_gate(partners_bp, "partners")
 
 
 # ── Helpers ───────────────────────────────────────────────────

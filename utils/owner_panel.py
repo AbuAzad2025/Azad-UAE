@@ -21,10 +21,12 @@ from utils.tenant_branding import branding_path_warnings, resolve_tenant_brandin
 # Platform-level monthly price per subscription plan (telemetry only, not
 # tenant business data). Used to derive indicative MRR for the owner plane.
 _PLAN_MONTHLY_PRICE_AED = {
-    "basic": 199,
-    "standard": 499,
-    "professional": 999,
-    "enterprise": 2499,
+    # Slugs that actually exist in DEFAULT_PACKAGES. Owner-created packages
+    # override these at runtime; the map is only a fallback for a tenant whose
+    # plan slug has no active Package row.
+    "basic": 299,
+    "pro": 799,
+    "enterprise": 1999,
     "trial": 0,
 }
 
@@ -137,6 +139,14 @@ def build_platform_telemetry() -> dict:
     week_start = today - timedelta(days=today.weekday())
     day_start = today
 
+    # Owner-created packages are the commercial source of truth; fall back to
+    # the built-in map only when a tenant's plan has no active Package row.
+    from models.package import Package
+
+    package_prices = {
+        (p.slug or "").lower(): Decimal(str(p.price)) for p in Package.query.filter_by(is_active=True).all()
+    }
+
     tenants = Tenant.query.all()
     total = len(tenants)
     active = sum(1 for t in tenants if getattr(t, "is_active", False))
@@ -154,7 +164,8 @@ def build_platform_telemetry() -> dict:
     for t in tenants:
         plan = (getattr(t, "subscription_plan", None) or "basic") or "basic"
         plan_distribution[plan] = plan_distribution.get(plan, 0) + 1
-        mrr += _plan_monthly_price(plan)
+        price = package_prices.get((plan or "").lower())
+        mrr += price if price is not None else _plan_monthly_price(plan)
 
         end = getattr(t, "subscription_end", None)
         if end is not None:

@@ -953,23 +953,25 @@ body.sidebar-mini.sidebar-collapse .main-sidebar:not(:hover) .erp-nav-icon-tile 
 
 body[data-sidebar-side="right"] .main-sidebar { left: auto !important; right: 0 !important; }
 
+/* The sidebar side is a physical edge, independent of text direction.
+   Use physical margins so the content never shrinks from the wrong side. */
 body[data-sidebar-side="right"] .content-wrapper,
 body[data-sidebar-side="right"] .main-header,
-body[data-sidebar-side="right"] .main-footer { margin-inline-start: 0 !important; margin-inline-end: var(--az-sidebar-width) !important; }
+body[data-sidebar-side="right"] .main-footer { margin-left: 0 !important; margin-right: var(--az-sidebar-width) !important; }
 
 body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .content-wrapper,
 body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-header,
-body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-footer { margin-inline-end: var(--az-sidebar-collapsed) !important; }
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-footer { margin-left: 0 !important; margin-right: var(--az-sidebar-collapsed) !important; }
 
 body[data-sidebar-side="left"] .main-sidebar { left: 0 !important; right: auto !important; }
 
 body[data-sidebar-side="left"] .content-wrapper,
 body[data-sidebar-side="left"] .main-header,
-body[data-sidebar-side="left"] .main-footer { margin-inline-start: var(--az-sidebar-width) !important; margin-inline-end: 0 !important; }
+body[data-sidebar-side="left"] .main-footer { margin-right: 0 !important; margin-left: var(--az-sidebar-width) !important; }
 
 body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .content-wrapper,
 body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-header,
-body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-footer { margin-inline-start: var(--az-sidebar-collapsed) !important; margin-inline-end: 0 !important; }
+body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-footer { margin-right: 0 !important; margin-left: var(--az-sidebar-collapsed) !important; }
 
 /* ── Footer Global Gradient Text ── */
 .footer-gradient-text {

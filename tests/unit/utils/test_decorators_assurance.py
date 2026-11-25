@@ -360,7 +360,8 @@ class TestCompanyAdminRequired:
         with pytest.raises(Forbidden):
             view()
 
-    def test_global_owner_aborts_404(self, deco_ctx, mocker):
+    def test_global_owner_allowed(self, deco_ctx, mocker):
+        """The platform owner is the developer — no company surface is hidden."""
         mocker.patch(
             "utils.decorators.current_user",
             _user(role_slug="super_admin", is_super_admin=True),
@@ -372,8 +373,7 @@ class TestCompanyAdminRequired:
         def view():
             return "ok"
 
-        with pytest.raises(NotFound):
-            view()
+        assert view() == "ok"
 
     def test_missing_tenant_aborts(self, deco_ctx, mocker):
         mocker.patch(

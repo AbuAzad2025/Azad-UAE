@@ -219,8 +219,10 @@ def company_admin_required(f):
             flash("الرجاء تسجيل الدخول أولاً", "warning")
             return redirect(url_for("auth.login"))
 
+        # The platform owner is the developer: no tenant surface is hidden
+        # from them. Tenant-scoped pages render with the owner's own context.
         if is_global_owner_user(current_user):
-            abort(404)
+            return f(*args, **kwargs)
 
         from utils.tenanting import get_active_tenant_id
 
@@ -328,6 +330,15 @@ _FEATURE_COLUMNS = frozenset(
         "cheques",
         "expenses",
         "store",
+        "partners",
+        "donations",
+        "maintenance",
+        "shipments",
+        "fixed_assets",
+        "warranty_tracking",
+        "bank_reconciliation",
+        "azad_platform",
+        "campaigns",
         # POS Phase 4 — SaaS sub-feature flags (nullable: NULL inherits the
         # plan-level default via utils/pos_features).
         "pos_promotions",
@@ -354,6 +365,12 @@ def require_subscription_feature(feature_name: str):
 
             tid = get_active_tenant_id()
             if not tid:
+                # Platform owner has no tenant context; feature flags do not
+                # apply to the owner plane (same rule as install_feature_gate).
+                from utils.auth_helpers import is_global_owner_user
+
+                if is_global_owner_user(current_user):
+                    return f(*args, **kwargs)
                 abort(403, description="لا يوجد مستأجر نشط")
             tenant = db.session.get(Tenant, int(tid))
             if not tenant:
@@ -473,6 +490,7 @@ def _load_limit_checkers():
         check_invoices_monthly_limit,
         check_products_limit,
         check_sales_monthly_limit,
+        check_storage_limit,
         check_suppliers_limit,
         check_users_limit,
         check_warehouses_limit,
@@ -486,6 +504,7 @@ def _load_limit_checkers():
     _LIMIT_CHECKERS["suppliers"] = check_suppliers_limit
     _LIMIT_CHECKERS["sales_monthly"] = check_sales_monthly_limit
     _LIMIT_CHECKERS["invoices_monthly"] = check_invoices_monthly_limit
+    _LIMIT_CHECKERS["storage"] = check_storage_limit
 
 
 def enforce_resource_limit(resource_name: str):

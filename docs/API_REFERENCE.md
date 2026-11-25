@@ -48,11 +48,21 @@ Access control is enforced in two places, and both are captured below.
 - **Blueprint `before_request` hooks** — five blueprints guard their whole
   surface this way, so a decorator-only audit wrongly reports them open:
 
+  - `admin_ledger` → feature_flag:gl
+  - `advanced_ledger` → feature_flag:gl
   - `api_docs` → authenticated_when_production
+  - `cheques` → feature_flag:cheques
+  - `expenses` → feature_flag:expenses
+  - `ledger` → feature_flag:gl
+  - `maintenance` → feature_flag:maintenance
   - `owner_admin` → ip_allowlist
-  - `payment_vault` → owner, authenticated
+  - `partners` → feature_flag:partners
+  - `payment_vault` → owner, authenticated, feature_flag:allow_custom_integrations
+  - `payroll` → feature_flag:payroll
   - `pos` → feature_flag:pos_enabled
-  - `reports` → tenant_scope
+  - `reports` → tenant_scope, feature_flag:reports
+  - `store` → feature_flag:store
+  - `treasury` → feature_flag:reports
 
 ## Endpoints by domain
 
@@ -66,22 +76,22 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/admin/ledger/` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/accounts` | admin, authenticated | — | — | html |
-| POST | `/admin/ledger/accounts/<int:id>/delete` | admin, authenticated | — | — | json |
-| GET, POST | `/admin/ledger/accounts/<int:id>/edit` | admin, authenticated | — | — | html |
-| GET, POST | `/admin/ledger/accounts/add` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/api/account-balance/<int:account_id>` | admin, authenticated | — | — | json |
-| GET | `/admin/ledger/api/account-statement/<int:account_id>` | admin, authenticated | — | — | json |
-| GET | `/admin/ledger/journals` | admin, authenticated | — | — | html |
-| POST | `/admin/ledger/journals/<int:id>/reverse` | admin, authenticated | — | — | json |
-| GET | `/admin/ledger/journals/<int:id>/view` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/reports` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/reports/balance-sheet` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/reports/income-statement` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/reports/trial-balance` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/settings` | admin, authenticated | — | — | html |
-| GET | `/admin/ledger/vaults` | admin, authenticated | — | — | html |
+| GET | `/admin/ledger/` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/accounts` | admin, authenticated, feature_flag:gl | — | — | html |
+| POST | `/admin/ledger/accounts/<int:id>/delete` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET, POST | `/admin/ledger/accounts/<int:id>/edit` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET, POST | `/admin/ledger/accounts/add` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/api/account-balance/<int:account_id>` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/admin/ledger/api/account-statement/<int:account_id>` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/admin/ledger/journals` | admin, authenticated, feature_flag:gl | — | — | html |
+| POST | `/admin/ledger/journals/<int:id>/reverse` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/admin/ledger/journals/<int:id>/view` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/reports` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/reports/balance-sheet` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/reports/income-statement` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/reports/trial-balance` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/settings` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/admin/ledger/vaults` | admin, authenticated, feature_flag:gl | — | — | html |
 
 ### `ai` (50)
 
@@ -164,8 +174,8 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/api/search` | authenticated, permission | `view_reports` | — | json |
 | GET | `/api/search_warehouses` | authenticated, permission | `view_reports` | — | json |
 | POST | `/api/v1/telemetry/logs` | — | — | `60 per minute` | json |
-| GET | `/api/v2/analytics/profit-margins` | authenticated, permission | `view_reports` | — | json |
-| GET | `/api/v2/analytics/sales-forecast` | authenticated, permission | `view_reports` | — | json |
+| GET | `/api/v2/analytics/profit-margins` | authenticated, permission, plan_feature | `view_reports` | — | json |
+| GET | `/api/v2/analytics/sales-forecast` | authenticated, permission, plan_feature | `view_reports` | — | json |
 | GET | `/api/v2/customers` | authenticated, permission | `manage_customers` | `100 per minute` | json |
 | GET | `/api/v2/products/search` | authenticated, permission | `manage_products` | `200 per minute` | json |
 | GET | `/api/v2/sales` | authenticated, permission | `manage_sales` | `100 per minute` | json |
@@ -194,13 +204,13 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/assets/` | authenticated, permission | `assets` | — | html |
-| GET | `/assets/<int:asset_id>` | authenticated, permission | `assets` | — | html |
-| POST | `/assets/<int:asset_id>/depreciate` | authenticated, permission | `assets` | — | json |
-| GET, POST | `/assets/<int:asset_id>/dispose` | authenticated, permission | `assets` | — | html |
-| GET, POST | `/assets/<int:asset_id>/edit` | authenticated, permission | `assets` | — | html |
-| GET, POST | `/assets/create` | authenticated, permission | `assets` | — | html |
-| GET | `/assets/depreciation-schedule` | authenticated, permission | `assets` | — | html |
+| GET | `/assets/` | authenticated, permission | `assets:view` | — | html |
+| GET | `/assets/<int:asset_id>` | authenticated, permission | `assets:view` | — | html |
+| POST | `/assets/<int:asset_id>/depreciate` | authenticated, permission | `assets:depreciate` | — | json |
+| GET, POST | `/assets/<int:asset_id>/dispose` | authenticated, permission | `assets:manage` | — | html |
+| GET, POST | `/assets/<int:asset_id>/edit` | authenticated, permission | `assets:manage` | — | html |
+| GET, POST | `/assets/create` | authenticated, permission | `assets:manage` | — | html |
+| GET | `/assets/depreciation-schedule` | authenticated, permission | `assets:view` | — | html |
 
 ### `auth` (12)
 
@@ -252,35 +262,35 @@ Access control is enforced in two places, and both are captured below.
 |---|---|---|---|---|---|
 | GET | `/budgets/` | authenticated, permission | `view_ledger` | — | html |
 | GET | `/budgets/<int:budget_id>` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/budgets/<int:budget_id>/activate` | authenticated, permission | `budget` | — | json |
-| POST | `/budgets/<int:budget_id>/approve` | authenticated, permission | `budget` | — | json |
-| POST | `/budgets/<int:budget_id>/close` | authenticated, permission | `budget` | — | json |
-| POST | `/budgets/<int:budget_id>/delete` | authenticated, permission | `budget` | — | json |
-| GET, POST | `/budgets/<int:budget_id>/edit` | authenticated, permission | `budget` | — | html |
+| POST | `/budgets/<int:budget_id>/activate` | authenticated, permission | `budget:approve` | — | json |
+| POST | `/budgets/<int:budget_id>/approve` | authenticated, permission | `budget:approve` | — | json |
+| POST | `/budgets/<int:budget_id>/close` | authenticated, permission | `budget:approve` | — | json |
+| POST | `/budgets/<int:budget_id>/delete` | authenticated, permission | `budget:create` | — | json |
+| GET, POST | `/budgets/<int:budget_id>/edit` | authenticated, permission | `budget:create` | — | html |
 | GET | `/budgets/<int:budget_id>/variance` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/budgets/api/create` | authenticated, permission | `budget` | — | json |
-| GET, POST | `/budgets/create` | authenticated, permission | `budget` | — | html |
+| POST | `/budgets/api/create` | authenticated, permission | `budget:create` | — | json |
+| GET, POST | `/budgets/create` | authenticated, permission | `budget:create` | — | html |
 
 ### `cheques` (16)
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/cheques/` | authenticated, permission | `manage_payments` | — | html |
-| GET | `/cheques/<int:id>` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/bounce` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/cancel` | admin, authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/clear` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/delete` | admin, authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/deposit` | authenticated, permission | `manage_payments` | — | html |
-| GET, POST | `/cheques/<int:id>/edit` | authenticated, permission | `manage_payments` | — | html |
-| POST | `/cheques/<int:id>/restore` | admin, authenticated, permission | `manage_payments` | — | html |
-| GET | `/cheques/alerts` | authenticated, permission | `manage_payments` | — | html |
-| GET | `/cheques/api/alerts` | authenticated, permission | `manage_payments` | — | json |
-| GET | `/cheques/api/stats` | authenticated, permission | `manage_payments` | — | json |
-| GET | `/cheques/archived` | admin, authenticated, permission | `manage_payments` | — | html |
-| GET, POST | `/cheques/create` | authenticated, permission | `manage_payments` | `10 per minute` | html |
-| GET | `/cheques/incoming` | authenticated, permission | `manage_payments` | — | html |
-| GET | `/cheques/outgoing` | authenticated, permission | `manage_payments` | — | html |
+| GET | `/cheques/` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET | `/cheques/<int:id>` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/bounce` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/cancel` | admin, authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/clear` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/delete` | admin, authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/deposit` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET, POST | `/cheques/<int:id>/edit` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| POST | `/cheques/<int:id>/restore` | admin, authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET | `/cheques/alerts` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET | `/cheques/api/alerts` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | json |
+| GET | `/cheques/api/stats` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | json |
+| GET | `/cheques/archived` | admin, authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET, POST | `/cheques/create` | authenticated, feature_flag:cheques, permission | `manage_payments` | `10 per minute` | html |
+| GET | `/cheques/incoming` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
+| GET | `/cheques/outgoing` | authenticated, feature_flag:cheques, permission | `manage_payments` | — | html |
 
 ### `contact` (1)
 
@@ -338,18 +348,18 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/expenses/` | authenticated, permission | `manage_expenses` | — | html |
-| GET | `/expenses/<int:id>` | authenticated, permission | `manage_expenses` | — | html |
-| POST | `/expenses/<int:id>/archive` | authenticated, permission | `manage_expenses` | — | html |
-| POST | `/expenses/<int:id>/cancel` | authenticated, permission | `manage_expenses` | — | html |
-| POST | `/expenses/<int:id>/delete` | authenticated, permission | `manage_expenses` | — | html |
-| GET, POST | `/expenses/<int:id>/edit` | authenticated, permission | `manage_expenses` | — | html |
-| GET | `/expenses/<int:id>/print` | authenticated, permission | `manage_expenses` | — | json |
-| POST | `/expenses/<int:id>/restore` | authenticated, permission | `manage_expenses` | — | json |
-| GET | `/expenses/archived` | authenticated, permission | `manage_expenses` | — | html |
-| GET | `/expenses/categories` | authenticated, permission | `manage_expenses` | — | html |
-| POST | `/expenses/categories/create` | authenticated, permission | `manage_expenses` | — | json |
-| GET, POST | `/expenses/create` | authenticated, permission | `manage_expenses` | `10 per minute` | html |
+| GET | `/expenses/` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| GET | `/expenses/<int:id>` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| POST | `/expenses/<int:id>/archive` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| POST | `/expenses/<int:id>/cancel` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| POST | `/expenses/<int:id>/delete` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| GET, POST | `/expenses/<int:id>/edit` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| GET | `/expenses/<int:id>/print` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | json |
+| POST | `/expenses/<int:id>/restore` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | json |
+| GET | `/expenses/archived` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| GET | `/expenses/categories` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | html |
+| POST | `/expenses/categories/create` | authenticated, feature_flag:expenses, permission | `manage_expenses` | — | json |
+| GET, POST | `/expenses/create` | authenticated, feature_flag:expenses, permission | `manage_expenses` | `10 per minute` | html |
 
 ### `favicon.ico` (1)
 
@@ -388,9 +398,9 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/hr/contracts/create` | authenticated, permission | `hr.manage` | — | json |
 | GET | `/hr/departments` | authenticated, permission | `hr.view` | — | html |
 | POST | `/hr/departments/create` | authenticated, permission | `hr.manage` | — | json |
-| GET | `/hr/leave-ledger` | authenticated, permission | `hr` | — | html |
-| POST | `/hr/leave-ledger/accrue` | authenticated, permission | `hr` | — | json |
-| POST | `/hr/leave-ledger/carry-forward` | authenticated, permission | `hr` | — | json |
+| GET | `/hr/leave-ledger` | authenticated, permission | `hr:leave_manage` | — | html |
+| POST | `/hr/leave-ledger/accrue` | authenticated, permission | `hr:leave_manage` | — | json |
+| POST | `/hr/leave-ledger/carry-forward` | authenticated, permission | `hr:leave_manage` | — | json |
 | GET | `/hr/leaves` | authenticated, permission | `hr.view` | — | html |
 | POST | `/hr/leaves/<int:leave_id>/approve` | authenticated, permission | `hr.manage` | — | json |
 | POST | `/hr/leaves/<int:leave_id>/refuse` | authenticated, permission | `hr.manage` | — | json |
@@ -416,63 +426,63 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/ledger/` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/account/<int:account_id>` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/account/<int:account_id>/statement` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/accounts-tree` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/admin-accounts` | authenticated, finance_admin | — | — | html |
-| GET, POST | `/ledger/admin-accounts/add` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-balance-sheet` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-dashboard` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-income-statement` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-journals` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-reports` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-settings` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-trial-balance` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/admin-vaults` | authenticated, finance_admin | — | — | html |
-| GET | `/ledger/advanced/advanced-analytics` | admin, authenticated | — | — | html |
-| GET | `/ledger/advanced/advanced-expenses` | authenticated, permission | `view_ledger` | — | html |
-| GET, POST | `/ledger/advanced/advanced-expenses/add` | admin, authenticated | — | — | html |
-| GET | `/ledger/advanced/api/cheque/<int:cheque_id>/accounting-summary` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/advanced/api/events/stream` | admin, authenticated | — | — | json |
-| GET | `/ledger/advanced/api/financial-ratios` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/advanced/api/forecasting` | admin, authenticated | — | — | json |
-| GET | `/ledger/advanced/api/trend-analysis` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/advanced/cheque-integration` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/clear` | admin, authenticated | — | — | json |
-| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/receive` | admin, authenticated | — | — | json |
-| GET | `/ledger/advanced/customs-taxes` | admin, authenticated | — | — | html |
-| GET, POST | `/ledger/advanced/customs-taxes/add` | admin, authenticated | — | — | html |
-| GET | `/ledger/advanced/expense-categories` | admin, authenticated | — | — | html |
-| GET, POST | `/ledger/advanced/expense-categories/add` | admin, authenticated | — | — | html |
-| GET | `/ledger/advanced/journal-management` | admin, authenticated | — | — | html |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/approve` | admin, authenticated | — | — | json |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/delete` | admin, authenticated | — | — | json |
-| POST | `/ledger/advanced/journal-management/<int:entry_id>/reverse` | admin, authenticated | — | — | json |
-| GET | `/ledger/advanced/professional-printing` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/advanced/professional-reports` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/advanced/real-time-events` | admin, authenticated | — | — | html |
-| GET | `/ledger/aging-analysis` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/aging-analysis/export` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/api/accounts/search` | authenticated, permission | `view_ledger` | — | json |
-| POST | `/ledger/api/calculate-journal-balance` | authenticated, permission | `view_ledger` | — | json |
-| GET | `/ledger/balance-sheet` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/budget-vs-actual` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/cash-flow` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/close-fiscal-year` | authenticated, permission | `admin` | — | json |
-| GET | `/ledger/entry/<int:entry_id>` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/entry/<int:entry_id>/reverse` | authenticated, permission | `manage_ledger` | — | html |
-| GET | `/ledger/fiscal-year-preview` | authenticated, permission | `admin` | — | json |
-| POST | `/ledger/fx-revaluation` | authenticated, permission | `manage_ledger` | — | json |
-| GET | `/ledger/income-statement` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/income-tax-accrual` | authenticated, permission | `manage_ledger` | — | json |
-| GET | `/ledger/journal-entries` | authenticated, permission | `view_ledger` | — | html |
-| GET, POST | `/ledger/manual-entry` | authenticated, permission | `manage_ledger` | — | html |
-| GET, POST | `/ledger/periods` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/run-depreciation` | authenticated, permission | `manage_ledger` | — | json |
-| GET | `/ledger/trial-balance` | authenticated, permission | `view_ledger` | — | html |
-| GET | `/ledger/vat-report` | authenticated, permission | `view_ledger` | — | html |
-| POST | `/ledger/zakat-accrual` | authenticated, permission | `manage_ledger` | — | json |
+| GET | `/ledger/` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/account/<int:account_id>` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/account/<int:account_id>/statement` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/accounts-tree` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/admin-accounts` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET, POST | `/ledger/admin-accounts/add` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-balance-sheet` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-dashboard` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-income-statement` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-journals` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-reports` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-settings` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-trial-balance` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/admin-vaults` | authenticated, feature_flag:gl, finance_admin | — | — | html |
+| GET | `/ledger/advanced/advanced-analytics` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/ledger/advanced/advanced-expenses` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET, POST | `/ledger/advanced/advanced-expenses/add` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/ledger/advanced/api/cheque/<int:cheque_id>/accounting-summary` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| GET | `/ledger/advanced/api/events/stream` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/ledger/advanced/api/financial-ratios` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| GET | `/ledger/advanced/api/forecasting` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/ledger/advanced/api/trend-analysis` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| GET | `/ledger/advanced/cheque-integration` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/clear` | admin, authenticated, feature_flag:gl | — | — | json |
+| POST | `/ledger/advanced/cheque-integration/<int:cheque_id>/receive` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/ledger/advanced/customs-taxes` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET, POST | `/ledger/advanced/customs-taxes/add` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/ledger/advanced/expense-categories` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET, POST | `/ledger/advanced/expense-categories/add` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/ledger/advanced/journal-management` | admin, authenticated, feature_flag:gl | — | — | html |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/approve` | admin, authenticated, feature_flag:gl | — | — | json |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/delete` | admin, authenticated, feature_flag:gl | — | — | json |
+| POST | `/ledger/advanced/journal-management/<int:entry_id>/reverse` | admin, authenticated, feature_flag:gl | — | — | json |
+| GET | `/ledger/advanced/professional-printing` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/advanced/professional-reports` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/advanced/real-time-events` | admin, authenticated, feature_flag:gl | — | — | html |
+| GET | `/ledger/aging-analysis` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/aging-analysis/export` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| GET | `/ledger/api/accounts/search` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| POST | `/ledger/api/calculate-journal-balance` | authenticated, feature_flag:gl, permission | `view_ledger` | — | json |
+| GET | `/ledger/balance-sheet` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/budget-vs-actual` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/cash-flow` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/close-fiscal-year` | authenticated, feature_flag:gl, permission | `admin` | — | json |
+| GET | `/ledger/entry/<int:entry_id>` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/entry/<int:entry_id>/reverse` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | html |
+| GET | `/ledger/fiscal-year-preview` | authenticated, feature_flag:gl, permission | `admin` | — | json |
+| POST | `/ledger/fx-revaluation` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | json |
+| GET | `/ledger/income-statement` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/income-tax-accrual` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | json |
+| GET | `/ledger/journal-entries` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET, POST | `/ledger/manual-entry` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | html |
+| GET, POST | `/ledger/periods` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/run-depreciation` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | json |
+| GET | `/ledger/trial-balance` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| GET | `/ledger/vat-report` | authenticated, feature_flag:gl, permission | `view_ledger` | — | html |
+| POST | `/ledger/zakat-accrual` | authenticated, feature_flag:gl, permission | `manage_ledger` | — | json |
 
 ### `login` (1)
 
@@ -484,38 +494,38 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/maintenance/` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/<int:order_id>` | authenticated, permission | `manage_maintenance` | — | html |
-| POST | `/maintenance/<int:order_id>/close` | authenticated, permission | `maintenance_close` | — | json |
-| POST | `/maintenance/<int:order_id>/deposit` | authenticated, permission | `maintenance_close` | — | json |
-| POST | `/maintenance/<int:order_id>/device` | authenticated, permission | `maintenance_receive` | — | json |
-| POST | `/maintenance/<int:order_id>/discount` | authenticated, permission | `maintenance_discount` | — | json |
-| GET | `/maintenance/<int:order_id>/einvoice-qr.png` | authenticated, permission | `manage_maintenance` | — | json |
-| GET | `/maintenance/<int:order_id>/einvoice.xml` | authenticated, permission | `manage_maintenance` | — | json |
-| GET | `/maintenance/<int:order_id>/invoice-print` | authenticated, permission | `manage_maintenance` | — | html |
-| POST | `/maintenance/<int:order_id>/lines` | authenticated, permission | `maintenance_work` | — | json |
-| GET | `/maintenance/<int:order_id>/receipt-print` | authenticated, permission | `manage_maintenance` | — | html |
-| POST | `/maintenance/<int:order_id>/refund` | authenticated, permission | `maintenance_close` | — | json |
-| POST | `/maintenance/<int:order_id>/returns` | authenticated, permission | `maintenance_close` | — | json |
-| POST | `/maintenance/<int:order_id>/services` | authenticated, permission | `maintenance_work` | — | json |
-| POST | `/maintenance/<int:order_id>/status` | authenticated, permission | `maintenance_work` | — | json |
-| POST | `/maintenance/<int:order_id>/warranty/cancel` | authenticated, permission | `manage_maintenance` | — | json |
-| POST | `/maintenance/<int:order_id>/warranty/check` | authenticated, permission | `maintenance_receive` | — | json |
-| POST | `/maintenance/<int:order_id>/warranty/restore` | authenticated, permission | `manage_maintenance` | — | json |
-| GET, POST | `/maintenance/create` | authenticated, permission | `maintenance_receive` | — | html |
-| GET | `/maintenance/purchases` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/purchases/<int:purchase_order_id>` | authenticated, permission | `manage_maintenance` | — | html |
-| POST | `/maintenance/purchases/<int:purchase_order_id>/lines` | authenticated, permission | `manage_maintenance` | — | json |
-| POST | `/maintenance/purchases/<int:purchase_order_id>/receive` | authenticated, permission | `manage_maintenance` | — | json |
-| GET, POST | `/maintenance/purchases/create` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/report` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/report/engineers` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/report/margin` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/report/parts` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/report/warranty` | authenticated, permission | `manage_maintenance` | — | html |
-| GET, POST | `/maintenance/service-templates` | authenticated, permission | `manage_maintenance` | — | html |
-| GET, POST | `/maintenance/settings` | authenticated, permission | `manage_maintenance` | — | html |
-| GET | `/maintenance/warranty-audit` | authenticated, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/<int:order_id>` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| POST | `/maintenance/<int:order_id>/close` | authenticated, feature_flag:maintenance, permission | `maintenance_close` | — | json |
+| POST | `/maintenance/<int:order_id>/deposit` | authenticated, feature_flag:maintenance, permission | `maintenance_close` | — | json |
+| POST | `/maintenance/<int:order_id>/device` | authenticated, feature_flag:maintenance, permission | `maintenance_receive` | — | json |
+| POST | `/maintenance/<int:order_id>/discount` | authenticated, feature_flag:maintenance, permission | `maintenance_discount` | — | json |
+| GET | `/maintenance/<int:order_id>/einvoice-qr.png` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | json |
+| GET | `/maintenance/<int:order_id>/einvoice.xml` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | json |
+| GET | `/maintenance/<int:order_id>/invoice-print` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| POST | `/maintenance/<int:order_id>/lines` | authenticated, feature_flag:maintenance, permission | `maintenance_work` | — | json |
+| GET | `/maintenance/<int:order_id>/receipt-print` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| POST | `/maintenance/<int:order_id>/refund` | authenticated, feature_flag:maintenance, permission | `maintenance_close` | — | json |
+| POST | `/maintenance/<int:order_id>/returns` | authenticated, feature_flag:maintenance, permission | `maintenance_close` | — | json |
+| POST | `/maintenance/<int:order_id>/services` | authenticated, feature_flag:maintenance, permission | `maintenance_work` | — | json |
+| POST | `/maintenance/<int:order_id>/status` | authenticated, feature_flag:maintenance, permission | `maintenance_work` | — | json |
+| POST | `/maintenance/<int:order_id>/warranty/cancel` | authenticated, feature_flag:maintenance, permission, plan_feature | `manage_maintenance` | — | json |
+| POST | `/maintenance/<int:order_id>/warranty/check` | authenticated, feature_flag:maintenance, permission, plan_feature | `maintenance_receive` | — | json |
+| POST | `/maintenance/<int:order_id>/warranty/restore` | authenticated, feature_flag:maintenance, permission, plan_feature | `manage_maintenance` | — | json |
+| GET, POST | `/maintenance/create` | authenticated, feature_flag:maintenance, permission | `maintenance_receive` | — | html |
+| GET | `/maintenance/purchases` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/purchases/<int:purchase_order_id>` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| POST | `/maintenance/purchases/<int:purchase_order_id>/lines` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | json |
+| POST | `/maintenance/purchases/<int:purchase_order_id>/receive` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | json |
+| GET, POST | `/maintenance/purchases/create` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/report` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/report/engineers` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/report/margin` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/report/parts` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/report/warranty` | authenticated, feature_flag:maintenance, permission, plan_feature | `manage_maintenance` | — | html |
+| GET, POST | `/maintenance/service-templates` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET, POST | `/maintenance/settings` | authenticated, feature_flag:maintenance, permission | `manage_maintenance` | — | html |
+| GET | `/maintenance/warranty-audit` | authenticated, feature_flag:maintenance, permission, plan_feature | `manage_maintenance` | — | html |
 
 ### `marketing` (8)
 
@@ -619,7 +629,7 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/owner/maintenance/rebuild-gl-tree` | owner | — | — | json |
 | POST | `/owner/maintenance/regenerate-default-backup` | owner | — | — | json |
 | POST | `/owner/maintenance/run-default-tenant-maintenance` | owner | — | — | json |
-| GET | `/owner/master-login-info` | owner | — | — | html |
+| GET | `/owner/master-login-info` | owner, two_factor | — | — | html |
 | GET, POST | `/owner/notification-templates` | owner | — | — | html |
 | GET, POST | `/owner/payment-gateways` | owner | — | — | html |
 | GET | `/owner/performance-metrics` | owner | — | — | html |
@@ -666,67 +676,67 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/partners/` | authenticated, permission | `view_reports` | — | html |
-| GET | `/partners/<int:id>` | authenticated, permission | `view_reports` | — | html |
-| GET, POST | `/partners/<int:id>/edit` | authenticated, permission | `manage_users` | — | html |
-| POST | `/partners/<int:id>/link-customer` | authenticated, permission | `manage_users` | — | json |
-| GET | `/partners/<int:id>/statement` | authenticated, permission | `view_reports` | — | html |
-| POST | `/partners/<int:id>/tx` | authenticated, permission | `manage_payments` | — | json |
-| GET | `/partners/<int:id>/unified` | authenticated, permission | `view_reports` | — | json |
-| POST | `/partners/<int:id>/unlink-customer` | authenticated, permission | `manage_users` | — | json |
-| GET | `/partners/api/preview-pnl` | authenticated, permission | `view_reports` | — | json |
-| GET, POST | `/partners/create` | authenticated, permission | `manage_users` | — | html |
-| GET, POST | `/partners/distribute` | authenticated, permission | `manage_users` | — | html |
-| GET | `/partners/distributions` | authenticated, permission | `view_reports` | — | html |
-| POST | `/partners/distributions/<int:dist_id>/approve` | authenticated, permission | `manage_users` | — | json |
-| POST | `/partners/distributions/<int:dist_id>/pay` | authenticated, permission | `manage_payments` | — | json |
+| GET | `/partners/` | authenticated, feature_flag:partners, permission | `view_reports` | — | html |
+| GET | `/partners/<int:id>` | authenticated, feature_flag:partners, permission | `view_reports` | — | html |
+| GET, POST | `/partners/<int:id>/edit` | authenticated, feature_flag:partners, permission | `manage_users` | — | html |
+| POST | `/partners/<int:id>/link-customer` | authenticated, feature_flag:partners, permission | `manage_users` | — | json |
+| GET | `/partners/<int:id>/statement` | authenticated, feature_flag:partners, permission | `view_reports` | — | html |
+| POST | `/partners/<int:id>/tx` | authenticated, feature_flag:partners, permission | `manage_payments` | — | json |
+| GET | `/partners/<int:id>/unified` | authenticated, feature_flag:partners, permission | `view_reports` | — | json |
+| POST | `/partners/<int:id>/unlink-customer` | authenticated, feature_flag:partners, permission | `manage_users` | — | json |
+| GET | `/partners/api/preview-pnl` | authenticated, feature_flag:partners, permission | `view_reports` | — | json |
+| GET, POST | `/partners/create` | authenticated, feature_flag:partners, permission | `manage_users` | — | html |
+| GET, POST | `/partners/distribute` | authenticated, feature_flag:partners, permission | `manage_users` | — | html |
+| GET | `/partners/distributions` | authenticated, feature_flag:partners, permission | `view_reports` | — | html |
+| POST | `/partners/distributions/<int:dist_id>/approve` | authenticated, feature_flag:partners, permission | `manage_users` | — | json |
+| POST | `/partners/distributions/<int:dist_id>/pay` | authenticated, feature_flag:partners, permission | `manage_payments` | — | json |
 
 ### `payment-vault` (42)
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/payment-vault/` | authenticated, owner | — | — | html |
-| POST | `/payment-vault/api/donation` | authenticated, owner | — | `10 per minute` | json |
-| GET | `/payment-vault/api/live-stats` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/api/notifications` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/api/package-stats/<int:package_id>` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/api/purchase` | authenticated, owner | — | `10 per minute` | json |
-| GET | `/payment-vault/api/v2/donations` | authenticated, owner | — | `60 per minute` | json |
-| GET | `/payment-vault/api/v2/purchases` | authenticated, owner | — | `60 per minute` | json |
-| GET | `/payment-vault/api/v2/stats` | authenticated, owner | — | `60 per minute` | json |
-| POST | `/payment-vault/auto-approve` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/card/<int:card_id>/decrypt` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/cards` | authenticated, owner | — | — | html |
-| GET, POST | `/payment-vault/change-password` | authenticated, owner | — | — | html |
-| GET | `/payment-vault/dashboard` | authenticated, owner | — | — | html |
-| GET | `/payment-vault/donation/<int:donation_id>` | authenticated, owner | — | — | html |
-| POST | `/payment-vault/donation/<int:donation_id>/approve` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/donation/<int:donation_id>/reject` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/donation/<int:donation_id>/send-thank-you` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/donations` | authenticated, owner | — | — | html |
-| GET | `/payment-vault/export/cards` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/export/donations` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/export/purchases` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/export/report-pdf` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/health` | authenticated, owner | — | — | json |
-| GET, POST | `/payment-vault/lock` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/metrics` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/package/<int:package_id>/delete` | authenticated, owner | — | — | json |
-| GET, POST | `/payment-vault/package/<int:package_id>/edit` | authenticated, owner | — | — | html |
-| POST | `/payment-vault/package/<int:package_id>/toggle` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/package/create` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/packages-management` | authenticated, owner | — | — | html |
-| POST | `/payment-vault/platform-fees/confirm` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/process-payment` | authenticated, owner | — | `20 per minute` | json |
-| GET | `/payment-vault/purchase/<int:id>` | authenticated, owner | — | — | html |
-| POST | `/payment-vault/purchase/<int:id>/activate` | authenticated, owner | — | — | json |
-| POST | `/payment-vault/purchase/<int:id>/send-email` | authenticated, owner | — | — | json |
-| GET | `/payment-vault/purchases` | authenticated, owner | — | — | html |
-| GET | `/payment-vault/reports` | authenticated, owner | — | — | html |
-| GET, POST | `/payment-vault/settings` | authenticated, owner | — | — | html |
-| GET, POST | `/payment-vault/unlock` | authenticated, owner | — | `5 per minute` | html |
-| POST | `/payment-vault/webhook/nowpayments` | authenticated, owner | — | `100 per minute` | json |
-| POST | `/payment-vault/webhook/stripe` | authenticated, owner | — | `100 per minute` | json |
+| GET | `/payment-vault/` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| POST | `/payment-vault/api/donation` | authenticated, feature_flag:allow_custom_integrations, owner | — | `10 per minute` | json |
+| GET | `/payment-vault/api/live-stats` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/api/notifications` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/api/package-stats/<int:package_id>` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/api/purchase` | authenticated, feature_flag:allow_custom_integrations, owner | — | `10 per minute` | json |
+| GET | `/payment-vault/api/v2/donations` | authenticated, feature_flag:allow_custom_integrations, owner | — | `60 per minute` | json |
+| GET | `/payment-vault/api/v2/purchases` | authenticated, feature_flag:allow_custom_integrations, owner | — | `60 per minute` | json |
+| GET | `/payment-vault/api/v2/stats` | authenticated, feature_flag:allow_custom_integrations, owner | — | `60 per minute` | json |
+| POST | `/payment-vault/auto-approve` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/card/<int:card_id>/decrypt` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/cards` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET, POST | `/payment-vault/change-password` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET | `/payment-vault/dashboard` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET | `/payment-vault/donation/<int:donation_id>` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| POST | `/payment-vault/donation/<int:donation_id>/approve` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/donation/<int:donation_id>/reject` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/donation/<int:donation_id>/send-thank-you` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/donations` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET | `/payment-vault/export/cards` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/export/donations` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/export/purchases` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/export/report-pdf` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/health` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET, POST | `/payment-vault/lock` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/metrics` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/package/<int:package_id>/delete` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET, POST | `/payment-vault/package/<int:package_id>/edit` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| POST | `/payment-vault/package/<int:package_id>/toggle` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/package/create` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/packages-management` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| POST | `/payment-vault/platform-fees/confirm` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/process-payment` | authenticated, feature_flag:allow_custom_integrations, owner | — | `20 per minute` | json |
+| GET | `/payment-vault/purchase/<int:id>` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| POST | `/payment-vault/purchase/<int:id>/activate` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| POST | `/payment-vault/purchase/<int:id>/send-email` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | json |
+| GET | `/payment-vault/purchases` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET | `/payment-vault/reports` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET, POST | `/payment-vault/settings` | authenticated, feature_flag:allow_custom_integrations, owner | — | — | html |
+| GET, POST | `/payment-vault/unlock` | authenticated, feature_flag:allow_custom_integrations, owner | — | `5 per minute` | html |
+| POST | `/payment-vault/webhook/nowpayments` | authenticated, feature_flag:allow_custom_integrations, owner | — | `100 per minute` | json |
+| POST | `/payment-vault/webhook/stripe` | authenticated, feature_flag:allow_custom_integrations, owner | — | `100 per minute` | json |
 
 ### `payments` (20)
 
@@ -757,34 +767,34 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET, POST | `/payroll/advances` | authenticated, permission | `manage_payroll` | — | html |
-| GET | `/payroll/employees` | authenticated, permission | `manage_payroll` | — | html |
-| GET, POST | `/payroll/employees/add` | authenticated, permission | `manage_payroll` | — | html |
-| GET, POST | `/payroll/process` | authenticated, permission | `manage_payroll` | — | html |
-| GET | `/payroll/slip/<int:id>` | authenticated, permission | `manage_payroll` | — | html |
-| GET | `/payroll/statement/<int:id>` | authenticated, permission | `manage_payroll` | — | html |
+| GET, POST | `/payroll/advances` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
+| GET | `/payroll/employees` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
+| GET, POST | `/payroll/employees/add` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
+| GET, POST | `/payroll/process` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
+| GET | `/payroll/slip/<int:id>` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
+| GET | `/payroll/statement/<int:id>` | authenticated, feature_flag:payroll, permission | `manage_payroll` | — | html |
 
 ### `pos` (61)
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
 | GET | `/pos/` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | html |
-| POST | `/pos/api/authorize-override` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/carts` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| DELETE | `/pos/api/carts/<int:cart_id>` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/carts/<int:cart_id>` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/carts/<int:cart_id>/void-line` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/carts/park` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/cash-movements` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/cash-movements` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/authorize-override` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/carts` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| DELETE | `/pos/api/carts/<int:cart_id>` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/carts/<int:cart_id>` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/carts/<int:cart_id>/void-line` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/carts/park` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/cash-movements` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/cash-movements` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/catalog/snapshot` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/categories` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/checkout` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/checkout` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/customer-display/<int:session_id>/stream` | feature_flag:pos_enabled | — | — | json |
 | GET | `/pos/api/customers` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/customers/create` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/drawer/open` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/fast-cash` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/drawer/open` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/fast-cash` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/floors` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/floors/<int:floor_id>/tables` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/floors/create` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
@@ -797,36 +807,36 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/pos/api/order-types` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/product` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/products` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/promotions/evaluate` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/receipts/lookup` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.POS_RETURN` | — | json |
-| POST | `/pos/api/returns` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.POS_RETURN` | — | json |
-| GET | `/pos/api/sale/<int:sale_id>/print-tickets` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/promotions/evaluate` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/receipts/lookup` | authenticated, feature_flag:pos_enabled, permission | `pos_return` | — | json |
+| POST | `/pos/api/returns` | authenticated, feature_flag:pos_enabled, permission | `pos_return` | — | json |
+| GET | `/pos/api/sale/<int:sale_id>/print-tickets` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/session/close` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/session/current` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/session/open` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/session/pause` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/session/report` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/session/resume` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/shift/close` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/shift/current` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/shift/open` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/shift/reconcile` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/stock/lookup` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/shift/close` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/shift/current` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/shift/open` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/shift/reconcile` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/stock/lookup` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/stock/summary` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/supervisor-pin` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.POS_AUTHORIZE_OVERRIDE` | — | json |
+| POST | `/pos/api/supervisor-pin` | authenticated, feature_flag:pos_enabled, permission | `pos_authorize_override` | — | json |
 | GET | `/pos/api/tables` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/tables/<int:table_id>/assign` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/tables/<int:table_id>/status` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | POST | `/pos/api/tables/create` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
-| POST | `/pos/api/terminal/connection_token` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| POST | `/pos/api/terminal/payment_intent` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
-| GET | `/pos/api/terminal/status` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | json |
+| POST | `/pos/api/terminal/connection_token` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| POST | `/pos/api/terminal/payment_intent` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
+| GET | `/pos/api/terminal/status` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/api/walkin-customer` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/customer-display` | feature_flag:pos_enabled | — | — | html |
 | GET | `/pos/grid` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | json |
 | GET | `/pos/held-carts` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | html |
 | GET | `/pos/kds` | authenticated, feature_flag:pos_enabled, permission | `view_kds` | — | html |
-| GET | `/pos/receipt/<int:sale_id>` | authenticated, feature_flag:pos_enabled, permission | `PermissionEnum.MANAGE_SALES` | — | html |
+| GET | `/pos/receipt/<int:sale_id>` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | html |
 | GET, POST | `/pos/settings/order-types` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | html |
 | GET, POST | `/pos/settings/printers` | authenticated, feature_flag:pos_enabled, permission | `manage_sales` | — | html |
 
@@ -860,7 +870,7 @@ Access control is enforced in two places, and both are captured below.
 | GET | `/products/<int:id>` | authenticated, permission | `manage_products` | — | html |
 | POST | `/products/<int:id>/adjust-stock` | authenticated, permission | `manage_products` | — | json |
 | POST | `/products/<int:id>/delete` | authenticated, permission | `manage_products` | — | html |
-| GET, POST | `/products/<int:id>/edit` | authenticated, permission | `manage_products` | — | html |
+| GET, POST | `/products/<int:id>/edit` | authenticated, permission, quota | `manage_products` | — | html |
 | GET | `/products/<int:id>/print-label` | authenticated, permission | `view_products` | — | json |
 | POST | `/products/api/products/bulk` | authenticated, permission | `manage_products` | — | json |
 | GET | `/products/api/products/by-barcode/<barcode>` | authenticated, permission | `view_products` | — | json |
@@ -871,8 +881,8 @@ Access control is enforced in two places, and both are captured below.
 | DELETE, POST | `/products/categories/<int:id>/delete` | authenticated, permission | `manage_products` | — | json |
 | POST, PUT | `/products/categories/<int:id>/update` | authenticated, permission | `manage_products` | — | json |
 | POST | `/products/categories/create` | authenticated, permission | `manage_products` | — | json |
-| GET, POST | `/products/create` | authenticated, permission | `manage_products` | `10 per minute` | html |
-| GET, POST | `/products/import` | authenticated, permission | `manage_products` | — | html |
+| GET, POST | `/products/create` | authenticated, permission, quota | `manage_products` | `10 per minute` | html |
+| GET, POST | `/products/import` | authenticated, permission, quota | `manage_products` | — | html |
 | POST | `/products/import-grid` | authenticated, permission | `manage_products` | — | json |
 | GET | `/products/import-template` | authenticated, permission | `manage_products` | — | json |
 | GET | `/products/import/jobs` | authenticated, permission | `manage_products` | — | html |
@@ -914,15 +924,15 @@ Access control is enforced in two places, and both are captured below.
 | GET, POST | `/purchases/<int:id>/return` | authenticated, permission | `manage_purchases` | — | html |
 | POST | `/purchases/api/calculate-totals` | authenticated, permission | `manage_purchases` | — | json |
 | GET, POST | `/purchases/create` | authenticated, permission | `manage_purchases` | `10 per minute` | html |
-| GET | `/purchases/grn` | authenticated, permission | `grn` | — | html |
-| POST | `/purchases/grn/<int:grn_id>/confirm` | authenticated, permission | `grn` | — | json |
-| GET, POST | `/purchases/grn/create` | authenticated, permission | `grn` | — | html |
-| GET | `/purchases/match/<int:po_id>` | authenticated, permission | `grn` | — | html |
-| GET | `/purchases/requisitions` | authenticated, permission | `purchase_req` | — | html |
-| POST | `/purchases/requisitions/<int:pr_id>/approve` | authenticated, permission | `purchase_req` | — | json |
-| POST | `/purchases/requisitions/<int:pr_id>/reject` | authenticated, permission | `purchase_req` | — | json |
-| POST | `/purchases/requisitions/<int:pr_id>/submit` | authenticated, permission | `purchase_req` | — | json |
-| GET, POST | `/purchases/requisitions/create` | authenticated, permission | `purchase_req` | — | html |
+| GET | `/purchases/grn` | authenticated, permission | `grn:manage` | — | html |
+| POST | `/purchases/grn/<int:grn_id>/confirm` | authenticated, permission | `grn:manage` | — | json |
+| GET, POST | `/purchases/grn/create` | authenticated, permission | `grn:manage` | — | html |
+| GET | `/purchases/match/<int:po_id>` | authenticated, permission | `grn:manage` | — | html |
+| GET | `/purchases/requisitions` | authenticated, permission | `purchase_req:create` | — | html |
+| POST | `/purchases/requisitions/<int:pr_id>/approve` | authenticated, permission | `purchase_req:approve` | — | json |
+| POST | `/purchases/requisitions/<int:pr_id>/reject` | authenticated, permission | `purchase_req:approve` | — | json |
+| POST | `/purchases/requisitions/<int:pr_id>/submit` | authenticated, permission | `purchase_req:create` | — | json |
+| GET, POST | `/purchases/requisitions/create` | authenticated, permission | `purchase_req:create` | — | html |
 
 ### `quotations` (9)
 
@@ -942,30 +952,30 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/reports/` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/ap-aging` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/ap-aging/export` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/api/ap-aging` | authenticated, permission, tenant_scope | `view_reports` | — | json |
-| GET | `/reports/api/entity-search` | authenticated, permission, tenant_scope | `view_reports` | — | json |
-| GET | `/reports/api/model_fields` | authenticated, permission, tenant_scope | `view_reports` | — | json |
-| GET | `/reports/ar-reconciliation` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/entity_report_fragment/<entity_type>/<id>` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/inventory` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/inventory-reconciliation` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/inventory-reconciliation/export` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/inventory/export` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/partners` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/purchases` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/purchases/export` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/receivables` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/receivables/export` | authenticated, permission, tenant_scope | `view_reports` | — | json |
-| GET | `/reports/sales` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/sales/export` | authenticated, permission, tenant_scope | `view_reports` | — | json |
-| GET | `/reports/top-selling` | authenticated, permission, tenant_scope | `view_reports` | — | html |
-| GET | `/reports/treasury` | authenticated, permission | `view_reports` | — | html |
-| GET | `/reports/treasury/export` | authenticated, permission | `view_reports` | — | html |
-| GET | `/reports/vat-return` | authenticated, permission | `view_reports` | — | html |
-| GET | `/reports/wps-export` | authenticated, permission | `view_reports` | — | html |
+| GET | `/reports/` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/ap-aging` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/ap-aging/export` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/api/ap-aging` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | json |
+| GET | `/reports/api/entity-search` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | json |
+| GET | `/reports/api/model_fields` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | json |
+| GET | `/reports/ar-reconciliation` | authenticated, feature_flag:reports, permission, plan_feature, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/entity_report_fragment/<entity_type>/<id>` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/inventory` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/inventory-reconciliation` | authenticated, feature_flag:reports, permission, plan_feature, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/inventory-reconciliation/export` | authenticated, feature_flag:reports, permission, plan_feature, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/inventory/export` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/partners` | authenticated, feature_flag:reports, permission, plan_feature, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/purchases` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/purchases/export` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/receivables` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/receivables/export` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | json |
+| GET | `/reports/sales` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/sales/export` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | json |
+| GET | `/reports/top-selling` | authenticated, feature_flag:reports, permission, tenant_scope | `view_reports` | — | html |
+| GET | `/reports/treasury` | authenticated, feature_flag:reports, permission, plan_feature | `view_reports` | — | html |
+| GET | `/reports/treasury/export` | authenticated, feature_flag:reports, permission, plan_feature | `view_reports` | — | html |
+| GET | `/reports/vat-return` | authenticated, feature_flag:reports, permission, plan_feature | `view_reports` | — | html |
+| GET | `/reports/wps-export` | authenticated, feature_flag:reports, permission, plan_feature | `view_reports` | — | html |
 
 ### `returns` (5)
 
@@ -1050,7 +1060,7 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/sales/api/calculate-totals` | authenticated, permission | `manage_sales` | — | json |
 | GET | `/sales/api/get-price` | authenticated, permission | `manage_sales` | — | json |
 | GET | `/sales/archived` | authenticated, permission | `manage_sales` | — | html |
-| GET, POST | `/sales/create` | authenticated, permission | `manage_sales` | `15 per minute` | html |
+| GET, POST | `/sales/create` | authenticated, permission, quota | `manage_sales` | `15 per minute` | html |
 
 ### `shipments` (11)
 
@@ -1078,28 +1088,28 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/store/` | — | — | `60 per minute` | html |
-| GET | `/store/admin` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/admin/catalog` | authenticated, permission | `manage_store` | — | html |
-| GET, POST | `/store/admin/coupons` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/admin/customers` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/admin/orders` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/admin/orders/<int:order_id>` | authenticated, permission | `manage_store` | — | html |
-| POST | `/store/admin/orders/<int:order_id>/cancel` | authenticated, permission | `manage_store` | — | json |
-| POST | `/store/admin/orders/<int:order_id>/confirm` | authenticated, permission | `manage_store` | — | json |
-| GET, POST | `/store/admin/prices` | authenticated, permission | `manage_store` | — | html |
-| POST | `/store/admin/provisional/<int:provisional_id>/approve` | authenticated, permission | `manage_store` | — | json |
-| POST | `/store/admin/provisional/<int:provisional_id>/cancel` | authenticated, permission | `manage_store` | — | json |
-| GET, POST | `/store/admin/settings` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/admin/stats` | authenticated, permission | `manage_store` | — | html |
-| GET, POST | `/store/admin/transfer` | authenticated, permission | `manage_store` | — | html |
-| GET | `/store/cart` | — | — | `60 per minute` | html |
-| POST | `/store/cart/add` | — | — | `30 per minute` | json |
-| POST | `/store/cart/remove` | — | — | `30 per minute` | json |
-| POST | `/store/checkout` | authenticated, permission | `manage_store` | — | json |
-| GET | `/store/product/<int:product_id>` | — | — | `60 per minute` | html |
-| POST | `/store/public-checkout` | — | — | `5 per minute` | json |
-| GET | `/store/reports` | authenticated, permission | `manage_store` | — | html |
+| GET | `/store/` | feature_flag:store | — | `60 per minute` | html |
+| GET | `/store/admin` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET | `/store/admin/catalog` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET, POST | `/store/admin/coupons` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET | `/store/admin/customers` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET | `/store/admin/orders` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET | `/store/admin/orders/<int:order_id>` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| POST | `/store/admin/orders/<int:order_id>/cancel` | authenticated, feature_flag:store, permission | `manage_store` | — | json |
+| POST | `/store/admin/orders/<int:order_id>/confirm` | authenticated, feature_flag:store, permission | `manage_store` | — | json |
+| GET, POST | `/store/admin/prices` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| POST | `/store/admin/provisional/<int:provisional_id>/approve` | authenticated, feature_flag:store, permission | `manage_store` | — | json |
+| POST | `/store/admin/provisional/<int:provisional_id>/cancel` | authenticated, feature_flag:store, permission | `manage_store` | — | json |
+| GET, POST | `/store/admin/settings` | authenticated, feature_flag:store, permission, quota | `manage_store` | — | html |
+| GET | `/store/admin/stats` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET, POST | `/store/admin/transfer` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
+| GET | `/store/cart` | feature_flag:store | — | `60 per minute` | html |
+| POST | `/store/cart/add` | feature_flag:store | — | `30 per minute` | json |
+| POST | `/store/cart/remove` | feature_flag:store | — | `30 per minute` | json |
+| POST | `/store/checkout` | authenticated, feature_flag:store, permission | `manage_store` | — | json |
+| GET | `/store/product/<int:product_id>` | feature_flag:store | — | `60 per minute` | html |
+| POST | `/store/public-checkout` | feature_flag:store | — | `5 per minute` | json |
+| GET | `/store/reports` | authenticated, feature_flag:store, permission | `manage_store` | — | html |
 
 ### `super-admin` (3)
 
@@ -1181,12 +1191,12 @@ Access control is enforced in two places, and both are captured below.
 
 | Method | Path | Guards | Permission | Rate limit | Returns |
 |---|---|---|---|---|---|
-| GET | `/uinv/campaigns` | authenticated, permission | `manage_products` | — | html |
-| POST | `/uinv/campaigns` | authenticated, permission | `manage_products` | — | json |
+| GET | `/uinv/campaigns` | authenticated, permission, plan_feature | `manage_products` | — | html |
+| POST | `/uinv/campaigns` | authenticated, permission, plan_feature | `manage_products` | — | json |
 | GET | `/uinv/shipments` | authenticated, permission | `manage_warehouse` | — | html |
 | POST | `/uinv/shipments` | authenticated, permission | `manage_warehouse` | — | json |
-| GET | `/uinv/warranty` | authenticated, permission | `manage_products` | — | html |
-| POST | `/uinv/warranty` | authenticated, permission | `manage_products` | — | json |
+| GET | `/uinv/warranty` | authenticated, permission, plan_feature | `manage_products` | — | html |
+| POST | `/uinv/warranty` | authenticated, permission, plan_feature | `manage_products` | — | json |
 
 ### `user-guide` (1)
 
@@ -1220,7 +1230,7 @@ Access control is enforced in two places, and both are captured below.
 | POST | `/warehouse/<int:id>/delete` | admin, authenticated, permission | `manage_warehouse` | — | json |
 | GET, POST | `/warehouse/<int:id>/edit` | admin, authenticated, permission | `manage_warehouse` | — | html |
 | POST | `/warehouse/add-stock/<int:product_id>` | authenticated, permission | `manage_warehouse` | — | json |
-| POST | `/warehouse/api/upload_product_image` | authenticated, permission | `manage_products` | — | json |
+| POST | `/warehouse/api/upload_product_image` | authenticated, permission, quota | `manage_products` | — | json |
 | GET, POST | `/warehouse/create` | admin, authenticated, permission | `manage_warehouse` | — | html |
 | GET, POST | `/warehouse/create-warehouse` | admin, authenticated, permission | `manage_warehouse` | — | html |
 | POST | `/warehouse/exchange` | authenticated, permission | `manage_warehouse` | — | json |

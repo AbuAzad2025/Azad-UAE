@@ -777,6 +777,434 @@ html[dir="rtl"] .nav-sidebar .nav-link {
 	flex-direction: row;
 }
 
+/* The sidebar sits on a physical edge (data-sidebar-side=right|left), which
+   does not follow text direction. Offset the content on that physical edge
+   only and keep the opposite edge at zero. Transition both physical margins
+   so the content follows the sidebar's width change instead of snapping. */
+@media (min-width: 992px) {
+	body[data-sidebar-side="right"] .content-wrapper,
+	body[data-sidebar-side="right"] .main-header,
+	body[data-sidebar-side="right"] .main-footer {
+		margin-left: 0 !important;
+		margin-right: var(--az-sidebar-width) !important;
+		transition: margin-left 0.3s ease-in-out, margin-right 0.3s ease-in-out !important;
+	}
+
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .content-wrapper,
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-header,
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="right"] .main-footer {
+		margin-left: 0 !important;
+		margin-right: var(--az-sidebar-collapsed) !important;
+	}
+
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="right"] .content-wrapper,
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="right"] .main-header,
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="right"] .main-footer {
+		margin-right: var(--az-sidebar-width) !important;
+	}
+
+	body[data-sidebar-side="left"] .content-wrapper,
+	body[data-sidebar-side="left"] .main-header,
+	body[data-sidebar-side="left"] .main-footer {
+		margin-right: 0 !important;
+		margin-left: var(--az-sidebar-width) !important;
+		transition: margin-left 0.3s ease-in-out, margin-right 0.3s ease-in-out !important;
+	}
+
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .content-wrapper,
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-header,
+	body.sidebar-mini.sidebar-collapse[data-sidebar-side="left"] .main-footer {
+		margin-right: 0 !important;
+		margin-left: var(--az-sidebar-collapsed) !important;
+	}
+
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="left"] .content-wrapper,
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="left"] .main-header,
+	body.sidebar-mini.sidebar-collapse:has(.main-sidebar:hover)[data-sidebar-side="left"] .main-footer {
+		margin-left: var(--az-sidebar-width) !important;
+	}
+
+	/* AdminLTE widens the hovered mini rail to its own 250px, while the
+	   content offset uses --az-sidebar-width (260px). Match them so no gap
+	   or overlap appears between the rail and the content. */
+	body.sidebar-mini.sidebar-collapse .main-sidebar:hover {
+		width: var(--az-sidebar-width) !important;
+	}
+}
+
+/* Platform owner sidebar: each admin unit is a clean, color-coded row group.
+   Scoped to the owner shell so tenant navigation keeps its original look. */
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit] {
+	--owner-unit-rgb: 148 163 184;
+
+	margin-top: 12px;
+}
+
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="tenants"] { --owner-unit-rgb: 245 178 66; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="system"] { --owner-unit-rgb: 76 201 240; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="backups"] { --owner-unit-rgb: 183 144 255; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="database"] { --owner-unit-rgb: 74 222 128; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="settings"] { --owner-unit-rgb: 251 146 60; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="ai"] { --owner-unit-rgb: 217 70 239; }
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit="security"] { --owner-unit-rgb: 248 113 113; }
+
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit] > .nav-link {
+	background: rgb(var(--owner-unit-rgb) / 0.12) !important;
+	border-inline-start: 3px solid rgb(var(--owner-unit-rgb));
+	border-radius: 8px;
+	color: #f8fafc !important;
+	font-size: 0.74rem;
+	font-weight: 800;
+	letter-spacing: 0.02em;
+	margin: 0 10px 4px;
+	padding: 8px 10px !important;
+}
+
+.main-sidebar.owner-shell .erp-sidebar-nav > li[data-owner-unit] > .nav-link .nav-icon {
+	background: rgb(var(--owner-unit-rgb) / 0.18) !important;
+	border-radius: 6px;
+	color: rgb(var(--owner-unit-rgb)) !important;
+	height: 26px;
+	line-height: 26px;
+	width: 26px;
+}
+
+.main-sidebar.owner-shell .erp-sidebar-nav > li > .nav-link {
+	border-radius: 8px;
+	margin-inline: 10px;
+}
+
+.main-sidebar.owner-shell .erp-sidebar-nav .nav-treeview .nav-link {
+	border-radius: 8px;
+	margin-inline: 8px;
+	padding: 7px 10px;
+}
+
+.main-sidebar.owner-shell .erp-sidebar-nav .nav-treeview .nav-link:hover,
+.main-sidebar.owner-shell .erp-sidebar-nav .nav-treeview .nav-link.active {
+	background: rgb(var(--owner-unit-rgb) / 0.16) !important;
+}
+
+/* Platform packages page: readable, theme-aware cards and a clean empty state. */
+.packages-page .package-create-card,
+.packages-page .card,
+.packages-page .package-item,
+.packages-page .packages-empty {
+	background: var(--az-surface);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-lg);
+	box-shadow: var(--az-shadow-sm);
+	color: var(--az-text);
+}
+
+.packages-page:not(.form-open) .package-create-card { display: none; }
+
+.packages-page .package-create-card { margin-bottom: 24px; overflow: hidden; }
+
+.packages-page .package-create-card > .card-header {
+	background: var(--az-primary) !important;
+	border: 0;
+	color: var(--az-on-primary);
+	padding: 12px 18px;
+}
+
+.packages-page .package-create-card .card-body { padding: 18px; }
+
+.packages-page .package-create-card label,
+.packages-page .package-create-card .custom-control-label,
+.packages-page .package-create-card h6 {
+	color: var(--az-text);
+	font-weight: 700;
+}
+
+.packages-page .package-create-card h6 {
+	border-bottom: 1px solid var(--az-border);
+	color: var(--az-gold) !important;
+	font-size: 0.95rem;
+	margin-top: 16px;
+	padding-bottom: 6px;
+}
+
+.packages-page .package-create-card .text-muted,
+.packages-page .packages-section-head p,
+.packages-page .packages-empty p { color: var(--az-text-muted) !important; }
+
+.packages-page .package-create-card .form-control,
+.packages-page .package-create-card .custom-select {
+	background: var(--az-input-bg);
+	border-color: var(--az-border);
+	color: var(--az-text);
+}
+
+.packages-section-head {
+	align-items: center;
+	display: flex;
+	gap: 12px;
+	justify-content: space-between;
+	margin: 6px 0 14px;
+	padding-inline: 4px;
+}
+
+.packages-section-head h5 { color: var(--az-text); margin: 0; }
+
+.package-grid {
+	display: grid;
+	gap: 18px;
+	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	margin-bottom: 24px;
+}
+
+.packages-page .package-item { padding: 22px; position: relative; }
+.packages-page .package-item:hover { box-shadow: var(--az-shadow); transform: translateY(-3px); }
+.packages-page .package-item.featured { border: 2px solid var(--az-gold); }
+
+.package-header {
+	border-bottom: 1px solid var(--az-border);
+	margin-bottom: 14px;
+	padding-bottom: 14px;
+	text-align: center;
+}
+
+.package-name { color: var(--az-primary); font-size: 1.4rem; font-weight: 800; }
+.package-price { color: var(--az-text); font-size: 2rem; font-weight: 900; }
+.package-price small { color: var(--az-text-muted); font-size: 0.85rem; }
+
+.package-features { list-style: none; margin: 0 0 14px; padding: 0; }
+
+.package-features li {
+	align-items: center;
+	border-bottom: 1px solid var(--az-border);
+	display: flex;
+	gap: 8px;
+	padding: 7px 0;
+}
+.package-features li:last-child { border-bottom: 0; }
+.package-features i { color: var(--az-success); }
+.package-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+.packages-page .featured-badge {
+	background: var(--az-gold);
+	border-radius: var(--az-radius-pill);
+	color: var(--az-on-primary);
+	font-size: 0.8rem;
+	font-weight: 800;
+	inset-inline-start: 50%;
+	padding: 5px 18px;
+	position: absolute;
+	top: -14px;
+	transform: translateX(-50%);
+}
+
+.packages-page .inline-form {
+	background: var(--az-surface-2);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-sm);
+	color: var(--az-text);
+	font-size: 0.85rem;
+	margin: 14px 0;
+	padding: 12px;
+}
+
+.packages-empty {
+	grid-column: 1 / -1;
+	padding: 42px 20px;
+	text-align: center;
+}
+
+.packages-empty-icon {
+	align-items: center;
+	background: var(--az-surface-2);
+	border-radius: 50%;
+	color: var(--az-primary);
+	display: flex;
+	font-size: 1.6rem;
+	height: 64px;
+	justify-content: center;
+	margin: 0 auto 12px;
+	width: 64px;
+}
+
+/* Narrow desktops: keep every control reachable without turning the top bar
+   into a scroll container — `overflow-x: auto` clips the language/tools
+   dropdowns. The breadcrumb zone shrinks and ellipsises instead. */
+@media (max-width: 1499px) {
+	.main-header {
+		overflow: visible !important;
+	}
+
+	.erp-navbar-main-zone {
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.erp-navbar-main-zone .breadcrumb {
+		flex-wrap: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+}
+
+/* The user menu is the leftmost top-bar control; its panel opens off-screen
+   when aligned to the button's right edge. Anchor it to the left edge so it
+   stays inside the viewport in both languages. */
+.main-header .dropdown:has(.erp-navbar-user-btn) .dropdown-menu {
+	left: 0 !important;
+	right: auto !important;
+}
+
+/* Footer: platform-only, four divided cells with a calm but living rhythm. */
+.erp-footer-grid {
+	display: grid;
+	gap: 18px;
+	grid-template-columns: 1.6fr 1fr 1fr 0.9fr;
+	align-items: start;
+	padding-block: 6px 16px;
+}
+
+.erp-footer-cell {
+	min-width: 0;
+	padding-inline: 18px;
+	position: relative;
+}
+
+.erp-footer-cell + .erp-footer-cell::before {
+	background: linear-gradient(180deg, transparent, var(--az-border), transparent);
+	content: "";
+	inset-block: 4px;
+	position: absolute;
+	inset-inline-start: 0;
+	width: 1px;
+}
+
+.erp-footer-cell--brand {
+	display: flex;
+	gap: 14px;
+	align-items: center;
+	padding-inline-start: 0;
+}
+
+.erp-footer .erp-footer-logo {
+	flex: 0 0 auto;
+	height: 64px;
+	max-height: 64px;
+	width: 64px;
+	max-width: 64px;
+	object-fit: contain;
+	transition: transform 0.3s ease;
+}
+
+.erp-footer .erp-footer-logo:hover {
+	transform: scale(1.05) rotate(-2deg);
+}
+
+.erp-footer-heading {
+	color: var(--az-gold);
+	font-size: 0.8rem;
+	font-weight: 800;
+	letter-spacing: 0.04em;
+	margin: 0 0 10px;
+}
+
+.erp-footer-heading i {
+	margin-inline-end: 6px;
+}
+
+.erp-footer-link {
+	border-radius: var(--az-radius-sm);
+	color: rgba(255, 255, 255, 0.78);
+	display: flex;
+	font-size: 0.83rem;
+	gap: 8px;
+	padding: 5px 8px;
+	text-decoration: none;
+	transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.erp-footer-link i {
+	color: var(--az-gold);
+	width: 18px;
+}
+
+.erp-footer-link:hover {
+	background: rgba(212, 175, 55, 0.16);
+	color: #ffffff;
+	transform: translateX(3px);
+}
+
+.erp-footer-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.erp-footer-action {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid var(--az-border);
+	border-radius: var(--az-radius-sm);
+	color: var(--az-text);
+	display: inline-flex;
+	font-size: 0.8rem;
+	gap: 6px;
+	padding: 7px 10px;
+	text-decoration: none;
+	transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.erp-footer-action i {
+	font-size: 1rem;
+}
+
+.erp-footer-action:hover {
+	background: rgba(212, 160, 23, 0.14);
+	text-decoration: none;
+	transform: translateY(-2px);
+}
+
+.erp-footer-chip--live i.fa-robot {
+	animation: erp-footer-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes erp-footer-pulse {
+	0%, 100% { opacity: 0.65; }
+	50% { opacity: 1; transform: scale(1.12); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.erp-footer-chip--live i.fa-robot { animation: none; }
+}
+
+@media (max-width: 991px) {
+	.erp-footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.erp-footer-cell:nth-child(3)::before { display: none; }
+}
+
+@media (max-width: 575px) {
+	.erp-footer-grid { grid-template-columns: minmax(0, 1fr); }
+	.erp-footer-cell + .erp-footer-cell::before { display: none; }
+	.erp-footer-cell { padding-inline: 0; }
+}
+
+.erp-footer-copyright {
+	border-top: 1px solid var(--az-border);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 18px;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
+
+.erp-footer-legal {
+	font-variant-numeric: tabular-nums;
+}
+
+html[data-ui-mode="light"] .erp-footer .footer-gradient-text {
+	background: none;
+	-webkit-text-fill-color: currentColor;
+	color: #7a5b12;
+}
+
 /* Phone numbers are LTR tokens inside an RTL document. Without an explicit
    direction the leading + is painted after the digits (971...+). */
 input[name="phone"],

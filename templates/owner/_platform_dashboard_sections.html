@@ -132,36 +132,7 @@
 </div>
 
 <div class="row mb-4">
-  <div class="col-lg-7">
-    <div class="card owner-panel-card">
-      <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-palette" aria-hidden="true"></i> {{ t('Branding_Invoices') }}</h3></div>
-      <div class="card-body p-0 table-responsive">
-        <table class="table table-sm mb-0">
-          <thead><tr><th>{{ t('Company') }}</th><th>{{ t('Warnings') }}</th><th>{{ t('Preview') }}</th></tr></thead>
-          <tbody>
-            {% for br in branding_rows %}
-            <tr>
-              <td>{{ br.tenant.slug|default('') }}</td>
-              <td>
-                {% if br.warnings %}
-                  {% for w in br.warnings %}<span class="badge owner-badge-warn">{{ w }}</span> {% endfor %}
-                {% else %}
-                  <span class="text-success">OK</span>
-                {% endif %}
-              </td>
-              <td>
-                <a href="{{ br.invoice_preview_url|default('#') }}" target="_blank" rel="noopener" class="btn btn-link">{{ t('Invoice') }}</a>
-                <a href="{{ br.receipt_preview_url|default('#') }}" target="_blank" rel="noopener" class="btn btn-link">{{ t('Receipt') }}</a>
-                <a href="{{ url_for('owner.invoice_settings') }}" class="btn btn-link">{{ t('Settings') }}</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-lg-5">
+  <div class="col-lg-6">
     {% if health_summary %}
     <div class="card owner-panel-card">
       <div class="card-header"><h3 class="card-title mb-0"><i class="fas fa-heartbeat" aria-hidden="true"></i> {{ t('System_Health') }}</h3></div>

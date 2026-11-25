@@ -731,7 +731,7 @@ def api_tenant_toggle_status(tenant_id):
             data={"is_active": tenant.is_active},
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return error_response(message=safe_error(e, context="owner tenant api", logger=logger), status_code=500)
 
 
 @owner_bp.route("/api/tenant/<int:tenant_id>/update-package", methods=["POST"])
@@ -773,7 +773,7 @@ def api_tenant_update_package(tenant_id):
         )
         return success_response(message=gettext(f"تم تحديث {field} إلى {value}"))
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return error_response(message=safe_error(e, context="owner tenant api", logger=logger), status_code=500)
 
 
 @owner_bp.route("/tenants/<int:tenant_id>/extend-subscription", methods=["POST"])
@@ -880,4 +880,4 @@ def api_tenant_extend_subscription(tenant_id):
             },
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=500)
+        return error_response(message=safe_error(e, context="owner tenant api", logger=logger), status_code=500)

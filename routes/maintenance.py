@@ -42,7 +42,7 @@ from services.maintenance_order_service import MaintenanceService
 from services.maintenance_purchase_service import MaintenancePurchaseService
 from services.maintenance_warranty_service import WarrantyService
 from utils.db_safety import atomic_transaction
-from utils.decorators import permission_required
+from utils.decorators import permission_required, require_subscription_feature
 from utils.error_messages import safe_error
 from utils.feature_guards import install_feature_gate
 from utils.tenanting import (
@@ -426,6 +426,7 @@ def refund_credit(order_id):
 @maintenance_bp.route("/<int:order_id>/warranty/check", methods=["POST"])
 @login_required
 @permission_required("maintenance_receive")
+@require_subscription_feature("warranty_tracking")
 def check_warranty(order_id):
     tid = require_active_tenant_id()
     order = _order_or_404(order_id, tid)
@@ -488,6 +489,7 @@ def register_device(order_id):
 @maintenance_bp.route("/<int:order_id>/warranty/cancel", methods=["POST"])
 @login_required
 @permission_required("manage_maintenance")
+@require_subscription_feature("warranty_tracking")
 def cancel_warranty(order_id):
     tid = require_active_tenant_id()
     _order_or_404(order_id, tid)
@@ -510,6 +512,7 @@ def cancel_warranty(order_id):
 @maintenance_bp.route("/<int:order_id>/warranty/restore", methods=["POST"])
 @login_required
 @permission_required("manage_maintenance")
+@require_subscription_feature("warranty_tracking")
 def restore_warranty(order_id):
     tid = require_active_tenant_id()
     _order_or_404(order_id, tid)
@@ -782,6 +785,7 @@ def settings():
 @maintenance_bp.route("/warranty-audit")
 @login_required
 @permission_required("manage_maintenance")
+@require_subscription_feature("warranty_tracking")
 def warranty_audit():
     tid = require_active_tenant_id()
     audits = (
@@ -1045,6 +1049,7 @@ def parts_report():
 @maintenance_bp.route("/report/warranty")
 @login_required
 @permission_required("manage_maintenance")
+@require_subscription_feature("warranty_tracking")
 def warranty_report():
     tid = require_active_tenant_id()
 

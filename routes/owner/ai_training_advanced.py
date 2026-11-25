@@ -40,6 +40,13 @@ def _resolve_training_tenant():
     """Validate the ?tenant_id= parameter against active tenants."""
     tid = request.args.get("tenant_id", type=int) or request.form.get("tenant_id", type=int)
     if not tid:
+        # The platform owner is the developer: no tenant surface is hidden.
+        # With no explicit tenant, use the first active one.
+        from utils.auth_helpers import is_global_owner_user
+
+        if is_global_owner_user(current_user):
+            tenants = OwnerOpsService.active_ai_tenants()
+            return tenants[0] if tenants else None
         return None
     tenant = OwnerOpsService.get_tenant(int(tid))
     if not tenant or not getattr(tenant, "is_active", False):
@@ -210,15 +217,17 @@ def ai_training_batches():
         abort(404)
 
     from models.ai_training_advanced import AiTrainingBatch
-    from utils.tenanting import tenant_query
+    from utils.tenanting import without_tenant_scope
 
-    batches = (
-        tenant_query(AiTrainingBatch)
-        .filter(AiTrainingBatch.tenant_id == tenant.id)
-        .order_by(AiTrainingBatch.created_at.desc())
-        .limit(50)
-        .all()
-    )
+    # The resolved tenant may differ from the session tenant (platform owner
+    # has none), so query without the auto-scope and filter explicitly.
+    with without_tenant_scope():
+        batches = (
+            AiTrainingBatch.query.filter(AiTrainingBatch.tenant_id == tenant.id)
+            .order_by(AiTrainingBatch.created_at.desc())
+            .limit(50)
+            .all()
+        )
 
     return render_template(
         "owner/ai_training_batches.html",

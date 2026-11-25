@@ -42,10 +42,20 @@ DOC_PATH = ROOT / "docs" / "API_REFERENCE.md"
 # rather than hardcoded: the generator greps routes/*.py for the hook, then reads
 # its body for the guards it actually applies.
 _BLUEPRINT_GUARDS = {
-    "payment_vault": ("owner", "authenticated"),
     "owner_admin": ("ip_allowlist",),
     "pos": ("feature_flag:pos_enabled",),
-    "reports": ("tenant_scope",),
+    "reports": ("tenant_scope", "feature_flag:reports"),
+    "treasury": ("feature_flag:reports",),
+    "ledger": ("feature_flag:gl",),
+    "advanced_ledger": ("feature_flag:gl",),
+    "admin_ledger": ("feature_flag:gl",),
+    "payroll": ("feature_flag:payroll",),
+    "expenses": ("feature_flag:expenses",),
+    "cheques": ("feature_flag:cheques",),
+    "store": ("feature_flag:store",),
+    "maintenance": ("feature_flag:maintenance",),
+    "partners": ("feature_flag:partners",),
+    "payment_vault": ("owner", "authenticated", "feature_flag:allow_custom_integrations"),
     "api_docs": ("authenticated_when_production",),
 }
 
@@ -64,6 +74,8 @@ _DECORATORS = (
     ("@any_permission_required", "permission"),
     ("@two_factor_required", "two_factor"),
     ("@feature_required", "feature"),
+    ("@require_subscription_feature", "plan_feature"),
+    ("@enforce_resource_limit", "quota"),
 )
 
 _RENDER = re.compile(r"render_template\(|render_template_string\(")
@@ -117,8 +129,18 @@ def _guards(src: str, blueprint: str) -> list[str]:
 
 
 def _permission(src: str) -> str:
-    match = re.search(r'@permission_required\(\s*["\']?([A-Za-z0-9_.\'\"]+)', src)
-    return match.group(1).strip("'\"") if match else ""
+    # Include ':' (assets:view, budget:create, ...) and resolve enum members.
+    match = re.search(r"""@permission_required\(\s*["']?([A-Za-z0-9_.:'"]+)""", src)
+    if not match:
+        return ""
+    value = match.group(1).strip("'\"")
+    if value.startswith("PermissionEnum."):
+        from models.enums import PermissionEnum
+
+        name = value.rsplit(".", 1)[-1]
+        member = getattr(PermissionEnum, name, None)
+        return member.value if member else value
+    return value
 
 
 def _rate_limit(src: str) -> str:

@@ -21,6 +21,8 @@ from utils.safe_sql import (
 )
 
 from .common import (
+    Tenant,
+    User,
     current_app,
     current_user,
     db,
@@ -613,17 +615,46 @@ def import_export_tools():
 @owner_required
 def export_excel(table_name):
     normalized = (table_name or "").strip().lower()
-    if _is_blocked_table(normalized) or _is_blocked_table(table_name):
-        current_app.logger.warning(
-            "export_excel rejected entity=%r user_id=%s (tenant business table)",
-            table_name,
-            current_user.id,
-        )
-        flash(gettext("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك"), "danger")
+
+    # Platform-owned exports only. Tenant business tables stay blocked to
+    # preserve tenant isolation; those exports belong in the tenant's panel.
+    columns = {
+        "tenants": ("id", "name", "slug", "country", "is_active", "default_currency", "created_at"),
+        "users": ("id", "username", "email", "tenant_id", "is_active", "is_owner", "created_at"),
+    }
+    if normalized not in columns:
+        if _is_blocked_table(normalized) or _is_blocked_table(table_name):
+            current_app.logger.warning(
+                "export_excel rejected entity=%r user_id=%s (tenant business table)",
+                table_name,
+                current_user.id,
+            )
+            flash(gettext("❌ تصدير جداول بيانات المستأجرين محظور من لوحة المالك"), "danger")
+        else:
+            flash(gettext("❌ جدول غير موجود"), "danger")
         return redirect(url_for("owner.import_export_tools"))
 
-    flash(gettext("❌ جدول غير موجود"), "danger")
-    return redirect(url_for("owner.import_export_tools"))
+    import csv
+    import io
+
+    from flask import Response
+
+    from utils.tenanting import without_tenant_scope
+
+    model = Tenant if normalized == "tenants" else User
+    fields = columns[normalized]
+    with without_tenant_scope():
+        rows = db.session.query(model).order_by(model.id).all()
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(fields)
+    for row in rows:
+        writer.writerow([getattr(row, f, "") for f in fields])
+    return Response(
+        "\ufeff" + buf.getvalue(),
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{normalized}.csv"'},
+    )
 
 
 @owner_bp.route("/api/recent-audit-logs")

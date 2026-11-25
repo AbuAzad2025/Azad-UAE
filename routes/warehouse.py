@@ -28,6 +28,7 @@ from utils.db_safety import atomic_transaction
 from utils.decorators import (
     admin_required,
     branch_scope_id,
+    enforce_resource_limit,
     permission_required,
 )
 from utils.error_messages import ErrorMessages, safe_error
@@ -671,6 +672,7 @@ def api_exchange():
 @warehouse_bp.route("/api/upload_product_image", methods=["POST"])
 @login_required
 @permission_required("manage_products")
+@enforce_resource_limit("storage")
 def upload_product_image():
     """رفع صورة منتج من صفحة المتجر"""
     from utils.helpers import save_uploaded_file

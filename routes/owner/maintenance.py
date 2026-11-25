@@ -54,7 +54,7 @@ def maintenance_fix_cost_centers():
             source="routes.owner.maintenance_fix_cost_centers",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)
 
 
 @owner_bp.route("/maintenance/rebuild-gl-tree", methods=["POST"])
@@ -95,7 +95,7 @@ def maintenance_rebuild_gl_tree():
             source="routes.owner.maintenance_rebuild_gl_tree",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)
 
 
 @owner_bp.route("/maintenance/fix-default-tenant", methods=["POST"])
@@ -145,7 +145,7 @@ def maintenance_fix_default_tenant():
             source="routes.owner.maintenance_fix_default_tenant",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)
 
 
 @owner_bp.route("/maintenance/regenerate-default-backup", methods=["POST"])
@@ -189,7 +189,7 @@ def maintenance_regenerate_default_backup():
             source="routes.owner.maintenance_regenerate_default_backup",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)
 
 
 @owner_bp.route("/maintenance/run-default-tenant-maintenance", methods=["POST"])
@@ -235,7 +235,7 @@ def maintenance_run_default_tenant_maintenance():
             source="routes.owner.maintenance_run_default_tenant_maintenance",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)
 
 
 @owner_bp.route("/maintenance/cleanup-test-dbs", methods=["POST"])
@@ -280,4 +280,4 @@ def maintenance_cleanup_test_dbs():
             source="routes.owner.maintenance_cleanup_test_dbs",
             exception=e,
         )
-        return error_response(message=gettext(f"خطأ: {str(e)}"), status_code=500)
+        return error_response(message=gettext("حدث خطأ أثناء عملية الصيانة — راجع سجل الأخطاء"), status_code=500)

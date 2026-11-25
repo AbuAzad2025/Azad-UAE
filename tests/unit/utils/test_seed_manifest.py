@@ -93,7 +93,7 @@ class TestManifestMatchesSource:
         assert _seed_set("permissions").expected == len(constants.PERMISSION_CODES)
 
     def test_role_count(self):
-        """owner, super_admin, developer + the six functional roles."""
+        """owner, super_admin, developer + all fourteen seeded functional roles."""
         import utils.system_init as system_init
 
         slugs = {
@@ -106,6 +106,14 @@ class TestManifestMatchesSource:
             "accountant",
             "kitchen",
             "cashier",
+            "inventory",
+            "viewer",
+            "maintenance_reception",
+            "maintenance_engineer",
+            "maintenance_cashier",
+            "maintenance_closer",
+            "maintenance_discount",
+            "maintenance_settings",
         }
         assert _seed_set("roles").expected == len(slugs)
         # Every slug must actually appear in the seeder module.

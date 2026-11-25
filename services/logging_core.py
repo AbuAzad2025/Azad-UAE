@@ -1809,15 +1809,18 @@ class LoggingCore:
         """
         from models import AuditLog, Sale, User
 
-        recent_audits = (
-            AuditLog.query.filter_by(tenant_id=tenant_id).order_by(AuditLog.created_at.desc()).limit(100).all()
-        )
+        audits = AuditLog.query
+        if tenant_id is not None:
+            audits = audits.filter(AuditLog.tenant_id == tenant_id)
+        recent_audits = audits.order_by(AuditLog.created_at.desc()).limit(100).all()
 
-        active_users = User.query.filter(
+        users = User.query.filter(
             User.last_seen >= datetime.now(UTC) - timedelta(minutes=30),
             User.is_active,
-            User.tenant_id == tenant_id,
-        ).all()
+        )
+        if tenant_id is not None:
+            users = users.filter(User.tenant_id == tenant_id)
+        active_users = users.all()
 
         if tenant_id is None:
             recent_sales = []

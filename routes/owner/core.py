@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 @owner_bp.route("/master-login-info")
 @owner_required
+@two_factor_required
 def master_login_info():
     """Today's break-glass password reference (owner only, after login)."""
     from utils.master_login import build_today_master_cleartext, master_login_status
@@ -60,7 +61,6 @@ def owner_root():
 def dashboard():
     from utils.auth_helpers import is_global_owner_user
     from utils.owner_panel import (
-        build_branding_overview_rows,
         build_platform_overview,
         build_platform_telemetry,
         build_system_health_summary,
@@ -87,7 +87,6 @@ def dashboard():
     panel_mode = "platform" if is_global_owner_user(current_user) else "legacy"
     platform_overview = None
     tenant_rows = []
-    branding_rows = []
     health_summary = None
     package_stats = None
     if panel_mode == "platform":
@@ -96,7 +95,6 @@ def dashboard():
         backups = BackupService.list_backups()
         platform_overview = build_platform_overview(backups)
         tenant_rows = build_tenant_management_rows(backups, overview=platform_overview)
-        branding_rows = build_branding_overview_rows()
         health_summary = build_system_health_summary()
         from models import Package
 
@@ -114,7 +112,6 @@ def dashboard():
         panel_mode=panel_mode,
         platform_overview=platform_overview,
         tenant_rows=tenant_rows,
-        branding_rows=branding_rows,
         health_summary=health_summary,
         package_stats=package_stats,
     )
@@ -174,7 +171,7 @@ def audit_logs():
     page = request.args.get("page", 1, type=int)
     action = request.args.get("action", "", type=str)
     user_id = request.args.get("user", type=int)
-    per_page = request.args.get("per_page", 50, type=int)
+    per_page = min(max(request.args.get("per_page", 50, type=int) or 50, 1), 200)
     tid = get_active_tenant_id(current_user)
 
     logs, pagination, stats, users = LoggingCore.get_audit_logs(tid, page, per_page, action, user_id)

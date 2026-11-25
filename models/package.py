@@ -110,10 +110,11 @@ class Package(db.Model):
         limits/flags keep the tenant's current value (manual overrides survive
         when the package leaves a dimension unconfigured).
 
-        *Intelligent tier mapping*: when ``tier_level`` is set, feature flags
-        are resolved from the tier rather than blindly copying ``has_*`` booleans,
-        so that upgrading a package coherently enables/disables the right
-        sub‑features and limits.
+        Feature flags are copied exactly as declared on the package: the
+        owner-panel checkboxes and the seeded template are the single source
+        of truth. A tier map used to silently override values that happened to
+        equal a column default (e.g. pro's ``enable_ai=False`` became ``True``),
+        which made the UI promise disagree with the enforced backend state.
         """
         # ‑‑‑ limits (unchanged)
         for col in TENANT_LIMIT_COLUMNS:
@@ -121,58 +122,10 @@ class Package(db.Model):
             if value is not None:
                 setattr(tenant, col, value)
 
-        # ‑‑ feature flags (intelligent tier mapping)
-        tier = getattr(self, "tier_level", None) or 0
-        # tier-level tiers (basic=10, pro=20, enterprise=30);
-        # map each tier to the feature flags that should be active
-        _TIER_FEATURES = {
-            10: {
-                "enable_payroll": False,
-                "enable_expenses": True,
-                "enable_cheques": True,
-                "enable_reports": True,
-                "enable_ai": False,
-                "enable_store": False,
-                "enable_gl": False,
-                "enable_api": False,
-                "enable_pos": False,
-            },
-            20: {
-                "enable_payroll": True,
-                "enable_expenses": True,
-                "enable_cheques": True,
-                "enable_reports": True,
-                "enable_ai": True,
-                "enable_store": True,
-                "enable_gl": True,
-                "enable_api": True,
-                "enable_pos": True,
-            },
-            30: {
-                "enable_payroll": True,
-                "enable_expenses": True,
-                "enable_cheques": True,
-                "enable_reports": True,
-                "enable_ai": True,
-                "enable_store": True,
-                "enable_gl": True,
-                "enable_api": True,
-                "enable_pos": True,
-            },
-        }
-        tier_map = _TIER_FEATURES.get(tier, {})
+        # ‑‑ feature flags (exact copy: UI and template agree with enforcement)
         for col in TENANT_FLAG_COLUMNS:
             value = getattr(self, col, None)
-            if value is None:
-                # Unconfigured dimension: tenant's current value survives.
-                continue
-            default = Package.__table__.c[col].default
-            default_val = default.arg if default is not None else None
-            if col in tier_map and bool(value) == bool(default_val):
-                # Left at the column default: resolve coherently from the tier.
-                setattr(tenant, col, bool(tier_map[col]))
-            else:
-                # Explicit package value wins over the tier.
+            if value is not None:
                 setattr(tenant, col, bool(value))
 
         # Preserve the existing POS‑specific logic
