@@ -443,10 +443,8 @@
                 <select name="subscription_plan" id="input_plan" class="form-select" aria-label="subscription plan">
                   <option value="">{{ t('No_Change') }}</option>
                   <option value="basic" {% if tenant.subscription_plan == 'basic' %}selected{% endif %}>Basic</option>
-                  <option value="standard" {% if tenant.subscription_plan == 'standard' %}selected{% endif %}>Standard</option>
-                  <option value="professional" {% if tenant.subscription_plan == 'professional' %}selected{% endif %}>Professional</option>
+                  <option value="pro" {% if tenant.subscription_plan == 'pro' %}selected{% endif %}>Pro</option>
                   <option value="enterprise" {% if tenant.subscription_plan == 'enterprise' %}selected{% endif %}>Enterprise</option>
-                  <option value="trial" {% if tenant.subscription_plan == 'trial' %}selected{% endif %}>Trial</option>
                 </select>
               </div>
               <div class="col-6">
@@ -464,6 +462,11 @@
               <label class="form-check-label" for="input_is_trial">{{ t('Enable_Trial_Mode') }}</label>
             </div>
             <button type="submit" class="btn btn-warning w-100"><i class="bi bi-calendar-check mr-1"></i>{{ t('Apply_Subscription_Update') }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('owner.tenant_sync_package', tenant_id=tenant.id) }}" class="mt-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" aria-label="csrf token">
+            <button type="submit" class="btn btn-outline-info w-100"><i class="fas fa-sync mr-1" aria-hidden="true"></i>{% if current_language == 'en' %}Sync package flags{% else %}مزامنة ميزات الباقة{% endif %}</button>
+            <div class="form-text">{% if current_language == 'en' %}Re-apply the active package's module flags; per-tenant integration overrides are preserved.{% else %}إعادة تطبيق أعلام الباقة النشطة مع الحفاظ على تخصيصات التكامل لكل مستأجر.{% endif %}</div>
           </form>
         </div>
       </div>

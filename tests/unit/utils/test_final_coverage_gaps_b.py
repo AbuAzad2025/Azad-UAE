@@ -162,6 +162,7 @@ class TestSystemInitRemaining:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
         )
 
     def test_inner_skips_telemetry_when_already_started(self):

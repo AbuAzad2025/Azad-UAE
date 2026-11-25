@@ -13,6 +13,7 @@ from flask import (
 )
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from werkzeug.exceptions import HTTPException
 
 from extensions import db, limiter
 from models import Customer, Product, Sale
@@ -296,6 +297,8 @@ def create():
             refuse(e, context="sale create", category=ErrorCategory.BUSINESS)
         except TenantLimitError as e:
             refuse(e, context="sale create", category=ErrorCategory.BUSINESS)
+        except HTTPException:
+            raise  # tenant_get_or_404 / scoped lookups must stay 403/404
         except Exception as e:
             refuse(e, context="sale create")
 

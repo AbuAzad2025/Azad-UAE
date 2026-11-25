@@ -165,6 +165,23 @@ class TestGenericWebhook:
         assert resp.status_code == 400
         assert "tenant_id and package_id required" in resp.get_json()["message"]
 
+    def test_non_numeric_ids_returns_400_not_500(self, client, mocker):
+        provision = mocker.patch(
+            "services.saas_provisioning_service.SaaSProvisioningService.activate_purchased_package"
+        )
+        resp = client.post(
+            "/billing-webhook/generic",
+            json={
+                "event": "payment_succeeded",
+                "tenant_id": "not-a-number",
+                "package_id": "nope",
+                "transaction_id": "bad-ids-001",
+            },
+            headers={"X-Webhook-Secret": self._SECRET},
+        )
+        assert resp.status_code == 400
+        provision.assert_not_called()
+
     def test_unhandled_event_acknowledged(self, client):
         resp = client.post(
             "/billing-webhook/generic",

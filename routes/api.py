@@ -20,6 +20,7 @@ from utils.branching import (
     get_branch_stock_map,
 )
 from utils.decorators import any_permission_required, branch_scope_id, permission_required
+from utils.feature_guards import feature_enabled
 from utils.logger import log_event
 from utils.tenanting import get_active_tenant_id
 
@@ -355,6 +356,7 @@ def api_search():
         products = products_query.order_by(Product.name).limit(per_page + 1).offset(offset).all()
         has_more = len(products) > per_page
         products = products[:per_page]
+        partners_enabled = feature_enabled("partners")
         stock_map = (
             get_branch_stock_map(
                 product_ids=[p.id for p in products],
@@ -374,8 +376,7 @@ def api_search():
                 "default_price": float(p.regular_price or 0),
                 "unit_price": float(p.regular_price or 0),
                 "regular_price": float(p.regular_price or 0),
-                "merchant_price": float(p.merchant_price) if p.merchant_price else None,
-                "partner_price": float(p.partner_price) if p.partner_price else None,
+                **_partner_price_fields(p, partners_enabled),
                 # Cost visibility is a role decision, not a plan decision:
                 # never leak cost to a user the reports UI would hide it from.
                 "cost_price": float(p.cost_price) if current_user.can_see_costs() and p.cost_price else None,
@@ -809,6 +810,24 @@ def _query_accessible_warehouses():
     return [{"id": w.id, "text": w.name, "name": w.name} for w in whs]
 
 
+def _partner_price_fields(product, enabled: bool) -> dict:
+    """Partner/merchant prices belong to the partners module.
+
+    Product lookup is a general-purpose endpoint (POS, sales and purchase
+    forms all use it), so gating the whole route would break those flows.
+    Redact the module-specific fields instead, exactly like the partner
+    blueprint's 403 gate protects the module's own screens.
+    """
+    if not enabled:
+        return {}
+    merchant = getattr(product, "merchant_price", None)
+    partner = getattr(product, "partner_price", None)
+    return {
+        "merchant_price": float(merchant) if merchant else None,
+        "partner_price": float(partner) if partner else None,
+    }
+
+
 def _query_products(warehouse_id=None):
     q = request.args.get("q", "").strip()
     products = StockService.get_visible_products_query(current_user)
@@ -826,6 +845,7 @@ def _query_products(warehouse_id=None):
             )
         )
     products = products.order_by(Product.name).limit(20).all()
+    partners_enabled = feature_enabled("partners")
     warehouse_ids = [warehouse_id] if warehouse_id else get_accessible_warehouse_ids(current_user)
     stock_map = (
         get_branch_stock_map(
@@ -843,9 +863,7 @@ def _query_products(warehouse_id=None):
             "sku": p.sku,
             "barcode": getattr(p, "barcode", None),
             "price": float(p.regular_price or 0),
-            "merchant_price": (
-                float(getattr(p, "merchant_price", None)) if getattr(p, "merchant_price", None) else None
-            ),
+            **_partner_price_fields(p, partners_enabled),
             "cost_price": float(getattr(p, "cost_price", None) or 0),
             "stock": float(stock_map.get(p.id, p.current_stock or 0)),
         }
@@ -902,6 +920,7 @@ def api_product_info(pid):
                 gettext("غير مصرح بالوصول إلى المستودع"),
                 status_code=403,
             )
+    partners_enabled = feature_enabled("partners")
     stock = float(product.current_stock or 0)
     if warehouse_id:
         stock_map = get_branch_stock_map(
@@ -917,9 +936,7 @@ def api_product_info(pid):
             "barcode": product.barcode,
             "price": float(product.regular_price or 0),
             "regular_price": float(product.regular_price or 0),
-            "merchant_price": (
-                float(getattr(product, "merchant_price", None)) if getattr(product, "merchant_price", None) else None
-            ),
+            **_partner_price_fields(product, partners_enabled),
             "cost_price": float(getattr(product, "cost_price", None) or 0),
             "stock": stock,
             "unit": product.unit,

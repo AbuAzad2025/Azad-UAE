@@ -421,14 +421,14 @@ def tenant_create():
             # Optional subscription scenario: activate a purchased package
             # (applies the plan label, duration window, and the package's
             # limits/flags template on top of the form values).
-            package_id_raw = str(request.form.get("package_id", "")).strip()
-            if package_id_raw:
+            package_pk = request.form.get("package_id", type=int)
+            if package_pk:
                 duration = request.form.get("subscription_plan_duration", "monthly").strip() or "monthly"
                 if duration not in ("monthly", "annual", "trial", "lifetime"):
                     duration = "monthly"
                 SaaSProvisioningService.activate_purchased_package(
                     tenant_id=tenant.id,
-                    package_id=int(package_id_raw),
+                    package_id=package_pk,
                     duration_type=duration,
                 )
                 explicit_end = (request.form.get("subscription_end") or "").strip()
@@ -821,6 +821,27 @@ def tenant_extend_subscription(tenant_id):
         )
     except Exception as e:
         flash(gettext(f"خطأ في تمديد الاشتراك: {safe_error(e, context=__name__)}"), "danger")
+    return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
+
+
+@owner_bp.route("/tenants/<int:tenant_id>/sync-package", methods=["POST"])
+@owner_required
+def tenant_sync_package(tenant_id):
+    """Re-apply the tenant's active package module flags (idempotent)."""
+    tenant = OwnerOpsService.get_tenant_or_404(tenant_id)
+    try:
+        changed = SaaSProvisioningService.sync_tenant_package_flags(tenant.id)
+        _invalidate_owner_changes()
+        _audit_owner_db_action(
+            "tenant_sync_package",
+            {"tenant_id": tenant_id, "changed": changed},
+        )
+        flash(
+            gettext(f'تمت مزامنة باقة "{tenant.name_ar or tenant.name}" — تغيّرت {len(changed)} ميزة.'),
+            "success",
+        )
+    except Exception as e:
+        flash(gettext(f"خطأ في مزامنة الباقة: {safe_error(e, context=__name__)}"), "danger")
     return redirect(url_for("owner.tenant_edit", tenant_id=tenant_id))
 
 

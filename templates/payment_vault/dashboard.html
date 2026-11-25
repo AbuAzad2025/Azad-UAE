@@ -334,7 +334,7 @@
                                         <td>{{ purchase.customer_name or _('Unspecified') }}</td>
                                         <td>
                                             {% if purchase.package == 'basic' %}<i class="fas fa-box" aria-hidden="true"></i> {{ _('Basic') }}
-                                            {% elif purchase.package == 'professional' %}<i class="fas fa-briefcase" aria-hidden="true"></i> {{ _('Professional') }}
+                                            {% elif purchase.package == 'pro' %}<i class="fas fa-rocket" aria-hidden="true"></i> {{ _('Pro') }}
                                             {% elif purchase.package == 'enterprise' %}<i class="fas fa-building" aria-hidden="true"></i> {{ _('Enterprise') }}
                                             {% else %}{{ purchase.package }}
                                             {% endif %}

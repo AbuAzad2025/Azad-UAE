@@ -137,6 +137,7 @@ class TestPackageApply:
             has_pos=pos,
             has_customization=custom,
             has_advanced_reports=reports,
+            allow_custom_integrations=custom,
         )
         if flags:
             pkg.enable_payroll = True
@@ -171,11 +172,18 @@ class TestPackageApply:
         assert sample_tenant.enable_pos is True
         assert getattr(sample_tenant, "allow_custom_integrations", True) is True
 
-    def test_advanced_reports_flag_upgrades_reports(self, db_session, sample_tenant):
+    def test_legacy_has_flags_do_not_override_explicit_flags(self, db_session, sample_tenant):
         sample_tenant.enable_reports = False
         pkg = self._package(reports=True)
+        pkg.enable_reports = True
         pkg.apply_to_tenant(sample_tenant)
+        # has_advanced_reports is display metadata only; the checkbox wins.
         assert sample_tenant.enable_reports is True
+
+        pkg.enable_reports = False
+        pkg.has_advanced_reports = True
+        pkg.apply_to_tenant(sample_tenant)
+        assert sample_tenant.enable_reports is False
 
     def test_package_flags_are_copied_exactly(self, db_session, sample_tenant):
         sample_tenant.enable_ai = True

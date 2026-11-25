@@ -73,5 +73,6 @@ def test_system_init_bootstrap(app):
         patch.object(si, "_ensure_functional_roles", return_value=None),
         patch.object(si, "_ensure_core_data", return_value=None),
         patch.object(si, "_ensure_tenant_gl_trees", side_effect=RuntimeError("gl down")),
+        patch.object(si, "_ensure_tenant_pos_order_types"),
     ):
         si.ensure_system_integrity(app)  # 30-92 incl GL exception branch 80-92

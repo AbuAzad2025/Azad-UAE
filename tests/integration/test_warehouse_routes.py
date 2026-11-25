@@ -8,6 +8,18 @@ from decimal import Decimal
 from models import StockMovement
 
 
+def _grant_permissions(db_session, role, *codes):
+    """Give a test role the codes its routes actually check.
+
+    A freshly created Role carries no permissions, so @permission_required
+    answers 403 before any warehouse logic runs.
+    """
+    from models import Permission
+
+    role.permissions = Permission.query.filter(Permission.code.in_(codes)).all()
+    db_session.flush()
+
+
 def _add_initial_stock(db_session, product_id, warehouse_id, tenant_id, quantity):
     sm = StockMovement(
         product_id=product_id,
@@ -63,6 +75,7 @@ class TestWarehouseAddStock:
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
         db_session.flush()
+        _grant_permissions(db_session, role, "manage_warehouse", "manage_products")
 
         user = User(
             username=f"whuser-{tid}",
@@ -195,6 +208,7 @@ class TestWarehouseAddStock:
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
         db_session.flush()
+        _grant_permissions(db_session, role, "manage_warehouse", "manage_products")
 
         user = User(
             username=f"whuser2-{tid}",
@@ -318,11 +332,12 @@ class TestWarehouseCreate:
         db_session.add(branch)
         db_session.flush()
 
-        role = Role.query.filter_by(slug="super_admin").first()
-        if role is None:
-            role = Role(name=f"Admin {tid}", slug=f"super-admin-{tid}", is_active=True)
-            db_session.add(role)
-            db_session.flush()
+        # Use a dedicated role: mutating the shared super_admin role would leak
+        # permissions into every other integration test.
+        role = Role(name=f"Admin {tid}", slug=f"wh-admin-{tid}", is_active=True)
+        db_session.add(role)
+        db_session.flush()
+        _grant_permissions(db_session, role, "manage_warehouse", "manage_products")
 
         user = User(
             username=f"whadmin-{tid}",

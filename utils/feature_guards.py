@@ -132,6 +132,42 @@ def system_module_denial(blueprint: str):
     )
 
 
+def deny_if_locked(feature_name: str):
+    """Public form of the denial check for routes with mixed entity types."""
+    return _feature_denial(feature_name)
+
+
+def feature_enabled(feature_name: str) -> bool:
+    """Boolean form of the flag check, for redacting optional response fields.
+
+    Same resolution order as ``_feature_denial`` (exact column first, then
+    ``enable_<name>``, then the POS plan default). Unlike it, this never
+    produces a denial response: the endpoint stays usable and only the
+    module-specific fields are omitted when the flag is off. Platform-owner
+    (no tenant) context is treated as enabled.
+    """
+    from flask_login import current_user
+
+    from models.tenant import Tenant
+    from utils.auth_helpers import is_global_owner_user
+    from utils.tenanting import get_active_tenant_id
+
+    if is_global_owner_user(current_user):
+        return True
+    tid = get_active_tenant_id()
+    if not tid:
+        return True
+    tenant = db.session.get(Tenant, int(tid))
+    if tenant is None:
+        return False
+    enabled = getattr(tenant, feature_name, None)
+    if enabled is None:
+        enabled = getattr(tenant, f"enable_{feature_name}", True)
+    if enabled is None and feature_name in POS_SUBFEATURES:
+        enabled = pos_feature_enabled(tenant, feature_name)
+    return bool(enabled)
+
+
 def install_feature_gate(bp, feature_name: str) -> None:
     """Lock every route of a blueprint behind the tenant's feature flag."""
 

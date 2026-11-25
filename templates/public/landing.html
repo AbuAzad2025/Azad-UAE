@@ -360,125 +360,57 @@
         <div class="azad-pricing-grid">
             <div class="azad-calc-card">
                 <div class="azad-tier-nav" id="tierNav">
-                    <button class="azad-tier-btn active" data-tier="0">
-                        <span>{{ _('Starter') }}</span>
-                        <span class="tier-price">$29</span>
+                    {% for pkg in packages %}
+                    <button class="azad-tier-btn{% if loop.first %} active{% endif %}" data-tier="{{ loop.index0 }}">
+                        <span>{{ pkg.name_ar or pkg.name_en }}</span>
+                        <span class="tier-price">${{ pkg.price }}</span>
                         <span class="tier-sub">{{ _('/mo') }}</span>
                     </button>
-                    <button class="azad-tier-btn" data-tier="1">
-                        <span>{{ _('Pro') }}</span>
-                        <span class="tier-price">$79</span>
-                        <span class="tier-sub">{{ _('/mo') }}</span>
-                    </button>
-                    <button class="azad-tier-btn" data-tier="2">
-                        <span>{{ _('Enterprise') }}</span>
-                        <span class="tier-price">$249</span>
-                        <span class="tier-sub">{{ _('/mo') }}</span>
-                    </button>
+                    {% endfor %}
                 </div>
                 <label for="tierSlider" class="sr-only">{{ _('Select plan') }}</label>
-                <input type="range" class="azad-tier-slider" id="tierSlider" min="0" max="2" value="0" step="1">
+                <input type="range" class="azad-tier-slider" id="tierSlider" min="0" max="{{ packages|length - 1 }}" value="0" step="1">
                 <div class="lp-meta-row">
-                    <span>{{ _('Starter') }}</span>
-                    <span>{{ _('Pro') }}</span>
-                    <span>{{ _('Enterprise') }}</span>
+                    {% for pkg in packages %}<span>{{ pkg.name_ar or pkg.name_en }}</span>{% endfor %}
                 </div>
-                <div class="azad-tier-card active" data-tier="0">
+                {% for pkg in packages %}
+                <div class="azad-tier-card{% if loop.first %} active{% endif %}" data-tier="{{ loop.index0 }}">
                     <div class="azad-tier-card-inner">
-                        <div class="azad-tier-name">{{ _('Starter') }}</div>
-                        <div class="azad-tier-price-big">$29</div>
-                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_starter') }}</div>
-                        <div class="azad-tier-badge">{{ _('⭐ Most popular') }}</div>
+                        <div class="azad-tier-name">{{ pkg.icon or '📦' }} {{ pkg.name_ar or pkg.name_en }}</div>
+                        <div class="azad-tier-price-big">${{ pkg.price }}</div>
+                        <div class="azad-tier-price-sub">{{ t('/month') }}{% if pkg.badge_text %} — {{ pkg.badge_text }}{% endif %}</div>
                         <ul class="azad-tier-features">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Up to 3 users') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Sales, purchases & inventory') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('E-invoices + printing') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Basic reports') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('WhatsApp support') }}</li>
-                            <li><i class="fas fa-times lp-c-red" aria-hidden="true"></i> {{ _('No online storefront') }}</li>
+                            {% if pkg.max_users and pkg.max_users < 0 %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Unlimited users') }}</li>
+                            {% elif pkg.max_users %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Up to {n} users', n=pkg.max_users) }}</li>{% endif %}
+                            {% if pkg.max_branches and pkg.max_branches < 0 %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Unlimited branches') }}</li>
+                            {% elif pkg.max_branches %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Up to {n} branches', n=pkg.max_branches) }}</li>{% endif %}
+                            {% if pkg.enable_gl %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('General ledger (GL)') }}</li>{% endif %}
+                            {% if pkg.enable_reports %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Basic reports') }}</li>{% endif %}
+                            {% if pkg.enable_payroll %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('HR & payroll') }}</li>{% endif %}
+                            {% if pkg.has_pos %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Point of Sale (POS)') }}</li>{% endif %}
+                            {% if pkg.enable_ai %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('AI-powered business insights') }}</li>{% endif %}
+                            {% if pkg.enable_store %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Online storefront') }}</li>{% endif %}
+                            {% if pkg.enable_api %}<li><i class="fas fa-check" aria-hidden="true"></i> API</li>{% endif %}
+                            {% if pkg.enable_maintenance %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Maintenance') }}</li>{% endif %}
+                            {% if pkg.enable_partners %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Partners') }}</li>{% endif %}
+                            {% if pkg.enable_warranty_tracking %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Warranty') }}</li>{% endif %}
+                            {% if pkg.allow_custom_integrations %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Custom_Integrations') }}</li>{% endif %}
                         </ul>
-                        {% set wa_msg_starter = 'مرحباً، أرغب في الاشتراك في الباقة الأساسية - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_starter | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}</a>
+                        {% set wa_msg = 'مرحباً، أرغب في الاشتراك في ' ~ (pkg.name_ar or pkg.name_en) ~ ' - شهرياً' %}
+                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}</a>
                     </div>
                 </div>
-                <div class="azad-tier-card" data-tier="1">
-                    <div class="azad-tier-card-inner">
-                        <div class="azad-tier-name">{{ _('Professional') }}</div>
-                        <div class="azad-tier-price-big">$79</div>
-                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_professional') }}</div>
-                        <ul class="azad-tier-features">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Up to 10 users') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('All Starter features') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Full AI features') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('General ledger (GL)') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Point of Sale (POS)') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Online storefront') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Advanced reports') }}</li>
-                        </ul>
-                        {% set wa_msg_pro = 'مرحباً، أرغب في الاشتراك في الباقة الاحترافية - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_pro | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}</a>
-                    </div>
-                </div>
-                <div class="azad-tier-card" data-tier="2">
-                    <div class="azad-tier-card-inner">
-                        <div class="azad-tier-name">{{ _('Enterprise') }}</div>
-                        <div class="azad-tier-price-big">$249</div>
-                        <div class="azad-tier-price-sub">{{ t('/month') }} — {{ t('landing_tier_note_enterprise') }}</div>
-                        <ul class="azad-tier-features">
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Unlimited users') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('All advanced features') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Online store + API') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('HR & payroll') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('AI-powered business insights') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Automated daily cloud backups') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('Full customization') }}</li>
-                            <li><i class="fas fa-check" aria-hidden="true"></i> {{ _('24/7 support + account manager') }}</li>
-                        </ul>
-                        {% set wa_msg_enterprise = 'مرحباً، أرغب في الاشتراك في باقة المؤسسات - شهرياً' %}
-                        <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}?text={{ wa_msg_enterprise | urlencode }}" class="btn-hero-primary azad-calc-cta" target="_blank" rel="noopener"><i class="fab fa-whatsapp" aria-hidden="true"></i> {{ _('Subscribe Now') }}</a>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
             <div>
-                <div class="lp-feature-title"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ _('Add-on Modules (Flat fee)') }}</div>
-                <div class="azad-addon-grid">
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonPOS" aria-label="{{ _('Point of Sale') }}">
-                        <div class="info"><div class="name">{{ _('Point of Sale') }}</div></div>
-                        <span class="price-tag">+$10</span>
-                    </div>
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonStore" aria-label="{{ _('Online Store') }}">
-                        <div class="info"><div class="name">{{ _('Online Store') }}</div></div>
-                        <span class="price-tag">+$10</span>
-                    </div>
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonHR" aria-label="{{ _('HR & Payroll') }}">
-                        <div class="info"><div class="name">{{ _('HR & Payroll') }}</div></div>
-                        <span class="price-tag">+$10</span>
-                    </div>
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonAI" aria-label="{{ _('AI Assistant') }}">
-                        <div class="info"><div class="name">{{ _('AI Assistant') }}</div></div>
-                        <span class="price-tag">+$15</span>
-                    </div>
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonMultiBranch" aria-label="{{ _('Multi-Branch') }}">
-                        <div class="info"><div class="name">{{ _('Multi-Branch') }}</div></div>
-                        <span class="price-tag">+$10</span>
-                    </div>
-                    <div class="azad-addon-item">
-                        <input type="checkbox" id="addonRestaurant" aria-label="{{ _('Restaurant') }}">
-                        <div class="info"><div class="name">{{ _('Restaurant') }}</div></div>
-                        <span class="price-tag">+$12</span>
-                    </div>
-                </div>
+                <div class="lp-feature-title"><i class="fas fa-puzzle-piece" aria-hidden="true"></i> {{ _('Included Modules') }}</div>
                 <div class="lp-panel-gold">
                     {% if not is_en %}
-                    جميع الموديولات الأساسية (محاسبة، مخزون، فواتير، عملات، شيكات، تقارير، أصول) <strong>مشمولة في جميع الباقات</strong>.
+                    المحاسبة والمخزون والفواتير والعملات والشيكات والتقارير مشمولة في الباقات حسب الجدول أعلاه. للتفاصيل الكاملة راجع صفحة الأسعار.
                     {% else %}
-                    All base modules (GL, inventory, invoices, multi-currency, checks, reports, fixed assets) are <strong>included in all plans</strong>.
+                    Accounting, inventory, invoices, multi-currency, cheques and reports are included per the plans above. See the pricing page for the full matrix.
                     {% endif %}
+                    <a href="{{ url_for('public.pricing') }}">{{ _('All plans') }}</a>
                 </div>
             </div>
         </div>

@@ -62,7 +62,7 @@ def landing():
     lang = request.args.get("lang")
     if lang not in ("ar", "en"):
         lang = session.get("language", "ar")
-    packages = _public_packages()
+    packages = _public_plans()
 
     return render_template("public/landing.html", packages=packages, is_en=lang == "en", active_stores=_active_stores())
 
@@ -85,18 +85,22 @@ def _active_stores() -> list:
 
 
 def _public_packages() -> list:
-    """Active SaaS packages for public marketing pages.
-
-    Public pages must never 500 because of a DB hiccup (e.g. a schema-less
-    database in the e2e-tours CI job): degrade to an empty catalog instead.
-    """
+    """Active SaaS packages from the database, [] on DB hiccup."""
     from services.saas_provisioning_service import SaaSProvisioningService
 
     try:
         return SaaSProvisioningService.list_active_packages()
     except Exception:
-        current_app.logger.warning("Public package catalog unavailable; rendering without it", exc_info=True)
+        current_app.logger.warning("Public package catalog unavailable; using seeded tiers", exc_info=True)
         return []
+
+
+def _public_plans() -> list:
+    """Real packages, or the seeded catalog when the DB has none."""
+    from services.saas_provisioning_service import DEFAULT_PACKAGES
+
+    packages = _public_packages()
+    return packages or [dict(spec, currency="USD") for spec in DEFAULT_PACKAGES]
 
 
 @public_bp.route("/welcome")
@@ -112,7 +116,7 @@ def landing_page():
 def pricing():
     """صفحة الأسعار والعروض"""
     lang = session.get("language", "ar")
-    packages = _public_packages()
+    packages = _public_plans()
     ctx = {
         "packages": packages,
         "is_en": lang == "en",

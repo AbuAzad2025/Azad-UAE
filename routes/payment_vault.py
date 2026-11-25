@@ -1277,7 +1277,10 @@ def api_create_purchase():
         customer_phone = sanitize(data.get("customer_phone", ""), 50)
         company_name = sanitize(data.get("company_name", ""), 100)
 
-        package = VaultQueryService.get_package_by_id(data["package_id"])
+        package_pk = parse_int_field(data.get("package_id"), field="package_id", minimum=1)
+        if not package_pk:
+            return error_response(message=gettext("معرف الباقة غير صالح"), status_code=400)
+        package = VaultQueryService.get_package_by_id(package_pk)
         if not package or not package.is_active:
             return error_response(message=gettext("الباقة غير متاحة"), status_code=404)
 
@@ -1298,7 +1301,7 @@ def api_create_purchase():
 
             buyer_tenant = data.get("tenant_id")
             purchase = PackagePurchase(
-                package_id=parse_int_field(data.get("package_id"), field="package_id", minimum=1),
+                package_id=package_pk,
                 tenant_id=(
                     parse_int_field(buyer_tenant, field="tenant_id", minimum=1)
                     if buyer_tenant not in (None, "")
@@ -1642,6 +1645,20 @@ def activate_purchase(**kwargs):
         purchase.payment_status = "completed"
         if not already_activated:
             purchase.activation_date = datetime.now(UTC)
+
+        # A package purchase is a subscription: provisioning must bind the
+        # tenant to the package so its flags/limits actually take effect.
+        if purchase.tenant_id and purchase.package_id:
+            from services.saas_provisioning_service import SaaSProvisioningService
+
+            if already_activated:
+                SaaSProvisioningService.sync_tenant_package_flags(purchase.tenant_id)
+            else:
+                SaaSProvisioningService.activate_purchased_package(
+                    tenant_id=purchase.tenant_id,
+                    package_id=purchase.package_id,
+                    duration_type="monthly",
+                )
 
         tid = None
         donation = VaultQueryService.find_purchase_donation_by_email(purchase.customer_email, tid)

@@ -6,6 +6,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
 from flask_babel import gettext
+from werkzeug.exceptions import HTTPException
 
 from routes.owner.shared import (
     _audit_owner_db_action,
@@ -676,6 +677,8 @@ def invoice_settings():
             _invalidate_owner_changes()
             flash(gettext("تم حفظ إعدادات الترويسات بنجاح"), "success")
             return redirect(url_for("owner.invoice_settings"))
+        except HTTPException:
+            raise  # abort(404) for a missing tenant must stay a 404, not a flashed 200
         except Exception as e:
             refuse(e, context="owner invoice settings save")
 

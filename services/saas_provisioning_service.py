@@ -48,6 +48,13 @@ DEFAULT_PACKAGES: tuple[dict, ...] = (
         "enable_store": False,
         "enable_gl": True,
         "enable_api": False,
+        "enable_maintenance": False,
+        "enable_partners": False,
+        "enable_campaigns": False,
+        "enable_warranty_tracking": False,
+        "enable_fixed_assets": False,
+        "enable_shipments": True,
+        "allow_custom_integrations": False,
         "sort_order": 10,
     },
     {
@@ -83,6 +90,13 @@ DEFAULT_PACKAGES: tuple[dict, ...] = (
         "enable_store": False,
         "enable_gl": True,
         "enable_api": False,
+        "enable_maintenance": True,
+        "enable_partners": True,
+        "enable_campaigns": True,
+        "enable_warranty_tracking": True,
+        "enable_fixed_assets": True,
+        "enable_shipments": True,
+        "allow_custom_integrations": False,
         "sort_order": 20,
     },
     {
@@ -125,6 +139,13 @@ DEFAULT_PACKAGES: tuple[dict, ...] = (
         "enable_store": True,
         "enable_gl": True,
         "enable_api": True,
+        "enable_maintenance": True,
+        "enable_partners": True,
+        "enable_campaigns": True,
+        "enable_warranty_tracking": True,
+        "enable_fixed_assets": True,
+        "enable_shipments": True,
+        "allow_custom_integrations": True,
         "sort_order": 30,
     },
 )
@@ -235,6 +256,40 @@ class SaaSProvisioningService:
                 "has_priority_support": bool(package.has_priority_support),
             },
         }
+
+    @staticmethod
+    def sync_tenant_package_flags(tenant_id: int) -> list[str]:
+        """Backfill a tenant's module flags from its active Package.
+
+        Safe for existing tenants: only flags with a real package counterpart
+        are touched, and flags the owner can override per tenant
+        (allow_custom_integrations) are deliberately skipped. Idempotent.
+        """
+        from models.package import TENANT_FLAG_COLUMNS, Package
+        from models.tenant import Tenant
+
+        tenant = db.session.get(Tenant, int(tenant_id))
+        if tenant is None:
+            raise SaaSProvisioningError(f"Tenant {tenant_id} not found")
+        package = Package.query.filter_by(slug=(tenant.subscription_plan or "").lower(), is_active=True).first()
+        if package is None:
+            return []
+
+        changed: list[str] = []
+        for col in TENANT_FLAG_COLUMNS:
+            if col == "allow_custom_integrations":
+                continue  # per-tenant override exists in the owner panel
+            value = getattr(package, col, None)
+            if value is None:
+                continue
+            value = bool(value)
+            if bool(getattr(tenant, col, False)) != value:
+                setattr(tenant, col, value)
+                changed.append(col)
+        if changed:
+            with atomic_transaction("sync_tenant_package_flags"):
+                db.session.flush()
+        return changed
 
     @staticmethod
     def apply_plan_with_template(

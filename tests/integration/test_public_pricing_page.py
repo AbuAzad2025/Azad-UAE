@@ -67,9 +67,9 @@ def test_pricing_arabic_falls_back_to_static_tiers(client):
     assert resp.status_code == 200
     html = resp.data.decode("utf-8")
 
-    assert "البداية" in html
-    assert "الاحترافية" in html
-    assert "المؤسسات" in html
+    assert "الباقة الأساسية" in html
+    assert "الباقة الاحترافية" in html
+    assert "باقة المؤسسات" in html
     assert "اشترك الآن" in html
 
 

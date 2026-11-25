@@ -12,6 +12,7 @@ from flask import (
 )
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from werkzeug.exceptions import HTTPException
 
 from extensions import db
 from models import Branch, Product, Warehouse
@@ -549,6 +550,8 @@ def add_stock(product_id):
             message=gettext(f"تم إضافة {quantity} وحدة للمنتج {product.name}"),
         )
 
+    except HTTPException:
+        raise  # tenant_get_or_404 must stay a 404, not a masked 500
     except Exception as e:
         current_app.logger.error(f"Error adding stock: {e}")
         return error_response(

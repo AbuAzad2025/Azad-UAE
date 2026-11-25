@@ -10,6 +10,7 @@ from __future__ import annotations
 import contextlib
 import logging
 from datetime import UTC, datetime
+from numbers import Number
 
 from flask_login import current_user
 
@@ -300,13 +301,19 @@ def check_storage_limit() -> None:
         return  # no tenant context -- skip (owner/platform mode)
 
     limit_val = getattr(tenant, "max_storage_mb", None)
-    if limit_val is None or limit_val <= 0:
+    # A mocked/unexpected tenant can carry a non-numeric quota; comparing it
+    # with an int raises TypeError before any upload logic runs. Treat any
+    # non-numeric value as "no limit configured" instead of crashing.
+    if not isinstance(limit_val, Number) or isinstance(limit_val, bool):
+        return
+    limit = int(limit_val)
+    if limit <= 0:
         return  # no limit configured or unlimited
 
     current_mb = _get_tenant_storage_mb(tenant.id)
 
-    if current_mb >= limit_val:
-        raise TenantLimitError("storage", limit_val, current_mb)
+    if current_mb >= limit:
+        raise TenantLimitError("storage", limit, current_mb)
 
 
 def enforce_feature(feature_flag: str, feature_name_ar: str) -> None:

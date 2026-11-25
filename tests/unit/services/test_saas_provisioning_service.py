@@ -35,6 +35,7 @@ def sample_package(db_session):
         has_ai=True,
         has_pos=True,
         has_customization=True,
+        allow_custom_integrations=True,
         has_advanced_reports=True,
         has_whatsapp=True,
         enable_ai=True,
@@ -147,6 +148,29 @@ class TestActivatePurchasedPackageFeatures:
         assert snapshot["has_whatsapp"] is True
         assert snapshot["has_training"] is False
         assert snapshot["has_priority_support"] is False
+
+
+class TestSyncTenantPackageFlags:
+    def test_backfills_module_flags_without_touching_owner_overrides(self, db_session, sample_tenant, sample_package):
+        sample_package.enable_maintenance = True
+        sample_package.enable_partners = True
+        sample_package.allow_custom_integrations = True
+        sample_tenant.subscription_plan = sample_package.slug
+        sample_tenant.enable_maintenance = False
+        sample_tenant.enable_partners = False
+        sample_tenant.allow_custom_integrations = False
+        db_session.commit()
+
+        changed = SaaSProvisioningService.sync_tenant_package_flags(sample_tenant.id)
+        assert "enable_maintenance" in changed
+        assert "enable_partners" in changed
+        assert "allow_custom_integrations" not in changed
+
+        db_session.refresh(sample_tenant)
+        assert sample_tenant.enable_maintenance is True
+        assert sample_tenant.enable_partners is True
+        assert sample_tenant.allow_custom_integrations is False
+        assert SaaSProvisioningService.sync_tenant_package_flags(sample_tenant.id) == []
 
 
 class TestApplyPlanWithTemplate:

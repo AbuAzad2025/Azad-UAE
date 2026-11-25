@@ -36,6 +36,23 @@ class TestPlanFlagEnforcement:
             response = auth_client.get(path)
             assert response.status_code == 403, (path, response.status_code)
 
+    def test_partner_fragment_requires_partners_module(self, auth_client, db_session, sample_tenant):
+        from models import Customer
+
+        sample_tenant.enable_partners = False
+        db_session.flush()
+        partner = Customer(
+            tenant_id=sample_tenant.id,
+            name="Partner X",
+            customer_type="partner",
+            is_active=True,
+        )
+        db_session.add(partner)
+        db_session.flush()
+
+        assert auth_client.get(f"/reports/entity_report_fragment/partner/{partner.id}").status_code == 403
+        assert auth_client.get(f"/reports/entity_report_fragment/regular/{partner.id}").status_code == 200
+
     def test_reports_still_open_when_reports_enabled(self, auth_client, db_session, sample_tenant):
         sample_tenant.enable_reports = True
         sample_tenant.enable_gl = False

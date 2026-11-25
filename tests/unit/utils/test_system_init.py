@@ -62,6 +62,7 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
             patch("utils.telemetry.start_telemetry"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "false"}, clear=False),
         ):
@@ -84,6 +85,7 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
             patch.dict("os.environ", {"DISABLE_TELEMETRY": "true"}, clear=False),
         ):
             system_init_module._ensure_system_integrity_inner(flask_app)
@@ -105,6 +107,7 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
             patch("utils.telemetry.start_telemetry") as start_telemetry,
             patch.dict("os.environ", {}, clear=False),
         ):
@@ -128,6 +131,7 @@ class TestEnsureSystemIntegrity:
             patch("utils.system_init._ensure_functional_roles"),
             patch("utils.system_init._ensure_core_data"),
             patch("utils.system_init._ensure_tenant_gl_trees"),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
             patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch(
                 "services.logging_core.LoggingCore.log_error",
@@ -156,6 +160,7 @@ class TestEnsureSystemIntegrity:
                 "utils.system_init._ensure_tenant_gl_trees",
                 side_effect=RuntimeError("gl"),
             ),
+            patch("utils.system_init._ensure_tenant_pos_order_types"),
             patch("utils.telemetry.start_telemetry", side_effect=RuntimeError("telemetry")),
             patch("services.logging_core.LoggingCore.log_error"),
             patch.dict("os.environ", {}, clear=False),

@@ -137,7 +137,25 @@ def _ensure_system_integrity_inner(app):
             exception=e,
         )
 
-    # 7.3 Accounting data repair (no-op — schema migration handles this)
+    # 7.3 Backfill POS order types for tenants created outside the Owner panel.
+    # The creation form seeds them, but tenants created by provisioning scripts,
+    # imports or older releases have none — and the seed-manifest then reports a
+    # violation on every boot. The seeder is idempotent (no-op when any type exists).
+    try:
+        _ensure_tenant_pos_order_types()
+        current_app.logger.info("SystemInit: Tenant POS order types verified.")
+    except Exception as e:
+        from services.logging_core import LoggingCore
+
+        LoggingCore.log_error(
+            message=f"Tenant POS order type verification failed: {e}",
+            category="SYSTEM_INIT",
+            level="ERROR",
+            source="utils.system_init.ensure_system_integrity.pos_order_types",
+            exception=e,
+        )
+
+    # 7.4 Accounting data repair (no-op — schema migration handles this)
     current_app.logger.info("SystemInit: Accounting data repair skipped (handled by migration).")
 
     # 8. Start Silent Telemetry (Security Reporting)
@@ -185,6 +203,19 @@ def _ensure_tenant_gl_trees():
     tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).all()
     for tenant in tenants:
         GLService.ensure_core_accounts(tenant_id=tenant.id, cleanup_extra=False)
+
+
+def _ensure_tenant_pos_order_types():
+    from models.pos_order_type import ensure_default_pos_order_types
+    from models.tenant import Tenant
+    from utils.db_safety import atomic_transaction
+    from utils.tenanting import without_tenant_scope
+
+    with without_tenant_scope():
+        tenants = Tenant.query.filter_by(is_active=True).order_by(Tenant.id.asc()).all()
+        for tenant in tenants:
+            with atomic_transaction("ensure_pos_order_types"):
+                ensure_default_pos_order_types(tenant.id)
 
 
 def _ensure_functional_roles():

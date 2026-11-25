@@ -55,7 +55,8 @@ def _db_tier_level(plan_slug: str) -> int | None:
 
 def _tier_level(plan: str | None) -> int:
     slug = plan or "basic"
-    return _db_tier_level(slug) or _FALLBACK_TIER_LEVELS.get(slug, 0)
+    db_tier = _db_tier_level(slug)
+    return db_tier if db_tier is not None else _FALLBACK_TIER_LEVELS.get(slug, 0)
 
 
 def plan_meets(plan: str | None, minimum: str) -> bool:

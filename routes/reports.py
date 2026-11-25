@@ -5,6 +5,7 @@ from typing import Any
 from flask import Blueprint, render_template, request
 from flask_babel import gettext
 from flask_login import current_user, login_required
+from werkzeug.exceptions import HTTPException
 
 from services.reports_query_service import ReportsQueryService
 from utils.api_response import error_response, success_response
@@ -1150,6 +1151,15 @@ def api_entity_search():
 @permission_required("view_reports")
 def entity_report_fragment(entity_type, **kwargs):
     record_id = kwargs.pop("id")
+    if entity_type in ("partner", "merchant"):
+        # This secondary fragment exposes partner commission data just like
+        # /reports/partners. Check before the broad try/except below, which
+        # would otherwise swallow abort(403) and return a 200 error fragment.
+        from utils.feature_guards import deny_if_locked
+
+        denial = deny_if_locked("partners")
+        if denial is not None:
+            return denial
     try:
         from models import Customer, Supplier
 
@@ -1192,6 +1202,8 @@ def entity_report_fragment(entity_type, **kwargs):
             )
         return render_template("reports/partials/entity_report.html", **context)
 
+    except HTTPException:
+        raise  # 403/404 from guards and scoped lookups must stay as-is
     except Exception as e:
         return render_template("reports/partials/entity_report.html", error=str(e))
 

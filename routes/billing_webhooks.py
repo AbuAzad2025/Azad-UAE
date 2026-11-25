@@ -111,9 +111,15 @@ def stripe_webhook():
             )
 
             try:
+                tenant_pk = int(tenant_id)
+                package_pk = int(package_id)
+            except (TypeError, ValueError):
+                return error_response(message="Invalid metadata ids", status_code=400)
+
+            try:
                 result = SaaSProvisioningService.activate_purchased_package(
-                    tenant_id=int(tenant_id),
-                    package_id=int(package_id),
+                    tenant_id=tenant_pk,
+                    package_id=package_pk,
                     duration_type=duration_type,
                 )
                 logger.info(
@@ -205,9 +211,15 @@ def generic_webhook():
         if not tenant_id or not package_id:
             return error_response(message="tenant_id and package_id required", status_code=400)
 
+        try:
+            tenant_pk = int(tenant_id)
+            package_pk = int(package_id)
+        except (TypeError, ValueError):
+            return error_response(message="Invalid tenant_id or package_id", status_code=400)
+
         result = SaaSProvisioningService.activate_purchased_package(
-            tenant_id=int(tenant_id),
-            package_id=int(package_id),
+            tenant_id=tenant_pk,
+            package_id=package_pk,
             duration_type=duration_type,
         )
 

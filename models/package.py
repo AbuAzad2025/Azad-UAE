@@ -34,6 +34,13 @@ TENANT_FLAG_COLUMNS = (
     "enable_store",
     "enable_gl",
     "enable_api",
+    "enable_maintenance",
+    "enable_partners",
+    "enable_campaigns",
+    "enable_warranty_tracking",
+    "enable_fixed_assets",
+    "enable_shipments",
+    "allow_custom_integrations",
 )
 
 
@@ -96,6 +103,16 @@ class Package(db.Model):
     enable_store = db.Column(db.Boolean, default=False)
     enable_gl = db.Column(db.Boolean, default=True)
     enable_api = db.Column(db.Boolean, default=False)
+    # Module entitlements that are enforced in production code and were
+    # previously tenant-only switches, so no package could grant or withhold
+    # them. Same names on Package and Tenant; copied by apply_to_tenant().
+    enable_maintenance = db.Column(db.Boolean, default=False)
+    enable_partners = db.Column(db.Boolean, default=False)
+    enable_campaigns = db.Column(db.Boolean, default=False)
+    enable_warranty_tracking = db.Column(db.Boolean, default=False)
+    enable_fixed_assets = db.Column(db.Boolean, default=False)
+    enable_shipments = db.Column(db.Boolean, default=True)
+    allow_custom_integrations = db.Column(db.Boolean, default=False)
 
     created_at = db.Column(db.DateTime(timezone=True), default=_utc_now, index=True)
     updated_at = db.Column(db.DateTime(timezone=True), default=_utc_now, onupdate=_utc_now)
@@ -128,11 +145,10 @@ class Package(db.Model):
             if value is not None:
                 setattr(tenant, col, bool(value))
 
-        # Preserve the existing POS‑specific logic
+        # POS is set from the explicit has_pos field; every other entitlement
+        # above is copied exactly. Legacy has_* fields are display metadata
+        # only and must not silently override a checkbox the owner set.
         tenant.enable_pos = bool(self.has_pos)
-        tenant.allow_custom_integrations = bool(self.has_customization)
-        if self.has_advanced_reports:
-            tenant.enable_reports = True
         return tenant
 
     def to_dict(self):

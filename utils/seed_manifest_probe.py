@@ -210,16 +210,18 @@ def max_document_sequences_per_document_type() -> int:
     """
     from models.document_sequence import DocumentSequence
 
-    counts = [
-        int(
+    counts = []
+    for tid in _active_tenant_ids():
+        # `.group_by(...).scalar()` calls `.one()` and raises MultipleResultsFound
+        # as soon as a tenant has more than one document code — exactly when the
+        # probe has data worth reporting. Read all groups and take the largest.
+        grouped = (
             db.session.query(func.count(DocumentSequence.id))
             .filter(DocumentSequence.tenant_id == tid)
             .group_by(DocumentSequence.code)
-            .scalar()
-            or 0
+            .all()
         )
-        for tid in _active_tenant_ids()
-    ]
+        counts.append(max((int(row[0]) for row in grouped), default=0))
     return max(counts) if counts else 0
 
 

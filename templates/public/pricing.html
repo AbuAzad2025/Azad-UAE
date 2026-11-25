@@ -113,6 +113,16 @@
           {% if pkg.has_customization %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Customization') }}</li>{% endif %}
           {% if pkg.has_training %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('AI training') }}</li>{% endif %}
           {% if pkg.has_priority_support %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Priority support') }}</li>{% endif %}
+          {% if pkg.enable_payroll %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Payroll') }}</li>{% endif %}
+          {% if pkg.enable_gl %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('General Ledger (GL)') }}</li>{% endif %}
+          {% if pkg.enable_store %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Online store') }}</li>{% endif %}
+          {% if pkg.enable_api %}<li><i class="fas fa-check" aria-hidden="true"></i> API</li>{% endif %}
+          {% if pkg.enable_maintenance %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Maintenance') }}</li>{% endif %}
+          {% if pkg.enable_partners %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Partners') }}</li>{% endif %}
+          {% if pkg.enable_campaigns %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Campaigns') }}</li>{% endif %}
+          {% if pkg.enable_warranty_tracking %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Warranty') }}</li>{% endif %}
+          {% if pkg.enable_fixed_assets %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Assets') }}</li>{% endif %}
+          {% if pkg.allow_custom_integrations %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Custom_Integrations') }}</li>{% endif %}
           {% if pkg.features %}
             {% for feat in pkg.features %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>{% endfor %}
           {% endif %}
@@ -123,62 +133,6 @@
         </a>
       </div>
       {% endfor %}
-    </div>
-  </div>
-  {% else %}
-  <div class="pricing-container">
-    <div class="pricing-grid">
-      <div class="price-card featured">
-        <div class="badge">⭐ {{ t('Most popular') }}</div>
-        <div class="plan-name">📦 {{ t('plan_starter') }}</div>
-        <div class="price">USD 29<small>{{ t('/month') }}</small></div>
-        <div class="price-note">{{ t('starter_plan_note') }}</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('starter_users') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('core_modules') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('e_invoices_printing') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('basic_reports') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('whatsapp_support') }}</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ (t('pricing_whatsapp_intro') ~ ' ' ~ t('plan_starter')) | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('Subscribe now') }}
-        </a>
-      </div>
-      <div class="price-card">
-        <div class="plan-name">🚀 {{ t('plan_professional') }}</div>
-        <div class="price">USD 79<small>{{ t('/month') }}</small></div>
-        <div class="price-note">{{ t('professional_plan_note') }}</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('professional_users') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('everything_in_starter') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('AI-powered features') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('General Ledger (GL)') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Point of Sale (POS)') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Online store') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Advanced reports') }}</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ (t('pricing_whatsapp_intro') ~ ' ' ~ t('plan_professional')) | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('Subscribe now') }}
-        </a>
-      </div>
-      <div class="price-card">
-        <div class="plan-name">🏢 {{ t('plan_enterprise') }}</div>
-        <div class="price">USD 249<small>{{ t('/month') }}</small></div>
-        <div class="price-note">{{ t('enterprise_plan_note') }}</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Unlimited') }} {{ t('users') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('all_advanced_features') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Online store') }} + API</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('hr_payroll_management') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('AI-powered features') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('daily_cloud_backups') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Customization') }}</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> {{ t('Priority support') }}</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ (t('pricing_whatsapp_intro') ~ ' ' ~ t('plan_enterprise')) | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> {{ t('Subscribe now') }}
-        </a>
-      </div>
     </div>
   </div>
   {% endif %}

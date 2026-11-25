@@ -95,6 +95,16 @@
           {% if pkg.has_ai %}<li><i class="fas fa-check" aria-hidden="true"></i> AI-powered features</li>{% endif %}
           {% if pkg.has_whatsapp %}<li><i class="fas fa-check" aria-hidden="true"></i> WhatsApp integration</li>{% endif %}
           {% if pkg.has_advanced_reports %}<li><i class="fas fa-check" aria-hidden="true"></i> Advanced reports</li>{% endif %}
+          {% if pkg.enable_payroll %}<li><i class="fas fa-check" aria-hidden="true"></i> Payroll</li>{% endif %}
+          {% if pkg.enable_gl %}<li><i class="fas fa-check" aria-hidden="true"></i> General Ledger (GL)</li>{% endif %}
+          {% if pkg.enable_store %}<li><i class="fas fa-check" aria-hidden="true"></i> Online store</li>{% endif %}
+          {% if pkg.enable_api %}<li><i class="fas fa-check" aria-hidden="true"></i> API access</li>{% endif %}
+          {% if pkg.enable_maintenance %}<li><i class="fas fa-check" aria-hidden="true"></i> Maintenance</li>{% endif %}
+          {% if pkg.enable_partners %}<li><i class="fas fa-check" aria-hidden="true"></i> Partners</li>{% endif %}
+          {% if pkg.enable_campaigns %}<li><i class="fas fa-check" aria-hidden="true"></i> Campaigns</li>{% endif %}
+          {% if pkg.enable_warranty_tracking %}<li><i class="fas fa-check" aria-hidden="true"></i> Warranty tracking</li>{% endif %}
+          {% if pkg.enable_fixed_assets %}<li><i class="fas fa-check" aria-hidden="true"></i> Fixed assets</li>{% endif %}
+          {% if pkg.allow_custom_integrations %}<li><i class="fas fa-check" aria-hidden="true"></i> Custom integrations</li>{% endif %}
           {% if pkg.features %}
             {% for feat in pkg.features %}<li><i class="fas fa-check" aria-hidden="true"></i> {{ feat }}</li>{% endfor %}
           {% endif %}
@@ -105,63 +115,6 @@
         </a>
       </div>
       {% endfor %}
-    </div>
-  </div>
-  {% else %}
-  <div class="pricing-container">
-    <div class="pricing-grid">
-      <div class="price-card featured">
-        <div class="badge">⭐ Most popular</div>
-        <div class="plan-name">📦 Starter</div>
-        <div class="price">$29<small>/month</small></div>
-        <div class="price-note">For small businesses — up to 200 invoices/month</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> Up to 3 users</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Sales, purchases & inventory</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> E-invoices & printing</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Basic reports</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> WhatsApp support</li>
-          <li><i class="fas fa-times" style="color:#e53e3e;" aria-hidden="true"></i> Online storefront not included</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Starter plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
-        </a>
-      </div>
-      <div class="price-card">
-        <div class="plan-name">🚀 Professional</div>
-        <div class="price">$79<small>/month</small></div>
-        <div class="price-note">For growing businesses — up to 1,000 invoices/month</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> Up to 10 users</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Everything in Starter</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Full AI features</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> General Ledger (GL)</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Point of Sale (POS)</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Online storefront</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Advanced reports</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Professional plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
-        </a>
-      </div>
-      <div class="price-card">
-        <div class="plan-name">🏢 Enterprise</div>
-        <div class="price">$249<small>/month</small></div>
-        <div class="price-note">For large organizations — unlimited invoices</div>
-        <ul class="features-list">
-          <li><i class="fas fa-check" aria-hidden="true"></i> Unlimited users</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> All advanced features</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Online store + API</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> HR, payroll & employee mgmt</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> AI-powered business insights</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Automated daily cloud backups</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> Full customization</li>
-          <li><i class="fas fa-check" aria-hidden="true"></i> 24/7 priority support</li>
-        </ul>
-        <a href="https://api.whatsapp.com/send?phone={{ wa_number }}&text={{ 'Hello, I want to subscribe to the Enterprise plan' | urlencode }}" target="_blank" rel="noopener" class="btn-select">
-          <i class="fab fa-whatsapp" aria-hidden="true"></i> Subscribe now
-        </a>
-      </div>
     </div>
   </div>
   {% endif %}
