@@ -14,7 +14,7 @@
   <div class="card-body">
     <form method="GET" action="{{ url_for('owner.ai_training_progress') }}" class="form-inline">
       <label class="mr-2" for="tenant_id">{{ t('Tenant') }}</label>
-      <select name="tenant_id" id="tenant_id" class="form-control mr-2" onchange="this.form.submit()">
+      <select name="tenant_id" id="tenant_id" class="form-control mr-2" data-submit-on-change>
         <option value="">— {{ t('Choose') }} —</option>
         {% for row in tenants|default([]) %}
         <option value="{{ row.id }}" {% if tenant and row.id == tenant.id %}selected{% endif %}>{{ row.name_ar|default('') or row.name|default('') }}</option>
@@ -98,9 +98,9 @@
             <span class="text-muted">{{ t('Concepts') }}</span>
           </div>
         </div>
-        <button type="button" class="btn btn-outline-primary btn-sm btn-block" onclick="window.location.href='{{ url_for('owner.ai_training_knowledge_graph', tenant_id=tenant.id) }}'">
-          <i class="fas fa-project-diagram mr-2"></i>{{ t('View_Graph') }}
-        </button>
+        <a href="{{ url_for('owner.ai_training_knowledge_graph', tenant_id=tenant.id) }}" class="btn btn-outline-primary btn-sm btn-block">
+          <i class="fas fa-project-diagram mr-2" aria-hidden="true"></i>{{ t('View_Graph') }}
+        </a>
       </div>
     </div>
   </div>
@@ -114,9 +114,9 @@
         <p class="mb-1">{{ t('Average_Mastery') }}: {{ health_report.average_mastery_score|default(0) }}</p>
         <p class="mb-1">{{ t('Learning_Velocity') }}: {{ "%.2f"|format(health_report.learning_velocity|default(0)) }}</p>
         <p class="mb-2">{{ t('Total_Concepts') }}: {{ health_report.total_concepts|default(0) }}</p>
-        <button type="button" class="btn btn-outline-info btn-sm btn-block" onclick="window.location.href='{{ url_for('owner.ai_training_health', tenant_id=tenant.id) }}'">
-          <i class="fas fa-heartbeat mr-2"></i>{{ t('View_Health_Report') }}
-        </button>
+        <a href="{{ url_for('owner.ai_training_health', tenant_id=tenant.id) }}" class="btn btn-outline-info btn-sm btn-block">
+          <i class="fas fa-heartbeat mr-2" aria-hidden="true"></i>{{ t('View_Health_Report') }}
+        </a>
       </div>
     </div>
   </div>

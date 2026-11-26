@@ -142,7 +142,7 @@ function addLine() {
 
           <button type="button" class="btn btn-danger btn-block" 
 
-                  onclick="removeLine(${purchaseLineIndex})" title="${PURCHASE_LABELS.delete || "حذف"}">
+                  data-purchase-remove data-index="${purchaseLineIndex}" title="${PURCHASE_LABELS.delete || "حذف"}">
 
             <i class="fas fa-trash"></i>
 
@@ -326,6 +326,14 @@ window.calculateTotalsClientSide = calculateTotalsClientSide;
 window._purchaseClientSideFallback = _purchaseClientSideFallback;
 window.updateLineCosts = updateLineCosts;
 window.removeLine = _removeLine;
+
+// Strict CSP blocks inline event-handler attributes generated into innerHTML.
+document.addEventListener('click', (event) => {
+	const button = event.target.closest('[data-purchase-remove]');
+	if (!button) return;
+	event.preventDefault();
+	_removeLine(Number(button.getAttribute('data-index')));
+});
 
 // =====================================
 

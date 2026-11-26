@@ -262,16 +262,29 @@ class TestGLJournalEntry:
         entry = self._balanced(sample_tenant.id, number="ORIG-1")
         db.session.add(entry)
         db.session.flush()
-        db.session.add(
-            GLJournalLine(
-                tenant_id=sample_tenant.id,
-                entry_id=entry.id,
-                account_id=chart["bank"].id,
-                debit=Decimal("50"),
-                credit=Decimal("0"),
-                amount=Decimal("50"),
-                amount_aed=Decimal("50"),
-            )
+        db.session.add_all(
+            [
+                GLJournalLine(
+                    tenant_id=sample_tenant.id,
+                    entry_id=entry.id,
+                    account_id=chart["bank"].id,
+                    debit=Decimal("50"),
+                    credit=Decimal("0"),
+                    amount=Decimal("50"),
+                    amount_aed=Decimal("50"),
+                ),
+                # A posted entry's lines must balance; the reversal now goes
+                # through the same posting rail and enforces that invariant.
+                GLJournalLine(
+                    tenant_id=sample_tenant.id,
+                    entry_id=entry.id,
+                    account_id=chart["rev"].id,
+                    debit=Decimal("0"),
+                    credit=Decimal("50"),
+                    amount=Decimal("-50"),
+                    amount_aed=Decimal("-50"),
+                ),
+            ]
         )
         db.session.flush()
 

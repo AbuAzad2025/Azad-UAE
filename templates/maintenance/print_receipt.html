@@ -13,7 +13,7 @@
 <div class="erp-watermark" aria-hidden="true"><span>{{ settings.watermark_text if settings is defined and settings and settings.watermark_text else (developer_name or t('Default_Watermark')) }}</span></div>
 
 <div class="mnt-print-actions d-print-none">
-  <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+  <button type="button" class="btn btn-primary btn-sm" data-print>
     <i class="fas fa-print me-1" aria-hidden="true"></i>{{ t('Print') }}
   </button>
 </div>
@@ -62,5 +62,6 @@
   </div>
 </div>
 {% endfor %}
+<script src="{{ url_for('static', filename='js/print-button.js') }}"></script>
 </body>
 </html>

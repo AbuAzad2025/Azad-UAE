@@ -68,15 +68,19 @@ def _feature_denial(feature_name: str):
     if tenant is None:
         abort(403, description=gettext("المستأجر غير موجود"))
 
-    # Accept either a column name as-is (e.g. allow_custom_integrations) or
-    # the usual enable_<name> form. The old code only tried the latter, so a
-    # gate on an existing non-prefixed column silently allowed everyone.
-    enabled = getattr(tenant, feature_name, None)
+    # Resolve the explicit enable_<name> column FIRST. The bare name can be an
+    # ORM backref (Tenant.expenses is a dynamic relationship from Expense), and
+    # reading that instead of enable_expenses denies a module that is enabled.
+    # The bare name is still honoured for non-prefixed flags such as
+    # allow_custom_integrations, which have no enable_ column.
+    enabled = getattr(tenant, f"enable_{feature_name}", None)
     if enabled is None:
-        enabled = getattr(tenant, f"enable_{feature_name}", True)
+        enabled = getattr(tenant, feature_name, None)
     if enabled is None and feature_name in POS_SUBFEATURES:
         # Nullable POS sub-feature: NULL inherits the plan default.
         enabled = pos_feature_enabled(tenant, feature_name)
+    if enabled is None:
+        enabled = True  # a flag with no column is not a locked module
 
     if enabled:
         return None
@@ -160,12 +164,14 @@ def feature_enabled(feature_name: str) -> bool:
     tenant = db.session.get(Tenant, int(tid))
     if tenant is None:
         return False
-    enabled = getattr(tenant, feature_name, None)
+    # Same resolution order as _feature_denial: the flag column wins over a
+    # same-named ORM relationship.
+    enabled = getattr(tenant, f"enable_{feature_name}", None)
     if enabled is None:
-        enabled = getattr(tenant, f"enable_{feature_name}", True)
+        enabled = getattr(tenant, feature_name, None)
     if enabled is None and feature_name in POS_SUBFEATURES:
         enabled = pos_feature_enabled(tenant, feature_name)
-    return bool(enabled)
+    return True if enabled is None else bool(enabled)
 
 
 def install_feature_gate(bp, feature_name: str) -> None:

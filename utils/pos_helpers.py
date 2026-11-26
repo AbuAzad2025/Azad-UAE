@@ -83,22 +83,18 @@ def payment_amount_base(payment, tenant_id: int | None = None) -> Decimal:
 
 
 def resolve_pos_cash_account_code(tenant_id: int, branch_id: int) -> str:
-    """Postable branch cash account code (single source for POS GL cash legs)."""
-    from services import gl_helpers
+    """Postable branch cash account code (single source for POS GL cash legs).
+
+    The chart is tenant-owned: deriving a code from a hardcoded ``1110`` parent
+    guessed at a numbering scheme a tenant may not use. Resolve through the
+    tenant's own liquidity accounts instead; missing/ambiguous candidates are
+    refused by ``get_default_liquidity_account`` rather than guessed.
+    """
     from services.gl_service import GLService
-    from services.gl_tree_builder import GLTreeBuilder
 
     GLService.ensure_core_accounts(tenant_id=tenant_id)
-    cash_parent_code = "1110"
-    cash_acct_code = GLTreeBuilder._branch_account_code(cash_parent_code, branch_id)
-    cash_account = gl_helpers.get_account(cash_acct_code, tenant_id=tenant_id)
-    if cash_account is None or getattr(cash_account, "is_header", False):
-        cash_acct_code = GLService.get_account_code_for_concept(
-            "CASH",
-            tenant_id=tenant_id,
-            branch_id=branch_id,
-        )
-    return cash_acct_code
+    resolved_branch = GLService.resolve_liquidity_branch("cash", branch_id, tenant_id)
+    return GLService.get_default_liquidity_account("cash", branch_id=resolved_branch, tenant_id=tenant_id)
 
 
 def get_pos_walkin_customer(tenant_id: int | None = None) -> Customer:

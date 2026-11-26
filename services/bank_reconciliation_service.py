@@ -224,7 +224,11 @@ class BankReconciliationService:
         if reconciliation.bank_charges > 0:
             lines.append(
                 {
-                    "account": "6950",  # مصاريف بنكية
+                    "account": GLService.get_account_code_for_concept(
+                        "BANK_FEES",
+                        tenant_id=getattr(reconciliation.bank_account, "tenant_id", None),
+                        branch_id=getattr(reconciliation, "branch_id", None),
+                    ),
                     "concept_code": "BANK_FEES",
                     "debit": reconciliation.bank_charges,
                     "credit": 0,

@@ -1523,16 +1523,21 @@ class SaleService:
 
                     reverse_sale_revaluation(sale.id, tenant_id=(sale.tenant_id if sale is not None else None))
                     try:
+                        # Use the sale's own receivable control account; a
+                        # partner/merchant invoice must not post its FX leg to
+                        # the generic AR account.
+                        receivable_concept = GLService.get_customer_credit_concept(sale.customer)
+                        receivable_account = GLService.get_customer_credit_account(
+                            sale.customer,
+                            branch_id=sale.branch_id,
+                            tenant_id=(sale.tenant_id if sale is not None else None),
+                        )
                         fx_lines = []
                         if fx_diff > 0:
                             fx_lines = [
                                 {
-                                    "account": GLService.get_account_code_for_concept(
-                                        "AR",
-                                        branch_id=sale.branch_id,
-                                        tenant_id=(sale.tenant_id if sale is not None else None),
-                                    ),
-                                    "concept_code": "AR",
+                                    "account": receivable_account,
+                                    "concept_code": receivable_concept,
                                     "debit": fx_diff,
                                     "description": f"FX Gain Adjustment - Payment {payment.payment_number}",
                                 },
@@ -1560,12 +1565,8 @@ class SaleService:
                                     "description": f"FX Loss - Payment {payment.payment_number}",
                                 },
                                 {
-                                    "account": GLService.get_account_code_for_concept(
-                                        "AR",
-                                        branch_id=sale.branch_id,
-                                        tenant_id=(sale.tenant_id if sale is not None else None),
-                                    ),
-                                    "concept_code": "AR",
+                                    "account": receivable_account,
+                                    "concept_code": receivable_concept,
                                     "credit": abs(fx_diff),
                                     "description": f"FX Loss Adjustment - Payment {payment.payment_number}",
                                 },

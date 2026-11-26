@@ -841,21 +841,37 @@ class GLService:
         if m in ("bank_transfer", "card"):
             return GLService.get_default_liquidity_account("bank", branch_id=branch_id, tenant_id=tenant_id)
         if m == "cheque":
-            if tenant_id and is_dynamic_gl_mapping_enabled():
+            concept = "CHEQUES_UNDER_COLLECTION"
+            if tenant_id is None:
+                raise ValueError("A tenant is required to resolve the cheque-in-collection account.")
+            if is_dynamic_gl_mapping_enabled():
                 account = resolve_gl_account(
                     tenant_id=tenant_id,
-                    concept_code="CHEQUES_UNDER_COLLECTION",
+                    concept_code=concept,
                     branch_id=branch_id,
                 )
                 if account:
                     return account.code
                 raise GLMappingError(
                     tenant_id=tenant_id,
-                    concept_code="CHEQUES_UNDER_COLLECTION",
+                    concept_code=concept,
                     branch_id=branch_id,
                     issue="No GL account mapping found for cheque debit account.",
                 )
-            return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
+            # Legacy mode must still use the dedicated account, not cash:
+            # the line is tagged CHEQUES_UNDER_COLLECTION and silently posting
+            # it to a drawer made the two flag states disagree.
+            legacy_code = str(GL_CONCEPT_REGISTRY[concept]["legacy_code"])
+            GLService.ensure_core_accounts(tenant_id=tenant_id)
+            account = gl_helpers.get_account(legacy_code, tenant_id)
+            if account and account.is_active and not account.is_header:
+                return account.code
+            raise GLMappingError(
+                tenant_id=tenant_id,
+                concept_code=concept,
+                branch_id=branch_id,
+                issue=f"Cheque-in-collection account {legacy_code} is missing, inactive or a header.",
+            )
         return GLService.get_default_liquidity_account("cash", branch_id=branch_id, tenant_id=tenant_id)
 
     @staticmethod

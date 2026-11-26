@@ -28,19 +28,19 @@
     .badge { background: #667eea; color: white; padding: 8px 20px; border-radius: 20px; font-size: 0.9rem; display: inline-block; margin-bottom: 20px; font-weight: 800; }
     .plan-name { font-size: 2rem; font-weight: 800; margin-bottom: 15px; color: #2d3748; }
     .price { font-size: 3.5rem; font-weight: 900; color: #667eea; margin: 20px 0; }
-    .price small { font-size: 1.1rem; font-weight: 500; }
-    .price-note { color: #718096; margin-bottom: 30px; font-weight: 600; }
+    .price small { font-size: 1.1rem; font-weight: 500; color: #434190; }
+    .price-note { color: #4a5568; margin-bottom: 30px; font-weight: 600; }
     .features-list { list-style: none; margin: 30px 0; text-align: start; flex-grow: 1; }
     .features-list li { padding: 12px 0; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px; justify-content: flex-start; }
     .features-list li i { color: #48bb78; font-size: 1.2rem; }
-    .btn-select { background: #25D366; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.05rem; font-weight: 800; cursor: pointer; width: 100%; transition: background 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-select { background: #0f7a5f; color: white; border: none; padding: 15px 40px; border-radius: 50px; font-size: 1.05rem; font-weight: 800; cursor: pointer; width: 100%; transition: background 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
     .btn-select:hover { background: #128C7E; }
     .cta-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 80px 20px; text-align: center; }
     .cta-section h2 { font-size: 2.4rem; margin-bottom: 20px; }
     .cta-section p { font-size: 1.2rem; margin-bottom: 40px; opacity: 0.95; }
     .cta-buttons { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
     .btn-cta { padding: 15px 40px; border-radius: 50px; font-size: 1.05rem; text-decoration: none; transition: transform 0.3s; display: inline-block; font-weight: 800; }
-    .btn-white { background: white; color: #667eea; }
+    .btn-white { background: white; color: #434190; }
     .btn-outline { background: transparent; color: white; border: 2px solid white; }
     .btn-cta:hover { transform: translateY(-3px); }
     footer { background: #2d3748; color: white; padding: 40px 20px; text-align: center; }
@@ -76,6 +76,7 @@
   </nav>
 {% include "partials/store_banners.html" %}
 
+  <main>
   <header class="pricing-header">
     <h1>{{ t('Pricing') }}</h1>
     <p>{{ t('pricing_meta_description') }}</p>
@@ -149,6 +150,7 @@
       </a>
     </div>
   </section>
+  </main>
 
   <footer>
     <p>&copy; {{ current_year }} {{ platform_name }}. {{ t('All rights reserved.') }}</p>

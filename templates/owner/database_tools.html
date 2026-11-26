@@ -466,19 +466,27 @@ async function refreshAuditLog() {
   }
 }
 
+// Audit rows carry free text (action names, serialized details) from the
+// database; everything below lands in innerHTML, so escape each field.
+function _escAudit(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function renderAuditLog(logs) {
   const tbody = document.querySelector('#audit-log-table tbody');
   if (!tbody) return;
   tbody.innerHTML = logs.map(log => `
     <tr>
-      <td>${log.timestamp}</td>
-      <td><code>${log.action}</code></td>
+      <td>${_escAudit(log.timestamp)}</td>
+      <td><code>${_escAudit(log.action)}</code></td>
       <td>
         <span class="badge badge-${log.success ? 'success' : 'danger'}">
           ${log.success ? '{{ t('Success') }}' : '{{ t('Failed') }}'}
         </span>
       </td>
-      <td><small>${log.details || '-'}</small></td>
+      <td><small>${_escAudit(log.details || '-')}</small></td>
     </tr>
   `).join('') || '<tr><td colspan="4" class="text-center text-muted">' + i18n.no_records + '</td></tr>';
 }

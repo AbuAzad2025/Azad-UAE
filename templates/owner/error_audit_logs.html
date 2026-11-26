@@ -383,7 +383,7 @@ const i18n = {{ {
       html += '<h6>' + i18n.stack_trace + '</h6>';
       if (showFull) {
         html += '<pre class="bg-light p-2 small ic-11">' + preview + '</pre>';
-        html += '<button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="toggleStackTrace(this)" data-full-trace="' + esc(fullTrace) + '">' + i18n.show_full_trace + '</button>';
+        html += '<button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-trace-toggle data-full-trace="' + esc(fullTrace) + '">' + i18n.show_full_trace + '</button>';
       } else {
         html += '<pre class="bg-light p-2 small ic-11">' + preview + '</pre>';
       }
@@ -402,13 +402,9 @@ const i18n = {{ {
     }
   }
 
-  function cleanupModalState() {
-    $('body').removeClass('error-audit-modal-open');
-    if ($('.modal.show').length === 0) {
-      $('.modal-backdrop').remove();
-      $('body').removeClass('modal-open').css('padding-right', '');
-    }
-  }
+  // Inline event handlers are blocked by the strict CSP. Delegate the
+  // generated trace buttons to the local handler instead.
+  $(document).on('click', '[data-trace-toggle]', function() { toggleStackTrace(this); });
 
   function toggleStackTrace(btn) {
     const $btn = window.jQuery(btn);

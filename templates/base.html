@@ -246,6 +246,39 @@
       }
     }, true);
 
+    // CSP_STRICT drops 'unsafe-inline' from script-src, so inline
+    // onclick/onchange/onsubmit attributes never fire. These data-actions
+    // replace them with delegated listeners on nonced script blocks.
+    document.addEventListener('submit', (ev) => {
+      const text = ev.target.getAttribute && ev.target.getAttribute('data-confirm');
+      if (text !== null && text !== undefined && !window.confirm(text)) ev.preventDefault();
+    }, true);
+    document.addEventListener('click', (ev) => {
+      const el = ev.target.closest('[data-confirm],[data-print],[data-href],[data-submit-form],[data-line-action]');
+      if (!el) return;
+      const text = el.getAttribute('data-confirm');
+      if (text !== null && !window.confirm(text)) { ev.preventDefault(); return; }
+      if (el.hasAttribute('data-print')) { ev.preventDefault(); window.print(); return; }
+      if (el.hasAttribute('data-submit-form')) {
+        const form = el.closest('form');
+        if (form) { ev.preventDefault(); form.requestSubmit ? form.requestSubmit() : form.submit(); }
+        return;
+      }
+      const href = el.getAttribute('data-href');
+      if (href) { ev.preventDefault(); window.location.href = href; return; }
+      const lineAction = el.getAttribute('data-line-action');
+      if (lineAction === 'add' && typeof window.addLine === 'function') { ev.preventDefault(); window.addLine(); }
+      else if (lineAction === 'remove' && typeof window.removeLine === 'function') {
+        ev.preventDefault(); window.removeLine(Number(el.getAttribute('data-index')));
+      }
+    }, true);
+    document.addEventListener('change', (ev) => {
+      if (ev.target.matches && ev.target.matches('[data-submit-on-change]')) {
+        const form = ev.target.closest('form');
+        if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
+      }
+    });
+
     // Auto-calculate totals on change/keyup
     document.addEventListener('change', (ev) => {
       if (ev.target.matches('[data-calc-totals]') && typeof calculateTotals === 'function') calculateTotals();

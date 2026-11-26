@@ -122,7 +122,8 @@ def _seed(db):
         ("cashier", "Cashier"),
     ]:
         role = Role.query.filter_by(slug=slug).first()
-        if not role:
+        created = role is None
+        if created:
             role = Role(
                 name=label,
                 name_ar=label,
@@ -130,6 +131,55 @@ def _seed(db):
                 description=f"Automated test role: {slug}",
             )
             db.session.add(role)
+            db.session.flush()
+            # A role with no permission rows answers 403 on every gated route,
+            # which makes browser tours test the fixture instead of the app.
+            # Only seed permissions for roles this script creates; seeded
+            # production roles keep their own, already-tested permission sets.
+            from models import Permission
+
+            if slug in ("super_admin", "tenant_owner"):
+                role.permissions = Permission.query.all()
+            elif slug == "store_manager":
+                wanted = {
+                    "manage_sales",
+                    "manage_purchases",
+                    "manage_products",
+                    "manage_customers",
+                    "manage_suppliers",
+                    "manage_warehouse",
+                    "manage_expenses",
+                    "view_reports",
+                    "view_ledger",
+                    "manage_payments",
+                    "manage_store",
+                    "override_sale_price",
+                    "pos_void_line",
+                    "pos_discount_override",
+                    "pos_no_sale_drawer",
+                    "pos_pay_in_out",
+                    "pos_authorize_override",
+                    "pos_view_expected",
+                    "pos_return",
+                    "view_kds",
+                }
+                role.permissions = Permission.query.filter(Permission.code.in_(wanted)).all()
+            elif slug == "cashier":
+                wanted = {
+                    "manage_sales",
+                    "view_customers",
+                    "view_products",
+                    "override_sale_price",
+                    "pos_void_line",
+                    "pos_discount_override",
+                    "pos_no_sale_drawer",
+                    "pos_pay_in_out",
+                    "pos_authorize_override",
+                    "pos_view_expected",
+                    "pos_return",
+                    "view_kds",
+                }
+                role.permissions = Permission.query.filter(Permission.code.in_(wanted)).all()
             db.session.flush()
         role_map[slug] = role
 

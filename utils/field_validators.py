@@ -140,6 +140,8 @@ def validate_gl_line_sides(
     tol = tolerance if tolerance is not None else _GL_SIDE_TOLERANCE
     d = Decimal(str(debit or 0))
     c = Decimal(str(credit or 0))
+    if d < 0 or c < 0:
+        raise FieldValidationError("سطر القيد: لا يجوز أن يكون المدين أو الدائن سالباً.")
     if d <= 0 and c <= 0:
         raise FieldValidationError("سطر القيد: يجب أن يحتوي على مبلغ مدين أو دائن.")
     if d > tol and c > tol:

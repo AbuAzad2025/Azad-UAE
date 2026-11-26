@@ -208,10 +208,11 @@ class PaymentService:
             ]
         # Reverse any unrealized FX revaluation entries for this purchase
         # before posting the realized FX gain/loss
-        from services.fx_revaluation_service import revalue_purchase_at_settlement, reverse_purchase_revaluation
+        from services.fx_revaluation_service import revalue_purchase_at_settlement
 
-        reverse_purchase_revaluation(purchase.id, tenant_id=tenant_id)
-        # P0 Fix: Also call the settlement revaluation wrapper for semantic clarity
+        # `revalue_purchase_at_settlement` is the documented settlement wrapper
+        # around reverse_purchase_revaluation; calling both reversed twice and
+        # only the first call had any effect.
         revalue_purchase_at_settlement(purchase.id, tenant_id=tenant_id)
         post_or_fail(
             fx_lines,
@@ -775,15 +776,15 @@ class PaymentService:
                             if abs(fx_diff) > Decimal("0.01"):
                                 try:
                                     fx_lines = []
+                                    receivable_concept = GLService.get_customer_credit_concept(customer)
+                                    receivable_account = GLService.get_customer_credit_account(
+                                        customer, branch_id=receipt.branch_id, tenant_id=tenant_id
+                                    )
                                     if fx_diff > 0:
                                         fx_lines = [
                                             {
-                                                "account": GLService.get_account_code_for_concept(
-                                                    "AR",
-                                                    branch_id=receipt.branch_id,
-                                                    tenant_id=tenant_id,
-                                                ),
-                                                "concept_code": "AR",
+                                                "account": receivable_account,
+                                                "concept_code": receivable_concept,
                                                 "debit": fx_diff,
                                                 "description": f"FX Gain Adjustment - Receipt {receipt.receipt_number}",
                                             },
@@ -811,12 +812,8 @@ class PaymentService:
                                                 "description": f"FX Loss - Receipt {receipt.receipt_number}",
                                             },
                                             {
-                                                "account": GLService.get_account_code_for_concept(
-                                                    "AR",
-                                                    branch_id=receipt.branch_id,
-                                                    tenant_id=tenant_id,
-                                                ),
-                                                "concept_code": "AR",
+                                                "account": receivable_account,
+                                                "concept_code": receivable_concept,
                                                 "credit": abs(fx_diff),
                                                 "description": f"FX Loss Adjustment - Receipt {receipt.receipt_number}",
                                             },

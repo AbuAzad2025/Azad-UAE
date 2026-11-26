@@ -75,6 +75,7 @@ class TestGetGlAccountByCode:
             patch("utils.gl_tenant.active_tenant_id", return_value=None),
         ):
             assert gt.get_gl_account_by_code("2000") is None
+            q.first.assert_not_called()  # no tenant context means no lookup at all
 
 
 class TestReverseDocumentGl:

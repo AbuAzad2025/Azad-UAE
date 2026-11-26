@@ -28,12 +28,20 @@ def scope_journal_entries(query, user=None, tenant_id=None):
 
 
 def get_gl_account_by_code(code, tenant_id=None, user=None):
+    """Look up a chart account. Never falls back to an arbitrary tenant's row.
+
+    A code like ``1130`` is only unique *within* a tenant; returning the first
+    cross-tenant match would give a report one company's account under another
+    company's numbers. Without a tenant context there is no answer, so return
+    ``None`` instead of guessing.
+    """
     from models import GLAccount
 
     tid = tenant_id if tenant_id is not None else active_tenant_id(user)
+    if tid is None:
+        return None
     q = GLAccount.query.filter_by(code=str(code))
-    if tid is not None:
-        q = q.filter_by(tenant_id=int(tid))
+    q = q.filter_by(tenant_id=int(tid))
     return q.first()
 
 

@@ -13,6 +13,8 @@ def _gl_mock(gl):
         "FX_GAIN": "4400",
         "FX_LOSS": "6600",
     }[code]
+    gl.get_customer_credit_concept.return_value = "AR"
+    gl.get_customer_credit_account.return_value = "1130"
 
 
 def _run_revaluate(open_sales=None, open_purchases=None, current_rate="3.5", existing=None):

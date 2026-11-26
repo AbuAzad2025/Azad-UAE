@@ -56,7 +56,7 @@ if (!window.__upgradeBannerDelegationBound) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
     const action = el.dataset.action;
-    if (action === 'open-upgrade-link') window.open(el.dataset.url, '_blank');
+    if (action === 'open-upgrade-link') window.open(el.dataset.url, '_blank', 'noopener,noreferrer');
     else if (action === 'dismiss-alert') {
       const alert = el.closest('.alert');
       if (alert) {

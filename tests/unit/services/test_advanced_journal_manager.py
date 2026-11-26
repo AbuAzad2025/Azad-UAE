@@ -64,6 +64,28 @@ class TestEntryOr404:
         ):
             AdvancedJournalEntryManager._entry_or_404(999)
 
+    def test_no_tenant_fails_explicitly_instead_of_cross_tenant_lookup(self):
+        q = MagicMock()
+        with (
+            patch("utils.gl_tenant.gl_entry_query", return_value=q) as query,
+            patch("utils.gl_tenant.active_tenant_id", return_value=None),
+            patch("services.gl_helpers.resolve_tenant_id", side_effect=ValueError("no tenant")),
+            pytest.raises(ValueError, match="A tenant is required"),
+        ):
+            AdvancedJournalEntryManager._entry_or_404(1)
+        query.assert_not_called()  # no cross-tenant query was attempted
+
+    def test_entry_from_another_tenant_is_not_found(self):
+        entry = _mock_entry()
+        entry.tenant_id = 2
+        q = MagicMock()
+        q.filter_by.return_value.first.return_value = entry
+        with (
+            patch("utils.gl_tenant.gl_entry_query", return_value=q),
+            pytest.raises(NotFound),
+        ):
+            AdvancedJournalEntryManager._entry_or_404(entry.id, tenant_id=1)
+
 
 class TestCreateEntryWithValidation:
     def test_rejects_unbalanced_lines(self):

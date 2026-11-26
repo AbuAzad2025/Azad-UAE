@@ -18,7 +18,7 @@
         <button class="btn btn-success">{{ t('Approve') }}</button>
       </form>
       <a href="{{ url_for('budget.edit', budget_id=budget.id) }}" class="btn btn-warning">{{ t('Edit') }}</a>
-      <form method="POST" action="{{ url_for('budget.delete', budget_id=budget.id) }}" class="d-inline" onsubmit="return confirm('{{ t('Are you sure?') }}')">
+      <form method="POST" action="{{ url_for('budget.delete', budget_id=budget.id) }}" class="d-inline" data-confirm="{{ t('Are you sure?') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-danger">{{ t('Delete') }}</button>
       </form>
@@ -30,7 +30,7 @@
       </form>
       {% endif %}
       {% if budget.status == 'active' %}
-      <form method="POST" action="{{ url_for('budget.close', budget_id=budget.id) }}" class="d-inline" onsubmit="return confirm('{{ t('Are you sure?') }}')">
+      <form method="POST" action="{{ url_for('budget.close', budget_id=budget.id) }}" class="d-inline" data-confirm="{{ t('Are you sure?') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn btn-dark">{{ t('Close') }}</button>
       </form>

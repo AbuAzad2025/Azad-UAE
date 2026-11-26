@@ -99,6 +99,12 @@ class TestResolveTenantId:
         with pytest.raises(ValueError, match="could not determine tenant_id"):
             resolve_tenant_id()
 
+    def test_strict_mode_never_infers_single_tenant(self, mocker, sample_tenant):
+        mocker.patch("utils.tenanting.get_active_tenant_id", return_value=None)
+        _mock_tenant_query(mocker, 1, sample_tenant.id)
+        with pytest.raises(ValueError, match="explicit tenant is required in strict mode"):
+            resolve_tenant_id(strict=True)
+
     def test_invalid_branch_returns_via_user(self, db_session, sample_user):
         tid = resolve_tenant_id(branch_id=999999, user_id=sample_user.id)
         assert tid == sample_user.tenant_id

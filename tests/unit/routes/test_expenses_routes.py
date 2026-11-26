@@ -87,6 +87,7 @@ def _expense_patches(expense=None, tenant_get_raises=False, branch_scope=None):
         stack.enter_context(patch("routes.expenses._resolve_transaction_rate", return_value=Decimal("1")))
         stack.enter_context(patch("routes.expenses.post_or_fail"))
         stack.enter_context(patch("routes.expenses.GLService.ensure_core_accounts"))
+        stack.enter_context(patch("services.gl_service.GLService.get_account_code_for_concept", return_value="5100"))
         stack.enter_context(
             patch(
                 "routes.expenses.GLService.get_payment_credit_account",

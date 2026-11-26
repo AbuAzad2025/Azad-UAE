@@ -509,11 +509,24 @@ def manual_entry():
                 )
                 # A draft entry affects no balance or statement. Validate and
                 # post it inside the same transaction so the "created"
-                # confirmation is truthful.
+                # confirmation is truthful. Both transitions are bound to the
+                # entry's own tenant so a mismatch can never resolve by id
+                # across tenants.
                 from services.advanced_journal_manager import AdvancedJournalEntryManager
 
-                AdvancedJournalEntryManager.validate_entry(entry.id, validated_by=current_user.id, commit=False)
-                AdvancedJournalEntryManager.post_entry(entry.id, posted_by=current_user.id, commit=False)
+                entry_tenant_id = entry.tenant_id
+                active_tenant_id = get_active_tenant_id(current_user)
+                if entry_tenant_id is None or (
+                    active_tenant_id is not None and int(entry_tenant_id) != int(active_tenant_id)
+                ):
+                    raise ValueError("Journal entry tenant does not match the active tenant.")
+
+                AdvancedJournalEntryManager.validate_entry(
+                    entry.id, validated_by=current_user.id, tenant_id=entry_tenant_id, commit=False
+                )
+                AdvancedJournalEntryManager.post_entry(
+                    entry.id, posted_by=current_user.id, tenant_id=entry_tenant_id, commit=False
+                )
                 LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
 
             flash(gettext(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح"), "success")

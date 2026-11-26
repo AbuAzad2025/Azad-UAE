@@ -11,6 +11,7 @@ import contextlib
 import logging
 from datetime import UTC, datetime
 from numbers import Number
+from typing import SupportsInt, cast
 
 from flask_login import current_user
 
@@ -306,7 +307,7 @@ def check_storage_limit() -> None:
     # non-numeric value as "no limit configured" instead of crashing.
     if not isinstance(limit_val, Number) or isinstance(limit_val, bool):
         return
-    limit = int(limit_val)
+    limit = int(cast(SupportsInt, limit_val))
     if limit <= 0:
         return  # no limit configured or unlimited
 

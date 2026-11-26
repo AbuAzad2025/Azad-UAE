@@ -567,7 +567,7 @@ class ReturnService:
                 revenue_lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "SALES_REVENUE",
+                            "SALES_RETURNS",
                             branch_id=product_return.branch_id,
                             tenant_id=tenant_id,
                         ),
@@ -602,7 +602,7 @@ class ReturnService:
                 revenue_lines.append(
                     {
                         "account": GLService.get_account_code_for_concept(
-                            "CAMPAIGN_DISCOUNT_EXPENSE",
+                            "CAMPAIGN_DISCOUNT_REVERSAL",
                             branch_id=product_return.branch_id,
                             tenant_id=tenant_id,
                         ),

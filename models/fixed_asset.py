@@ -279,6 +279,7 @@ class FixedAsset(db.Model):
             self.notes = (self.notes or "") + f"\n{notes}"
 
         # إنشاء قيد محاسبي للتخلص
+        from services.gl_service import GLService
 
         bank_account = None
         if self.disposal_price > 0:
@@ -339,7 +340,10 @@ class FixedAsset(db.Model):
         if self.disposal_gain_loss > 0:
             lines.append(
                 {
-                    "account": "4600",
+                    "account": GLService.get_account_code_for_concept(
+                        "FIXED_ASSET_GAIN",
+                        tenant_id=getattr(self, "tenant_id", None),
+                    ),
                     "concept_code": "FIXED_ASSET_GAIN",
                     "debit": 0,
                     "credit": self.disposal_gain_loss,
@@ -349,7 +353,10 @@ class FixedAsset(db.Model):
         elif self.disposal_gain_loss < 0:
             lines.append(
                 {
-                    "account": "6700",
+                    "account": GLService.get_account_code_for_concept(
+                        "FIXED_ASSET_LOSS",
+                        tenant_id=getattr(self, "tenant_id", None),
+                    ),
                     "concept_code": "FIXED_ASSET_LOSS",
                     "debit": abs(self.disposal_gain_loss),
                     "credit": 0,

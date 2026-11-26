@@ -103,7 +103,7 @@
 {# MOBILE DRAWER                                    #}
 {# ──────────────────────────────────────────────── #}
 <div class="azad-drawer-overlay" id="drawerOverlay"></div>
-<aside class="azad-drawer" id="azadDrawer" aria-hidden="true">
+<aside class="azad-drawer" id="azadDrawer" aria-hidden="true" inert>
     <div class="azad-drawer-header">
         <a class="azad-brand" href="{{ url_for('public.landing') }}">
             <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
@@ -536,17 +536,17 @@
         <div class="azad-contact-grid">
             <div class="azad-contact-card">
                 <i class="fab fa-whatsapp" aria-hidden="true"></i>
-                <h4>{{ _('WhatsApp') }}</h4>
+                <h3>{{ _('WhatsApp') }}</h3>
                 <a href="https://wa.me/{{ developer_whatsapp_link or config.DEVELOPER_WHATSAPP }}" target="_blank" rel="noopener">{{ developer_whatsapp or config.DEVELOPER_WHATSAPP or '—' }}</a>
             </div>
             <div class="azad-contact-card">
                 <i class="fas fa-phone" aria-hidden="true"></i>
-                <h4>{{ _('Phone') }}</h4>
+                <h3>{{ _('Phone') }}</h3>
                 <a href="tel:{{ developer_phone or config.DEVELOPER_PHONE }}">{{ developer_phone or config.DEVELOPER_PHONE or '—' }}</a>
             </div>
             <div class="azad-contact-card">
                 <i class="fas fa-envelope" aria-hidden="true"></i>
-                <h4>{{ _('Email') }}</h4>
+                <h3>{{ _('Email') }}</h3>
                 <a href="mailto:{{ developer_email or config.DEVELOPER_EMAIL }}">{{ developer_email or config.DEVELOPER_EMAIL or '—' }}</a>
             </div>
         </div>
@@ -574,7 +574,7 @@
         {% if _footer_whatsapp or _footer_phone or _footer_email or _footer_website or _footer_address %}
         <div class="azad-footer-topbar" aria-label="{{ _('Quick contact') }}">
             {% if _footer_whatsapp %}
-            <a class="azad-footer-topbar-item" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <a class="azad-footer-topbar-item" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="{{ _('WhatsApp') }} {{ _footer_whatsapp }}">
                 <span class="azad-footer-topbar-icon icon-wa"><i class="fab fa-whatsapp" aria-hidden="true"></i></span>
                 <span>
                     <div class="azad-footer-topbar-label">{{ _('WhatsApp') }}</div>
@@ -583,7 +583,7 @@
             </a>
             {% endif %}
             {% if _footer_email %}
-            <a class="azad-footer-topbar-item" href="mailto:{{ _footer_email }}" aria-label="Email">
+            <a class="azad-footer-topbar-item" href="mailto:{{ _footer_email }}" aria-label="{{ _('Email') }} {{ _footer_email }}">
                 <span class="azad-footer-topbar-icon icon-mail"><i class="fas fa-envelope" aria-hidden="true"></i></span>
                 <span>
                     <div class="azad-footer-topbar-label">{{ _('Email') }}</div>
@@ -592,7 +592,7 @@
             </a>
             {% endif %}
             {% if _footer_phone %}
-            <a class="azad-footer-topbar-item" href="tel:{{ _footer_phone }}" aria-label="Phone">
+            <a class="azad-footer-topbar-item" href="tel:{{ _footer_phone }}" aria-label="{{ _('Phone') }} {{ _footer_phone }}">
                 <span class="azad-footer-topbar-icon icon-call"><i class="fas fa-phone-volume" aria-hidden="true"></i></span>
                 <span>
                     <div class="azad-footer-topbar-label">{{ _('Phone') }}</div>
@@ -606,7 +606,7 @@
         <div class="azad-footer-grid">
             <div class="azad-footer-brand">
                 <img src="{{ url_for('static', filename=_logo_path) }}" alt="{{ _company_name }}">
-                <h4 class="footer-gradient-text lp-lead">{{ _company_name }}</h4>
+                <h3 class="footer-gradient-text lp-lead">{{ _company_name }}</h3>
                 <p>{{ _('Full cloud ERP — accounting, warehouses, AI, POS, e-commerce, HR & payroll.') }}</p>
                 <div class="azad-footer-social">
                     {% if _footer_whatsapp %}<a class="whatsapp-bg" href="https://wa.me/{{ _footer_whatsapp }}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="fab fa-whatsapp" aria-hidden="true"></i></a>{% endif %}
@@ -615,7 +615,7 @@
                 </div>
             </div>
             <div class="azad-footer-col">
-                <h4 class="footer-gradient-text">{{ _('Platform') }}</h4>
+                <h3 class="footer-gradient-text">{{ _('Platform') }}</h3>
                 <ul class="azad-footer-links">
                     <li><a href="#features">{{ _features }}</a></li>
                     <li><a href="#pricing">{{ _pricing_label }}</a></li>
@@ -625,7 +625,7 @@
                 </ul>
             </div>
             <div class="azad-footer-col">
-                <h4 class="footer-gradient-text">{{ _('Support') }}</h4>
+                <h3 class="footer-gradient-text">{{ _('Support') }}</h3>
                 <ul class="azad-footer-links">
                     <li><a href="#faq">{{ _faq }}</a></li>
                     <li><a href="#contact">{{ _contact }}</a></li>
@@ -634,7 +634,7 @@
                 </ul>
             </div>
             <div class="azad-footer-col">
-                <h4 class="footer-gradient-text">{{ _('Info') }}</h4>
+                <h3 class="footer-gradient-text">{{ _('Info') }}</h3>
                 <ul class="azad-footer-links">
                     <li><span class="info-line"><i class="fas fa-code-branch" aria-hidden="true"></i> v{{ config.APP_VERSION }}</span></li>
                     <li><span class="info-line"><i class="fas fa-robot" aria-hidden="true"></i> {{ _('AI-powered') }}</span></li>
@@ -676,12 +676,14 @@
             drawer.classList.add('open');
             overlay.classList.add('open');
             drawer.setAttribute('aria-hidden', 'false');
+            drawer.removeAttribute('inert');
             document.body.style.overflow = 'hidden';
         });
         function closeDrawer() {
             drawer.classList.remove('open');
             overlay.classList.remove('open');
             drawer.setAttribute('aria-hidden', 'true');
+            drawer.setAttribute('inert', '');
             document.body.style.overflow = '';
         }
         closeBtn.addEventListener('click', closeDrawer);

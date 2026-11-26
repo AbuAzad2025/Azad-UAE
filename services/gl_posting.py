@@ -11,6 +11,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from flask_babel import gettext
 
 from extensions import db
+from services.gl_account_resolver import GLMappingError
 from services.gl_helpers import assert_period_open
 from services.gl_service import GLService
 from utils.currency_utils import (
@@ -19,6 +20,7 @@ from utils.currency_utils import (
     resolve_default_currency,
     resolve_tenant_base_currency,
 )
+from utils.field_validators import FieldValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -205,9 +207,16 @@ def post_or_fail(
             posted_by=user_id,
             post_notes=None,
             commit=commit,
+            tenant_id=entry.tenant_id,
         )
 
         return posted_entry
+    except (GlPostingError, GLMappingError, FieldValidationError):
+        # Typed domain failures must reach callers unchanged: a mapping
+        # refusal, an unbalanced entry or a field-validation error is not the
+        # same as an unexpected system failure. Generic ValueErrors (e.g. a
+        # closed-period refusal from GLService) are still wrapped below.
+        raise
     except Exception as exc:
         raise GlPostingError(str(exc)) from exc
 

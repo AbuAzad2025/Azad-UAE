@@ -31,8 +31,19 @@ class AdvancedJournalEntryManager:
         from utils.gl_tenant import active_tenant_id, gl_entry_query
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
+        if tid is None:
+            # A journal id is only meaningful inside one tenant. Never issue
+            # an unscoped lookup that could find another company's entry.
+            from services.gl_helpers import resolve_tenant_id
+
+            try:
+                tid = resolve_tenant_id(strict=True)
+            except (ValueError, RuntimeError) as exc:
+                raise ValueError("A tenant is required to resolve a journal entry; no active tenant is set.") from exc
         entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
         if not entry:
+            raise NotFound()
+        if getattr(entry, "tenant_id", None) is not None and int(entry.tenant_id) != int(tid):
             raise NotFound()
         return entry
 
@@ -215,7 +226,7 @@ class AdvancedJournalEntryManager:
     # ── Post (requires validated status) ─────────────────────────────────
 
     @staticmethod
-    def post_entry(entry_id, posted_by, post_notes=None, commit=True):
+    def post_entry(entry_id, posted_by, post_notes=None, commit=True, tenant_id=None):
         """Post a validated entry to the GL.
 
         Args:
@@ -229,7 +240,7 @@ class AdvancedJournalEntryManager:
                     to group validate+post atomically in an outer
                     atomic_transaction.
         """
-        entry = AdvancedJournalEntryManager._entry_or_404(entry_id)
+        entry = AdvancedJournalEntryManager._entry_or_404(entry_id, tenant_id)
         if entry.status != "validated":
             raise ValueError(
                 f"Entry must be validated before posting (current status: {entry.status}). Run validate_entry() first."

@@ -810,6 +810,16 @@ def _query_accessible_warehouses():
     return [{"id": w.id, "text": w.name, "name": w.name} for w in whs]
 
 
+def _cost_price_value(product) -> float | None:
+    """Cost is a role decision, not a plan decision: never leak it to a user
+    whose reports UI would hide it from (same rule as /api/search).
+    """
+    if not current_user.can_see_costs():
+        return None
+    value = getattr(product, "cost_price", None)
+    return float(value) if value else None
+
+
 def _partner_price_fields(product, enabled: bool) -> dict:
     """Partner/merchant prices belong to the partners module.
 
@@ -864,7 +874,7 @@ def _query_products(warehouse_id=None):
             "barcode": getattr(p, "barcode", None),
             "price": float(p.regular_price or 0),
             **_partner_price_fields(p, partners_enabled),
-            "cost_price": float(getattr(p, "cost_price", None) or 0),
+            "cost_price": _cost_price_value(p),
             "stock": float(stock_map.get(p.id, p.current_stock or 0)),
         }
         for p in products
@@ -937,7 +947,7 @@ def api_product_info(pid):
             "price": float(product.regular_price or 0),
             "regular_price": float(product.regular_price or 0),
             **_partner_price_fields(product, partners_enabled),
-            "cost_price": float(getattr(product, "cost_price", None) or 0),
+            "cost_price": _cost_price_value(product),
             "stock": stock,
             "unit": product.unit,
             "is_low_stock": stock <= float(product.min_stock_alert or 0),

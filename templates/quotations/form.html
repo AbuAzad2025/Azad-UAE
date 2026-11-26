@@ -92,7 +92,7 @@
                 <input type="number" name="lines-{{ loop.index0 }}-tax_rate" class="form-control" value="{{ line.tax_rate or 0 }}" step="0.01" min="0" aria-label="{{ t('Tax Rate') }}">
               </div>
               <div class="col-md-1 d-flex align-items-end">
-                <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeLine({{ loop.index0 }})" title="{{ t('Delete') }}">
+                <button type="button" class="btn btn-danger btn-sm w-100" data-line-action="remove" data-index="{{ loop.index0 }}" title="{{ t('Delete') }}">
                   <i class="fas fa-trash" aria-hidden="true"></i>
                 </button>
               </div>
@@ -109,7 +109,7 @@
           {% endfor %}
           {% endif %}
         </div>
-        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addLine()"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Line') }}</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-line-action="add" aria-label="{{ t('Add Line') }}"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Line') }}</button>
       </div>
     </div>
     <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>
@@ -156,7 +156,7 @@
         <input type="number" name="lines-__IDX__-tax_rate" class="form-control" value="0" step="0.01" min="0" aria-label="{{ t('Tax Rate') }}">
       </div>
       <div class="col-md-1 d-flex align-items-end">
-        <button type="button" class="btn btn-danger btn-sm w-100" onclick="removeLine(__IDX__)" title="{{ t('Delete') }}">
+        <button type="button" class="btn btn-danger btn-sm w-100" data-line-action="remove" data-index="__IDX__" title="{{ t('Delete') }}">
           <i class="fas fa-trash" aria-hidden="true"></i>
         </button>
       </div>

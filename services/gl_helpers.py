@@ -16,15 +16,19 @@ logger = logging.getLogger(__name__)
 _ENTRY_NUMBER_RE = re.compile(r"^JE-(\d{4})-(\d+)$")
 
 
-def resolve_tenant_id(branch_id=None, user_id=None):
+def resolve_tenant_id(branch_id=None, user_id=None, *, strict=False):
     """Resolve tenant_id safely in multi-tenant mode.
 
     Priority:
       1) branch_id → Branch.tenant_id
       2) user_id  → User.tenant_id
       3) active tenant context (session / g)
-      4) Exactly ONE active tenant in DB → auto-pick it
+      4) Exactly ONE active tenant in DB → auto-pick it (unless ``strict``)
       5) Zero or >1 active tenants → raise ValueError (never guess)
+
+    ``strict=True`` is for privileged/background/ledger paths where an
+    omitted tenant must never be inferred from a one-row database: it fails
+    explicitly instead of guessing.
 
     This prevents GL entries from being silently posted to the wrong company.
     """
@@ -65,6 +69,12 @@ def resolve_tenant_id(branch_id=None, user_id=None):
                     "Failed to log tenant ID resolution error via LoggingCore",
                     exc_info=True,
                 )
+
+    if tenant_id is None and strict:
+        raise ValueError(
+            "resolve_tenant_id failed: an explicit tenant is required in strict mode. "
+            "Provide tenant_id, branch_id, user_id, or an active tenant context."
+        )
 
     if tenant_id is None:
         try:

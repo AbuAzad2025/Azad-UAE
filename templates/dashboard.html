@@ -739,22 +739,27 @@
         }),
         headers: { 'X-CSRFToken': $('input[name="csrf_token"]').val() }
       }).done(function(res) {
+        // Supervisor username and server error strings are response data, not
+        // markup: append them as text nodes so a crafted value cannot execute.
+        const setOverrideResult = (icon, level, text) => {
+          const box = $('#overrideResult').removeClass('d-none alert-danger alert-success').addClass(level).empty();
+          box.append('<i class="' + icon + ' mr-1" aria-hidden="true"></i> ');
+          box.append(document.createTextNode(text));
+        };
         if (res.success) {
-          $('#overrideResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-            '<i class="fas fa-check-circle mr-1" aria-hidden="true"></i> {{ _("تم التفويض بنجاح") }} (' + res.supervisor_username + ')'
-          );
+          setOverrideResult('fas fa-check-circle', 'alert-success',
+            '{{ _("تم التفويض بنجاح") }} (' + (res.supervisor_username || '') + ')');
           setTimeout(function() { $('#supervisorOverrideModal').modal('hide'); }, 1500);
         } else {
-          $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-            '<i class="fas fa-times-circle mr-1" aria-hidden="true"></i> ' + (res.error || '{{ _("فشل التفويض") }}')
-          );
+          setOverrideResult('fas fa-times-circle', 'alert-danger',
+            res.error || '{{ _("فشل التفويض") }}');
         }
       }).fail(function(xhr) {
         let msg = '{{ _("خطأ في الاتصال") }}';
         try { msg = xhr.responseJSON.error || msg; } catch(e) {}
-        $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-          '<i class="fas fa-times-circle mr-1" aria-hidden="true"></i> ' + msg
-        );
+        const box = $('#overrideResult').removeClass('d-none alert-success').addClass('alert-danger').empty();
+        box.append('<i class="fas fa-times-circle mr-1" aria-hidden="true"></i> ');
+        box.append(document.createTextNode(msg));
       }).always(function() {
         btn.prop('disabled', false).html('<i class="fas fa-check mr-1" aria-hidden="true"></i> {{ _("تأكيد التفويض") }}');
       });

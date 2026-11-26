@@ -15,7 +15,7 @@ services/integration_service.py|atomic_transaction() in services/ - the commit b
 services/logging_core.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=4
 services/nowpayments_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=2
 services/procurement_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
-services/saas_provisioning_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=2
+services/saas_provisioning_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=3
 services/stock_sync_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=1
 services/store_payment_method_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=6
 services/store_service.py|atomic_transaction() in services/ - the commit boundary belongs to routes/; use db.session.flush() here=2

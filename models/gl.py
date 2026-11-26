@@ -6,7 +6,6 @@ from sqlalchemy.orm import Mapped, relationship
 
 from extensions import db
 from utils.currency_utils import context_aware_default_currency
-from utils.gl_services import gl_next_entry_number
 
 
 class GLAccount(db.Model):
@@ -235,6 +234,14 @@ class GLJournalEntry(db.Model):
             "abs(total_debit - total_credit) <= 0.001",
             name="ck_gl_journal_entries_balanced",
         ),
+        db.CheckConstraint(
+            "total_debit >= 0",
+            name="ck_gl_journal_entries_total_debit_nonneg",
+        ),
+        db.CheckConstraint(
+            "total_credit >= 0",
+            name="ck_gl_journal_entries_total_credit_nonneg",
+        ),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -266,7 +273,7 @@ class GLJournalEntry(db.Model):
     exchange_rate = db.Column(db.Numeric(15, 6), default=1)
     total_debit = db.Column(db.Numeric(18, 3), default=0)
     total_credit = db.Column(db.Numeric(18, 3), default=0)
-    is_posted = db.Column(db.Boolean, default=True)  # DEPRECATED: use status column
+    is_posted = db.Column(db.Boolean, default=False)  # DEPRECATED: use status column
     is_reversed = db.Column(db.Boolean, default=False)  # هل تم عكس القيد
     # ── State Machine ──────────────────────────────────────────────────────
     # Draft → Validated → Posted   (happy path)
@@ -334,56 +341,78 @@ class GLJournalEntry(db.Model):
         }
         return types.get(self.entry_type, self.entry_type)
 
-    def reverse_entry(self, description=None):
-        """عكس القيد (إنشاء قيد معاكس)"""
+    def reverse_entry(self, description=None, *, allow_closed_period=False):
+        """عكس القيد (إنشاء قيد معاكس) through the standard posting lifecycle.
+
+        A reversal is still a ledger write: it must respect period closure,
+        post only to still-valid accounts of the same tenant, and pass the same
+        draft → validated → posted rail as every other entry. It used to build
+        a `posted` row directly, which could land in a closed period and bypass
+        every validation guard.
+        """
         if self.is_reversed:
             raise ValueError("هذا القيد تم عكسه مسبقاً")
 
-        reversed_entry = GLJournalEntry(
-            tenant_id=self.tenant_id,
-            entry_number=gl_next_entry_number(self.tenant_id),
-            entry_date=datetime.now(UTC),
+        from decimal import Decimal
+
+        from services.gl_helpers import assert_period_open
+        from services.gl_posting import GlPostingError, UnbalancedJournalEntryError, post_or_fail
+        from utils.currency_utils import resolve_tenant_base_currency
+
+        tid = self.tenant_id
+        if tid is None:
+            raise ValueError("Cannot reverse a journal entry without a tenant.")
+        now = datetime.now(UTC)
+        assert_period_open(now, tid, allow_closed_period=allow_closed_period)
+
+        lines = []
+        total_debit = Decimal("0")
+        total_credit = Decimal("0")
+        for line in self.lines:
+            account = GLAccount.query.filter_by(id=line.account_id, tenant_id=tid).first()
+            if account is None or not account.is_active or account.is_header:
+                raise GlPostingError(
+                    f"Cannot reverse line {line.id}: account {line.account_id} is missing, inactive or a header."
+                )
+            debit = Decimal(str(line.credit or 0))
+            credit = Decimal(str(line.debit or 0))
+            total_debit += debit
+            total_credit += credit
+            lines.append(
+                {
+                    "account": account.code,
+                    "debit": debit,
+                    "credit": credit,
+                    "description": line.description,
+                    "branch_id": line.branch_id,
+                    "warehouse_id": line.warehouse_id,
+                    "cost_center_id": line.cost_center_id,
+                    "profit_center_id": line.profit_center_id,
+                    "partner_id": line.partner_id,
+                }
+            )
+        if not lines:
+            raise GlPostingError("Cannot reverse an entry without lines.")
+        if abs(total_debit - total_credit) > Decimal("0.001"):
+            raise UnbalancedJournalEntryError(f"القيد غير متوازن: مدين={total_debit} دائن={total_credit}")
+
+        reversal = post_or_fail(
+            lines,
             description=description or f"عكس قيد: {self.description}",
             reference_type=self.reference_type,
             reference_id=self.reference_id,
+            date=now,
+            currency=resolve_tenant_base_currency(tenant_id=tid),
+            exchange_rate=1,
             branch_id=self.branch_id,
-            entry_type="reversing",
-            currency=self.currency,
-            exchange_rate=self.exchange_rate,
-            total_debit=self.total_credit,
-            total_credit=self.total_debit,
-            reversed_entry_id=self.id,
-            created_by=self.created_by,
-            status="posted",
+            tenant_id=tid,
+            allow_closed_period=allow_closed_period,
         )
-        db.session.add(reversed_entry)
-        db.session.flush()
-
-        # عكس السطور
-        for line in self.lines:
-            reversed_line = GLJournalLine(
-                tenant_id=self.tenant_id,
-                entry_id=reversed_entry.id,
-                account_id=line.account_id,
-                description=line.description,
-                debit=line.credit,  # عكس
-                credit=line.debit,  # عكس
-                amount=-(line.amount or 0),  # عكس المبلغ الأصلي
-                amount_aed=-line.amount_aed,  # عكس
-                # الأبعاد المالية (متوارثة من السطر الأصلي)
-                branch_id=line.branch_id,
-                warehouse_id=line.warehouse_id,
-                cost_center_id=line.cost_center_id,
-                profit_center_id=line.profit_center_id,
-                partner_id=line.partner_id,
-            )
-            db.session.add(reversed_line)
-
-        # تحديث القيد الأصلي
+        reversal.entry_type = "reversing"
+        reversal.reversed_entry_id = self.id
         self.is_reversed = True
-
         db.session.flush()
-        return reversed_entry
+        return reversal
 
 
 class GLPeriod(db.Model):
@@ -419,6 +448,8 @@ class GLJournalLine(db.Model):
     __tablename__ = "gl_journal_lines"
 
     __table_args__ = (
+        db.CheckConstraint("debit >= 0", name="ck_gl_journal_lines_debit_nonneg"),
+        db.CheckConstraint("credit >= 0", name="ck_gl_journal_lines_credit_nonneg"),
         db.Index("idx_gl_lines_tenant_entry", "tenant_id", "entry_id"),
         db.Index("idx_gl_lines_tenant_account", "tenant_id", "account_id"),
         # Tenant isolation is a DB invariant, not just a service convention:

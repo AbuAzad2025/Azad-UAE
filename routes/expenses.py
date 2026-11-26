@@ -282,21 +282,25 @@ def create():
 
                 db.session.flush()
 
-                # Budget enforcement check
+                # Build the posting lines first, then enforce the budget on the
+                # exact account those lines will post to. Using a separate
+                # "6500" fallback here used to check one account and post to the
+                # tenant's mapped MISC_EXPENSE account.
+                lines = _build_expense_gl_lines(expense, tid)
+
                 from services.budget_enforcement import check_budget_for_account
 
-                cat = ExpenseService.get_category(expense.category_id)
-                expense_acct = getattr(cat, "gl_account_code", None) or "6500"
-                budget_check = check_budget_for_account(
-                    tenant_id=tid,
-                    account_code=expense_acct,
-                    amount=expense.amount,
-                    branch_id=expense_branch_id,
-                )
-                if budget_check and not budget_check.get("allowed", True):
-                    raise ValueError(budget_check["message"])
+                expense_acct = next((line.get("account") for line in lines if line.get("account")), None)
+                if expense_acct:
+                    budget_check = check_budget_for_account(
+                        tenant_id=tid,
+                        account_code=expense_acct,
+                        amount=expense.amount,
+                        branch_id=expense_branch_id,
+                    )
+                    if budget_check and not budget_check.get("allowed", True):
+                        raise ValueError(budget_check["message"])
 
-                lines = _build_expense_gl_lines(expense, tid)
                 post_or_fail(
                     lines,
                     description=f"Expense {expense.expense_number}",

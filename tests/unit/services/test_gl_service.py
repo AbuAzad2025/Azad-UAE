@@ -33,8 +33,12 @@ def _post_entry(entry_id, *, user_id=1):
     """Validate and post a draft journal entry so read methods can find it."""
     from services.advanced_journal_manager import AdvancedJournalEntryManager
 
-    AdvancedJournalEntryManager.validate_entry(entry_id=entry_id, validated_by=user_id, commit=False)
-    AdvancedJournalEntryManager.post_entry(entry_id=entry_id, posted_by=user_id, commit=False)
+    # Pass the entry's own tenant explicitly: privileged journal lookups must
+    # never fall back to an unscoped guess, even in tests with no request ctx.
+    entry = db.session.get(GLJournalEntry, entry_id)
+    tid = getattr(entry, "tenant_id", None)
+    AdvancedJournalEntryManager.validate_entry(entry_id=entry_id, validated_by=user_id, tenant_id=tid, commit=False)
+    AdvancedJournalEntryManager.post_entry(entry_id=entry_id, posted_by=user_id, tenant_id=tid, commit=False)
     db.session.flush()
 
 
@@ -264,10 +268,14 @@ class TestLiquidityAccounts:
 
     def test_payment_debit_cheque_legacy(self, sample_tenant, sample_branch, mocker, sample_gl_accounts):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)
-        # When dynamic mapping is disabled, cheque falls back to default cash account
-        # With branch_id, returns the branch-specific cash account code
+        # Legacy mode must still use the dedicated cheque-in-collection account,
+        # never a cash drawer, so both flag states post to the same account.
         code = GLService.get_payment_debit_account("cheque", tenant_id=sample_tenant.id, branch_id=sample_branch.id)
-        assert code.startswith("1110")  # branch-specific cash account
+        assert code == "1150"
+
+    def test_payment_debit_cheque_without_tenant_raises(self, mocker):
+        with pytest.raises(ValueError, match="tenant is required"):
+            GLService.get_payment_debit_account("cheque")
 
     def test_customer_credit_legacy_codes(self, sample_tenant, mocker):
         mocker.patch("services.gl_service.is_dynamic_gl_mapping_enabled", return_value=False)

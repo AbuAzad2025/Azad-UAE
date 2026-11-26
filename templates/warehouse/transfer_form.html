@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('New Transfer') }}{% endblock %}
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/warehouse-transfer-form.js') }}"></script>
+{% endblock %}
 {% block content %}
 <div class="container-fluid py-4">
   <h2>{{ t('Edit Transfer') if transfer else t('New Transfer') }}</h2>
@@ -31,7 +34,7 @@
       <div class="card-header"><h5>{{ t('Items') }}</h5></div>
       <div class="card-body">
         <div id="lines-container"></div>
-        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="addLine()"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Item') }}</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" data-line-action="add" aria-label="{{ t('Add Item') }}"><i class="fas fa-plus" aria-hidden="true"></i> {{ t('Add Item') }}</button>
       </div>
     </div>
     <button type="submit" class="btn btn-primary">{{ t('Save') }}</button>

@@ -258,6 +258,15 @@ class MaintenanceService:
                     )
                 ).fetchall()
                 tenants_tbl = Table("tenants", MetaData(), autoload_with=engine)
+                # ``scalar()`` is None both when the column is NULL and when no
+                # row matches. Without this guard an install that has no
+                # 'default' tenant reports every NOT NULL column as repaired
+                # on every boot, even though no UPDATE matched a single row.
+                default_tenant_id = conn.execute(
+                    select(tenants_tbl.c.id).where(tenants_tbl.c.slug == "default").limit(1)
+                ).scalar()
+                if default_tenant_id is None:
+                    return []
                 for name, dtype, default in cols:
                     if default is not None and str(default).upper() != "NULL":
                         continue  # DB will supply the default on insert/update
@@ -343,10 +352,14 @@ class MaintenanceService:
             if not dry_run:
                 backup_fn = MaintenanceService.regenerate_default_backup(dry_run=dry_run)
 
+            # ``regenerate_default_backup`` reports "No default tenant found"
+            # as a human-readable string, not a backup that was made. Counting
+            # it as an action made every boot claim maintenance had run.
+            no_default = backup_fn == "No default tenant found"
             return {
                 "patched": fixed,
                 "backup_regenerated": backup_fn,
-                "action_needed": len(fixed) > 0 or backup_fn is not None,
+                "action_needed": len(fixed) > 0 or (bool(backup_fn) and not no_default),
                 "conflicts": conflicts,
             }
 

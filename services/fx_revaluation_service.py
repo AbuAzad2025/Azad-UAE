@@ -266,16 +266,35 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
         total_fx_diff += fx_diff
         desc = f"Unrealized FX Revaluation — Sale #{sale.sale_number} ({sale.currency})"
 
+        # A partner/merchant sale lives in its own control account: posting
+        # the FX leg to the generic AR account would diverge from the sale's
+        # sub-ledger. Resolve the same control account the sale used.
+        customer = getattr(sale, "customer", None)
+        receivable_concept = GLService.get_customer_credit_concept(customer)
+        receivable_account = GLService.get_customer_credit_account(
+            customer, branch_id=sale.branch_id, tenant_id=tenant_id
+        )
+
         if fx_diff > 0:
             lines = [
-                {"account": ar_concept, "concept_code": "AR", "debit": fx_diff, "description": desc},
+                {
+                    "account": receivable_account,
+                    "concept_code": receivable_concept,
+                    "debit": fx_diff,
+                    "description": desc,
+                },
                 {"account": fx_gain, "concept_code": "FX_GAIN", "credit": fx_diff, "description": desc},
             ]
         else:
             loss_amount = abs(fx_diff)
             lines = [
                 {"account": fx_loss, "concept_code": "FX_LOSS", "debit": loss_amount, "description": desc},
-                {"account": ar_concept, "concept_code": "AR", "credit": loss_amount, "description": desc},
+                {
+                    "account": receivable_account,
+                    "concept_code": receivable_concept,
+                    "credit": loss_amount,
+                    "description": desc,
+                },
             ]
 
         entry = post_or_fail(

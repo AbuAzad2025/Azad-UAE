@@ -378,6 +378,14 @@ document.addEventListener('change', (e) => {
   else if (action === 'toggle-warehouse-negative') toggleWarehouseNegative();
 });
 
+// Server messages are response data, never markup: append them as text nodes
+// so an error string from an API cannot inject HTML into the owner panel.
+function setSettingsResult(icon, level, text) {
+  const box = $('#settingsResult').removeClass('d-none alert-danger alert-success').addClass(level).empty();
+  box.append('<i class="' + icon + '" aria-hidden="true"></i> ');
+  box.append(document.createTextNode(text));
+}
+
 function updateTenantSetting(field, value, targetEl) {
 
   const btn = $(targetEl);
@@ -402,11 +410,7 @@ function updateTenantSetting(field, value, targetEl) {
 
     if (res.success) {
 
-      $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-
-        '<i class="fas fa-check-circle" aria-hidden="true"></i> ' + (res.message || i18n.update_success)
-
-      );
+      setSettingsResult('fas fa-check-circle', 'alert-success', res.message || i18n.update_success);
 
       if (field === 'prices_include_vat') {
 
@@ -418,11 +422,7 @@ function updateTenantSetting(field, value, targetEl) {
 
     } else {
 
-      $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-
-        '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + (res.error || i18n.update_failed)
-
-      );
+      setSettingsResult('fas fa-times-circle', 'alert-danger', res.error || i18n.update_failed);
 
     }
 
@@ -432,11 +432,7 @@ function updateTenantSetting(field, value, targetEl) {
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 
-    $('#settingsResult').removeClass('d-none alert-success').addClass('alert-danger').html(
-
-      '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + msg
-
-    );
+    setSettingsResult('fas fa-times-circle', 'alert-danger', msg);
 
   }).always(() => {
 
@@ -466,11 +462,8 @@ function toggleWarehouseNegative() {
 
     if (res.success) {
 
-      $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-success').html(
-
-        '<i class="fas fa-check-circle" aria-hidden="true"></i> ' + (res.allow_negative_inventory ? i18n.negative_sales_enabled : i18n.negative_sales_disabled)
-
-      );
+      setSettingsResult('fas fa-check-circle', 'alert-success',
+        res.allow_negative_inventory ? i18n.negative_sales_enabled : i18n.negative_sales_disabled);
 
       btn.prop('checked', res.allow_negative_inventory);
 
@@ -482,11 +475,7 @@ function toggleWarehouseNegative() {
 
     try { msg = xhr.responseJSON.error || msg; } catch(e) {}
 
-    $('#settingsResult').removeClass('d-none alert-danger').addClass('alert-danger').html(
-
-      '<i class="fas fa-times-circle" aria-hidden="true"></i> ' + msg
-
-    );
+    setSettingsResult('fas fa-times-circle', 'alert-danger', msg);
 
   });
 

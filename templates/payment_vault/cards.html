@@ -301,6 +301,14 @@
         }
     }
     
+    // Decrypted vault fields are inserted into innerHTML below. Escape them
+    // for the HTML context: server-side JSON escaping does not cover HTML.
+    function escHtml(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     function viewCard(id) {
         const _errTitle = '{{ _('Error') }}';
         // {{ _('جلب') }} {{ _('Data') }} {{ _('من') }} {{ _('الخادم') }}
@@ -316,9 +324,9 @@
             if (data.success && data.card) {
                 const cardInfo = `
                     <div class="inline-form">
-                        <p><strong>{{ _('رقم') }} {{ _('Card_2') }}:</strong> ${data.card.card_number}</p>
-                        <p><strong>CVV:</strong> ${data.card.cvv}</p>
-                        <p><strong>{{ _('History') }} {{ _('الانتهاء') }}:</strong> ${data.card.expiry}</p>
+                        <p><strong>{{ _('رقم') }} {{ _('Card_2') }}:</strong> ${escHtml(data.card.card_number)}</p>
+                        <p><strong>CVV:</strong> ${escHtml(data.card.cvv)}</p>
+                        <p><strong>{{ _('History') }} {{ _('الانتهاء') }}:</strong> ${escHtml(data.card.expiry)}</p>
                         <hr>
                         <p class="text-danger"><strong><i class="fas fa-exclamation-triangle" aria-hidden="true"></i> {{ _('لا') }} {{ _('تشارك') }} {{ _('هذه') }} {{ _('Info_3') }}!</strong></p>
                     </div>

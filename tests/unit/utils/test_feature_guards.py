@@ -12,7 +12,7 @@ import pytest
 from flask import Blueprint
 from werkzeug.exceptions import Forbidden
 
-from utils.feature_guards import feature_required, install_feature_gate
+from utils.feature_guards import deny_if_locked, feature_enabled, feature_required, install_feature_gate
 
 
 def _patch_tenant(tenant_id):
@@ -71,6 +71,32 @@ class TestFeatureRequired:
 
         with app.test_request_context("/x/"), _patch_tenant(sample_tenant.id):
             assert _view() == "ok"
+
+
+class TestFlagResolutionOrder:
+    def test_orm_relationship_with_flag_name_does_not_lock_module(self, app):
+        """Tenant.expenses is a dynamic backref, not the enable_expenses flag."""
+        from types import SimpleNamespace
+
+        fake_tenant = SimpleNamespace(enable_expenses=True, expenses=[])
+        with (
+            app.test_request_context("/expenses/"),
+            _patch_tenant(1),
+            patch("extensions.db.session.get", return_value=fake_tenant),
+        ):
+            assert deny_if_locked("expenses") is None
+            assert feature_enabled("expenses") is True
+
+    def test_disabled_flag_still_locks_module(self, app):
+        from types import SimpleNamespace
+
+        fake_tenant = SimpleNamespace(enable_expenses=False, expenses=[object()])
+        with (
+            app.test_request_context("/expenses/"),
+            _patch_tenant(1),
+            patch("extensions.db.session.get", return_value=fake_tenant),
+        ):
+            assert feature_enabled("expenses") is False
 
 
 class TestInstallFeatureGate:

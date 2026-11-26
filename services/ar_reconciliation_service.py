@@ -14,14 +14,14 @@ from services.gl_service import GLService
 from utils.gl_tenant import scope_gl_accounts
 
 
-def _get_receivable_concept_account(tenant_id=None, branch_id=None, fallback="1130"):
+def _get_receivable_concept_account(tenant_id=None, branch_id=None):
     """Get the receivable account code via concept resolution (mapping only)."""
     if tenant_id:
         return GLService.get_account_code_for_concept("AR", tenant_id=tenant_id, branch_id=branch_id)
     raise ValueError("tenant_id is required to resolve AR account")
 
 
-def _get_partner_account(tenant_id=None, branch_id=None, fallback="2150"):
+def _get_partner_account(tenant_id=None, branch_id=None):
     """Get the partner current account code (None when the module is off)."""
     if tenant_id:
         try:
@@ -35,7 +35,7 @@ def _get_partner_account(tenant_id=None, branch_id=None, fallback="2150"):
     raise ValueError("tenant_id is required to resolve partner account")
 
 
-def _get_merchant_account(tenant_id=None, branch_id=None, fallback="2151"):
+def _get_merchant_account(tenant_id=None, branch_id=None):
     """Get the merchant current account code (None when the module is off)."""
     if tenant_id:
         try:

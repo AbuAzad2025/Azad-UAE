@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from extensions import db
 from models import Customer, Sale
+from services.gl_account_resolver import GLMappingError
 from services.main_site_service import MainSiteService
 from services.stock_service import StockService
 from utils.api_response import success_response
@@ -116,6 +117,12 @@ def dashboard():
                     stats["inventory_value_gl"] = float(
                         MainSiteService.inventory_gl_value(inventory_acc, scoped_branch_id)
                     )
+            except GLMappingError as exc:
+                # An unmapped concept on a newly provisioned tenant is an
+                # expected state, not a crash: the dashboard simply omits
+                # that one balance. Keep the log concise instead of emitting
+                # a stack trace on every dashboard request.
+                current_app.logger.warning("Dashboard inventory GL balance skipped: %s", exc)
             except Exception:
                 current_app.logger.exception("Failed to compute inventory GL balance for dashboard")
 

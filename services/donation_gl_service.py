@@ -39,6 +39,17 @@ class DonationGLService:
 
         if not credit:
             credit = GLService.get_account_code_for_concept("DONATION_REVENUE", tenant_id=tenant_id)
+        else:
+            credit_account = GLAccount.query.filter_by(code=credit, tenant_id=tenant_id).first()
+            if (
+                credit_account is None
+                or not credit_account.is_active
+                or credit_account.is_header
+                or str(credit_account.type).lower() not in ("revenue", "income")
+            ):
+                raise ValueError(
+                    f"Vault donation credit account {credit!r} is not a postable revenue account for this tenant."
+                )
 
         return debit, credit
 

@@ -974,12 +974,18 @@ function loadCustomerBalance() {
         const saleUrlTemplate = "{{ url_for('sales.view', id=0) }}";
       {% endif %}
 
+      // Sale numbers are stored data concatenated into innerHTML below;
+      // escape them for the HTML context rather than trusting their shape.
+      const escSale = (v) => String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       data.unpaid_sales.forEach((sale) => {
+        const label = escSale(sale.sale_number);
         {% if current_user.has_permission('manage_sales') %}
-        const saleUrl = saleUrlTemplate.replace('0', sale.id);
-        html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + sale.sale_number + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
+        const saleUrl = saleUrlTemplate.replace('0', encodeURIComponent(sale.id));
+        html += '<li><a href="' + saleUrl + '" target="_blank" rel="noopener noreferrer">' + label + '</a>: ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
         {% else %}
-        html += '<li>' + sale.sale_number + ': ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
+        html += '<li>' + label + ': ' + parseFloat(sale.balance_due_aed || sale.balance_due).toFixed(2) + ' {{ tenant_currency_symbol }}</li>';
         {% endif %}
       });
 
