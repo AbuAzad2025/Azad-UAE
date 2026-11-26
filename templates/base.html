@@ -248,7 +248,7 @@
 
     // CSP_STRICT drops 'unsafe-inline' from script-src, so inline
     // onclick/onchange/onsubmit attributes never fire. These data-actions
-    // replace them with delegated listeners on nonced script blocks.
+    // replace them with delegated listeners on CSP nonce script blocks.
     document.addEventListener('submit', (ev) => {
       const text = ev.target.getAttribute && ev.target.getAttribute('data-confirm');
       if (text !== null && text !== undefined && !window.confirm(text)) ev.preventDefault();
