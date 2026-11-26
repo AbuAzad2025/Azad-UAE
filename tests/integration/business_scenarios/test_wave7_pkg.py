@@ -771,6 +771,18 @@ class TestPKG06VaultLifecycle:
         )
         db_session.expire_all()
         assert PaymentVault.get_platform_vault().vault_password_hash != before, "the password did not change"
+        # Restore the shared password: the platform vault is created once per
+        # database, and every later scenario opens it with Vault-Pass-123.
+        client.post(
+            "/payment-vault/change-password",
+            data={
+                "current_password": "Rotated-Pass-2",
+                "new_password": "Vault-Pass-123",
+                "confirm_password": "Vault-Pass-123",
+            },
+            follow_redirects=True,
+        )
+        db_session.expire_all()
 
     def test_locking_the_vault_closes_it_again(self, client, scenario_owner, db_session):
         """PKG-48. The round trip, so PKG-42 is not a one-way door."""

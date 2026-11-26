@@ -328,11 +328,11 @@ window.updateLineCosts = updateLineCosts;
 window.removeLine = _removeLine;
 
 // Strict CSP blocks inline event-handler attributes generated into innerHTML.
-document.addEventListener('click', (event) => {
-	const button = event.target.closest('[data-purchase-remove]');
+document.addEventListener("click", (event) => {
+	const button = event.target.closest("[data-purchase-remove]");
 	if (!button) return;
 	event.preventDefault();
-	_removeLine(Number(button.getAttribute('data-index')));
+	_removeLine(Number(button.getAttribute("data-index")));
 });
 
 // =====================================

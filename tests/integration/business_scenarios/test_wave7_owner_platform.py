@@ -962,3 +962,27 @@ class TestOWN03StatusApi:
         """OWN-18."""
         resp = client.post("/owner/api/tenant/99999999/toggle-status", json={})
         assert resp.status_code == 404, f"a missing tenant answered {resp.status_code}"
+
+
+class TestOWN98PackageSyncRoute:
+    """OWN-98 to OWN-100: the package-sync route added with the plan flags."""
+
+    def test_sync_package_is_owner_only(self, client, db_session):
+        """OWN-98. A caller who is not the platform owner cannot re-apply flags."""
+        target = _new_tenant(db_session)
+        resp = client.post(f"/owner/tenants/{target.id}/sync-package", follow_redirects=False)
+        assert resp.status_code != 200, f"anonymous caller reached the sync route: {resp.status_code}"
+
+    def test_sync_package_on_a_missing_tenant_is_a_404(self, client, scenario_owner, db_session):
+        """OWN-99. A stale link must not look like a successful sync."""
+        resp = client.post("/owner/tenants/99999999/sync-package", follow_redirects=False)
+        assert resp.status_code == 404, f"a missing tenant answered {resp.status_code}"
+
+    def test_sync_package_is_idempotent(self, client, scenario_owner, db_session):
+        """OWN-100. Re-applying the same package flags twice is harmless."""
+        target = _new_tenant(db_session)
+        path = f"/owner/tenants/{target.id}/sync-package"
+        first = client.post(path, follow_redirects=False)
+        second = client.post(path, follow_redirects=False)
+        assert first.status_code == 302, f"first sync answered {first.status_code}"
+        assert second.status_code == 302, f"second sync answered {second.status_code}"

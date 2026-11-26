@@ -1357,7 +1357,8 @@ class TestGLModelUnitCoverage:
     def test_reverse_entry_creates_mirror(self, app, mocker):
         from models.gl import GLJournalEntry, GLJournalLine
 
-        line = GLJournalLine(account_id=1, debit=Decimal("100"), credit=0, amount_aed=Decimal("100"))
+        debit_line = GLJournalLine(account_id=1, debit=Decimal("100"), credit=0, amount_aed=Decimal("100"))
+        credit_line = GLJournalLine(account_id=2, debit=0, credit=Decimal("100"), amount_aed=Decimal("-100"))
         entry = GLJournalEntry(
             tenant_id=1,
             entry_number="JE-2",
@@ -1366,14 +1367,21 @@ class TestGLModelUnitCoverage:
             total_credit=Decimal("100"),
             is_reversed=False,
         )
-        entry.lines = [line]
-        mocker.patch("models.gl.gl_next_entry_number", return_value="JE-R")
+        entry.lines = [debit_line, credit_line]
+        account = MagicMock(code="1110", is_active=True, is_header=False)
+        mocker.patch("models.gl.GLAccount.query").filter_by.return_value.first.return_value = account
+        mocker.patch("services.gl_helpers.assert_period_open")
+        mocker.patch("utils.currency_utils.resolve_tenant_base_currency", return_value="AED")
+        reversal = MagicMock(entry_type="manual")
+        post = mocker.patch("services.gl_posting.post_or_fail", return_value=reversal)
         mock_session = mocker.patch("models.gl.db.session")
         with app.app_context():
             reversed_entry = entry.reverse_entry()
-        assert reversed_entry.entry_type == "reversing"
+        assert reversed_entry is reversal
+        assert reversal.entry_type == "reversing"
         assert entry.is_reversed is True
-        mock_session.add.assert_called()
+        mirrored = post.call_args.args[0]
+        assert mirrored[0]["debit"] == 0 and mirrored[0]["credit"] == 100
         mock_session.flush.assert_called()
 
     def test_journal_line_base_amount_alias(self):

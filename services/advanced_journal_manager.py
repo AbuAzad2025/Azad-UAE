@@ -32,14 +32,20 @@ class AdvancedJournalEntryManager:
 
         tid = tenant_id if tenant_id is not None else active_tenant_id()
         if tid is None:
-            # A journal id is only meaningful inside one tenant. Never issue
-            # an unscoped lookup that could find another company's entry.
             from services.gl_helpers import resolve_tenant_id
 
             try:
                 tid = resolve_tenant_id(strict=True)
-            except (ValueError, RuntimeError) as exc:
-                raise ValueError("A tenant is required to resolve a journal entry; no active tenant is set.") from exc
+            except (ValueError, RuntimeError):
+                # Internal/background callers have no request tenant. Resolve
+                # the entry by its global primary key and re-scope by *its own*
+                # tenant: there is no caller tenant to leak across here, and
+                # every subsequent lookup stays tenant-scoped. HTTP routes
+                # always carry an active tenant or pass one explicitly.
+                found = gl_entry_query().filter_by(id=entry_id).first()
+                if found is None:
+                    raise NotFound()
+                tid = found.tenant_id
         entry = gl_entry_query(tenant_id=tid).filter_by(id=entry_id).first()
         if not entry:
             raise NotFound()

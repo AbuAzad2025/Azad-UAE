@@ -74,11 +74,12 @@ def _feature_denial(feature_name: str):
     # The bare name is still honoured for non-prefixed flags such as
     # allow_custom_integrations, which have no enable_ column.
     enabled = getattr(tenant, f"enable_{feature_name}", None)
+    if enabled is None and feature_name in POS_SUBFEATURES:
+        # Nullable POS sub-feature: NULL inherits the plan default *before* a
+        # bare-name lookup, which can be an ORM backref (or a mock attribute).
+        enabled = pos_feature_enabled(tenant, feature_name)
     if enabled is None:
         enabled = getattr(tenant, feature_name, None)
-    if enabled is None and feature_name in POS_SUBFEATURES:
-        # Nullable POS sub-feature: NULL inherits the plan default.
-        enabled = pos_feature_enabled(tenant, feature_name)
     if enabled is None:
         enabled = True  # a flag with no column is not a locked module
 
@@ -167,10 +168,10 @@ def feature_enabled(feature_name: str) -> bool:
     # Same resolution order as _feature_denial: the flag column wins over a
     # same-named ORM relationship.
     enabled = getattr(tenant, f"enable_{feature_name}", None)
-    if enabled is None:
-        enabled = getattr(tenant, feature_name, None)
     if enabled is None and feature_name in POS_SUBFEATURES:
         enabled = pos_feature_enabled(tenant, feature_name)
+    if enabled is None:
+        enabled = getattr(tenant, feature_name, None)
     return True if enabled is None else bool(enabled)
 
 

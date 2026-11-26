@@ -341,6 +341,7 @@ class TestClosePosSession:
             return_value="1110",
         )
         mocker.patch("services.gl_helpers.get_account", return_value=MagicMock(is_header=False))
+        mocker.patch("utils.pos_helpers.resolve_pos_cash_account_code", return_value="1110")
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
             side_effect=["1110", "6995"],
@@ -374,6 +375,7 @@ class TestClosePosSession:
             return_value="1110",
         )
         mocker.patch("services.gl_helpers.get_account", return_value=None)
+        mocker.patch("utils.pos_helpers.resolve_pos_cash_account_code", return_value="1110")
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
             side_effect=["1110", "6995"],
@@ -407,6 +409,7 @@ class TestClosePosSession:
             return_value="1110",
         )
         mocker.patch("services.gl_helpers.get_account", return_value=MagicMock(is_header=True))
+        mocker.patch("utils.pos_helpers.resolve_pos_cash_account_code", return_value="1110")
         mocker.patch(
             "services.gl_service.GLService.get_account_code_for_concept",
             side_effect=["1110-B", "6995"],

@@ -44,31 +44,7 @@ def resolve_tenant_id(branch_id=None, user_id=None, *, strict=False):
         u = db.session.get(User, user_id)
         tenant_id = getattr(u, "tenant_id", None) if u else None
     if tenant_id is None:
-        try:
-            from utils.tenanting import get_active_tenant_id
-
-            tenant_id = get_active_tenant_id()
-        except Exception as e:
-            import sys
-            import traceback
-
-            sys.stderr.write(f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n")
-            traceback.print_exc()
-            try:
-                from services.logging_core import LoggingCore
-
-                LoggingCore.log_error(
-                    message=str(e),
-                    category="GL",
-                    source="services.gl_helpers.resolve_tenant_id.get_active_tenant_id",
-                    level="WARNING",
-                    exception=e,
-                )
-            except Exception:
-                logger.warning(
-                    "Failed to log tenant ID resolution error via LoggingCore",
-                    exc_info=True,
-                )
+        tenant_id = _active_tenant_context()
 
     if tenant_id is None and strict:
         raise ValueError(
@@ -77,33 +53,64 @@ def resolve_tenant_id(branch_id=None, user_id=None, *, strict=False):
         )
 
     if tenant_id is None:
-        try:
-            from models import Tenant
-
-            active_count = Tenant.query.filter_by(is_active=True).count()
-            if active_count == 1:
-                t = Tenant.query.filter_by(is_active=True).first()
-                tenant_id = t.id if t else None
-            elif active_count == 0:
-                raise ValueError(
-                    "resolve_tenant_id failed: no active tenants in database. "
-                    "Cannot create GL entries without a tenant context."
-                )
-            else:
-                raise ValueError(
-                    f"resolve_tenant_id failed: {active_count} active tenants found. "
-                    "Auto-selecting one would post to the wrong company. "
-                    "Please provide an explicit branch_id, user_id, or active tenant context."
-                )
-        except ValueError:
-            raise
-        except Exception as e:
-            raise RuntimeError(f"resolve_tenant_id database lookup failed: {e}")
+        tenant_id = _sole_active_tenant()
 
     if tenant_id is None:
         raise ValueError("resolve_tenant_id: could not determine tenant_id under any fallback.")
 
     return int(tenant_id)
+
+
+def _active_tenant_context():
+    """Read the active tenant from session/g, logging any lookup failure."""
+    try:
+        from utils.tenanting import get_active_tenant_id
+
+        return get_active_tenant_id()
+    except Exception as e:
+        import sys
+        import traceback
+
+        sys.stderr.write(f"[GL_HELPERS_WARNING] get_active_tenant_id() failed: {e}\n")
+        traceback.print_exc()
+        try:
+            from services.logging_core import LoggingCore
+
+            LoggingCore.log_error(
+                message=str(e),
+                category="GL",
+                source="services.gl_helpers.resolve_tenant_id.get_active_tenant_id",
+                level="WARNING",
+                exception=e,
+            )
+        except Exception:
+            logger.warning("Failed to log tenant ID resolution error via LoggingCore", exc_info=True)
+        return None
+
+
+def _sole_active_tenant():
+    """Auto-pick only when exactly one active tenant exists; never guess."""
+    try:
+        from models import Tenant
+
+        active_count = Tenant.query.filter_by(is_active=True).count()
+        if active_count == 1:
+            t = Tenant.query.filter_by(is_active=True).first()
+            return t.id if t else None
+        if active_count == 0:
+            raise ValueError(
+                "resolve_tenant_id failed: no active tenants in database. "
+                "Cannot create GL entries without a tenant context."
+            )
+        raise ValueError(
+            f"resolve_tenant_id failed: {active_count} active tenants found. "
+            "Auto-selecting one would post to the wrong company. "
+            "Please provide an explicit branch_id, user_id, or active tenant context."
+        )
+    except ValueError:
+        raise
+    except Exception as e:
+        raise RuntimeError(f"resolve_tenant_id database lookup failed: {e}") from e
 
 
 def get_account(code, tenant_id=None):

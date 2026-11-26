@@ -407,6 +407,10 @@ def unlock_vault():
             # or the row would inherit the session's active tenant.
             with without_tenant_scope(), atomic_transaction("vault_creation"):
                 db.session.add(vault)
+                # The audit log has a NOT NULL vault_id: assign the primary
+                # key before logging, otherwise platform-vault creation rolls
+                # back with a null constraint violation.
+                db.session.flush()
                 PaymentLog.log_action(
                     vault_id=vault.id,
                     action="vault_created",

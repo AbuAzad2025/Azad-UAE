@@ -185,7 +185,6 @@ class GLAccount(db.Model):
             )
 
         balance = q.scalar()
-
         is_contra = getattr(self, "is_contra", False)
         if is_contra:
             # Contra-asset/contra-equity has opposite normal balance

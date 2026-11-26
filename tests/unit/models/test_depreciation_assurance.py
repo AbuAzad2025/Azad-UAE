@@ -333,6 +333,10 @@ class TestFixedAssetModelCoverage:
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 4
         mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            side_effect=lambda concept, **kw: {"FIXED_ASSET_GAIN": "4600", "FIXED_ASSET_LOSS": "6700"}[concept],
+        )
         mocker.patch("models.fixed_asset.gl_post_or_fail")
         mocker.patch("models.fixed_asset.db.session")
         with app.app_context():
@@ -345,6 +349,10 @@ class TestFixedAssetModelCoverage:
         asset.depreciation_account = MagicMock(code="1590")
         asset.id = 3
         mocker.patch("models.fixed_asset.gl_get_default_liquidity_account", return_value="1110")
+        mocker.patch(
+            "services.gl_service.GLService.get_account_code_for_concept",
+            side_effect=lambda concept, **kw: {"FIXED_ASSET_GAIN": "4600", "FIXED_ASSET_LOSS": "6700"}[concept],
+        )
         mocker.patch("models.fixed_asset.gl_post_or_fail")
         mock_session = mocker.patch("models.fixed_asset.db.session")
         with app.app_context():

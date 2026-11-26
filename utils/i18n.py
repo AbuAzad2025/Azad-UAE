@@ -8110,6 +8110,8 @@ TRANSLATIONS = {
     "Automated daily cloud backups": {"ar": "النسخ الاحتياطي التلقائي اليومي", "en": "Automated daily cloud backups"},
     "Full customization": {"ar": "تخصيص كامل + تقارير مخصصة", "en": "Full customization"},
     "24/7 support + account manager": {"ar": "دعم فني 24/7 + مدير حساب", "en": "24/7 support + account manager"},
+    "Included Modules": {"ar": "الموديولات المضمنة", "en": "Included Modules"},
+    "Unlimited branches": {"ar": "فروع غير محدودة", "en": "Unlimited branches"},
     "Add-on Modules (Flat fee)": {"ar": "موديولات إضافية (رسوم ثابتة)", "en": "Add-on Modules (Flat fee)"},
     "AI That Speaks Your Language": {"ar": "ذكاء اصطناعي يتحدث بلغتك", "en": "AI That Speaks Your Language"},
     "Real operation execution": {"ar": "تنفيذ عمليات حقيقية", "en": "Real operation execution"},

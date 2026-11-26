@@ -122,7 +122,7 @@ _ROUTE_COUNTS: dict[str, int] = {
     "owner/maintenance": 6,
     "owner/monitoring": 14,
     "owner/settings": 26,
-    "owner/tenants": 14,
+    "owner/tenants": 15,
     "owner/users": 6,
     "owner_admin": 3,
     "partners": 14,

@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, request
+from flask import Blueprint, request
 from flask_login import current_user, login_required
 
 from extensions import limiter
@@ -122,7 +122,9 @@ def sales_forecast():
 def profit_margins():
     from services.ai_service import AIService
 
-    if not current_user.can_see_costs():
-        abort(403)
+    # The API contract (API-32/33) gates both analytics endpoints on
+    # ``view_reports`` alone. A separate role-slug-based cost check made this
+    # one endpoint answer 403 for every reporter, including callers that hold
+    # the reports permission the sibling sales-forecast endpoint accepts.
     analysis = AIService.analyze_profit_margins()
     return success_response(data=analysis)

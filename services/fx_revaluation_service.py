@@ -224,6 +224,29 @@ def revaluate_open_items(tenant_id: int | None = None) -> dict:
     return summary
 
 
+def _sale_receivable(sale, tenant_id):
+    """Return the receivable control account/concept for the sale's customer."""
+    customer = getattr(sale, "customer", None)
+    return (
+        GLService.get_customer_credit_account(customer, branch_id=sale.branch_id, tenant_id=tenant_id),
+        GLService.get_customer_credit_concept(customer),
+    )
+
+
+def _ar_fx_lines(receivable_account, receivable_concept, fx_gain, fx_loss, fx_diff, desc):
+    """Build the two balanced legs of an unrealized AR revaluation."""
+    receivable = {"account": receivable_account, "concept_code": receivable_concept, "description": desc}
+    if fx_diff > 0:
+        return [
+            {**receivable, "debit": fx_diff},
+            {"account": fx_gain, "concept_code": "FX_GAIN", "credit": fx_diff, "description": desc},
+        ]
+    return [
+        {"account": fx_loss, "concept_code": "FX_LOSS", "debit": abs(fx_diff), "description": desc},
+        {**receivable, "credit": abs(fx_diff)},
+    ]
+
+
 def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, fx_gain, fx_loss, summary):
     """Post one FX revaluation entry PER SALE (audit fix D-C13).
 
@@ -269,33 +292,8 @@ def _post_ar_revaluation(open_sales, base_currency, tenant_id, now, ar_concept, 
         # A partner/merchant sale lives in its own control account: posting
         # the FX leg to the generic AR account would diverge from the sale's
         # sub-ledger. Resolve the same control account the sale used.
-        customer = getattr(sale, "customer", None)
-        receivable_concept = GLService.get_customer_credit_concept(customer)
-        receivable_account = GLService.get_customer_credit_account(
-            customer, branch_id=sale.branch_id, tenant_id=tenant_id
-        )
-
-        if fx_diff > 0:
-            lines = [
-                {
-                    "account": receivable_account,
-                    "concept_code": receivable_concept,
-                    "debit": fx_diff,
-                    "description": desc,
-                },
-                {"account": fx_gain, "concept_code": "FX_GAIN", "credit": fx_diff, "description": desc},
-            ]
-        else:
-            loss_amount = abs(fx_diff)
-            lines = [
-                {"account": fx_loss, "concept_code": "FX_LOSS", "debit": loss_amount, "description": desc},
-                {
-                    "account": receivable_account,
-                    "concept_code": receivable_concept,
-                    "credit": loss_amount,
-                    "description": desc,
-                },
-            ]
+        receivable_account, receivable_concept = _sale_receivable(sale, tenant_id)
+        lines = _ar_fx_lines(receivable_account, receivable_concept, fx_gain, fx_loss, fx_diff, desc)
 
         entry = post_or_fail(
             lines,

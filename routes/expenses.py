@@ -291,6 +291,12 @@ def create():
                 from services.budget_enforcement import check_budget_for_account
 
                 expense_acct = next((line.get("account") for line in lines if line.get("account")), None)
+                if expense_acct is None:
+                    # No line account is available yet (e.g. a caller that has
+                    # not built the lines); keep the legacy check account so a
+                    # budget denial is still enforced instead of skipped.
+                    cat = ExpenseService.get_category(expense.category_id)
+                    expense_acct = getattr(cat, "gl_account_code", None) or "6500"
                 if expense_acct:
                     budget_check = check_budget_for_account(
                         tenant_id=tid,

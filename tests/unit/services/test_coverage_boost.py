@@ -109,7 +109,11 @@ class TestMaintenanceCoverage:
         scalar_mock = MagicMock()
         scalar_mock.scalar.return_value = "exists"
         conn = MagicMock()
-        conn.execute.side_effect = [fetch_mock, scalar_mock]
+        # first: information_schema columns, second: default-tenant id guard,
+        # third: the column value
+        default_tenant_result = MagicMock()
+        default_tenant_result.scalar.return_value = 1
+        conn.execute.side_effect = [fetch_mock, default_tenant_result, scalar_mock]
         engine = MagicMock()
         engine.begin.return_value.__enter__.return_value = conn
         engine.begin.return_value.__exit__.return_value = False

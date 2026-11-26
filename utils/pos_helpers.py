@@ -93,8 +93,15 @@ def resolve_pos_cash_account_code(tenant_id: int, branch_id: int) -> str:
     from services.gl_service import GLService
 
     GLService.ensure_core_accounts(tenant_id=tenant_id)
-    resolved_branch = GLService.resolve_liquidity_branch("cash", branch_id, tenant_id)
-    return GLService.get_default_liquidity_account("cash", branch_id=resolved_branch, tenant_id=tenant_id)
+    try:
+        resolved_branch = GLService.resolve_liquidity_branch("cash", branch_id, tenant_id)
+        return GLService.get_default_liquidity_account("cash", branch_id=resolved_branch, tenant_id=tenant_id)
+    except (ValueError, RuntimeError):
+        # A tenant whose chart has no configured liquidity account still has a
+        # tenant-owned CASH mapping. Resolve through that mapping rather than
+        # the hardcoded ``1110`` parent a previous version derived the code
+        # from; a missing mapping still fails loudly.
+        return GLService.get_account_code_for_concept("CASH", tenant_id=tenant_id, branch_id=branch_id)
 
 
 def get_pos_walkin_customer(tenant_id: int | None = None) -> Customer:

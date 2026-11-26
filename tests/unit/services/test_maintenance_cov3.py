@@ -129,7 +129,11 @@ class TestFixDefaultTenantMetadataBranches:
         conn = MagicMock(name="conn")
         fetch = MagicMock(fetchall=MagicMock(return_value=[("created_at", "timestamp", None)]))
         cur_result = MagicMock(scalar=MagicMock(return_value=None))
-        conn.execute.side_effect = [fetch, cur_result, MagicMock()]
+        # first: information_schema columns, second: default-tenant id guard,
+        # third: the column value, fourth: the UPDATE
+        default_tenant_result = MagicMock()
+        default_tenant_result.scalar.return_value = 1
+        conn.execute.side_effect = [fetch, default_tenant_result, cur_result, MagicMock()]
         engine = MagicMock(name="engine")
         engine.begin.return_value.__enter__.return_value = conn
         engine.begin.return_value.__exit__.return_value = False

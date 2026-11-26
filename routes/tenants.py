@@ -42,7 +42,9 @@ def switch(tenant_id):
         set_active_tenant(None, user=current_user)
         clear_active_branch()
         flash(gettext("تم إلغاء تحديد الشركة الحالية."), "success")
-        return redirect(safe_redirect_target(request.referrer, "main.dashboard"))
+        # The dashboard is a tenant blueprint and is blocked for a tenantless
+        # platform owner; land on the owner console, which is always reachable.
+        return redirect(safe_redirect_target(request.referrer, "owner.dashboard"))
 
     if not target_tenant or not target_tenant.is_active or getattr(target_tenant, "is_suspended", False):
         flash(gettext("الشركة غير موجودة أو غير مفعلة أو معلقة."), "danger")

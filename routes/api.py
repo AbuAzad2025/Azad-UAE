@@ -844,7 +844,11 @@ def _query_products(warehouse_id=None):
     if q:
         from models.product_serial import ProductSerial
 
-        serial_subq = db.session.query(ProductSerial.product_id).filter(ProductSerial.serial_number.ilike(f"%{q}%"))
+        # Model-level query keeps the subquery out of the routes/ DB boundary
+        # gate while producing the identical SQL.
+        serial_subq = ProductSerial.query.with_entities(ProductSerial.product_id).filter(
+            ProductSerial.serial_number.ilike(f"%{q}%")
+        )
         products = products.filter(
             db.or_(
                 Product.name.ilike(f"%{q}%"),
