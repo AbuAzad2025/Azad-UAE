@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Integration tests for dashboard isolation and feature injection across three panels:
 1. Tenant Admin Dashboard (dashboard_company)
@@ -67,6 +69,7 @@ def _make_user(db_session, tenant_id, branch_id=None, role_slug="seller", is_own
     if not role:
         role = Role(name=f"{role_slug}_{suffix}", slug=unique_slug, is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
     u = User(
         tenant_id=tenant_id,
@@ -154,6 +157,7 @@ def _make_manager_user(db_session, tenant_id, branch_id):
     if not role:
         role = Role(name=f"SA_{suffix}", slug="super_admin", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
     u = User(
         tenant_id=tenant_id,
@@ -300,6 +304,7 @@ class TestDashboardPermissions:
         db_session.flush()
         role = Role(name=f"Cashier_{suffix}", slug=f"cashier_{suffix}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         u = User(
             tenant_id=t.id,
@@ -327,6 +332,7 @@ class TestDashboardPermissions:
         db_session.flush()
         role = Role(name=f"CashierEdP_{suffix}", slug=f"cashier_edp_{suffix}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         u = User(
             tenant_id=t.id,
@@ -352,6 +358,7 @@ class TestDashboardPermissions:
         db_session.flush()
         role = Role(name=f"Manager_{suffix}", slug=f"manager_{suffix}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         u = User(
             tenant_id=t.id,
@@ -387,6 +394,7 @@ class TestDashboardPermissions:
         db_session.flush()
         role = Role(name=f"Seller_{suffix}", slug=f"seller_{suffix}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         u = User(
             tenant_id=t.id,
@@ -419,11 +427,15 @@ class TestDashboardPermissions:
 
 class TestTenantSettingsAPI:
     def test_update_tax_rate(self, db_session, app):
+        from utils.tax_settings import suggested_rate_for_country
+
         t = _make_tenant(db_session, "TaxAPI", "tax-api", tax_rate=Decimal("5.00"))
+        t.vat_country = "PS"
         b = _make_branch(db_session, t.id)
         u = _make_manager_user(db_session, t.id, b.id)
         u.set_password("password123")
         db_session.commit()
+        statutory = suggested_rate_for_country("PS")
         with app.test_client() as client:
             client.post(
                 "/auth/login",
@@ -434,14 +446,14 @@ class TestTenantSettingsAPI:
                 "/owner/api/update-tenant-settings",
                 json={
                     "field": "default_tax_rate",
-                    "value": "15.00",
+                    "value": str(statutory),
                 },
             )
             assert resp.status_code == 200
             data = resp.get_json()
             assert data["success"] is True
             db_session.refresh(t)
-            assert float(t.default_tax_rate) == 15.00
+            assert float(t.default_tax_rate) == float(statutory)
 
     def test_update_prices_include_vat(self, db_session, app):
         t = _make_tenant(db_session, "VATAPI", "vat-api", piv=False)
@@ -568,6 +580,7 @@ class TestSupervisorOverride:
         if not role:
             role = Role(name=f"SupRole_{suffix}", slug="super_admin", is_active=True)
             db_session.add(role)
+            grant_all_permissions(db_session, role)
             db_session.flush()
         u = User(
             tenant_id=tenant_id,
@@ -670,6 +683,7 @@ class TestSuperAdminEndpoints:
         if not role:
             role = Role(name=f"OwnerRole_{suffix}", slug="developer", is_active=True)
             db_session.add(role)
+            grant_all_permissions(db_session, role)
             db_session.flush()
         u = User(
             tenant_id=None,

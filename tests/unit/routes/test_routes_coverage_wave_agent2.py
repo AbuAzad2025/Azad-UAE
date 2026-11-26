@@ -1000,10 +1000,14 @@ class TestConfigUploadWave:
         env_dir.mkdir()
         fake_ai = env_dir / "ai.py"
         fake_ai.write_text("#", encoding="utf-8")
+        # The endpoint prefers the nearest existing .env (repo root) instead
+        # of creating one next to the module; create it so the key lands here.
+        env_file = tmp_path / ".env"
+        env_file.write_text("", encoding="utf-8")
         with patch("routes.ai_routes.assistant.__file__", str(fake_ai)):
             resp = ai_client.post("/ai/config", data={"api_key": "k", "provider": "groq"})
         assert resp.get_json()["success"] is True
-        assert (tmp_path / ".env").exists()
+        assert "GROQ_API_KEY=k" in env_file.read_text(encoding="utf-8")
 
     def test_config_save_exception(self, ai_client, tmp_path):
         env_dir = tmp_path / "routes"

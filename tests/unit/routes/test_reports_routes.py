@@ -520,9 +520,10 @@ class TestReportsEntityFragment:
             patch("routes.reports.render_template", return_value="not-found-fragment") as render,
         ):
             resp = reports_client.get("/reports/entity_report_fragment/supplier/404")
-            assert resp.status_code == 200
-            assert render.called
-            assert "error" in render.call_args[1]
+            # HTTPException is re-raised instead of being swallowed by the
+            # generic exception branch: a missing entity is a real 404.
+            assert resp.status_code == 404
+            assert not render.called
 
     def test_supplier_branch_scope_403(self, reports_client, mock_user):
         _configure_user(mock_user)
@@ -609,8 +610,9 @@ class TestReportsTenantIsolation:
             patch("routes.reports.render_template", return_value="err") as render,
         ):
             resp = reports_client.get("/reports/entity_report_fragment/supplier/888")
-            assert resp.status_code == 200
-            assert "wrong tenant" in str(render.call_args[1].get("error", ""))
+            # Cross-tenant lookup must be refused, not rendered as an error fragment.
+            assert resp.status_code == 404
+            assert not render.called
 
 
 class TestReportsPartnersDeep:

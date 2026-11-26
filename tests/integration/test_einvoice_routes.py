@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """Integration: statutory e-invoice routes + artifact wiring on posted sales."""
 
 import uuid
@@ -9,6 +11,7 @@ from models import Branch, Customer, Product, Role, Sale, SaleLine, Tenant, User
 def _make_admin(db_session, tid, slug):
     role = Role(name=f"Admin {slug}", slug=f"admin-{slug}", is_active=True)
     db_session.add(role)
+    grant_all_permissions(db_session, role)
     db_session.flush()
     branch = Branch(tenant_id=tid, name=f"Main {slug}", code=f"BR{slug[:4]}")
     db_session.add(branch)

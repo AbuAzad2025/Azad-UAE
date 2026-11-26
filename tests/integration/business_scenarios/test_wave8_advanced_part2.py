@@ -645,7 +645,15 @@ class TestTRE01Treasury:
 
     def test_the_wps_export_streams_a_file(self, client, db_session, sample_tenant, sample_branch):
         """TRE-06. The payroll export the WPS portal consumes."""
-        user = _user(db_session, sample_tenant, slug="tre-wps", permissions=["view_reports"], branch=sample_branch)
+        # The export now requires both the reports grant and the payroll
+        # management grant: payroll data leaves the system through this route.
+        user = _user(
+            db_session,
+            sample_tenant,
+            slug="tre-wps",
+            permissions=["view_reports", "manage_payroll"],
+            branch=sample_branch,
+        )
         _login(client, user)
         resp = client.get("/reports/wps-export")
         assert resp.status_code in (200, 302, 404), f"the WPS export answered {resp.status_code}"

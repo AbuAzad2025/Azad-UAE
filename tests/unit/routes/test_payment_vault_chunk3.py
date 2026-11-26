@@ -648,7 +648,7 @@ class TestVaultExports:
 
 
 class TestPackageFormParsing:
-    """Unit tests for _package_limits_flags_from_form — 9 limits + 8 flags."""
+    """Unit tests for _package_limits_flags_from_form — 9 limits + 8 flags + tier/POS."""
 
     def _form(self, data):
         from werkzeug.datastructures import ImmutableMultiDict
@@ -669,7 +669,10 @@ class TestPackageFormParsing:
             }
         )
         data = _package_limits_flags_from_form(form)
-        assert set(data) == set(TENANT_LIMIT_COLUMNS) | set(TENANT_FLAG_COLUMNS)
+        # tier_level and has_pos are part of the package form contract: POS
+        # sub-features inherit from the tier and enable_pos comes from has_pos.
+        assert set(data) == set(TENANT_LIMIT_COLUMNS) | set(TENANT_FLAG_COLUMNS) | {"tier_level", "has_pos"}
+        assert data["tier_level"] == 10 and data["has_pos"] is False
         assert data["max_users"] == 5
         assert data["max_sales_per_month"] == -1  # unlimited sentinel preserved
         assert data["max_storage_mb"] == 2048

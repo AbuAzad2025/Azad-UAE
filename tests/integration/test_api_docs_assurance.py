@@ -57,7 +57,7 @@ class TestApiDocsProtection:
 
     def test_protected_allows_administrator(self, app, client):
         admin = MagicMock(is_authenticated=True)
-        admin.role.slug = "admin"
+        admin.role.slug = "super_admin"
         with patch("routes.api_docs._api_docs_public", return_value=False):
             with patch("routes.api_docs.current_user", admin):
                 with app.app_context():
@@ -66,7 +66,7 @@ class TestApiDocsProtection:
 
     def test_openapi_strips_servers_when_not_public(self, app, client):
         admin = MagicMock(is_authenticated=True)
-        admin.role.slug = "admin"
+        admin.role.slug = "super_admin"
         with patch("routes.api_docs._api_docs_public", return_value=False):
             with patch("routes.api_docs.current_user", admin):
                 with app.app_context():

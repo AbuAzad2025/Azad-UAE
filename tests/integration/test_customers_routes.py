@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Integration tests: Customers routes — real business logic via HTTP.
 """
@@ -33,6 +35,7 @@ class TestCustomerBranchIsolation:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         u1 = User(
@@ -140,6 +143,7 @@ class TestCustomerBranchIsolation:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         u1 = User(
@@ -231,6 +235,7 @@ class TestCustomerStatement:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -322,6 +327,7 @@ class TestCustomerStatement:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -436,6 +442,7 @@ class TestCustomerDelete:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -513,6 +520,7 @@ class TestCustomerDelete:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -578,6 +586,7 @@ class TestCustomerView:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -655,6 +664,7 @@ class TestCustomerSearch:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -746,6 +756,7 @@ class TestReceivablesReport:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -823,6 +834,7 @@ class TestReceivablesReport:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -915,6 +927,7 @@ class TestReceivablesReport:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -992,6 +1005,7 @@ class TestCustomerApi:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -1067,6 +1081,7 @@ class TestCustomerApi:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(

@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from tests.integration.conftest import grant_all_permissions
+
 
 class TestUserUniqueness:
     def test_username_is_globally_unique(self, app, db_session):
@@ -139,7 +141,7 @@ class TestTenantIsolation:
         db_session.flush()
         r1 = Role(name=f"R1 {tid1}", slug=f"r1-{tid1}", is_active=True)
         db_session.add(r1)
-        db_session.flush()
+        grant_all_permissions(db_session, r1)
         u1 = User(
             username=f"u1-{tid1}",
             email=f"u1-{tid1}@t.com",
@@ -172,7 +174,7 @@ class TestTenantIsolation:
         db_session.flush()
         r2 = Role(name=f"R2 {tid2}", slug=f"r2-{tid2}", is_active=True)
         db_session.add(r2)
-        db_session.flush()
+        grant_all_permissions(db_session, r2)
         u2 = User(
             username=f"u2-{tid2}",
             email=f"u2-{tid2}@t.com",
@@ -238,7 +240,7 @@ class TestBranchIsolation:
         db_session.flush()
         r = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(r)
-        db_session.flush()
+        grant_all_permissions(db_session, r)
 
         u_b1 = User(
             username=f"ub1-{tid}",

@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Real route tests: Payments routes — HTTP client.get() only.
 """
@@ -28,6 +30,7 @@ class TestPaymentsListPage:
         db_session.flush()
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"pmuser-{tid}",

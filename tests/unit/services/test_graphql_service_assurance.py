@@ -121,6 +121,7 @@ class TestQueryResolvers:
 
     def test_resolve_all_products(self, mocker):
         mocker.patch("services.graphql_service._require_permission")
+        mocker.patch("services.graphql_service.current_user", MagicMock(can_see_costs=MagicMock(return_value=True)))
         product = SimpleNamespace(
             id=4,
             name="Widget",
@@ -140,6 +141,7 @@ class TestQueryResolvers:
 
     def test_resolve_product_by_id(self, mocker):
         mocker.patch("services.graphql_service._require_permission")
+        mocker.patch("services.graphql_service.current_user", MagicMock(can_see_costs=MagicMock(return_value=True)))
         product = SimpleNamespace(
             id=5,
             name="X",

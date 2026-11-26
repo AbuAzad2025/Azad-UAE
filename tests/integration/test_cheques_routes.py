@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Integration tests: Cheques routes — full lifecycle (create, deposit, clear, bounce, cancel, delete).
 """
@@ -30,6 +32,7 @@ class TestChequesCreate:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqu-{tid}",
@@ -148,6 +151,7 @@ class TestChequesCreate:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqu2-{tid}",
@@ -268,6 +272,7 @@ class TestChequesLifecycle:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqu3-{tid}",
@@ -399,6 +404,7 @@ class TestChequesLifecycle:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqu4-{tid}",
@@ -528,6 +534,7 @@ class TestChequesViewEdit:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqv-{tid}",
@@ -571,6 +578,7 @@ class TestChequesViewEdit:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqc-{tid}",
@@ -614,6 +622,7 @@ class TestChequesViewEdit:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqvw-{tid}",
@@ -678,6 +687,7 @@ class TestChequesViewEdit:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqe-{tid}",
@@ -760,6 +770,7 @@ class TestChequesDelete:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqdel-{tid}",
@@ -844,6 +855,7 @@ class TestChequesApi:
         db_session.flush()
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"chqapi-{tid}",

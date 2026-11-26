@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Real route tests: Sales routes — HTTP client.get() / client.post() only.
 """
@@ -25,6 +27,7 @@ class TestSalesListPage:
         db_session.flush()
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"sluser-{tid}",
@@ -97,6 +100,7 @@ class TestSalesListPage:
         db_session.flush()
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
         user = User(
             username=f"scuser-{tid}",

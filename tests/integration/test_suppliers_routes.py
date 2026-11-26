@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Integration tests: Supplier routes — purchases, payables, cheques, ageing.
 """
@@ -29,6 +31,7 @@ class TestSupplierCreate:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         # No branch_id → "all" scope → supplier viewable after creation
@@ -101,6 +104,7 @@ class TestSupplierBranchIsolation:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         u1 = User(
@@ -194,6 +198,7 @@ class TestSupplierBranchIsolation:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         u1 = User(
@@ -285,6 +290,7 @@ class TestSupplierStatement:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -379,6 +385,7 @@ class TestPayablesReport:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -465,6 +472,7 @@ class TestSupplierChequeReport:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -578,6 +586,7 @@ class TestSupplierAgeing:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -658,6 +667,7 @@ class TestSupplierDelete:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -736,6 +746,7 @@ class TestSupplierDelete:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -799,6 +810,7 @@ class TestSupplierSearch:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(
@@ -889,6 +901,7 @@ class TestSupplierCrossTenant:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         u1 = User(
@@ -971,6 +984,7 @@ class TestSupplierCreditLimit:
 
         role = Role(name=f"R {tid}", slug=f"r-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(

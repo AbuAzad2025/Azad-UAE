@@ -38,7 +38,9 @@ def test_require_permission_missing(monkeypatch):
         g._require_permission("manage_sales")
 
 
-def test_converters_handle_nones():
+def test_converters_handle_nones(monkeypatch):
+    # Product conversion redacts cost via current_user.can_see_costs().
+    monkeypatch.setattr(g, "current_user", SimpleNamespace(can_see_costs=lambda: True))
     s = SimpleNamespace(
         id=1, sale_number="S", customer_id=2, total_amount=None, amount_aed=None, status="pending", created_at=None
     )

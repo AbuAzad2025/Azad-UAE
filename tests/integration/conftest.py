@@ -98,6 +98,22 @@ def demo_warehouse(db_session, demo_tenant, demo_branch):
     return warehouse
 
 
+def grant_all_permissions(db_session, role):
+    """Give a test role the full seeded permission set.
+
+    Business-logic integration tests create their own Role/User pairs inline.
+    Since a tenant-scoped ``is_owner`` no longer bypasses ``@permission_required``,
+    those roles must carry real permission rows; otherwise every route answers
+    403 and the failure looks like a product regression.
+    """
+    from models import Permission
+
+    role.permissions = Permission.query.all()
+    db_session.add(role)
+    db_session.flush()
+    return role
+
+
 @pytest.fixture
 def demo_role(db_session):
     """A unique role for demo users."""

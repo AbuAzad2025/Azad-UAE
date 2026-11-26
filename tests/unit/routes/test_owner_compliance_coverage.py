@@ -336,9 +336,9 @@ class TestInvoiceSettingsBranches:
                 "/owner/invoice-settings",
                 data={"company_name_ar": "شركة"},
             )
-        # abort(404) is raised inside the POST try; the bare Exception handler
-        # catches it and re-renders, so the line is covered but the status is 200.
-        assert resp.status_code == 200
+        # HTTPException is re-raised through the POST handler instead of being
+        # swallowed by the generic exception branch: a missing tenant is a 404.
+        assert resp.status_code == 404
 
     def test_preview_receipt_unknown_template_404(self, app_factory, bypass_owner_auth):
         from routes.owner import owner_bp as bp

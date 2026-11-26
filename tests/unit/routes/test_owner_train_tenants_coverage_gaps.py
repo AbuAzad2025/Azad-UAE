@@ -146,12 +146,17 @@ class TestAdvancedApisNoTenant:
         ],
     )
     def test_api_without_tenant_404(self, owner_client, url):
-        assert owner_client.get(url).status_code == 404
+        # The DB may contain a provisioned tenant; force the no-tenant branch
+        # that these coverage cases are written for.
+        with patch("routes.owner.ai_training_advanced._resolve_training_tenant", return_value=None):
+            resp = owner_client.get(url)
+        assert resp.status_code == 404, f"{url} answered {resp.status_code}"
 
 
 class TestSemanticTrain:
     def test_no_tenant_404(self, owner_client):
-        assert owner_client.post("/owner/ai-training/semantic-train", data={}).status_code == 404
+        with patch("routes.owner.ai_training_advanced._resolve_training_tenant", return_value=None):
+            assert owner_client.post("/owner/ai-training/semantic-train", data={}).status_code == 404
 
     def test_missing_answer_redirects(self, owner_client):
         with (

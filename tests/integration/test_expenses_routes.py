@@ -1,3 +1,5 @@
+from tests.integration.conftest import grant_all_permissions
+
 """
 Integration tests: Expenses routes — real business logic via POST /expenses/create.
 """
@@ -30,6 +32,7 @@ class TestExpensesCreate:
 
         role = Role(name=f"Admin {tid}", slug=f"admin-{tid}", is_active=True)
         db_session.add(role)
+        grant_all_permissions(db_session, role)
         db_session.flush()
 
         user = User(

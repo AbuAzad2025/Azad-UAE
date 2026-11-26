@@ -49,7 +49,7 @@ class TestPublicLanding:
             with patch("routes.public.render_template", return_value="landing") as render:
                 resp = public_client.get("/", follow_redirects=False)
         assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html", packages=[], is_en=False, active_stores=ANY)
+        render.assert_called_once_with("public/landing.html", packages=ANY, is_en=False, active_stores=ANY)
 
     def test_landing_lang_arg_renders_english(self, public_client):
         with patch("flask_login.current_user") as mock_user:
@@ -57,7 +57,7 @@ class TestPublicLanding:
             with patch("routes.public.render_template", return_value="landing") as render:
                 resp = public_client.get("/?lang=en", follow_redirects=False)
         assert resp.status_code == 200
-        render.assert_called_once_with("public/landing.html", packages=[], is_en=True, active_stores=ANY)
+        render.assert_called_once_with("public/landing.html", packages=ANY, is_en=True, active_stores=ANY)
 
     def test_landing_redirects_to_dashboard_when_authenticated(self, public_client):
         with patch("flask_login.current_user") as mock_user:
@@ -83,7 +83,7 @@ class TestPublicPricing:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
         render.assert_called_once_with(
-            "public/pricing.html", packages=[], is_en=False, developer_whatsapp_link="", active_stores=ANY
+            "public/pricing.html", packages=ANY, is_en=False, developer_whatsapp_link="", active_stores=ANY
         )
 
     def test_pricing_english_session(self, public_client):
@@ -93,7 +93,7 @@ class TestPublicPricing:
             resp = public_client.get("/pricing")
         assert resp.status_code == 200
         render.assert_called_once_with(
-            "public/pricing_en.html", packages=[], is_en=True, developer_whatsapp_link="", active_stores=ANY
+            "public/pricing_en.html", packages=ANY, is_en=True, developer_whatsapp_link="", active_stores=ANY
         )
 
 

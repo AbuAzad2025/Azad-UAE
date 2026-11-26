@@ -113,19 +113,26 @@ class TestApiUpdateTenantSettings:
         mocker,
         mock_settings_db,
     ):
+        from utils.tax_settings import suggested_rate_for_country
+
         mocker.patch("routes.owner.settings.Tenant")
         inst = MagicMock()
+        # The endpoint now refuses a rate that disagrees with the tenant's
+        # statutory country profile: use the real statutory rate, not 10.
+        inst.enable_tax = True
+        inst.vat_country = "PS"
+        statutory = suggested_rate_for_country("PS")
         mock_settings_db.session.get.return_value = inst
         mocker.patch("routes.owner.settings._invalidate_owner_changes")
         mocker.patch("routes.owner.settings._audit_owner_db_action")
 
         resp = company_admin_client.post(
             "/owner/api/update-tenant-settings",
-            json={"field": "default_tax_rate", "value": "10"},
+            json={"field": "default_tax_rate", "value": str(statutory)},
         )
         assert resp.status_code == 200
         assert resp.json["success"] is True
-        assert inst.default_tax_rate == Decimal("10")
+        assert inst.default_tax_rate == Decimal(str(statutory))
 
     def test_success_prices_include_vat(
         self,
