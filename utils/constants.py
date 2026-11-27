@@ -114,6 +114,7 @@ PERMISSION_CODES = [
     "manage_payments",
     "manage_expenses",
     "view_reports",
+    "view_costs",
     "manage_warehouse",
     "manage_store",
     "view_ledger",
@@ -238,6 +239,7 @@ PERMISSION_FEATURE_MAP: dict[str, str | None] = {
     "view_ledger": "enable_gl",
     "manage_ledger": "enable_gl",
     "view_reports": "enable_reports",
+    "view_costs": "enable_reports",
     # CRM, support, projects and marketing have no feature flag of their own
     # yet, so their permissions are always available. When a flag is added
     # for one of them, list it here so the roles follow.
@@ -258,6 +260,7 @@ PERMISSIONS = {
     "manage_payments": {"ar": "إدارة المدفوعات", "en": "Manage Payments"},
     "manage_expenses": {"ar": "إدارة المصروفات", "en": "Manage Expenses"},
     "view_reports": {"ar": "عرض التقارير", "en": "View Reports"},
+    "view_costs": {"ar": "عرض التكاليف", "en": "View Costs"},
     "manage_warehouse": {"ar": "إدارة المستودعات", "en": "Manage Warehouse"},
     "manage_store": {"ar": "إدارة المتجر الإلكتروني", "en": "Manage Online Store"},
     "view_ledger": {"ar": "عرض دفتر الأستاذ", "en": "View Ledger"},
