@@ -2,7 +2,7 @@
 Canonical relative paths under static/ for branding and shared assets.
 
 Layout (plain language):
-  assets/brand/azad/     — Azad platform owner logos & icons (not a tenant)
+  assets/platform/azad/     — Azad platform owner logos & icons (not a tenant)
   assets/tenants/{slug}/ — each company's branding (logo, favicon, headers…)
   assets/shared/         — defaults for everyone (e.g. "no product photo")
   uploads/tenants/{id}/  — runtime files per tenant (product photos, uploaded logos)
@@ -11,11 +11,11 @@ Layout (plain language):
 from __future__ import annotations
 
 # Platform owner — Azad Smart Systems
-AZAD_LOGO = "assets/brand/azad/logos/logo.png"
+AZAD_LOGO = "assets/platform/azad/logos/logo.png"
 AZAD_LOGO_DARK = AZAD_LOGO
-AZAD_FAVICON = "assets/brand/azad/favicons/favicon.png"
-AZAD_ICON_192 = "assets/brand/azad/icons/icon-192.png"
-AZAD_ICON_512 = "assets/brand/azad/icons/icon-512.png"
+AZAD_FAVICON = "assets/platform/azad/favicons/favicon.png"
+AZAD_ICON_192 = "assets/platform/azad/icons/icon-192.png"
+AZAD_ICON_512 = "assets/platform/azad/icons/icon-512.png"
 
 DEFAULT_PRODUCT_IMAGE = "assets/shared/placeholders/no-product.png"
 

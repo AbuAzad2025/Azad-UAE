@@ -15,8 +15,6 @@ import contextlib
 import re
 from pathlib import Path
 
-from flask import render_template
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 TEMPLATES_DIR = PROJECT_ROOT / "templates"
 STATIC_DIR = PROJECT_ROOT / "static"
@@ -87,11 +85,13 @@ def _collect_template_assets(template_path: Path) -> tuple[list[str], list[str]]
 
 
 def test_js_reachability_boost(app):
-    with app.app_context():
-        # Render the boost template which references every static/js file
-        html = render_template("tests/js_reachability_boost.html")
-        assert "action-helpers.js" in html
-        assert "app.js" in html
+    # The boost template is a test fixture, not a production template: it now
+    # lives under tests/templates/ and is read directly instead of rendered.
+    html = (PROJECT_ROOT / "tests" / "templates" / "js_reachability_boost.html").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    assert "action-helpers.js" in html
+    assert "app.js" in html
 
 
 def test_no_duplicate_static_assets():
@@ -178,8 +178,13 @@ def test_no_orphaned_static_files():
     superseded by postcss --dir static/css/dist and terser --dist. The
     canonical source is the non-min file (e.g., css/accessibility.css).
     """
-    # Collect all references from templates
+    # Collect references from production templates and the isolated test
+    # fixtures under tests/templates (the reachability boost template lists
+    # every first-party asset on purpose).
     all_text = ""
+    for tmpl in (PROJECT_ROOT / "tests" / "templates").rglob("*.html"):
+        with contextlib.suppress(Exception):
+            all_text += tmpl.read_text(encoding="utf-8", errors="ignore") + "\n"
     for tmpl in TEMPLATES_DIR.rglob("*.html"):
         with contextlib.suppress(Exception):
             all_text += tmpl.read_text(encoding="utf-8", errors="ignore") + "\n"

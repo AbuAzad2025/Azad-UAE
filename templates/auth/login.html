@@ -11,8 +11,8 @@
        rather than request.base_url, because base_url is not the site root under
        this app's script-root config and produced /auth/loginlogin. -->
   <link rel="canonical" href="{{ url_for('auth.login', _external=True) }}">
-  <link rel="icon" href="{{ url_for('static', filename='assets/brand/azad/favicons/favicon.png') }}" type="image/png">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
+  <link rel="icon" href="{{ url_for('static', filename='assets/platform/azad/favicons/favicon.png') }}" type="image/png">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/platform/azad/icons/icon-192.png') }}">
   {# No third-party font connection: Tajawal is served from the repository. #}
   
   <link rel="stylesheet" href="{{ url_for('static', filename='adminlte/plugins/fontawesome/css/all.min.css') }}">
@@ -59,7 +59,7 @@
     <aside class="azad-login-brand">
       <div class="azad-login-brand__logo">
         <img
-          src="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
+          src="{{ url_for('static', filename='assets/platform/azad/logos/logo.png') }}"
           alt="{{ _('شعار شركة ازاد') }}"
           width="400" height="120"
           loading="eager" decoding="async"

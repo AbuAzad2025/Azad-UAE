@@ -45,3 +45,18 @@ class TestTenantAssetPaths:
         assert AZAD_LOGO.startswith("assets/")
         assert AZAD_FAVICON.startswith("assets/")
         assert DEFAULT_PRODUCT_IMAGE.startswith("assets/")
+
+
+class TestPlatformAssetLayout:
+    def test_platform_brand_is_not_a_tenant_asset(self):
+        assert AZAD_LOGO == "assets/platform/azad/logos/logo.png"
+        assert AZAD_FAVICON.startswith("assets/platform/azad/")
+        assert tenant_asset_base("acme").startswith("assets/tenants/")
+        assert "brand/azad" not in AZAD_LOGO
+
+    def test_platform_assets_exist_on_disk(self):
+        from pathlib import Path
+
+        static_root = Path(__file__).resolve().parents[3] / "static"
+        assert (static_root / AZAD_LOGO).is_file()
+        assert (static_root / AZAD_FAVICON).is_file()

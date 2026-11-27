@@ -26,10 +26,10 @@
 **AR:** لا تشد الشعار أو تشوهه أو تدوّره. لا تغيّر ألوان الشعار. لا تضع الشعار على خلفيات مشغولة أو ذات تباين منخفض. لا تُضيف تأثيرات (ظلال، توهج، حدود).
 
 ### 2.4 File Locations | مواقع الملفات
-- `static/assets/brand/azad/logos/logo.png` — Single canonical logo for every use / الشعار الرسمي الموحّد لكل الاستخدامات
-- `static/assets/brand/azad/icons/icon-192.png` — 192px app icon / أيقونة التطبيق 192 بكسل
-- `static/assets/brand/azad/icons/icon-512.png` — 512px app icon / أيقونة التطبيق 512 بكسل
-- `static/assets/brand/azad/favicons/favicon.png` — Favicon / أيقونة المتصفح
+- `static/assets/platform/azad/logos/logo.png` — Single canonical logo for every use / الشعار الرسمي الموحّد لكل الاستخدامات
+- `static/assets/platform/azad/icons/icon-192.png` — 192px app icon / أيقونة التطبيق 192 بكسل
+- `static/assets/platform/azad/icons/icon-512.png` — 512px app icon / أيقونة التطبيق 512 بكسل
+- `static/assets/platform/azad/favicons/favicon.png` — Favicon / أيقونة المتصفح
 
 ## 3. Color Palette | لوحة الألوان
 

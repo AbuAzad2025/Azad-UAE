@@ -177,7 +177,7 @@
 ### Files created
 - `utils/numeric_input.py` — strict numeric parsing helper (`parse_decimal_field`, `parse_float_field`, `parse_int_field`).
 - `scripts/local/azad-finance.env.example` — the local configuration template.
-- `docs/AUDIT_REPORT_2026-11-12.md` — this report.
+- `dev/docs/AUDIT_REPORT_2026-11-12.md` — this report.
 
 ---
 

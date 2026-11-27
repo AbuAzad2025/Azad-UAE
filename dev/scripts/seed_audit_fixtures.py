@@ -10,7 +10,7 @@ reconciliation pass must report ZERO discrepancies.
 Use it to validate the controls against real data instead of an empty schema::
 
     $env:DATABASE_URL = "postgresql+psycopg2://postgres@localhost:5433/AzadFull2026"
-    python scripts/ops/seed_audit_fixtures.py
+    python dev/scripts/seed_audit_fixtures.py
     python scripts/ops/reconcile_historical_balances.py
 """
 

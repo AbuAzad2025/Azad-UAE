@@ -34,3 +34,4 @@ select = [
 "cli_commands.py" = ["E501", "B007"]
 "services/**" = ["E501", "SIM102", "B904", "E402", "B007", "SIM112"]
 "scripts/**" = ["E501", "SIM102", "SIM115", "UP031", "S110", "S112", "B023", "B007"]
+"dev/scripts/**" = ["E501", "SIM102", "SIM115", "UP031", "S110", "S112", "B023", "B007"]

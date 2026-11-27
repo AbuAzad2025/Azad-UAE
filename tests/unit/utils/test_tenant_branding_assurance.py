@@ -35,7 +35,7 @@ class TestStaticExists:
 
     def test_existing_file(self, mocker):
         mocker.patch("os.path.isfile", return_value=True)
-        assert tb._static_exists("assets/brand/azad/logos/logo.png") is True
+        assert tb._static_exists("assets/platform/azad/logos/logo.png") is True
 
 
 class TestResolveBranding:
@@ -144,7 +144,7 @@ class TestBrandingPathWarnings:
         warns = tb.branding_path_warnings(
             {
                 "tenant_slug": "otherco",
-                "logo_url": "assets/brand/azad/logos/logo.png",
+                "logo_url": "assets/platform/azad/logos/logo.png",
             }
         )
         assert any("platform default" in w for w in warns)

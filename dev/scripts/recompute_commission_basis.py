@@ -6,8 +6,8 @@ invoice-currency revenue (and to gross down zero/exempt lines). Historical
 entries carry the stored ``cost_basis`` needed to re-derive them exactly.
 
 Usage:
-    python scripts/ops/recompute_commission_basis.py            # dry-run report
-    python scripts/ops/recompute_commission_basis.py --apply    # rewrite entries
+    python dev/scripts/recompute_commission_basis.py            # dry-run report
+    python dev/scripts/recompute_commission_basis.py --apply    # rewrite entries
 
 The rewrite is explicit (never silent): draft distributions of affected
 periods are deleted and recreated through ``create_distributions`` so they

@@ -27,7 +27,7 @@
   <meta property="og:url" content="{{ request.url }}">
   <meta property="og:title" content="{% block og_title %}{{ tenant_name_ar or company_name_ar or t('App_Name') }}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{{ tenant_name_ar or company_name_ar or t('App_Name') }} — {{ t('App_Description') }}{% endblock %}">
-  {% set _logo_path = tenant_logo_url or developer_logo or 'assets/brand/azad/logos/logo.png' %}
+  {% set _logo_path = tenant_logo_url or developer_logo or 'assets/platform/azad/logos/logo.png' %}
   {% set _logo_external = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path, _external=True) %}
   {% set _logo_internal = _logo_path if _logo_path.startswith('http') else url_for('static', filename=_logo_path) %}
   <meta property="og:image" content="{{ _logo_external }}">
@@ -49,9 +49,9 @@
   <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
 
   <!-- Favicon -->
-  {% set _favicon_path = tenant_favicon_url or 'assets/brand/azad/favicons/favicon.png' %}
+  {% set _favicon_path = tenant_favicon_url or 'assets/platform/azad/favicons/favicon.png' %}
   <link rel="icon" href="{{ _favicon_path if _favicon_path.startswith('http') else url_for('static', filename=_favicon_path) }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/brand/azad/icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/platform/azad/icons/icon-192.png') }}">
 
   <!-- Every font this shell uses is served from the repository, so there is no
        third-party host to connect to. -->

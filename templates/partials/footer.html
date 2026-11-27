@@ -10,7 +10,7 @@
       {% else %}
         {% set _credit = _credit_raw %}
       {% endif %}
-      {% set _logo_path = (developer_logo or config.DEVELOPER_LOGO or 'assets/brand/azad/logos/logo.png')|trim %}
+      {% set _logo_path = (developer_logo or config.DEVELOPER_LOGO or 'assets/platform/azad/logos/logo.png')|trim %}
       {% set _logo_rel = _logo_path %}
       {% if _logo_rel.startswith('/static/') %}
         {% set _logo_rel = _logo_rel[8:] %}
@@ -25,7 +25,7 @@
         <section class="erp-footer-cell erp-footer-cell--brand">
           <img
             src="{{ _logo_path if (_logo_path.startswith('http') or _logo_path.startswith('/')) else url_for('static', filename=_logo_rel) }}"
-            data-fallback="{{ url_for('static', filename='assets/brand/azad/logos/logo.png') }}"
+            data-fallback="{{ url_for('static', filename='assets/platform/azad/logos/logo.png') }}"
             alt="{{ _platform_name }}"
             loading="lazy"
             class="erp-footer-logo"

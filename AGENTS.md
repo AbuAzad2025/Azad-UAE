@@ -355,7 +355,7 @@ tenant-scoped / branch-scoped / tenant-store-scoped / platform-owner-scoped / pu
 
 ### Frontend (Layer 3)
 - `static/js/ai-sales.js`: inline `onclick` replaced with addEventListener (nonce-CSP-safe, no `${}` XSS)
-- JS reachability 100% via `templates/tests/js_reachability_boost.html` + `tests/unit/test_js_reachability.py`
+- JS reachability 100% via `tests/templates/js_reachability_boost.html` + `tests/unit/test_js_reachability.py`
 - 0 `var` usage; global `unhandledrejection` handlers in base-helpers.js/app.js
 
 ### First-Run Scripts (clean, idempotent, PG+SQLite via batch_alter_table)
