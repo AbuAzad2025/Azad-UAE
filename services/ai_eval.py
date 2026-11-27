@@ -559,6 +559,24 @@ def _evaluate_case(
     )
 
 
+def _run_eval_cases(case_list, scoped_query):
+    intent_counts: dict[str, list[int]] = {}
+    intent_correct = 0
+    case_results: list[CaseResult] = []
+    results: list[tuple[EvalCase, CaseResult, CognitiveResult]] = []
+    for case in case_list:
+        hypothesis = route(normalize_message(case.prompt))
+        correct = hypothesis.intent == case.expected_intent
+        intent_correct += int(correct)
+        bucket = intent_counts.setdefault(case.expected_intent.value, [0, 0])
+        bucket[1] += 1
+        bucket[0] += int(correct)
+        case_result, cognitive = _evaluate_case(case, scoped_query)
+        case_results.append(case_result)
+        results.append((case, case_result, cognitive))
+    return intent_counts, intent_correct, case_results, results
+
+
 def run_local_eval(
     cases: Iterable[EvalCase] = DEFAULT_CASES,
     *,
@@ -572,21 +590,7 @@ def run_local_eval(
     case_list = tuple(cases)
     scoped_query = _make_scoped_query(list(rows if rows is not None else _fixture_rows()))
 
-    intent_counts: dict[str, list[int]] = {}
-    intent_correct = 0
-    case_results: list[CaseResult] = []
-    results: list[tuple[EvalCase, CaseResult, CognitiveResult]] = []
-
-    for case in case_list:
-        hypothesis = route(normalize_message(case.prompt))
-        correct = hypothesis.intent == case.expected_intent
-        intent_correct += int(correct)
-        bucket = intent_counts.setdefault(case.expected_intent.value, [0, 0])
-        bucket[1] += 1
-        bucket[0] += int(correct)
-        case_result, cognitive = _evaluate_case(case, scoped_query)
-        case_results.append(case_result)
-        results.append((case, case_result, cognitive))
+    intent_counts, intent_correct, case_results, results = _run_eval_cases(case_list, scoped_query)
 
     grounding_cases = [item for item in results if item[0].grounded_numbers and item[2].decision == "answer"]
     grounded_ok = sum(1 for item in grounding_cases if item[1].grounded is True)

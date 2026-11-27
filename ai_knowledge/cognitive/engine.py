@@ -154,6 +154,49 @@ def _answer_data(intent, hypothesis, slots, user, required: str) -> CognitiveRes
     )
 
 
+def _conversational_result(intent, hypothesis, normalized) -> CognitiveResult:
+    if intent == CognitiveIntent.SYSTEM_GUIDE:
+        from ai_knowledge.cognitive.guide import resolve_guide_topic
+
+        topic = resolve_guide_topic(normalized.tokens)
+        return CognitiveResult(
+            success=True,
+            response=composer.compose_guide(topic),
+            intent=intent.value,
+            confidence=hypothesis.confidence,
+            decision="conversational",
+            trace=_trace_note(f"Guide topic={topic or 'index'}.", hypothesis.confidence),
+            provenance=Provenance(tenant_id=None),
+        )
+    return CognitiveResult(
+        success=True,
+        response=composer.compose_conversational(intent),
+        intent=intent.value,
+        confidence=hypothesis.confidence,
+        decision="conversational",
+        trace=_trace_note(f"Conversational intent={intent.value}.", hypothesis.confidence),
+        provenance=Provenance(tenant_id=None),
+    )
+
+
+def _unknown_result(hypothesis, normalized, user) -> CognitiveResult:
+    from ai_knowledge.cognitive.fallback import try_dynamic_fallback
+
+    dynamic = try_dynamic_fallback(normalized, user)
+    if dynamic is not None:
+        return dynamic
+    return CognitiveResult(
+        success=True,
+        response=composer.compose_unknown(hypothesis),
+        intent=CognitiveIntent.UNKNOWN.value,
+        confidence=hypothesis.confidence,
+        decision="clarify",
+        needs_escalation=hypothesis.confidence < CLARIFY_THRESHOLD,
+        trace=_trace_note("No reliable signal; asking targeted clarification.", hypothesis.confidence),
+        provenance=Provenance(tenant_id=None),
+    )
+
+
 def process(message: str, user: object | None = None, cache: Any | None = None) -> CognitiveResult:
     from ai_knowledge.cognitive.followup import (
         clear_context,
@@ -180,44 +223,9 @@ def process(message: str, user: object | None = None, cache: Any | None = None) 
     intent = hypothesis.intent
 
     if intent in CONVERSATIONAL_INTENTS and intent != CognitiveIntent.UNKNOWN:
-        if intent == CognitiveIntent.SYSTEM_GUIDE:
-            from ai_knowledge.cognitive.guide import resolve_guide_topic
-
-            topic = resolve_guide_topic(normalized.tokens)
-            return CognitiveResult(
-                success=True,
-                response=composer.compose_guide(topic),
-                intent=intent.value,
-                confidence=hypothesis.confidence,
-                decision="conversational",
-                trace=_trace_note(f"Guide topic={topic or 'index'}.", hypothesis.confidence),
-                provenance=Provenance(tenant_id=None),
-            )
-        return CognitiveResult(
-            success=True,
-            response=composer.compose_conversational(intent),
-            intent=intent.value,
-            confidence=hypothesis.confidence,
-            decision="conversational",
-            trace=_trace_note(f"Conversational intent={intent.value}.", hypothesis.confidence),
-            provenance=Provenance(tenant_id=None),
-        )
+        return _conversational_result(intent, hypothesis, normalized)
     if intent == CognitiveIntent.UNKNOWN:
-        from ai_knowledge.cognitive.fallback import try_dynamic_fallback
-
-        dynamic = try_dynamic_fallback(normalized, user)
-        if dynamic is not None:
-            return dynamic
-        return CognitiveResult(
-            success=True,
-            response=composer.compose_unknown(hypothesis),
-            intent=intent.value,
-            confidence=hypothesis.confidence,
-            decision="clarify",
-            needs_escalation=hypothesis.confidence < CLARIFY_THRESHOLD,
-            trace=_trace_note("No reliable signal; asking targeted clarification.", hypothesis.confidence),
-            provenance=Provenance(tenant_id=None),
-        )
+        return _unknown_result(hypothesis, normalized, user)
 
     allowed, required = check_access(intent, user)
     if not allowed:
