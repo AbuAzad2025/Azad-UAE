@@ -88,8 +88,10 @@ def _enforce_ai_access_policy():
             "ai.optimize_inventory": "advanced",
             "ai.ask_genius": "advanced",
             "ai.upload_excel": "execute",
+            # The endpoint registered in system.py is ai.add_customer (url
+            # /ai/system/add-customer). The old key never matched, so a
+            # tenant at AI level "basic" could still execute a DB mutation.
             "ai.add_customer": "execute",
-            "ai.system_add_customer": "execute",
         }
         required_cap = endpoint_caps.get(request.endpoint or "", "basic")
         if not state.get("is_platform_user") and not ai_level_allows(state.get("ai_level") or "", required_cap):

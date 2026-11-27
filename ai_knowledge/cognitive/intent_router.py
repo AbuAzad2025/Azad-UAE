@@ -32,7 +32,7 @@ _PHRASES: dict[CognitiveIntent, tuple[str, ...]] = {
     CognitiveIntent.WHO_ARE_YOU: ("who are you", "what is your name", "مين انت", "من انت", "عرف عن نفسك"),
     CognitiveIntent.CUSTOMER_BALANCE: ("رصيد العميل", "رصيد الزبون", "customer balance"),
     CognitiveIntent.SALES_SUMMARY: ("ملخص المبيعات", "تقرير المبيعات", "sales summary", "sales report"),
-    CognitiveIntent.INVENTORY_STATUS: ("فحص المخزون", "low stock", "stock check"),
+    CognitiveIntent.INVENTORY_STATUS: ("فحص المخزون", "stock check"),
     CognitiveIntent.GL_BALANCE: ("ميزان المراجعه", "trial balance"),
     CognitiveIntent.PATTERN_ANALYSIS: ("انماط المبيعات", "تحليل الانماط", "اتجاه المبيعات", "sales patterns"),
     CognitiveIntent.PROFIT_MARGIN: ("هوامش الربح", "هامش الربح", "profit margin"),
@@ -42,6 +42,22 @@ _PHRASES: dict[CognitiveIntent, tuple[str, ...]] = {
     CognitiveIntent.TAX_SUMMARY: ("ضريبه القيمه", "vat report", "tax summary"),
     CognitiveIntent.SUPPLIER_STATUS: ("كشف الموردين", "حساب المورد", "supplier statement"),
     CognitiveIntent.PURCHASE_SUMMARY: ("امر الشراء", "فاتوره الشراء"),
+    CognitiveIntent.CASH_FLOW_SUMMARY: (
+        "cash flow",
+        "cashflow",
+        "التدفقات النقديه",
+        "تدفق نقدي",
+    ),
+    CognitiveIntent.LOW_STOCK_LIST: (
+        "low stock",
+        "المخزون المنخفض",
+        "مخزون منخفض",
+    ),
+    CognitiveIntent.TOP_CUSTOMERS: (
+        "افضل العملاء",
+        "اعلى العملاء",
+        "top customers",
+    ),
 }
 
 _GUIDE_TRIGGERS = frozenset({"وين", "اين", "خطوات", "اختصار", "اختصارات", "طريقه"})
@@ -154,6 +170,9 @@ _KEYWORDS: dict[CognitiveIntent, frozenset[str]] = {
     CognitiveIntent.DEBT_OVERVIEW: frozenset({"ديون", "ذمم", "مديونيه", "debt", "debts", "receivable", "receivables"}),
     CognitiveIntent.TAX_SUMMARY: frozenset({"ضريبه", "ضرايب", "القيمه", "vat", "tax", "taxes"}),
     CognitiveIntent.SUPPLIER_STATUS: frozenset({"مورد", "موردين", "supplier", "suppliers", "vendor", "vendors"}),
+    CognitiveIntent.CASH_FLOW_SUMMARY: frozenset({"تدفق", "تدفقات", "نقدي", "سيوله", "cash", "flow", "cashflow"}),
+    CognitiveIntent.LOW_STOCK_LIST: frozenset({"منخفض", "ناقص", "نقص", "low", "مخزون"}),
+    CognitiveIntent.TOP_CUSTOMERS: frozenset({"عملاء", "زبائن", "customers", "top", "افضل", "اعلي"}),
     CognitiveIntent.SYSTEM_GUIDE: _GUIDE_TRIGGERS,
 }
 
@@ -186,6 +205,18 @@ _COMPOUNDS: dict[CognitiveIntent, tuple[frozenset[str], ...]] = {
         frozenset({"رصيد", "عملاء"}),
     ),
     CognitiveIntent.SUPPLIER_STATUS: (frozenset({"حساب", "مورد"}), frozenset({"شراء", "مورد"})),
+    CognitiveIntent.CASH_FLOW_SUMMARY: (
+        frozenset({"تدفق", "نقدي"}),
+        frozenset({"cash", "flow"}),
+    ),
+    CognitiveIntent.LOW_STOCK_LIST: (
+        frozenset({"مخزون", "منخفض"}),
+        frozenset({"مخزون", "ناقص"}),
+    ),
+    CognitiveIntent.TOP_CUSTOMERS: (
+        frozenset({"افضل", "عملاء"}),
+        frozenset({"اعلي", "عملاء"}),
+    ),
     CognitiveIntent.SYSTEM_GUIDE: _guide_compounds(),
 }
 

@@ -77,11 +77,18 @@ def _has_permission(perm_code: str) -> bool:
 
 
 def _is_owner() -> bool:
-    """Check if current user is owner."""
+    """True only for platform authority (platform owner or developer).
+
+    A tenant-scoped ``is_owner`` is still a tenant user: production RBAC
+    requires the mapped ERP permission for every action, so it must not get a
+    blanket bypass here. The name is kept for backward compatibility.
+    """
     try:
-        return getattr(current_user, "is_owner", False) or _has_permission("admin")
+        from utils.auth_helpers import is_platform_authority
+
+        return bool(is_platform_authority(current_user))
     except Exception as exc:
-        logger.debug("Owner check failed: %s", exc)
+        logger.debug("Platform-owner check failed: %s", exc)
         return False
 
 
@@ -1031,7 +1038,12 @@ class ActionDispatcher:
 
         # Execute with schema-validated arguments
         try:
-            return action["handler"](clean_args)
+            result = action["handler"](clean_args)
+            if result.success:
+                from ai_knowledge.cognitive.read_cache import invalidate_tenant_reads
+
+                invalidate_tenant_reads(_get_active_tenant_id())
+            return result
         except Exception as e:
             _log_ai_error(
                 "action_dispatch_error",

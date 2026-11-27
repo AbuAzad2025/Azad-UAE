@@ -26,6 +26,9 @@ INTENT_PERMISSION: dict[CognitiveIntent, str] = {
     CognitiveIntent.DEBT_OVERVIEW: "manage_customers",
     CognitiveIntent.TAX_SUMMARY: "view_reports",
     CognitiveIntent.SUPPLIER_STATUS: "manage_suppliers",
+    CognitiveIntent.CASH_FLOW_SUMMARY: "view_ledger",
+    CognitiveIntent.LOW_STOCK_LIST: "manage_warehouse",
+    CognitiveIntent.TOP_CUSTOMERS: "view_reports",
 }
 
 _DISPATCHER_ACTION: dict[CognitiveIntent, str] = {

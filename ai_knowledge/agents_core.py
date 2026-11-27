@@ -182,8 +182,8 @@ def _get_llm_response(system_prompt: str, user_message: str) -> str | None:
             # Aligned with AIService.ACTIVE_MODELS (gemini-2.0-flash); the
             # old gemini-2.0-flash-exp endpoint is retired.
             resp = requests.post(
-                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-                f"?key={gemini_key}",
+                "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+                headers={"x-goog-api-key": gemini_key, "Content-Type": "application/json"},
                 json={"contents": [{"parts": [{"text": system_prompt + "\n\n" + user_message}]}]},
                 timeout=15,
             )

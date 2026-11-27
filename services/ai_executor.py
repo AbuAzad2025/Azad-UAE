@@ -12,8 +12,8 @@ from decimal import Decimal
 from flask_babel import gettext
 from flask_login import current_user as flask_user
 
+from ai_knowledge.cognitive.read_cache import ai_write_transaction
 from extensions import db
-from utils.db_safety import atomic_transaction
 from utils.tenanting import get_active_tenant_id
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class AIExecutor:
             customer_type=customer_type,
             credit_limit=Decimal(str(credit_limit)),
         )
-        with atomic_transaction("ai_create_customer"):
+        with ai_write_transaction("ai_create_customer", self.tenant_id):
             db.session.add(customer)
             db.session.flush()
 
@@ -167,7 +167,7 @@ class AIExecutor:
             category_id=category_id,
             is_active=True,
         )
-        with atomic_transaction("ai_create_product"):
+        with ai_write_transaction("ai_create_product", self.tenant_id):
             db.session.add(product)
             db.session.flush()
 
@@ -279,7 +279,7 @@ class AIExecutor:
                 "currency": "AED",
             }
 
-        with atomic_transaction("ai_create_sale"):
+        with ai_write_transaction("ai_create_sale", self.tenant_id):
             sale = SaleService.create_sale(
                 customer=customer,
                 seller=seller,
@@ -340,7 +340,7 @@ class AIExecutor:
 
         user_id = self._require_user_id()
         payment_number = self._generate_number("PAY", Payment, tenant_id=self.tenant_id)
-        with atomic_transaction("ai_receive_payment"):
+        with ai_write_transaction("ai_receive_payment", self.tenant_id):
             payment = Payment(
                 tenant_id=self.tenant_id,
                 payment_number=payment_number,
@@ -432,7 +432,7 @@ class AIExecutor:
         )
         amount_dec = Decimal(str(amount))
         user_id = self._require_user_id()
-        with atomic_transaction("ai_add_expense"):
+        with ai_write_transaction("ai_add_expense", self.tenant_id):
             expense = Expense(
                 tenant_id=self.tenant_id,
                 expense_number=expense_number,
@@ -482,7 +482,7 @@ class AIExecutor:
             tax_number=tax_number,
             is_active=True,
         )
-        with atomic_transaction("ai_create_supplier"):
+        with ai_write_transaction("ai_create_supplier", self.tenant_id):
             db.session.add(supplier)
             db.session.flush()
 
@@ -518,7 +518,7 @@ class AIExecutor:
             branch_id=self._current_branch_id(),
             is_active=True,
         )
-        with atomic_transaction("ai_create_employee"):
+        with ai_write_transaction("ai_create_employee", self.tenant_id):
             db.session.add(employee)
             db.session.flush()
 
@@ -563,7 +563,7 @@ class AIExecutor:
                 }
             )
 
-        with atomic_transaction("ai_create_purchase"):
+        with ai_write_transaction("ai_create_purchase", self.tenant_id):
             purchase = PurchaseService.create_purchase(
                 user=self.user,
                 supplier_data={"supplier_id": supplier.id, "supplier_name": supplier.name},

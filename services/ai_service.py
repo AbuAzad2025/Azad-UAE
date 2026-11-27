@@ -449,14 +449,22 @@ class AIService:
         }
 
     @staticmethod
-    def _get_model(model_cls, pk):
-        """Load a model by PK via db.session; ignore leaked Model.query mocks."""
+    def _get_model(model_cls, pk, tenant_id=None):
+        """Load a model by PK and enforce the active tenant on scoped models.
+
+        A bare ``db.session.get`` ignores tenant boundaries; AI reads must
+        never return another company's product/customer to the current user.
+        """
         if pk is None:
             return None
         instance = db.session.get(model_cls, pk)
         if instance is None or not isinstance(instance, model_cls):
             return None
         if getattr(type(instance), "__module__", "").startswith("unittest.mock"):
+            return None
+        tid = tenant_id if tenant_id is not None else get_active_tenant_id()
+        row_tenant = getattr(instance, "tenant_id", None)
+        if tid is not None and row_tenant is not None and int(row_tenant) != int(tid):
             return None
         return instance
 
@@ -1070,8 +1078,11 @@ class AIService:
         llm_reachable = bool(AIService.get_api_key()) and not force_local
         try:
             from ai_knowledge.action_dispatcher import action_dispatcher
+            from ai_knowledge.cognitive.normalizer import interrogative_blocks_write
 
             parsed = action_dispatcher.parse_chat_action(message)
+            if parsed and interrogative_blocks_write(message, parsed[0]):
+                parsed = None
             if parsed:
                 action_type, args = parsed
                 if (
@@ -1220,11 +1231,12 @@ class AIService:
             url = "https://api.groq.com/openai/v1/chat/completions"
             model = AIService.ACTIVE_MODELS["groq"]
         elif is_gemini:
-            # Native Gemini endpoint — the API key travels as a query
-            # param and the payload uses the contents/parts schema,
-            # NOT the OpenAI chat-completions schema.
+            # Native Gemini endpoint. The key travels in the x-goog-api-key
+            # header, never in a URL query string where it would leak into
+            # proxy logs, browser history and error traces. The payload uses
+            # the contents/parts schema, NOT the OpenAI chat schema.
             model = AIService.ACTIVE_MODELS["gemini"]
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         else:  # openai
             url = "https://api.openai.com/v1/chat/completions"
             model = AIService.ACTIVE_MODELS["openai"]
@@ -1344,7 +1356,7 @@ class AIService:
             logger.debug("Hint block build skipped", exc_info=True)
 
         if is_gemini:
-            headers = {"Content-Type": "application/json"}
+            headers = {"Content-Type": "application/json", "x-goog-api-key": api_key}
             payload: dict[str, Any] = {
                 "contents": [{"parts": [{"text": expert_prompt}]}],
                 "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000},

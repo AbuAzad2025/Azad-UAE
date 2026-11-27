@@ -8,6 +8,7 @@ from flask import Response, g, request, stream_with_context
 from flask_babel import gettext
 from flask_login import current_user, login_required
 
+from ai_knowledge.cognitive.normalizer import interrogative_blocks_write
 from extensions import db, limiter
 from routes.ai_routes.actions import _process_user_action, _user_can_ai_execute_actions
 from routes.ai_routes.shared import _sanitize_ai_prompt, _stream_ai_response
@@ -228,19 +229,7 @@ def chat():
         return prompt_error
     message = safe_message
 
-    # Check if client prefers SSE streaming (to prevent Gunicorn timeouts)
     prefer_stream = request.headers.get("Accept") == "text/event-stream" or data.get("stream", False)
-
-    if prefer_stream:
-        return Response(
-            stream_with_context(cast(Iterator[str], _stream_ai_response(message, context, ai_mode))),
-            mimetype="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "X-Accel-Buffering": "no",
-                "Connection": "keep-alive",
-            },
-        )
 
     action_result = None
     ai_state = getattr(g, "ai_access_state", None) or get_ai_access_state(current_user)
@@ -250,11 +239,20 @@ def chat():
     )
 
     # Try new action dispatcher first (clean, permission-validated, error-logged)
-    if can_execute_mutations and _user_can_ai_execute_actions(current_user):
+    # Streaming clients get the grounded token stream for conversational
+    # prompts; only explicit ``keyword: args`` commands are dispatched as
+    # structured (JSON) actions even when Accept asks for SSE.
+    wants_structured_action = not prefer_stream or AIService._is_structured_command(message)
+    if can_execute_mutations and _user_can_ai_execute_actions(current_user) and wants_structured_action:
         from ai_knowledge.action_dispatcher import action_dispatcher
         from ai_knowledge.agents_core import intelligent_response
 
         parsed = action_dispatcher.parse_chat_action(message)
+        action_blocked = False
+        if parsed and interrogative_blocks_write(message, parsed[0]):
+            # "كم رصيده؟" is a read question, never a "balance: ..." write.
+            parsed = None
+            action_blocked = True
         if parsed:
             action_type, args = parsed
             if action_type in ("greeting", "help"):
@@ -274,17 +272,34 @@ def chat():
                     # Input-validation failure only: let the interactive wizard
                     # guide the user step by step to complete the action.
                     action_result = _process_user_action(message, current_user)
-        else:
+        elif not action_blocked and not prefer_stream:
             action_result = _process_user_action(message, current_user)
-    elif _user_can_ai_execute_actions(current_user):
+    elif (
+        _user_can_ai_execute_actions(current_user)
+        and not interrogative_blocks_write(message, "create_sale")
+        and wants_structured_action
+    ):
         action_result = _process_user_action(message, current_user)
 
     if action_result:
+        # Structured action responses are always JSON, even when the client
+        # asked for SSE: streaming them would desync the delta/final contract.
         return success_response(
             data={
                 "response": action_result,
                 "ai_enabled": True,
                 "action_executed": True,
+            },
+        )
+
+    if prefer_stream:
+        return Response(
+            stream_with_context(cast(Iterator[str], _stream_ai_response(message, context, ai_mode))),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+                "Connection": "keep-alive",
             },
         )
 

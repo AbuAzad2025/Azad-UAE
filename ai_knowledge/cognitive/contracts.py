@@ -27,6 +27,9 @@ class CognitiveIntent(StrEnum):
     DEBT_OVERVIEW = "debt_overview"
     TAX_SUMMARY = "tax_summary"
     SUPPLIER_STATUS = "supplier_status"
+    CASH_FLOW_SUMMARY = "cash_flow_summary"
+    LOW_STOCK_LIST = "low_stock_list"
+    TOP_CUSTOMERS = "top_customers"
     SYSTEM_GUIDE = "system_guide"
     UNKNOWN = "unknown"
 
@@ -59,6 +62,8 @@ class NormalizedMessage:
     tokens: frozenset[str]
     numbers: tuple[float, ...] = ()
     currency_hints: tuple[str, ...] = ()
+    locale: str = "en"
+    relative_period: tuple[int, str] | None = None
 
 
 @dataclass(frozen=True)

@@ -88,6 +88,22 @@ def is_admin_surface_user(user):
     return (slug == RoleEnum.SUPER_ADMIN.value) or (name == RoleEnum.SUPER_ADMIN.name)
 
 
+def is_platform_authority(user):
+    """True only for platform owner (tenantless is_owner) or developer role.
+
+    Unlike ``is_global_owner_user`` this predicate is deliberately not used by
+    route-level bypass decorators, so test doubles that patch those decorators
+    cannot silently grant a tenant owner platform-wide authority.
+    """
+    if not user:
+        return False
+    if getattr(user, "is_owner", False) and getattr(user, "tenant_id", None) is None:
+        return True
+    role = getattr(user, "role", None)
+    slug = getattr(role, "slug", None) if role else None
+    return slug == RoleEnum.DEVELOPER.value
+
+
 def is_global_owner_user(user):
     """
     هل المستخدم مالك منصة أو مطوّر (صلاحيات شاملة)؟

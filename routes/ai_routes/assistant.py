@@ -25,6 +25,23 @@ from .blueprint import ai_bp
 logger = logging.getLogger(__name__)
 
 
+def _can_see_costs(user) -> bool:
+    check = getattr(user, "can_see_costs", None)
+    if callable(check):
+        try:
+            if bool(check()):
+                return True
+        except Exception:
+            logger.debug("can_see_costs check failed", exc_info=True)
+    has_permission = getattr(user, "has_permission", None)
+    if callable(has_permission):
+        try:
+            return bool(has_permission("view_costs"))
+        except Exception:
+            logger.debug("view_costs check failed", exc_info=True)
+    return False
+
+
 @ai_bp.route("/assistant", methods=["GET"])
 @login_required
 @permission_required("view_reports")
@@ -47,6 +64,11 @@ def assistant_page():
             ai_disable_reason=disable_reason,
             warehouses=warehouses,
             current_user=current_user,
+            ai_can_reports=bool(current_user.has_permission("view_reports")),
+            ai_can_ledger=bool(current_user.has_permission("view_ledger")),
+            ai_can_warehouse=bool(current_user.has_permission("manage_warehouse")),
+            ai_can_customers=bool(current_user.has_permission("manage_customers")),
+            ai_can_see_costs=bool(_can_see_costs(current_user)),
         )
     except Exception:
         current_app.logger.exception("AI assistant page failed")

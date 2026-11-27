@@ -38,10 +38,17 @@ logger = logging.getLogger(__name__)
 
 
 def _user_can_ai_execute_actions(user):
-    """Allow DB-mutating AI actions only for owner or users with relevant ERP permissions."""
+    """Coarse gate for DB-mutating AI actions.
+
+    Only platform authority bypasses this list; a tenant owner must still hold
+    one of the mapped ERP permissions. The precise per-action permission is
+    enforced later by ActionDispatcher / the wizard flow.
+    """
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    if getattr(user, "is_owner", False):
+    from utils.auth_helpers import is_platform_authority
+
+    if is_platform_authority(user):
         return True
     mutation_perms = (
         "manage_sales",

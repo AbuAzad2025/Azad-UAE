@@ -21,6 +21,28 @@ from utils.tenanting import get_active_tenant_id, tenant_query
 
 logger = logging.getLogger(__name__)
 
+
+class _CostVisibilityDenied(Exception):
+    """Internal signal: margin/cost data requested without cost visibility."""
+
+
+def _can_see_costs(user: object) -> bool:
+    """Cost/profit figures are only for users with cost visibility."""
+    check = getattr(user, "can_see_costs", None)
+    if callable(check):
+        try:
+            return bool(check())
+        except Exception as exc:
+            logger.debug("can_see_costs check failed: %s", exc)
+    has_permission = getattr(user, "has_permission", None)
+    if callable(has_permission):
+        try:
+            return bool(has_permission("view_costs"))
+        except Exception as exc:
+            logger.debug("view_costs check failed: %s", exc)
+    return False
+
+
 DEFAULT_DAYS = 30
 MAX_DAYS = 365
 ROW_LIMIT = 500
@@ -235,6 +257,11 @@ def _pattern_analysis(days: int, user: object) -> tuple[str, str, int, dict]:
 
 
 def _profit_margin(days: int, user: object) -> tuple[str, str, int, dict]:
+    # Gate before touching any data: cost/profit/margin must never reach a
+    # caller that lacks cost visibility (view_reports alone is not enough).
+    if not _can_see_costs(user):
+        raise _CostVisibilityDenied()
+
     from models.sale import Sale, SaleLine
 
     cutoff = _cutoff(days)
@@ -349,6 +376,80 @@ def _supplier_status(slots: SlotSet, user: object) -> tuple[str, str, int, dict]
     )
 
 
+def _cash_flow_summary(days: int, user: object) -> tuple[str, str, int, dict]:
+    """Operating cash movement from the same sources as the cash-flow report."""
+    from models.payment import Payment
+    from models.receipt import Receipt
+
+    cutoff = _cutoff(days)
+    receipts = tenant_query(Receipt, user).filter(Receipt.receipt_date >= cutoff).limit(ROW_LIMIT).all()
+    payments = tenant_query(Payment, user).filter(Payment.payment_date >= cutoff).limit(ROW_LIMIT).all()
+    inflow = sum(_to_float(getattr(row, "amount_aed", 0)) for row in receipts)
+    outflow = sum(_to_float(getattr(row, "amount_aed", 0)) for row in payments)
+    net = inflow - outflow
+    movements = len(receipts) + len(payments)
+    obs = (
+        f"Cash flow in last {days} days: inflow {inflow:,.2f}, outflow {outflow:,.2f}, "
+        f"net {net:,.2f} across {movements} movements."
+    )
+    return (
+        obs,
+        f"Receipt+Payment[tenant,last={days}d]",
+        movements,
+        {
+            "inflow": inflow,
+            "outflow": outflow,
+            "net": net,
+        },
+    )
+
+
+def _low_stock_list(user: object, limit: int = 10) -> tuple[str, str, int, dict]:
+    """Named products at or below their reorder alert, tenant scoped."""
+    from models.product import Product
+
+    rows = tenant_query(Product, user).filter_by(is_active=True).limit(ROW_LIMIT).all()
+    low = [
+        row
+        for row in rows
+        if _to_float(getattr(row, "current_stock", 0)) <= _to_float(getattr(row, "min_stock_alert", 0))
+    ]
+    items = [
+        f"{getattr(row, 'name', row.id)} "
+        f"(stock {_to_float(getattr(row, 'current_stock', 0)):,.2f}, "
+        f"alert {_to_float(getattr(row, 'min_stock_alert', 0)):,.2f})"
+        for row in low[:limit]
+    ]
+    obs = f"Low-stock list: {len(low)} product(s) at or below alert level."
+    if items:
+        obs += " " + "; ".join(items) + "."
+    return obs, "Product[tenant,low_stock]", len(low), {"low": len(low), "items": items}
+
+
+def _top_customers(days: int, user: object, limit: int = 5) -> tuple[str, str, int, dict]:
+    """Top customers by sales revenue (never cost), tenant scoped."""
+    from models.customer import Customer
+    from models.sale import Sale
+
+    cutoff = _cutoff(days)
+    totals: dict[int, float] = {}
+    for row in tenant_query(Sale, user).filter(Sale.sale_date >= cutoff).limit(ROW_LIMIT).all():
+        customer_id = getattr(row, "customer_id", None)
+        if customer_id is None:
+            continue
+        totals[int(customer_id)] = totals.get(int(customer_id), 0.0) + _to_float(getattr(row, "total_amount", 0))
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)[:limit]
+    leaders: list[str] = []
+    for customer_id, total in ranked:
+        customer = tenant_query(Customer, user).filter_by(id=customer_id).first()
+        label = getattr(customer, "name", None) if customer else None
+        leaders.append(f"{label or customer_id} ({total:,.2f})")
+    obs = f"Top {len(ranked)} customers by revenue in last {days} days."
+    if leaders:
+        obs += " Leaders: " + ", ".join(leaders) + "."
+    return obs, f"Sale+Customer[tenant,last={days}d]", len(ranked), {"leaders": leaders}
+
+
 def plan_and_execute(
     intent: CognitiveIntent, slots: SlotSet, user: object | None
 ) -> tuple[str, ReasoningTrace, Provenance, dict]:
@@ -412,8 +513,26 @@ def plan_and_execute(
                 obs, prov, count, data = _tax_summary(days, user)
             case CognitiveIntent.SUPPLIER_STATUS:
                 obs, prov, count, data = _supplier_status(slots, user)
+            case CognitiveIntent.CASH_FLOW_SUMMARY:
+                obs, prov, count, data = _cash_flow_summary(days, user)
+            case CognitiveIntent.LOW_STOCK_LIST:
+                obs, prov, count, data = _low_stock_list(user)
+            case CognitiveIntent.TOP_CUSTOMERS:
+                obs, prov, count, data = _top_customers(days, user)
             case _:
                 raise ValueError(f"planner has no grounded plan for {intent.value}")
+    except _CostVisibilityDenied:
+        trace = ReasoningTrace(
+            plan=("intent-decoded", "rbac-passed", "cost-visibility-gate"),
+            steps=(
+                ReasoningStep("intent-decoded", f"Intent={intent.value}.", 0.9),
+                ReasoningStep("rbac-passed", "Role check passed before query.", 1.0),
+                ReasoningStep("cost-visibility-gate", "Cost/profit data hidden; no query executed.", 1.0),
+            ),
+            conclusion="Cost and profit details require view_costs permission.",
+            confidence=1.0,
+        )
+        return "cost_denied", trace, Provenance(tenant_id=tid), {}
     except Exception as exc:
         logger.error("Cognitive query failed for %s: %s", intent.value, exc)
         trace = ReasoningTrace(

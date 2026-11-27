@@ -213,7 +213,9 @@ class TestActionDispatcherWave6:
             ):
                 r = action_dispatcher.dispatch(action, args)
                 assert r.success is False
-                assert "تينانت" in r.message
+                # create_user is gated by platform authority before the tenant
+                # guard; the rest are blocked by the missing tenant context.
+                assert "المالك" in r.message if action == "create_user" else "تينانت" in r.message
 
     def test_remaining_handler_branches(self, mock_ai_user):
         from ai_knowledge.action_dispatcher import action_dispatcher

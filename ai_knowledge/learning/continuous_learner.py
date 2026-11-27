@@ -298,6 +298,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
         q = test.get("question", "").strip()
         expected = [k.lower() for k in (test.get("expected_keywords") or [])]
         context = test.get("context") or {}
+        tenant_id = context.get("tenant_id")
         if not q:
             continue
         try:
@@ -324,6 +325,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
                         response=text,
                         user_feedback=5 if success else 2,
                         context={"expected": expected, "score": score},
+                        tenant_id=tenant_id,
                     )
                 except Exception as learn_exc:
                     logger.debug("Feedback learn failed: %s", learn_exc)
@@ -345,6 +347,7 @@ def evaluate_and_learn(qa_tests: list, ai_service=None):
                         response=str(exc),
                         user_feedback=1,
                         context={"expected": expected, "error": True},
+                        tenant_id=tenant_id,
                     )
                 except Exception as inner_exc:
                     logger.debug("Error feedback learn failed: %s", inner_exc)

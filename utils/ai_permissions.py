@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from flask_login import current_user
 
+from utils.auth_helpers import is_platform_authority
+
 # Mapping: ai_action_type -> (base_erp_permission, ai_specific_permission)
 _AI_PERM_MAP: dict[str, tuple[str, str]] = {
     "create_customer": ("manage_customers", "ai:manage_customers"),
@@ -44,7 +46,7 @@ def get_ai_permission(action_type: str) -> str:
 def user_has_ai_permission(action_type: str, user=None) -> bool:
     """Check if a user has permission to execute an AI action.
 
-    Owners always pass.  For others:
+    Platform owners/developers always pass.  For others:
     1. If the AI-specific permission exists and the user has it → allow.
     2. If the AI-specific permission does NOT exist on the user,
        fall back to the base ERP permission → allow if present.
@@ -54,7 +56,9 @@ def user_has_ai_permission(action_type: str, user=None) -> bool:
         user = current_user
     if not user or not getattr(user, "is_authenticated", False):
         return False
-    if getattr(user, "is_owner", False):
+    # Only platform authority bypasses the permission matrix. A tenant owner
+    # is a tenant-scoped user and must hold the mapped ERP/AI permission.
+    if is_platform_authority(user):
         return True
 
     base_perm, ai_perm = _AI_PERM_MAP.get(action_type, ("", ""))

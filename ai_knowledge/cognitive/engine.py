@@ -7,6 +7,7 @@ deterministic compose -> decision gate. Read-only: never writes to the DB.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from ai_knowledge.cognitive import composer
 from ai_knowledge.cognitive.access import check_access
@@ -44,14 +45,32 @@ def _history(user: object | None, limit: int = 6) -> list[tuple[str, str | None]
             .limit(limit)
             .all()
         )
-        return [(r.query or "", r.intent) for r in rows]
+        from datetime import UTC, datetime, timedelta
+
+        cutoff = datetime.now(UTC) - timedelta(minutes=15)
+        result: list[tuple[str, str | None]] = []
+        for row in rows:
+            created = getattr(row, "created_at", None)
+            if created is not None:
+                if created.tzinfo is None:
+                    created = created.replace(tzinfo=UTC)
+                if created < cutoff:
+                    continue
+            result.append((row.query or "", row.intent))
+        return result
     except Exception as exc:
         logger.debug("Cognitive history unavailable: %s", exc)
         return []
 
 
-def _previous_slots(intent: CognitiveIntent, past: list[tuple[str, str | None]]) -> dict[str, str]:
+def _previous_slots(
+    intent: CognitiveIntent,
+    past: list[tuple[str, str | None]],
+    stored: dict[str, str] | None = None,
+) -> dict[str, str]:
     wanted = "customer_name" if intent == CognitiveIntent.CUSTOMER_BALANCE else "supplier_name"
+    if stored and stored.get(wanted):
+        return {wanted: stored[wanted]}
     for query, _saved in past:
         if not query:
             continue
@@ -77,8 +96,20 @@ def _trace_note(text: str, confidence: float) -> ReasoningTrace:
     return ReasoningTrace(plan=("decision",), steps=(step,), conclusion=text, confidence=confidence)
 
 
-def _resolve_slots(intent: CognitiveIntent, normalized: NormalizedMessage, past: list[tuple[str, str | None]]):
-    slots = extract_slots(intent, normalized, _previous_slots(intent, past))
+def _resolve_slots(
+    intent: CognitiveIntent,
+    normalized: NormalizedMessage,
+    past: list[tuple[str, str | None]],
+    stored: dict[str, str] | None = None,
+):
+    slots = extract_slots(intent, normalized, _previous_slots(intent, past, stored))
+    carried = _previous_slots(intent, past, stored)
+    if stored:
+        for key in ("days", "period_label", "currency"):
+            if stored.get(key) and not slots.values.get(key):
+                slots.values[key] = stored[key]
+    elif carried:
+        slots.values.update({key: value for key, value in carried.items() if not slots.values.get(key)})
     if intent == CognitiveIntent.CUSTOMER_BALANCE and slots.missing:
         rescued = _single_token_name(normalized, past)
         if rescued:
@@ -98,6 +129,17 @@ def _answer_data(intent, hypothesis, slots, user, required: str) -> CognitiveRes
             trace=trace,
             provenance=provenance,
         )
+    if status == "cost_denied":
+        return CognitiveResult(
+            success=True,
+            response=composer.compose_denied(intent, "view_costs"),
+            intent=intent.value,
+            confidence=1.0,
+            decision="denied",
+            required_permission="view_costs",
+            trace=trace,
+            provenance=provenance,
+        )
     response = composer.compose_data(intent, trace, provenance)
     return CognitiveResult(
         success=True,
@@ -112,9 +154,27 @@ def _answer_data(intent, hypothesis, slots, user, required: str) -> CognitiveRes
     )
 
 
-def process(message: str, user: object | None = None) -> CognitiveResult:
+def process(message: str, user: object | None = None, cache: Any | None = None) -> CognitiveResult:
+    from ai_knowledge.cognitive.followup import (
+        clear_context,
+        get_context,
+        is_reset,
+        permission_signature,
+        set_context,
+    )
+    from utils.tenanting import get_active_tenant_id
+
     normalized = normalize_message(message)
-    past = _history(user)
+    tenant_id = get_active_tenant_id(user)
+    user_id = getattr(user, "id", None)
+    signature = permission_signature(user)
+    stored: dict[str, str] = {}
+    if is_reset(message):
+        clear_context(tenant_id, user_id)
+        past = []
+    else:
+        stored = get_context(tenant_id, user_id, signature)
+        past = _history(user)
     previous_intent = past[0][1] if past else None
     hypothesis = route(normalized, previous_intent)
     intent = hypothesis.intent
@@ -172,7 +232,7 @@ def process(message: str, user: object | None = None) -> CognitiveResult:
             provenance=Provenance(tenant_id=None),
         )
 
-    slots = _resolve_slots(intent, normalized, past)
+    slots = _resolve_slots(intent, normalized, past, stored)
     if slots.missing:
         return CognitiveResult(
             success=True,
@@ -184,4 +244,17 @@ def process(message: str, user: object | None = None) -> CognitiveResult:
             provenance=Provenance(tenant_id=None),
         )
 
-    return _answer_data(intent, hypothesis, slots, user, required)
+    set_context(tenant_id, user_id, signature, dict(slots.values))
+
+    from ai_knowledge.cognitive.read_cache import get_default_cache, make_key
+
+    active_cache = cache if cache is not None else get_default_cache()
+    cache_key = make_key(normalized, intent, slots, user)
+    if cache_key is not None:
+        cached = active_cache.get(cache_key, user)
+        if cached is not None:
+            return cached
+    result = _answer_data(intent, hypothesis, slots, user, required)
+    if cache_key is not None and result.decision == "answer":
+        active_cache.set(cache_key, result)
+    return result

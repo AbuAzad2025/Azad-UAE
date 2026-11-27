@@ -162,6 +162,7 @@
       </div>
     </div>
   </div>
+  {% if ai_can_see_costs %}
   <div class="col-md-3 mb-3">
     <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('هوامش') }} {{ t('Profit') }}">
       <div class="card-body">
@@ -171,6 +172,7 @@
       </div>
     </div>
   </div>
+  {% endif %}
   <div class="col-md-3 mb-3">
     <div class="card text-center h-100 erp-clickable" data-action="quick-ask" data-question="{{ t('Health') }} {{ t('Inventory') }}">
       <div class="card-body">
@@ -187,6 +189,24 @@
         <h6>{{ t('كشف') }} {{ t('الأنماط') }}</h6>
         <small class="text-muted">{{ t('سلوكيات') }} {{ t('خفية') }}</small>
       </div>
+    </div>
+  </div>
+</div>
+
+{# Grounded quick prompts — only for permissions the caller actually holds. #}
+<div class="row mb-3">
+  <div class="col-12">
+    <div class="btn-group flex-wrap" role="group" aria-label="{{ t('اقتراحات') }}">
+      {% if ai_can_customers %}
+      <button type="button" class="btn btn-outline-primary btn-sm" data-action="quick-ask" data-question="{{ t('Receivables') }}">{{ t('Receivables') }}</button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-action="quick-ask" data-question="{{ t('أفضل العملاء') }}">{{ t('أفضل العملاء') }}</button>
+      {% endif %}
+      {% if ai_can_ledger %}
+      <button type="button" class="btn btn-outline-info btn-sm" data-action="quick-ask" data-question="{{ t('Cash Flow Statement') }}">{{ t('Cash Flow Statement') }}</button>
+      {% endif %}
+      {% if ai_can_warehouse %}
+      <button type="button" class="btn btn-outline-warning btn-sm" data-action="quick-ask" data-question="{{ t('Low_Stock') }}">{{ t('Low_Stock') }}</button>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -220,18 +240,18 @@
   <div class="px-3 py-2 bg-white border-top chat-input-bar">
     <div class="d-flex justify-content-between mb-2">
       <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-danger" data-action="clear-chat" title="{{ t('مسح') }} {{ t('المحادثة_2') }}">
+        <button type="button" class="btn btn-outline-danger" data-action="clear-chat" title="{{ t('مسح') }} {{ t('المحادثة_2') }}" aria-label="{{ t('مسح') }} {{ t('المحادثة_2') }}">
           <i class="fas fa-trash" aria-hidden="true"></i>
         </button>
-        <button type="button" class="btn btn-outline-info" data-action="get-summary" title="{{ t('Summary') }}">
+        <button type="button" class="btn btn-outline-info" data-action="get-summary" title="{{ t('Summary') }}" aria-label="{{ t('Summary') }}">
           <i class="fas fa-list" aria-hidden="true"></i>
         </button>
-        <button type="button" class="btn btn-outline-success" data-action="toggle-beginners-mode" id="beginnersBtn" title="{{ t('وضع') }} {{ t('المبتدئين') }}">
+        <button type="button" class="btn btn-outline-success" data-action="toggle-beginners-mode" id="beginnersBtn" title="{{ t('وضع') }} {{ t('المبتدئين') }}" aria-label="{{ t('وضع') }} {{ t('المبتدئين') }}">
           <i class="fas fa-graduation-cap" aria-hidden="true"></i>
         </button>
       </div>
       <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-secondary" data-action="set-dialect" data-dialect="formal" id="formalBtn" title="{{ t('فصحى') }}">
+        <button type="button" class="btn btn-outline-secondary" data-action="set-dialect" data-dialect="formal" id="formalBtn" title="{{ t('فصحى') }}" aria-label="{{ t('فصحى') }}">
           <i class="fas fa-book" aria-hidden="true"></i>
         </button>
         <button type="button" class="btn btn-outline-primary active" data-action="set-dialect" data-dialect="palestinian" id="palestinianBtn" title="{{ t('Palestinian_2') }}">
@@ -242,7 +262,7 @@
         </button>
       </div>
       <div class="btn-group btn-group-sm">
-        <button type="button" class="btn btn-outline-success" data-action="show-excel-uploader" title="{{ t('Upload') }} Excel">
+        <button type="button" class="btn btn-outline-success" data-action="show-excel-uploader" title="{{ t('Upload') }} Excel" aria-label="{{ t('Upload') }} Excel">
           <i class="fas fa-file-excel" aria-hidden="true"></i>
         </button>
       </div>
@@ -427,7 +447,7 @@ function sendMessage() {
   showTyping();
   const payload = {
     message: msg,
-    ai_mode: localStorage.getItem('ai_mode') || 'groq',
+    ai_mode: localStorage.getItem('ai_mode') || 'local',
     context: { dialect: currentDialect, beginners_mode: beginnersMode }
   };
   // P3-2: بث حقيقي token-by-token عبر SSE مع تراجع تلقائي لـ AJAX
@@ -575,7 +595,8 @@ window.switchAIMode = (mode) => {
   }
 };
 
-  const savedMode = localStorage.getItem('ai_mode') || 'groq';
+  // Local-first: the deterministic grounded engine is the default path.
+  const savedMode = localStorage.getItem('ai_mode') || 'local';
   switchAIMode(savedMode);
 
 // Footer clearance — measure the real fixed footer (+ mobile bottom nav when

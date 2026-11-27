@@ -202,6 +202,12 @@ def _with(client, db_session, tenant, branch, codes, slug):
     permission set is longer than that. Every call therefore makes its own
     role, so one scenario's grants can never be overwritten by another's.
     """
+    from models import Permission
+
+    for code in codes:
+        if db_session.query(Permission).filter_by(code=code).first() is None:
+            db_session.add(Permission(code=code, name=code, name_ar=code, category="ai-test"))
+    db_session.flush()
     role_slug = f"{slug}-{uuid.uuid4().hex[:10]}"
     user = _user(db_session, tenant, slug=role_slug, permissions=list(codes), branch=branch)
     _login(client, user)
@@ -282,7 +288,8 @@ class TestAI01ThePermissionBoundary:
 
     def test_view_reports_reaches_the_report_routes(self, client, db_session, demo_tenant, demo_branch):
         """AI-03."""
-        _with(client, db_session, demo_tenant, demo_branch, ["view_reports"], "reporter")
+        # Margin analysis additionally requires cost visibility.
+        _with(client, db_session, demo_tenant, demo_branch, ["view_reports", "view_costs"], "reporter")
         for path in REPORT_ROUTES:
             resp = client.get(path)
             assert resp.status_code == 200, f"{path} answered {resp.status_code}"
@@ -455,7 +462,7 @@ class TestAI26TheAnalytics:
 
     def test_the_margin_analysis_answers(self, client, db_session, demo_tenant, demo_branch):
         """AI-26."""
-        _with(client, db_session, demo_tenant, demo_branch, ["view_reports"], "reporter")
+        _with(client, db_session, demo_tenant, demo_branch, ["view_reports", "view_costs"], "reporter")
         resp = client.get("/ai/analyze-margins")
         assert resp.status_code == 200
         assert "data" in _json_envelope(resp)
@@ -977,7 +984,14 @@ class TestAI89TheShape:
             db_session,
             demo_tenant,
             demo_branch,
-            ["view_reports", "view_products", "manage_products", "manage_customers", "view_customers"],
+            [
+                "view_reports",
+                "view_costs",
+                "view_products",
+                "manage_products",
+                "manage_customers",
+                "view_customers",
+            ],
             "reader",
         )
         for path in REPORT_ROUTES:

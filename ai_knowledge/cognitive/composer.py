@@ -24,6 +24,9 @@ _CAPABILITIES = (
     "ملخص المشتريات",
     "حالة الموردين",
     "ملخص المصروفات",
+    "ملخص التدفق النقدي",
+    "قائمة المخزون المنخفض",
+    "أفضل العملاء",
     "ملخص الضرائب",
     "حالة المدفوعات",
     "حالة الشيكات",
@@ -68,6 +71,9 @@ def compose_data(intent: CognitiveIntent, trace: ReasoningTrace, provenance: Pro
         CognitiveIntent.DEBT_OVERVIEW: "ديون العملاء",
         CognitiveIntent.TAX_SUMMARY: "ملخص الضرائب",
         CognitiveIntent.SUPPLIER_STATUS: "حالة الموردين",
+        CognitiveIntent.CASH_FLOW_SUMMARY: "ملخص التدفق النقدي",
+        CognitiveIntent.LOW_STOCK_LIST: "قائمة المخزون المنخفض",
+        CognitiveIntent.TOP_CUSTOMERS: "أفضل العملاء",
     }
     title = titles.get(intent, intent.value)
     return f"{title}:\n{trace.conclusion}{_provenance_line(provenance)}"
