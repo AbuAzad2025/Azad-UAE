@@ -17,7 +17,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 # Warning-level rules are baselined, not xfailed. A count that grows means a
 # new violation slipped in; a count that shrinks means the baseline must be
 # tightened in the same commit, so the ratchet can only move one way.
-BASELINE = {"routes_db_queries": 4, "type_ignore": 20, "function_length": 231}
+BASELINE = {"routes_db_queries": 4, "type_ignore": 20, "function_length": 230}
 
 
 def _assert_baseline(key: str, violations: list[Violation]) -> None:

@@ -48,6 +48,7 @@ EXEMPT_DIRS: frozenset[str] = frozenset(
         "logs",
         "load_tests",
         "tools",
+        "dev",  # isolated dev-only docs/scripts; not production code
     }
 )
 

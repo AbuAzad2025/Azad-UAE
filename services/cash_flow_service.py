@@ -16,6 +16,25 @@ from models.receipt import Receipt
 
 class CashFlowService:
     @staticmethod
+    def _prepare_scope(period_start, period_end, tenant_id):
+        """Parse dates and resolve the tenant BEFORE any aggregation.
+
+        The old code resolved the tenant only for the cash-balance step, so all
+        three activity sections aggregated every tenant's rows when the caller
+        omitted it — a cross-tenant financial leak on /ledger/cash-flow.
+        """
+        if isinstance(period_start, str):
+            period_start = datetime.strptime(period_start, "%Y-%m-%d").date()
+        if isinstance(period_end, str):
+            period_end = datetime.strptime(period_end, "%Y-%m-%d").date()
+        from utils.gl_tenant import active_tenant_id
+
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        if tenant_id is None:
+            raise ValueError("An active tenant is required to generate a cash-flow statement.")
+        return period_start, period_end, tenant_id
+
+    @staticmethod
     def generate_cash_flow(period_start, period_end, branch_id=None, tenant_id=None):
         """
         إنشاء قائمة التدفقات النقدية
@@ -29,22 +48,7 @@ class CashFlowService:
         Returns:
             dict: قائمة التدفقات النقدية الكاملة
         """
-        # تحويل التواريخ
-        if isinstance(period_start, str):
-            period_start = datetime.strptime(period_start, "%Y-%m-%d").date()
-        if isinstance(period_end, str):
-            period_end = datetime.strptime(period_end, "%Y-%m-%d").date()
-
-        # Tenant scope MUST be resolved before any aggregation. The old code
-        # resolved it only for the cash-balance step, so all three activity
-        # sections aggregated every tenant's rows when the caller omitted it —
-        # a cross-tenant financial leak on /ledger/cash-flow. A caller with no
-        # tenant context is refused rather than served unscoped data.
-        from utils.gl_tenant import active_tenant_id
-
-        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
-        if tenant_id is None:
-            raise ValueError("An active tenant is required to generate a cash-flow statement.")
+        period_start, period_end, tenant_id = CashFlowService._prepare_scope(period_start, period_end, tenant_id)
 
         # 1. الأنشطة التشغيلية (Operating Activities)
         operating: dict[str, Any] = CashFlowService._get_operating_activities(

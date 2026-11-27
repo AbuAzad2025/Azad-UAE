@@ -442,6 +442,48 @@ def account_statement(account_id):
     )
 
 
+def _manual_entry_lines_from_form(form):
+    """Parse repeated line_N_* fields into posting lines."""
+    lines = []
+    i = 0
+    while True:
+        account_code = form.get(f"line_{i}_account")
+        if not account_code:
+            break
+        debit = form.get(f"line_{i}_debit") or ""
+        credit = form.get(f"line_{i}_credit") or ""
+        try:
+            debit_value = Decimal(debit.strip()) if debit.strip() else Decimal("0")
+            credit_value = Decimal(credit.strip()) if credit.strip() else Decimal("0")
+        except (ValueError, ArithmeticError, AttributeError):
+            debit_value = Decimal("0")
+            credit_value = Decimal("0")
+        if debit_value > 0 or credit_value > 0:
+            lines.append(
+                {
+                    "account_code": account_code,
+                    "debit": debit_value,
+                    "credit": credit_value,
+                    "description": form.get(f"line_{i}_description", ""),
+                }
+            )
+        i += 1
+    return lines
+
+
+def _validate_and_post_manual_entry(entry, user):
+    """Validate and post a draft within the caller's transaction."""
+    from services.advanced_journal_manager import AdvancedJournalEntryManager
+
+    entry_tenant_id = entry.tenant_id
+    active_tenant_id = get_active_tenant_id(user)
+    if entry_tenant_id is None or (active_tenant_id is not None and int(entry_tenant_id) != int(active_tenant_id)):
+        raise ValueError("Journal entry tenant does not match the active tenant.")
+    AdvancedJournalEntryManager.validate_entry(entry.id, validated_by=user.id, tenant_id=entry_tenant_id, commit=False)
+    AdvancedJournalEntryManager.post_entry(entry.id, posted_by=user.id, tenant_id=entry_tenant_id, commit=False)
+    LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
+
+
 @ledger_bp.route("/manual-entry", methods=["GET", "POST"])
 @login_required
 @permission_required("manage_ledger")
@@ -457,36 +499,7 @@ def manual_entry():
             if entry_date_raw:
                 entry_date = datetime.strptime(entry_date_raw, "%Y-%m-%d")
 
-            lines = []
-
-            i = 0
-            while True:
-                account_code = request.form.get(f"line_{i}_account")
-                if not account_code:
-                    break
-
-                debit = request.form.get(f"line_{i}_debit") or ""
-                credit = request.form.get(f"line_{i}_credit") or ""
-                line_description = request.form.get(f"line_{i}_description", "")
-
-                try:
-                    debit_value = Decimal(debit.strip()) if debit and debit.strip() else Decimal("0")
-                    credit_value = Decimal(credit.strip()) if credit and credit.strip() else Decimal("0")
-                except (ValueError, ArithmeticError, AttributeError):
-                    debit_value = Decimal("0")
-                    credit_value = Decimal("0")
-
-                if debit_value > 0 or credit_value > 0:
-                    lines.append(
-                        {
-                            "account_code": account_code,
-                            "debit": debit_value,
-                            "credit": credit_value,
-                            "description": line_description,
-                        }
-                    )
-
-                i += 1
+            lines = _manual_entry_lines_from_form(request.form)
 
             try:
                 requested_branch_id = int(request.form.get("branch_id") or 0) or None
@@ -507,27 +520,7 @@ def manual_entry():
                     created_by=current_user.id,
                     branch_id=branch_id,
                 )
-                # A draft entry affects no balance or statement. Validate and
-                # post it inside the same transaction so the "created"
-                # confirmation is truthful. Both transitions are bound to the
-                # entry's own tenant so a mismatch can never resolve by id
-                # across tenants.
-                from services.advanced_journal_manager import AdvancedJournalEntryManager
-
-                entry_tenant_id = entry.tenant_id
-                active_tenant_id = get_active_tenant_id(current_user)
-                if entry_tenant_id is None or (
-                    active_tenant_id is not None and int(entry_tenant_id) != int(active_tenant_id)
-                ):
-                    raise ValueError("Journal entry tenant does not match the active tenant.")
-
-                AdvancedJournalEntryManager.validate_entry(
-                    entry.id, validated_by=current_user.id, tenant_id=entry_tenant_id, commit=False
-                )
-                AdvancedJournalEntryManager.post_entry(
-                    entry.id, posted_by=current_user.id, tenant_id=entry_tenant_id, commit=False
-                )
-                LoggingCore.log_audit("create", "gl_journal_entries", entry.id)
+                _validate_and_post_manual_entry(entry, current_user)
 
             flash(gettext(f"✅ تم إنشاء القيد {entry.entry_number} بنجاح"), "success")
             return redirect(url_for("ledger.view_entry", entry_id=entry.id))
