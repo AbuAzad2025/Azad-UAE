@@ -129,7 +129,20 @@ class IntegrationService:
             IntegrationService._record_test_result(integration, False, message)
             return False, message
         try:
-            response = requests.get(url, timeout=8)
+            # Owner-configured URLs are still untrusted input: never follow a
+            # redirect to an unvalidated host (SSRF guard), as with the AI
+            # knowledge import path.
+            from ai_knowledge.expansion.knowledge_expansion import is_public_http_url
+
+            if not is_public_http_url(url):
+                message = "رابط API غير مسموح — يجب أن يكون http(s) عاماً"
+                IntegrationService._record_test_result(integration, False, message)
+                return False, message
+            response = requests.get(url, timeout=8, allow_redirects=False)
+            if 300 <= response.status_code < 400:
+                message = "رابط API أعاد توجيهاً — يُرفض لأسباب أمنية"
+                IntegrationService._record_test_result(integration, False, message)
+                return False, message
         except Exception as exc:
             current_app.logger.exception("Currency API test request failed")
             IntegrationService._record_test_result(integration, False, str(exc))

@@ -35,6 +35,17 @@ class CashFlowService:
         if isinstance(period_end, str):
             period_end = datetime.strptime(period_end, "%Y-%m-%d").date()
 
+        # Tenant scope MUST be resolved before any aggregation. The old code
+        # resolved it only for the cash-balance step, so all three activity
+        # sections aggregated every tenant's rows when the caller omitted it —
+        # a cross-tenant financial leak on /ledger/cash-flow. A caller with no
+        # tenant context is refused rather than served unscoped data.
+        from utils.gl_tenant import active_tenant_id
+
+        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
+        if tenant_id is None:
+            raise ValueError("An active tenant is required to generate a cash-flow statement.")
+
         # 1. الأنشطة التشغيلية (Operating Activities)
         operating: dict[str, Any] = CashFlowService._get_operating_activities(
             period_start, period_end, branch_id=branch_id, tenant_id=tenant_id
@@ -51,10 +62,6 @@ class CashFlowService:
         )
 
         # 4. حساب النقدية
-        from utils.gl_tenant import active_tenant_id
-
-        tenant_id = tenant_id if tenant_id is not None else active_tenant_id()
-
         cash_accounts_query = GLAccount.query.filter(
             GLAccount.tenant_id == int(tenant_id),
             GLAccount.is_active,

@@ -7,7 +7,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -418,11 +418,13 @@ class TestExchangeRate:
         )
         db_session.add(sale)
         db_session.commit()
-        result = AIService.get_exchange_rate_suggestion("USD")
+        with patch("services.ai_service.get_active_tenant_id", return_value=sample_tenant.id):
+            result = AIService.get_exchange_rate_suggestion("USD")
         assert result["source"] == "نظام داخلي - متوسط آخر 7 أيام"
 
     def test_default_rate(self):
-        result = AIService.get_exchange_rate_suggestion("GBP", target_date=datetime.now())
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            result = AIService.get_exchange_rate_suggestion("GBP", target_date=datetime.now())
         assert result["source"] == "سعر افتراضي"
 
 
@@ -451,7 +453,8 @@ def _confirmed_sale(db_session, sample_tenant, sample_customer, sample_user, **k
 class TestSalesTrend:
     def test_no_data(self, mocker):
         _mock_sale_query(mocker, filter_all=[])
-        result = AIService.predict_sales_trend()
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            result = AIService.predict_sales_trend()
         assert result["prediction"] is None
 
     def test_insufficient_days(self, mocker):
@@ -465,7 +468,8 @@ class TestSalesTrend:
                 )
             )
         _mock_sale_query(mocker, filter_all=sales)
-        result = AIService.predict_sales_trend()
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            result = AIService.predict_sales_trend()
         assert "7 أيام" in result["message"]
 
     def test_full_prediction(self, mocker):
@@ -479,7 +483,8 @@ class TestSalesTrend:
                 )
             )
         _mock_sale_query(mocker, filter_all=sales)
-        result = AIService.predict_sales_trend(days_ahead=3)
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            result = AIService.predict_sales_trend(days_ahead=3)
         assert result["prediction"] is not None
         assert result["confidence"] >= 0
 
@@ -487,7 +492,8 @@ class TestSalesTrend:
 class TestProfitMargins:
     def test_no_sales(self, mocker):
         _mock_sale_query(mocker, filter_all=[])
-        assert AIService.analyze_profit_margins()["success"] is False
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            assert AIService.analyze_profit_margins()["success"] is False
 
     def test_with_lines(self, mocker, sample_product):
         line = MagicMock(
@@ -504,14 +510,16 @@ class TestProfitMargins:
             lines=[line],
         )
         _mock_sale_query(mocker, filter_all=[sale])
-        result = AIService.analyze_profit_margins()
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            result = AIService.analyze_profit_margins()
         assert result["success"] is True
 
 
 class TestSalesPatterns:
     def test_insufficient_data(self, mocker):
         _mock_sale_query(mocker, filter_all=[])
-        assert AIService.detect_sales_patterns()["success"] is False
+        with patch("services.ai_service.get_active_tenant_id", return_value=1):
+            assert AIService.detect_sales_patterns()["success"] is False
 
     def test_patterns(self, db_session, sample_tenant, sample_customer, sample_user):
         base = datetime.now(UTC)
@@ -523,7 +531,8 @@ class TestSalesPatterns:
                 sample_user,
                 sale_date=base - timedelta(days=i),
             )
-        result = AIService.detect_sales_patterns()
+        with patch("services.ai_service.get_active_tenant_id", return_value=sample_tenant.id):
+            result = AIService.detect_sales_patterns()
         assert result["success"] is True
 
 

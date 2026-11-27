@@ -649,6 +649,10 @@ class AIService:
         from models import Sale
 
         tid = get_active_tenant_id()
+        # Never fall back to an unscoped query: that would mix other tenants'
+        # exchange rates into this company's suggestion.
+        if tid is None:
+            return {"rate": None, "message": gettext("لا يوجد سياق شركة نشط")}
 
         if not target_date:
             target_date = datetime.now()
@@ -659,9 +663,8 @@ class AIService:
             Sale.currency == currency,
             Sale.created_at >= last_7_days,
             Sale.exchange_rate > 0,
+            Sale.tenant_id == tid,
         )
-        if tid is not None:
-            recent_sales_query = recent_sales_query.filter(Sale.tenant_id == tid)
         recent_sales = recent_sales_query.order_by(Sale.created_at.desc()).limit(10).all()
 
         if recent_sales:
@@ -692,11 +695,13 @@ class AIService:
         from models import Sale
 
         tid = get_active_tenant_id()
+        if tid is None:
+            return {"prediction": None, "confidence": 0, "message": gettext("لا يوجد سياق شركة نشط")}
 
         last_30_days = datetime.now(UTC) - timedelta(days=30)
-        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
-        if tid is not None:
-            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales_query = db.session.query(Sale).filter(
+            Sale.sale_date >= last_30_days, Sale.status == "confirmed", Sale.tenant_id == tid
+        )
         sales = sales_query.all()
 
         if not sales:
@@ -762,11 +767,13 @@ class AIService:
         from models import Sale
 
         tid = get_active_tenant_id()
+        if tid is None:
+            return {"prediction": None, "confidence": 0, "message": gettext("لا يوجد سياق شركة نشط")}
 
         last_30_days = datetime.now(UTC) - timedelta(days=30)
-        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_30_days, Sale.status == "confirmed")
-        if tid is not None:
-            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales_query = db.session.query(Sale).filter(
+            Sale.sale_date >= last_30_days, Sale.status == "confirmed", Sale.tenant_id == tid
+        )
         sales = sales_query.all()
 
         if not sales:
@@ -832,11 +839,13 @@ class AIService:
         from models import Sale
 
         tid = get_active_tenant_id()
+        if tid is None:
+            return {"success": False, "message": gettext("لا يوجد سياق شركة نشط")}
 
         last_90_days = datetime.now(UTC) - timedelta(days=90)
-        sales_query = db.session.query(Sale).filter(Sale.sale_date >= last_90_days, Sale.status == "confirmed")
-        if tid is not None:
-            sales_query = sales_query.filter(Sale.tenant_id == tid)
+        sales_query = db.session.query(Sale).filter(
+            Sale.sale_date >= last_90_days, Sale.status == "confirmed", Sale.tenant_id == tid
+        )
         sales = sales_query.all()
 
         if len(sales) < 10:

@@ -534,12 +534,16 @@ def manual_entry():
 
         except ValueError as e:
             flash(
-                gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
+                gettext(
+                    f"❌ خطأ: {safe_error(e, context='ledger.manual_entry')}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
         except Exception as e:
             flash(
-                gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
+                gettext(
+                    f"❌ خطأ: {safe_error(e, context='ledger.manual_entry')}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -671,7 +675,7 @@ def api_calculate_journal_balance():
             }
         )
     except Exception as e:
-        return error_response(message=str(e), status_code=400)
+        return error_response(message=safe_error(e, context="ledger.api"), status_code=400)
 
 
 @ledger_bp.route("/cash-flow")
@@ -688,7 +692,14 @@ def cash_flow():
     branch_id = _effective_branch_id()
 
     try:
-        report = CashFlowService.generate_cash_flow(date_from, date_to, branch_id=branch_id)
+        # Pass the caller's tenant explicitly so the service can never fall
+        # back to an unscoped aggregation across every company.
+        report = CashFlowService.generate_cash_flow(
+            date_from,
+            date_to,
+            branch_id=branch_id,
+            tenant_id=get_active_tenant_id(current_user),
+        )
 
         return render_template(
             "ledger/cash_flow.html",
@@ -700,7 +711,9 @@ def cash_flow():
         )
     except Exception as e:
         flash(
-            gettext(f"❌ فشل إنشاء قائمة التدفقات: {str(e)}\n💡 تحقق من الفترة المحددة وحاول مرة أخرى."),
+            gettext(
+                f"❌ فشل إنشاء قائمة التدفقات: {safe_error(e, context='ledger.cash_flow')}\n💡 تحقق من الفترة المحددة وحاول مرة أخرى."
+            ),
             "danger",
         )
         return redirect(url_for("ledger.index"))
@@ -742,7 +755,9 @@ def aging_analysis():
         )
     except Exception as e:
         flash(
-            gettext(f"❌ فشل إنشاء تحليل الأعمار: {str(e)}\n💡 تحقق من البيانات وحاول مرة أخرى."),
+            gettext(
+                f"❌ فشل إنشاء تحليل الأعمار: {safe_error(e, context='ledger.ageing')}\n💡 تحقق من البيانات وحاول مرة أخرى."
+            ),
             "danger",
         )
         return redirect(url_for("ledger.index"))
@@ -804,7 +819,7 @@ def aging_analysis_export():
     except Exception as e:
         current_app.logger.error("Aging analysis PDF export failed: %s", e)
         flash(
-            gettext(f"❌ فشل تصدير PDF: {str(e)}\n💡 حاول مرة أخرى."),
+            gettext(f"❌ فشل تصدير PDF: {safe_error(e, context='ledger.pdf_export')}\n💡 حاول مرة أخرى."),
             "danger",
         )
         return redirect(url_for("ledger.aging_analysis", type=analysis_type, as_of_date=as_of_date))
@@ -945,7 +960,9 @@ def admin_add_account():
 
         except Exception as e:
             flash(
-                gettext(f"❌ خطأ: {str(e)}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."),
+                gettext(
+                    f"❌ خطأ: {safe_error(e, context='ledger.manual_entry')}\n💡 تحقق من البيانات المدخلة وحاول مرة أخرى."
+                ),
                 "danger",
             )
 
@@ -1252,4 +1269,4 @@ def fiscal_year_preview():
             }
         )
     except Exception as exc:
-        return error_response(message=str(exc), status_code=400)
+        return error_response(message=safe_error(exc, context="ledger.api"), status_code=400)

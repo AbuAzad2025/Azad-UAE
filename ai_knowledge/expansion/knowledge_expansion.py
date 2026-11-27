@@ -161,7 +161,15 @@ class KnowledgeExpander:
                 )
             }
 
-            response = requests.get(url, headers=headers, timeout=30)
+            # The initial URL passed is_public_http_url(); following a 3xx
+            # would re-fetch an unvalidated target (e.g. a public URL that
+            # redirects to a link-local metadata endpoint) — an SSRF bypass.
+            response = requests.get(url, headers=headers, timeout=30, allow_redirects=False)
+            if 300 <= response.status_code < 400:
+                return {
+                    "success": False,
+                    "error": "Redirects are not followed for safety (SSRF guard).",
+                }
             response.raise_for_status()
 
             # تحليل المحتوى
